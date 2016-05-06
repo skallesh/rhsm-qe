@@ -192,6 +192,13 @@
   [path]
   (str path "/"))
 
+(defn with-starting-slash
+  "Tests for starting slash and adds if needed"
+  [path]
+  (if (= \/ (first path))
+    path
+    (str "/" path)))
+
 (defn make-dir
   "Creates a directory given by path"
   [^String path]
@@ -210,3 +217,37 @@
                   keyword
                   #(clojure.string/replace % #"\s+" "-")
                   clojure.string/lower-case))
+
+(defn compare-to [this o]
+  "Useful for comparing two Version records.  If this is logically less than o, it will return -1,
+  if they have logically equal values, it will return 0, and if it's greater, it will return 1"
+  (let [{:keys [major minor patch]} this
+        [maj-o min-o patch-o] [(:major o) (:minor o) (:patch o)]]
+    (loop [x (for [i [major minor patch]]
+               (Integer/parseInt i))
+           y (for [i [maj-o min-o patch-o]]
+               (Integer/parseInt i))]
+      (let [hx (first x)
+            hy (first y)]
+        (cond (> hx hy) 1
+              (< hx hy) -1
+              (= hx hy) (if (empty? (rest x))
+                          0
+                          (recur (rest x) (rest y))))))))
+
+(defrecord Version [full major minor patch pre-release]
+  Comparable
+  (compareTo [this other]
+    (compare-to this other)))
+
+(defn subman-version
+  []
+  (let [lines (-> (run-command "subscription-manager version") :stdout)
+        ver-patt #"\s+subscription-manager:\s+(.+)\s+"
+        convert-patt #"^(\d)\.(\d+)\.(\d+)-(.+)"
+        git-patt #"(\d+)\.git\.(\d+)\.([0-9a-fA-F]+)"
+        [_ version] (first (re-seq ver-patt lines))
+        m (zipmap [:full :major :minor :patch :dev]
+                  (re-find convert-patt version))
+        m (assoc m :dev (re-find git-patt (:dev m)))]
+    (map->Version m)))

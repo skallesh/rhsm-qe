@@ -1,7 +1,7 @@
 <!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
 
 <!-- Running on the command line:  java -cp `lein classpath` org.testng.TestNG [testng options] [suitefile] -->
-<suite name="SM CLI Tier2 TestSuite">
+<suite name="CLI Tier2 TestSuite">
 
 	<listeners>
 		<listener class-name="com.redhat.qe.auto.testng.TestNGListener" />
@@ -847,6 +847,19 @@
 	<test name="CLI: FlexibleBranding Tests">
 		<classes>
 			<class name="rhsm.cli.tests.FlexibleBrandingTests" />
+		</classes>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="Tier2Tests" />
+				<include name="cleanup" />
+			</run>
+		</groups>
+	</test>
+	
+	<test name="CLI: DevSKU Tests">
+		<classes>
+			<class name="rhsm.cli.tests.DevSKUTests" />
 		</classes>
 		<groups>
 			<run>

@@ -585,7 +585,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			// The WORKAROUND is to tell subscription-manager to clean before registering with the consumerId
 			clienttasks.clean(null, null, null);
 		}
-	    clienttasks.register(sm_clientUsername, sm_clientPassword, null, null, null, null, consumerid, null, null, null, (String)null, null, null, null, Boolean.TRUE, false, null, null, null);
+	    clienttasks.register(sm_clientUsername, sm_clientPassword, null, null, null, null, consumerid, null, null, null, (String)null, null, null, null, /* --force Boolean.TRUE was okay prior to subscription-manager-1.16.2-1 commit f14d2618ea94c18a0295ae3a5526a2ff252a3f99 and 6bd0448c85c10d8a58cae10372f0d4aa323d5c27 changing to */ Boolean.FALSE, false, null, null, null);
 		clienttasks.restart_rhsmcertd(minutes, null, true); sleep(10000); // allow 10sec for the initial update
 		log.info("Appending a marker in the '"+clienttasks.rhsmcertdLogFile+"' so we can assert that the certificates are being updated every '"+minutes+"' minutes");
 		marker = "Testing rhsm.conf certFrequency="+minutes+" when registered..."; // https://tcms.engineering.redhat.com/case/41692/
@@ -1002,6 +1002,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		//clienttasks.subscribe(true,"".equals(serviceLevel)?String.format("\"%s\"", serviceLevel):serviceLevel, (List<String>)null, (List<String>)null, (List<String>)null, null, null, null, null, null, null);
 		
 		// determine the newly granted entitlement certs
+		List<ProductSubscription> currentlyConsumedProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
  		List<EntitlementCert> newlyGrantedEntitlementCerts = new ArrayList<EntitlementCert>();
  		List<EntitlementCert> currentlyGrantedEntitlementCerts = clienttasks.getCurrentEntitlementCerts();
 		for (EntitlementCert entitlementCert : currentlyGrantedEntitlementCerts) {
@@ -1080,8 +1081,10 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 				log.warning("After actually running auto-subscribe, the predicted dry-run pool '"+dryrunSubscriptionPool.poolId+"' was NOT among the attached subscriptions.  This is probably because there is another available pool that also provides the same provided products '"+dryrunSubscriptionPool.provides+"' (at least one of which is installed) which was granted instead of the dry-run pool.");
 				// assert that the warning statement is true
 				// the follow assertion may expectedly fail when the provided products exceeds one.
-				ProductSubscription consumedProductSubscription = ProductSubscription.findFirstInstanceWithMatchingFieldFromList("provides", dryrunSubscriptionPool.provides, clienttasks.getCurrentlyConsumedProductSubscriptions());
-				Assert.assertNotNull(consumedProductSubscription, "Found a consumed Product Subscription that provides the same products corresponding to dry-run pool: "+dryrunSubscriptionPool+"  (IF THIS FAILS, SEE WARNING ABOCVE FOR PROBABLE EXPLANATION)");
+				//ProductSubscription consumedProductSubscription = ProductSubscription.findFirstInstanceWithMatchingFieldFromList("provides", dryrunSubscriptionPool.provides, currentlyConsumedProductSubscriptions);	// THIS IS NOT SMART ENOUGH TO COMPARE THE provides List FOR EQUALITY, INSTEAD SEARCH FOR ANOTHER POOL BY THE SAME SKU
+				//Assert.assertNotNull(consumedProductSubscription, "Found a consumed Product Subscription that provides the same products corresponding to dry-run pool: "+dryrunSubscriptionPool+"  (IF THIS FAILS, SEE WARNING ABOVE FOR PROBABLE EXPLANATION)");
+				ProductSubscription consumedProductSubscription = ProductSubscription.findFirstInstanceWithMatchingFieldFromList("productId", dryrunSubscriptionPool.productId, currentlyConsumedProductSubscriptions);
+				Assert.assertNotNull(consumedProductSubscription, "Found a consumed Product Subscription for the same SKU corresponding to dry-run pool: "+dryrunSubscriptionPool+"  (IF THIS FAILS, SEE WARNING ABOVE FOR PROBABLE EXPLANATION)");
 				Assert.assertEquals(Integer.valueOf(consumedProductSubscription.quantityUsed), quantity, "The actual entitlement quantityUsed matches the dry-run quantity results for pool :"+dryrunSubscriptionPool);
 			} else {
 				Assert.assertNotNull(entitlementCert, "Found an entitlement cert corresponding to dry-run pool: "+dryrunSubscriptionPool);
@@ -1185,17 +1188,18 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		Assert.assertTrue(clienttasks.subscribe(null,null,consumer2Pool.poolId,null,null,String.valueOf(consumer2Quantity),null,null,null, null, null, null).getStdout().startsWith("Success"),"An attempt by consumer2 to exactly consume the remaining pool quantity should succeed.");
 		
 		// start rolling back the subscribes
+		clienttasks.clean(null,null,null);
 		
 		// restore consumer1, unsubscribe, and assert remaining quantities
-		clienttasks.clean(null,null,null);
 		clienttasks.register(sm_clientUsername, sm_clientPassword, null, null, null, null, consumer1Id, null, null, null, (String)null, null, null, null, false, false, null, null, null);
 		Assert.assertNull(SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", consumer1Pool.poolId, clienttasks.getCurrentlyAvailableSubscriptionPools()),"SubscriptionPool '"+consumer1Pool.poolId+"' should NOT be available (because consumer1 is already subscribed to it).");
 		clienttasks.unsubscribe(null,clienttasks.getCurrentlyConsumedProductSubscriptions().get(0).serialNumber,null,null,null, null);
 		consumer1Pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", consumer1Pool.poolId, clienttasks.getCurrentlyAvailableSubscriptionPools()); 
 		Assert.assertEquals(consumer1Pool.quantity, String.valueOf(totalPoolQuantity-consumer2Quantity),"The pool quantity available to consumer1 has incremented by the quantity consumer1 consumed.");
+		clienttasks.unregister(null,null,null);
 		
 		// restore consumer2, unsubscribe, and assert remaining quantities
-		clienttasks.register(sm_clientUsername, sm_clientPassword, null, null, null, null, consumer2Id, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, null, null, null, null, consumer2Id, null, null, null, (String)null, null, null, null, false, false, null, null, null);
 		consumer2Pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", consumer2Pool.poolId, clienttasks.getCurrentlyAvailableSubscriptionPools());
 		//Assert.assertNull(consumer2Pool,"SubscriptionPool '"+consumer2Pool.poolId+"' should NOT be available (because consumer2 is already subscribed to it).");
 		Assert.assertNotNull(consumer2Pool,"SubscriptionPool '"+consumer2Pool.poolId+"' should be available even though consumer2 is already subscribed to it because it is multi-entitleable.");
@@ -1203,6 +1207,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		clienttasks.unsubscribe(null,clienttasks.getCurrentlyConsumedProductSubscriptions().get(0).serialNumber,null,null,null, null);
 		consumer2Pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", consumer2Pool.poolId, clienttasks.getCurrentlyAvailableSubscriptionPools()); 
 		Assert.assertEquals(consumer2Pool.quantity, String.valueOf(totalPoolQuantity),"The pool quantity available to consumer2 has been restored to its original total quantity");
+		clienttasks.unregister(null,null,null);
 	}
 	
 	

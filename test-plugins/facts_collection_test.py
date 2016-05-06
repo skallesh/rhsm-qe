@@ -30,4 +30,5 @@ class FactsCollectionTestPlugin(SubManPlugin):
         Args:
             conduit: A FactsConduit()
         """
+        conduit.log.debug("Debugging post_facts_collection_hook: consumer conduit.facts: %s" % conduit.facts)
         conduit.log.info("Running post_facts_collection_hook: consumer facts count is %s" % len(conduit.facts))

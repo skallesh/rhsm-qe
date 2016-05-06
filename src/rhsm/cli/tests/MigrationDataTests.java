@@ -309,6 +309,13 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 			if (line.trim().startsWith("#")) continue; // skip comments
 			String channel = line.split(":")[0].trim();
 			String productCertFilename = line.split(":")[1].trim();
+			
+			// exclude RHEL7 aus channels // examples: rhel-x86_64-server-7.2.aus rhel-x86_64-server-optional-7.2.aus
+			if (doesStringContainMatches(channel, "-7\\.\\d\\.aus")) {
+				log.info("Ignoring RHEL7 aus channel '"+channel+"'");
+				continue;
+			}
+			
 			actualRhel6AusChannels.add(channel);
 		}
 		
@@ -423,7 +430,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(verifiedVersionOfAllMigrationProductCertFiles,"All of the migration productCerts in directory '"+baseProductsDir+"' support this version of RHEL '"+clienttasks.redhatReleaseXY+"'.");
 	}
 	@Test(	description="Verify that the migration product certs support this system's RHEL release version",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-782208","blockedByBug-1006060","blockedByBug-1025338","blockedByBug-1080072","blockedByBug-1110863","blockedByBug-1148110","blockedByBug-1197864","blockedByBug-1241221"},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-782208","blockedByBug-1006060","blockedByBug-1025338","blockedByBug-1080072","blockedByBug-1110863","blockedByBug-1148110","blockedByBug-1197864","blockedByBug-1300766","blockedByBug-1241221","blockedByBug-1328579"},
 			dependsOnMethods={"VerifyChannelCertMapping_Test"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=130940)
@@ -516,7 +523,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(verifiedMatchForAllMigrationProductCertFiles,"All of the migration productCerts in directory '"+baseProductsDir+"' match the current ["+sm_rhnDefinitionsGitRepository+"] product certs for this RHEL release '"+clienttasks.redhatReleaseXY+"' ");
 	}
 	@Test(	description="Verify that the migration product certs match those from rhn definitions",
-			groups={"AcceptanceTests","Tier1Tests"/*,"blockedByBug-799152","blockedByBug-814360","blockedByBug-861420","blockedByBug-861470","blockedByBug-872959","blockedByBug-875760","blockedByBug-875802"*/},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-799152","blockedByBug-814360","blockedByBug-861420","blockedByBug-861470","blockedByBug-872959","blockedByBug-875760","blockedByBug-875802","blockedByBug-1305695"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyMigrationProductCertsMatchThoseFromRhnDefinitions_Test() {
@@ -855,7 +862,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Verify that all of the classic RHN Channels available to a classically registered consumer are accounted for in the in the channel-cert-mapping.txt or is a known exception",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1080072"},
+			groups={"AcceptanceTests","Tier1Tests"},
 			dependsOnMethods={"VerifyChannelCertMapping_Test"},
 			dataProvider="getRhnClassicBaseAndAvailableChildChannelsData",
 			enabled=true)
@@ -1062,7 +1069,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Verify that the expected RHN base channels supporting this system's RHEL release version are mapped to product certs whose version matches this system's RHEL release",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1110863","blockedByBug-1148110","blockedByBug-1197864","blockedByBug-1222712","blockedByBug-1228387","blockedByBug-1241221"},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1110863","blockedByBug-1148110","blockedByBug-1197864","blockedByBug-1300766","blockedByBug-1222712","blockedByBug-1228387","blockedByBug-1241221","blockedByBug-1328579","blockedByBug-1328609"},
 			dependsOnMethods={"VerifyChannelCertMapping_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -1083,10 +1090,14 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 			expectedBaseChannels.add("rhel-x86_64-client-7");		// 68	Red Hat Enterprise Linux Desktop
 			expectedBaseChannels.add("rhel-x86_64-server-7");		// 69	Red Hat Enterprise Linux Server
 			expectedBaseChannels.add("rhel-x86_64-workstation-7");	// 71	Red Hat Enterprise Linux Workstation
+			expectedBaseChannels.add("rhel-x86_64-hpc-node-7");		// 76	Red Hat Enterprise Linux for Scientific Computing
 			expectedBaseChannels.add("rhel-s390x-server-7");		// 72	Red Hat Enterprise Linux for IBM System z
 			expectedBaseChannels.add("rhel-ppc64-server-7");		// 74	Red Hat Enterprise Linux for IBM POWER
-			expectedBaseChannels.add("rhel-x86_64-hpc-node-7");		// 76	Red Hat Enterprise Linux for Scientific Computing
-		} else
+			if (Float.valueOf(clienttasks.redhatReleaseXY) >= 7.3) {
+			expectedBaseChannels.add("rhel-ppc64le-server-7");		// 279	Red Hat Enterprise Linux for Power, little endian
+			expectedBaseChannels.add("rhel-aarch64-server-7");		// 294	Red Hat Enterprise Linux Server for ARM Development Preview <= Preview?
+			}
+			} else
 		if (clienttasks.redhatReleaseX.equals("6")) {
 //			// TEMPORARY WORKAROUND FOR BUG
 //			String bugId = "0000"; boolean invokeWorkaroundWhileBugIsOpen = true;
@@ -1160,8 +1171,8 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 		if (!allBaseChannelProductCertsMatchThisRhelRelease) Assert.fail("Review logged warnings above for expected RHN base channel product cert versions that do not match this system.s dot release.");
 	}
 	
-	@Test(	description="Verify that the expected RHN RHEL channels supporting this system's RHEL release X.Y version are mapped to product certs whose version matches this system's RHEL release X.Y",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1080072","blockedByBug-1110863","blockedByBug-1148110","blockedByBug-1197864","blockedByBug-1222712","blockedByBug-1241221"},
+	@Test(	description="Verify that the expected RHN RHEL channels supporting this system's RHEL release X.Y version are mapped to product certs whose version matches this system's RHEL release X.Y (also asserts beta channels to Beta product certs)",
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1080072","blockedByBug-1110863","blockedByBug-1148110","blockedByBug-1197864","blockedByBug-1300766","blockedByBug-1222712","blockedByBug-1241221"},
 			dataProvider="RhnRhelChannelsFromChannelMappingData",
 			dependsOnMethods={"VerifyChannelCertMapping_Test"},
 			enabled=true)
@@ -1170,9 +1181,9 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(!channelsToProductCertFilenamesMap.get(rhnRhelChannel).equalsIgnoreCase("none"), "RHN RHEL Channel '"+rhnRhelChannel+"' does not map to None.");
 		ProductCert rhnRhelProductCert = clienttasks.getProductCertFromProductCertFile(new File(baseProductsDir+"/"+channelsToProductCertFilenamesMap.get(rhnRhelChannel)));
 		if (rhnRhelChannel.contains(/*clienttasks.redhatReleaseX+*/"-beta-") || rhnRhelChannel.endsWith(/*clienttasks.redhatReleaseX+*/"-beta")) {
-			Assert.assertEquals(rhnRhelProductCert.productNamespace.version, clienttasks.redhatReleaseXY+" Beta", "RHN RHEL Beta Channel '"+rhnRhelChannel+"' maps to the following product cert that matches this RHEL dot release '"+clienttasks.redhatReleaseXY+"': "+rhnRhelProductCert.productNamespace);			
+			Assert.assertEquals(rhnRhelProductCert.productNamespace.version, clienttasks.redhatReleaseXY+" Beta", "RHN RHEL Beta Channel '"+rhnRhelChannel+"' maps to the following product cert that corresponds to this RHEL minor release '"+clienttasks.redhatReleaseXY+"': "+rhnRhelProductCert.productNamespace);			
 		} else {
-			Assert.assertEquals(rhnRhelProductCert.productNamespace.version, clienttasks.redhatReleaseXY, "RHN RHEL Channel '"+rhnRhelChannel+"' maps to the following product cert that matches this RHEL dot release '"+clienttasks.redhatReleaseXY+"': "+rhnRhelProductCert.productNamespace);
+			Assert.assertEquals(rhnRhelProductCert.productNamespace.version, clienttasks.redhatReleaseXY, "RHN RHEL Channel '"+rhnRhelChannel+"' maps to the following product cert that corresponds to this RHEL minor release '"+clienttasks.redhatReleaseXY+"': "+rhnRhelProductCert.productNamespace);
 		}
 	}
 	@DataProvider(name="RhnRhelChannelsFromChannelMappingData")
@@ -1379,7 +1390,13 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				rhnChannel.equals("rhel-x86_64-server-7-thirdparty-oracle-java-beta") ||
 				rhnChannel.equals("rhel-x86_64-workstation-7-thirdparty-oracle-java-beta")) {
 				bugIds.add("1263432");
-			}	
+			}
+			
+			// Bug 1320647 - rhn channels 'rhel-ARCH-workstation-6-thirdparty-oracle-java-beta' should maps to the Beta product cert, not the GA cert.
+			if (rhnChannel.equals("rhel-i386-workstation-6-thirdparty-oracle-java-beta") ||
+				rhnChannel.equals("rhel-x86_64-workstation-6-thirdparty-oracle-java-beta")) {
+				bugIds.add("1320647");
+			}
 			
 			// Object bugzilla, String productBaselineRhnChannel, String productBaselineProductId
 			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
@@ -1413,6 +1430,9 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 		for (String pkg : new String[]{"subscription-manager-migration", "subscription-manager-migration-data", "expect"}) {
 			Assert.assertTrue(clienttasks.isPackageInstalled(pkg),"Required package '"+pkg+"' is installed for MigrationTests.");
 		}
+		
+		// configure a valid sslCACert in /etc/sysconfig/rhn/up2date
+		setupRhnCACert();
 	}
 	
 	
@@ -2610,6 +2630,76 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 			if (rhnAvailableChildChannel.equals("rhel-x86_64-server-6-rh-gluster-3-samba-debuginfo")) {
 				// Bug 1286842 - 'rhel-x86_64-server-6-rh-gluster-3-samba-debuginfo' channel map is missing from channel-cert-mapping.txt
 				bugIds.add("1286842");
+			}
+			
+			if (rhnAvailableChildChannel.equals("rhel-x86_64-server-6-cf-ce-1-beta") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-6-cf-ce-1-beta-debuginfo")) {
+				// Bug 1299620 - rhel-x86_64-server-6-cf-ce-1-beta channel maps are absent from channel-cert-mapping.txt 
+				bugIds.add("1299620");
+			}
+			
+			if (rhnAvailableChildChannel.equals("rhel-x86_64-server-6-cf-se-1-beta") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-6-cf-se-1-beta-debuginfo")) {
+				// Bug 1299621 - rhel-x86_64-server-6-cf-se-1-beta channel maps are absent from channel-cert-mapping.txt
+				bugIds.add("1299621");
+			}
+			
+			if (rhnAvailableChildChannel.equals("rhel-x86_64-server-6-cf-tools-1-beta") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-6-cf-tools-1-beta-debuginfo") ||
+				rhnAvailableChildChannel.equals("rhel-i386-server-6-cf-tools-1-beta") ||
+				rhnAvailableChildChannel.equals("rhel-i386-server-6-cf-tools-1-beta-debuginfo")) {
+				// Bug 1299623 - rhel-x86_64-server-6-cf-tools-1-beta channel maps are absent from channel-cert-mapping.txt
+				bugIds.add("1299623");
+			}
+			
+			if (rhnAvailableChildChannel.equals("rhel-x86_64-rhev-mgmt-agent-6-beta") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-rhev-mgmt-agent-6-beta-debuginfo")) {
+				// Bug 1299624 - rhel-x86_64-rhev-mgmt-agent-6-beta channel maps are absent from channel-cert-mapping.txt 
+				bugIds.add("1299624");
+			}
+			
+			if (rhnAvailableChildChannel.equals("rhel-x86_64-rhev-mgmt-agent-7") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-rhev-mgmt-agent-7-debuginfo") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-rhev-mgmt-agent-7-beta") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-rhev-mgmt-agent-7-beta-debuginfo")) {
+				// Bug 1300848 - RHN channels to product cert maps for "rhel-x86_64-rhev-mgmt-agent-7*" disappeared
+				bugIds.add("1300848");
+			}
+			
+			if (rhnAvailableChildChannel.equals("rhel-x86_64-server-6-rhevm-3.6") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-6-rhevm-3.6-debuginfo")) {
+				// Bug 1320592 - rhel-x86_64-server-6-rhevm-3.6 channel maps are absent from channel-cert-mapping.txt
+				bugIds.add("1320592");
+			}
+			
+			if (rhnAvailableChildChannel.equals("rhel-x86_64-server-hpn-fastrack-6") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-hpn-fastrack-6-debuginfo")) {
+				// Bug 1320597 - rhel-x86_64-server-hpn-fastrack-6 channel maps are absent from channel-cert-mapping.txt
+				bugIds.add("1320597");
+			}
+			
+			if (rhnAvailableChildChannel.equals("rhel-x86_64-server-hpn-6") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-hpn-6-debuginfo")) {
+				// Bug 1320607 - rhel-x86_64-server-hpn-6 channel maps are absent from channel-cert-mapping.txt
+				bugIds.add("1320607");
+			}
+			
+			if (rhnAvailableChildChannel.equals("rhel-x86_64-server-7-ost-7") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-7-ost-7-debuginfo") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-7-ost-7-optools") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-7-ost-7-optools-debuginfo") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-7-ost-7-director") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-7-ost-7-director-debuginfo")) {
+				// Bug 1328628 - rhel-x86_64-server-7-ost-7 channel maps are absent from channel-cert-mapping.txt
+				bugIds.add("1328628");
+			}
+			
+			if (rhnAvailableChildChannel.equals("rhel-x86_64-server-7-rhevh") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-7-rhevh-debuginfo") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-7-rhevh-beta") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-7-rhevh-beta-debuginfo")) {
+				// Bug 1333545 - rhel-x86_64-server-7-rhevh channel maps are absent from channel-cert-mapping.txt
+				bugIds.add("1333545");
 			}
 			
 			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));

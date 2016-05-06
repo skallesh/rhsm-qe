@@ -68,7 +68,7 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	@Test(	description="attempt to override a baseurl using subscription-manager repos-override",
-			groups={"blockedByBug-1030604"},
+			groups={"blockedByBug-1030604", "AcceptanceTests"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
 	public void AttemptToOverrideBaseurl_Test() {
@@ -85,18 +85,29 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 		repoOverrideNameValueMap.put("baseurl", "https://cdn.redhat.com/repo-override-testing/$releasever/$basearch");
 		repoOverrideNameValueMap.put("test", "value");
 		SSHCommandResult result = clienttasks.repo_override_(null, null, Arrays.asList(yumRepo.id, "foo-bar"), null, repoOverrideNameValueMap, null, null, null);
-		Assert.assertEquals(result.getExitCode(), Integer.valueOf(1), "ExitCode from an attempt to repo-override the baseurl of yumRepo: "+yumRepo);		
-		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
-			Assert.assertEquals(result.getStdout().trim(), "", "Stdout from an attempt to repo-override the baseurl of yumRepo: "+yumRepo);
-			Assert.assertEquals(result.getStderr().trim(), "Not allowed to override values for: baseurl", "Stderr from an attempt to repo-override the baseurl of yumRepo: "+yumRepo);
-		} else {
-			Assert.assertEquals(result.getStderr().trim(), "", "Stderr from an attempt to repo-override the baseurl of yumRepo: "+yumRepo);
-			Assert.assertEquals(result.getStdout().trim(), "Not allowed to override values for: baseurl", "Stdout from an attempt to repo-override the baseurl of yumRepo: "+yumRepo);
+		
+		// new standalone candlepin behavior allows baseurl overrides
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.10-1") && servertasks.statusStandalone) {	// candlepin commit bbba2dfc1ba44a16fef3d483caf4e7d4eaf63c10
+			log.info("Starting in candlepin version 2.0.10-1, the restriction on overriding the baseurl has been lifted against a standalone candlepin server for the benefit of mirror lists in Satellite.  See https://trello.com/c/6IKbKppZ/7-work-with-satellite-team-to-design-out-mirror-lists-for-subscription-manager");
+			Assert.assertEquals(result.getExitCode(), Integer.valueOf(0), "ExitCode (against a standalone candlepin version >= 2.0.10-1) from an attempt to repo-override the baseurl of yumRepo: "+yumRepo);		
+			Assert.assertEquals(result.getStdout().trim(), "Repository 'foo-bar' does not currently exist, but the override has been added.", "Stdout (against a standalone candlepin version >= 2.0.10-1) from an attempt to repo-override the baseurl of yumRepo: "+yumRepo);
+			Assert.assertEquals(result.getStderr().trim(), "", "Stderr (against a standalone candlepin version >= 2.0.10-1) from an attempt to repo-override the baseurl of yumRepo: "+yumRepo);
+		} else {	// original candlepin behavior denies baseurl overrides
+			
+			Assert.assertEquals(result.getExitCode(), Integer.valueOf(1), "ExitCode from an attempt to repo-override the baseurl of yumRepo: "+yumRepo);		
+	
+			if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+				Assert.assertEquals(result.getStdout().trim(), "", "Stdout from an attempt to repo-override the baseurl of yumRepo: "+yumRepo);
+				Assert.assertEquals(result.getStderr().trim(), "Not allowed to override values for: baseurl", "Stderr from an attempt to repo-override the baseurl of yumRepo: "+yumRepo);
+			} else {
+				Assert.assertEquals(result.getStderr().trim(), "", "Stderr from an attempt to repo-override the baseurl of yumRepo: "+yumRepo);
+				Assert.assertEquals(result.getStdout().trim(), "Not allowed to override values for: baseurl", "Stdout from an attempt to repo-override the baseurl of yumRepo: "+yumRepo);
+			}
 		}
 	}
 	
 	@Test(	description="attempt to override a bASeUrL (note the case) using subscription-manager repos-override",
-			groups={"blockedByBug-1030604","blockedByBug-1034375"},
+			groups={"blockedByBug-1030604","blockedByBug-1034375","AcceptanceTests"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
 	public void AttemptToOverrideBaseurlInMixedCases_Test() {
@@ -112,32 +123,69 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 		Map<String,String> repoOverrideNameValueMap = new HashMap<String,String>();
 		// attempt to override bASeUrL
 		String baseUrl = "bASeUrL";	// contains mixed case characters
-		repoOverrideNameValueMap.put(baseUrl, "https://cdn.redhat.com/repo-override-testing/$releasever/$basearch");
+		//repoOverrideNameValueMap.put(baseUrl, "https://cdn.redhat.com/repo-override-testing/$releasever/$basearch");
+		repoOverrideNameValueMap.put(baseUrl, "https://cdn.redhat.com/repo-override-testing/");	// $releasever/$basearch will get interpreted as bash env vars which are empty strings.
 		SSHCommandResult result = clienttasks.repo_override_(null, null, Arrays.asList(yumRepo.id, "foo-bar"), null, repoOverrideNameValueMap, null, null, null);
-		Assert.assertEquals(result.getExitCode(), Integer.valueOf(1), "ExitCode from an attempt to repo-override the "+baseUrl+" (note the case) of yumRepo '"+yumRepo.id+"'.");		
-		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
-			Assert.assertEquals(result.getStdout().trim(), "", "Stdout from an attempt to repo-override the '"+baseUrl+"' (note the case) of yumRepo '"+yumRepo.id+"'.");
-			Assert.assertEquals(result.getStderr().trim(), "Not allowed to override values for: "+baseUrl, "Stderr from an attempt to repo-override the '"+baseUrl+"' (note the case) of yumRepo '"+yumRepo.id+"'.");
-		} else {
-			Assert.assertEquals(result.getStderr().trim(), "", "Stderr from an attempt to repo-override the '"+baseUrl+"' (note the case) of yumRepo '"+yumRepo.id+"'.");
-			Assert.assertEquals(result.getStdout().trim(), "Not allowed to override values for: "+baseUrl, "Stdout from an attempt to repo-override the '"+baseUrl+"' (note the case) of yumRepo '"+yumRepo.id+"'.");
+		// new standalone candlepin behavior allows baseurl overrides
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.10-1") && servertasks.statusStandalone) {	// candlepin commit bbba2dfc1ba44a16fef3d483caf4e7d4eaf63c10
+			log.info("Starting in candlepin version 2.0.10-1, the restriction on overriding the baseurl has been lifted against a standalone candlepin server for the benefit of mirror lists in Satellite.  See https://trello.com/c/6IKbKppZ/7-work-with-satellite-team-to-design-out-mirror-lists-for-subscription-manager");
+			Assert.assertEquals(result.getExitCode(), Integer.valueOf(0), "ExitCode (against a standalone candlepin version >= 2.0.10-1) from an attempt to repo-override the baseurl of yumRepo: "+yumRepo);		
+			Assert.assertEquals(result.getStdout().trim(), "Repository 'foo-bar' does not currently exist, but the override has been added.", "Stdout (against a standalone candlepin version >= 2.0.10-1) from an attempt to repo-override the baseurl of yumRepo: "+yumRepo);
+			Assert.assertEquals(result.getStderr().trim(), "", "Stderr (against a standalone candlepin version >= 2.0.10-1) from an attempt to repo-override the baseurl of yumRepo: "+yumRepo);
+		} else {	// original candlepin behavior denies baseurl overrides
+			
+			Assert.assertEquals(result.getExitCode(), Integer.valueOf(1), "ExitCode from an attempt to repo-override the "+baseUrl+" (note the case) of yumRepo '"+yumRepo.id+"'.");		
+			if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+				Assert.assertEquals(result.getStdout().trim(), "", "Stdout from an attempt to repo-override the '"+baseUrl+"' (note the case) of yumRepo '"+yumRepo.id+"'.");
+				Assert.assertEquals(result.getStderr().trim(), "Not allowed to override values for: "+baseUrl, "Stderr from an attempt to repo-override the '"+baseUrl+"' (note the case) of yumRepo '"+yumRepo.id+"'.");
+			} else {
+				Assert.assertEquals(result.getStderr().trim(), "", "Stderr from an attempt to repo-override the '"+baseUrl+"' (note the case) of yumRepo '"+yumRepo.id+"'.");
+				Assert.assertEquals(result.getStdout().trim(), "Not allowed to override values for: "+baseUrl, "Stdout from an attempt to repo-override the '"+baseUrl+"' (note the case) of yumRepo '"+yumRepo.id+"'.");
+			}
 		}
 		// attempt to override two bASeUrL and baseurl
-		repoOverrideNameValueMap.put("baseurl", "https://cdn.redhat.com/repo-override-testing/$releasever/$basearch");
+		//repoOverrideNameValueMap.put("baseurl", "https://cdn.redhat.com/repo-override-testing/$releasever/$basearch");
+		repoOverrideNameValueMap.put("baseurl", "https://cdn.redhat.com/repo-override-testing/");	// $releasever/$basearch will get interpreted as bash env vars which are empty strings.
 		repoOverrideNameValueMap.put("mirrorlist_expire", "10");	// include another valid parameter for the fun of it
 		result = clienttasks.repo_override_(null, null, Arrays.asList(yumRepo.id, "foo-bar"), null, repoOverrideNameValueMap, null, null, null);
-		Assert.assertEquals(result.getExitCode(), Integer.valueOf(1), "ExitCode from an attempt to repo-override "+baseUrl+" (note the case) and 'baseurl' of yumRepo '"+yumRepo.id+"'.");		
-		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
-			Assert.assertEquals(result.getStdout().trim(), "", "Stdout from an attempt to repo-override the '"+baseUrl+"' (note the case) and 'baseurl' of yumRepo '"+yumRepo.id+"'.");
-			Assert.assertEquals(result.getStderr().trim(), "Not allowed to override values for: "+baseUrl+", baseurl", "Stderr from an attempt to repo-override the '"+baseUrl+"' (note the case) and 'baseurl' of yumRepo '"+yumRepo.id+"'.");
-		} else {
-			Assert.assertEquals(result.getStderr().trim(), "", "Stderr from an attempt to repo-override the '"+baseUrl+"' (note the case) and 'baseurl' of yumRepo '"+yumRepo.id+"'.");
-			Assert.assertEquals(result.getStdout().trim(), "Not allowed to override values for: "+baseUrl+", baseurl", "Stdout from an attempt to repo-override the '"+baseUrl+"' (note the case) and 'baseurl' of yumRepo '"+yumRepo.id+"'.");
+		// new standalone candlepin behavior allows baseurl overrides
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.10-1") && servertasks.statusStandalone) {	// candlepin commit bbba2dfc1ba44a16fef3d483caf4e7d4eaf63c10
+			log.info("Starting in candlepin version 2.0.10-1, the restriction on overriding the baseurl has been lifted against a standalone candlepin server for the benefit of mirror lists in Satellite.  See https://trello.com/c/6IKbKppZ/7-work-with-satellite-team-to-design-out-mirror-lists-for-subscription-manager");
+			Assert.assertEquals(result.getExitCode(), Integer.valueOf(0), "ExitCode (against a standalone candlepin version >= 2.0.10-1) from an attempt to repo-override the baseurl of yumRepo: "+yumRepo);		
+			Assert.assertEquals(result.getStdout().trim(), "Repository 'foo-bar' does not currently exist, but the override has been added.", "Stdout (against a standalone candlepin version >= 2.0.10-1) from an attempt to repo-override the baseurl of yumRepo: "+yumRepo);
+			Assert.assertEquals(result.getStderr().trim(), "", "Stderr (against a standalone candlepin version >= 2.0.10-1) from an attempt to repo-override the baseurl of yumRepo: "+yumRepo);
+		} else {	// original candlepin behavior denies baseurl overrides
+			Assert.assertEquals(result.getExitCode(), Integer.valueOf(1), "ExitCode from an attempt to repo-override "+baseUrl+" (note the case) and 'baseurl' of yumRepo '"+yumRepo.id+"'.");		
+			if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+				Assert.assertEquals(result.getStdout().trim(), "", "Stdout from an attempt to repo-override the '"+baseUrl+"' (note the case) and 'baseurl' of yumRepo '"+yumRepo.id+"'.");
+				Assert.assertEquals(result.getStderr().trim(), "Not allowed to override values for: "+baseUrl+", baseurl", "Stderr from an attempt to repo-override the '"+baseUrl+"' (note the case) and 'baseurl' of yumRepo '"+yumRepo.id+"'.");
+			} else {
+				Assert.assertEquals(result.getStderr().trim(), "", "Stderr from an attempt to repo-override the '"+baseUrl+"' (note the case) and 'baseurl' of yumRepo '"+yumRepo.id+"'.");
+				Assert.assertEquals(result.getStdout().trim(), "Not allowed to override values for: "+baseUrl+", baseurl", "Stdout from an attempt to repo-override the '"+baseUrl+"' (note the case) and 'baseurl' of yumRepo '"+yumRepo.id+"'.");
+			}
 		}
 		
 		// verify that no repo overrides have been added (including the valid parameter for the fun of it)
 		result = clienttasks.repo_override(true,null,(String)null,(String)null,null,null,null,null);
-		Assert.assertEquals(result.getStdout().trim(), "This system does not have any content overrides applied to it.", "Stdout from repo-override --list after attempts to add baseurl overrides.");
+		// new standalone candlepin behavior allows baseurl overrides
+		String expectedStdout = "This system does not have any content overrides applied to it.";
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.10-1") && servertasks.statusStandalone) {	// candlepin commit bbba2dfc1ba44a16fef3d483caf4e7d4eaf63c10
+			//	[root@jsefler-6 ~] subscription-manager repo-override --list
+			//	Repository: content-label-empty-gpg
+			//	  baseurl:           https://cdn.redhat.com/repo-override-testing//
+			//	  mirrorlist_expire: 10
+			//
+			//	Repository: foo-bar
+			//	  baseurl:           https://cdn.redhat.com/repo-override-testing//
+			//	  mirrorlist_expire: 10
+			Assert.assertTrue(!result.getStdout().trim().equals(expectedStdout), "Stdout from repo-override --list after attempts to add baseurl overrides (against a standalone candlepin version >= 2.0.10-1).");
+			Assert.assertTrue(SubscriptionManagerCLITestScript.doesStringContainMatches(result.getStdout(), String.format(SubscriptionManagerTasks.repoOverrideListRepositoryNameValueRegexFormat,yumRepo.id,"baseurl",repoOverrideNameValueMap.get("baseurl"))),"Stdout from repo-override --list after attempts to add baseurl overrides (against a standalone candlepin version >= 2.0.10-1).");
+			Assert.assertTrue(SubscriptionManagerCLITestScript.doesStringContainMatches(result.getStdout(), String.format(SubscriptionManagerTasks.repoOverrideListRepositoryNameValueRegexFormat,yumRepo.id,"mirrorlist_expire",repoOverrideNameValueMap.get("mirrorlist_expire"))),"Stdout from repo-override --list after attempts to add baseurl overrides (against a standalone candlepin version >= 2.0.10-1).");
+			Assert.assertTrue(SubscriptionManagerCLITestScript.doesStringContainMatches(result.getStdout(), String.format(SubscriptionManagerTasks.repoOverrideListRepositoryNameValueRegexFormat,"foo-bar","baseurl",repoOverrideNameValueMap.get("baseurl"))),"Stdout from repo-override --list after attempts to add baseurl overrides (against a standalone candlepin version >= 2.0.10-1).");
+			Assert.assertTrue(SubscriptionManagerCLITestScript.doesStringContainMatches(result.getStdout(), String.format(SubscriptionManagerTasks.repoOverrideListRepositoryNameValueRegexFormat,"foo-bar","mirrorlist_expire",repoOverrideNameValueMap.get("mirrorlist_expire"))),"Stdout from repo-override --list after attempts to add baseurl overrides (against a standalone candlepin version >= 2.0.10-1).");
+		} else {	// original candlepin behavior denies baseurl overrides
+			Assert.assertEquals(result.getStdout().trim(), expectedStdout, "Stdout from repo-override --list after attempts to add baseurl overrides.");
+		}
 		Assert.assertEquals(result.getStderr().trim(), "", "Stderr from repo-override --list after attempts to add baseurl overrides.");
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(/*1*/0), "ExitCode from repo-override --list after attempts to add baseurl overrides.");
 	}
@@ -184,10 +232,20 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(1), "ExitCode from an attempt to add repo-overrides for baseurl, name, and label for repoids: "+repoids);
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
 			Assert.assertEquals(result.getStdout().trim(), "", "Stdout from an attempt add a repo-overrides for baseurl, name, and label for repoids: "+repoids);
-			Assert.assertMatch(result.getStderr().trim(), "Not allowed to override values for: (name, label, baseurl|label, name, baseurl|name, baseurl, label|label, baseurl, name|baseurl, name, label|baseurl, label, name)", "Stderr from an attempt add a repo-overrides for baseurl, name, and label for repoids: "+repoids);
+			String notAllowedToOverrideRegex = "(name, label, baseurl|label, name, baseurl|name, baseurl, label|label, baseurl, name|baseurl, name, label|baseurl, label, name)";
+			if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.10-1") && servertasks.statusStandalone) {	// candlepin commit bbba2dfc1ba44a16fef3d483caf4e7d4eaf63c10
+				log.info("Starting in candlepin version 2.0.10-1, the restriction on overriding the baseurl has been lifted against a standalone candlepin server for the benefit of mirror lists in Satellite.  See https://trello.com/c/6IKbKppZ/7-work-with-satellite-team-to-design-out-mirror-lists-for-subscription-manager");
+				notAllowedToOverrideRegex = "(name, label|label, name)";
+			}
+			Assert.assertMatch(result.getStderr().trim(), "Not allowed to override values for: "+notAllowedToOverrideRegex, "Stderr from an attempt add a repo-overrides for baseurl, name, and label for repoids: "+repoids);
 		} else {
 			Assert.assertEquals(result.getStderr().trim(), "", "Stderr from an attempt add a repo-overrides for baseurl, name, and label for repoids: "+repoids);
-			Assert.assertEquals(result.getStdout().trim(), "Not allowed to override values for: name, label, baseurl", "Stdout from an attempt add a repo-overrides for baseurl, name, and label for repoids: "+repoids);
+			String notAllowedToOverrideRegex = "name, label, baseurl";
+			if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.10-1") && servertasks.statusStandalone) {	// candlepin commit bbba2dfc1ba44a16fef3d483caf4e7d4eaf63c10
+				log.info("Starting in candlepin version 2.0.10-1, the restriction on overriding the baseurl has been lifted against a standalone candlepin server for the benefit of mirror lists in Satellite.  See https://trello.com/c/6IKbKppZ/7-work-with-satellite-team-to-design-out-mirror-lists-for-subscription-manager");
+				notAllowedToOverrideRegex = "name, label";
+			}
+			Assert.assertEquals(result.getStdout().trim(), "Not allowed to override values for: "+notAllowedToOverrideRegex, "Stdout from an attempt add a repo-overrides for baseurl, name, and label for repoids: "+repoids);
 		}
 	}
 	
@@ -670,7 +728,7 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(result.getStderr().trim(), "", "Stderr when calling repo-override --remove with rhsm.manage_repos configured to 0.");
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(0), "ExitCode when calling repo-override --remove with rhsm.manage_repos configured to 0.");
 		
-		// TODO could add more repo-override calls to asert expected message
+		// TODO could add more repo-override calls to assert expected message
 	}
 	@AfterGroups(groups={"setup"}, value={"ReposOverridesWhenManageReposIsOff_Test"})
 	public void restoreRhsmManageReposAfterGroups() {

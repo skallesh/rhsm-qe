@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.json.JSONException;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -19,55 +20,44 @@ import com.redhat.qe.auto.testng.TestNGUtils;
 /**
  * @author skallesh
  * 
- * 
+ * References:
+ *   Design Doc: http://www.candlepinproject.org/docs/candlepin/storage_band_subscriptions.html
+ *   Testcases:  http://etherpad.corp.redhat.com/O7VqZCon7m
+ *   
+ *   Note: This test script was developed for execution against an standalone Candlepin server
+ *   with TESTDATA deployed and assumes that multiple pools are available that provide entitlements
+ *   in 1 TB quantity increments up to 256 TB.  In otherwords the pool quantity is 256.  The system under
+ *   test will be instrumented with a "band.storage.usage" fact in excess of 256 and less than 512 thereby
+ *   permitting tests to stage across multiple pools to achieve compliance.
  */
 @Test(groups = { "StorageBandTests","Tier3Tests" })
 public class StorageBandTests extends SubscriptionManagerCLITestScript{
 	Map<String, String> factsMap = new HashMap<String, String>();
+	int bandStorageUsage = 300;	// TB (choose a value greater that 256 and less than 512)
 
 	/**
 	 * @author skallesh
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@Test(description = "verify if you attach 1 quantity of subscriptions,each covering 256 GB on a system with 1024 GB subscription , installed product is partially subscribed", 
-			groups = { "partiallySubscribeStorageBandSubscription"},dataProvider="getStorageBandSubscriptions", enabled = true)
-	public void partiallySubscribeStorageBandSubscription(Object Bugzilla,SubscriptionPool storagebandpool) throws JSONException, Exception{
+	@Test(description = "verify that attaching a quantity of 1 entitlement from a pool capable of covering 256TB on a system with 300TB of usage, installed product will be partially subscribed", 
+			groups = {"PartiallySubscribeStorageBandSubscription"},dataProvider="getStorageBandSubscriptions", enabled = true)
+	public void PartiallySubscribeStorageBandSubscription(Object Bugzilla,SubscriptionPool storagebandpool) throws JSONException, Exception{
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
-			clienttasks.subscribe(null, null, storagebandpool.poolId, null, null, "1", null, null, null, null, null, null);
-			
-			List<String> providedProductIds = CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, storagebandpool.poolId);
-			List<InstalledProduct> installedProducts = clienttasks.getCurrentlyInstalledProducts();
-			for (String providedProductId : providedProductIds) {
-				InstalledProduct installedProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", providedProductId, installedProducts);
-				if (installedProduct!=null) {	
-			Assert.assertEquals(installedProduct.status,"Partially Subscribed","Status of an installed product provided for by a Storage Band entitlement from a pool that covers only 256GB ");	
+		clienttasks.subscribe(null, null, storagebandpool.poolId, null, null, "1", null, null, null, null, null, null);
 		
-				}
-	}}
-	/**
-	 * @author skallesh
-	 * @throws Exception
-	 * @throws JSONException
-	 */
-	@Test(description = "verify if you attach 2 quantites of subscriptions , each covering that covers 256 GB on a system with 1024 GB subscription , installed product is fully subscribed", 
-			groups = { "FullySubscribeStorageBandSubscription"},dataProvider="getStorageBandSubscriptions", enabled = true)
-	public void FullySubscribeStorageBandSubscription(Object Bugzilla,SubscriptionPool storagebandpool) throws JSONException, Exception{
-		clienttasks.register(sm_clientUsername, sm_clientPassword,
-				sm_clientOrg, null, null, null, null, null, null, null,
-				(String) null, null, null, null, true, null, null, null, null);
-			clienttasks.subscribe(null, null, storagebandpool.poolId, null, null, null, null, null, null, null, null, null);
-		
-			
-			List<String> providedProductIds = CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, storagebandpool.poolId);
-			List<InstalledProduct> installedProducts = clienttasks.getCurrentlyInstalledProducts();
-			for (String providedProductId : providedProductIds) {
-				InstalledProduct installedProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", providedProductId, installedProducts);
-				if (installedProduct!=null) {	
-			Assert.assertEquals(installedProduct.status.trim()," Subscribed","Status of an installed product provided for by a Storage Band entitlement from a pool that covers only 256GB ");	
-		}}
+		List<String> providedProductIds = CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, storagebandpool.poolId);
+		List<InstalledProduct> installedProducts = clienttasks.getCurrentlyInstalledProducts();
+		for (String providedProductId : providedProductIds) {
+			InstalledProduct installedProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", providedProductId, installedProducts);
+			if (installedProduct!=null) {	
+				Assert.assertEquals(installedProduct.status.trim(),"Partially Subscribed","Status of installed product '"+installedProduct.productName+"' provided for by Storage Band entitlement pools that covers only 256TB on a system using '"+bandStorageUsage+"'TBs (that has been subscribed to pool SKU '"+storagebandpool.productId+"' '"+storagebandpool.subscriptionName+"' with quantity 1)");	
+				String expectedReason = String.format("Only supports %dTB of %dTB of storage.", 1, bandStorageUsage);
+				Assert.assertTrue(installedProduct.statusDetails.contains(expectedReason),"Status Details includes expected reason '"+expectedReason+"'.");	
+			}
+		}
 	}
 	
 	/**
@@ -75,7 +65,32 @@ public class StorageBandTests extends SubscriptionManagerCLITestScript{
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@Test(description = "verify if you auto-attach , installed product is fully subscribed", 
+	@Test(description = "verify if you attach one subscription that covers 256TB on a system with 300TB of usage, the installed product will be partially subscribed", 
+			groups = { "SubscribeStorageBandSubscription"},dataProvider="getStorageBandSubscriptions", enabled = true)
+	public void SubscribeStorageBandSubscription(Object Bugzilla,SubscriptionPool storagebandpool) throws JSONException, Exception{
+		clienttasks.register(sm_clientUsername, sm_clientPassword,
+				sm_clientOrg, null, null, null, null, null, null, null,
+				(String) null, null, null, null, true, null, null, null, null);
+		clienttasks.subscribe(null, null, storagebandpool.poolId, null, null, null, null, null, null, null, null, null);
+		
+		List<String> providedProductIds = CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, storagebandpool.poolId);
+		List<InstalledProduct> installedProducts = clienttasks.getCurrentlyInstalledProducts();
+		for (String providedProductId : providedProductIds) {
+			InstalledProduct installedProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", providedProductId, installedProducts);
+			if (installedProduct!=null) {	
+				Assert.assertEquals(installedProduct.status.trim(),"Partially Subscribed","Status of installed product '"+installedProduct.productName+"' provided for by Storage Band entitlement pools that covers only 256TB on a system using '"+bandStorageUsage+"'TBs (that has been subscribed to pool SKU '"+storagebandpool.productId+"' '"+storagebandpool.subscriptionName+"')");	
+				String expectedReason = String.format("Only supports %dTB of %dTB of storage.", Integer.valueOf(storagebandpool.quantity), bandStorageUsage);
+				Assert.assertTrue(installedProduct.statusDetails.contains(expectedReason),"Status Details includes expected reason '"+expectedReason+"'.");	
+			}
+		}
+	}
+	
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	@Test(description = "verify after auto-attaching a system using 300TB of storage, installed storage product is fully subscribed from multiple pools that provide 256TB of coverage.", 
 			groups = { "AutoAttachStorageBandSubscription"},dataProvider="getStorageBandSubscriptions", enabled = true)
 	public void AutoAttachStorageBandSubscription(Object Bugzilla,SubscriptionPool storagebandpool) throws JSONException, Exception{
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
@@ -86,16 +101,17 @@ public class StorageBandTests extends SubscriptionManagerCLITestScript{
 		List<InstalledProduct> installedProducts = clienttasks.getCurrentlyInstalledProducts();
 		for (String providedProductId : providedProductIds) {
 			InstalledProduct installedProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", providedProductId, installedProducts);
-			if (installedProduct!=null) {	
-		Assert.assertEquals(installedProduct.status.trim(),"Subscribed","Status of an installed product provided for by a Storage Band entitlement from a pool that covers only 256GB ");	
-	}}
+			if (installedProduct!=null) {
+				Assert.assertEquals(installedProduct.status.trim(),"Subscribed","Status of installed product '"+installedProduct.productName+"' provided for by Storage Band entitlement pools that covers only 256TB on a system using '"+bandStorageUsage+"'TBs (that has been autosubscribed)");
+			}
+		}
 	}
 	/**
 	 * @author skallesh
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@Test(description = "verify if you auto-heal , installed product is fully subscribed", 
+	@Test(description = "verify if you auto-heal a system using 300TB of storage, installed storage product is fully subscribed from multiple pools that provide 256TB of coverage.", 
 			groups = { "AutoHealStorageBandSubscription"}, dataProvider="getStorageBandSubscriptions",enabled = true)
 	public void AutoHealStorageBandSubscription(Object Bugzilla,SubscriptionPool storagebandpool) throws JSONException, Exception{
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
@@ -107,9 +123,10 @@ public class StorageBandTests extends SubscriptionManagerCLITestScript{
 		List<InstalledProduct> installedProducts = clienttasks.getCurrentlyInstalledProducts();
 		for (String providedProductId : providedProductIds) {
 			InstalledProduct installedProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", providedProductId, installedProducts);
-			if (installedProduct!=null) {	
-		Assert.assertEquals(installedProduct.status.trim(),"Subscribed","Status of an installed product provided for by a Storage Band entitlement from a pool that covers only 256GB ");	
-	}}
+			if (installedProduct!=null) {
+				Assert.assertEquals(installedProduct.status.trim(),"Subscribed","Status of installed product '"+installedProduct.productName+"' provided for by Storage Band entitlement pools that covers only 256TB on a system using '"+bandStorageUsage+"'TBs (that has been autohealed)");	
+			}
+		}
 	}
 	
 	
@@ -150,20 +167,25 @@ public class StorageBandTests extends SubscriptionManagerCLITestScript{
 	
 	@BeforeClass(groups={"setup"})
 	public void CustomiseCephFacts() throws Exception {
+/* unnecessary
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, false, null, null, null);
+unnecessary */
 		factsMap.clear();
-		factsMap.put("band.storage.usage", "1024");
+		factsMap.put("band.storage.usage", String.valueOf(bandStorageUsage));
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
 
 	}
-	@BeforeClass(groups={"setup"})
+	@AfterClass(groups={"setup"})
 	public void RemoveCephFacts() throws Exception {
+/* unnecessary
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, false, null, null, null);
 		clienttasks.removeAllFacts();
+unnecessary */
 
+		clienttasks.deleteFactsFileWithOverridingValues();
 	}
 }

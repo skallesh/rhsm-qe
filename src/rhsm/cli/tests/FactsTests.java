@@ -1206,7 +1206,93 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	
 	
 	
-	
+	@Test(	description="Verify proc_cpuinfo facts are now collected on subscription-manager-1.16.8-2+.  On ppc64 systems, also verify that a virt.uuid is collected on a pSeries platform.",
+			groups={"AcceptanceTests","blockedByBug-1300805","blockedByBug-1300816"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void VerifyProcCpuInfoCollection_Test() {
+		// Reference: https://github.com/RedHatQE/rhsm-qe/issues/527
+		
+		if (clienttasks.isPackageVersion("subscription-manager", "<", "1.16.8-2")) {	// subscription-manager commit f8416137a3b426aa54608116e005df7273abfada 1300805: Add support for ppc64 virt.uuid
+			throw new SkipException("Collection of proc_cpuinfo facts was not available in this version of subscription-manager '"+clienttasks.installedPackageVersionMap.get("subscription-manager")+"'.");
+		}
+		
+		// this is the list of base facts in English
+		Map<String,String> procCpuInfoFacts = clienttasks.getFacts("proc_cpuinfo.common");
+		
+		// assert proc_cpuinfo.common facts are now collected on x86_64/ppc64/ppc64le/aarch64
+		ArrayList<String> procCpuInfoArches = new ArrayList<String>(Arrays.asList("x86_64","ppc64","ppc64le","aarch64"));
+		if (procCpuInfoArches.contains(clienttasks.arch)) {
+			Assert.assertTrue(!procCpuInfoFacts.isEmpty(), "proc_cpuinfo.common facts are now collected on '"+clienttasks.arch+"'.");
+		} else {
+			Assert.assertTrue(procCpuInfoFacts.isEmpty(), "Not expecting proc_cpuinfo.common facts to be collected on '"+clienttasks.arch+"'.  (Current list of expected arches is "+procCpuInfoArches+")");			
+		}
+		
+		// assert specific proc_cpuinfo.common facts are now collected on ppc64*
+		if (clienttasks.arch.startsWith("ppc64")) {
+			for (String fact : new String[]{"proc_cpuinfo.common.machine","proc_cpuinfo.common.model","proc_cpuinfo.common.platform"}) {
+				Assert.assertNotNull(procCpuInfoFacts.get(fact), "Expected fact '"+fact+"' was collected on '"+clienttasks.arch+"'.");		
+			}
+			
+// HAVING SECOND THOUGTS ON THE VALIDITY OF THIS ASSERTION BLOCK
+if (false) {
+			// assert that virt.uuid is set on a pSeries ppc64 System
+			if (procCpuInfoFacts.get("proc_cpuinfo.common.platform").toLowerCase().contains("pSeries".toLowerCase())) {
+				String virtUuid = clienttasks.getFactValue("virt.uuid");
+				Assert.assertNotNull(virtUuid, "The virt.uuid fact is set on a pSeries '"+clienttasks.arch+"' platform.");
+				
+				// assert virt.uuid not Unknown
+				// TEMPORARY WORKAROUND FOR BUG
+				String bugId = "1310846"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1310846 - The virt.uuid fact value 'Unknown' is not Unknown on a pSeries 'ppc64' platform. expected:<true> but was:<false>
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				if (invokeWorkaroundWhileBugIsOpen) {
+					log.warning("Skipping the assertion of fact virt.uuid is not Unknown on a '"+clienttasks.arch+"' '"+procCpuInfoFacts.get("proc_cpuinfo.common.platform")+"' platform.");
+				} else
+				// END OF WORKAROUND
+				Assert.assertTrue(!virtUuid.toLowerCase().equalsIgnoreCase("Unknown"), "The virt.uuid fact value '"+virtUuid+"' is not Unknown on a pSeries '"+clienttasks.arch+"' platform. ");
+				
+				// assert virt.is_guest is True
+				// TEMPORARY WORKAROUND FOR BUG
+				/*String*/ bugId = "1072524"; /*boolean*/ invokeWorkaroundWhileBugIsOpen = true;	// Bug 1072524 - Add support for detecting ppc64 LPAR as virt guests
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				if (invokeWorkaroundWhileBugIsOpen) {
+					log.warning("Skipping the assertion of fact virt.is_guest:True on a '"+clienttasks.arch+"' '"+procCpuInfoFacts.get("proc_cpuinfo.common.platform")+"' platform.");
+				} else
+				// END OF WORKAROUND
+				Assert.assertTrue(Boolean.valueOf(clienttasks.getFactValue("virt.is_guest")), "The virt.is_guest fact value is true on a pSeries '"+clienttasks.arch+"' platform. ");
+			}
+}
+// I THINK THE FOLLOWING IS BETTER
+			
+			// assert that virt.uuid is populated when /proc/device-tree/vm,uuid is known	// Bug 1300805 - ppc64 kvm guests do not collect a virt.uuid fact.
+			String procDeviceTreeVmUuidFile = "/proc/device-tree/vm,uuid";
+			if (RemoteFileTasks.testExists(client, procDeviceTreeVmUuidFile)) {
+				String expectedVirtUuid = client.runCommandAndWait("cat "+procDeviceTreeVmUuidFile).getStdout().trim();
+				String virtUuid = clienttasks.getFactValue("virt.uuid");
+				Assert.assertNotNull(virtUuid, "The virt.uuid fact is set on a '"+clienttasks.arch+"' platform when "+procDeviceTreeVmUuidFile+" is defined.");
+				Assert.assertEquals(virtUuid, expectedVirtUuid, "The virt.uuid fact on a '"+clienttasks.arch+"' '"+procCpuInfoFacts.get("proc_cpuinfo.common.model")+"' '"+procCpuInfoFacts.get("proc_cpuinfo.common.platform")+"' platform should match the contents of "+procDeviceTreeVmUuidFile);
+								
+				// assert virt.is_guest is True
+				// TEMPORARY WORKAROUND FOR BUG
+				String bugId = "1072524"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1072524 - Add support for detecting ppc64 LPAR as virt guests
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				if (invokeWorkaroundWhileBugIsOpen) {
+					log.warning("Skipping the assertion of fact virt.is_guest:True on a '"+clienttasks.arch+"' '"+procCpuInfoFacts.get("proc_cpuinfo.common.model")+"' '"+procCpuInfoFacts.get("proc_cpuinfo.common.platform")+"' platform.");
+				} else
+				// END OF WORKAROUND
+				Assert.assertTrue(Boolean.valueOf(clienttasks.getFactValue("virt.is_guest")), "The virt.is_guest fact value is true on a '"+clienttasks.arch+"' '"+procCpuInfoFacts.get("proc_cpuinfo.common.platform")+"' platform.");
+			} else {
+				// assert virt.is_guest is False
+				Assert.assertEquals(Boolean.valueOf(clienttasks.getFactValue("virt.is_guest")), Boolean.FALSE, "The virt.is_guest fact value is false on a '"+clienttasks.arch+"' '"+procCpuInfoFacts.get("proc_cpuinfo.common.model")+"' '"+procCpuInfoFacts.get("proc_cpuinfo.common.platform")+"' platform.");
+				// assert virt.uuid is null
+				Assert.assertNull(clienttasks.getFactValue("virt.uuid"), "The virt.uuid fact is null on a '"+clienttasks.arch+"' '"+procCpuInfoFacts.get("proc_cpuinfo.common.model")+"' '"+procCpuInfoFacts.get("proc_cpuinfo.common.platform")+"' platform.");
+			}
+		}
+		
+		// TODO assert specific proc_cpuinfo.common facts are now collected on x86_64
+		
+		// TODO assert specific proc_cpuinfo.common facts are now collected on aarch64
+	}
 	
 	
 	

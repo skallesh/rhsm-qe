@@ -1337,7 +1337,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager : repos list with proxy set to a real server that is not truely a proxy (e.g. www.redhat.com)",
-			groups={"blockedByBug-968820"},
+			groups={"blockedByBug-968820","blockedByBug-1301215"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
 	public void ReposListWithProxyTimeoutBug968820_Test() {
@@ -1353,7 +1353,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		
 		// repos --list --proxy=www.redhat.com
 		String command = clienttasks.command+" repos --list --proxy=www.redhat.com";
-		Long timeoutMS = Long.valueOf(5/*min*/*60*1000);	// do not wait any longer than this many milliseconds
+		Long timeoutMS = Long.valueOf(8/*min*/*60*1000);	// do not wait any longer than this many milliseconds
 		SSHCommandResult result= client.runCommandAndWait(command, timeoutMS);
 		//	201503301409:07.031 - FINE: ssh root@jsefler-os6.usersys.redhat.com subscription-manager repos --list --proxy=www.redhat.com
 		//	201503301410:07.487 - FINE: Stdout: 
@@ -1487,7 +1487,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 
 	
 	@Test(	description="subscription-manager : register when no_proxy environment variable matches our hostname regardless of proxy configurations and environment variable (Positive and Negative Variations)",
-			groups={"blockedByBug-1266608"},
+			groups={"blockedByBug-1266608","blockedByBug-1285010"},
 			dataProvider="getRegisterAttemptsToVerifyHonoringNoProxyEnvironmentVariableData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	

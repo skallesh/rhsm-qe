@@ -37,11 +37,13 @@
 (defn ^{BeforeClass {:groups ["setup"]}}
   setup [_]
   (try+
-    (if (= "RHEL7" (get-release)) (base/startup nil))
+    (when (= "RHEL7" (get-release))
+      (base/startup nil))
     (tasks/restart-app)
     (tasks/unregister)
     (catch [:type :not-registered] _)
     (catch Exception e
+      (log/warn "caught " e)
       (reset! (skip-groups :repo) true)
       (throw e))))
 
@@ -97,49 +99,47 @@
            (sleep 5000)
            (throw e)))))
 
-(defn select-random-repo
-  "This is a helper function to select random repo which does
-   does not have both overrides enabled"
+(defn get-repo-information
+  "Returns repository information, including whether a repo has been modified or not
+
+  Returns a map of
+  repo-id: name of the repo
+  index: the row in the table
+  modified: true if either the enabled or gpgcheck columns were changed, false otherwise"
   []
-  (sleep 3000)
-   (if (= 0 (tasks/ui getrowcount :repo-table))
-      (throw (Exception. "Repositories table is not populated")))
-   (let [row-count (tasks/ui getrowcount :repo-table)
-         list-row (into [] (range row-count))
-         row-num (nth list-row (rand (count list-row)))
-         repo (tasks/ui getcellvalue :repo-table row-num 2)]
-     (tasks/ui selectrow :repo-table repo)
-     ;;(sleep 2000)
-     (if (check-bz-open? "1155954")
-       (do
-         (log/info (str "======= Work Around in select-random-repo
-                         as Bug 1155954 is not resolved"))
-         ;; Work around catches exception and ignores it.
-         ;; Why Workaround ?? At the moment 'checkrow' fails because
-         ;;                   there is a performance issue in the repo
-         ;;                   dialog were the checkbox takes a while
-         ;;                   before it can be accessed/asserted.
-         (exception-handler row-num 0)
-         (exception-handler row-num 1))
-         ;; No work around. If the performance improvement is as expected
-         ;; the sleep command embedded inbetween can be removed.
-       (do
-         (tasks/ui checkrow :repo-table row-num 1)
-         (sleep 2000)
-         (tasks/ui checkrow :repo-table row-num 0)
-         (sleep 2000)))
-     (if-not (and (tasks/has-state? :repo-remove-override "sensitive")
-                  (tasks/has-state? :repo-remove-override "enabled")
-                  (< @counter 10))
-       (do
-         (reset! counter (inc @counter))
-         (assert-and-remove-all-override :repo repo)
-         (select-random-repo)))
-     (if-not (= @counter 10)
-       (do
-         (assert-and-remove-all-override :repo repo)
-         (reset! random_row_num row-num))))
-   (reset! counter 0))
+  (let [rc (tasks/ui getrowcount :repo-table)
+        all-repos (for [i (range rc)]
+                    (do
+                      (tasks/ui selectrowindex :repo-table i)
+                      (let [index i
+                            repo-id (tasks/ui getcellvalue :repo-table i 2)
+                            ;; If the Remove Overrides Button is enabled, then the row was modified
+                            modified (or (tasks/has-state? :repo-remove-override "sensitive")
+                                         (tasks/has-state? :repo-remove-override "enabled"))]
+                        {:repo-id repo-id :index index :modified modified})))]
+    all-repos))
+
+(defn get-unmodified-repos
+  []
+  (let [repos (get-repo-information)]
+    (vec (filter #(not (:modified %)) repos))))
+
+(defn get-repo-by-id
+  "Returns the map of the repo-id, index, and whether it is modified or not, based on name"
+  [id]
+  (first (filter #(= id (:repo-id %)) (get-repo-information))))
+
+(defn get-repo-by-index
+  "Returns the map of the name, index and if the repo was modified or not based on index in the table"
+  [index]
+  (first (filter #(= index (:index %)) (get-repo-information))))
+
+(defn select-random-repo
+  "Finds a random repo which has not been modified"
+  []
+  (let [random-repos (shuffle (get-repo-information))
+        unmodified (filter #(= false (:modified %)) random-repos)]
+    (rand-nth unmodified)))
 
 (defn ^{Test {:groups ["repo"
                        "tier1"
@@ -201,9 +201,10 @@
 
 (defn ^{Test {:groups ["repo"
                        "tier2"
-                       "blockedByBug-1095938"]}}
+                       "blockedByBug-1095938"]
+              :enabled false}}
   check_repo_remove_override_button
-  "This tests if repo-override button is enabled when a row is checked"
+  "This tests if repo-override button is enabled when a row is checked and applied"
   [_]
   (try
     (if (tasks/ui showing? :register-system)
@@ -214,37 +215,40 @@
     (if (= 0 (tasks/ui getrowcount :repo-table))
       (throw (Exception. "Repositories table is not populated"))
       (do
-        (select-random-repo)
-        (if (nil? @random_row_num)
-          (throw (SkipException.
-                  (str "Repo without overrides not found"))))
-        (tasks/ui selectrowindex :repo-table @random_row_num)
-        (verify (not (tasks/has-state? :repo-remove-override "enabled")))
-        (if (check-bz-open? "1155954")
-          (do
-            (log/info (str "======= Work Around in check_repo_remove_override_button as Bug 1155954 is not resolved"))
-            ;; Workaround: Catches exception and ignores it.
-            ;; Why Workaround ?? At the moment 'checkrow' fails because
-            ;;                   there is a performance issue in the repo
-            ;;                   dialog were the checkbox takes a while
-            ;;                   before it can be accessed/asserted.
-            (exception-handler @random_row_num 0)
-            (exception-handler @random_row_num 1))
-          ;; No work around. If the performance improvement is as expected
-          ;; the sleep command embedded inbetween can be removed.
-          (do
-            (tasks/ui checkrow :repo-table @random_row_num 0)
-            (sleep 1000)
-            (tasks/ui checkrow :repo-table @random_row_num 1)
-            (sleep 1000)))
-        (sleep 2000)
-        (verify (tasks/has-state? :repo-remove-override "enabled"))
-        (assert-and-remove-all-override)
-        (sleep 2000)
-        (verify (not (tasks/has-state? :repo-remove-override "enabled")))))
+        (let [rand-repo (select-random-repo)
+              random-row-num (if (nil? rand-repo)
+                               (throw (SkipException.
+                                        (str "Repo without overrides not found")))
+                               (:index rand-repo))]
+          (log/info "Using repository " (:repo-id rand-repo) "index = " (:index rand-repo))
+          (tasks/ui selectrowindex :repo-table random-row-num)
+          (verify (not (tasks/has-state? :repo-remove-override "enabled")))
+          (if (check-bz-open? "1155954")
+            (do
+              (log/info (str "======= Work Around in check_repo_remove_override_button as Bug 1155954 is not resolved"))
+              ;; Workaround: Catches exception and ignores it.
+              ;; Why Workaround ?? At the moment 'checkrow' fails because
+              ;;                   there is a performance issue in the repo
+              ;;                   dialog were the checkbox takes a while
+              ;;                   before it can be accessed/asserted.
+              (exception-handler random-row-num 0)
+              (exception-handler random-row-num 1))
+            ;; No work around. If the performance improvement is as expected
+            ;; the sleep command embedded inbetween can be removed.
+            (do
+              (tasks/ui checkrow :repo-table random-row-num 0)
+              (sleep 1000)
+              (tasks/ui checkrow :repo-table random-row-num 1)
+              (sleep 1000)
+              (tasks/ui click :apply)))
+          (sleep 2000)
+          (verify (tasks/has-state? :repo-remove-override "enabled"))
+          (assert-and-remove-all-override)
+          (sleep 2000)
+          (verify (not (tasks/has-state? :repo-remove-override "enabled"))))))
     (finally
-     (tasks/ui click :close-repo-dialog)
-     (tasks/unsubscribe_all))))
+      (tasks/ui click :close-repo-dialog)
+      (tasks/unsubscribe_all))))
 
 (defn toggle-checkbox-state
   "This is a helper function to toggle state of checkbox"
@@ -442,28 +446,39 @@
     (tasks/ui click :close-repo-dialog))
   (tasks/unsubscribe_all))
 
+;; Automates manual test case
+(defn ^{Test {:groups ["repo"
+                       "acceptance"]
+              :description "Verfies that the in the Repository Details that the Name and Base Url
+                            fields are correct by comparing to the redhat.repo file, running
+                            subscription-manager repos --list, and by reading the product.pem data"}}
+  verify_repo_name_and_url
+  [_]
+  (tasks/restart-app :reregister? true)
+)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; DATA PROVIDERS
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn ^{DataProvider {:name "repolist"}}
-  subscribed_repos [_ & {:keys [debug]
-                         :or {debug false}}]
+  subscribed_repos
+  [_ & {:keys [debug]
+        :or {debug false}}]
   (log/info (str "======= Starting DataProvider: " ns-log " subscribed_repos()"))
-  (if-not (assert-skip :repo)
+  (if (assert-skip :repo)
+    (to-array-2d [])
     (do
       (tasks/restart-app)
       (if (tasks/ui showing? :register-system)
         (tasks/register-with-creds))
-      (assert-and-subscribe-all)
+      (tasks/subscribe-random)
       (assert-and-open-repo-dialog)
       (tasks/ui waittillwindowexist :repositories-dialog 10)
       (sleep 3000)
-      (let [repos (into [] (map vector (tasks/get-table-elements
-                                        :repo-table 2)))]
+      (let [repos (vec (map vector (tasks/get-table-elements :repo-table 2)))]
         (if-not debug
           (to-array-2d repos)
-          repos)))
-    (to-array-2d [])))
+          repos)))))
 
 (gen-class-testng)

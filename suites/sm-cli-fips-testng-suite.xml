@@ -1,7 +1,26 @@
 <!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
 
+<!-- FIPS NOTES:
+How can I make RHEL 6 or RHEL 7 FIPS 140-2 compliant?
+    https://access.redhat.com/solutions/137833
+    
+Add Beaker Task to make provision system in FIPS mode
+    <task name="/distribution/fips/setup-fips-enabled" role="STANDALONE"/>
+    
+Historical Bugzillas related to FIPS:
+	Bug 902357 - yum crashes in FIPS if a remote repository uses MD5 checksum
+    Bug 920524 - Failed to register a system which in the FIPS mode.
+    Bug 1007707 - Can't use yum to install "dracut-fips" in rhel6.5-alpha-1.1
+    Bug 1008822 - Can't log in the system when use "fips=1" in the grub.conf
+    Bug 1018459 - Failed reboot the system with FIPS enabled.
+    Bug 1045329 - subscription-manager can't work in fips mode.
+    Bug 1158836 - Can't log into the GUI desktop after enable the FIPS mode in RHEL7.1
+
+-->
+
+
 <!-- Running on the command line:  java -cp `lein classpath` org.testng.TestNG [testng options] [suitefile] -->
-<suite name="CLI Acceptance TestSuite">
+<suite name="CLI FIPS TestSuite">
 
 	<listeners>
 		<listener class-name="com.redhat.qe.auto.testng.TestNGListener" />
@@ -10,8 +29,8 @@
 		<listener class-name="org.testng.reporters.XMLReporter" />
 	</listeners>
 
-	<!-- CLI ACCEPTANCE TESTS -->
-	
+	<!-- CLI FIPS TESTS -->
+<!--
 	<test name="CLI: Help Tests">
 		<classes>
 			<class name="rhsm.cli.tests.HelpTests" />
@@ -19,7 +38,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="AcceptanceTests" />
+				<include name="FipsTests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -32,7 +51,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="AcceptanceTests" />
+				<include name="FipsTests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -45,7 +64,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="AcceptanceTests" />
+				<include name="FipsTests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -58,7 +77,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="AcceptanceTests" />
+				<include name="FipsTests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -71,7 +90,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="AcceptanceTests" />
+				<include name="FipsTests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -84,7 +103,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="AcceptanceTests" />
+				<include name="FipsTests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -97,7 +116,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="AcceptanceTests" />
+				<include name="FipsTests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -110,7 +129,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="AcceptanceTests" />
+				<include name="FipsTests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -123,7 +142,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="AcceptanceTests" />
+				<include name="FipsTests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -136,7 +155,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="AcceptanceTests" />
+				<include name="FipsTests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -149,7 +168,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="AcceptanceTests" />
+				<include name="FipsTests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -162,7 +181,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="AcceptanceTests" />
+				<include name="FipsTests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -175,7 +194,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="AcceptanceTests" />
+				<include name="FipsTests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -188,7 +207,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="AcceptanceTests" />
+				<include name="FipsTests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -201,7 +220,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="AcceptanceTests" />
+				<include name="FipsTests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -214,7 +233,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="AcceptanceTests" />
+				<include name="FipsTests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -227,7 +246,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="AcceptanceTests" />
+				<include name="FipsTests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -240,7 +259,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="AcceptanceTests" />
+				<include name="FipsTests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -253,7 +272,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="AcceptanceTests" />
+				<include name="FipsTests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -266,7 +285,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="AcceptanceTests" />
+				<include name="FipsTests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -279,7 +298,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="AcceptanceTests" />
+				<include name="FipsTests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -292,7 +311,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="AcceptanceTests" />
+				<include name="FipsTests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -305,7 +324,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="AcceptanceTests" />
+				<include name="FipsTests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -318,7 +337,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="AcceptanceTests" />
+				<include name="FipsTests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -331,7 +350,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="AcceptanceTests" />
+				<include name="FipsTests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -344,7 +363,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="AcceptanceTests" />
+				<include name="FipsTests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -357,7 +376,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="AcceptanceTests" />
+				<include name="FipsTests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -370,7 +389,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="AcceptanceTests" />
+				<include name="FipsTests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -383,7 +402,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="AcceptanceTests" />
+				<include name="FipsTests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -396,7 +415,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="AcceptanceTests" />
+				<include name="FipsTests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -409,7 +428,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="AcceptanceTests" />
+				<include name="FipsTests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -422,7 +441,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="AcceptanceTests" />
+				<include name="FipsTests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -435,7 +454,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="AcceptanceTests" />
+				<include name="FipsTests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -448,7 +467,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="AcceptanceTests" />
+				<include name="FipsTests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -461,7 +480,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="AcceptanceTests" />
+				<include name="FipsTests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -474,7 +493,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="AcceptanceTests" />
+				<include name="FipsTests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -487,7 +506,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="AcceptanceTests" />
+				<include name="FipsTests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -500,7 +519,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="AcceptanceTests" />
+				<include name="FipsTests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -513,7 +532,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="AcceptanceTests" />
+				<include name="FipsTests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -526,7 +545,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="AcceptanceTests" />
+				<include name="FipsTests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -539,7 +558,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="AcceptanceTests" />
+				<include name="FipsTests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -552,7 +571,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="AcceptanceTests" />
+				<include name="FipsTests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -565,12 +584,12 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="AcceptanceTests" />
+				<include name="FipsTests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
 	</test>
-	
+-->	
 	<test name="CLI: Content Tests">
 		<classes>
 			<class name="rhsm.cli.tests.ContentTests" />
@@ -578,12 +597,12 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="AcceptanceTests" />
+				<include name="FipsTests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
 	</test>
-	
+<!--
 	<test name="CLI: SearchDisabledRepos Tests">
 		<classes>
 			<class name="rhsm.cli.tests.SearchDisabledReposTests" />
@@ -591,7 +610,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="AcceptanceTests" />
+				<include name="FipsTests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -604,7 +623,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="AcceptanceTests" />
+				<include name="FipsTests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -617,12 +636,12 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="AcceptanceTests" />
+				<include name="FipsTests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
 	</test>
-		
+	
 	<test name="CLI: Modifier Tests">
 		<classes>
 			<class name="rhsm.cli.tests.ModifierTests" />
@@ -630,7 +649,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="AcceptanceTests" />
+				<include name="FipsTests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -643,7 +662,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="AcceptanceTests" />
+				<include name="FipsTests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -656,7 +675,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="AcceptanceTests" />
+				<include name="FipsTests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -669,7 +688,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="AcceptanceTests" />
+				<include name="FipsTests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -682,7 +701,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="AcceptanceTests" />
+				<include name="FipsTests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -695,7 +714,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="AcceptanceTests" />
+				<include name="FipsTests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -708,7 +727,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="AcceptanceTests" />
+				<include name="FipsTests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -721,7 +740,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="AcceptanceTests" />
+				<include name="FipsTests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -734,7 +753,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="AcceptanceTests" />
+				<include name="FipsTests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -747,7 +766,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="AcceptanceTests" />
+				<include name="FipsTests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -760,7 +779,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="AcceptanceTests" />
+				<include name="FipsTests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -773,7 +792,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="AcceptanceTests" />
+				<include name="FipsTests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -786,7 +805,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="AcceptanceTests" />
+				<include name="FipsTests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -799,7 +818,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="AcceptanceTests" />
+				<include name="FipsTests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -812,7 +831,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="AcceptanceTests" />
+				<include name="FipsTests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -825,7 +844,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="AcceptanceTests" />
+				<include name="FipsTests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -838,7 +857,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="AcceptanceTests" />
+				<include name="FipsTests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -851,7 +870,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="AcceptanceTests" />
+				<include name="FipsTests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -864,12 +883,12 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="AcceptanceTests" />
+				<include name="FipsTests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
 	</test>
-	
+-->
 	<test name="CLI: SELinux Tests">
 		<classes>
 			<class name="rhsm.cli.tests.SELinuxTests" />
@@ -877,7 +896,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="AcceptanceTests" />
+				<include name="FipsTests" />
 				<include name="cleanup" />
 			</run>
 		</groups>

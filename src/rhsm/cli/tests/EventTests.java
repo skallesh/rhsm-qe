@@ -175,7 +175,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
 		// 7/30/2012 updating consumer's autoheal to prevent an auto 'ENTITLEMENT CREATED' event
-		CandlepinTasks.setAutohealForConsumer(sm_clientUsername, sm_clientPassword, SubscriptionManagerBaseTestScript.sm_serverUrl, consumerCert.consumerid, false);
+		CandlepinTasks.setAutohealForConsumer(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerCert.consumerid, false);
 
 		// get the owner and consumer feeds before we test the firing of a new event
 		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,consumerCert.consumerid);
@@ -189,6 +189,11 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 // debugTesting randomly picked standalone non-zero virt_limit pools
 //testPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", "awesomeos-virt-4", pools);
 //testPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", "awesomeos-virt-unlimited", pools);
+//testPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", "awesomeos-server-basic-dc", pools);
+//testPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", "8a90879051a127080151a12847570758", pools);
+//testPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("contract", "", pools);
+//testPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("subscriptionType", "Standard (Temporary)", pools);
+
 		//clienttasks.subscribeToSubscriptionPoolUsingPoolId(testPool);	// RHEL59: THIS IS GENERATING EXTRA CONSUMER MODIFIED EVENTS THAT WE DON'T REALLY WANT TO TEST 
 		clienttasks.subscribe(null, null, testPool.poolId, null, null, null, null, null, null, null, null, null);
 		List<String> newEventTitles = new ArrayList<String>();
@@ -227,7 +232,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager: events: Pool Modified and Entitlement Modified is sent over an RSS atom feed.",
-			groups={"blockedByBug-721141","PoolModifiedAndEntitlementModified_Test","blockedByBug-645597"},
+			groups={"blockedByBug-721141","PoolModifiedAndEntitlementModified_Test","blockedByBug-645597","blockedByBug-1303242"},
 			dependsOnGroups={"EntitlementCreated_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
@@ -312,8 +317,8 @@ public class EventTests extends SubscriptionManagerCLITestScript{
         
         //ProductSubscription newConsumedProductSubscription = ProductSubscription.findFirstInstanceWithMatchingFieldFromList("serialNumber", originalConsumedProductSubscription.serialNumber, clienttasks.getCurrentlyConsumedProductSubscriptions());	// can't do this because the serialNumber changes after the pool and entitlement have been modified
         ProductSubscription newConsumedProductSubscription = ProductSubscription.findFirstInstanceWithMatchingFieldFromList("productId", originalConsumedProductSubscription.productId, clienttasks.getCurrentlyConsumedProductSubscriptions());
-        //AN org.xmlpull.v1.XmlPullParserException IS THROWN WHEN THIS FAILS: Assert.assertEquals(newConsumedProductSubscription.startDate, newStartDate, "After modifing pool '"+testPool.poolId+"' by subtracting one month from startdate and refreshing entitlements, the consumed product subscription now reflects the modified field.");
-        Assert.assertEquals(ProductSubscription.formatDateString(newConsumedProductSubscription.startDate), ProductSubscription.formatDateString(newStartDate), "After modifing pool '"+testPool.poolId+"' by subtracting one month from startdate and refreshing entitlements, the consumed product subscription now reflects the modified field.");
+        //AN org.xmlpull.v1.XmlPullParserException IS THROWN WHEN THIS FAILS: Assert.assertEquals(newConsumedProductSubscription.startDate, newStartDate, "After modifying pool '"+testPool.poolId+"' by subtracting one month from startdate and refreshing entitlements, the consumed product subscription now reflects the modified field.");
+        Assert.assertEquals(ProductSubscription.formatDateString(newConsumedProductSubscription.startDate), ProductSubscription.formatDateString(newStartDate), "After modifying pool '"+testPool.poolId+"' by subtracting one month from startdate and refreshing entitlements, the consumed product subscription now reflects the modified field.");
 	}
 	
 	
@@ -506,6 +511,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		SyndFeed oldFeed = CandlepinTasks.getSyndFeed(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
 
         // do something that will fire a create pool event
+/* DELETEME
 		if (servertasks.branch.equals("ALPHA") || servertasks.branch.equals("BETA") || servertasks.branch.matches("^candlepin-0\\.[012]\\..*$")) {
 			// candlepin branch 0.2-  (createPoolUsingCPC was deprecated in candlepin branch 0.3+)
 			testJSONPool = servertasks.createPoolUsingCPC(testJSONProduct.getString("id"), testProductId+" Test Product", testJSONOwner.getString("id"), "99");
@@ -517,6 +523,28 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 				JSONObject jobDetail = servertasks.refreshPoolsUsingCPC(testOwnerKey,true);
 				CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,jobDetail,"FINISHED", 10*1000, 3);
 			}
+		}
+*/
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.10")){	// candlepin commit 50d3bdcac7c9ad7f94dfd140a6ebfccc2512ee48	 /root/candlepin/server/client/ruby/candlepin_api.rb:926:in `create_subscription': Deprecated API. Please use create_pool or HostedTest resources (RuntimeError)
+			//	201602221354:11.019 - FINE: ssh root@jsefler-f22-candlepin.usersys.redhat.com cd /root/candlepin/server/client/ruby; ./cpc create_subscription "newOwner1456166653160" "newProduct1456166653160"
+			//	201602221354:11.960 - FINE: Stdout:  
+			//	201602221354:11.960 - FINE: Stderr: 
+			//	/root/candlepin/server/client/ruby/candlepin_api.rb:926:in `create_subscription': Deprecated API. Please use create_pool or HostedTest resources (RuntimeError)
+			//		from ./cpc:130:in `<main>'
+			
+			// candlepin-2.0.10+  (createSubscriptionUsingCPC deprecation was enforced in candlepin 2.0.10 commit 50d3bdcac7c9ad7f94dfd140a6ebfccc2512ee48 )
+			testJSONPool = servertasks.createPoolUsingCPC(testOwnerKey, testJSONProduct.getString("id"));
+		} else if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "0.3")) {
+			// candlepin branch 0.3+
+			testJSONPool = servertasks.createSubscriptionUsingCPC(testOwnerKey, testJSONProduct.getString("id"));
+			
+			if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, "<", "2.0.0")){	// no need to refresh pools in candlepin 2.0
+				JSONObject jobDetail = servertasks.refreshPoolsUsingCPC(testOwnerKey,true);
+				CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,jobDetail,"FINISHED", 10*1000, 3);
+			}
+		} else {
+			// candlepin branch 0.2-  (createPoolUsingCPC was deprecated in candlepin branch 0.3+)
+			testJSONPool = servertasks.createPoolUsingCPC(testJSONProduct.getString("id"), testProductId+" Test Product", testJSONOwner.getString("id"), "99");
 		}
 		String[] newEventTitles = new String[]{"POOL CREATED"};
 
@@ -551,8 +579,9 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		SyndFeed oldFeed = CandlepinTasks.getSyndFeed(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
 
         // do something that will fire a delete pool event
+/* DELETEME
 		if (servertasks.branch.equals("ALPHA") || servertasks.branch.equals("BETA") || servertasks.branch.matches("^candlepin-0\\.[012]\\..*$")) {
-			// candlepin branch 0.2-  (createPoolUsingCPC was deprecated in candlepin branch 0.3+)
+			// candlepin branch 0.2-  (deleteSubscriptionUsingCPC was deprecated in candlepin branch 0.3+)
 			servertasks.deletePoolUsingCPC(testJSONPool.getString("id"));
 		} else {
 			// candlepin branch 0.3+
@@ -561,6 +590,27 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 				JSONObject jobDetail = servertasks.refreshPoolsUsingCPC(testOwnerKey,true);
 				CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,jobDetail,"FINISHED", 10*1000, 3);
 			}
+		}
+*/
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.10")){	// candlepin commit 50d3bdcac7c9ad7f94dfd140a6ebfccc2512ee48	 /root/candlepin/server/client/ruby/candlepin_api.rb:934:in `delete_subscription': Deprecated API. Please use delete_pool or HostedTest resources (RuntimeError)
+			//	201602221609:59.292 - FINE: ssh root@jsefler-f22-candlepin.usersys.redhat.com cd /root/candlepin/server/client/ruby; ./cpc delete_subscription "8a908790530a4f1801530ad04188158b" (com.redhat.qe.tools.SSHCommandRunner.run)
+			//	201602221610:00.269 - FINE: Stdout:  (com.redhat.qe.tools.SSHCommandRunner.runCommandAndWait)
+			//	201602221610:00.269 - FINE: Stderr: 
+			//	/root/candlepin/server/client/ruby/candlepin_api.rb:934:in `delete_subscription': Deprecated API. Please use delete_pool or HostedTest resources (RuntimeError)
+			//		from ./cpc:130:in `<main>'
+			
+			// candlepin-2.0.10+  (createSubscriptionUsingCPC deprecation was enforced in candlepin 2.0.10 commit 50d3bdcac7c9ad7f94dfd140a6ebfccc2512ee48 )
+			servertasks.deletePoolUsingCPC(testJSONPool.getString("id"));
+		} else if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "0.3")) {
+			// candlepin branch 0.3+
+			servertasks.deleteSubscriptionUsingCPC(testJSONPool.getString("id"));
+			if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, "<", "2.0.0")){	// no more refresh pools in candlepin 2.0
+				JSONObject jobDetail = servertasks.refreshPoolsUsingCPC(testOwnerKey,true);
+				CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,jobDetail,"FINISHED", 10*1000, 3);
+			}
+		} else {
+			// candlepin branch 0.2-  (deleteSubscriptionUsingCPC was deprecated in candlepin branch 0.3+)
+			servertasks.deletePoolUsingCPC(testJSONPool.getString("id"));
 		}
 		String[] newEventTitles = new String[]{"POOL DELETED"};
 		

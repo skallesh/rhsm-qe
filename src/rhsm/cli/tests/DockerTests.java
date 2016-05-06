@@ -55,7 +55,13 @@ import com.redhat.qe.tools.SSHCommandResult;
  *     docker-registry.usersys.redhat.com/brew/rhel7:latest
  *     docker-registry.usersys.redhat.com/brew/rhel6:latest
  *     
- *     
+ * Note: To enable/disable repos within a running container, use yum-config-manager.
+ *   https://access.redhat.com/solutions/1443553
+ *   Examples:
+ *     https://bugzilla.redhat.com/show_bug.cgi?id=1329349#c4
+ *     https://bugzilla.redhat.com/show_bug.cgi?id=1329349#c5
+ * 
+ * 
  */
 @Test(groups={"DockerTests","Tier3Tests"})
 public class DockerTests extends SubscriptionManagerCLITestScript {
@@ -238,6 +244,11 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 		dockerRpmInstallUrls.add(runLocalCommand("./scripts/get-brew-rpm docker --rpmname=docker-selinux --release=el7 --regress --arch="+clienttasks.arch).getStdout());
 		dockerRpmInstallUrls.add(runLocalCommand("./scripts/get-brew-rpm docker --rpmname=docker         --release=el7 --regress --arch="+clienttasks.arch).getStdout());
 		clienttasks.installSubscriptionManagerRPMs(dockerRpmInstallUrls, null, sm_yumInstallOptions);
+
+//TODO This may be the best way to install docker
+// register and autosubscribe to a RHEL7 subscription
+// yum install docker --enablerepo=rhel-7-server-extras-rpms --nogpgcheck
+// might have trouble with this...  use --no-gpgcheck
 		
 		// assert the docker version is >= 1.0.0-2
 		Assert.assertTrue(clienttasks.isPackageVersion("docker", ">=", "1.0.0-2"), "Expecting docker version to be >= 1.0.0-2 (first RHSM compatible version of docker).");

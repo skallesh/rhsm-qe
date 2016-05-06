@@ -64,6 +64,7 @@ public class SubscriptionManagerTasks {
 	public final String command				= "subscription-manager";
 	public final String redhatRepoFile		= "/etc/yum.repos.d/redhat.repo";
 	public final String rhsmConfFile		= "/etc/rhsm/rhsm.conf";
+	public final String rhsmLoggingConfFile	= "/etc/rhsm/logging.conf";
 	public final String factsDir			= "/etc/rhsm/facts";
 	public final String rhsmUpdateFile		= "/var/run/rhsm/update";
 	public final String yumPluginConfFileForSubscriptionManager	= "/etc/yum/pluginconf.d/subscription-manager.conf"; // "/etc/yum/pluginconf.d/rhsmplugin.conf"; renamed by dev on 11/24/2010
@@ -130,6 +131,9 @@ public class SubscriptionManagerTasks {
 	protected String currentlyRegisteredOrg			= null;	// most recent owner used during register
 	protected ConsumerType currentlyRegisteredType	= null;	// most recent consumer type used during register
 	
+	public String candlepinAdminUsername = null;	// hold onto the candlepin admin creds to facilitate calling static CandlepinTasks
+	public String candlepinAdminPassword = null;	// hold onto the candlepin admin creds to facilitate calling static CandlepinTasks
+	public String candlepinUrl = null;				// hold onto the candlepin url to facilitate calling static CandlepinTasks
 	
 	public SubscriptionManagerTasks(SSHCommandRunner runner) {
 		super();
@@ -186,10 +190,14 @@ public class SubscriptionManagerTasks {
 		
 		// copy RHNS-CA-CERT to RHN-ORG-TRUSTED-SSL-CERT on RHEL7 as a workaround for Bug 906875 ERROR: can not find RHNS CA file: /usr/share/rhn/RHN-ORG-TRUSTED-SSL-CERT 
 // FIXME Not convinced that this workaround is needed anymore.  Surrounding by if (false) at the start of the rhel71 test cycle...
+// This is a better solution... SubscriptionManagerCLITestScript.setupRhnCACert();		
 if (false) {
 		if (Integer.valueOf(redhatReleaseX)>=7) {
 			log.info("Invoking the following suggestion to enable this rhel7 system to use rhn-client-tools https://bugzilla.redhat.com/show_bug.cgi?id=906875#c2 ");
 			sshCommandRunner.runCommandAndWait("cp -n /usr/share/rhn/RHNS-CA-CERT /usr/share/rhn/RHN-ORG-TRUSTED-SSL-CERT"); 
+			// will not work anymore because...
+			//   The certificate /usr/share/rhn/RHN-ORG-TRUSTED-SSL-CERT is expired. Please ensure you have the correct certificate and your system time is correct.
+			//   See /var/log/up2date for more information
 		}
 }
 		
@@ -703,7 +711,8 @@ if (false) {
 		pkgs.add(0,"hunspell");	// used for spellcheck testing
 		pkgs.add(0,"gettext");	// used for Pofilter and Translation testing - msgunfmt
 		pkgs.add(0,"policycoreutils-python");	// used for Docker testing - required by docker-selinux package 
-		
+		pkgs.add(0,"net-tools");	// provides netstat which is used to know when vncserver is up
+	
 		// TEMPORARY WORKAROUND FOR BUG
 		String bugId = "790116"; boolean invokeWorkaroundWhileBugIsOpen = true;
 		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
@@ -1218,7 +1227,8 @@ if (false) {
 	 * @return value of the section.parameter config (null when not found)
 	 */
 	protected String getSectionParameterFromConfigFileContents(String section, String parameter, String confFileContents){
-
+		// TODO: A alternative solution for this task would be to use: https://github.com/pixelb/crudini
+		
 		//	[root@jsefler-onprem-62server ~]# egrep -v  "^\s*(#|$)" /etc/rhsm/rhsm.conf
 		//	[server]
 		//	hostname=jsefler-onprem-62candlepin.usersys.redhat.com
@@ -2189,7 +2199,7 @@ if (false) {
 //		String port = getConfFileParameter(rhsmConfFile, "port");
 //		String prefix = getConfFileParameter(rhsmConfFile, "prefix");
 		
-		return (CandlepinTasks.getOwnerKeyOfConsumerId(this.currentlyRegisteredUsername, this.currentlyRegisteredPassword, SubscriptionManagerBaseTestScript.sm_serverUrl, getCurrentConsumerId()));
+		return (CandlepinTasks.getOwnerKeyOfConsumerId(this.currentlyRegisteredUsername, this.currentlyRegisteredPassword, candlepinUrl, getCurrentConsumerId()));
 	}
 	
 	/**
@@ -2250,7 +2260,7 @@ if (false) {
 			log.warning("The former \""+factName+"\" fact is no longer used.  Employing a WORKAROUND by getting the system compliance status directly from the candlepin server...");
 			String complianceStatus = "UNKNOWN_COMPLIANCE_STATUS";
 			try {
-				complianceStatus = CandlepinTasks.getConsumerComplianceStatus(currentlyRegisteredUsername, currentlyRegisteredPassword, SubscriptionManagerBaseTestScript.sm_serverUrl, getCurrentConsumerId());
+				complianceStatus = CandlepinTasks.getConsumerComplianceStatus(currentlyRegisteredUsername, currentlyRegisteredPassword, candlepinUrl, getCurrentConsumerId());
 			} catch (JSONException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -2296,7 +2306,7 @@ if (false) {
 		
 		//SSHCommandResult factsList = facts_(true, false, null, null, null);
 		String rhsmCommand = factsCommand(true, null, null, null, null);
-		if (grepFilter!=null) rhsmCommand+=" | grep \""+grepFilter+"\"";
+		if (grepFilter!=null) rhsmCommand+=" | grep --text \""+grepFilter+"\"";		// add --text option to avoid "Binary file (standard input) matches"
 		SSHCommandResult factsList = runCommandWithLang(localeVariable, lang, rhsmCommand);
 		String factsListAsString = factsList.getStdout().trim();
 		// # subscription-manager facts --list
@@ -2465,15 +2475,15 @@ if (false) {
 //		String port = getConfFileParameter(rhsmConfFile, "port");
 //		String prefix = getConfFileParameter(rhsmConfFile, "prefix");
 		for (EntitlementCert entitlementCert : getCurrentEntitlementCerts()) {
-			JSONObject jsonEntitlement = CandlepinTasks.getEntitlementUsingRESTfulAPI(username,password,SubscriptionManagerBaseTestScript.sm_serverUrl,entitlementCert.id);
+			JSONObject jsonEntitlement = CandlepinTasks.getEntitlementUsingRESTfulAPI(username,password,candlepinUrl,entitlementCert.id);
 			String poolHref = jsonEntitlement.getJSONObject("pool").getString("href");
-			JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(username,password,SubscriptionManagerBaseTestScript.sm_serverUrl,poolHref));
+			JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(username,password,candlepinUrl,poolHref));
 			String subscriptionName = jsonPool.getString("productName");
 			String productId = jsonPool.getString("productId");
 			String poolId = jsonPool.getString("id");
 			String quantity = Integer.toString(jsonPool.getInt("quantity"));	// = jsonPool.getString("quantity");
 			String endDate = jsonPool.getString("endDate");
-			Boolean multiEntitlement = CandlepinTasks.isPoolProductMultiEntitlement(username,password, SubscriptionManagerBaseTestScript.sm_serverUrl, poolId);
+			Boolean multiEntitlement = CandlepinTasks.isPoolProductMultiEntitlement(username,password, candlepinUrl, poolId);
 			SubscriptionPool fromPool = new SubscriptionPool(subscriptionName,productId,poolId,quantity,null,multiEntitlement,endDate);
 			serialMapToSubscriptionPools.put(entitlementCert.serialNumber, fromPool);
 		}
@@ -2937,8 +2947,8 @@ if (false) {
 		for (File entitlementCertFile : getCurrentEntitlementCertFiles("-t")) {
 			EntitlementCert entitlementCert = getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
 			try {
-				JSONObject jsonEntitlement = CandlepinTasks.getEntitlementUsingRESTfulAPI(this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,SubscriptionManagerBaseTestScript.sm_serverUrl,entitlementCert.id);
-				JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,SubscriptionManagerBaseTestScript.sm_serverUrl,jsonEntitlement.getJSONObject("pool").getString("href")));
+				JSONObject jsonEntitlement = CandlepinTasks.getEntitlementUsingRESTfulAPI(this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,candlepinUrl,entitlementCert.id);
+				JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,candlepinUrl,jsonEntitlement.getJSONObject("pool").getString("href")));
 				if (jsonPool.getString("id").equals(subscribedPool.poolId)) {
 					return entitlementCert;
 				}
@@ -2975,7 +2985,7 @@ if (false) {
 //		String port = getConfFileParameter(rhsmConfFile, "port");
 //		String prefix = getConfFileParameter(rhsmConfFile, "prefix");
 
-		JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,SubscriptionManagerBaseTestScript.sm_serverUrl,"/pools/"+pool.poolId));
+		JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,candlepinUrl,"/pools/"+pool.poolId));
 		JSONArray jsonProvidedProducts = (JSONArray) jsonPool.getJSONArray("providedProducts");
 		for (int k = 0; k < jsonProvidedProducts.length(); k++) {
 			JSONObject jsonProvidedProduct = (JSONObject) jsonProvidedProducts.get(k);
@@ -3216,7 +3226,7 @@ if (false) {
 		if (autoheal!=null && sshCommandResult.getExitCode().equals(Integer.valueOf(0))) {
 			try {
 				// Note: NullPointerException will likely occur when activationKeys are used because null will likely be passed for username/password
-				CandlepinTasks.setAutohealForConsumer(currentlyRegisteredUsername, currentlyRegisteredPassword, SubscriptionManagerBaseTestScript.sm_serverUrl, getCurrentConsumerId(sshCommandResult), autoheal);
+				CandlepinTasks.setAutohealForConsumer(currentlyRegisteredUsername, currentlyRegisteredPassword, candlepinUrl, getCurrentConsumerId(sshCommandResult), autoheal);
 			} catch (Exception e) {
 				e.printStackTrace();
 				Assert.fail(e.getMessage());
@@ -4803,8 +4813,8 @@ if (false) {
 		
 		// when rhsm.manage_repos is off, this feedback overrides all operations
 		String manage_repos = getConfFileParameter(rhsmConfFile, "rhsm", "manage_repos");
-		if (manage_repos==null) manage_repos="1";
-		if (manage_repos.equals("0") || manage_repos.isEmpty()/*see bug 1251853*/) {
+		if (manage_repos==null || manage_repos.isEmpty() /*see bug 1251853*/) manage_repos="1";	// default configuration
+		if (manage_repos.equals("0") ) {
 			//Assert.assertEquals(sshCommandResult.getStdout().trim(), "Repositories disabled by configuration.","Stdout when rhsm.manage_repos is configured to 0.");
 			//Assert.assertEquals(sshCommandResult.getStdout().trim(), "Repositories disabled by configuration.\nThe system is not entitled to use any repositories.","Stdout when rhsm.manage_repos is configured to 0.");
 			//Assert.assertEquals(sshCommandResult.getStdout().trim(), "Repositories disabled by configuration.\nThis system has no repositories available through subscriptions.","Stdout when rhsm.manage_repos is configured to 0.");	// changed by bug 895462
@@ -5061,8 +5071,6 @@ if (false) {
 	
 	/**
 	 * subscribe WITHOUT asserting results
-	 * @param servicelevel TODO
-	 * @param file TODO
 	 */
 	public SSHCommandResult subscribe_(Boolean auto, String servicelevel, List<String> poolIds, List<String> productIds, List<String> regtokens, String quantity, String email, String locale, String file, String proxy, String proxyuser, String proxypassword) {
 		
@@ -5090,8 +5098,6 @@ if (false) {
 
 	/**
 	 * subscribe WITHOUT asserting results.
-	 * @param servicelevel TODO
-	 * @param file TODO
 	 */
 	public SSHCommandResult subscribe_(Boolean auto, String servicelevel, String poolId, String productId, String regtoken, String quantity, String email, String locale, String file, String proxy, String proxyuser, String proxypassword) {
 		
@@ -5106,8 +5112,6 @@ if (false) {
 	
 	/**
 	 * subscribe and assert all results are successful
-	 * @param servicelevel TODO
-	 * @param file TODO
 	 */
 	public SSHCommandResult subscribe(Boolean auto, String servicelevel, List<String> poolIds, List<String> productIds, List<String> regtokens, String quantity, String email, String locale, String file, String proxy, String proxyuser, String proxypassword) {
 
@@ -5184,8 +5188,6 @@ if (false) {
 	
 	/**
 	 * subscribe and assert all results are successful
-	 * @param servicelevel TODO
-	 * @param file TODO
 	 */
 	public SSHCommandResult subscribe(Boolean auto, String servicelevel, String poolId, String productId, String regtoken, String quantity, String email, String locale, String file, String proxy, String proxyuser, String proxypassword) {
 
@@ -5220,7 +5222,6 @@ if (false) {
 	
 	/**
 	 * subscribe to the given SubscriptionPool (assumes pool came from the list of available pools)
-	 * @param pool
 	 * @return the newly installed EntitlementCert file to the newly consumed ProductSubscriptions 
 	 */
 	public File subscribeToSubscriptionPool(SubscriptionPool pool, String quantity, String authenticator, String password, String serverUrl)  {
@@ -5512,7 +5513,7 @@ if (false) {
 
 		// get the serial of the entitlement that was granted from this pool
 		//BigInteger serialNumber = CandlepinTasks.getOwnersNewestEntitlementSerialCorrespondingToSubscribedPoolId(this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,SubscriptionManagerBaseTestScript.sm_serverUrl,getCurrentlyRegisteredOwnerKey(),pool.poolId);
-		BigInteger serialNumber = CandlepinTasks.getConsumersNewestEntitlementSerialCorrespondingToSubscribedPoolId(this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,SubscriptionManagerBaseTestScript.sm_serverUrl,getCurrentConsumerId(),pool.poolId);
+		BigInteger serialNumber = CandlepinTasks.getConsumersNewestEntitlementSerialCorrespondingToSubscribedPoolId(this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,candlepinUrl,getCurrentConsumerId(),pool.poolId);
 		//Assert.assertNotNull(serialNumber, "Found the serial number of the entitlement that was granted after subscribing to pool id '"+pool.poolId+"'.");
 		if (serialNumber==null) return null;
 		File serialPemFile = new File(entitlementCertDir+File.separator+serialNumber+".pem");
@@ -5626,8 +5627,8 @@ if (false) {
 						
 						// determine how much the quantity should have decremented
 						int expectedDecrement = 1;
-						String virt_only = CandlepinTasks.getPoolAttributeValue(currentlyRegisteredUsername, currentlyRegisteredPassword, SubscriptionManagerBaseTestScript.sm_serverUrl, afterPool.poolId, "virt_only");
-						String virt_limit = CandlepinTasks.getPoolProductAttributeValue(currentlyRegisteredUsername, currentlyRegisteredPassword, SubscriptionManagerBaseTestScript.sm_serverUrl, afterPool.poolId, "virt_limit");
+						String virt_only = CandlepinTasks.getPoolAttributeValue(currentlyRegisteredUsername, currentlyRegisteredPassword, candlepinUrl, afterPool.poolId, "virt_only");
+						String virt_limit = CandlepinTasks.getPoolProductAttributeValue(currentlyRegisteredUsername, currentlyRegisteredPassword, candlepinUrl, afterPool.poolId, "virt_limit");
 						if (virt_only!=null && Boolean.valueOf(virt_only) && virt_limit!=null) expectedDecrement += Integer.valueOf(virt_limit);	// the quantity consumed on a virt pool should be 1 (from the subscribe on the virtual pool itself) plus virt_limit (from the subscribe by the candlepin consumer on the physical pool)
 
 						// assert the quantity has decremented;
@@ -5700,9 +5701,9 @@ if (false) {
 		List<SubscriptionPool> poolsAvailable = getCurrentlyAvailableSubscriptionPools();
 		for (SubscriptionPool pool : poolsAvailable) {
 			try {
-				String authenticator = this.currentlyRegisteredUsername!=null?this.currentlyRegisteredUsername:SubscriptionManagerBaseTestScript.sm_serverAdminUsername;
-				String password = this.currentlyRegisteredPassword!=null?this.currentlyRegisteredPassword:SubscriptionManagerBaseTestScript.sm_serverAdminPassword;
-				if (!CandlepinTasks.isPoolProductMultiEntitlement(authenticator,password,SubscriptionManagerBaseTestScript.sm_serverUrl,pool.poolId)) {
+				String authenticator = this.currentlyRegisteredUsername!=null?this.currentlyRegisteredUsername:candlepinAdminUsername;
+				String password = this.currentlyRegisteredPassword!=null?this.currentlyRegisteredPassword:candlepinAdminPassword;
+				if (!CandlepinTasks.isPoolProductMultiEntitlement(authenticator,password,candlepinUrl,pool.poolId)) {
 					poolsAvailableExcludingMuliEntitlement.add(pool);
 				}
 			} catch (Exception e) {
@@ -5828,7 +5829,7 @@ if (false) {
 				regexForSerialNumber = "[\\d,]*";
 			}
 			// END OF WORKAROUND
-						
+			
 			//Assert.assertContainsMatch(result.getStderr(), "Entitlement Certificate with serial number "+regexForSerialNumber+" could not be found.",
 			//		"Stderr from an attempt to unsubscribe from Entitlement Certificate serial "+serialNumber+" that was not found in "+entitlementCertDir);
 			//Assert.assertContainsMatch(result.getStdout(), "Entitlement Certificate with serial number "+regexForSerialNumber+" could not be found.",
@@ -5838,9 +5839,18 @@ if (false) {
 			expectedStdoutMsg = "Unsuccessfully removed serial numbers:";	// changed by bug 874749
 			expectedStdoutMsg = "Serial numbers unsuccessfully removed at the server:";	// changed by bug 895447 subscription-manager commit 8e10e76fb5951e0b5d6c867c6c7209d8ec80dead
 			Assert.assertTrue(result.getStdout().contains(expectedStdoutMsg), "Stdout from unsubscribe contains expected message: "+expectedStdoutMsg);
-			expectedStdoutMsg = "   Entitlement Certificate with serial number "+serialNumber+" could not be found.";
-			expectedStdoutMsg = "   Entitlement Certificate with serial number '"+serialNumber+"' could not be found.";
-			Assert.assertTrue(result.getStdout().contains(expectedStdoutMsg), "Stdout from unsubscribe contains expected message: "+expectedStdoutMsg);
+			if (isPackageVersion("subscription-manager", ">=", "1.16.6-1")) {	// commit 0d80caacf5e9483d4f10424030d6a5b6f472ed88 1285004: Adds check for access to the required manager capabilty
+				//	[root@jsefler-6 ~]# subscription-manager remove --serial 8375727538260415740 --serial 2872676222813362535
+				//	Serial numbers unsuccessfully removed at the server:
+				//	   2872676222813362535
+				//	   8375727538260415740
+				String expectedStdoutRegex = expectedStdoutMsg+"(?:\\n   \\d+)*?\\n   "+serialNumber;
+				Assert.assertContainsMatch(result.getStdout(), expectedStdoutRegex);
+			} else {
+				expectedStdoutMsg = "   Entitlement Certificate with serial number "+serialNumber+" could not be found.";
+				expectedStdoutMsg = "   Entitlement Certificate with serial number '"+serialNumber+"' could not be found.";
+				Assert.assertTrue(result.getStdout().contains(expectedStdoutMsg), "Stdout from unsubscribe contains expected message: "+expectedStdoutMsg);
+			}
 			Assert.assertEquals(result.getStderr(),"", "Stderr from unsubscribe.");
 			Assert.assertEquals(result.getExitCode(), Integer.valueOf(1), "ExitCode from unsubscribe when the serial's entitlement cert file ("+certFilePath+") does not exist.");	// changed by bug 873791
 			return false;
@@ -5952,12 +5962,12 @@ if (false) {
 		// THIS AVOIDS PROBLEMS WHEN MODIFIER ENTITLEMENTS ARE BEING CONSUMED
 		for(ProductSubscription productSubscription : getCurrentlyConsumedProductSubscriptions()) {
 			EntitlementCert entitlementCert = getEntitlementCertCorrespondingToProductSubscription(productSubscription);
-			JSONObject jsonEntitlement = CandlepinTasks.getEntitlementUsingRESTfulAPI(this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,SubscriptionManagerBaseTestScript.sm_serverUrl,entitlementCert.id);
+			JSONObject jsonEntitlement = CandlepinTasks.getEntitlementUsingRESTfulAPI(this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,candlepinUrl,entitlementCert.id);
 			String poolHref = jsonEntitlement.getJSONObject("pool").getString("href");
-			JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,SubscriptionManagerBaseTestScript.sm_serverUrl,poolHref));
+			JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,candlepinUrl,poolHref));
 			String poolId = jsonPool.getString("id");
 				
-			if (CandlepinTasks.isPoolAModifier(this.currentlyRegisteredUsername, this.currentlyRegisteredPassword, poolId,  SubscriptionManagerBaseTestScript.sm_serverUrl)) {
+			if (CandlepinTasks.isPoolAModifier(this.currentlyRegisteredUsername, this.currentlyRegisteredPassword, poolId,  candlepinUrl)) {
 				serials.add(0,productSubscription.serialNumber);	// serials to entitlements that modify others should be at the front of the list to be removed, otherwise they will get re-issued under a new serial number when the modified entitlement is removed first.
 			} else {
 				serials.add(productSubscription.serialNumber);
@@ -6022,12 +6032,12 @@ if (false) {
 		// THIS AVOIDS PROBLEMS WHEN MODIFIER ENTITLEMENTS ARE BEING CONSUMED
 		for(ProductSubscription productSubscription : getCurrentlyConsumedProductSubscriptions()) {
 			EntitlementCert entitlementCert = getEntitlementCertCorrespondingToProductSubscription(productSubscription);
-			JSONObject jsonEntitlement = CandlepinTasks.getEntitlementUsingRESTfulAPI(this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,SubscriptionManagerBaseTestScript.sm_serverUrl,entitlementCert.id);
+			JSONObject jsonEntitlement = CandlepinTasks.getEntitlementUsingRESTfulAPI(this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,candlepinUrl,entitlementCert.id);
 			String poolHref = jsonEntitlement.getJSONObject("pool").getString("href");
-			JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,SubscriptionManagerBaseTestScript.sm_serverUrl,poolHref));
+			JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,candlepinUrl,poolHref));
 			String poolId = jsonPool.getString("id");
 				
-			if (CandlepinTasks.isPoolAModifier(this.currentlyRegisteredUsername, this.currentlyRegisteredPassword, poolId,  SubscriptionManagerBaseTestScript.sm_serverUrl)) {
+			if (CandlepinTasks.isPoolAModifier(this.currentlyRegisteredUsername, this.currentlyRegisteredPassword, poolId,  candlepinUrl)) {
 				serials.add(0,productSubscription.serialNumber);	// serials to entitlements that modify others should be at the front of the list to be removed, otherwise they will get re-issued under a new serial number when the modified entitlement is removed first.
 				poolIds.add(0,productSubscription.poolId);
 			} else {
@@ -6194,6 +6204,16 @@ if (false) {
 //	}
 	public boolean areAllRequiredTagsInContentNamespaceProvidedByProductCerts(ContentNamespace contentNamespace, List<ProductCert> productCerts) {
 		return areAllRequiredTagsProvidedByProductCerts(contentNamespace.requiredTags, productCerts);
+	}
+	
+	public boolean isArchCoveredByArchesInContentNamespace(String arch, ContentNamespace contentNamespace) {
+		List<String> contentNamespaceArches = new ArrayList<String>();
+		contentNamespaceArches.addAll(Arrays.asList(contentNamespace.arches.trim().split(" *, *")));	// Note: the arch attribute can be a comma separated list of values
+		if (contentNamespaceArches.contains("x86")) {contentNamespaceArches.addAll(Arrays.asList("i386","i486","i586","i686"));}  // Note: x86 is a general arch to cover all 32-bit intel microprocessors 
+		if (contentNamespaceArches.contains("ALL")) return true;
+		if (contentNamespaceArches.contains("All")) return true;
+		if (contentNamespaceArches.contains("all")) return true;
+		return contentNamespaceArches.contains(arch);
 	}
 	
 	public boolean areAllRequiredTagsProvidedByProductCerts(String requiredTagsAsString, List<ProductCert> productCerts) {
@@ -7400,14 +7420,14 @@ if (false) {
 	public SSHCommandResult yumInstallGroup (String group) {
 		String command = "yum -y groupinstall \""+group+"\" --disableplugin=rhnplugin"; // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
 		SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(sshCommandRunner,command, 0, "^Complete!$",null);
-		Assert.assertFalse(this.yumGroupList("Available", ""/*"--disablerepo=* --enablerepo="+repo*/).contains(group),"Yum group is Available after calling '"+command+"'.");
+		Assert.assertTrue(!this.yumGroupList("Available", ""/*"--disablerepo=* --enablerepo="+repo*/).contains(group),"Yum group is NOT Available after calling '"+command+"'.");
 		return result;
 	}
 	
 	public SSHCommandResult yumRemoveGroup (String group) {
 		String command = "yum -y groupremove \""+group+"\" --disableplugin=rhnplugin"; // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
 		SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(sshCommandRunner,command, 0, "^Complete!$",null);
-		Assert.assertFalse(this.yumGroupList("Installed", ""/*"--disablerepo=* --enablerepo="+repo*/).contains(group),"Yum group is Installed after calling '"+command+"'.");
+		Assert.assertTrue(!this.yumGroupList("Installed", ""/*"--disablerepo=* --enablerepo="+repo*/).contains(group),"Yum group is NOT Installed after calling '"+command+"'.");
 		return result;
 	}
 	
@@ -7693,6 +7713,7 @@ if (false) {
 		return runCommandWithLangAndAssert(lang, rhsmCommand, exitCode, stdoutRegexs, stderrRegexs);
 	}
 	public SSHCommandResult runCommandWithLangAndAssert(String lang, String rhsmCommand, Integer exitCode, List<String> stdoutRegexs, List<String> stderrRegexs){
+		// prepend the command with a well formated LANG
 		if (lang==null) {
 			lang="";
 		} else {
@@ -7700,10 +7721,37 @@ if (false) {
 			lang="LANG="+lang;
 		}
 		String command = lang+" "+rhsmCommand;
+		/* this was an attempt to fix a problem that should have been solved on the jenkins node environment vars
+		command = "LC_CTYPE= "+command;	// also unset LC_CTYPE
+		*/
 		/* this workaround should no longer be needed after rhel70 fixes by ckozak similar to bugs 1052297 1048325 commit 6fe57f8e6c3c35ac7761b9fa5ac7a6014d69ce20 that employs #!/usr/bin/python -S    sys.setdefaultencoding('utf-8')    import site
 		command = "PYTHONIOENCODING=ascii "+command;	// THIS WORKAROUND IS NEEDED AFTER master commit 056e69dc833919709bbf23d8a7b73a5345f77fdf RHEL6.4 commit 1bc25596afaf294cd217200c605737a43112a378 for bug 800323
 		*/
+		
+		// run the command and assert the expected results
+		/* the problem with this original method call is that we could not intercept Runtime Error, hence the implementation that follows thi block includes a call to logRuntimeErrors()
 		return RemoteFileTasks.runCommandAndAssert(sshCommandRunner, command, exitCode, stdoutRegexs, stderrRegexs);
+		*/
+		
+		// run the command
+		SSHCommandResult sshCommandResult = sshCommandRunner.runCommandAndWait(command);
+		logRuntimeErrors(sshCommandResult);
+		
+		// assert the expected results
+		if (exitCode!=null) {
+			Assert.assertEquals(exitCode, sshCommandResult.getExitCode(),String.format("ExitCode from command '%s'.",command));
+		}
+		if (stdoutRegexs!=null) {
+			for (String regex : stdoutRegexs) {
+				Assert.assertContainsMatch(sshCommandResult.getStdout(),regex,"Stdout",String.format("Stdout from command '%s' contains matches to regex '%s',",command,regex));
+			}
+		}
+		if (stderrRegexs!=null) {
+			for (String regex : stderrRegexs) {
+				Assert.assertContainsMatch(sshCommandResult.getStderr(),regex,"Stderr",String.format("Stderr from command '%s' contains matches to regex '%s',",command,regex));
+			}
+		}
+		return sshCommandResult;
 	}
 	
 	public void setLanguage(String lang){
@@ -7877,10 +7925,16 @@ if (false) {
 			String systemUuid = getCurrentConsumerId();
 			if (systemUuid!=null) {	// is registered
 				String virtUuid = getFactValue("virt.uuid");
+				if (virtUuid==null) {	// can occur on s390x where virt.uuid is Unknown/null as demonstrated in Bug 815598 - [RFE] virt.uuid should not be "Unknown" in s390x when list fact 
+					log.warning("Since the virt.uuid on this system is null (Unknown), create a fake virt.uuid and add it as a custom fact so we can include it in the consumer's list of guestIds thereby mapping this virt system as a guest of itself...");
+					virtUuid = "fake-"+String.valueOf(System.currentTimeMillis());	// using a timestamp as a fake virt.uuid
+					Map<String,String> factsMap = new HashMap<String,String>(); factsMap.put("virt.uuid",virtUuid);
+					createFactsFileWithOverridingValues(factsMap);
+				}
 				try {
-					String authenticator = this.currentlyRegisteredUsername!=null?this.currentlyRegisteredUsername:SubscriptionManagerBaseTestScript.sm_serverAdminUsername;
-					String password = this.currentlyRegisteredPassword!=null?this.currentlyRegisteredPassword:SubscriptionManagerBaseTestScript.sm_serverAdminPassword;
-					return CandlepinTasks.setGuestIdsForConsumer(authenticator,password, SubscriptionManagerBaseTestScript.sm_serverUrl, systemUuid,Arrays.asList(new String[]{"this-guest-is-self-hosted",virtUuid,"trick-for-testing"}));
+					String authenticator = this.currentlyRegisteredUsername!=null?this.currentlyRegisteredUsername:candlepinAdminUsername;
+					String password = this.currentlyRegisteredPassword!=null?this.currentlyRegisteredPassword:candlepinAdminPassword;
+					return CandlepinTasks.setGuestIdsForConsumer(authenticator,password, candlepinUrl, systemUuid,Arrays.asList(new String[]{"this-guest-is-self-hosted",virtUuid,"trick-for-testing"}));
 				} catch (Exception e) {
 					e.printStackTrace();
 					Assert.fail(e.getMessage());
@@ -8182,6 +8236,7 @@ if (false) {
 			(result.getStdout()+result.getStderr()).toLowerCase().contains("Remote server error".toLowerCase()) ||
 			(result.getStdout()+result.getStderr()).toLowerCase().contains("Unable to verify server's identity".toLowerCase()) ||
 			(result.getStdout()+result.getStderr()).toLowerCase().contains("Unable to reach the server".toLowerCase()) ||
+			(result.getStdout()+result.getStderr()).toLowerCase().contains("Connection reset by peer".toLowerCase()) ||
 			(result.getStdout()+result.getStderr()).toLowerCase().contains("Request failed due to concurrent modification".toLowerCase()) ||
 			(result.getStdout()+result.getStderr()).toLowerCase().contains("The system is unable to complete the requested transaction".toLowerCase()) ||
 			(result.getStdout()+result.getStderr()).toLowerCase().contains("object is not iterable".toLowerCase()) ||
@@ -8292,7 +8347,7 @@ if (false) {
 			//	    raise RestlibException(response['status'], error_msg)
 			//	RestlibException: The proxy server received an invalid response from an upstream server
 			issue = "Response: status=502";
-			if (getTracebackCommandResult.getStdout().contains(issue) && SubscriptionManagerBaseTestScript.sm_serverType.equals(CandlepinType.hosted)) {
+			if (getTracebackCommandResult.getStdout().contains(issue)) {
 				String bugId = "1105173"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1105173 - subscription-manager encounters frequent 502 responses from stage IT-Candlepin
 				// duplicate of Bug 1113741 - RHEL 7 (and 6?): subscription-manager fails with "JSON parsing error: No JSON object could be decoded" error
 				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
@@ -8330,7 +8385,7 @@ if (false) {
 			//	return m2.ssl_read(self.ssl, size, self._timeout)
 			//	SSLTimeoutError: timed out
 			issue = "SSLTimeoutError: timed out";
-			if (getTracebackCommandResult.getStdout().contains(issue) && SubscriptionManagerBaseTestScript.sm_serverType.equals(CandlepinType.hosted)) {
+			if (getTracebackCommandResult.getStdout().contains(issue)) {
 				String bugId = "1165239"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1165239 - subscription-manager encounters frequent SSLTimeoutErrors from stage IT-Candlepin
 				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 				if (invokeWorkaroundWhileBugIsOpen) {
@@ -8345,28 +8400,28 @@ if (false) {
 			//	2014-11-18 13:32:34,127 [DEBUG] subscription-manager @connection.py:489 - Response: status=500
 			//	2014-11-18 13:32:34,127 [ERROR] subscription-manager @managercli.py:1625 - Runtime Error Lock wait timeout exceeded; try restarting transaction at com.mysql.jdbc.SQLError.createSQLException:1,078
 			issue = "Runtime Error Lock wait timeout exceeded";
-			if (getTracebackCommandResult.getStdout().contains(issue) && SubscriptionManagerBaseTestScript.sm_serverType.equals(CandlepinType.hosted)) {
+			if (getTracebackCommandResult.getStdout().contains(issue)) {
 				String bugId = "1084782"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1084782 - Runtime Error Lock wait timeout exceeded; try restarting transaction at com.mysql.jdbc.SQLError.createSQLException:1,078
 				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 				if (invokeWorkaroundWhileBugIsOpen) {
 					throw new SkipException("Encounterd a '"+issue+"' from the server and could not complete this test while bug '"+bugId+"' is open.");
 				}
 			}
-			if (getTracebackCommandResult.getStdout().contains(issue) && SubscriptionManagerBaseTestScript.sm_serverType.equals(CandlepinType.hosted)) {
+			if (getTracebackCommandResult.getStdout().contains(issue)) {
 				String bugId = "1165295"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1165295 - subscription-manager encounters frequent "Runtime Error Lock wait timeout exceeded" from stage IT-Candlepin
 				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 				if (invokeWorkaroundWhileBugIsOpen) {
 					throw new SkipException("Encounterd a '"+issue+"' from the server and could not complete this test while bug '"+bugId+"' is open.");
 				}
 			}
-			if (getTracebackCommandResult.getStdout().contains(issue) && SubscriptionManagerBaseTestScript.sm_serverType.equals(CandlepinType.hosted)) {
+			if (getTracebackCommandResult.getStdout().contains(issue)) {
 				String bugId = "1161736"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1161736 - subscription-manager doesn't behave in a consistent way
 				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 				if (invokeWorkaroundWhileBugIsOpen) {
 					throw new SkipException("Encounterd a '"+issue+"' from the server and could not complete this test while bug '"+bugId+"' is open.");
 				}
 			}
-			if (getTracebackCommandResult.getStdout().contains(issue) || result.getStdout().contains(issue) || result.getStderr().contains(issue)) if (SubscriptionManagerBaseTestScript.sm_serverType.equals(CandlepinType.hosted)) {
+			if (getTracebackCommandResult.getStdout().contains(issue) || result.getStdout().contains(issue) || result.getStderr().contains(issue)) {
 				String bugId = "1231308"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1231308 - subscription-manager encounters frequent "Runtime Error Lock wait timeout exceeded"/"Unable to verify server's identity" from stage IT-Candlepin
 				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 				if (invokeWorkaroundWhileBugIsOpen) {
@@ -8398,7 +8453,7 @@ if (false) {
 			//	    raise RestlibException(response['status'], error_msg)
 			//	RestlibException: Runtime Error could not execute statement at org.postgresql.core.v3.QueryExecutorImpl.receiveErrorResponse:2,102
 			issue = "Runtime Error could not execute statement at org.postgresql.core.v3.QueryExecutorImpl.receiveErrorResponse:2,102";
-			if (getTracebackCommandResult.getStdout().contains(issue) && SubscriptionManagerBaseTestScript.sm_serverType.equals(CandlepinType.hosted)) {
+			if (getTracebackCommandResult.getStdout().contains(issue)) {
 				String bugId = "1207721"; boolean invokeWorkaroundWhileBugIsOpen = true;	//	Bug 1207721 - Runtime Error could not execute statement at org.postgresql.core.v3.QueryExecutorImpl.receiveErrorResponse:2,102
 				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 				if (invokeWorkaroundWhileBugIsOpen) {
@@ -8471,7 +8526,7 @@ if (false) {
 			//	raise RestlibException(response['status'], error_msg)
 			//	RestlibException: Runtime Error com.mysql.jdbc.exceptions.jdbc4.MySQLTransactionRollbackException: Deadlock found when trying to get lock; try restarting transaction at sun.reflect.NativeConstructorAccessorImpl.newInstance0:-2
 			issue = "Runtime Error com.mysql.jdbc.exceptions.jdbc4.MySQLTransactionRollbackException: Deadlock found when trying to get lock";
-			if (getTracebackCommandResult.getStdout().contains(issue) && SubscriptionManagerBaseTestScript.sm_serverType.equals(CandlepinType.hosted)) {
+			if (getTracebackCommandResult.getStdout().contains(issue)) {
 				String bugId = "1220830"; boolean invokeWorkaroundWhileBugIsOpen = true;	//	Bug 1220830 - subscription-manager encounters occasional Deadlock from stage IT-Candlepin
 				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 				if (invokeWorkaroundWhileBugIsOpen) {
@@ -8533,8 +8588,61 @@ if (false) {
 					throw new SkipException("Encounterd a '"+issue+"' and could not complete this test while bug '"+bugId+"' is open.");
 				}
 			}
+			if (getTracebackCommandResult.getStdout().contains(issue) || result.getStderr().contains(issue)) {
+				String bugId = "1302364"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1302364 - Unable to verify server's identity: (104, 'Connection reset by peer')
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				if (invokeWorkaroundWhileBugIsOpen) {
+					throw new SkipException("Encounterd a '"+issue+"' and could not complete this test while bug '"+bugId+"' is open.");
+				}
+			}
 			// END OF WORKAROUND
 			
+			// TEMPORARY WORKAROUND FOR BUG
+			//	2016-01-27 16:24:22.520  FINE: ssh root@ibm-x3550m3-09.lab.eng.brq.redhat.com subscription-manager unsubscribe --all
+			//	2016-01-27 16:24:50.438  FINE: Stdout: 1 subscription removed at the server.
+			//
+			//	2016-01-27 16:24:50.439  FINE: Stderr: Network error, unable to connect to server. Please see /var/log/rhsm/rhsm.log for more information.
+			//
+			//	2016-01-27 16:24:50.439  FINE: ExitCode: 70
+			//	2016-01-27 16:24:50.439  FINE: ssh root@ibm-x3550m3-09.lab.eng.brq.redhat.com LINE_NUMBER=$(grep --line-number 'Making request:' /var/log/rhsm/rhsm.log | tail --lines=1 | cut --delimiter=':' --field=1); if [ -n "$LINE_NUMBER" ]; then tail -n +$LINE_NUMBER /var/log/rhsm/rhsm.log; fi;
+			//	2016-01-27 16:24:50.896  WARNING: Last request from /var/log/rhsm/rhsm.log:
+			//	2016-01-27 22:24:33,609 [DEBUG] subscription-manager:23027 @connection.py:557 - Making request: GET /subscription/consumers/162ac9ed-d2aa-45d9-921a-ce3aeaae180d/certificates/serials
+			//	2016-01-27 22:24:51,334 [ERROR] subscription-manager:23027 @entcertlib.py:121 - [Errno -3] Temporary failure in name resolution
+			//	Traceback (most recent call last):
+			//	  File "/usr/share/rhsm/subscription_manager/entcertlib.py", line 119, in perform
+			//	    expected = self._get_expected_serials()
+			//	  File "/usr/share/rhsm/subscription_manager/entcertlib.py", line 254, in _get_expected_serials
+			//	    exp = self.get_certificate_serials_list()
+			//	  File "/usr/share/rhsm/subscription_manager/entcertlib.py", line 234, in get_certificate_serials_list
+			//	    reply = self.uep.getCertificateSerials(identity.uuid)
+			//	  File "/usr/lib/python2.6/site-packages/rhsm/connection.py", line 1145, in getCertificateSerials
+			//	    return self.conn.request_get(method)
+			//	  File "/usr/lib/python2.6/site-packages/rhsm/connection.py", line 681, in request_get
+			//	    return self._request("GET", method)
+			//	  File "/usr/lib/python2.6/site-packages/rhsm/connection.py", line 571, in _request
+			//	    conn.request(request_type, handler, body=body, headers=headers)
+			//	  File "/usr/lib/python2.6/httplib.py", line 936, in request
+			//	    self._send_request(method, url, body, headers)
+			//	  File "/usr/lib/python2.6/httplib.py", line 973, in _send_request
+			//	    self.endheaders()
+			//	  File "/usr/lib/python2.6/httplib.py", line 930, in endheaders
+			//	    self._send_output()
+			//	  File "/usr/lib/python2.6/httplib.py", line 802, in _send_output
+			//	    self.send(msg)
+			//	  File "/usr/lib/python2.6/httplib.py", line 761, in send
+			//	    self.connect()
+			//	  File "/usr/lib/python2.6/site-packages/M2Crypto/httpslib.py", line 51, in connect
+			//	    socket.getaddrinfo(self.host, self.port, 0, socket.SOCK_STREAM):
+			//	gaierror: [Errno -3] Temporary failure in name resolution
+			issue = "[Errno -3] Temporary failure in name resolution";
+			if (getTracebackCommandResult.getStdout().contains(issue) || result.getStderr().contains(issue)) {
+				String bugId = "1302798"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1302798 - gaierror: [Errno -3] Temporary failure in name resolution
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				if (invokeWorkaroundWhileBugIsOpen) {
+					throw new SkipException("Encounterd a '"+issue+"' and could not complete this test while bug '"+bugId+"' is open.");
+				}
+			}
+			// END OF WORKAROUND
 			
 			// TEMPORARY WORKAROUND FOR BUG
 			//	2015-10-12 17:58:54,620 [DEBUG] subscription-manager:44349 @connection.py:523 - Making request: PUT /subscription/consumers/d8018dbc-7e66-4c0a-b322-9c28037fd8cf
@@ -8569,7 +8677,7 @@ if (false) {
 	/**
 	 * Compare the version of an installed package to a given version. For example...
 	 * @param packageName - "subscription-manager"
-	 * @param comparator - valid values: ">", "<", ">=", "<=", "=="
+	 * @param comparator - valid values: ">", "<", ">=", "<=", "=="  (for not equals functionality, simply ! the return value of "==")
 	 * @param version - "1.10.14-7"
 	 * @return true or false (null is returned when the packageName is not installed)
 	 * 
@@ -8605,6 +8713,12 @@ if (false) {
 	 * <br>  subscription-manager-1.10.14-7.el7.x86_64 <  1.10.14-7.5 is true
 	 */
 	public Boolean isPackageVersion(String packageName, String comparator, String version) {
+		
+		if (!Arrays.asList(">", "<", ">=", "<=", "==").contains(comparator)) {
+			log.warning("Do not know how to use comparator '"+comparator+"'.");
+			return null;
+		}
+		
 		// example package versions:
 		//	libXau-1.0.8-2.1.el7.x86_64
 		//	subscription-manager-1.10.14-7.git.0.798ba5c.el7.x86_64
@@ -8634,7 +8748,18 @@ if (false) {
 	}
 	public Map<String,String> installedPackageVersionMap = new HashMap<String,String>();	// contains key=python-rhsm, value=python-rhsm-0.98.9-1.el5
 	
+	/**
+	 * @param version1
+	 * @param comparator - valid values: ">", "<", ">=", "<=", "=="  (for not equals functionality, simply ! the return value of "==")
+	 * @param version2
+	 * @return
+	 */
 	public static Boolean isVersion(String version1, String comparator, String version2) {
+		if (!Arrays.asList(">", "<", ">=", "<=", "==").contains(comparator)) {
+			log.warning("Do not know how to use comparator '"+comparator+"'.");
+			return null;
+		}
+		
 		String s1 = version1;
 		String s2 = version2;
 		

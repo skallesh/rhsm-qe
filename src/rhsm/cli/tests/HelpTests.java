@@ -191,15 +191,24 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		
 		SSHCommandResult result = client.runCommandAndWait("subscription-manager-gui --help");
 		
-		// tolerate both acceptable behaviors
+		// tolerate historically acceptable behaviors
 
 		//	[jsefler@jseflerT5400 ~]$ ssh root@jsefler-6.usersys.redhat.com subscription-manager-gui --help
 		//	Unable to open a display
 		//	[jsefler@jseflerT5400 ~]$ echo $?
 		//	1
 		if (Integer.valueOf(1).equals(result.getExitCode())) {
-			Assert.assertEquals(result.getStdout(), "Unable to open a display","Stdout from calling subscription-manager-gui --help with no X-Display");
-			Assert.assertEquals(result.getStderr(), "","Stderr from calling subscription-manager-gui --help with no X-Display");
+			Assert.assertEquals(result.getStdout().trim(), "Unable to open a display","Stdout from calling subscription-manager-gui --help with no X-Display");
+			Assert.assertEquals(result.getStderr().trim(), "","Stderr from calling subscription-manager-gui --help with no X-Display");
+		}
+		
+		//	[jsefler@jseflerT540p ~]$ ssh root@jsefler-6.usersys.redhat.com subscription-manager-gui --help
+		//	Unable to start.  Error: could not open display
+		//	[jsefler@jseflerT540p ~]$ echo $?
+		//	2
+		else if (Integer.valueOf(2).equals(result.getExitCode())) {	// post subscription-manager-1.16.8-3	1303092: GUI issues in Repos and Help
+			Assert.assertEquals(result.getStderr().trim(), "Unable to start.  Error: could not open display","Stderr from calling subscription-manager-gui --help with no X-Display");
+			Assert.assertEquals(result.getStdout().trim(), "","Stdout from calling subscription-manager-gui --help with no X-Display");
 		}
 
 		//	[jsefler@jseflerT5400 ~]$ ssh root@jsefler-7.usersys.redhat.com subscription-manager-gui --help

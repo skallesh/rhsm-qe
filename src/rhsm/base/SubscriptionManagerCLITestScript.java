@@ -111,6 +111,19 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		// unregister clients in case they are still registered from prior run (DO THIS BEFORE SETTING UP A NEW CANDLEPIN)
 		unregisterClientsAfterSuite();
 		
+		// assert that fips is enabled (or not) as expected before running any tests.
+		// FIPS INFO:
+	    //	https://beaker.engineering.redhat.com/jobs/1259246
+		//	Notice this task... <task name="/distribution/fips/setup-fips-enabled" role="STANDALONE"/>
+		//	How can I make RHEL 6 or RHEL 7 FIPS 140-2 compliant?  https://access.redhat.com/solutions/137833
+		// 
+		// Beaker test_log-Setup.log :: [   FAIL   ] :: FIPS on s390 on RHEL <7.1 is not supported (Assert: expected 0, got 1)
+		if (client1 != null) {
+			Assert.assertEquals(client1.runCommandAndWait("sysctl crypto.fips_enabled").getStdout().trim(), "crypto.fips_enabled = "+(sm_clientFips?"1":"0"), "Asserting the expected enablement of FIPS on client '"+sm_client1Hostname+"' before running any tests.");
+		}
+		if (client2 != null) {
+			Assert.assertEquals(client2.runCommandAndWait("sysctl crypto.fips_enabled").getStdout().trim(), "crypto.fips_enabled = "+(sm_clientFips?"1":"0"), "Asserting the expected enablement of FIPS on client '"+sm_client2Hostname+"' before running any tests.");
+		}
 		
 		File serverCaCertFile = null;
 		List<File> generatedProductCertFiles = new ArrayList<File>();
@@ -130,7 +143,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			
 			// NOTE: After updating the candlepin.conf file, the server needs to be restarted, therefore this will not work against the Hosted IT server which we don't want to restart or deploy
 			//       I suggest manually setting this on hosted and asking calfanso to restart
-			servertasks.updateConfigFileParameter("pinsetter.org.fedoraproject.candlepin.pinsetter.tasks.CertificateRevocationListTask.schedule","0 0\\/2 * * * ?");  // every 2 minutes
+			servertasks.updateConfFileParameter("pinsetter.org.fedoraproject.candlepin.pinsetter.tasks.CertificateRevocationListTask.schedule","0 0\\/2 * * * ?");  // every 2 minutes
 			servertasks.cleanOutCRL();
 			servertasks.deploy();
 			server.runCommandAndWait("df -h");server.runCommandAndWait("ls -Slh /var/log/tomcat6 | head");	// log candlepin's starting disk usage (for debugging information only)
@@ -174,105 +187,15 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		for (SubscriptionManagerTasks smt : new SubscriptionManagerTasks[]{client2tasks, client1tasks}) {
 			if (smt != null) setupClient(smt, serverCaCertFile, generatedProductCertFiles);
 		}
-		
-		// determine the server URL that will be used for candlepin API calls
-		if (sm_serverUrl.equals("")) {
-			sm_serverUrl = getServerUrl(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile,"hostname"), clienttasks.getConfFileParameter(clienttasks.rhsmConfFile,"port"), clienttasks.getConfFileParameter(clienttasks.rhsmConfFile,"prefix"));
-		}
-		
-		log.info("Installed version of candlepin...");
-		JSONObject jsonStatus =null;
-		try {
-			//jsonStatus = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,"anybody","password","/status")); // seems to work no matter what credentials are passed		
-			//jsonStatus = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,"","","/status"));
-			//The above call works against onpremises, but causes the following against stage
-			//201108251644:10.040 - INFO: SSH alternative to HTTP request: curl -k  --request GET https://rubyvip.web.stage.ext.phx2.redhat.com:80/clonepin/candlepin/status (rhsm.cli.tasks.CandlepinTasks.getResourceUsingRESTfulAPI)
-			//201108251644:10.049 - WARNING: Required credentials not available for BASIC <any realm>@rubyvip.web.stage.ext.phx2.redhat.com:80 (org.apache.commons.httpclient.HttpMethodDirector.authenticateHost)
-			//201108251644:10.052 - WARNING: Preemptive authentication requested but no default credentials available (org.apache.commons.httpclient.HttpMethodDirector.authenticateHost)
-			jsonStatus = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(/*sm_serverAdminUsername*/null,/*sm_serverAdminPassword*/null,sm_serverUrl,"/status"));
-			if (jsonStatus!=null) {
-				servertasks.statusCapabilities.clear();
-				servertasks.statusRelease		= jsonStatus.getString("release");
-				servertasks.statusResult		= jsonStatus.getBoolean("result");
-				servertasks.statusVersion		= jsonStatus.getString("version");
-				servertasks.statusTimeUTC		= jsonStatus.getString("timeUTC");
-				try {
-				servertasks.statusStandalone	= jsonStatus.getBoolean("standalone");
-				} catch(Exception e){log.warning(e.getMessage());log.warning("You should upgrade your candlepin server!");}
-				for (int i=0; i<jsonStatus.getJSONArray("managerCapabilities").length(); i++) {	// not displayed on Katello; see Bug 1097875 - /katello/api/status neglects to report all of the fields that /candlepin/status reports
-					servertasks.statusCapabilities.add(jsonStatus.getJSONArray("managerCapabilities").getString(i));
-				}
 
-				//	# curl --insecure --user testuser1:password --request GET https://jsefler-f14-candlepin.usersys.redhat.com:8443/candlepin/status --stderr /dev/null | python -msimplejson/tool
-				//	{
-				//	    "release": "1", 
-				//	    "result": true, 
-				//	    "standalone": true, 
-				//	    "timeUTC": "2012-03-08T18:58:07.688+0000", 
-				//	    "version": "0.5.24"
-				//	}
-				
-				//	# curl --stderr /dev/null --insecure --user ***:*** --request GET http://rubyvip.web.stage.ext.phx2.redhat.com/clonepin/candlepin/status | python -m simplejson/tool
-				//	{
-				//	    "managerCapabilities": [
-				//	        "cores", 
-				//	        "ram", 
-				//	        "instance_multiplier", 
-				//	        "derived_product", 
-				//	        "cert_v3"
-				//	    ], 
-				//	    "release": "1", 
-				//	    "result": true, 
-				//	    "rulesSource": "DEFAULT", 
-				//	    "rulesVersion": "4.3", 
-				//	    "standalone": false, 
-				//	    "timeUTC": "2013-09-27T13:51:08.783+0000", 
-				//	    "version": "0.8.28"    <=== COULD ALSO BE "0.8.28.0" IF A HOT FIX WAS APPLIED
-				//	}
-				
-				//	# curl -k -u ***:*** https://katellosach.usersys.redhat.com:443/katello/api/status --stderr /dev/null | python -mjson/tool
-				//	{
-				//	    "release": "Katello",
-				//	    "result": true,
-				//	    "standalone": true,
-				//	    "timeUTC": "2014-01-29T09:04:14Z",
-				//	    "version": "1.4.15-1.el6"
-				//	}
-				
-				//	# curl --stderr /dev/null --insecure --request GET https://qe-subman-rhel65.usersys.redhat.com:443/rhsm/status | python -m simplejson/tool
-				//	{
-				//	    "managerCapabilities": [
-				//	        "cores", 
-				//	        "ram", 
-				//	        "instance_multiplier", 
-				//	        "derived_product", 
-				//	        "cert_v3", 
-				//	        "guest_limit", 
-				//	        "vcpu"
-				//	    ], 
-				//	    "release": "Katello", 
-				//	    "result": true, 
-				//	    "rulesSource": "DEFAULT", 
-				//	    "rulesVersion": "5.11", 
-				//	    "standalone": true, 
-				//	    "timeUTC": "2014-09-24T22:03:34Z", 
-				//	    "version": "1.5.0-30.el6sat"
-				//	}
-				
-				//TODO git candlepin version on hosted stage:
-				// curl -s	http://git.corp.redhat.com/cgit/puppet-cfg/modules/candlepin/plain/data/rpm-versions.yaml?h=stage | grep candlepin
-				// candlepin-it-jars: 0.5.26-1
-				// candlepin-jboss: 0.5.26-1.el6
-
-				log.info("Candlepin server '"+sm_serverHostname+"' is running: release="+servertasks.statusRelease+" version="+servertasks.statusVersion+" standalone="+servertasks.statusStandalone+" timeUTC="+servertasks.statusTimeUTC);
-				Assert.assertEquals(servertasks.statusResult, true,"Candlepin status result");
-				Assert.assertTrue(servertasks.statusRelease.matches("\\d+|Katello"), "Candlepin release '"+servertasks.statusRelease+"' matches d+|Katello");	// https://bugzilla.redhat.com/show_bug.cgi?id=703962
-				Assert.assertTrue(servertasks.statusVersion.matches("\\d+\\.\\d+\\.\\d+(\\.\\d+)?(-.+)?"), "Candlepin version '"+servertasks.statusVersion+"' matches d+\\.d+\\.d+(\\.d+)?(-.+)? (Note: optional fourth digits indicate a hot fix)");
-			}
-		} catch (Exception e) {
-			// Bug 843649 - subscription-manager server version reports Unknown against prod/stage candlepin
-			log.warning("Ecountered exception while getting the Candlepin server '"+sm_serverHostname+"' version from the /status api: "+e);
-		} 
+////DELETEME - moved into setupClient(...)
+//		// determine the server URL that will be used for candlepin API calls
+//		if (sm_serverUrl.isEmpty()) {
+//			sm_serverUrl = getServerUrl(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile,"hostname"), clienttasks.getConfFileParameter(clienttasks.rhsmConfFile,"port"), clienttasks.getConfFileParameter(clienttasks.rhsmConfFile,"prefix"));
+//		}
+		
+		// initialize various servertasks instance variables for future reference
+		servertasks.initialize(clienttasks.candlepinAdminUsername, clienttasks.candlepinAdminPassword, clienttasks.candlepinUrl);
 		
 	    File file = new File("test-output/version.txt"); // this will be in the automation.dir directory on hudson (workspace/automatjon/sm)
     	Writer output = new BufferedWriter(new FileWriter(file));
@@ -289,6 +212,8 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			log.info(infoMsg); output.write(infoMsg+"\n");
 			infoMsg = client1.runCommandAndWait("uname -a").getStdout();	// Linux jsefler-onprem-server.usersys.redhat.com 2.6.32-122.el6.x86_64 #1 SMP Wed Mar 9 23:54:34 EST 2011 x86_64 x86_64 x86_64 GNU/Linux
 			log.info(infoMsg); output.write(infoMsg+"\n");
+			infoMsg = client1.runCommandAndWait("grep RHEL /etc/yum.repos.d/beaker-*.repo | sort | tail -1").getStdout();	// /etc/yum.repos.d/beaker-Client.repo:baseurl=http://download.eng.bos.redhat.com/rel-eng/RHEL-6.8-20160125.0/compose/Client/i386/os
+			log.info(infoMsg); output.write(infoMsg+"\n");
 		}
 		if (client2 != null) {
 			infoMsg = "Client2 '"+sm_client2Hostname+"' is running version: ";
@@ -301,11 +226,15 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			log.info(infoMsg); output.write(infoMsg+"\n");
 			infoMsg = client2.runCommandAndWait("uname -a").getStdout();	// Linux jsefler-onprem-server.usersys.redhat.com 2.6.32-122.el6.x86_64 #1 SMP Wed Mar 9 23:54:34 EST 2011 x86_64 x86_64 x86_64 GNU/Linux
 			log.info(infoMsg); output.write(infoMsg+"\n");
+			infoMsg = client2.runCommandAndWait("grep RHEL /etc/yum.repos.d/beaker-*.repo | sort | tail -1").getStdout();	// /etc/yum.repos.d/beaker-Client.repo:baseurl=http://download.eng.bos.redhat.com/rel-eng/RHEL-6.8-20160125.0/compose/Client/i386/os
+			log.info(infoMsg); output.write(infoMsg+"\n");
+
 		}
 		output.close();
 		
 		isSetupBeforeSuiteComplete = true;
 	}
+	
 	
 	/**
 	 * @param ciMessage - the value of an environment variable called CI_MESSAGE
@@ -570,6 +499,12 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		// transfer copies of all the generated product certs from the candlepin server to the clients
 		log.info("Copying Candlepin generated product certs onto client to simulate installed products...");
 		smt.installProductCerts(generatedProductCertFiles);
+		
+		// initialize variables used to access CandlepinTasks from SubcriptionManagerTasks
+		smt.candlepinAdminUsername = sm_serverAdminUsername;
+		smt.candlepinAdminPassword = sm_serverAdminPassword;
+		smt.candlepinUrl = sm_serverUrl.isEmpty() ? getServerUrl(smt.getConfFileParameter(smt.rhsmConfFile,"hostname"), smt.getConfFileParameter(smt.rhsmConfFile,"port"), smt.getConfFileParameter(smt.rhsmConfFile,"prefix")) : sm_serverUrl;
+		sm_serverUrl = smt.candlepinUrl;	// rewrite it back to sm_serverUrl to make it easier for tests to access
 	}
 	
 	protected static boolean isSetupBeforeSuiteComplete = false;
@@ -1039,12 +974,15 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		if (!CandlepinType.standalone.equals(sm_serverType)) return;
 		
 		// process all of the subscriptions belonging to ownerKey
-		JSONArray jsonSubscriptions = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,"/owners/"+sm_clientOrg+"/subscriptions"));	
+		JSONArray jsonSubscriptions = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,"/owners/"+sm_clientOrg+"/subscriptions"));	// /subscriptions?include=id&include=product.id
 		List<String> secondarySubscriptionIdsDeleted = new ArrayList<String>();
 		for (int i = 0; i < jsonSubscriptions.length(); i++) {
 			JSONObject jsonSubscription = (JSONObject) jsonSubscriptions.get(i);
 			JSONObject jsonProduct = (JSONObject) jsonSubscription.get("product");
 			String productId = jsonProduct.getString("id");
+			
+			// skip all skus not on the list of secondarySkusToDelete
+			if (!secondarySkusToDelete.contains(productId)) continue;
 			
 			// TODO check the startDate and keep future subscriptions
 			
@@ -1060,7 +998,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			secondarySubscriptionIdsDeleted.add(subscriptionId);
 		}
 		
-		// refresh the pools
+		// refresh the pools (only when some secondary subscriptions have been deleted) 
 		if (!secondarySubscriptionIdsDeleted.isEmpty()) {
 			JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,sm_clientOrg);
 			jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,jobDetail,"FINISHED", 5*1000, 1);
@@ -1567,6 +1505,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			DateFormat dateFormat = new SimpleDateFormat(datePattern);	// format="yyyy-MM-dd'T'HH:mm:ss.SSSZ" will parse dateString="2012-02-08T00:00:00.000+0000"
 			if (timeZone!=null) dateFormat.setTimeZone(TimeZone.getTimeZone(timeZone));	// timeZone="GMT"
 			Calendar calendar = new GregorianCalendar();
+			if (timeZone!=null) calendar.setTimeZone(TimeZone.getTimeZone(timeZone));
 			calendar.setTimeInMillis(dateFormat.parse(dateString).getTime());
 			return calendar;
 		}
@@ -3184,7 +3123,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 */
 			Calendar endDate = parseISO8601DateString(jsonPool.getString("endDate"), "GMT");
 			
-			Boolean multiEntitlement = CandlepinTasks.isPoolProductMultiEntitlement(sm_clientUsername,sm_clientPassword, SubscriptionManagerBaseTestScript.sm_serverUrl, jsonPool.getString("id"));
+			Boolean multiEntitlement = CandlepinTasks.isPoolProductMultiEntitlement(sm_clientUsername,sm_clientPassword, sm_serverUrl, jsonPool.getString("id"));
 
 			String quantity = String.valueOf(jsonPool.getInt("quantity"));
 			
@@ -3380,13 +3319,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	 */
 	protected List<List<Object>> getModifierSubscriptionDataAsListOfLists(Integer limitPoolsModifiedCount) throws JSONException, Exception {
 		List<List<Object>> ll = new ArrayList<List<Object>>();	if (!isSetupBeforeSuiteComplete) return ll;
-		
-		// get the owner key for clientusername, clientpassword
-		String consumerId = clienttasks.getCurrentConsumerId();
-		if (consumerId==null) consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, Boolean.TRUE, false, null, null, null));
-		//String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword, consumerId);
-
-		
+		JSONObject jsonStatus = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(/*authenticator*/null,/*password*/null,sm_serverUrl,"/status"));
 		List<SubscriptionPool> allAvailablePools = clienttasks.getCurrentlyAllAvailableSubscriptionPools();
 		
 		// iterate through all available pools looking for those that contain products with content that modify other products
@@ -3395,7 +3328,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		Map <String,JSONObject> jsonProductMap = new HashMap<String,JSONObject>();	// keys are productId, values are jsonProduct
 		for (SubscriptionPool modifierPool : allAvailablePools) {
 			//JSONObject jsonModifierPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/pools/"+modifierPool.poolId));	
-			if (!jsonPoolMap.containsKey(modifierPool.poolId)) jsonPoolMap.put(modifierPool.poolId, new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/pools/"+modifierPool.poolId+"?include=providedProducts.productId")));
+			if (!jsonPoolMap.containsKey(modifierPool.poolId)) jsonPoolMap.put(modifierPool.poolId, new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/pools/"+modifierPool.poolId+"?include=providedProducts.productId&include=owner.href")));
 			JSONObject jsonModifierPool = jsonPoolMap.get(modifierPool.poolId);
 			JSONArray jsonModifierProvidedProducts = jsonModifierPool.getJSONArray("providedProducts");
 			
@@ -3412,8 +3345,9 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 				String modifierProvidedProductId = jsonModifierProvidedProduct.getString("productId");
 				
 				// get the productContents
-				//JSONObject jsonProduct = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/products/"+modifierProvidedProductId));	
-				if (!jsonProductMap.containsKey(modifierProvidedProductId)) jsonProductMap.put(modifierProvidedProductId, new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/products/"+modifierProvidedProductId+"?include=productContent.content")));
+				String path = "/products/"+modifierProvidedProductId;
+				if (SubscriptionManagerTasks.isVersion(jsonStatus.getString("version"),">=","2.0.11")) path = jsonModifierPool.getJSONObject("owner").getString("href")+path;	// starting with candlepin-2.0.11 /products/<ID> are requested by /owners/<KEY>/products/<ID> OR /products/<UUID>
+				if (!jsonProductMap.containsKey(modifierProvidedProductId)) jsonProductMap.put(modifierProvidedProductId, new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,path+"?include=productContent.content")));
 				JSONObject jsonProduct = jsonProductMap.get(modifierProvidedProductId);
 				JSONArray jsonProductContents = jsonProduct.getJSONArray("productContent");
 				for (int j = 0; j < jsonProductContents.length(); j++) {
@@ -3473,7 +3407,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 						MODIFIED_LOOP_FOR_ALL_AVAILABLE_POOLS: for (SubscriptionPool poolModified : allAvailablePools) {
 							
 							//JSONObject jsonPoolModified = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/pools/"+poolModified.poolId));	
-							if (!jsonPoolMap.containsKey(poolModified.poolId)) jsonPoolMap.put(poolModified.poolId, new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/pools/"+poolModified.poolId+"?include=providedProducts.productId")));
+							if (!jsonPoolMap.containsKey(poolModified.poolId)) jsonPoolMap.put(poolModified.poolId, new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/pools/"+poolModified.poolId+"?include=providedProducts.productId&include=owner.href")));
 							JSONObject jsonPoolModified = jsonPoolMap.get(poolModified.poolId);
 							
 							// iterate through each of the providedProducts of the poolModified
@@ -3601,7 +3535,33 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		serverurl="";																					ll.add(Arrays.asList(new Object[] {	null,	serverurl,	/* last set */ ll.get(ll.size()-1).get(2),	ll.get(ll.size()-1).get(3),	ll.get(ll.size()-1).get(4),	new Integer(0),	null,	null}));	
 	
 		// negative tests
-		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.9-1")) {	// post commit a695ef2d1da882c5f851fde90a24f957b70a63ad
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.17.5-1")) {	// post commit ea10b99095ad58df57ed107e13bf19498e003ae8	// Bug 1320507 - Wrong prefix prompts when register using serverurl without prefix
+			if (isCurrentlyConfiguredServerTypeHosted()) {
+				// 08-11-2015, I don't like this behavior because IT is blacklisting any prefix that does not match /subscription causing a inaccessible server to masquarade as a CA certificate error"
+				serverurl= "https://"+server_hostname+(server_port.isEmpty()?"":":"+server_port)+"/PREFIX";		ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"1119688","842885"}),								serverurl,	null,	null,	null,		new Integer(78),	null,						"Error: CA certificate for subscription service has not been installed."}));
+				serverurl= "/";																					ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"1119688","830767"}),								serverurl,	null,	null,	null,		new Integer(78),	null,						"Error: CA certificate for subscription service has not been installed."}));
+			} else {
+				serverurl= "https://"+server_hostname+(server_port.isEmpty()?"":":"+server_port)+"/PREFIX";		ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"1119688","842885"}),								serverurl,	null,	null,	null,		new Integer(69),	null,						"Unable to reach the server at "+server_hostname+(server_port.isEmpty()?":"+defaultPort:":"+server_port)+"/PREFIX"}));
+				serverurl= "/";																					ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"1119688","1320507","830767"}),						serverurl,	null,	null,	null,		new Integer(69),	null,						"Unable to reach the server at "+server_hostname+":"+server_port+"/"}));
+			}
+			serverurl= "hostname";																			ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"1119688","1320507"}),									serverurl,	null,	null,	null,		new Integer(69),	null,						"Unable to reach the server at hostname:"+server_port+server_prefix}));
+			serverurl= "hostname:900";																		ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"1119688","1320507"}),									serverurl,	null,	null,	null,		new Integer(69),	null,						"Unable to reach the server at hostname:900"+server_prefix}));
+			serverurl= "hostname:900/prefix";																ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"1119688"}),											serverurl,	null,	null,	null,		new Integer(69),	null,						"Unable to reach the server at hostname:900/prefix"}));
+			serverurl= "https://"+server_hostname+":PORT"+server_prefix;									ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"1119688","1044686","1054496","878634","842845"}),		serverurl,	null,	null,	null,		new Integer(70),	"Error parsing serverurl:",	"Server URL port should be numeric"}));
+			serverurl= "https://hostname:PORT/prefix";														ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"1119688","1044686","1054496","878634","842845"}),		serverurl,	null,	null,	null,		new Integer(70),	"Error parsing serverurl:",	"Server URL port should be numeric"}));
+			serverurl= "https://hostname:/prefix";															ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"1119688","1044686","1054496","878634"}),				serverurl,	null,	null,	null,		new Integer(70),	"Error parsing serverurl:",	"Server URL port should be numeric"}));
+			serverurl= "https:/hostname/prefix";															ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"1119688","1044686","1054496"}),						serverurl,	null,	null,	null,		new Integer(70),	"Error parsing serverurl:",	"Server URL has an invalid scheme. http:// and https:// are supported"}));
+			serverurl= "https:hostname/prefix";																ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"1119688","1044686","1054496"}),						serverurl,	null,	null,	null,		new Integer(70),	"Error parsing serverurl:",	"Server URL has an invalid scheme. http:// and https:// are supported"}));
+			serverurl= "https//hostname/prefix";															ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"1119688","1044686","1054496"}),						serverurl,	null,	null,	null,		new Integer(70),	"Error parsing serverurl:",	"Server URL has an invalid scheme. http:// and https:// are supported"}));
+			serverurl= "https/hostname/prefix";																ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"1119688","1044686","1054496"}),						serverurl,	null,	null,	null,		new Integer(70),	"Error parsing serverurl:",	"Server URL has an invalid scheme. http:// and https:// are supported"}));
+			serverurl= "ftp://hostname/prefix";																ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"1119688","1044686","1054496"}),						serverurl,	null,	null,	null,		new Integer(70),	"Error parsing serverurl:",	"Server URL has an invalid scheme. http:// and https:// are supported"}));
+			serverurl= "git://hostname/prefix";																ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"1119688","1044686","1054496"}),						serverurl,	null,	null,	null,		new Integer(70),	"Error parsing serverurl:",	"Server URL has an invalid scheme. http:// and https:// are supported"}));
+			serverurl= "https://";																			ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"1119688","1044686","1054496"}),						serverurl,	null,	null,	null,		new Integer(70),	"Error parsing serverurl:",	"Server URL is just a schema. Should include hostname, and/or port and path"}));
+			serverurl= "http://";																			ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"1119688","1044686","1054496"}),						serverurl,	null,	null,	null,		new Integer(70),	"Error parsing serverurl:",	"Server URL is just a schema. Should include hostname, and/or port and path"}));
+			//TODO serverurl= "DON'T KNOW WHAT TO PUT HERE TO INVOKE THE ERROR; see exceptions.py";			ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"1119688","1044686","1054496"}),						serverurl,	null,	null,	null,		new Integer(70),	"Error parsing serverurl:",	"Server URL can not be empty"}));
+			//TODO serverurl= "DON'T KNOW WHAT TO PUT HERE TO INVOKE THE ERROR; see exceptions.py";			ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"1119688","1044686","1054496"}),						serverurl,	null,	null,	null,		new Integer(70),	"Error parsing serverurl:",	"Server URL can not be None"}));
+
+		} else if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.9-1")) {	// post commit a695ef2d1da882c5f851fde90a24f957b70a63ad
 			if (isCurrentlyConfiguredServerTypeHosted()) {
 				// 08-11-2015, I don't like this behavior because IT is blacklisting any prefix that does not match /subscription causing a inaccessible server to masquarade as a CA certificate error"
 				serverurl= "https://"+server_hostname+(server_port.isEmpty()?"":":"+server_port)+"/PREFIX";		ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"1119688","842885"}),								serverurl,	null,	null,	null,		new Integer(78),	null,						"Error: CA certificate for subscription service has not been installed."}));
@@ -3740,7 +3700,47 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	protected boolean isHostnameHosted(String hostname) {
 		return hostname.matches("subscription\\.rhn\\.(.*\\.)*redhat\\.com");
 	}
-
+	
+	protected void setupRhnCACert() {
+		// is rhn-client-tools package installed?
+		boolean isRhnClientToolsInstalled = clienttasks.isPackageInstalled("rhn-client-tools");	// provides /etc/sysconfig/rhn/up2date and /usr/sbin/rhnreg_ks
+		
+		// make dir /etc/sysconfig/rhn/ when rhn-client-tools package is not installed to enable some more tesing
+		if (!isRhnClientToolsInstalled) {
+			String rhnDir =  new File(clienttasks.rhnSystemIdFile).getParent();
+			client.runCommandAndWait("mkdir -p "+rhnDir);
+		}
+		
+		
+		// make sure we have the RHN-ORG-TRUSTED-SSL-CERT for the rhn/satellite server
+		/*
+		 * 	1. Set automation parameters:
+		 * 		sm.rhn.hostname : https://sat-56-server.usersys.redhat.com
+		 *		sm.rhn.username : admin
+		 *		sm.rhn.password : *****
+		 *  2. Use firefox to login to the Satellite account
+		 *      https://sat-56-server.usersys.redhat.com/rhn/Login.do
+		 *      do whatever work you need to there
+		 *  3. Get the CA cert from Satellite and install it onto your client
+		 *      wget --no-verbose --no-check-certificate --output-document=/usr/share/rhn/RHN-ORG-TRUSTED-SSL-CERT_sat-56-server.usersys.redhat.com https://sat-56-server.usersys.redhat.com/pub/RHN-ORG-TRUSTED-SSL-CERT
+		 *  4. Update the /etc/sysconfig/rhn/up2date with
+		 *      sslCACert=RHN-ORG-TRUSTED-SSL-CERT_sat-56-server.usersys.redhat.com
+		 */
+		// get the CA cert from Satellite and install it onto your client
+		if (!sm_rhnHostname.isEmpty()) {
+			if (!doesStringContainMatches(sm_rhnHostname, "rhn\\.(.+\\.)*redhat\\.com")) {	// if (sm_rhnHostname.startsWith("http") { 	// indicates that we are migrating from a non-hosted rhn server - as opposed to rhn.code.stage.redhat.com (stage) or rhn.redhat.com (production)
+				String satHostname = sm_rhnHostname.split("/")[2];	// https://sat-56-server.usersys.redhat.com
+				String satCaCertPath = "/usr/share/rhn/RHN-ORG-TRUSTED-SSL-CERT"+"_"+satHostname;
+				RemoteFileTasks.runCommandAndAssert(client,"wget --no-verbose --no-check-certificate --output-document="+satCaCertPath+" "+sm_rhnHostname+"/pub/RHN-ORG-TRUSTED-SSL-CERT",Integer.valueOf(0),null,"-> \""+satCaCertPath+"\"");
+				
+				// update /etc/sysconfig/rhn/up2date->sslCACert with satCaCertPath
+				clienttasks.updateConfFileParameter(clienttasks.rhnUp2dateFile, "sslCACert", satCaCertPath);	// sslCACert[comment]=The CA cert used to verify the ssl server
+			}
+		}
+		
+		// make sure the rhnplugin conf is enabled
+		clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForRhn, "enabled","1");
+	}
 
 
 }

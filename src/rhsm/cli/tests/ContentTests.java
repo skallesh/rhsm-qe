@@ -52,9 +52,9 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 
 	
 	// Test methods ***********************************************************************
-
+	
 	@Test(	description="subscription-manager Yum plugin: enable/disable",
-			groups={"EnableDisableManageReposAndVerifyContentAvailable_Test","blockedByBug-804227","blockedByBug-871146","blockedByBug-905546","blockedByBug-1017866"},
+			groups={"FipsTests","EnableDisableManageReposAndVerifyContentAvailable_Test","blockedByBug-804227","blockedByBug-871146","blockedByBug-905546","blockedByBug-1017866"},
 			//dataProvider="getAvailableSubscriptionPoolsData",	// very thorough, but takes too long to execute and rarely finds more bugs
 			dataProvider="getRandomSubsetOfAvailableSubscriptionPoolsData",
 			enabled=true)
@@ -318,7 +318,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager Yum plugin: ensure content can be downloaded/installed/removed",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-701425","blockedByBug-871146","blockedByBug-962520"},
+			groups={"FipsTests","AcceptanceTests","Tier1Tests","blockedByBug-701425","blockedByBug-871146","blockedByBug-962520"},
 			dataProvider="getPackageFromEnabledRepoAndSubscriptionPoolData",
 			enabled=false)	// disabled in favor of replacement InstallAndRemoveAnyPackageFromEnabledRepoAfterSubscribingToPool_Test
 	@ImplementsNitrateTest(caseId=41695,fromPlan=2479)
@@ -353,7 +353,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager Yum plugin: ensure content can be downloaded/installed/removed",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-701425","blockedByBug-871146","blockedByBug-962520"},
+			groups={"FipsTests","AcceptanceTests","Tier1Tests","blockedByBug-701425","blockedByBug-871146","blockedByBug-962520"},
 			dataProvider="getEnabledRepoAndSubscriptionPoolData",
 			enabled=true)
 	@ImplementsNitrateTest(caseId=41695,fromPlan=2479)
@@ -403,39 +403,61 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	
-	@Test(	description="subscription-manager Yum plugin: ensure yum groups can be downloaded/installed/removed",
-			groups={},
-			dataProvider="getYumGroupFromEnabledRepoAndSubscriptionPoolData",
+	@Test(	description="subscription-manager Yum plugin: ensure yum groups can be installed/removed",
+			groups={"FipsTests"},
+			dataProvider="getYumAvailableGroupFromEnabledRepoAndSubscriptionPoolData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=) //TODO Find a tcms caseId for
-	public void InstallAndRemoveYumGroupFromEnabledRepoAfterSubscribingToPool_Test(String availableGroup, String installedGroup, String repoLabel, SubscriptionPool pool) throws JSONException, Exception {
-		if (availableGroup==null && installedGroup==null) throw new SkipException("No yum groups corresponding to enabled repo '"+repoLabel+" were found after subscribing to pool: "+pool);
+	public void InstallAndRemoveYumGroupFromEnabledRepoAfterSubscribingToPool_Test(String availableGroup, String repoLabel, SubscriptionPool pool) throws JSONException, Exception {
+		if (availableGroup==null) throw new SkipException("No yum groups corresponding to enabled repo '"+repoLabel+" were found after subscribing to pool: "+pool);
+		
+		// remove any previously attached subscriptions
+		// avoid throttling RateLimitExceededException from IT-Candlepin
+		if (CandlepinType.hosted.equals(sm_serverType)) {	// strategically  get a new consumer to avoid 60 repeated API calls from the same consumer
+			// re-register as a new consumer
+			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		} else clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null, null);
+		
+		// subscribe to this pool (and remember it)
+		File entitlementCertFile = clienttasks.subscribeToSubscriptionPool_(pool);
+		Assert.assertNotNull(entitlementCertFile, "Found the entitlement cert file that was granted after subscribing to pool: "+pool);
+		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
+		
+		// install and remove availableGroup
+		clienttasks.yumInstallGroup(availableGroup);
+		clienttasks.yumRemoveGroup(availableGroup);
+		
+		// TODO: add asserts for the products that get installed or deleted in stdout as a result of yum group install/remove: 
+		// deleting: /etc/pki/product/7.pem
+		// installing: 7.pem
+		// assert the list --installed "status" for the productNamespace name that corresponds to the ContentNamespace from where this repolabel came from.
+		
+		// clean up
+		clienttasks.unsubscribeFromSerialNumber(entitlementCert.serialNumber);
+	}
+	@Test(	description="subscription-manager Yum plugin: ensure yum groups can be removed/re-installed",
+			groups={},
+			dataProvider="getYumInstalledGroupFromEnabledRepoAndSubscriptionPoolData",
+			enabled=false)	// jsefler - I don't like this test becasue groups installed from the latest compose will have newer packages and required packages than available from the subscription CDN content
+	//@ImplementsNitrateTest(caseId=) //TODO Find a tcms caseId for
+	public void RemoveAndInstallYumGroupFromEnabledRepoAfterSubscribingToPool_Test(String installedGroup, String repoLabel, SubscriptionPool pool) throws JSONException, Exception {
+		if (installedGroup==null) throw new SkipException("No yum groups corresponding to enabled repo '"+repoLabel+" were found after subscribing to pool: "+pool);
 				
 		// unsubscribe from this pool
 		if (pool.equals(lastSubscribedSubscriptionPool)) clienttasks.unsubscribeFromSerialNumber(clienttasks.getSerialNumberFromEntitlementCertFile(lastSubscribedEntitlementCertFile));
 		
 		// before subscribing to the pool, assert that the yum groupinfo does not exist
-		for (String group : new String[]{availableGroup,installedGroup}) {
-			if (group!=null) RemoteFileTasks.runCommandAndAssert(client, "yum groupinfo \""+group+"\" --disableplugin=rhnplugin", Integer.valueOf(0), null, "Warning: Group "+group+" does not exist.");
-		}
-
+		RemoteFileTasks.runCommandAndAssert(client, "yum groupinfo \""+installedGroup+"\" --disableplugin=rhnplugin", Integer.valueOf(0), null, "Warning: Group "+installedGroup+" does not exist.");
+		
 		// subscribe to this pool (and remember it)
 		File entitlementCertFile = clienttasks.subscribeToSubscriptionPool_(pool);
 		Assert.assertNotNull(entitlementCertFile, "Found the entitlement cert file that was granted after subscribing to pool: "+pool);
 		lastSubscribedEntitlementCertFile = entitlementCertFile;
 		lastSubscribedSubscriptionPool = pool;
 		
-		// install and remove availableGroup
-		if (availableGroup!=null) {
-			clienttasks.yumInstallGroup(availableGroup);
-			clienttasks.yumRemoveGroup(availableGroup);
-		}
-		
 		// remove and install installedGroup
-		if (installedGroup!=null) {
-			clienttasks.yumRemoveGroup(installedGroup);
-			clienttasks.yumInstallGroup(installedGroup);
-		}
+		clienttasks.yumRemoveGroup(installedGroup);
+		clienttasks.yumInstallGroup(installedGroup);
 
 		// TODO: add asserts for the products that get installed or deleted in stdout as a result of yum group install/remove: 
 		// deleting: /etc/pki/product/7.pem
@@ -825,7 +847,9 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	public void VerifyContentSetsEntitledFromSubscriptionPoolSatisfyTheSystemArch_Test(SubscriptionPool pool) throws JSONException, Exception {
 		List<String> providedProductIds = CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername,sm_clientPassword,sm_serverUrl,pool.poolId);
 		if (providedProductIds.isEmpty()) throw new SkipException("This test is not applicable for a pool that provides no products.");
-		
+		JSONObject jsonStatus = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(/*authenticator*/null,/*password*/null,sm_serverUrl,"/status"));
+		JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/pools/"+pool.poolId));
+
 		// maintain a list of expected content sets
 		Set<ContentNamespace> expectedContentNamespaceSet = new HashSet<ContentNamespace>();
 		// maintain a list of unexpected content sets
@@ -834,7 +858,9 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		for (String providedProductId : providedProductIds) {
 			
 			// get the product
-			JSONObject jsonProduct = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/products/"+providedProductId));	
+			String path = "/products/"+providedProductId;
+			if (SubscriptionManagerTasks.isVersion(jsonStatus.getString("version"),">=","2.0.11")) path = jsonPool.getJSONObject("owner").getString("href")+path;	// starting with candlepin-2.0.11 /products/<ID> are requested by /owners/<KEY>/products/<ID> OR /products/<UUID>
+			JSONObject jsonProduct = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,path));	
 			
 			// get the product supported arches
 			JSONArray jsonProductAttributes = jsonProduct.getJSONArray("attributes");
@@ -940,7 +966,10 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		for (String providedProductId : providedProductIds) {
 			
 			// get the product
-			JSONObject jsonProduct = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/products/"+providedProductId));	
+			String path = "/products/"+providedProductId;
+			if (SubscriptionManagerTasks.isVersion(jsonStatus.getString("version"),">=","2.0.11")) path = jsonPool.getJSONObject("owner").getString("href")+path;	// starting with candlepin-2.0.11 /products/<ID> are requested by /owners/<KEY>/products/<ID> OR /products/<UUID>
+			JSONObject jsonProduct = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,path));	
+			
 			// get the provided product contents
 			JSONArray jsonProductContents = jsonProduct.getJSONArray("productContent");
 			for (int j = 0; j < jsonProductContents.length(); j++) {
@@ -1029,7 +1058,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="Verify that all there is at least one available RHEL subscription and that yum content is available for the installed RHEL product cert",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1156638"},
+			groups={"FipsTests","AcceptanceTests","Tier1Tests","blockedByBug-1156638"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyRhelSubscriptionContentIsAvailable_Test() throws JSONException, Exception {
@@ -1118,13 +1147,18 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		}
 		// END OF WORKAROUND
 		
+		if (!rhelSubscriptionIsAvailable) {
+			clienttasks.facts_(true, null, null, null, null);
+			log.warning("This test is about to fail and may be due to the lack of an available subscription with enough socket/ram/core support to cover this system.  Visually confirm by reviewing the system facts above.");
+		}
+		
 		Assert.assertTrue(rhelSubscriptionIsAvailable,"Successfully subscribed to at least one available RHEL subscription that provided for our installed RHEL product cert: "+rhelProductCert);
 		Assert.assertTrue(rhelYumContentIsAvailable,"All of the RHEL subscriptions subscribed provided at least one enabled yum content package applicable for our installed RHEL product cert: "+rhelProductCert+" (See WARNINGS logged above for failed subscriptions)");
 	}
 	
 	
 	@Test(	description="Verify that yum install does not fail when service rsyslog is stopped",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1211557","VerifyYumInstallSucceedsWhenServiceRsyslogIsStopped_Test"},
+			groups={"FipsTests","AcceptanceTests","Tier1Tests","blockedByBug-1211557","VerifyYumInstallSucceedsWhenServiceRsyslogIsStopped_Test"},
 			dependsOnMethods={"VerifyRhelSubscriptionContentIsAvailable_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -1754,6 +1788,34 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		
 		return ll;
 	}
+	@DataProvider(name="getYumAvailableGroupFromEnabledRepoAndSubscriptionPoolData")
+	public Object[][] getYumAvailableGroupFromEnabledRepoAndSubscriptionPoolDataAs2dArray() throws JSONException, Exception {
+		return TestNGUtils.convertListOfListsTo2dArray(getYumAvailableGroupFromEnabledRepoAndSubscriptionPoolDataAsListOfLists());
+	}
+	protected List<List<Object>> getYumAvailableGroupFromEnabledRepoAndSubscriptionPoolDataAsListOfLists() throws JSONException, Exception {
+		List<List<Object>> ll = new ArrayList<List<Object>>();
+		
+		for (List<Object> list : getYumGroupFromEnabledRepoAndSubscriptionPoolDataAsListOfLists()) {
+			// list contains:  String availableGroup, String installedGroup, String repoLabel, SubscriptionPool pool
+			ll.add(Arrays.asList(new Object[]{list.get(0), /*exclude installedGroup,*/ list.get(2), list.get(3)}));
+		}
+		
+		return ll;
+	}
+	@DataProvider(name="getYumInstalledGroupFromEnabledRepoAndSubscriptionPoolData")
+	public Object[][] getYumInstalledGroupFromEnabledRepoAndSubscriptionPoolDataAs2dArray() throws JSONException, Exception {
+		return TestNGUtils.convertListOfListsTo2dArray(getYumInstalledGroupFromEnabledRepoAndSubscriptionPoolDataAsListOfLists());
+	}
+	protected List<List<Object>> getYumInstalledGroupFromEnabledRepoAndSubscriptionPoolDataAsListOfLists() throws JSONException, Exception {
+		List<List<Object>> ll = new ArrayList<List<Object>>();
+		
+		for (List<Object> list : getYumGroupFromEnabledRepoAndSubscriptionPoolDataAsListOfLists()) {
+			// list contains:  String availableGroup, String installedGroup, String repoLabel, SubscriptionPool pool
+			ll.add(Arrays.asList(new Object[]{/* exclude availableGroup*/ list.get(1), list.get(2), list.get(3)}));
+		}
+		
+		return ll;
+	}
 	
 	
 	@DataProvider(name="getPackageFromEnabledRepoAndPersonalSubscriptionSubPoolData")
@@ -1827,14 +1889,20 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	}
 	protected List<List<Object>> getAllAvailableSubscriptionPoolsProvidingArchBasedContentDataAsListOfLists() throws JSONException, Exception {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
+		String ownerKey = null;
+		JSONObject jsonStatus = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(/*authenticator*/null,/*password*/null,sm_serverUrl,"/status"));
+
 
 		for (List<Object> l : getAllAvailableSubscriptionPoolsDataAsListOfLists()) {
 			SubscriptionPool pool = (SubscriptionPool)l.get(0);
+			if (ownerKey==null) ownerKey = clienttasks.getCurrentlyRegisteredOwnerKey();
 			
 			for (String providedProductId : CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername,sm_clientPassword,sm_serverUrl,pool.poolId)) {
 	
 				// get the product
-				JSONObject jsonProduct = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/products/"+providedProductId));	
+				String path = "/products/"+providedProductId;
+				if (SubscriptionManagerTasks.isVersion(jsonStatus.getString("version"),">=","2.0.11")) path = "/owners/"+ownerKey+path;	// starting with candlepin-2.0.11 /products/<ID> are requested by /owners/<KEY>/products/<ID> OR /products/<UUID>
+				JSONObject jsonProduct = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,path));	
 				
 				// get the provided product contents
 				JSONArray jsonProductContents = jsonProduct.getJSONArray("productContent");

@@ -208,19 +208,28 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForProductId, "enabled", "1");
 
 		sshCommandResult = client.runCommandAndWait("yum repolist --disableplugin=rhnplugin"); // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
+		// Observed results
 		//	Loaded plugins: product-id, refresh-packagekit, security, subscription-manager
+		//
 		//	Loaded plugins: langpacks, product-id, search-disabled-repos, subscription-
 		//                : manager
-		stdout = sshCommandResult.getStdout().replaceAll("\\n\\s+:\\s", "");	// join multiple lines of Loaded plugins
+		//
+		//	Loaded plugins: product-id, refresh-packagekit, search-disabled-repos, security,
+		//                : subscription-manager
+		stdout = sshCommandResult.getStdout();	// (first observed result)
+		stdout = stdout.replaceAll("-\\n\\s+:\\s", "");	// join multiple lines of Loaded plugins (second observed result)
+		stdout = stdout.replaceAll(",\\n\\s+:\\s", ", ");	// join multiple lines of Loaded plugins (third observed result)
 		stdoutRegex = "Loaded plugins:.* subscription-manager";
-		Assert.assertTrue(doesStringContainMatches(stdout, stdoutRegex),"Yum repolist with "+clienttasks.yumPluginConfFileForSubscriptionManager+" enabled=1 contains expected regex '"+stdoutRegex+"'.");
+		Assert.assertTrue(doesStringContainMatches(stdout, stdoutRegex),"Yum repolist with "+clienttasks.yumPluginConfFileForSubscriptionManager+" enabled=1 appears to have plugin subscription-manager loaded.");
 		stdoutRegex = "Loaded plugins:.* product-id";
-		Assert.assertTrue(doesStringContainMatches(stdout, stdoutRegex),"Yum repolist with "+clienttasks.yumPluginConfFileForProductId+" enabled=1 contains expected regex '"+stdoutRegex+"'.");
+		Assert.assertTrue(doesStringContainMatches(stdout, stdoutRegex),"Yum repolist with "+clienttasks.yumPluginConfFileForProductId+" enabled=1 appears to have plugin product-id loaded.");
 			
 		clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForSubscriptionManager, "enabled", "0");
 		sshCommandResult = client.runCommandAndWait("yum repolist --disableplugin=rhnplugin"); // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
 		//	Loaded plugins: product-id, refresh-packagekit, security
-		stdout = sshCommandResult.getStdout().replaceAll("\\n\\s+:\\s", "");
+		stdout = sshCommandResult.getStdout();	// (first observed result)
+		stdout = stdout.replaceAll("-\\n\\s+:\\s", "");	// join multiple lines of Loaded plugins (second observed result)
+		stdout = stdout.replaceAll(",\\n\\s+:\\s", ", ");	// join multiple lines of Loaded plugins (third observed result)
 		stdoutRegex = "Loaded plugins:.* subscription-manager";
 		Assert.assertFalse(doesStringContainMatches(stdout, stdoutRegex),"Yum repolist with "+clienttasks.yumPluginConfFileForSubscriptionManager+" enabled=0 does NOT contain expected regex '"+stdoutRegex+"'.");
 		stdoutRegex = "Loaded plugins:.* product-id";
@@ -229,7 +238,9 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForProductId, "enabled", "0");
 		sshCommandResult = client.runCommandAndWait("yum repolist --disableplugin=rhnplugin"); // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
 		//	Loaded plugins: product-id, refresh-packagekit, security
-		stdout = sshCommandResult.getStdout().replaceAll("\\n\\s+:\\s", "");
+		stdout = sshCommandResult.getStdout();	// (first observed result)
+		stdout = stdout.replaceAll("-\\n\\s+:\\s", "");	// join multiple lines of Loaded plugins (second observed result)
+		stdout = stdout.replaceAll(",\\n\\s+:\\s", ", ");	// join multiple lines of Loaded plugins (third observed result)
 		stdoutRegex = "Loaded plugins:.* subscription-manager";
 		Assert.assertFalse(doesStringContainMatches(stdout, stdoutRegex),"Yum repolist with "+clienttasks.yumPluginConfFileForSubscriptionManager+" enabled=0 does NOT contain expected regex '"+stdoutRegex+"'.");
 		stdoutRegex = "Loaded plugins:.* product-id";
@@ -237,7 +248,9 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		
 		sshCommandResult = client.runCommandAndWait("yum repolist --disableplugin=rhnplugin --enableplugin=subscription-manager --enableplugin=product-id"); // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
 		//	Loaded plugins: product-id, refresh-packagekit, security, subscription-manager
-		stdout = sshCommandResult.getStdout().replaceAll("\\n\\s+:\\s", "");
+		stdout = sshCommandResult.getStdout();	// (first observed result)
+		stdout = stdout.replaceAll("-\\n\\s+:\\s", "");	// join multiple lines of Loaded plugins (second observed result)
+		stdout = stdout.replaceAll(",\\n\\s+:\\s", ", ");	// join multiple lines of Loaded plugins (third observed result)
 		stdoutRegex = "Loaded plugins:.* product-id";
 		Assert.assertTrue(doesStringContainMatches(stdout, "Loaded plugins:.* subscription-manager"),"Yum repolist with "+clienttasks.yumPluginConfFileForSubscriptionManager+" enabled=0 (but--enableplugin=subscription-manager) contains expected stdout regex '"+stdoutRegex+"'.");
 		stdoutRegex = "Loaded plugins:.* product-id";
@@ -370,6 +383,12 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 					"manual: virt-what",
 					"manual: yum >= 3.2.19-15"
 			}));
+			
+			if (clienttasks.isPackageVersion("subscription-manager",">=","1.16.8-1")) {	// commit 88f7183a7f0ab2955995e238cc221af5f4eadc3e	1282961: Update yum version to current RHEL 6.8 one
+				expectedRequiresList.remove("manual: yum >= 3.2.19-15");
+				expectedRequiresList.add("manual: yum >= 3.2.29-73");
+			}
+			
 			if		(clienttasks.isPackageVersion("subscription-manager",">=","1.10.5-1"))	expectedRequiresList.remove("manual: python-simplejson");		// Bug 1006748 - remove subscription-manager dependency on python-simplejson; subscription-manager commit ee34aef839d0cb367e558f1cd7559590d95cd636
 			if		(clienttasks.isPackageVersion("subscription-manager",">=","1.16.0-1"))	expectedRequiresList.add("manual: python-rhsm >= 1.16.0");		// RHEL6.8	// commit c52630da1d45aee68c122d39fe92607e9a38ff8e
 			else if	(clienttasks.isPackageVersion("subscription-manager",">=","1.14.3-1"))	expectedRequiresList.add("manual: python-rhsm >= 1.14.2");		// RHEL6.7	// commit 26b7eb90519c5d7f696869344610d49c42dfd918
@@ -409,6 +428,10 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 				expectedRequiresList.remove("manual: pygobject2");
 				expectedRequiresList.add("manual: gobject-introspection");
 				expectedRequiresList.add("manual: pygobject3-base");
+			}
+			if (clienttasks.isPackageVersion("subscription-manager",">=","1.16.8-1")) {	// commit 88f7183a7f0ab2955995e238cc221af5f4eadc3e	1282961: Update yum version to current RHEL 6.8 one
+				expectedRequiresList.remove("manual: yum >= 3.2.19-15");
+				expectedRequiresList.add("manual: yum >= 3.2.29-73");
 			}
 			
 			if		(clienttasks.isPackageVersion("subscription-manager",">=","1.15.1-1"))	expectedRequiresList.add("manual: python-rhsm >= 1.15.0");		// RHEL7.2	// commit a2a4794d9eb7b8d74b0eb4bd27d0b6974b87d716
@@ -966,7 +989,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1119688"}),			clienttasks.command+" register --servicelevel=foo",							new Integer(64),	"","Error: Must use --auto-attach with --servicelevel."}));	// changed by bug 874804,876305		ll.add(Arrays.asList(new Object[]{clienttasks.command+" register --servicelevel=foo",				new Integer(255),	"Error: Must use --autosubscribe with --servicelevel.", ""}));
 			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"856236","1119688"}),	clienttasks.command+" register --activationkey=foo --org=foo --env=foo",	new Integer(64),	"","Error: Activation keys do not allow environments to be specified."}));
 			if (clienttasks.isPackageVersion("subscription-manager",">=","1.16.2-1")) {	// subscription-manager commit f14d2618ea94c18a0295ae3a5526a2ff252a3f99	and 6bd0448c85c10d8a58cae10372f0d4aa323d5c27
-				ll.add(Arrays.asList(new Object[]{null,												clienttasks.command+" register --consumerid=123 --force",					new Integer(64),	"","Error: Can not force registration while attempting to recover registration with consumerid. Please use --force without --consumerid to re-register or use the clean command and try again without --force."}));
+				ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1262998"}),		clienttasks.command+" register --consumerid=123 --force",					new Integer(64),	"","Error: Can not force registration while attempting to recover registration with consumerid. Please use --force without --consumerid to re-register or use the clean command and try again without --force."}));
 			}
 			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1119688"}),			clienttasks.command+" list --installed --servicelevel=foo",					new Integer(64),	"","Error: --servicelevel is only applicable with --available or --consumed"}));
 			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1119688"}),			clienttasks.command+" list --no-overlap",									new Integer(64),	"","Error: --no-overlap is only applicable with --available"}));

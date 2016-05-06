@@ -330,7 +330,10 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "manage_repos", "");
 		
 		SSHCommandResult result = clienttasks.repos(true, null, null, (String)null, (String)null, null, null, null);
-		Assert.assertEquals(result.getStdout().trim(), "Repositories disabled by configuration.", "Stdout when calling repos with rhsm.manage_repos configured to nothing.");
+		
+		// as discussed in https://bugzilla.redhat.com/show_bug.cgi?id=1251853#c12
+		// when rhsm.manage_repos is blank, behavior should assume the default value [1] which means repos will be managed
+		Assert.assertEquals(result.getStdout().trim(), "This system has no repositories available through subscriptions.", "Stdout when calling repos with rhsm.manage_repos configured to nothing.  Behavior should default to managed behavior (as if set to [1]).");
 		Assert.assertEquals(result.getStderr().trim(), "", "Stderr when calling repos with rhsm.manage_repos configured to nothing.");
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(0), "ExitCode when calling repos with rhsm.manage_repos configured to nothing.");
 	}

@@ -8,6 +8,8 @@ import org.testng.SkipException;
 import org.testng.annotations.Test;
 
 import com.redhat.qe.Assert;
+
+import rhsm.base.CandlepinType;
 import rhsm.base.ConsumerType;
 import rhsm.base.SubscriptionManagerCLITestScript;
 import rhsm.data.ContentNamespace;
@@ -15,6 +17,7 @@ import rhsm.data.EntitlementCert;
 import rhsm.data.Repo;
 import rhsm.data.SubscriptionPool;
 import com.redhat.qe.tools.RemoteFileTasks;
+import com.redhat.qe.tools.SSHCommandResult;
 
 /**
  * @author jsefler
@@ -27,7 +30,7 @@ import com.redhat.qe.tools.RemoteFileTasks;
  *		https://cdn.redhat.com/content/dist/rhel/rhui/server/5Server/i386/rhui/1.2/iso/rhel-5.5-rhui-1.2-i386.iso
  *		https://cdn.redhat.com/content/dist/rhel/rhui/server/5Server/x86_64/rhui/1.2/iso/rhel-5.5-rhui-1.2-x86_64.iso
  * 
- * To see the content available for download:
+ * To see the content available for download (register --type=RHUI and attach MCT2042):
  * RHEL6
 [root@storm ~]# curl --cert /etc/pki/entitlement/1126131111567895623.pem --key /etc/pki/entitlement/1126131111567895623-key.pem -k https://cdn.rcm-qa.redhat.com/content/dist/rhel/rhui/server/6/6Server/x86_64/rhui/2.0/iso
 RHEL-6.1-RHUI-2.0-LATEST-Server-x86_64-DVD.iso
@@ -46,6 +49,20 @@ RHEL-6.2-RHUI-2.0.3-20120416.0-Server-x86_64-DVD1.iso.sha256sum
 [root@storm ~]# curl --cert /etc/pki/entitlement/1126131111567895623.pem --key /etc/pki/entitlement/1126131111567895623-key.pem -k https://cdn.rcm-qa.redhat.com/content/dist/rhel/rhui/server/6/6Server/i386/rhui/2.0/iso
 [root@storm ~]# 
 
+
+[root@jsefler-6 ~]# curl --stderr /dev/null --cert /etc/pki/entitlement/1011784678244847405.pem --key /etc/pki/entitlement/1011784678244847405-key.pem -k https://cdn.redhat.com/content/dist/rhel/rhui/server/6/6Server/x86_64/rhui/2/iso | grep RHUI
+<IMG SRC="/icons/generic.gif" ALT="[FILE]"> <A HREF="iso/RHEL-6-RHUI-2-LATEST-Server-x86_64-DVD.iso">RHEL-6-RHUI-2-LATEST-Server-x8..&gt;</A> 21-Oct-2014 19:21  34.0M  
+<IMG SRC="/icons/generic.gif" ALT="[FILE]"> <A HREF="iso/RHEL-6.1-RHUI-2.0-20110727.2-Server-x86_64-DVD1.iso">RHEL-6.1-RHUI-2.0-20110727.2-S..&gt;</A> 29-Jul-2011 14:09  61.3M  
+<IMG SRC="/icons/generic.gif" ALT="[FILE]"> <A HREF="iso/RHEL-6.1-RHUI-2.0.1-20111027.1-Server-x86_64-DVD1.iso">RHEL-6.1-RHUI-2.0.1-20111027.1..&gt;</A> 10-Jan-2012 16:29  41.1M  
+<IMG SRC="/icons/generic.gif" ALT="[FILE]"> <A HREF="iso/RHEL-6.2-RHUI-2.0.2-20120309.0-Server-x86_64-DVD1.iso">RHEL-6.2-RHUI-2.0.2-20120309.0..&gt;</A> 09-Mar-2012 18:28  33.7M  
+<IMG SRC="/icons/generic.gif" ALT="[FILE]"> <A HREF="iso/RHEL-6.2-RHUI-2.0.3-20120416.0-Server-x86_64-DVD1.iso">RHEL-6.2-RHUI-2.0.3-20120416.0..&gt;</A> 01-May-2012 18:32  33.7M  
+<IMG SRC="/icons/generic.gif" ALT="[FILE]"> <A HREF="iso/RHEL-6.3-RHUI-2.1-20120827.0-Server-x86_64-DVD1.iso">RHEL-6.3-RHUI-2.1-20120827.0-S..&gt;</A> 23-Apr-2013 14:31  33.9M  
+<IMG SRC="/icons/generic.gif" ALT="[FILE]"> <A HREF="iso/RHEL-6.3-RHUI-2.1.1-20130219.0-Server-x86_64-DVD1.iso">RHEL-6.3-RHUI-2.1.1-20130219.0..&gt;</A> 19-Feb-2013 18:56  33.9M  
+<IMG SRC="/icons/generic.gif" ALT="[FILE]"> <A HREF="iso/RHEL-6.4-RHUI-2.1.2-20130417.0-Server-x86_64-DVD1.iso">RHEL-6.4-RHUI-2.1.2-20130417.0..&gt;</A> 17-Apr-2013 20:41  33.9M  
+<IMG SRC="/icons/generic.gif" ALT="[FILE]"> <A HREF="iso/RHEL-6.4-RHUI-2.1.3-20131212.0-Server-x86_64-DVD1.iso">RHEL-6.4-RHUI-2.1.3-20131212.0..&gt;</A> 12-Dec-2013 15:31  34.1M  
+<IMG SRC="/icons/generic.gif" ALT="[FILE]"> <A HREF="iso/RHEL-6.5-RHUI-2.1.3.1-20140912.1-Server-x86_64-DVD1.iso">RHEL-6.5-RHUI-2.1.3.1-20140912..&gt;</A> 12-Sep-2014 17:44  34.0M  
+<IMG SRC="/icons/generic.gif" ALT="[FILE]"> <A HREF="iso/RHEL-6.6-RHUI-2.1.3.2-20141021.3-Server-x86_64-DVD1.iso">RHEL-6.6-RHUI-2.1.3.2-20141021..&gt;</A> 21-Oct-2014 19:21  34.0M  
+
  */
 @Test(groups={"RHUITests","AcceptanceTests","Tier1Tests"})
 public class RHUITests extends SubscriptionManagerCLITestScript {
@@ -57,10 +74,14 @@ public class RHUITests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void RegisterRHUIConsumer_Test() {
-		if (sm_rhuiUsername.equals("")) throw new SkipException("Skipping this test when no value was given for the RHUI Username");
-		// register the RHUI consumer
-		clienttasks.register(sm_rhuiUsername,sm_rhuiPassword,sm_rhuiOrg,null,ConsumerType.RHUI,null,null,null,null,null,(String)null,null,null, null, true, null, null, null, null);
-		
+		// register a RHUI consumer type
+		if (sm_serverType.equals(CandlepinType.standalone)) {
+			SSHCommandResult result = clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,ConsumerType.RHUI,null,null,null,null,null,(String)null,null,null, null, true, null, null, null, null);
+			Assert.assertEquals(result.getStderr().trim(), String.format("Unit type '%s' could not be found.", ConsumerType.RHUI));
+			Assert.assertEquals(result.getExitCode(), Integer.valueOf(70));
+			throw new SkipException("On a candlpin server of type '"+sm_serverType+"': "+result.getStderr().trim());
+		} else
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,ConsumerType.RHUI,null,null,null,null,null,(String)null,null,null, null, true, null, null, null, null);
 	}
 	
 	@Test(	description="after registering to the stage/prod environment as a RHUI consumer, subscribe to the expected RHUI product subscription",
@@ -69,10 +90,11 @@ public class RHUITests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void ConsumeRHUISubscriptionProduct_Test() {
+		if (sm_rhuiSubscriptionProductId.isEmpty()) throw new SkipException("Skipping this test when no RHUI Subscription Product ID (SKU) was provided for testing.");	
 		
 		// assert that the RHUI ProductId is found in the all available list
 		List<SubscriptionPool> allAvailableSubscriptionPools = clienttasks.getCurrentlyAllAvailableSubscriptionPools();
-		Assert.assertNotNull(SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", sm_rhuiSubscriptionProductId, allAvailableSubscriptionPools), "RHUI Product ID '"+sm_rhuiSubscriptionProductId+"' is available for consumption when the client arch is ignored.");
+		Assert.assertNotNull(SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", sm_rhuiSubscriptionProductId, allAvailableSubscriptionPools), "RHUI Product ID '"+sm_rhuiSubscriptionProductId+"' is available for consumption to a consumer of type RHUI.");
 		
 		// assert that the RHUI ProductId is found in the available list only on x86_64,x86 arches
 		List<String> supportedArches = Arrays.asList("x86_64","x86","i386","i686");
@@ -86,7 +108,7 @@ public class RHUITests extends SubscriptionManagerCLITestScript {
 
 		
 		// Subscribe to the RHUI subscription productId
-		entitlementCertFile = clienttasks.subscribeToSubscriptionPool(rhuiPool,/*sm_serverAdminUsername*/sm_rhuiUsername,/*sm_serverAdminPassword*/sm_rhuiPassword,sm_serverUrl);
+		entitlementCertFile = clienttasks.subscribeToSubscriptionPool(rhuiPool,/*sm_serverAdminUsername*/sm_clientUsername,/*sm_serverAdminPassword*/sm_clientPassword,sm_serverUrl);
 	}
 	
 	@Test(	description="download an expected RHUI iso from an expected yum repoUrl",

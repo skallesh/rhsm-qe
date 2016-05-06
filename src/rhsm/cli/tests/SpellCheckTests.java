@@ -149,6 +149,8 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 			msgId = msgId.replace("couldn't","could not");
 			msgId = msgId.replace("Shouldn't","Should not");
 			msgId = msgId.replace("shouldn't","should not");
+			msgId = msgId.replace("consumerid", "consumer_id");
+			msgId = msgId.replace("consumer_uuid", "consumer_universally_unique_identifier");
 			msgId = msgId.replace("&#x2022;","bullet");
 			//msgId = msgId.replace("'%s'", "%s");	// already fixed by adjustment below
 			msgId = msgId.replaceAll("'([^ ]+)'", "$1");	// remove surrounding single quotes from single words
@@ -318,6 +320,18 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 			}
 			// END OF WORKAROUND
 			
+			// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=1188265
+			if (msgId.contains("Editition")) {
+				boolean invokeWorkaroundWhileBugIsOpen = true;
+				String bugId="1317613";	// Bug 1317613 - typo in src/subscription_manager/gui/data/ui/selectsla.ui
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				if (invokeWorkaroundWhileBugIsOpen) {
+					log.warning("Ignoring known misspelling of '"+"Awesome Developer Editition"+"' while bug '"+bugId+"' is open.");
+					msgId = msgId.replace("Awesome Developer Editition", "Awesome Developer Edition");
+				}
+			}
+			// END OF WORKAROUND
+			
 			msgIds.add(msgId);
 		}
 		// write the msgIds to a temporary file on the client
@@ -379,7 +393,9 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 			msgId = msgId.replace("consumer.json", "consumer json");
 			msgId = msgId.replace("vCPUs", "virtual CPU");
 			msgId = msgId.replace("UUID", "universally unique identifier");
+			msgId = msgId.replace("json", "JavaScript object notation");
 			msgId = msgId.replace("JSON", "JavaScript Object Notation");
+			msgId = msgId.replace("ActivationKey", "Activation Key");
 			msgId = msgId.replace("CDN", "Content Delivery Network");
 			msgId = msgId.replace("GMT[+-]HH:?MM", "Regular Expression");	// "offsets specified in the form of \"GMT[+-]HH:?MM\"."
 			msgId = msgId.replace("Multi-entitlement", "Multiple entitlement");
@@ -387,6 +403,9 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 			msgId = msgId.replace("Multi-Entitleable", "Capability for Multiple Entitlements");
 			msgId = msgId.replace("SKU", "Stock Keeping Unit");
 			msgId = msgId.replace("unmapped", "not mapped");	// unmapped fails on hunspell-1.3.3-3.fc20.x86_64
+			msgId = msgId.replace("Unmapped", "Not mapped");	// unmapped fails on hunspell-1.3.3-3.fc20.x86_64
+			msgId = msgId.replace("uber", "supreme example");	// unmapped fails on hunspell-1.3.3-3.fc20.x86_64
+			msgId = msgId.replace("orgs", "organizations");
 			msgId = msgId.replace("''", "'");	// remove the escaping single quotes
 			msgId = msgId.replaceAll("'([^ ]+)'", "$1");	// remove surrounding single quotes from single words
 			

@@ -5,9 +5,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.xmlrpc.XmlRpcException;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -21,6 +23,7 @@ import org.testng.annotations.Test;
 
 import com.redhat.qe.Assert;
 import com.redhat.qe.auto.bugzilla.BlockedByBzBug;
+import com.redhat.qe.auto.bugzilla.BzChecker;
 import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.jul.TestRecords;
@@ -108,7 +111,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 	// Test methods ***********************************************************************
 	
 	@Test(	description="subscription-manager: facts list should report virt.is_guest and virt.host_type and virt.uuid",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1018807","blockedByBug-1242409"}, dependsOnGroups={},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1018807","blockedByBug-1242409","blockedByBug-1308732"}, dependsOnGroups={},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VirtFactsReportedOnThisClient_Test() {
@@ -133,14 +136,43 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 		// dev note: calculation for uuid is done in /usr/share/rhsm/subscription_manager/hwprobe.py def _getVirtUUID(self):
 		String virtUuid = factsMap.get("virt.uuid");	// = clienttasks.getFactValue("virt.uuid");
 		if (Boolean.parseBoolean(virtIsGuest)) {
-			if (virtHostType.contains("ibm_systemz") || virtHostType.contains("xen-dom0") || virtHostType.contains("powervm")) {
-				Assert.assertEquals(virtUuid, "Unknown", "subscription-manager facts list reports virt.uuid as Unknown when the hypervisor contains \"ibm_systemz\", \"xen-dom0\", or \"powervm\".");
-			} else {
-				String expectedUuid = client.runCommandAndWait("if [ -r /system/hypervisor/uuid ]; then cat /system/hypervisor/uuid; else dmidecode -s system-uuid; fi").getStdout().trim().toLowerCase();	// TODO Not sure if the cat /system/hypervisor/uuid is exactly correct
-				Assert.assertEquals(virtUuid, expectedUuid, "subscription-manager facts list reports virt.uuid value to be the /system/hypervisor/uuid or dmidecode -s system-uuid.");
+			String expectedUuid = "Unknown";	// if (virtHostType.contains("ibm_systemz") || virtHostType.contains("xen-dom0") || virtHostType.contains("powervm")) expectedUuid = "Unknown";	// HARD CODED in src/subscription_manager/hwprobe.py:        no_uuid_platforms = ['powervm_lx86', 'xen-dom0', 'ibm_systemz']
+			if (RemoteFileTasks.testExists(client, "/system/hypervisor/uuid")) expectedUuid = client.runCommandAndWait("cat /system/hypervisor/uuid").getStdout().trim();
+			if (RemoteFileTasks.testExists(client, "/proc/device-tree/vm,uuid")) expectedUuid = client.runCommandAndWait("cat /proc/device-tree/vm,uuid").getStdout().trim();	// ppc64
+			if (clienttasks.isPackageInstalled("dmidecode")) expectedUuid = client.runCommandAndWait("dmidecode -s system-uuid").getStdout().trim()/*.toLowerCase() TODO CAN'T REMEMBER WHY THIS WAS NEEDED, TAKE IT OUT */;
+			// TEMPORARY WORKAROUND FOR BUG
+			if (virtHostType.contains("ibm_systemz") && expectedUuid.equals("Unknown")) {
+				String bugId = "815598"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 815598 - [RFE] virt.uuid should not be "Unknown" in s390x when list facts
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				if (invokeWorkaroundWhileBugIsOpen) {
+					throw new SkipException("Skipping the virt.uuid fact assertion on a '"+clienttasks.arch+"' virtual guest while bug '"+bugId+"' is open.");
+				}
 			}
+			// END OF WORKAROUND
+			Assert.assertEquals(virtUuid, expectedUuid, "subscription-manager facts list reports virt.uuid value");
 		} else {
-			Assert.assertNull(virtUuid, "subscription-manager facts list should NOT report virt.uuid when on a host machine.");		
+			
+			// TEMPORARY WORKAROUND FOR BUG
+			if (clienttasks.redhatReleaseX.equals("6") && virtUuid!=null && clienttasks.arch.startsWith("ppc")) {
+				String bugId = "1312431"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1312431 - Add support for detecting ppc64 LPAR as virt guests
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				if (invokeWorkaroundWhileBugIsOpen) {
+					throw new SkipException("Skipping the virt.uuid fact assertion on a '"+clienttasks.arch+"' virtual guest while virt-what bug '"+bugId+"' is open.");
+				}
+			}
+			// END OF WORKAROUND
+			// TEMPORARY WORKAROUND FOR BUG
+			if (clienttasks.redhatReleaseX.equals("7") && virtUuid!=null && clienttasks.arch.startsWith("ppc")) {
+				String bugId = "1072524"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1072524 - Add support for detecting ppc64 LPAR as virt guests
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				if (invokeWorkaroundWhileBugIsOpen) {
+					throw new SkipException("Skipping the virt.uuid fact assertion on a '"+clienttasks.arch+"' virtual guest while virt-what bug '"+bugId+"' is open.");
+				}
+			}
+			// END OF WORKAROUND
+			
+			// Note: the following assert caught regression Bug 1308732 - subscription-manager system fact virt.uuid: Unknown is reported on physical systems
+			Assert.assertNull(virtUuid, "subscription-manager facts list should NOT report virt.uuid when on a host machine (indicated when virt-what reports an empty stdout).");		
 		}
 	}
 	
@@ -179,16 +211,24 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 		// virt.uuid
 		String virtUuid = factsMap.get("virt.uuid");	// = clienttasks.getFactValue("virt.uuid");
 		if (host_type.contains("ibm_systemz") || host_type.contains("xen-dom0") || host_type.contains("powervm")) {
-			Assert.assertEquals(virtUuid,"Unknown","subscription-manager facts list reports virt.uuid as Unknown when the hypervisor is contains \"ibm_systemz\", \"xen-dom0\", or \"powervm\".");
+			
+			if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.16.8-3")) {	// master commit e330f0795879e7aaafac84237cf404aaac11ff7c	// RHEL6.8 commit 2c8c5a0372e9516b0799a31ca6d1b35299d70894	// 1308732: Leave hw fact virt.uuid unset if unknown
+				Assert.assertNull(virtUuid,"subscription-manager facts does NOT report a virt.uuid when it is Unknown (expected when hypervisor contains \"ibm_systemz\", \"xen-dom0\", or \"powervm\")");
+			} else
+			Assert.assertEquals(virtUuid,"Unknown","subscription-manager facts list reports virt.uuid as Unknown when the hypervisor contains \"ibm_systemz\", \"xen-dom0\", or \"powervm\".");
 		} else {
-			String expectedUuid = client.runCommandAndWait("if [ -r /system/hypervisor/uuid ]; then cat /system/hypervisor/uuid; else dmidecode -s system-uuid; fi").getStdout().trim().toLowerCase();	// TODO Not sure if the cat /system/hypervisor/uuid is exactly correct
-			Assert.assertEquals(virtUuid,expectedUuid,"subscription-manager facts list reports virt.uuid value to be the /system/hypervisor/uuid or dmidecode -s system-uuid.");
+			//String expectedUuid = client.runCommandAndWait("if [ -r /system/hypervisor/uuid ]; then cat /system/hypervisor/uuid; else dmidecode -s system-uuid; fi").getStdout().trim().toLowerCase();	// TODO Not sure if the cat /system/hypervisor/uuid is exactly correct
+			String expectedUuid = "Unknown";
+			if (RemoteFileTasks.testExists(client, "/system/hypervisor/uuid")) expectedUuid = client.runCommandAndWait("cat /system/hypervisor/uuid").getStdout().trim();
+			if (RemoteFileTasks.testExists(client, "/proc/device-tree/vm,uuid")) expectedUuid = client.runCommandAndWait("cat /proc/device-tree/vm,uuid").getStdout().trim();	// ppc64
+			if (clienttasks.isPackageInstalled("dmidecode")) expectedUuid = client.runCommandAndWait("dmidecode -s system-uuid").getStdout().trim()/*.toLowerCase() TODO CAN'T REMEMBER WHY THIS WAS NEEDED, TAKE IT OUT */;
+			Assert.assertEquals(virtUuid,expectedUuid,"subscription-manager facts list reports virt.uuid value to be the /system/hypervisor/uuid or /proc/device-tree/vm,uuid or dmidecode -s system-uuid");
 		}
 	}
 	
 	
 	@Test(	description="subscription-manager: facts list reports when the client is running on bare metal",
-			groups={"blockedByBug-726440","VirtFactsWhenClientIsAHost_Test"}, dependsOnGroups={},
+			groups={"blockedByBug-726440","blockedByBug-1308732","VirtFactsWhenClientIsAHost_Test"}, dependsOnGroups={},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=70203)
 	public void VirtFactsWhenClientIsAHost_Test() {
@@ -249,6 +289,9 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 		
 		// virt.uuid
 		String virtUuid = factsMap.get("virt.uuid");	// = clienttasks.getFactValue("virt.uuid");
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.16.8-3")) {	// master commit e330f0795879e7aaafac84237cf404aaac11ff7c	// RHEL6.8 commit 2c8c5a0372e9516b0799a31ca6d1b35299d70894	// 1308732: Leave hw fact virt.uuid unset if unknown
+			Assert.assertNull(virtUuid,"subscription-manager facts does NOT report a virt.uuid when it is Unknown (expected when virt-what fails after fix for bug 1308732)");
+		} else
 		Assert.assertEquals(virtUuid,"Unknown","subscription-manager facts list reports virt.uuid as Unknown when the hypervisor is undeterminable (virt-what fails).");
 	}
 	
@@ -275,6 +318,9 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 		
 		// virt.uuid
 		String virtUuid = factsMap.get("virt.uuid");	// = clienttasks.getFactValue("virt.uuid");
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.16.8-3")) {	// master commit e330f0795879e7aaafac84237cf404aaac11ff7c	// RHEL6.8 commit 2c8c5a0372e9516b0799a31ca6d1b35299d70894	// 1308732: Leave hw fact virt.uuid unset if unknown
+			Assert.assertNull(virtUuid,"subscription-manager facts does NOT report a virt.uuid when it is Unknown (expected when virt-what is not installed after fix for bug 1308732)");
+		} else
 		Assert.assertEquals(virtUuid,"Unknown","subscription-manager facts list reports virt.uuid as Unknown when virt-what in not installed.");
 
 	}
@@ -1286,7 +1332,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 		ll.add(Arrays.asList(new Object[]{null,	"xen"}));
 		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1018807"}),	"xen\nxen-domU"}));
 		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1018807"}),	"xen\nxen-hvm"}));
-		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1018807","757697"}),	"xen\nxen-dom0"}));
+		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1018807","757697","1308732"}),	"xen\nxen-dom0"}));
 
 		return ll;
 	}

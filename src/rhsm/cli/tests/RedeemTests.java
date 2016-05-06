@@ -158,7 +158,7 @@ public class RedeemTests extends SubscriptionManagerCLITestScript {
 
 		// register and attempt to update the consumer by forcing its canActivate attribute to true
 		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null));
-		CandlepinTasks.setAttributeForConsumer(sm_clientUsername, sm_clientPassword, SubscriptionManagerBaseTestScript.sm_serverUrl, consumerId, "canActivate", true);
+		CandlepinTasks.setAttributeForConsumer(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerId, "canActivate", true);
 		log.warning("Beacuse the consumer's canActivate attribute is black-listed from changes, that^ attempt to change it to true should have been ignored.  Let's verify...");
 		JSONObject jsonConsumer = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/consumers/"+consumerId));
 		Assert.assertFalse(jsonConsumer.getBoolean("canActivate"), "The attempt to change the consumer's canActivate attribute to true should have been ignored leaving the consumer with a value of false.");
@@ -186,7 +186,7 @@ public class RedeemTests extends SubscriptionManagerCLITestScript {
 		
 		// register and attempt to update the consumer by forcing its canActivate attribute to true
 		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null));
-		CandlepinTasks.setAttributeForConsumer(sm_clientUsername, sm_clientPassword, SubscriptionManagerBaseTestScript.sm_serverUrl, consumerId, "canActivate", true);
+		CandlepinTasks.setAttributeForConsumer(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerId, "canActivate", true);
 
 		// attempt to redeem
 		SSHCommandResult redeemResult = clienttasks.redeem("tester@redhat.com",null,null,null,null, null);

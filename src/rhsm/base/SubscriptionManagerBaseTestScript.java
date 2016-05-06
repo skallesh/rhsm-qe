@@ -21,9 +21,6 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 	public static SSHCommandRunner client1	= null;	// client1
 	public static SSHCommandRunner client2	= null;	// client2
 	
-	
-	public static String sm_serverUrl				= null;
-	
 	// /etc/rhsm/rhsm.conf [server] configurations
 	public static String sm_serverHostname			= null;
 	public static String sm_serverPrefix 			= null;
@@ -43,13 +40,21 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 	public static String sm_rhsmcertdCertFrequency	= null;
 	public static String sm_rhsmcertdHealFrequency	= null;
 	
-	public static String sm_serverAdminUsername		= getProperty("sm.server.admin.username","");
-	public static String sm_serverAdminPassword		= getProperty("sm.server.admin.password","");
+	public static String sm_serverUrl				= null;
 	
+	// IF THE FOLLOWING VARIABLES ARE INITIALIZED USING getProperty(...),
+	// DO NOT MAKE THEM static BECAUSE THE GUI CLOJURE TESTS WILL HAVE
+	// DIFFICULTING LOADING THEM UNLESS THEY ARE DEFINED BY -Dsm.foo=bar
+	// SYNTAX ON THE java COMMAND LINE
+	
+	public final String sm_serverAdminUsername	= getProperty("sm.server.admin.username","");
+	public final String sm_serverAdminPassword	= getProperty("sm.server.admin.password","");
+
+
 	public String sm_serverInstallDir			= getProperty("sm.server.installDir","");
 	public String sm_serverImportDir			= getProperty("sm.server.importDir","");
 	public String sm_serverBranch				= getProperty("sm.server.branch","");
-	public static CandlepinType sm_serverType	= CandlepinType.valueOf(getProperty("sm.server.type","standalone"));
+	public CandlepinType sm_serverType			= CandlepinType.valueOf(getProperty("sm.server.type","standalone"));
 	public Boolean sm_serverOld					= Boolean.valueOf(getProperty("sm.server.old","false"));
 	
 	public String sm_client1Hostname			= getProperty("sm.client1.hostname","");
@@ -68,6 +73,7 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 	public String sm_clientOrg					= sm_client1Org;
 	
 	public String sm_clientCertificateVersion	= getProperty("sm.client.certificateVersion",null);
+	public Boolean sm_clientFips				= Boolean.valueOf(getProperty("sm.client.fips","false"));
 
 
 // TODO RE-IMPLEMENT AS AN ALTERNATIVE FOR USE DURING STAGE TESTING
@@ -80,9 +86,6 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 	public String sm_rhpersonalOrg				= getProperty("sm.rhpersonal.org", null);
 	public String sm_rhpersonalSubproductQuantity =	getProperty("sm.rhpersonal.subproductQuantity", "unlimited");
 	
-	public String sm_rhuiUsername				= getProperty("sm.rhui.username", "");
-	public String sm_rhuiPassword				= getProperty("sm.rhui.password", "");
-	public String sm_rhuiOrg					= getProperty("sm.rhui.org", null);
 	public String sm_rhuiSubscriptionProductId	= getProperty("sm.rhui.subscriptionProductId", "");
 	public String sm_rhuiRepoIdForIsos			= getProperty("sm.rhui.repoIdForIsos", "");
 	public String sm_rhuiDownloadIso			= getProperty("sm.rhui.downloadIso", "");
@@ -158,7 +161,7 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 //	protected JSONArray systemSubscriptionPoolProductData = null;
 	protected JSONArray sm_personSubscriptionPoolProductData = null;
 	protected JSONArray sm_contentIntegrationTestData = null;
-
+	
 	
 	public SubscriptionManagerBaseTestScript() {
 		super();

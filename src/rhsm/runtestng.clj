@@ -94,7 +94,8 @@ Example: lein run 'GUI: REGISTRATION' 'GUI: FACTS' suites/sm-gui-testng-suite.xm
   ([]
    (before-suite (:runtestng-beforesuite dev-config))))
 
-(when (:runtestng-setup dev-config)
+(defn run-imports
+  []
   (use '[clojure.repl])
   (use '[clojure.pprint])
   (use '[slingshot.slingshot :only (try+ throw+)])
@@ -121,9 +122,9 @@ Example: lein run 'GUI: REGISTRATION' 'GUI: FACTS' suites/sm-gui-testng-suite.xm
            '[rhsm.gui.tests.search_status_tests :as sstattest]
            '[rhsm.gui.tasks.test-config :as config]
            '[rhsm.gui.tasks.tasks :as tasks]
-           '[rhsm.gui.tasks.tools :as tools])
+           '[rhsm.gui.tasks.tools :as tools]))
 
-
-  ;; We may not always want to do all the BeforeSuite stuff
-  (before-suite (:runtestng-beforesuite dev-config))
+(when (:runtestng-setup dev-config)
+  (run-imports)
+  (before-suite)
   (log/info "INITIALIZATION COMPLETE!!"))

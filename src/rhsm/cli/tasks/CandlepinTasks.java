@@ -83,7 +83,7 @@ public class CandlepinTasks {
 	protected /*NOT static*/ String serverInstallDir = null;
 	protected /*NOT static*/ String serverImportDir = null;
 	public static final String candlepinCRLFile	= "/var/lib/candlepin/candlepin-crl.crl";
-	public static /*final*/ String tomcat6LogFile	= null;
+	public /*NOT static final*/ String tomcat6LogFile	= null;
 	public static final String defaultConfigFile	= "/etc/candlepin/candlepin.conf";
 	public static String rubyClientDir	= "/server/client/ruby";	// "/client/ruby"; was valid prior to candlepin commit cddba55bda2cc1b89821a80e6ff23694296f2079
 	public static File candlepinCACertFile = new File("/etc/candlepin/certs/candlepin-ca.crt");
@@ -91,6 +91,7 @@ public class CandlepinTasks {
 	public static HttpClient client;
 	CandlepinType serverType = CandlepinType.hosted;
 	public String branch = "";
+	public Integer fedoraReleaseX = new Integer(0);
 	public Integer redhatReleaseX = new Integer(0);
 	
 	// populated from curl --insecure --user testuser1:password --request GET https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/status | python -mjson.tool
@@ -100,6 +101,10 @@ public class CandlepinTasks {
 	public String statusVersion = "Unknown";
 	public boolean statusStandalone = false;	// default to false since /status on stage is not readable and is expected to be false
 	public String statusTimeUTC = "";
+	
+	protected String serverUrl = null;
+	protected String adminUsername = null;
+	protected String adminPassword = null;
 	
 	static {
 		MultiThreadedHttpConnectionManager connectionManager = new MultiThreadedHttpConnectionManager();
@@ -142,15 +147,17 @@ public class CandlepinTasks {
 			// Red Hat Enterprise Linux Server release 6.4 Beta (Santiago)
 			Pattern pattern = Pattern.compile("\\d+");
 			Matcher matcher = pattern.matcher(redhatRelease);
-			Assert.assertTrue(matcher.find(),"Extracted redhatReleaseX '"+matcher.group()+"' from '"+redhatRelease+"'");
-			redhatReleaseX = Integer.valueOf(matcher.group());
+			Assert.assertTrue(matcher.find(),"Extracted releaseX from '"+redhatRelease+"'");
+			if (redhatRelease.startsWith("Fedora")) fedoraReleaseX = Integer.valueOf(matcher.group());
+			if (redhatRelease.startsWith("Red Hat")) redhatReleaseX = Integer.valueOf(matcher.group());
+			Assert.assertTrue(fedoraReleaseX+redhatReleaseX>0,"Determined the OS release running candlepin.");
 		}
 		
 		// where is catalina.out?
 		if (sshCommandRunner!=null) {
 			// "/var/log/tomcat6/catalina.out" or "/var/log/tomcat/catalina.out"
-			if (RemoteFileTasks.testExists(sshCommandRunner, "/var/log/tomcat6/catalina.out")) tomcat6LogFile = "/var/log/tomcat6/catalina.out";
-			if (RemoteFileTasks.testExists(sshCommandRunner, "/var/log/tomcat/catalina.out")) tomcat6LogFile = "/var/log/tomcat/catalina.out";
+			if (RemoteFileTasks.testExists(sshCommandRunner, "/var/log/tomcat6/catalina.out")) this.tomcat6LogFile = "/var/log/tomcat6/catalina.out";
+			if (RemoteFileTasks.testExists(sshCommandRunner, "/var/log/tomcat/catalina.out")) this.tomcat6LogFile = "/var/log/tomcat/catalina.out";
 		}
 	}
 	
@@ -237,15 +244,32 @@ public class CandlepinTasks {
 		//RemoteFileTasks.searchReplaceFile(sshCommandRunner, serverInstallDir+"/proxy/buildconf/scripts/gen-certs", "\\-days 365 ", "\\-days 7300 ");
 		//Assert.assertEquals(RemoteFileTasks.searchReplaceFile(sshCommandRunner, serverInstallDir+"/buildconf/scripts/gen-certs", "\\-days 365 ", "\\-days 7300 "),0,"ExitCode from attempt to modify the gen-certs file so the candlepin cert is valid for more than one year (make it 20 years).");
 		Assert.assertEquals(RemoteFileTasks.searchReplaceFile(sshCommandRunner, serverInstallDir+"/server/bin/gen-certs", "\\-days 365 ", "\\-days 7300 "),0,"ExitCode from attempt to modify the gen-certs file so the candlepin cert is valid for more than one year (make it 20 years).");
+		// TODO ALTERNATIVE vritant altered candlepin-2.0.11-1 to pass CA_CERT_DAYS during deploy to change the validity end date of the candlepin-ca.crt
 		
 		/* TODO: RE-INSTALL GEMS HELPS WHEN THERE ARE DEPLOY ERRORS
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "for item in $(for gem in $(gem list | grep -v \"\\*\"); do echo $gem; done | grep -v \"(\" | grep -v \")\"); do echo 'Y' | gem uninstall $item -a; done", Integer.valueOf(0), "Successfully uninstalled", null);	// probably only needs to be run once  // for item in $(for gem in $(gem list | grep -v "\*"); do echo $gem; done | grep -v "(" | grep -v ")"); do echo 'Y' | gem uninstall $item -a; done
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"; gem install bundler", Integer.valueOf(0), "installed", null);	// probably only needs to be run once
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"; gem install buildr", Integer.valueOf(0), "1 gem installed", null);	// probably only needs to be run once
 		*/
+		/* 3/14/2016: Gem::InstallError: byebug requires Ruby version >= 2.0.0.
+		 *     [root@jsefler-f22-candlepin ~]# ruby --version
+		 *     ruby 1.9.3p551 (2014-11-13 revision 48407) [x86_64-linux]
+		 * Solution:
+		 *     [root@jsefler-f22-candlepin ~]# rvm install ruby-2.2.1
+		 *     [root@jsefler-f22-candlepin ~]# rvm --default use ruby-2.2.1
+		 *     [root@jsefler-f22-candlepin ~]# rvm list
+		 *     [root@jsefler-f22-candlepin ~]# gem install bundler
+		 *     [root@jsefler-f22-candlepin ~]# cd candlepin/
+		 *     [root@jsefler-f22-candlepin candlepin]# bundle install
+		 */
 		//RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"/proxy && bundle install", Integer.valueOf(0), "Your bundle is complete!", null);	// Your bundle is complete! Use `bundle show [gemname]` to see where a bundled gem is installed.
 		//RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+" && bundle install", Integer.valueOf(0), "Your bundle is complete!", null);	// Your bundle is complete! Use `bundle show [gemname]` to see where a bundled gem is installed.
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+" && bundle install", Integer.valueOf(0), "Your bundle is complete!|Bundle complete!", null);	// Your bundle is complete! Use `bundle show [gemname]` to see where a bundled gem is installed.
+		
+		//TODO You may encounter this error on Fedora 23
+		// An error occurred while installing rjb (1.4.8), and Bundler cannot continue.
+		// Make sure that `gem install -v '1.4.8' succeeds before bundling
+		// Note: This error was manually solved by:   dnf -y install redhat-rpm-config
 		
 		// delete the keystore to avoid...
 		//	[root@jsefler-5 ~]# subscription-manager register --username=testuser1 --password=password --org=admin
@@ -257,20 +281,22 @@ public class CandlepinTasks {
 		
 		// restart some services
 		// TODO fix this logic for candlepin running on rhel7 which is based on f18
-		if (redhatReleaseX>=16)	{	// the Fedora 16+ way...
+		if (redhatReleaseX>=7 || fedoraReleaseX>=16)	{	// the Fedora 16+ way...
 			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "systemctl stop ntpd.service && ntpdate clock.redhat.com && systemctl start ntpd.service && systemctl is-active ntpd.service", Integer.valueOf(0), "^active$", null);	// Stdout: 24 May 17:53:28 ntpdate[20993]: adjust time server 66.187.233.4 offset -0.000287 sec
 			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "systemctl stop postgresql.service && systemctl start postgresql.service && systemctl is-active postgresql.service", Integer.valueOf(0), "^active$", null);
+			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "systemctl stop firewalld.service && systemctl disable firewalld.service && systemctl is-active firewalld.service", null, "^unknown$", null);	// avoid java.net.NoRouteToHostException: No route to host
 		} else {	// the old Fedora way...
 			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "service ntpd stop && ntpdate clock.redhat.com && service ntpd start && chkconfig ntpd on", /*Integer.valueOf(0) DON"T CHECK EXIT CODE SINCE IT RETURNS 1 WHEN STOP FAILS EVEN THOUGH START SUCCEEDS*/null, "Starting ntpd(.*?):\\s+\\[  OK  \\]", null);	// Starting ntpd:  [  OK  ]		// Starting ntpd (via systemctl):  [  OK  ]
 			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "service postgresql stop && service postgresql start", /*Integer.valueOf(0) DON"T CHECK EXIT CODE SINCE IT RETURNS 1 WHEN STOP FAILS EVEN THOUGH START SUCCEEDS*/null, "Starting postgresql(.*?):\\s+\\[  OK  \\]", null);	// Starting postgresql service: [  OK  ]	// Starting postgresql (via systemctl):  [  OK  ]
+			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "service iptables stop && chkconfig iptables off", Integer.valueOf(0));	// TODO Untested
 		}
 		
-		if (redhatReleaseX>=19)	{	// the Fedora 19+ way...
+		if (redhatReleaseX>=7 || fedoraReleaseX>=19)	{	// the Fedora 19+ way...
 			//RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "export TESTDATA=1 && export FORCECERT=1 && export GENDB=1 && export HOSTNAME="+hostname+" && export IMPORTDIR="+serverImportDir+" && cd "+serverInstallDir+" && buildconf/scripts/deploy", Integer.valueOf(0), "Initialized!", null);
 			//path changes caused by commit cddba55bda2cc1b89821a80e6ff23694296f2079 Fix scripts dir for server build.    before candlepin-0.9.22-1
 			//RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "export TESTDATA=1 && export FORCECERT=1 && export GENDB=1 && export HOSTNAME="+hostname+" && export IMPORTDIR="+serverImportDir+" && cd "+serverInstallDir+"/server && bin/deploy", Integer.valueOf(0), "Initialized!", null);
 			//started throwing... Stderr: tput: No value for $TERM and no -T specified
-			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "export TERM=xterm && export TESTDATA=1 && export FORCECERT=1 && export GENDB=1 && export HOSTNAME="+hostname+" && export IMPORTDIR="+serverImportDir+" && cd "+serverInstallDir+"/server && bin/deploy", Integer.valueOf(0), "Initialized!", null);
+			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "export TERM=xterm && export TESTDATA=1 && export FORCECERT=1 && export GENDB=1 && export HOSTEDTEST=\"hostedtest\" && export HOSTNAME="+hostname+" && export IMPORTDIR="+serverImportDir+" && cd "+serverInstallDir+"/server && bin/deploy", Integer.valueOf(0), "Initialized!", null);
 		} else {
 			//RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "export TESTDATA=1 && export FORCECERT=1 && export GENDB=1 && export HOSTNAME="+hostname+" && export IMPORTDIR="+serverImportDir+" && cd "+serverInstallDir+"/proxy && buildconf/scripts/deploy", Integer.valueOf(0), "Initialized!", null);
 			//RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "export TESTDATA=1 && export FORCECERT=1 && export GENDB=1 && export HOSTNAME="+hostname+" && export IMPORTDIR="+serverImportDir+" && cd "+serverInstallDir+" && buildconf/scripts/deploy", Integer.valueOf(0), "Initialized!", null);
@@ -365,6 +391,107 @@ schema generation failed
 		 */
 	}
 	
+	public void initialize(String adminUsername, String adminPassword, String serverUrl) throws IOException, JSONException {
+		// hold onto the server url and credentials.
+		this.serverUrl		= serverUrl;
+		this.adminUsername	= adminUsername;
+		this.adminPassword	= adminPassword;
+		
+		log.info("Installed status of candlepin...");
+		JSONObject jsonStatus=null;
+		try {
+			//jsonStatus = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,"anybody","password","/status")); // seems to work no matter what credentials are passed		
+			//jsonStatus = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,"","","/status"));
+			//The above call works against onpremises, but causes the following against stage
+			//201108251644:10.040 - INFO: SSH alternative to HTTP request: curl -k  --request GET https://rubyvip.web.stage.ext.phx2.redhat.com:80/clonepin/candlepin/status (rhsm.cli.tasks.CandlepinTasks.getResourceUsingRESTfulAPI)
+			//201108251644:10.049 - WARNING: Required credentials not available for BASIC <any realm>@rubyvip.web.stage.ext.phx2.redhat.com:80 (org.apache.commons.httpclient.HttpMethodDirector.authenticateHost)
+			//201108251644:10.052 - WARNING: Preemptive authentication requested but no default credentials available (org.apache.commons.httpclient.HttpMethodDirector.authenticateHost)
+			jsonStatus = new JSONObject(/*CandlepinTasks.*/getResourceUsingRESTfulAPI(/*adminUsername*/null,/*adminPassword*/null,serverUrl,"/status"));
+			if (jsonStatus!=null) {
+				statusCapabilities.clear();
+				statusRelease		= jsonStatus.getString("release");
+				statusResult		= jsonStatus.getBoolean("result");
+				statusVersion		= jsonStatus.getString("version");
+				statusTimeUTC		= jsonStatus.getString("timeUTC");
+			try {
+				statusStandalone	= jsonStatus.getBoolean("standalone");
+			} catch(Exception e){log.warning(e.getMessage());log.warning("You should upgrade your candlepin server!");}
+				for (int i=0; i<jsonStatus.getJSONArray("managerCapabilities").length(); i++) {	// not displayed on Katello; see Bug 1097875 - /katello/api/status neglects to report all of the fields that /candlepin/status reports
+					statusCapabilities.add(jsonStatus.getJSONArray("managerCapabilities").getString(i));
+				}
+	
+				//	# curl --insecure --user testuser1:password --request GET https://jsefler-f14-candlepin.usersys.redhat.com:8443/candlepin/status --stderr /dev/null | python -msimplejson/tool
+				//	{
+				//	    "release": "1", 
+				//	    "result": true, 
+				//	    "standalone": true, 
+				//	    "timeUTC": "2012-03-08T18:58:07.688+0000", 
+				//	    "version": "0.5.24"
+				//	}
+				
+				//	# curl --stderr /dev/null --insecure --user ***:*** --request GET http://rubyvip.web.stage.ext.phx2.redhat.com/clonepin/candlepin/status | python -m simplejson/tool
+				//	{
+				//	    "managerCapabilities": [
+				//	        "cores", 
+				//	        "ram", 
+				//	        "instance_multiplier", 
+				//	        "derived_product", 
+				//	        "cert_v3"
+				//	    ], 
+				//	    "release": "1", 
+				//	    "result": true, 
+				//	    "rulesSource": "DEFAULT", 
+				//	    "rulesVersion": "4.3", 
+				//	    "standalone": false, 
+				//	    "timeUTC": "2013-09-27T13:51:08.783+0000", 
+				//	    "version": "0.8.28"    <=== COULD ALSO BE "0.8.28.0" IF A HOT FIX WAS APPLIED
+				//	}
+				
+				//	# curl -k -u ***:*** https://katellosach.usersys.redhat.com:443/katello/api/status --stderr /dev/null | python -mjson/tool
+				//	{
+				//	    "release": "Katello",
+				//	    "result": true,
+				//	    "standalone": true,
+				//	    "timeUTC": "2014-01-29T09:04:14Z",
+				//	    "version": "1.4.15-1.el6"
+				//	}
+				
+				//	# curl --stderr /dev/null --insecure --request GET https://qe-subman-rhel65.usersys.redhat.com:443/rhsm/status | python -m simplejson/tool
+				//	{
+				//	    "managerCapabilities": [
+				//	        "cores", 
+				//	        "ram", 
+				//	        "instance_multiplier", 
+				//	        "derived_product", 
+				//	        "cert_v3", 
+				//	        "guest_limit", 
+				//	        "vcpu"
+				//	    ], 
+				//	    "release": "Katello", 
+				//	    "result": true, 
+				//	    "rulesSource": "DEFAULT", 
+				//	    "rulesVersion": "5.11", 
+				//	    "standalone": true, 
+				//	    "timeUTC": "2014-09-24T22:03:34Z", 
+				//	    "version": "1.5.0-30.el6sat"
+				//	}
+				
+				//TODO git candlepin version on hosted stage:
+				// curl -s	http://git.corp.redhat.com/cgit/puppet-cfg/modules/candlepin/plain/data/rpm-versions.yaml?h=stage | grep candlepin
+				// candlepin-it-jars: 0.5.26-1
+				// candlepin-jboss: 0.5.26-1.el6
+	
+				log.info("Candlepin server '"+serverUrl+"' is running: release="+statusRelease+" version="+statusVersion+" standalone="+statusStandalone+" timeUTC="+statusTimeUTC);
+				Assert.assertEquals(statusResult, true,"Candlepin status result");
+				Assert.assertTrue(statusRelease.matches("\\d+|Katello"), "Candlepin release '"+statusRelease+"' matches d+|Katello");	// https://bugzilla.redhat.com/show_bug.cgi?id=703962
+				Assert.assertTrue(statusVersion.matches("\\d+\\.\\d+\\.\\d+(\\.\\d+)?(-.+)?"), "Candlepin version '"+statusVersion+"' matches d+\\.d+\\.d+(\\.d+)?(-.+)? (Note: optional fourth digits indicate a hot fix)");
+			}
+		} catch (Exception e) {
+			// Bug 843649 - subscription-manager server version reports Unknown against prod/stage candlepin
+			log.warning("Encountered exception while getting the Candlepin server '"+serverUrl+"' version from the /status api: "+e);
+		}
+	}
+	
 	public void reportAPI() throws IOException {
 		
 		/*
@@ -383,11 +510,12 @@ schema generation failed
 		//RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"/proxy && if [ ! -e target/candlepin_methods.json ]; then buildr candlepin:apicrawl; fi;", Integer.valueOf(0));
 		//RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+" && if [ ! -e target/candlepin_methods.json ]; then buildr candlepin:apicrawl; fi;", Integer.valueOf(0));
 		//RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+" && if [ ! -e target/candlepin_methods.json ]; then bundle exec buildr candlepin:apicrawl; fi;", Integer.valueOf(0));	// prepended "bundle exec" to avoid: You have already activated rjb 1.4.8, but your Gemfile requires rjb 1.4.0. Prepending `bundle exec` to your command may solve this.
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+" && if [ ! -e server/target/candlepin_methods.json ]; then bundle exec buildr clean candlepin:server:apicrawl; fi;", Integer.valueOf(0));	// prepended "bundle exec" to avoid: You have already activated rjb 1.4.8, but your Gemfile requires rjb 1.4.0. Prepending `bundle exec` to your command may solve this.
+		//RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+" && if [ ! -e server/target/candlepin_methods.json ]; then bundle exec buildr clean candlepin:server:apicrawl; fi;", Integer.valueOf(0));
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+" && if [ ! -e server/target/candlepin_methods.json ]; then bundle exec buildr clean candlepin:server:apicrawl test=no; fi;", Integer.valueOf(0));
 		log.info("Following is a report of all the candlepin API urls:");
 		//RemoteFileTasks.runCommandAndWait(sshCommandRunner, "cd "+serverInstallDir+"/proxy && cat target/candlepin_methods.json | python -m simplejson/tool | egrep '\\\"POST\\\"|\\\"PUT\\\"|\\\"GET\\\"|\\\"DELETE\\\"|url'",TestRecords.action());		// 9/18/2012 the path appears to have moved
 		//RemoteFileTasks.runCommandAndWait(sshCommandRunner, "cd "+serverInstallDir+" && cat target/candlepin_methods.json | python -m simplejson/tool | egrep '\\\"POST\\\"|\\\"PUT\\\"|\\\"GET\\\"|\\\"DELETE\\\"|url'",TestRecords.action());
-		RemoteFileTasks.runCommandAndWait(sshCommandRunner, "cd "+serverInstallDir+" && cat server/target/candlepin_methods.json | python -m simplejson/tool | egrep '\\\"POST\\\"|\\\"PUT\\\"|\\\"GET\\\"|\\\"DELETE\\\"|url'",TestRecords.action());
+		RemoteFileTasks.runCommandAndWait(sshCommandRunner, "cd "+serverInstallDir+" && cat server/target/candlepin_methods.json | python -m json/tool | egrep '\\\"POST\\\"|\\\"PUT\\\"|\\\"GET\\\"|\\\"DELETE\\\"|url'",TestRecords.action());
 	}
 	
 	@Deprecated
@@ -475,14 +603,27 @@ schema generation failed
 	}
 	
 	/**
-	 * Note: Updating the candlepin server conf files requires a restart of the tomact server.
+	 * Update a configuration in the candlepin server conf file (/etc/candlepin/candlepin.conf)<br>
+	 * Note: Updates requires a restart of the tomcat server.
 	 * @param parameter
-	 * @param value
+	 * @param newValue
 	 * 
 	 */
-	public void updateConfigFileParameter(String parameter, String value){
-		Assert.assertEquals(RemoteFileTasks.searchReplaceFile(sshCommandRunner, defaultConfigFile, "^"+parameter+"\\s*=.*$", parameter+"="+value),
-				0,"Updated candlepin config parameter '"+parameter+"' to value: " + value);
+	public void updateConfFileParameter(String parameter, String newValue){
+		Assert.assertEquals(
+			RemoteFileTasks.searchReplaceFile(sshCommandRunner, defaultConfigFile, "^"+parameter+"\\s*=.*$", parameter+"="+newValue),0,
+			"Updated '"+defaultConfigFile+"' parameter '"+parameter+"' to value: " + newValue);
+	}
+	public void commentConfFileParameter(String parameter){
+		Assert.assertEquals(
+			RemoteFileTasks.searchReplaceFile(sshCommandRunner, defaultConfigFile, "^"+parameter+"\\s*=", "#"+parameter+"="),0,
+			"Commented '"+defaultConfigFile+"' parameter: "+parameter);
+	}
+	
+	public void uncommentConfFileParameter(String parameter){
+		Assert.assertEquals(
+			RemoteFileTasks.searchReplaceFile(sshCommandRunner, defaultConfigFile, "^#\\s*"+parameter+"\\s*=", parameter+"="),0,
+			"Uncommented '"+defaultConfigFile+"' parameter: "+parameter);
 	}
 	
 	static public String getResourceUsingRESTfulAPI(String authenticator, String password, String url, String path) throws Exception {
@@ -527,7 +668,7 @@ schema generation failed
 			//	<hr>
 			//	<address>Apache Server at subscription.rhn.stage.redhat.com Port 443</address>
 			//	</body></html>
-			if (response.contains("502 Proxy Error") && SubscriptionManagerBaseTestScript.sm_serverType.equals(CandlepinType.hosted)) {
+			if (response.contains("502 Proxy Error")) {
 				String bugId = "1105173"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1105173 - subscription-manager encounters frequent 502 responses from stage IT-Candlepin
 				// duplicate of Bug 1113741 - RHEL 7 (and 6?): subscription-manager fails with "JSON parsing error: No JSON object could be decoded" error
 				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
@@ -1029,7 +1170,7 @@ schema generation failed
 		JSONObject jsonOwner_ = (JSONObject) jsonConsumer.getJSONObject("owner");
 		// jsonOwner_.getString("href") takes the form /owners/6239231 where 6239231 is the key
 		File href = new File(jsonOwner_.getString("href")); // use a File to represent the path
-		return href.getName();
+		return href.getName();	// return 6239231 from the end of the path /owners/6239231
 	}
 	
 	/**
@@ -2307,11 +2448,6 @@ schema generation failed
 	
 	public static boolean isEnvironmentsSupported (String authenticator, String password, String url) throws JSONException, Exception {
 		
-		// 7/7/2014 TODO TEMPORARY WORKAROUND FOR ERROR: Could not generate DH keypair
-		if (CandlepinType.katello.equals(SubscriptionManagerCLITestScript.sm_serverType)) {
-			return true;
-		}
-		
 		// ask the candlepin server for all of its resources and search for a match to "environments"
 		boolean supportsEnvironments = false;  // assume not
 		JSONArray jsonResources = new JSONArray(getResourceUsingRESTfulAPI(authenticator, password, url, "/"));
@@ -2470,13 +2606,13 @@ schema generation failed
 				break;
 			}
 		}
-		virt_only = virt_only==null? false : virt_only;	// the absense of a "virt_only" attribute implies virt_only=false
+		virt_only = virt_only==null? false : virt_only;	// the absence of a "virt_only" attribute implies virt_only=false
 		return virt_only;
 	}
 	
 	public static boolean isPoolProductPhysicalOnly (String authenticator, String password, String poolId, String url) throws JSONException, Exception {
 		String physical_only = getPoolProductAttributeValue(authenticator, password, url, poolId, "physical_only");
-		if (physical_only==null) return false; // the absense of a "physical_only" attribute implies physical_only=false
+		if (physical_only==null) return false; // the absence of a "physical_only" attribute implies physical_only=false
 		return Boolean.valueOf(physical_only);
 	}
 	
@@ -2903,11 +3039,16 @@ schema generation failed
 	}
 	public static Set<String> getPoolProvidedProductModifiedIds (String authenticator, String password, String url, String poolId) throws JSONException, Exception {
 		Set<String> providedProductModifiedIds = new HashSet<String>();
+		JSONObject jsonStatus = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(/*authenticator*/null,/*password*/null,url,"/status"));
+		JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(authenticator,password,url,"/pools/"+poolId));
 		
 		for (String providedProductId : getPoolProvidedProductIds(authenticator,password,url,poolId)) {
 			
 			// get the productContents
-			JSONObject jsonProduct = new JSONObject(getResourceUsingRESTfulAPI(authenticator,password,url,"/products/"+providedProductId));	
+			String path = "/products/"+providedProductId;
+			if (SubscriptionManagerTasks.isVersion(jsonStatus.getString("version"),">=","2.0.11")) path = jsonPool.getJSONObject("owner").getString("href")+path;	// starting with candlepin-2.0.11 /products/<ID> are requested by /owners/<KEY>/products/<ID> OR /products/<UUID>
+			
+			JSONObject jsonProduct = new JSONObject(getResourceUsingRESTfulAPI(authenticator,password,url,path));	
 			JSONArray jsonProductContents = jsonProduct.getJSONArray("productContent");
 			for (int j = 0; j < jsonProductContents.length(); j++) {
 				JSONObject jsonProductContent = (JSONObject) jsonProductContents.get(j);
@@ -3138,6 +3279,17 @@ schema generation failed
 	 * @throws Exception
 	 */
 	public static String getPoolAttributeValue (JSONObject jsonPool, String attributeName) throws JSONException, Exception {
+		return getResourceAttributeValue(jsonPool,attributeName);
+	}
+	
+	/**
+	 * @param jsonResource
+	 * @param attributeName
+	 * @return the String "value" of the pool's attribute with the given "name".  If not found, then null is returned.
+	 * @throws JSONException
+	 * @throws Exception
+	 */
+	public static String getResourceAttributeValue (JSONObject jsonResource, String attributeName) throws JSONException, Exception {
 		String attributeValue = null;	// indicates that the pool does NOT have the "attributeName" attribute
 
 		// get the pool for the authenticator
@@ -3215,7 +3367,7 @@ schema generation failed
 
 		//{
 	
-		JSONArray jsonAttributes = jsonPool.getJSONArray("attributes");
+		JSONArray jsonAttributes = jsonResource.getJSONArray("attributes");
 		// loop through the attributes of this pool looking for the attributeName attribute
 		for (int j = 0; j < jsonAttributes.length(); j++) {
 			JSONObject jsonAttribute = (JSONObject) jsonAttributes.get(j);
@@ -3316,21 +3468,35 @@ schema generation failed
 
 	
 	public void restartTomcat() {
+		// what version of tomcat is installed?
+		String tomcat = "tomcat";
+		if (sshCommandRunner.runCommandAndWait("rpm -q tomcat6").getExitCode().equals(Integer.valueOf(0))) tomcat = "tomcat6";
 		
-		// TODO comment out after debugging a hunch that restarting tomcat is leading to multiple instances of tomcat6
-		if (sshCommandRunner.runCommandAndWait("ps u -U tomcat | grep tomcat6").getStdout().trim().split("\\n").length>1) log.warning("Detected multiple instances of tomcat6 running...");
-		sshCommandRunner.runCommandAndWait("df -h");
+//		// TODO comment out after debugging a hunch that restarting tomcat is leading to multiple instances of tomcat6
+//		if (sshCommandRunner.runCommandAndWait("ps u -U tomcat | grep "+tomcat+"").getStdout().trim().split("\\n").length>1) log.warning("Detected multiple instances of "+tomcat+" running...");
+//		sshCommandRunner.runCommandAndWait("df -h");
 		
 		// TODO fix this logic for candlepin running on rhel7 which is based on f18
-		if (redhatReleaseX>=16)	{	// the Fedora 16+ way...
-			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "systemctl restart tomcat6.service && systemctl is-active tomcat6.service", Integer.valueOf(0), "^active$", null);
+		if (redhatReleaseX>=7 || fedoraReleaseX>=16)	{	// the Fedora 16+ way...
+			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "systemctl restart "+tomcat+".service && systemctl enable "+tomcat+".service && systemctl is-active "+tomcat+".service", Integer.valueOf(0), "^active$", null);
 		} else {	// the old Fedora way...
-			RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service tomcat6 restart",Integer.valueOf(0),"^Starting tomcat6: +\\[  OK  \\]$",null);
+			RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"chkconfig "+tomcat+" on && service "+tomcat+" restart",Integer.valueOf(0),"^Starting "+tomcat+": +\\[  OK  \\]$",null);
 		}
+		sleep(10*1000);	// give tomcat a chance to restart
+
 		
-		// TODO comment out after debugging a hunch that restarting tomcat is leading to multiple instances of tomcat6
-		if (sshCommandRunner.runCommandAndWait("ps u -U tomcat | grep tomcat6").getStdout().trim().split("\\n").length>1) log.warning("Detected multiple instances of tomcat6 running...");
-		sshCommandRunner.runCommandAndWait("df -h");
+//		// TODO comment out after debugging a hunch that restarting tomcat is leading to multiple instances of tomcat6
+//		if (sshCommandRunner.runCommandAndWait("ps u -U tomcat | grep "+tomcat+"").getStdout().trim().split("\\n").length>1) log.warning("Detected multiple instances of "+tomcat+" running...");
+//		sshCommandRunner.runCommandAndWait("df -h");
+	}
+	
+	public static void sleep(long milliseconds) {
+		log.info("Sleeping for "+milliseconds+" milliseconds...");
+		try {
+			Thread.sleep(milliseconds);
+		} catch (InterruptedException e) {
+			log.info("Sleep interrupted!");
+		}
 	}
 	
 	public List<RevokedCert> getCurrentlyRevokedCerts() {
@@ -3453,6 +3619,17 @@ schema generation failed
 		
 		// call the ruby client
 		String command = String.format("cd %s; ./cpc create_subscription \"%s\" \"%s\"", serverInstallDir+rubyClientDir, ownerKey, productId);
+		SSHCommandResult sshCommandResult = RemoteFileTasks.runCommandAndAssert(sshCommandRunner, command, 0);
+		
+		return new JSONObject(sshCommandResult.getStdout().replaceAll("=>", ":"));
+	}
+	
+	public JSONObject createPoolUsingCPC(String ownerId, String productId) throws JSONException {
+		log.info("Using the ruby client to create_pool ownerId='"+ownerId+"' productId='"+productId+"'...");
+		if (serverInstallDir.isEmpty()) log.warning("serverInstallDir is empty.  Check the value of the sm.server.installDir in your automation.properties file.");
+		
+		// call the ruby client
+		String command = String.format("cd %s; ./cpc create_pool \"%s\" \"%s\"", serverInstallDir+rubyClientDir, ownerId, productId);
 		SSHCommandResult sshCommandResult = RemoteFileTasks.runCommandAndAssert(sshCommandRunner, command, 0);
 		
 		return new JSONObject(sshCommandResult.getStdout().replaceAll("=>", ":"));
@@ -3806,6 +3983,7 @@ schema generation failed
 		
 		// create the subscription
 		String requestBody = CandlepinTasks.createSubscriptionRequestBody(quantity, startDate, endDate, productId, contractNumber, accountNumber, providedProductIds, brandingMaps).toString();
+		// curl --stderr /dev/null --insecure --user admin:admin --request POST --data '{"product":{"id":"0-sockets"},"quantity":20,"providedProducts":[{"id":"90001"}],"endDate":"Tue, 15 Mar 2016 12:14:20 -0400","contractNumber":1021091971,"accountNumber":1131685727,"startDate":"Sun, 28 Feb 2016 11:14:20 -0500"}' --header 'accept: application/json' --header 'content-type: application/json' https://jsefler-f22-candlepin.usersys.redhat.com:8443/candlepin/owners/admin/subscriptions
 		JSONObject jsonSubscription = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(authenticator,password,url,"/owners/" + ownerKey + "/subscriptions",requestBody));
 		
 		if (jsonSubscription.has("displayMessage")) {
@@ -3830,7 +4008,7 @@ schema generation failed
 		for (int i = 0; i < jsonPools.length(); i++) {
 			jsonPool = (JSONObject) jsonPools.get(i);
 			//if (contractNumber.equals(jsonPool.getInt("contractNumber"))) {
-			if (jsonPool.getString("subscriptionId").equals(jsonSubscription.getString("id"))) {
+			if (!jsonPool.isNull("subscriptionId") && jsonPool.getString("subscriptionId").equals(jsonSubscription.getString("id"))) {
 				poolId = jsonPool.getString("id");
 				break;
 			}
@@ -3849,6 +4027,7 @@ schema generation failed
 		String requestBody = CandlepinTasks.createProductRequestBody(name, productId, multiplier, attributes, dependentProductIds).toString();
 		String path = "/products";
 		if (SubscriptionManagerTasks.isVersion(jsonStatus.getString("version"), ">=", "2.0.0")) path = "/owners/"+ownerKey+"/products";	// products are now defined on a per org basis in candlepin-2.0+
+		// SSH alternative to HTTP request: curl --stderr /dev/null --insecure --user admin:admin --request POST --data '{"multiplier":1,"name":"Awesome OS for systems with sockets value=0","attributes":[{"name":"warning_period","value":"30"},{"name":"variant","value":"server"},{"name":"sockets","value":"0"},{"name":"arch","value":"ALL"},{"name":"type","value":"MKT"},{"name":"version","value":"1.0"}],"id":"0-sockets"}' --header 'accept: application/json' --header 'content-type: application/json' https://jsefler-f22-candlepin.usersys.redhat.com:8443/candlepin/owners/admin/products
 		JSONObject jsonProduct = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(authenticator,password,url,path,requestBody));
 		if (jsonProduct.has("displayMessage")) {
 			//log.warning("Product creation appears to have failed: "+jsonProduct.getString("displayMessage"));
@@ -3877,7 +4056,7 @@ schema generation failed
 
 	public static JSONObject addContentToProductUsingRESTfulAPI(String authenticator, String password, String url, String ownerKey, String productId, String contentId, Boolean enabled) throws JSONException, Exception  {
 		JSONObject jsonStatus = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(/*authenticator*/null,/*password*/null,url,"/status"));
-
+		
 		// add the contentId to the productId
 		String path = String.format("/products/%s/content/%s?enabled=%s",productId,contentId,enabled);
 		if (SubscriptionManagerTasks.isVersion(jsonStatus.getString("version"), ">=", "2.0.0")) path = "/owners/"+ownerKey+path;	// products are now defined on a per org basis in candlepin-2.0+
@@ -4016,6 +4195,7 @@ schema generation failed
 	
 	
 	// FIXME DEPRECATED METHODS TO BE DELETED AFTER UPDATING CLOJURE TESTS
+	/*
 	@Deprecated
 	public static List<String> getOrgsKeyValueForUser(String server, String port, String prefix, String username, String password, String key) throws JSONException, Exception {
 		return getOrgsKeyValueForUser(username, password, SubscriptionManagerCLITestScript.sm_serverUrl, key);
@@ -4032,7 +4212,7 @@ schema generation failed
 	public static boolean isPoolProductMultiEntitlement (String server, String port, String prefix, String authenticator, String password, String poolId) throws JSONException, Exception {
 		return isPoolProductMultiEntitlement (authenticator, password, SubscriptionManagerCLITestScript.sm_serverUrl, poolId);
 	}
-
+	*/
 }
 
 
