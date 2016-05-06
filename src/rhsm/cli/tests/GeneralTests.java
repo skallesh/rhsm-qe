@@ -985,7 +985,13 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 			}
 			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1119688"}),			clienttasks.command+" subscribe",											new Integer(1),		"","This system is not yet registered. Try 'subscription-manager register --help' for more information."}));
 			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1119688","1162331"}),clienttasks.rhsmDebugSystemCommand(null,null,null,null,null,null,null,null),new Integer(1),		"","This system is not yet registered. Try 'subscription-manager register --help' for more information."}));
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1078091","1119688"}),clienttasks.command+" register --serverurl=https://sat6_fqdn/ --insecure",	new Integer(69),	"","Unable to reach the server at sat6_fqdn:443/"}));
+
+			if (clienttasks.isPackageVersion("subscription-manager",">=","1.17.5-1")) {	// subscription-manager commit ea10b99095ad58df57ed107e13bf19498e003ae8
+				ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1078091","1119688","1320507"}),	clienttasks.command+" register --serverurl=https://sat6_fqdn/ --insecure",	new Integer(69),	"","Unable to reach the server at sat6_fqdn:"+clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "port")+"/"}));
+			} else {
+				ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1078091","1119688"}),			clienttasks.command+" register --serverurl=https://sat6_fqdn/ --insecure",	new Integer(69),	"","Unable to reach the server at sat6_fqdn:443/"}));
+			}
+			
 			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1119688"}),			clienttasks.command+" register --servicelevel=foo",							new Integer(64),	"","Error: Must use --auto-attach with --servicelevel."}));	// changed by bug 874804,876305		ll.add(Arrays.asList(new Object[]{clienttasks.command+" register --servicelevel=foo",				new Integer(255),	"Error: Must use --autosubscribe with --servicelevel.", ""}));
 			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"856236","1119688"}),	clienttasks.command+" register --activationkey=foo --org=foo --env=foo",	new Integer(64),	"","Error: Activation keys do not allow environments to be specified."}));
 			if (clienttasks.isPackageVersion("subscription-manager",">=","1.16.2-1")) {	// subscription-manager commit f14d2618ea94c18a0295ae3a5526a2ff252a3f99	and 6bd0448c85c10d8a58cae10372f0d4aa323d5c27
