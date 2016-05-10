@@ -80,8 +80,6 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		super();
 		// TODO Auto-generated constructor stub
 	}
-
-
 	
 	
 	// Configuration Methods ***********************************************************************
@@ -505,6 +503,10 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		smt.candlepinAdminPassword = sm_serverAdminPassword;
 		smt.candlepinUrl = sm_serverUrl.isEmpty() ? getServerUrl(smt.getConfFileParameter(smt.rhsmConfFile,"hostname"), smt.getConfFileParameter(smt.rhsmConfFile,"port"), smt.getConfFileParameter(smt.rhsmConfFile,"prefix")) : sm_serverUrl;
 		sm_serverUrl = smt.candlepinUrl;	// rewrite it back to sm_serverUrl to make it easier for tests to access
+		
+		// set the logging level to DEBUG for rhsm.log - effectively reverting the changes from Bug 1266935 - Reduce default log level to INFO (from DEBUG)
+		// this is needed to enable more testing and log more useful info from SubscriptionManagerTasks.logRuntimeErrors(...)
+		smt.updateConfFileParameter(clienttasks.rhsmLoggingConfFile, "handler_rhsm_log", "level", "DEBUG");
 	}
 	
 	protected static boolean isSetupBeforeSuiteComplete = false;
