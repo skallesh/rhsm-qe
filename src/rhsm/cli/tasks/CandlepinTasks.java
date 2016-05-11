@@ -156,8 +156,8 @@ public class CandlepinTasks {
 		// where is catalina.out?
 		if (sshCommandRunner!=null) {
 			// "/var/log/tomcat6/catalina.out" or "/var/log/tomcat/catalina.out"
-			if (RemoteFileTasks.testExists(sshCommandRunner, "/var/log/tomcat6/catalina.out")) this.tomcat6LogFile = "/var/log/tomcat6/catalina.out";
-			if (RemoteFileTasks.testExists(sshCommandRunner, "/var/log/tomcat/catalina.out")) this.tomcat6LogFile = "/var/log/tomcat/catalina.out";
+			if (RemoteFileTasks.testExists(sshCommandRunner, "/var/log/tomcat6/")) this.tomcat6LogFile = "/var/log/tomcat6/catalina.out";
+			if (RemoteFileTasks.testExists(sshCommandRunner, "/var/log/tomcat/")) this.tomcat6LogFile = "/var/log/tomcat/catalina.out";
 		}
 	}
 	
@@ -196,7 +196,7 @@ public class CandlepinTasks {
 			for (String tomcatProcess : tomcatProcesses.getStdout().trim().split("\\n")) {
 				// tomcat   26523  1.9 17.4 1953316 178396 ?      Sl   06:35   6:43 /usr/lib/jvm/java-1.6.0/bin/java -Djavax.sql.DataSource.Factory=org.apache.commons.dbcp.BasicDataSourceFactory -classpath :/usr/share/tomcat6/bin/bootstrap.jar:/usr/share/tomcat6/bin/tomcat-juli.jar:/usr/share/java/commons-daemon.jar -Dcatalina.base=/usr/share/tomcat6 -Dcatalina.home=/usr/share/tomcat6 -Djava.endorsed.dirs= -Djava.io.tmpdir=/var/cache/tomcat6/temp -Djava.util.logging.config.file=/usr/share/tomcat6/conf/logging.properties -Djava.util.logging.manager=org.apache.juli.ClassLoaderLogManager org.apache.catalina.startup.Bootstrap start
 				String pid = tomcatProcess.trim().split("\\s+")[1];
-				sshCommandRunner.runCommandAndWait("kill -9 "+pid);
+				sshCommandRunner.runCommandAndWait("sudo "+"kill -9 "+pid);
 			}
 		}
 		
@@ -218,7 +218,7 @@ public class CandlepinTasks {
 		// catalina.out: java.lang.OutOfMemoryError: Java heap space
 		// deploy.sh: /usr/lib64/ruby/gems/1.8/gems/rest-client-1.6.1/lib/restclient/abstract_response.rb:48:in `return!': 404 Resource Not Found (RestClient::ResourceNotFound)
 		if (RemoteFileTasks.testExists(sshCommandRunner, "/var/lib/candlepin/hornetq/")) {
-			RemoteFileTasks.runCommandAndWait(sshCommandRunner, "rm -rf /var/lib/candlepin/hornetq/", TestRecords.action());	
+			RemoteFileTasks.runCommandAndWait(sshCommandRunner, "sudo "+"rm -rf /var/lib/candlepin/hornetq/", TestRecords.action());	
 		}
 		
 		// copy the patch file used to enable testing the redeem module to the candlepin proxy dir
@@ -277,18 +277,18 @@ public class CandlepinTasks {
 		// manual fix...
 		//  [root@jsefler-f14-candlepin candlepin]# rm -rf /etc/tomcat6/keystore
 		//  [root@jsefler-f14-candlepin candlepin]# service tomcat6 restart
-		RemoteFileTasks.runCommandAndWait(sshCommandRunner, "rm -rf /etc/tomcat6/keystore", TestRecords.action());
+		RemoteFileTasks.runCommandAndWait(sshCommandRunner, "sudo "+"rm -rf /etc/tomcat6/keystore", TestRecords.action());
 		
 		// restart some services
 		// TODO fix this logic for candlepin running on rhel7 which is based on f18
 		if (redhatReleaseX>=7 || fedoraReleaseX>=16)	{	// the Fedora 16+ way...
-			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "systemctl stop ntpd.service && ntpdate clock.redhat.com && systemctl start ntpd.service && systemctl is-active ntpd.service", Integer.valueOf(0), "^active$", null);	// Stdout: 24 May 17:53:28 ntpdate[20993]: adjust time server 66.187.233.4 offset -0.000287 sec
-			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "systemctl stop postgresql.service && systemctl start postgresql.service && systemctl is-active postgresql.service", Integer.valueOf(0), "^active$", null);
-			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "systemctl stop firewalld.service && systemctl disable firewalld.service && systemctl is-active firewalld.service", null, "^unknown$", null);	// avoid java.net.NoRouteToHostException: No route to host
+			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "sudo "+"systemctl stop ntpd.service && "+"sudo "+"ntpdate clock.redhat.com && "+"sudo "+"systemctl start ntpd.service && "+"sudo "+"systemctl is-active ntpd.service", Integer.valueOf(0), "^active$", null);	// Stdout: 24 May 17:53:28 ntpdate[20993]: adjust time server 66.187.233.4 offset -0.000287 sec
+			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "sudo "+"systemctl stop postgresql.service && "+"sudo "+"systemctl start postgresql.service && "+"sudo "+"systemctl is-active postgresql.service", Integer.valueOf(0), "^active$", null);
+			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "sudo "+"systemctl stop firewalld.service && "+"sudo "+"systemctl disable firewalld.service && "+"sudo "+"systemctl is-active firewalld.service", null, "^unknown$", null);	// avoid java.net.NoRouteToHostException: No route to host
 		} else {	// the old Fedora way...
-			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "service ntpd stop && ntpdate clock.redhat.com && service ntpd start && chkconfig ntpd on", /*Integer.valueOf(0) DON"T CHECK EXIT CODE SINCE IT RETURNS 1 WHEN STOP FAILS EVEN THOUGH START SUCCEEDS*/null, "Starting ntpd(.*?):\\s+\\[  OK  \\]", null);	// Starting ntpd:  [  OK  ]		// Starting ntpd (via systemctl):  [  OK  ]
-			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "service postgresql stop && service postgresql start", /*Integer.valueOf(0) DON"T CHECK EXIT CODE SINCE IT RETURNS 1 WHEN STOP FAILS EVEN THOUGH START SUCCEEDS*/null, "Starting postgresql(.*?):\\s+\\[  OK  \\]", null);	// Starting postgresql service: [  OK  ]	// Starting postgresql (via systemctl):  [  OK  ]
-			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "service iptables stop && chkconfig iptables off", Integer.valueOf(0));	// TODO Untested
+			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "sudo "+"service ntpd stop && "+"sudo "+"ntpdate clock.redhat.com && "+"sudo "+"service ntpd start && chkconfig ntpd on", /*Integer.valueOf(0) DON"T CHECK EXIT CODE SINCE IT RETURNS 1 WHEN STOP FAILS EVEN THOUGH START SUCCEEDS*/null, "Starting ntpd(.*?):\\s+\\[  OK  \\]", null);	// Starting ntpd:  [  OK  ]		// Starting ntpd (via systemctl):  [  OK  ]
+			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "sudo "+"service postgresql stop && "+"sudo "+"service postgresql start", /*Integer.valueOf(0) DON"T CHECK EXIT CODE SINCE IT RETURNS 1 WHEN STOP FAILS EVEN THOUGH START SUCCEEDS*/null, "Starting postgresql(.*?):\\s+\\[  OK  \\]", null);	// Starting postgresql service: [  OK  ]	// Starting postgresql (via systemctl):  [  OK  ]
+			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "sudo "+"service iptables stop && "+"sudo "+"chkconfig iptables off", Integer.valueOf(0));	// TODO Untested
 		}
 		
 		if (redhatReleaseX>=7 || fedoraReleaseX>=19)	{	// the Fedora 19+ way...
@@ -599,7 +599,7 @@ schema generation failed
 	
 	public void cleanOutCRL() {
 		log.info("Cleaning out the certificate revocation list (CRL) "+candlepinCRLFile+"...");
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "rm -f "+candlepinCRLFile, 0);
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "sudo "+"rm -f "+candlepinCRLFile, 0);
 	}
 	
 	/**
@@ -624,6 +624,30 @@ schema generation failed
 		Assert.assertEquals(
 			RemoteFileTasks.searchReplaceFile(sshCommandRunner, defaultConfigFile, "^#\\s*"+parameter+"\\s*=", parameter+"="),0,
 			"Uncommented '"+defaultConfigFile+"' parameter: "+parameter);
+	}
+	/**
+	 * return the value of an active configuration parameter from a config file. If not found null is returned.
+	 * @param confFile
+	 * @param parameter
+	 * @return
+	 */
+	public String getConfFileParameter(String confFile, String parameter){
+		// Note: parameter can be case insensitive
+		SSHCommandResult result = sshCommandRunner.runCommandAndWait(String.format("grep -iE \"^%s *(=|:)\" %s",parameter,confFile));	// tolerates = or : assignment character
+		if (result.getExitCode()!=0) return null;
+		String value = result.getStdout().split("=|:",2)[1];
+		return value.trim();
+	}
+	public String getConfFileParameter(String parameter){
+		return getConfFileParameter(defaultConfigFile, parameter);
+	}
+	public void addConfFileParameter(String confFile, String parameter, String value){
+		log.info("Adding config file '"+confFile+"' parameter: "+parameter+"="+value);
+		
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, String.format("echo '%s=%s' >> %s", parameter, value, confFile), 0);
+	}
+	public void addConfFileParameter(String parameter, String value){
+		addConfFileParameter(defaultConfigFile, parameter, value);
 	}
 	
 	static public String getResourceUsingRESTfulAPI(String authenticator, String password, String url, String path) throws Exception {
