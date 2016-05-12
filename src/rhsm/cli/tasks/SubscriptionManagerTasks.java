@@ -100,6 +100,7 @@ public class SubscriptionManagerTasks {
 	public String msg_NetworkErrorUnableToConnect	= null;
 	public String msg_NetworkErrorCheckConnection	= null;
 	public String msg_RemoteErrorCheckConnection	= null;
+	public String msg_ProxyConnectionFailed			= null;
 	public String msg_ClockSkewDetection			= null;
 	public String msg_ContainerMode					= null;
 	public String msg_InteroperabilityWarning		= null;
@@ -910,7 +911,16 @@ if (false) {
 		msg_ClockSkewDetection			= "Clock skew detected, please check your system time";
 		msg_ContainerMode				= "subscription-manager is disabled when running inside a container. Please refer to your host system for subscription management.";
 		msg_RemoteErrorCheckConnection	= "Remote server error. Please check the connection details, or see /var/log/rhsm/rhsm.log for more information.";
-		
+		msg_ProxyConnectionFailed		= "Proxy connection failed, please check your settings.";
+
+		// TEMPORARY WORKAROUND FOR BUG 1335537 - typo in "Proxy connnection failed, please check your settings."
+		String bugId = "1335537"; boolean invokeWorkaroundWhileBugIsOpen = true;
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
+			msg_ProxyConnectionFailed = msg_ProxyConnectionFailed.replace("connection", "connnection");	// pretend that "connnection" is the correct spelling while bug 1335537 is open
+		}
+		// END OF WORKAROUND
+
 		// msg_InteroperabilityWarning is defined in /usr/share/rhsm/subscription_manager/branding/__init__.py self.REGISTERED_TO_OTHER_WARNING
 		msg_InteroperabilityWarning		=
 			"WARNING" +"\n\n"+
