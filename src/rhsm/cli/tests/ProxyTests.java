@@ -1717,13 +1717,15 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	public static SSHCommandRunner basicauthproxy = null;
 	public static SSHCommandRunner noauthproxy = null;
 	public static String nErrMsg = null;
+	public static String pErrMsg = null;
 	protected String ipv4_address = null;
 
 	@BeforeClass(groups={"setup"})
 	public void setupBeforeClass() throws IOException {
-		basicauthproxy = new SSHCommandRunner(sm_basicauthproxyHostname, sm_sshUser, sm_sshKeyPrivate, sm_sshkeyPassphrase, null);
-		noauthproxy = new SSHCommandRunner(sm_noauthproxyHostname, sm_sshUser, sm_sshKeyPrivate, sm_sshkeyPassphrase, null);
+		basicauthproxy = new SSHCommandRunner(sm_basicauthproxyHostname, sm_basicauthproxySSHUser, sm_sshKeyPrivate, sm_sshkeyPassphrase, null);
+		noauthproxy = new SSHCommandRunner(sm_noauthproxyHostname, sm_noauthproxySSHUser, sm_sshKeyPrivate, sm_sshkeyPassphrase, null);
 		if (clienttasks!=null) nErrMsg = clienttasks.msg_NetworkErrorUnableToConnect;
+		if (clienttasks!=null) pErrMsg = clienttasks.msg_ProxyConnectionFailed;
 		if (clienttasks!=null) ipv4_address = clienttasks.getIPV4Address();
 	}
 	
@@ -1816,7 +1818,11 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 			// basic auth proxy test data...
 			ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug(new String[]{"1119688","755258","838242"}),	sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	basicauthproxyUrl,		sm_basicauthproxyUsername,		sm_basicauthproxyPassword,	Integer.valueOf(0),		null,		null}));
 			ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug(new String[]{"1119688"}),					sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	"bad-proxy",			sm_basicauthproxyUsername,		sm_basicauthproxyPassword,	Integer.valueOf(70),	null,		nErrMsg}));
-			ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug(new String[]{"1119688"}),					sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	basicauthproxyUrl+"0",	sm_basicauthproxyUsername,		sm_basicauthproxyPassword,	Integer.valueOf(70),	null,		nErrMsg}));
+			if (clienttasks.isPackageVersion("subscription-manager",">=","1.17.6-1")) {	// post commit 7ce6801fc1cc38edcdeb75dfb5f0d1f8a6398c68	1301215: Test proxy connection before making call	1176219: Stop before cache is returned when using bad proxy options
+				ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug(new String[]{"1119688","1301215"}),		sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	basicauthproxyUrl+"0",	sm_basicauthproxyUsername,		sm_basicauthproxyPassword,	Integer.valueOf(69),	null,		pErrMsg}));
+			}else {
+				ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug(new String[]{"1119688"}),				sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	basicauthproxyUrl+"0",	sm_basicauthproxyUsername,		sm_basicauthproxyPassword,	Integer.valueOf(70),	null,		nErrMsg}));
+			}
 			ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug(new String[]{"1119688","755258"}),			sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	basicauthproxyUrl,		"bad-username",					sm_basicauthproxyPassword,	Integer.valueOf(70),	null,		nErrMsg}));
 			ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug(new String[]{"1119688","755258"}),			sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	basicauthproxyUrl,		sm_basicauthproxyUsername,		"bad-password",				Integer.valueOf(70),	null,		nErrMsg}));
 			ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug(new String[]{"1119688","755258"}),			sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	basicauthproxyUrl,		"bad-username",					"bad-password",				Integer.valueOf(70),	null,		nErrMsg}));
@@ -1828,7 +1834,11 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 			// no auth proxy test data...
 			ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug(new String[]{"1119688","755258"}),			sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	noauthproxyUrl,			null,							null,						Integer.valueOf(0),		null,		null}));
 			ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug(new String[]{"1119688","755258"}),			sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	noauthproxyUrl,			"ignored-username",				"ignored-password",			Integer.valueOf(0),		null,		null}));
-			ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug(new String[]{"1119688"}),					sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	noauthproxyUrl+"0",		null,							null,						Integer.valueOf(70),	null,		nErrMsg}));
+			if (clienttasks.isPackageVersion("subscription-manager",">=","1.17.6-1")) {	// post commit 7ce6801fc1cc38edcdeb75dfb5f0d1f8a6398c68	1301215: Test proxy connection before making call	1176219: Stop before cache is returned when using bad proxy options
+				ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug(new String[]{"1119688","1301215"}),		sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	noauthproxyUrl+"0",		null,							null,						Integer.valueOf(69),	null,		pErrMsg}));			
+			} else {
+				ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug(new String[]{"1119688"}),				sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	noauthproxyUrl+"0",		null,							null,						Integer.valueOf(70),	null,		nErrMsg}));
+			}
 			ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug(new String[]{"1119688","755258"}),			"bad-username",		sm_clientPassword,	sm_clientOrg,	noauthproxyUrl,			null,							null,						Integer.valueOf(70),	null,		uErrMsg}));
 			ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug(new String[]{"1119688","755258"}),			sm_clientUsername,	"bad-password",		sm_clientOrg,	noauthproxyUrl,			null,							null,						Integer.valueOf(70),	null,		uErrMsg}));
 			ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug(new String[]{"1119688","755258"}),			sm_clientUsername,	sm_clientPassword,	"bad-org",		noauthproxyUrl,			null,							null,						Integer.valueOf(70),	null,		oErrMsg}));

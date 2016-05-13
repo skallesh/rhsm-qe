@@ -80,8 +80,6 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		super();
 		// TODO Auto-generated constructor stub
 	}
-
-
 	
 	
 	// Configuration Methods ***********************************************************************
@@ -93,15 +91,15 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		// create SSHCommandRunners to connect to the subscription-manager clients
 		File sshKeyPrivateKeyFile = new File(System.getProperty("automation.dir", null)+"/"+sm_sshKeyPrivate);
 		if (!sshKeyPrivateKeyFile.exists()) Assert.fail("Expected to find the private ssh key for automation testing at '"+sshKeyPrivateKeyFile+"'.  Ask the RHSM Automation Administrator for a copy.");
-		client = new SSHCommandRunner(sm_clientHostname, sm_sshUser, new File(sm_sshKeyPrivate), sm_sshkeyPassphrase, null);
-		if (sm_sshEmergenecyTimeoutMS!=null) client.setEmergencyTimeout(Long.valueOf(sm_sshEmergenecyTimeoutMS));
-		clienttasks = new SubscriptionManagerTasks(client);
-		client1 = client;
-		client1tasks = clienttasks;
+		client1 = new SSHCommandRunner(sm_client1Hostname, sm_client1SSHUser, new File(sm_sshKeyPrivate), sm_sshkeyPassphrase, null);
+		if (sm_sshEmergenecyTimeoutMS!=null) client1.setEmergencyTimeout(Long.valueOf(sm_sshEmergenecyTimeoutMS));
+		client1tasks = new SubscriptionManagerTasks(client1);
+		client = client1;
+		clienttasks = client1tasks;
 		
 		// will we be testing multiple clients?
 		if (!(	sm_client2Hostname.equals("") /*|| client2username.equals("") || client2password.equals("")*/ )) {
-			client2 = new SSHCommandRunner(sm_client2Hostname, sm_sshUser, new File(sm_sshKeyPrivate), sm_sshkeyPassphrase, null);
+			client2 = new SSHCommandRunner(sm_client2Hostname, sm_client2SSHUser, new File(sm_sshKeyPrivate), sm_sshkeyPassphrase, null);
 			if (sm_sshEmergenecyTimeoutMS!=null) client2.setEmergencyTimeout(Long.valueOf(sm_sshEmergenecyTimeoutMS));
 			client2tasks = new SubscriptionManagerTasks(client2);
 		} else {
@@ -130,7 +128,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		
 		// can we create an SSHCommandRunner to connect to the candlepin server ?
 		if (!sm_serverHostname.equals("") && sm_serverType.equals(CandlepinType.standalone)) {
-			server = new SSHCommandRunner(sm_serverHostname, sm_sshUser, new File(sm_sshKeyPrivate), sm_sshkeyPassphrase, null);
+			server = new SSHCommandRunner(sm_serverHostname, sm_serverSSHUser, new File(sm_sshKeyPrivate), sm_sshkeyPassphrase, null);
 			if (sm_sshEmergenecyTimeoutMS!=null) server.setEmergencyTimeout(Long.valueOf(sm_sshEmergenecyTimeoutMS));
 			servertasks = new rhsm.cli.tasks.CandlepinTasks(server,sm_serverInstallDir,sm_serverImportDir,sm_serverType,sm_serverBranch);
 		} else {
@@ -143,15 +141,20 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			
 			// NOTE: After updating the candlepin.conf file, the server needs to be restarted, therefore this will not work against the Hosted IT server which we don't want to restart or deploy
 			//       I suggest manually setting this on hosted and asking calfanso to restart
-			servertasks.updateConfFileParameter("pinsetter.org.fedoraproject.candlepin.pinsetter.tasks.CertificateRevocationListTask.schedule","0 0\\/2 * * * ?");  // every 2 minutes
+			if (servertasks.getConfFileParameter("pinsetter.org.fedoraproject.candlepin.pinsetter.tasks.CertificateRevocationListTask.schedule")==null) {
+				servertasks.addConfFileParameter("\n# purge the CRL list every 2 min\npinsetter.org.fedoraproject.candlepin.pinsetter.tasks.CertificateRevocationListTask.schedule","0 0/2 * * * ?");
+			} else {
+				servertasks.updateConfFileParameter("pinsetter.org.fedoraproject.candlepin.pinsetter.tasks.CertificateRevocationListTask.schedule","0 0\\/2 * * * ?");  // every 2 minutes
+			}
 			servertasks.cleanOutCRL();
 			servertasks.deploy();
-			server.runCommandAndWait("df -h");server.runCommandAndWait("ls -Slh /var/log/tomcat6 | head");	// log candlepin's starting disk usage (for debugging information only)
+			server.runCommandAndWait("df -h");
+			server.runCommandAndWait("sudo "+"ls -Slh "+new File(servertasks.tomcat6LogFile).getParent()+" | head");	// log candlepin's starting disk usage (for debugging information only)
 			servertasks.setupTranslateToolkitFromTarUrl(sm_translateToolkitTarUrl);
 			servertasks.reportAPI();
 			
 			// install packages
-			SSHCommandResult yumInstallResult = server.runCommandAndWait("yum install -y --quiet hunspell");
+			SSHCommandResult yumInstallResult = server.runCommandAndWait("sudo "+"yum install -y --quiet hunspell");
 			Assert.assertEquals(yumInstallResult.getExitCode(), Integer.valueOf(0),"ExitCode from yum install of packages on server '"+server.getConnection().getHostname()+"'.");
 			
 			// also connect to the candlepin server database
@@ -505,6 +508,10 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		smt.candlepinAdminPassword = sm_serverAdminPassword;
 		smt.candlepinUrl = sm_serverUrl.isEmpty() ? getServerUrl(smt.getConfFileParameter(smt.rhsmConfFile,"hostname"), smt.getConfFileParameter(smt.rhsmConfFile,"port"), smt.getConfFileParameter(smt.rhsmConfFile,"prefix")) : sm_serverUrl;
 		sm_serverUrl = smt.candlepinUrl;	// rewrite it back to sm_serverUrl to make it easier for tests to access
+		
+		// set the logging level to DEBUG for rhsm.log - effectively reverting the changes from Bug 1266935 - Reduce default log level to INFO (from DEBUG)
+		// this is needed to enable more testing and log more useful info from SubscriptionManagerTasks.logRuntimeErrors(...)
+		smt.updateConfFileParameter(clienttasks.rhsmLoggingConfFile, "handler_rhsm_log", "level", "DEBUG");
 	}
 	
 	protected static boolean isSetupBeforeSuiteComplete = false;
