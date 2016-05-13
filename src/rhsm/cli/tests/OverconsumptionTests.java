@@ -23,6 +23,8 @@ import com.redhat.qe.tools.SSHCommandResult;
 /**
  * @author jsefler
  *
+ * dgoodwin wrote a comparable test that will also test overconsumption.
+ * it is located on candlepin in server/bin/concurrency-test.rb
  *
  */
 
@@ -185,7 +187,7 @@ public class OverconsumptionTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager: Concurrent attempt to oversubscribe the pool quantity",
-			groups={"blockedByBug-671195"},
+			groups={"blockedByBug-671195","blockedByBug-1336054"},
 			dependsOnMethods={"ConcurrentAttemptToSubscribe_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
@@ -233,7 +235,7 @@ public class OverconsumptionTests extends SubscriptionManagerCLITestScript{
 		pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", testPool.poolId, client2tasks.getCurrentlyAllAvailableSubscriptionPools());
 		Assert.assertNull(pool, "The test pool is no longer in the --all --available list after having consumed all of its available subscriptions.");
 		JSONObject jsonTestPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/pools/"+testPool.poolId));
-		Assert.assertEquals(jsonTestPool.getInt("consumed"), jsonTestPool.getInt("quantity"), "Asserting the test pool's consumed attribute matches it's original total quantity after having consumed all of its available entitlements.");
+		Assert.assertEquals(jsonTestPool.getInt("consumed"), jsonTestPool.getInt("quantity"), "Asserting the consumed attribute of test pool '"+testPool.poolId+"' matches it's original total quantity after having consumed all of its available entitlements.");
 		
 		// one of these command should have succeeded and one should have failed with "No entitlements are available"...
 		// decide who was the winner and who must have been the loser
