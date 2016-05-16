@@ -1389,7 +1389,7 @@ if (false) {
 			
 			// special assert case
 			if (NON_NEG_INTEGER_FACT_LIST.contains(key)) {
-				// special special assert case lscpu.numa_node0_cpu(s): 0,1
+				// special assert case lscpu.numa_node0_cpu(s): 0,1
 				if (key.equals("lscpu.numa_node0_cpu(s)") || key.equals("lscpu.numa_node(s)")) {
 					for (String subvalue : consumerFactsMap.get(key).split(",")) {
 						Assert.assertTrue(isInteger(subvalue) && Integer.valueOf(subvalue)>=0, "Consumer fact '"+key+"' subvalue '"+subvalue+"' from fact "+key+":"+consumerFactsMap.get(key)+" is a non-negative integer.  ( If this test fails, then the remote candlepin API is failing to drop the fact entirely from the consumer when the system uploads this fact; see Candlepin commit 5d4d30753ab209b82181c267a94dd833f24b24c9 https://github.com/candlepin/candlepin/pull/157; see Bugzillas https://bugzilla.redhat.com/buglist.cgi?bug_id=803757%2C858286 )");
@@ -1405,6 +1405,11 @@ if (false) {
 				// special skip case
 				if (key.equals("net.interface.sit0.mac_address")) {
 					log.warning("Skipping comparison of fact '"+key+"'.  The local system value appears to change unpredictably.  The current value on the system '"+systemFactsMap.get(key)+"' may be acceptably different than the value on the consumer '"+consumerFactsMap.get(key)+"';  see Bugzilla https://bugzilla.redhat.com/show_bug.cgi?id=838123");
+					continue;
+				}
+				
+				if (systemFactsMap.get(key).length() > 255) {
+					// the comparison for this looooong fact will be performed in the next for loop
 					continue;
 				}
 				
@@ -1426,6 +1431,16 @@ if (false) {
 			// special skip case
 			if (key.equals("system.name") || key.equals("system.uuid")) {
 				log.info("Skipping comparison of extended fact '"+key+"'.");
+				continue;
+			}
+			
+			// special assert case for looooong facts - see Bug 1165193 - Candlepin refuses to register a consumer with a fact longer than 255 characters
+			if (systemFactsMap.get(key).length() > 255) {
+				String longSystemFact = systemFactsMap.get(key);		// proc_cpuinfo.common.flags:    fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 syscall nx rdtscp lm constant_tsc rep_good nopl eagerfpu pni pclmulqdq ssse3 cx16 sse4_1 sse4_2 x2apic popcnt tsc_deadline_timer aes xsave avx hypervisor lahf_lm xsaveopt
+				String longConsumerFact = consumerFactsMap.get(key);	// "proc_cpuinfo.common.flags": "fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 syscall nx rdtscp lm constant_tsc rep_good nopl eagerfpu pni pclmulqdq ssse3 cx16 sse4_1 sse4_2 x2apic popcnt tsc_deadline_timer aes xsave avx hypervisor ...",		// chars 253 254 255 are replaced with dots
+				// special assert case for long facts...  Candlepin has a 255 character limit which means the fact will be truncated with a ... suffix
+				Assert.assertEquals(longConsumerFact.length(),255, "System fact '"+key+"' exceeds 255 chars: When a system fact exceeds 255 chars, Candlepin will truncate it to 255 and include a '...' suffix.  see Bugzillas https://bugzilla.redhat.com/buglist.cgi?bug_id=1165193");
+				Assert.assertEquals(longConsumerFact, longSystemFact.substring(0, 252)+"...", "System fact '"+key+"' exceeds 255 chars: When a system fact exceeds 255 chars, Candlepin will truncate it to 255 and include a '...' suffix.  see Bugzillas https://bugzilla.redhat.com/buglist.cgi?bug_id=1165193");
 				continue;
 			}
 			
