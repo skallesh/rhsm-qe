@@ -16,10 +16,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 import org.apache.xmlrpc.XmlRpcException;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -39,7 +37,6 @@ import com.redhat.qe.auto.testng.TestNGUtils;
 
 import rhsm.base.CandlepinType;
 import rhsm.base.ConsumerType;
-import rhsm.base.SubscriptionManagerBaseTestScript;
 import rhsm.base.SubscriptionManagerCLITestScript;
 import rhsm.cli.tasks.CandlepinTasks;
 import rhsm.cli.tasks.SubscriptionManagerTasks;
@@ -82,7 +79,25 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	List<String> providedProducts = new ArrayList<String>();
 	protected List<File> entitlementCertFiles = new ArrayList<File>();
 	protected final String importCertificatesDir1 = "/tmp/sm-importV1CertificatesDir".toLowerCase();
+	SSHCommandRunner sshCommandRunner=null;
 
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	@Test(	description="verify Product certs not be generated with a tag value of None ",
+			groups={"VerifyProductCertWithNoneTag","blockedByBug-955824"},
+			enabled=true)
+	public void VerifyProductCertWithNoneTag() throws Exception {
+		String baseProductsDir="/usr/share/rhsm/product/RHEL-"+clienttasks.redhatReleaseX;
+		for (ProductCert productCert : clienttasks.getProductCerts(baseProductsDir)) {
+			System.out.println(productCert);
+			Assert.assertFalse(productCert.productNamespace.providedTags.equals("None"));
+		}
+	
+	}
+	
 
 	/**
 	 * @author skallesh
@@ -286,6 +301,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@SuppressWarnings("deprecation")
 	@Test(	description="verify if update facts button won't recreate facts.json file",
 			groups={"VerifyFactsFileExistenceAfterUpdate","blockedByBug-627707"},
 			enabled=true)
@@ -4125,40 +4141,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(assertedFutureSubscriptionIsNowSubscribed,"Verified at least one previously installed product covered by a Future Subscription is now covered by a current subscription after auto-subscribing.");
 	}
 
-/* DELETEME: No need to override these methods from the super class
-	protected Calendar parseISO8601DateString(String dateString, String timeZone) {
-		String iso8601DatePattern = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
-		String datePattern = iso8601DatePattern;
-		if (timeZone == null)
-			datePattern = datePattern.replaceFirst("Z$", ""); // strip off final
-		// timezone
-		// offset symbol
-		// from
-		// iso8601DatePattern
-		return parseDateStringUsingDatePattern(dateString, datePattern,
-				timeZone);
-	}
-	protected Calendar parseDateStringUsingDatePattern(String dateString,
-			String datePattern, String timeZone) {
-		try {
-			DateFormat dateFormat = new SimpleDateFormat(datePattern); // format="yyyy-MM-dd'T'HH:mm:ss.SSSZ"
-			// will
-			// parse
-			// dateString="2012-02-08T00:00:00.000+0000"
-			if (timeZone != null)
-				dateFormat.setTimeZone(TimeZone.getTimeZone(timeZone)); // timeZone="GMT"
-			Calendar calendar = new GregorianCalendar();
-			calendar.setTimeInMillis(dateFormat.parse(dateString).getTime());
-			return calendar;
-		} catch (ParseException e) {
-			log.warning("Failed to parse " + (timeZone == null ? "" : timeZone)
-					+ " date string '" + dateString + "' with format '"
-					+ datePattern + "':\n" + e.getMessage());
-			return null;
-		}
-	}
-*/
-	
 	/**
 	 * @author skallesh
 	 * @throws Exception
