@@ -281,45 +281,8 @@ public class InteroperabilityTests extends SubscriptionManagerCLITestScript {
 	@BeforeClass(groups={"setup"})
 	public void setupBeforeClass() {
 		if (clienttasks==null) return;
-		
-		// is rhn-client-tools package installed?
-		isRhnClientToolsInstalled = clienttasks.isPackageInstalled(rhnClientTools);	// provides /etc/sysconfig/rhn/up2date and /usr/sbin/rhnreg_ks
-		
-		// make dir /etc/sysconfig/rhn/ when rhn-client-tools package is not installed to enable some more tesing
-		if (!isRhnClientToolsInstalled) {
-			String rhnDir =  new File(clienttasks.rhnSystemIdFile).getParent();
-			client.runCommandAndWait("mkdir -p "+rhnDir);
-		}
-		
-		
-		// make sure we have the RHN-ORG-TRUSTED-SSL-CERT for the rhn/satellite server
-		/*
-		 * 	1. Set automation parameters:
-		 * 		sm.rhn.hostname : https://sat-56-server.usersys.redhat.com
-		 *		sm.rhn.username : admin
-		 *		sm.rhn.password : *****
-		 *  2. Use firefox to login to the Satellite account
-		 *      https://sat-56-server.usersys.redhat.com/rhn/Login.do
-		 *      do whatever work you need to there
-		 *  3. Get the CA cert from Satellite and install it onto your client
-		 *      wget --no-verbose --no-check-certificate --output-document=/usr/share/rhn/RHN-ORG-TRUSTED-SSL-CERT_sat-56-server.usersys.redhat.com https://sat-56-server.usersys.redhat.com/pub/RHN-ORG-TRUSTED-SSL-CERT
-		 *  4. Update the /etc/sysconfig/rhn/up2date with
-		 *      sslCACert=RHN-ORG-TRUSTED-SSL-CERT_sat-56-server.usersys.redhat.com
-		 */
-		// Get the CA cert from Satellite and install it onto your client
-		if (!sm_rhnHostname.isEmpty()) {
-			if (!doesStringContainMatches(sm_rhnHostname, "rhn\\.(.+\\.)*redhat\\.com")) {	// if (sm_rhnHostname.startsWith("http") { 	// indicates that we are migrating from a non-hosted rhn server - as opposed to rhn.code.stage.redhat.com (stage) or rhn.redhat.com (production)
-				String satHostname = sm_rhnHostname.split("/")[2];	// https://sat-56-server.usersys.redhat.com
-				String satCaCertPath = "/usr/share/rhn/RHN-ORG-TRUSTED-SSL-CERT"+"_"+satHostname;
-				RemoteFileTasks.runCommandAndAssert(client,"wget --no-verbose --no-check-certificate --output-document="+satCaCertPath+" "+sm_rhnHostname+"/pub/RHN-ORG-TRUSTED-SSL-CERT",Integer.valueOf(0),null,"-> \""+satCaCertPath+"\"");
-				
-				// Update /etc/sysconfig/rhn/up2date->sslCACert with satCaCertPath
-				clienttasks.updateConfFileParameter(clienttasks.rhnUp2dateFile, "sslCACert", satCaCertPath);	// sslCACert[comment]=The CA cert used to verify the ssl server
-			}
-		}
-		
-		// make sure the rhnplugin conf is enabled
-		clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForRhn, "enabled","1");
+		isRhnClientToolsInstalled = clienttasks.isPackageInstalled(rhnClientTools);
+		setupRhnCACert();
 	}
 	
 	

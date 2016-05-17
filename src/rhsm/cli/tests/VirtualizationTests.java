@@ -139,7 +139,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 			String expectedUuid = "Unknown";	// if (virtHostType.contains("ibm_systemz") || virtHostType.contains("xen-dom0") || virtHostType.contains("powervm")) expectedUuid = "Unknown";	// HARD CODED in src/subscription_manager/hwprobe.py:        no_uuid_platforms = ['powervm_lx86', 'xen-dom0', 'ibm_systemz']
 			if (RemoteFileTasks.testExists(client, "/system/hypervisor/uuid")) expectedUuid = client.runCommandAndWait("cat /system/hypervisor/uuid").getStdout().trim();
 			if (RemoteFileTasks.testExists(client, "/proc/device-tree/vm,uuid")) expectedUuid = client.runCommandAndWait("cat /proc/device-tree/vm,uuid").getStdout().trim();	// ppc64
-			if (clienttasks.isPackageInstalled("dmidecode")) expectedUuid = client.runCommandAndWait("dmidecode -s system-uuid").getStdout().trim().toLowerCase();
+			if (clienttasks.isPackageInstalled("dmidecode")) expectedUuid = client.runCommandAndWait("dmidecode -s system-uuid").getStdout().trim()/*.toLowerCase() TODO CAN'T REMEMBER WHY THIS WAS NEEDED, TAKE IT OUT */;
 			// TEMPORARY WORKAROUND FOR BUG
 			if (virtHostType.contains("ibm_systemz") && expectedUuid.equals("Unknown")) {
 				String bugId = "815598"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 815598 - [RFE] virt.uuid should not be "Unknown" in s390x when list facts
@@ -217,8 +217,12 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 			} else
 			Assert.assertEquals(virtUuid,"Unknown","subscription-manager facts list reports virt.uuid as Unknown when the hypervisor contains \"ibm_systemz\", \"xen-dom0\", or \"powervm\".");
 		} else {
-			String expectedUuid = client.runCommandAndWait("if [ -r /system/hypervisor/uuid ]; then cat /system/hypervisor/uuid; else dmidecode -s system-uuid; fi").getStdout().trim().toLowerCase();	// TODO Not sure if the cat /system/hypervisor/uuid is exactly correct
-			Assert.assertEquals(virtUuid,expectedUuid,"subscription-manager facts list reports virt.uuid value to be the /system/hypervisor/uuid or dmidecode -s system-uuid.");
+			//String expectedUuid = client.runCommandAndWait("if [ -r /system/hypervisor/uuid ]; then cat /system/hypervisor/uuid; else dmidecode -s system-uuid; fi").getStdout().trim().toLowerCase();	// TODO Not sure if the cat /system/hypervisor/uuid is exactly correct
+			String expectedUuid = "Unknown";
+			if (RemoteFileTasks.testExists(client, "/system/hypervisor/uuid")) expectedUuid = client.runCommandAndWait("cat /system/hypervisor/uuid").getStdout().trim();
+			if (RemoteFileTasks.testExists(client, "/proc/device-tree/vm,uuid")) expectedUuid = client.runCommandAndWait("cat /proc/device-tree/vm,uuid").getStdout().trim();	// ppc64
+			if (clienttasks.isPackageInstalled("dmidecode")) expectedUuid = client.runCommandAndWait("dmidecode -s system-uuid").getStdout().trim()/*.toLowerCase() TODO CAN'T REMEMBER WHY THIS WAS NEEDED, TAKE IT OUT */;
+			Assert.assertEquals(virtUuid,expectedUuid,"subscription-manager facts list reports virt.uuid value to be the /system/hypervisor/uuid or /proc/device-tree/vm,uuid or dmidecode -s system-uuid");
 		}
 	}
 	

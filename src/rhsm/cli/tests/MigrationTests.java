@@ -2227,8 +2227,8 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	protected String ipv4_address = null;
 	@BeforeClass(groups={"setup"})
 	public void setupProxyRunnersBeforeClass() throws IOException {
-		basicAuthProxyRunner = new SSHCommandRunner(sm_basicauthproxyHostname, sm_sshUser, sm_sshKeyPrivate, sm_sshkeyPassphrase, null);
-		noAuthProxyRunner = new SSHCommandRunner(sm_noauthproxyHostname, sm_sshUser, sm_sshKeyPrivate, sm_sshkeyPassphrase, null);
+		basicAuthProxyRunner = new SSHCommandRunner(sm_basicauthproxyHostname, sm_basicauthproxySSHUser, sm_sshKeyPrivate, sm_sshkeyPassphrase, null);
+		noAuthProxyRunner = new SSHCommandRunner(sm_noauthproxyHostname, sm_noauthproxySSHUser	, sm_sshKeyPrivate, sm_sshkeyPassphrase, null);
 		if (clienttasks!=null) ipv4_address = clienttasks.getIPV4Address();
 	}
 	

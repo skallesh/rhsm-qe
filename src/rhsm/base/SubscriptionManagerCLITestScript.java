@@ -80,8 +80,6 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		super();
 		// TODO Auto-generated constructor stub
 	}
-
-
 	
 	
 	// Configuration Methods ***********************************************************************
@@ -93,15 +91,15 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		// create SSHCommandRunners to connect to the subscription-manager clients
 		File sshKeyPrivateKeyFile = new File(System.getProperty("automation.dir", null)+"/"+sm_sshKeyPrivate);
 		if (!sshKeyPrivateKeyFile.exists()) Assert.fail("Expected to find the private ssh key for automation testing at '"+sshKeyPrivateKeyFile+"'.  Ask the RHSM Automation Administrator for a copy.");
-		client = new SSHCommandRunner(sm_clientHostname, sm_sshUser, new File(sm_sshKeyPrivate), sm_sshkeyPassphrase, null);
-		if (sm_sshEmergenecyTimeoutMS!=null) client.setEmergencyTimeout(Long.valueOf(sm_sshEmergenecyTimeoutMS));
-		clienttasks = new SubscriptionManagerTasks(client);
-		client1 = client;
-		client1tasks = clienttasks;
+		client1 = new SSHCommandRunner(sm_client1Hostname, sm_client1SSHUser, new File(sm_sshKeyPrivate), sm_sshkeyPassphrase, null);
+		if (sm_sshEmergenecyTimeoutMS!=null) client1.setEmergencyTimeout(Long.valueOf(sm_sshEmergenecyTimeoutMS));
+		client1tasks = new SubscriptionManagerTasks(client1);
+		client = client1;
+		clienttasks = client1tasks;
 		
 		// will we be testing multiple clients?
 		if (!(	sm_client2Hostname.equals("") /*|| client2username.equals("") || client2password.equals("")*/ )) {
-			client2 = new SSHCommandRunner(sm_client2Hostname, sm_sshUser, new File(sm_sshKeyPrivate), sm_sshkeyPassphrase, null);
+			client2 = new SSHCommandRunner(sm_client2Hostname, sm_client2SSHUser, new File(sm_sshKeyPrivate), sm_sshkeyPassphrase, null);
 			if (sm_sshEmergenecyTimeoutMS!=null) client2.setEmergencyTimeout(Long.valueOf(sm_sshEmergenecyTimeoutMS));
 			client2tasks = new SubscriptionManagerTasks(client2);
 		} else {
@@ -130,7 +128,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		
 		// can we create an SSHCommandRunner to connect to the candlepin server ?
 		if (!sm_serverHostname.equals("") && sm_serverType.equals(CandlepinType.standalone)) {
-			server = new SSHCommandRunner(sm_serverHostname, sm_sshUser, new File(sm_sshKeyPrivate), sm_sshkeyPassphrase, null);
+			server = new SSHCommandRunner(sm_serverHostname, sm_serverSSHUser, new File(sm_sshKeyPrivate), sm_sshkeyPassphrase, null);
 			if (sm_sshEmergenecyTimeoutMS!=null) server.setEmergencyTimeout(Long.valueOf(sm_sshEmergenecyTimeoutMS));
 			servertasks = new rhsm.cli.tasks.CandlepinTasks(server,sm_serverInstallDir,sm_serverImportDir,sm_serverType,sm_serverBranch);
 		} else {
@@ -143,15 +141,20 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			
 			// NOTE: After updating the candlepin.conf file, the server needs to be restarted, therefore this will not work against the Hosted IT server which we don't want to restart or deploy
 			//       I suggest manually setting this on hosted and asking calfanso to restart
-			servertasks.updateConfFileParameter("pinsetter.org.fedoraproject.candlepin.pinsetter.tasks.CertificateRevocationListTask.schedule","0 0\\/2 * * * ?");  // every 2 minutes
+			if (servertasks.getConfFileParameter("pinsetter.org.fedoraproject.candlepin.pinsetter.tasks.CertificateRevocationListTask.schedule")==null) {
+				servertasks.addConfFileParameter("\n# purge the CRL list every 2 min\npinsetter.org.fedoraproject.candlepin.pinsetter.tasks.CertificateRevocationListTask.schedule","0 0/2 * * * ?");
+			} else {
+				servertasks.updateConfFileParameter("pinsetter.org.fedoraproject.candlepin.pinsetter.tasks.CertificateRevocationListTask.schedule","0 0\\/2 * * * ?");  // every 2 minutes
+			}
 			servertasks.cleanOutCRL();
 			servertasks.deploy();
-			server.runCommandAndWait("df -h");server.runCommandAndWait("ls -Slh /var/log/tomcat6 | head");	// log candlepin's starting disk usage (for debugging information only)
+			server.runCommandAndWait("df -h");
+			server.runCommandAndWait("sudo "+"ls -Slh "+new File(servertasks.tomcat6LogFile).getParent()+" | head");	// log candlepin's starting disk usage (for debugging information only)
 			servertasks.setupTranslateToolkitFromTarUrl(sm_translateToolkitTarUrl);
 			servertasks.reportAPI();
 			
 			// install packages
-			SSHCommandResult yumInstallResult = server.runCommandAndWait("yum install -y --quiet hunspell");
+			SSHCommandResult yumInstallResult = server.runCommandAndWait("sudo "+"yum install -y --quiet hunspell");
 			Assert.assertEquals(yumInstallResult.getExitCode(), Integer.valueOf(0),"ExitCode from yum install of packages on server '"+server.getConnection().getHostname()+"'.");
 			
 			// also connect to the candlepin server database
@@ -505,6 +508,10 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		smt.candlepinAdminPassword = sm_serverAdminPassword;
 		smt.candlepinUrl = sm_serverUrl.isEmpty() ? getServerUrl(smt.getConfFileParameter(smt.rhsmConfFile,"hostname"), smt.getConfFileParameter(smt.rhsmConfFile,"port"), smt.getConfFileParameter(smt.rhsmConfFile,"prefix")) : sm_serverUrl;
 		sm_serverUrl = smt.candlepinUrl;	// rewrite it back to sm_serverUrl to make it easier for tests to access
+		
+		// set the logging level to DEBUG for rhsm.log - effectively reverting the changes from Bug 1266935 - Reduce default log level to INFO (from DEBUG)
+		// this is needed to enable more testing and log more useful info from SubscriptionManagerTasks.logRuntimeErrors(...)
+		smt.updateConfFileParameter(clienttasks.rhsmLoggingConfFile, "handler_rhsm_log", "level", "DEBUG");
 	}
 	
 	protected static boolean isSetupBeforeSuiteComplete = false;
@@ -3319,13 +3326,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	 */
 	protected List<List<Object>> getModifierSubscriptionDataAsListOfLists(Integer limitPoolsModifiedCount) throws JSONException, Exception {
 		List<List<Object>> ll = new ArrayList<List<Object>>();	if (!isSetupBeforeSuiteComplete) return ll;
-		
-		// get the owner key for clientusername, clientpassword
-		String consumerId = clienttasks.getCurrentConsumerId();
-		if (consumerId==null) consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, Boolean.TRUE, false, null, null, null));
-		//String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword, consumerId);
-
-		
+		JSONObject jsonStatus = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(/*authenticator*/null,/*password*/null,sm_serverUrl,"/status"));
 		List<SubscriptionPool> allAvailablePools = clienttasks.getCurrentlyAllAvailableSubscriptionPools();
 		
 		// iterate through all available pools looking for those that contain products with content that modify other products
@@ -3334,7 +3335,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		Map <String,JSONObject> jsonProductMap = new HashMap<String,JSONObject>();	// keys are productId, values are jsonProduct
 		for (SubscriptionPool modifierPool : allAvailablePools) {
 			//JSONObject jsonModifierPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/pools/"+modifierPool.poolId));	
-			if (!jsonPoolMap.containsKey(modifierPool.poolId)) jsonPoolMap.put(modifierPool.poolId, new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/pools/"+modifierPool.poolId+"?include=providedProducts.productId")));
+			if (!jsonPoolMap.containsKey(modifierPool.poolId)) jsonPoolMap.put(modifierPool.poolId, new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/pools/"+modifierPool.poolId+"?include=providedProducts.productId&include=owner.href")));
 			JSONObject jsonModifierPool = jsonPoolMap.get(modifierPool.poolId);
 			JSONArray jsonModifierProvidedProducts = jsonModifierPool.getJSONArray("providedProducts");
 			
@@ -3351,8 +3352,9 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 				String modifierProvidedProductId = jsonModifierProvidedProduct.getString("productId");
 				
 				// get the productContents
-				//JSONObject jsonProduct = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/products/"+modifierProvidedProductId));	
-				if (!jsonProductMap.containsKey(modifierProvidedProductId)) jsonProductMap.put(modifierProvidedProductId, new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/products/"+modifierProvidedProductId+"?include=productContent.content")));
+				String path = "/products/"+modifierProvidedProductId;
+				if (SubscriptionManagerTasks.isVersion(jsonStatus.getString("version"),">=","2.0.11")) path = jsonModifierPool.getJSONObject("owner").getString("href")+path;	// starting with candlepin-2.0.11 /products/<ID> are requested by /owners/<KEY>/products/<ID> OR /products/<UUID>
+				if (!jsonProductMap.containsKey(modifierProvidedProductId)) jsonProductMap.put(modifierProvidedProductId, new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,path+"?include=productContent.content")));
 				JSONObject jsonProduct = jsonProductMap.get(modifierProvidedProductId);
 				JSONArray jsonProductContents = jsonProduct.getJSONArray("productContent");
 				for (int j = 0; j < jsonProductContents.length(); j++) {
@@ -3412,7 +3414,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 						MODIFIED_LOOP_FOR_ALL_AVAILABLE_POOLS: for (SubscriptionPool poolModified : allAvailablePools) {
 							
 							//JSONObject jsonPoolModified = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/pools/"+poolModified.poolId));	
-							if (!jsonPoolMap.containsKey(poolModified.poolId)) jsonPoolMap.put(poolModified.poolId, new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/pools/"+poolModified.poolId+"?include=providedProducts.productId")));
+							if (!jsonPoolMap.containsKey(poolModified.poolId)) jsonPoolMap.put(poolModified.poolId, new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/pools/"+poolModified.poolId+"?include=providedProducts.productId&include=owner.href")));
 							JSONObject jsonPoolModified = jsonPoolMap.get(poolModified.poolId);
 							
 							// iterate through each of the providedProducts of the poolModified
@@ -3705,7 +3707,47 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	protected boolean isHostnameHosted(String hostname) {
 		return hostname.matches("subscription\\.rhn\\.(.*\\.)*redhat\\.com");
 	}
-
+	
+	protected void setupRhnCACert() {
+		// is rhn-client-tools package installed?
+		boolean isRhnClientToolsInstalled = clienttasks.isPackageInstalled("rhn-client-tools");	// provides /etc/sysconfig/rhn/up2date and /usr/sbin/rhnreg_ks
+		
+		// make dir /etc/sysconfig/rhn/ when rhn-client-tools package is not installed to enable some more tesing
+		if (!isRhnClientToolsInstalled) {
+			String rhnDir =  new File(clienttasks.rhnSystemIdFile).getParent();
+			client.runCommandAndWait("mkdir -p "+rhnDir);
+		}
+		
+		
+		// make sure we have the RHN-ORG-TRUSTED-SSL-CERT for the rhn/satellite server
+		/*
+		 * 	1. Set automation parameters:
+		 * 		sm.rhn.hostname : https://sat-56-server.usersys.redhat.com
+		 *		sm.rhn.username : admin
+		 *		sm.rhn.password : *****
+		 *  2. Use firefox to login to the Satellite account
+		 *      https://sat-56-server.usersys.redhat.com/rhn/Login.do
+		 *      do whatever work you need to there
+		 *  3. Get the CA cert from Satellite and install it onto your client
+		 *      wget --no-verbose --no-check-certificate --output-document=/usr/share/rhn/RHN-ORG-TRUSTED-SSL-CERT_sat-56-server.usersys.redhat.com https://sat-56-server.usersys.redhat.com/pub/RHN-ORG-TRUSTED-SSL-CERT
+		 *  4. Update the /etc/sysconfig/rhn/up2date with
+		 *      sslCACert=RHN-ORG-TRUSTED-SSL-CERT_sat-56-server.usersys.redhat.com
+		 */
+		// get the CA cert from Satellite and install it onto your client
+		if (!sm_rhnHostname.isEmpty()) {
+			if (!doesStringContainMatches(sm_rhnHostname, "rhn\\.(.+\\.)*redhat\\.com")) {	// if (sm_rhnHostname.startsWith("http") { 	// indicates that we are migrating from a non-hosted rhn server - as opposed to rhn.code.stage.redhat.com (stage) or rhn.redhat.com (production)
+				String satHostname = sm_rhnHostname.split("/")[2];	// https://sat-56-server.usersys.redhat.com
+				String satCaCertPath = "/usr/share/rhn/RHN-ORG-TRUSTED-SSL-CERT"+"_"+satHostname;
+				RemoteFileTasks.runCommandAndAssert(client,"wget --no-verbose --no-check-certificate --output-document="+satCaCertPath+" "+sm_rhnHostname+"/pub/RHN-ORG-TRUSTED-SSL-CERT",Integer.valueOf(0),null,"-> \""+satCaCertPath+"\"");
+				
+				// update /etc/sysconfig/rhn/up2date->sslCACert with satCaCertPath
+				clienttasks.updateConfFileParameter(clienttasks.rhnUp2dateFile, "sslCACert", satCaCertPath);	// sslCACert[comment]=The CA cert used to verify the ssl server
+			}
+		}
+		
+		// make sure the rhnplugin conf is enabled
+		clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForRhn, "enabled","1");
+	}
 
 
 }
