@@ -28,7 +28,7 @@ public class SKULevelContentOverrides extends SubscriptionManagerCLITestScript{
 	String resourcePath=null;
 	String requestBody=null;
 
-	@Test(description = "",
+	@Test(description = "Verify content can be overriden at SKU level,content overriden at sku level can be enabled/disabled by using subscription-manager repos --enable/--disable commands and enabled repo is given prefrence over disabled repo",
 			groups = { "OverrideAtSKULevel"},dataProvider="getSubscriptions", enabled = true)
 	public void OverrideAtSKULevel(Object Bugzilla,SubscriptionPool subscriptionpool) throws JSONException, Exception{
 		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null));
@@ -83,7 +83,7 @@ public class SKULevelContentOverrides extends SubscriptionManagerCLITestScript{
 		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		clienttasks.subscribe(null, null, subscriptionpool.poolId, null, null, null, null, null, null, null, null, null);
 		Assert.assertTrue(clienttasks.repos(null, true, null,(String)null, null, null, null, null).getStdout().contains(label));
-		/*verify repo overriden at sku level can be overriden with subscription-manager repos --enable command*/
+		/*verify repo overriden at sku level can be overriden with subscription-manager repos --disable command*/
 		clienttasks.repos(null, null, null,null , label, null, null, null);
 		Assert.assertTrue(clienttasks.repos(null, null, true,(String)null, null, null, null, null).getStdout().contains(label));
 
@@ -123,13 +123,13 @@ public class SKULevelContentOverrides extends SubscriptionManagerCLITestScript{
 		clienttasks.subscribe(null, null, subscriptionpool.poolId, null, null, null, null, null, null, null, null, null);
 		Assert.assertTrue(clienttasks.repos(null, null, true,(String)null, null, null, null, null).getStdout().contains(label));
 
-		/*verify repo overriden at sku level can be overriden with subscription-manager repos --disable command*/
+		/*verify repo overriden at sku level can be overriden with subscription-manager repos --enable command*/
 
 		clienttasks.repos(null, null, null, label,null , null, null, null);
 		Assert.assertTrue(clienttasks.repos(null, true, null,(String)null, null, null, null, null).getStdout().contains(label));
 
 
-		/*enabled repo is given prefrence over disabled repo*/
+		/*enabled repo is given preference over disabled repo*/
 		List<String> enabledRepoIds = new ArrayList<String>();
 		//currently available enabled repos that was overriden at sku level
 		for (Repo repo : availableRepos) {
@@ -210,12 +210,6 @@ public class SKULevelContentOverrides extends SubscriptionManagerCLITestScript{
 		return attributeValue;
 
 	}
-
-
-
-
-
-
 
 	@DataProvider(name="getSubscriptions")
 	public Object[][] getSubscriptionPoolsDataAs2dArray() throws JSONException,Exception {
