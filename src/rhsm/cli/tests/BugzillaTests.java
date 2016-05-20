@@ -92,7 +92,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	public void VerifyProductCertWithNoneTag() throws Exception {
 		String baseProductsDir="/usr/share/rhsm/product/RHEL-"+clienttasks.redhatReleaseX;
 		for (ProductCert productCert : clienttasks.getProductCerts(baseProductsDir)) {
-			System.out.println(productCert);
 			Assert.assertFalse(productCert.productNamespace.providedTags.equals("None"));
 		}
 	
@@ -2387,7 +2386,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		restoreProductCerts();
 		Assert.assertEquals(InstalledProducts.trim(), "No installed products to list");
 		String tailFromMarkedFile = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, LogMarker, null);
-		Assert.assertFalse(doesStringContainMatches(tailFromMarkedFile, "Error"),"'Error' messages in rhsm.log");	// "Error while updating certificates" should NOT be in the rhsm.log
+		Assert.assertFalse(doesStringContainMatches(tailFromMarkedFile, "Error while updating certificates using daemon"),"'Error' messages in rhsm.log");	// "Error while updating certificates" should NOT be in the rhsm.log
 		Assert.assertTrue(doesStringContainMatches(tailFromMarkedFile, "Installed product IDs: \\[\\]"), "'Installed product IDs:' list is empty in rhsm.log");
 		Assert.assertTrue(doesStringContainMatches(tailFromMarkedFile, "certs updated:"),"'certs updated:' in rhsm.log");
 	}
@@ -3288,7 +3287,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		basicauthproxyUrl = basicauthproxyUrl.replaceAll(":$", "");
 		SSHCommandResult factsResult = clienttasks.facts_(null, true, basicauthproxyUrl, null,null);
 		String Expect = clienttasks.msg_NetworkErrorUnableToConnect;
-		Expect = "Error updating system data on the server, see /var/log/rhsm/rhsm.log for more details.";	// jsefler 6/17/2014 - the expected error message changed to this value.  Could not find a bugzilla/commit to blame this change.
+		Expect = "Proxy connnection failed, please check your settings.";	// jsefler 6/17/2014 - the expected error message changed to this value.  Could not find a bugzilla/commit to blame this change.
 		Assert.assertEquals(factsResult.getStdout()+factsResult.getStderr().trim(), Expect);
 	}
 
