@@ -51,22 +51,26 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 	public final String sm_serverAdminPassword	= getProperty("sm.server.admin.password","");
 
 
+	public String sm_serverSSHUser				= getProperty("sm.server.sshUser","root");
 	public String sm_serverInstallDir			= getProperty("sm.server.installDir","");
 	public String sm_serverImportDir			= getProperty("sm.server.importDir","");
 	public String sm_serverBranch				= getProperty("sm.server.branch","");
 	public CandlepinType sm_serverType			= CandlepinType.valueOf(getProperty("sm.server.type","standalone"));
 	public Boolean sm_serverOld					= Boolean.valueOf(getProperty("sm.server.old","false"));
 	
+	public String sm_client1SSHUser				= getProperty("sm.client1.sshUser","root");
 	public String sm_client1Hostname			= getProperty("sm.client1.hostname","");
 	public String sm_client1Username			= getProperty("sm.client1.username",null);
 	public String sm_client1Password			= getProperty("sm.client1.password",null);
 	public String sm_client1Org					= getProperty("sm.client1.org",null);
 
+	public String sm_client2SSHUser				= getProperty("sm.client2.sshUser","root");
 	public String sm_client2Hostname			= getProperty("sm.client2.hostname","");
 	public String sm_client2Username			= getProperty("sm.client2.username",null);
 	public String sm_client2Password			= getProperty("sm.client2.password",null);
 	public String sm_client2Org					= getProperty("sm.client2.org",null);
 
+	public String sm_clientSSHUser				= sm_client1SSHUser;
 	public String sm_clientHostname				= sm_client1Hostname;
 	public String sm_clientUsername				= sm_client1Username;
 	public String sm_clientPassword				= sm_client1Password;
@@ -108,10 +112,9 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 	public String sm_yumInstallZStreamBrewUrl	= getProperty("sm.client.yumInstallZStreamBrewUrl","http://UNSPECIFIED/");
 	public String sm_ciMessage					= System.getenv("CI_MESSAGE");	// comes from a CI event Build Trigger in Jenkins 
 	
-	public String sm_sshUser					= getProperty("sm.ssh.user","root");
 	public String sm_sshKeyPrivate				= getProperty("sm.sshkey.private",".ssh/id_auto_dsa");
 	public String sm_sshkeyPassphrase			= getProperty("sm.sshkey.passphrase","");
-	public String sm_sshEmergenecyTimeoutMS		= getProperty("sm.ssh.emergencyTimeoutMS",null);
+	public String sm_sshEmergenecyTimeoutMS		= getProperty("sm.sshEmergencyTimeoutMS",null);
 	
 	public String sm_dbHostname					= getProperty("sm.server.db.hostname","");
 	public String sm_dbSqlDriver				= getProperty("sm.server.db.sqlDriver","");
@@ -122,12 +125,14 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 	
 	public String sm_productCertValidityDuration	= getProperty("sm.client.productCertValidityDuration", "");
 
+	public String sm_basicauthproxySSHUser		= getProperty("sm.basicauthproxy.sshUser","root");
 	public String sm_basicauthproxyHostname		= getProperty("sm.basicauthproxy.hostname", "");
 	public String sm_basicauthproxyPort			= getProperty("sm.basicauthproxy.port", "");
 	public String sm_basicauthproxyUsername		= getProperty("sm.basicauthproxy.username", "");
 	public String sm_basicauthproxyPassword		= getProperty("sm.basicauthproxy.password", "");
 	public String sm_basicauthproxyLog			= getProperty("sm.basicauthproxy.log", "");
 	
+	public String sm_noauthproxySSHUser			= getProperty("sm.noauthproxy.sshUser","root");
 	public String sm_noauthproxyHostname		= getProperty("sm.noauthproxy.hostname", "");
 	public String sm_noauthproxyPort			= getProperty("sm.noauthproxy.port", "");
 	public String sm_noauthproxyLog				= getProperty("sm.noauthproxy.log", "");

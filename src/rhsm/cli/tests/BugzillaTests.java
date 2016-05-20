@@ -3161,11 +3161,11 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		String StartDateBeforeRHSM=yyyy_MM_dd_DateFormat.format(clienttasks.getCurrentConsumerCert().validityNotBefore.getTime());
 		String existingCertdate = client.runCommandAndWait("ls -lart /etc/pki/consumer/cert.pem | cut -d ' ' -f6,7,8")
 				.getStdout();
-		String StartDate=setDate(sm_serverHostname, sm_sshUser, sm_sshKeyPrivate,
+		String StartDate=setDate(sm_serverHostname, sm_serverSSHUser, sm_sshKeyPrivate,
 				sm_sshkeyPassphrase, "date -s '15 year 9 month' +'%F'");
 		log.info("Changed the date of candlepin"
 				+ client.runCommandAndWait("hostname"));
-		setDate(sm_clientHostname, sm_sshUser, sm_sshKeyPrivate,
+		setDate(sm_clientHostname, sm_clientSSHUser, sm_sshKeyPrivate,
 				sm_sshkeyPassphrase, "date -s '15 year 9 month' +'%F'");
 		clienttasks.restart_rhsmcertd(null, null, null);
 		SubscriptionManagerCLITestScript.sleep(2* 60 * 1000);
@@ -3175,11 +3175,11 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		String EndDateAfterRHSM = yyyy_MM_dd_DateFormat.format(clienttasks.getCurrentConsumerCert().validityNotAfter.getTime());
 		String StartDateAfterRHSM=yyyy_MM_dd_DateFormat.format(clienttasks.getCurrentConsumerCert().validityNotBefore.getTime());
 		String updatedCertdate = client.runCommandAndWait("ls -lart /etc/pki/consumer/cert.pem | cut -d ' ' -f6,7,8").getStderr();
-		String EndDate=setDate(sm_serverHostname, sm_sshUser, sm_sshKeyPrivate,
+		String EndDate=setDate(sm_serverHostname, sm_serverSSHUser, sm_sshKeyPrivate,
 				sm_sshkeyPassphrase, "date -s '15 year ago 9 month ago' +'%F'");
 		log.info("Changed the date of candlepin"
 				+ client.runCommandAndWait("hostname"));
-		setDate(sm_clientHostname, sm_sshUser, sm_sshKeyPrivate,
+		setDate(sm_clientHostname, sm_clientSSHUser, sm_sshKeyPrivate,
 				sm_sshkeyPassphrase, "date -s '15 year ago 9 month ago' +'%F'");
 		System.out.println();
 		Assert.assertEquals(StartDateAfterRHSM, StartDate);
@@ -3273,9 +3273,12 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				sm_basicauthproxyPort);
 		basicauthproxyUrl = basicauthproxyUrl.replaceAll(":$", "");
 		SSHCommandResult factsResult = clienttasks.facts_(null, true, basicauthproxyUrl, null,null);
-		String Expect = clienttasks.msg_NetworkErrorUnableToConnect;
-		Expect = "Error updating system data on the server, see /var/log/rhsm/rhsm.log for more details.";	// jsefler 6/17/2014 - the expected error message changed to this value.  Could not find a bugzilla/commit to blame this change.
-		Assert.assertEquals(factsResult.getStdout()+factsResult.getStderr().trim(), Expect);
+		String factsResultExpected = clienttasks.msg_NetworkErrorUnableToConnect;
+		factsResultExpected = "Error updating system data on the server, see /var/log/rhsm/rhsm.log for more details.";	// jsefler 6/17/2014 - the expected error message changed to this value.  Could not find a bugzilla/commit to blame this change.
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.17.6-1")) {	// post commit 7ce6801fc1cc38edcdeb75dfb5f0d1f8a6398c68	1301215: Test proxy connection before making call
+			factsResultExpected = clienttasks.msg_ProxyConnectionFailed;
+		}
+		Assert.assertEquals(factsResult.getStdout().trim()+factsResult.getStderr().trim(), factsResultExpected);
 	}
 
 	/**
@@ -4624,25 +4627,25 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 
 	@AfterGroups(groups = { "setup" }, value = { "VerifyrhsmcertdRefreshIdentityCert"})
 	public void restoreSystemDate() throws IOException, ParseException {
-		String ClientDateAfterExecution=getDate(sm_clientHostname, sm_sshUser, sm_sshKeyPrivate,
+		String ClientDateAfterExecution=getDate(sm_clientHostname, sm_clientSSHUser, sm_sshKeyPrivate,
 				sm_sshkeyPassphrase,true);
-		String ServerDateAfterExecution=getDate(sm_serverHostname, sm_sshUser, sm_sshKeyPrivate,
+		String ServerDateAfterExecution=getDate(sm_serverHostname, sm_serverSSHUser, sm_sshKeyPrivate,
 				sm_sshkeyPassphrase,true);
-		String ClientDateAfterExeceutionOneDayBefore=getDate(sm_clientHostname, sm_sshUser, sm_sshKeyPrivate,
+		String ClientDateAfterExeceutionOneDayBefore=getDate(sm_clientHostname, sm_clientSSHUser, sm_sshKeyPrivate,
 				sm_sshkeyPassphrase,false);
-		String ServerDateAfterExeceutionOneDayBefore=getDate(sm_serverHostname, sm_sshUser, sm_sshKeyPrivate,
+		String ServerDateAfterExeceutionOneDayBefore=getDate(sm_serverHostname, sm_serverSSHUser, sm_sshKeyPrivate,
 				sm_sshkeyPassphrase,false);
 
 		if((!(ClientDateAfterExecution.equals(SystemDateOnClient))) &&(!(ClientDateAfterExeceutionOneDayBefore.equals(SystemDateOnClient))) ){
 
-			setDate(sm_clientHostname, sm_sshUser, sm_sshKeyPrivate,
+			setDate(sm_clientHostname, sm_clientSSHUser, sm_sshKeyPrivate,
 					sm_sshkeyPassphrase, "date -s '15 year ago 9 month ago'");
 			log.info("Reverted the date of client"
 					+ client.runCommandAndWait("hostname"));
 		}
 
 		if((!(ServerDateAfterExecution.equals(SystemDateOnServer)))&&((ServerDateAfterExeceutionOneDayBefore.equals(SystemDateOnServer)))){
-			setDate(sm_serverHostname, sm_sshUser, sm_sshKeyPrivate,
+			setDate(sm_serverHostname, sm_serverSSHUser, sm_sshKeyPrivate,
 					sm_sshkeyPassphrase, "date -s '15 year ago 9 month ago'");
 			log.info("Reverted the date of candlepin"
 					+ client.runCommandAndWait("hostname"));
@@ -4654,9 +4657,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 
 	@BeforeGroups(groups = {"setup"}, value = {"VerifyrhsmcertdRefreshIdentityCert"})
 	public void rgetSystemDate() throws IOException, ParseException {
-		SystemDateOnClient=getDate(sm_clientHostname, sm_sshUser, sm_sshKeyPrivate,
+		SystemDateOnClient=getDate(sm_clientHostname, sm_clientSSHUser, sm_sshKeyPrivate,
 				sm_sshkeyPassphrase,true);
-		SystemDateOnServer=getDate(sm_serverHostname, sm_sshUser, sm_sshKeyPrivate,
+		SystemDateOnServer=getDate(sm_serverHostname, sm_serverSSHUser, sm_sshKeyPrivate,
 				sm_sshkeyPassphrase,true);
 	}
 

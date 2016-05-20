@@ -91,6 +91,7 @@ public class CandlepinTasks {
 	public static HttpClient client;
 	CandlepinType serverType = CandlepinType.hosted;
 	public String branch = "";
+	public Integer fedoraReleaseX = new Integer(0);
 	public Integer redhatReleaseX = new Integer(0);
 	
 	// populated from curl --insecure --user testuser1:password --request GET https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/status | python -mjson.tool
@@ -146,15 +147,17 @@ public class CandlepinTasks {
 			// Red Hat Enterprise Linux Server release 6.4 Beta (Santiago)
 			Pattern pattern = Pattern.compile("\\d+");
 			Matcher matcher = pattern.matcher(redhatRelease);
-			Assert.assertTrue(matcher.find(),"Extracted redhatReleaseX '"+matcher.group()+"' from '"+redhatRelease+"'");
-			redhatReleaseX = Integer.valueOf(matcher.group());
+			Assert.assertTrue(matcher.find(),"Extracted releaseX from '"+redhatRelease+"'");
+			if (redhatRelease.startsWith("Fedora")) fedoraReleaseX = Integer.valueOf(matcher.group());
+			if (redhatRelease.startsWith("Red Hat")) redhatReleaseX = Integer.valueOf(matcher.group());
+			Assert.assertTrue(fedoraReleaseX+redhatReleaseX>0,"Determined the OS release running candlepin.");
 		}
 		
 		// where is catalina.out?
 		if (sshCommandRunner!=null) {
 			// "/var/log/tomcat6/catalina.out" or "/var/log/tomcat/catalina.out"
-			if (RemoteFileTasks.testExists(sshCommandRunner, "/var/log/tomcat6/catalina.out")) this.tomcat6LogFile = "/var/log/tomcat6/catalina.out";
-			if (RemoteFileTasks.testExists(sshCommandRunner, "/var/log/tomcat/catalina.out")) this.tomcat6LogFile = "/var/log/tomcat/catalina.out";
+			if (RemoteFileTasks.testExists(sshCommandRunner, "/var/log/tomcat6/")) this.tomcat6LogFile = "/var/log/tomcat6/catalina.out";
+			if (RemoteFileTasks.testExists(sshCommandRunner, "/var/log/tomcat/")) this.tomcat6LogFile = "/var/log/tomcat/catalina.out";
 		}
 	}
 	
@@ -193,7 +196,7 @@ public class CandlepinTasks {
 			for (String tomcatProcess : tomcatProcesses.getStdout().trim().split("\\n")) {
 				// tomcat   26523  1.9 17.4 1953316 178396 ?      Sl   06:35   6:43 /usr/lib/jvm/java-1.6.0/bin/java -Djavax.sql.DataSource.Factory=org.apache.commons.dbcp.BasicDataSourceFactory -classpath :/usr/share/tomcat6/bin/bootstrap.jar:/usr/share/tomcat6/bin/tomcat-juli.jar:/usr/share/java/commons-daemon.jar -Dcatalina.base=/usr/share/tomcat6 -Dcatalina.home=/usr/share/tomcat6 -Djava.endorsed.dirs= -Djava.io.tmpdir=/var/cache/tomcat6/temp -Djava.util.logging.config.file=/usr/share/tomcat6/conf/logging.properties -Djava.util.logging.manager=org.apache.juli.ClassLoaderLogManager org.apache.catalina.startup.Bootstrap start
 				String pid = tomcatProcess.trim().split("\\s+")[1];
-				sshCommandRunner.runCommandAndWait("kill -9 "+pid);
+				sshCommandRunner.runCommandAndWait("sudo "+"kill -9 "+pid);
 			}
 		}
 		
@@ -215,7 +218,7 @@ public class CandlepinTasks {
 		// catalina.out: java.lang.OutOfMemoryError: Java heap space
 		// deploy.sh: /usr/lib64/ruby/gems/1.8/gems/rest-client-1.6.1/lib/restclient/abstract_response.rb:48:in `return!': 404 Resource Not Found (RestClient::ResourceNotFound)
 		if (RemoteFileTasks.testExists(sshCommandRunner, "/var/lib/candlepin/hornetq/")) {
-			RemoteFileTasks.runCommandAndWait(sshCommandRunner, "rm -rf /var/lib/candlepin/hornetq/", TestRecords.action());	
+			RemoteFileTasks.runCommandAndWait(sshCommandRunner, "sudo "+"rm -rf /var/lib/candlepin/hornetq/", TestRecords.action());	
 		}
 		
 		// copy the patch file used to enable testing the redeem module to the candlepin proxy dir
@@ -274,19 +277,21 @@ public class CandlepinTasks {
 		// manual fix...
 		//  [root@jsefler-f14-candlepin candlepin]# rm -rf /etc/tomcat6/keystore
 		//  [root@jsefler-f14-candlepin candlepin]# service tomcat6 restart
-		RemoteFileTasks.runCommandAndWait(sshCommandRunner, "rm -rf /etc/tomcat6/keystore", TestRecords.action());
+		RemoteFileTasks.runCommandAndWait(sshCommandRunner, "sudo "+"rm -rf /etc/tomcat6/keystore", TestRecords.action());
 		
 		// restart some services
 		// TODO fix this logic for candlepin running on rhel7 which is based on f18
-		if (redhatReleaseX>=16)	{	// the Fedora 16+ way...
-			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "systemctl stop ntpd.service && ntpdate clock.redhat.com && systemctl start ntpd.service && systemctl is-active ntpd.service", Integer.valueOf(0), "^active$", null);	// Stdout: 24 May 17:53:28 ntpdate[20993]: adjust time server 66.187.233.4 offset -0.000287 sec
-			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "systemctl stop postgresql.service && systemctl start postgresql.service && systemctl is-active postgresql.service", Integer.valueOf(0), "^active$", null);
+		if (redhatReleaseX>=7 || fedoraReleaseX>=16)	{	// the Fedora 16+ way...
+			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "sudo "+"systemctl stop ntpd.service && "+"sudo "+"ntpdate clock.redhat.com && "+"sudo "+"systemctl start ntpd.service && "+"sudo "+"systemctl is-active ntpd.service", Integer.valueOf(0), "^active$", null);	// Stdout: 24 May 17:53:28 ntpdate[20993]: adjust time server 66.187.233.4 offset -0.000287 sec
+			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "sudo "+"systemctl stop postgresql.service && "+"sudo "+"systemctl start postgresql.service && "+"sudo "+"systemctl is-active postgresql.service", Integer.valueOf(0), "^active$", null);
+			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "sudo "+"systemctl stop firewalld.service && "+"sudo "+"systemctl disable firewalld.service && "+"sudo "+"systemctl is-active firewalld.service", null, "^unknown$", null);	// avoid java.net.NoRouteToHostException: No route to host
 		} else {	// the old Fedora way...
-			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "service ntpd stop && ntpdate clock.redhat.com && service ntpd start && chkconfig ntpd on", /*Integer.valueOf(0) DON"T CHECK EXIT CODE SINCE IT RETURNS 1 WHEN STOP FAILS EVEN THOUGH START SUCCEEDS*/null, "Starting ntpd(.*?):\\s+\\[  OK  \\]", null);	// Starting ntpd:  [  OK  ]		// Starting ntpd (via systemctl):  [  OK  ]
-			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "service postgresql stop && service postgresql start", /*Integer.valueOf(0) DON"T CHECK EXIT CODE SINCE IT RETURNS 1 WHEN STOP FAILS EVEN THOUGH START SUCCEEDS*/null, "Starting postgresql(.*?):\\s+\\[  OK  \\]", null);	// Starting postgresql service: [  OK  ]	// Starting postgresql (via systemctl):  [  OK  ]
+			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "sudo "+"service ntpd stop && "+"sudo "+"ntpdate clock.redhat.com && "+"sudo "+"service ntpd start && chkconfig ntpd on", /*Integer.valueOf(0) DON"T CHECK EXIT CODE SINCE IT RETURNS 1 WHEN STOP FAILS EVEN THOUGH START SUCCEEDS*/null, "Starting ntpd(.*?):\\s+\\[  OK  \\]", null);	// Starting ntpd:  [  OK  ]		// Starting ntpd (via systemctl):  [  OK  ]
+			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "sudo "+"service postgresql stop && "+"sudo "+"service postgresql start", /*Integer.valueOf(0) DON"T CHECK EXIT CODE SINCE IT RETURNS 1 WHEN STOP FAILS EVEN THOUGH START SUCCEEDS*/null, "Starting postgresql(.*?):\\s+\\[  OK  \\]", null);	// Starting postgresql service: [  OK  ]	// Starting postgresql (via systemctl):  [  OK  ]
+			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "sudo "+"service iptables stop && "+"sudo "+"chkconfig iptables off", Integer.valueOf(0));	// TODO Untested
 		}
 		
-		if (redhatReleaseX>=19)	{	// the Fedora 19+ way...
+		if (redhatReleaseX>=7 || fedoraReleaseX>=19)	{	// the Fedora 19+ way...
 			//RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "export TESTDATA=1 && export FORCECERT=1 && export GENDB=1 && export HOSTNAME="+hostname+" && export IMPORTDIR="+serverImportDir+" && cd "+serverInstallDir+" && buildconf/scripts/deploy", Integer.valueOf(0), "Initialized!", null);
 			//path changes caused by commit cddba55bda2cc1b89821a80e6ff23694296f2079 Fix scripts dir for server build.    before candlepin-0.9.22-1
 			//RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "export TESTDATA=1 && export FORCECERT=1 && export GENDB=1 && export HOSTNAME="+hostname+" && export IMPORTDIR="+serverImportDir+" && cd "+serverInstallDir+"/server && bin/deploy", Integer.valueOf(0), "Initialized!", null);
@@ -594,7 +599,7 @@ schema generation failed
 	
 	public void cleanOutCRL() {
 		log.info("Cleaning out the certificate revocation list (CRL) "+candlepinCRLFile+"...");
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "rm -f "+candlepinCRLFile, 0);
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "sudo "+"rm -f "+candlepinCRLFile, 0);
 	}
 	
 	/**
@@ -619,6 +624,30 @@ schema generation failed
 		Assert.assertEquals(
 			RemoteFileTasks.searchReplaceFile(sshCommandRunner, defaultConfigFile, "^#\\s*"+parameter+"\\s*=", parameter+"="),0,
 			"Uncommented '"+defaultConfigFile+"' parameter: "+parameter);
+	}
+	/**
+	 * return the value of an active configuration parameter from a config file. If not found null is returned.
+	 * @param confFile
+	 * @param parameter
+	 * @return
+	 */
+	public String getConfFileParameter(String confFile, String parameter){
+		// Note: parameter can be case insensitive
+		SSHCommandResult result = sshCommandRunner.runCommandAndWait(String.format("grep -iE \"^%s *(=|:)\" %s",parameter,confFile));	// tolerates = or : assignment character
+		if (result.getExitCode()!=0) return null;
+		String value = result.getStdout().split("=|:",2)[1];
+		return value.trim();
+	}
+	public String getConfFileParameter(String parameter){
+		return getConfFileParameter(defaultConfigFile, parameter);
+	}
+	public void addConfFileParameter(String confFile, String parameter, String value){
+		log.info("Adding config file '"+confFile+"' parameter: "+parameter+"="+value);
+		
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, String.format("echo '%s=%s' >> %s", parameter, value, confFile), 0);
+	}
+	public void addConfFileParameter(String parameter, String value){
+		addConfFileParameter(defaultConfigFile, parameter, value);
 	}
 	
 	static public String getResourceUsingRESTfulAPI(String authenticator, String password, String url, String path) throws Exception {
@@ -3034,11 +3063,16 @@ schema generation failed
 	}
 	public static Set<String> getPoolProvidedProductModifiedIds (String authenticator, String password, String url, String poolId) throws JSONException, Exception {
 		Set<String> providedProductModifiedIds = new HashSet<String>();
+		JSONObject jsonStatus = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(/*authenticator*/null,/*password*/null,url,"/status"));
+		JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(authenticator,password,url,"/pools/"+poolId));
 		
 		for (String providedProductId : getPoolProvidedProductIds(authenticator,password,url,poolId)) {
 			
 			// get the productContents
-			JSONObject jsonProduct = new JSONObject(getResourceUsingRESTfulAPI(authenticator,password,url,"/products/"+providedProductId));	
+			String path = "/products/"+providedProductId;
+			if (SubscriptionManagerTasks.isVersion(jsonStatus.getString("version"),">=","2.0.11")) path = jsonPool.getJSONObject("owner").getString("href")+path;	// starting with candlepin-2.0.11 /products/<ID> are requested by /owners/<KEY>/products/<ID> OR /products/<UUID>
+			
+			JSONObject jsonProduct = new JSONObject(getResourceUsingRESTfulAPI(authenticator,password,url,path));	
 			JSONArray jsonProductContents = jsonProduct.getJSONArray("productContent");
 			for (int j = 0; j < jsonProductContents.length(); j++) {
 				JSONObject jsonProductContent = (JSONObject) jsonProductContents.get(j);
@@ -3467,10 +3501,10 @@ schema generation failed
 //		sshCommandRunner.runCommandAndWait("df -h");
 		
 		// TODO fix this logic for candlepin running on rhel7 which is based on f18
-		if (redhatReleaseX>=16)	{	// the Fedora 16+ way...
-			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "systemctl restart "+tomcat+".service && systemctl is-active "+tomcat+".service", Integer.valueOf(0), "^active$", null);
+		if (redhatReleaseX>=7 || fedoraReleaseX>=16)	{	// the Fedora 16+ way...
+			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "systemctl restart "+tomcat+".service && systemctl enable "+tomcat+".service && systemctl is-active "+tomcat+".service", Integer.valueOf(0), "^active$", null);
 		} else {	// the old Fedora way...
-			RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service "+tomcat+" restart",Integer.valueOf(0),"^Starting "+tomcat+": +\\[  OK  \\]$",null);
+			RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"chkconfig "+tomcat+" on && service "+tomcat+" restart",Integer.valueOf(0),"^Starting "+tomcat+": +\\[  OK  \\]$",null);
 		}
 		sleep(10*1000);	// give tomcat a chance to restart
 
@@ -4046,7 +4080,7 @@ schema generation failed
 
 	public static JSONObject addContentToProductUsingRESTfulAPI(String authenticator, String password, String url, String ownerKey, String productId, String contentId, Boolean enabled) throws JSONException, Exception  {
 		JSONObject jsonStatus = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(/*authenticator*/null,/*password*/null,url,"/status"));
-
+		
 		// add the contentId to the productId
 		String path = String.format("/products/%s/content/%s?enabled=%s",productId,contentId,enabled);
 		if (SubscriptionManagerTasks.isVersion(jsonStatus.getString("version"), ">=", "2.0.0")) path = "/owners/"+ownerKey+path;	// products are now defined on a per org basis in candlepin-2.0+

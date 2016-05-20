@@ -847,7 +847,9 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	public void VerifyContentSetsEntitledFromSubscriptionPoolSatisfyTheSystemArch_Test(SubscriptionPool pool) throws JSONException, Exception {
 		List<String> providedProductIds = CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername,sm_clientPassword,sm_serverUrl,pool.poolId);
 		if (providedProductIds.isEmpty()) throw new SkipException("This test is not applicable for a pool that provides no products.");
-		
+		JSONObject jsonStatus = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(/*authenticator*/null,/*password*/null,sm_serverUrl,"/status"));
+		JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/pools/"+pool.poolId));
+
 		// maintain a list of expected content sets
 		Set<ContentNamespace> expectedContentNamespaceSet = new HashSet<ContentNamespace>();
 		// maintain a list of unexpected content sets
@@ -856,7 +858,9 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		for (String providedProductId : providedProductIds) {
 			
 			// get the product
-			JSONObject jsonProduct = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/products/"+providedProductId));	
+			String path = "/products/"+providedProductId;
+			if (SubscriptionManagerTasks.isVersion(jsonStatus.getString("version"),">=","2.0.11")) path = jsonPool.getJSONObject("owner").getString("href")+path;	// starting with candlepin-2.0.11 /products/<ID> are requested by /owners/<KEY>/products/<ID> OR /products/<UUID>
+			JSONObject jsonProduct = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,path));	
 			
 			// get the product supported arches
 			JSONArray jsonProductAttributes = jsonProduct.getJSONArray("attributes");
@@ -962,7 +966,10 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		for (String providedProductId : providedProductIds) {
 			
 			// get the product
-			JSONObject jsonProduct = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/products/"+providedProductId));	
+			String path = "/products/"+providedProductId;
+			if (SubscriptionManagerTasks.isVersion(jsonStatus.getString("version"),">=","2.0.11")) path = jsonPool.getJSONObject("owner").getString("href")+path;	// starting with candlepin-2.0.11 /products/<ID> are requested by /owners/<KEY>/products/<ID> OR /products/<UUID>
+			JSONObject jsonProduct = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,path));	
+			
 			// get the provided product contents
 			JSONArray jsonProductContents = jsonProduct.getJSONArray("productContent");
 			for (int j = 0; j < jsonProductContents.length(); j++) {
@@ -1882,14 +1889,20 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	}
 	protected List<List<Object>> getAllAvailableSubscriptionPoolsProvidingArchBasedContentDataAsListOfLists() throws JSONException, Exception {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
+		String ownerKey = null;
+		JSONObject jsonStatus = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(/*authenticator*/null,/*password*/null,sm_serverUrl,"/status"));
+
 
 		for (List<Object> l : getAllAvailableSubscriptionPoolsDataAsListOfLists()) {
 			SubscriptionPool pool = (SubscriptionPool)l.get(0);
+			if (ownerKey==null) ownerKey = clienttasks.getCurrentlyRegisteredOwnerKey();
 			
 			for (String providedProductId : CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername,sm_clientPassword,sm_serverUrl,pool.poolId)) {
 	
 				// get the product
-				JSONObject jsonProduct = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/products/"+providedProductId));	
+				String path = "/products/"+providedProductId;
+				if (SubscriptionManagerTasks.isVersion(jsonStatus.getString("version"),">=","2.0.11")) path = "/owners/"+ownerKey+path;	// starting with candlepin-2.0.11 /products/<ID> are requested by /owners/<KEY>/products/<ID> OR /products/<UUID>
+				JSONObject jsonProduct = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,path));	
 				
 				// get the provided product contents
 				JSONArray jsonProductContents = jsonProduct.getJSONArray("productContent");

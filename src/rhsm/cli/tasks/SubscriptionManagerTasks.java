@@ -17,6 +17,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Scanner;
 import java.util.Set;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -64,6 +65,7 @@ public class SubscriptionManagerTasks {
 	public final String command				= "subscription-manager";
 	public final String redhatRepoFile		= "/etc/yum.repos.d/redhat.repo";
 	public final String rhsmConfFile		= "/etc/rhsm/rhsm.conf";
+	public final String rhsmLoggingConfFile	= "/etc/rhsm/logging.conf";
 	public final String factsDir			= "/etc/rhsm/facts";
 	public final String rhsmUpdateFile		= "/var/run/rhsm/update";
 	public final String yumPluginConfFileForSubscriptionManager	= "/etc/yum/pluginconf.d/subscription-manager.conf"; // "/etc/yum/pluginconf.d/rhsmplugin.conf"; renamed by dev on 11/24/2010
@@ -98,6 +100,7 @@ public class SubscriptionManagerTasks {
 	public String msg_NetworkErrorUnableToConnect	= null;
 	public String msg_NetworkErrorCheckConnection	= null;
 	public String msg_RemoteErrorCheckConnection	= null;
+	public String msg_ProxyConnectionFailed			= null;
 	public String msg_ClockSkewDetection			= null;
 	public String msg_ContainerMode					= null;
 	public String msg_InteroperabilityWarning		= null;
@@ -189,10 +192,14 @@ public class SubscriptionManagerTasks {
 		
 		// copy RHNS-CA-CERT to RHN-ORG-TRUSTED-SSL-CERT on RHEL7 as a workaround for Bug 906875 ERROR: can not find RHNS CA file: /usr/share/rhn/RHN-ORG-TRUSTED-SSL-CERT 
 // FIXME Not convinced that this workaround is needed anymore.  Surrounding by if (false) at the start of the rhel71 test cycle...
+// This is a better solution... SubscriptionManagerCLITestScript.setupRhnCACert();		
 if (false) {
 		if (Integer.valueOf(redhatReleaseX)>=7) {
 			log.info("Invoking the following suggestion to enable this rhel7 system to use rhn-client-tools https://bugzilla.redhat.com/show_bug.cgi?id=906875#c2 ");
 			sshCommandRunner.runCommandAndWait("cp -n /usr/share/rhn/RHNS-CA-CERT /usr/share/rhn/RHN-ORG-TRUSTED-SSL-CERT"); 
+			// will not work anymore because...
+			//   The certificate /usr/share/rhn/RHN-ORG-TRUSTED-SSL-CERT is expired. Please ensure you have the correct certificate and your system time is correct.
+			//   See /var/log/up2date for more information
 		}
 }
 		
@@ -706,7 +713,8 @@ if (false) {
 		pkgs.add(0,"hunspell");	// used for spellcheck testing
 		pkgs.add(0,"gettext");	// used for Pofilter and Translation testing - msgunfmt
 		pkgs.add(0,"policycoreutils-python");	// used for Docker testing - required by docker-selinux package 
-		
+		pkgs.add(0,"net-tools");	// provides netstat which is used to know when vncserver is up
+	
 		// TEMPORARY WORKAROUND FOR BUG
 		String bugId = "790116"; boolean invokeWorkaroundWhileBugIsOpen = true;
 		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
@@ -903,7 +911,16 @@ if (false) {
 		msg_ClockSkewDetection			= "Clock skew detected, please check your system time";
 		msg_ContainerMode				= "subscription-manager is disabled when running inside a container. Please refer to your host system for subscription management.";
 		msg_RemoteErrorCheckConnection	= "Remote server error. Please check the connection details, or see /var/log/rhsm/rhsm.log for more information.";
-		
+		msg_ProxyConnectionFailed		= "Proxy connection failed, please check your settings.";
+
+		// TEMPORARY WORKAROUND FOR BUG 1335537 - typo in "Proxy connnection failed, please check your settings."
+		String bugId = "1335537"; boolean invokeWorkaroundWhileBugIsOpen = true;
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
+			msg_ProxyConnectionFailed = msg_ProxyConnectionFailed.replace("connection", "connnection");	// pretend that "connnection" is the correct spelling while bug 1335537 is open
+		}
+		// END OF WORKAROUND
+
 		// msg_InteroperabilityWarning is defined in /usr/share/rhsm/subscription_manager/branding/__init__.py self.REGISTERED_TO_OTHER_WARNING
 		msg_InteroperabilityWarning		=
 			"WARNING" +"\n\n"+
@@ -1162,6 +1179,61 @@ if (false) {
 		}
 	}
 	
+	public void updateConfFileParameter(String confFile, String section, String parameter, String value) throws IOException{
+		// TODO: An alternative solution for this task would be to use: https://github.com/pixelb/crudini
+		log.info("Updating config file '"+confFile+"' section '"+section+"' parameter: "+parameter+"="+value);
+
+		// get the permission mask on the file
+		String mask = sshCommandRunner.runCommandAndWait("stat -c '%a' "+confFile).getStdout().trim();	// returns 644
+		if (mask.length()==3) mask="0"+mask;	// prepend "0" as the file type to 0644
+		
+		// get a local copy of the confFile
+		File remoteFile = new File(confFile);
+	    File localFile = new File("tmp/"+remoteFile.getName()); // this will be in the automation.dir directory
+		RemoteFileTasks.getFile(sshCommandRunner.getConnection(), localFile.getParent(),remoteFile.getPath());
+		
+		// read the confFile into a single String
+		//String contents = new String(Files.readAllBytes(Paths.get("abc.java")));
+		//String contents = new Scanner(localFile).useDelimiter("\\Z").next();	// http://stackoverflow.com/questions/3402735/what-is-simplest-way-to-read-a-file-into-string
+		Scanner scanner = new Scanner(localFile,"UTF-8");
+		scanner.useDelimiter("\\Z");	// assumes that there is no occurrence of \Z in the file otherwise only part of the file contents will be read.  Should assert scanner.hasNext() is false.
+		String contents = scanner.next();
+		scanner.close();
+		
+		// use a regex to update the conf value
+		String regex = "(\\["+section+"\\](?:(?:\\n.*?)+)"+parameter+"\\s*(?::|=)\\s*)(.+)";
+		String updatedContents = contents.replaceFirst(regex, "$1"+value);
+		
+		// catch the case when the config file parameter is not defined and therefore cannot be updated
+		if (!SubscriptionManagerCLITestScript.doesStringContainMatches(contents, regex)) {
+			log.warning("Config file '"+confFile+"' parameter '"+parameter+"' was not found and therefore cannot be updated.");
+			return;
+		}
+		
+		// inform the user if no update was made and simply return
+		if (contents.equals(updatedContents)) {
+			log.info("No update to parameter '"+parameter+"' in section '"+section+"' of config file '"+confFile+"' was made.  It may already have value '"+value+"'.");
+			return;
+		}
+		
+		// overwrite the local file with the update
+    	Writer output = new BufferedWriter(new FileWriter(localFile));
+		output.write(updatedContents);	// TODO: will append an extra blank line
+	    output.close();
+	    
+	    // put the updated confFile back onto the client
+		RemoteFileTasks.putFile(sshCommandRunner.getConnection(), localFile.getPath(), confFile, mask);
+
+		// also update this "cached" value for these config file parameters
+		if (confFile.equals(this.rhsmConfFile)) {
+			if (parameter.equals("consumerCertDir"))	this.consumerCertDir = value;
+			if (parameter.equals("entitlementCertDir"))	this.entitlementCertDir = value;
+			if (parameter.equals("productCertDir"))		this.productCertDir = value;
+			if (parameter.equals("baseurl"))			this.baseurl = value;
+			if (parameter.equals("ca_cert_dir"))		this.caCertDir = value;
+		}
+	}
+	
 	public void commentConfFileParameter(String confFile, String parameter){
 		log.info("Commenting out config file '"+confFile+"' parameter: "+parameter);
 		Assert.assertEquals(
@@ -1221,7 +1293,8 @@ if (false) {
 	 * @return value of the section.parameter config (null when not found)
 	 */
 	protected String getSectionParameterFromConfigFileContents(String section, String parameter, String confFileContents){
-
+		// TODO: A alternative solution for this task would be to use: https://github.com/pixelb/crudini
+		
 		//	[root@jsefler-onprem-62server ~]# egrep -v  "^\s*(#|$)" /etc/rhsm/rhsm.conf
 		//	[server]
 		//	hostname=jsefler-onprem-62candlepin.usersys.redhat.com

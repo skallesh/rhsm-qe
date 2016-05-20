@@ -92,11 +92,11 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		JSONObject jsonActivationKeyRequest = new JSONObject(mapActivationKeyRequest);
 
 		// call the candlepin api to create an activation key
-		JSONObject jsonActivationKey = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(username, password, sm_serverUrl, "/owners/" + org + "/activation_keys", jsonActivationKeyRequest.toString()));
+		JSONObject jsonActivationKeyC = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(username, password, sm_serverUrl, "/owners/" + org + "/activation_keys", jsonActivationKeyRequest.toString()));
 
 		// assert that the creation was successful (does not contain a displayMessage)
-		if (jsonActivationKey.has("displayMessage")) {
-			Assert.fail("The creation of an activation key appears to have failed: "+jsonActivationKey.getString("displayMessage"));
+		if (jsonActivationKeyC.has("displayMessage")) {
+			Assert.fail("The creation of an activation key appears to have failed: "+jsonActivationKeyC.getString("displayMessage"));
 		}
 		Assert.assertTrue(true,"The absense of a displayMessage indicates the activation key creation was probably successful.");
 
@@ -124,24 +124,26 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 			if (jsonActivationKeyI.getString("name").equals(name)) break;
 		}
 		Assert.assertNotNull(jsonActivationKeyI, "Successfully listed keys for owner '"+org+"'.");
-		Assert.assertEquals(jsonActivationKey.toString(), jsonActivationKeyI.toString(), "Successfully found newly created activation key with credentials '"+username+"'/'"+password+"' under /owners/"+org+"/activation_keys .");
+		Assert.assertEquals(jsonActivationKeyC.toString(), jsonActivationKeyI.toString(), "Successfully found newly created activation key with credentials '"+username+"'/'"+password+"' under /owners/"+org+"/activation_keys .");
 		
 		// now assert that the activation key is found under /candlepin/activation_keys/<id>
-		JSONObject jsonActivationKeyJ = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,"/activation_keys/"+jsonActivationKey.getString("id")));
-		Assert.assertEquals(jsonActivationKey.toString(), jsonActivationKeyJ.toString(), "Successfully found newly created activation key among all activation keys under /activation_keys.");
-
+		JSONObject jsonActivationKeyJ = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,"/activation_keys/"+jsonActivationKeyC.getString("id")));
+		// Assert.assertEquals(jsonActivationKey.toString(), jsonActivationKeyJ.toString(), "Successfully found newly created activation key among all activation keys under Candlpin API /activation_keys/<id>.");	// will fail when the keys are in a different order
+		Assert.assertTrue(areActivationKeysEqual(jsonActivationKeyC,jsonActivationKeyJ),"Successfully found newly created activation key among all activation keys under Candlepin API /activation_keys/<id>."+
+				"\n jsonActivationKeyC='"+jsonActivationKeyC.toString()+"'"+
+				"\n jsonActivationKeyJ='"+jsonActivationKeyJ.toString()+"'");
 		// now attempt to delete the key
-		CandlepinTasks.deleteResourceUsingRESTfulAPI(username, password, sm_serverUrl, "/activation_keys/"+jsonActivationKey.getString("id"));
+		CandlepinTasks.deleteResourceUsingRESTfulAPI(username, password, sm_serverUrl, "/activation_keys/"+jsonActivationKeyC.getString("id"));
 		// assert that it is no longer found under /activation_keys
 		jsonActivationKeys = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,"/activation_keys"));
 		jsonActivationKeyI = null;
 		for (int i = 0; i < jsonActivationKeys.length(); i++) {
 			jsonActivationKeyI = (JSONObject) jsonActivationKeys.get(i);
-			if (jsonActivationKeyI.getString("id").equals(jsonActivationKey.getString("id"))) {
-				Assert.fail("After attempting to delete activation key id '"+jsonActivationKey.getString("id")+"', it was still found in the /activation_keys list.");
+			if (jsonActivationKeyI.getString("id").equals(jsonActivationKeyC.getString("id"))) {
+				Assert.fail("After attempting to delete activation key id '"+jsonActivationKeyC.getString("id")+"', it was still found in the /activation_keys list.");
 			}
 		}
-		Assert.assertTrue(true,"Deleted activation key with id '"+jsonActivationKey.getString("id")+"' is no longer found in the /activation_keys list.");
+		Assert.assertTrue(true,"Deleted activation key with id '"+jsonActivationKeyC.getString("id")+"' is no longer found in the /activation_keys list.");
 	}
 
 	
@@ -1623,6 +1625,29 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 	// Protected methods ***********************************************************************
 
 	protected List<String> systemConsumerIds = new ArrayList<String>();
+	
+	protected boolean areActivationKeysEqual (JSONObject ak1, JSONObject ak2) throws Exception {
+		//return(ak1.toString().equals(ak2.toString()));	// will fail when the keys are in a different order
+		List<String> ak1names = Arrays.asList(JSONObject.getNames(ak1));
+		List<String> ak2names = Arrays.asList(JSONObject.getNames(ak2));
+		// if both keys do not have the same key names, then they are not equal 
+		if (!ak1names.containsAll(ak2names)) return false;
+		if (!ak2names.containsAll(ak1names)) return false;
+		// if both lists of key names have a different count, then they are not equal
+		if (ak1names.size()!=ak2names.size()) return false;
+		// if each key value are not the same each ak, then they are not equal
+		for (String name : ak1names) {
+			if (ak1.get(name).toString().startsWith("{") && ak1.get(name).toString().endsWith("}")) {
+				if (!areActivationKeysEqual(ak1.getJSONObject(name),ak2.getJSONObject(name))) return false; 
+			} else {
+				if (!ak1.get(name).toString().equals(ak2.get(name).toString())) return false;
+			}
+			// TODO CAN FAIL IF THE KEY VALUE IS A JSONArray
+		}
+		// the aks must be equal
+		return true;
+	}
+
 	
 	// THIS IS THE ORIGINAL METHOD VALID PRIOR TO THE CHANGE IN list --consumed BEHAVIOR MODIFIED BY BUG 801187
 	protected void assertProvidedProductsFromPoolAreWithinConsumedProductSubscriptionsUsingQuantity_OLD (JSONObject jsonPool, List<ProductSubscription> consumedProductSubscriptions, Integer addQuantity, boolean assertConsumptionIsLimitedToThisPoolOnly) throws Exception {
