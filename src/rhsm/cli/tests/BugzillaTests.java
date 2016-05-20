@@ -3243,9 +3243,12 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				sm_basicauthproxyPort);
 		basicauthproxyUrl = basicauthproxyUrl.replaceAll(":$", "");
 		SSHCommandResult factsResult = clienttasks.facts_(null, true, basicauthproxyUrl, null,null);
-		String Expect = clienttasks.msg_NetworkErrorUnableToConnect;
-		Expect = "Error updating system data on the server, see /var/log/rhsm/rhsm.log for more details.";	// jsefler 6/17/2014 - the expected error message changed to this value.  Could not find a bugzilla/commit to blame this change.
-		Assert.assertEquals(factsResult.getStdout()+factsResult.getStderr().trim(), Expect);
+		String factsResultExpected = clienttasks.msg_NetworkErrorUnableToConnect;
+		factsResultExpected = "Error updating system data on the server, see /var/log/rhsm/rhsm.log for more details.";	// jsefler 6/17/2014 - the expected error message changed to this value.  Could not find a bugzilla/commit to blame this change.
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.17.6-1")) {	// post commit 7ce6801fc1cc38edcdeb75dfb5f0d1f8a6398c68	1301215: Test proxy connection before making call
+			factsResultExpected = clienttasks.msg_ProxyConnectionFailed;
+		}
+		Assert.assertEquals(factsResult.getStdout().trim()+factsResult.getStderr().trim(), factsResultExpected);
 	}
 
 	/**
