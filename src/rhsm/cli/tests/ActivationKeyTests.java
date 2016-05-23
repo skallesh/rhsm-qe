@@ -559,21 +559,22 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
-	@Test(	description="create an activation key, add it to a pool with an quantity outside the total possible available range",
+	@Test(	description="create an activation key, add it to a pool with a quantity outside the total possible available.  Also test adding a key with quantity 0 and -1. Also test pools with an unlimited quantity.",
 			groups={"blockedByBug-729125"},
 			dataProvider="getAllMultiEntitlementJSONPoolsData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
 	public void RegisterWithActivationKeyContainingPoolWithQuantityOutsideAvailableQuantity_Test(Object blockedByBug, String keyName, JSONObject jsonPool) throws JSONException, Exception {
-
+		
 		// choose a random pool quantity > totalPoolQuantity)
-		Integer excessiveQuantity = jsonPool.getInt("quantity") + randomGenerator.nextInt(10) +1;
+		Integer jsonPoolQuantity = jsonPool.getInt("quantity");	// can be -1 for an unlimited pool
+		Integer excessiveQuantity = jsonPoolQuantity + 1 + randomGenerator.nextInt(10)/*returns 0 to 9*/;	// can be 0 or more
 		//String keyName = String.format("ActivationKey%s_ForPool%s_", System.currentTimeMillis(), jsonPool.getString("id"));
-
+		
 		RegisterWithActivationKeyContainingPoolWithQuantity_Test(blockedByBug, keyName+"_Quantity"+excessiveQuantity, jsonPool, excessiveQuantity);
-		RegisterWithActivationKeyContainingPoolWithQuantity_Test(blockedByBug, keyName+"_Quantity0", jsonPool, 0);
-		RegisterWithActivationKeyContainingPoolWithQuantity_Test(blockedByBug, keyName+"_Quantity-1", jsonPool, -1);
 		RegisterWithActivationKeyContainingPoolWithQuantity_Test(blockedByBug, keyName+"_Quantity-"+excessiveQuantity, jsonPool, -1*excessiveQuantity);
+		if (!excessiveQuantity.equals(Integer.valueOf(0))/* already tested 0*/) RegisterWithActivationKeyContainingPoolWithQuantity_Test(blockedByBug, keyName+"_Quantity0", jsonPool, 0);
+		if (!excessiveQuantity.equals(Integer.valueOf(1))/* already tested 1*/) RegisterWithActivationKeyContainingPoolWithQuantity_Test(blockedByBug, keyName+"_Quantity-1", jsonPool, -1);
 	}
 	
 	
