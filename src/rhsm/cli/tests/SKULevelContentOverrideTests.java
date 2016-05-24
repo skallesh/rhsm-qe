@@ -3,12 +3,16 @@ import org.testng.annotations.Test;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.testng.annotations.AfterGroups;
 import org.testng.annotations.DataProvider;
 import rhsm.base.SubscriptionManagerCLITestScript;
 import rhsm.cli.tasks.CandlepinTasks;
@@ -21,16 +25,20 @@ import com.redhat.qe.auto.testng.TestNGUtils;
 /**
  * @author skallesh
  * 
- * 
+ * References:
+ *   Bug 1179727 - RFE: Support Per-SKU Enabled/Disabled Content Overrides
+ *   http://etherpad.corp.redhat.com/jgn9ZrC1uM
+ *   https://polarion.engineering.redhat.com/polarion/#/project/RedHatEnterpriseLinux7/wiki/RHSMQE/RHSM_SKU%20level%20content%20override?sidebar=approvals
  */
-public class SKULevelContentOverrides extends SubscriptionManagerCLITestScript{
+@Test(groups={"debugTest","SKULevelContentOverrideTests","Tier3Tests"})
+public class SKULevelContentOverrideTests extends SubscriptionManagerCLITestScript{
 	static String label = null;
 	String resourcePath=null;
 	String requestBody=null;
 
 	@Test(description = "Verify content can be overriden at SKU level,content overriden at sku level can be enabled/disabled by using subscription-manager repos --enable/--disable commands and enabled repo is given prefrence over disabled repo",
-			groups = { "OverrideAtSKULevel"},dataProvider="getSubscriptions", enabled = true)
-	public void OverrideAtSKULevel(Object Bugzilla,SubscriptionPool subscriptionpool) throws JSONException, Exception{
+			groups = { "OverrideAtSKULevelTest"},dataProvider="getSubscriptions", enabled = true)
+	public void OverrideAtSKULevelTest(Object Bugzilla,SubscriptionPool subscriptionpool) throws JSONException, Exception{
 		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null));
 		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerId);
 		clienttasks.subscribe(null, null, subscriptionpool.poolId, null, null, null, null, null, null, null, null, null);
@@ -72,10 +80,13 @@ public class SKULevelContentOverrides extends SubscriptionManagerCLITestScript{
 		resourcePath="/owners/"+ownerKey+"/products/"+subscriptionpool.productId+"?exclude=id&exclude=name&exclude=multiplier&exclude=productContent&exclude=dependentProductIds&exclude=href&exclude=created&exclude=updated&exclude=attributes.created&exclude=attributes.updated";
 		JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,resourcePath));	
 		resourcePath = "/owners/"+ownerKey+"/products/"+subscriptionpool.productId;
+		subscriptionPoolProductIdsTested.add(subscriptionpool.productId); // remember what SKUs we are putting content_overrides on
 		JSONArray jsonProductAttributesToEnable = jsonPool.getJSONArray("attributes");
 		JSONObject jsonDataToEnable = new JSONObject();
 		attributesMap.put("name", "content_override_enabled");
 		attributesMap.put("value", repoIdToEnable);
+		// WARNING: if jsonProductAttributesToEnable already contains an attribute(s) with the name "content_override_enabled", then duplicate attributes will get PUT on the SKU.  That's bad.  Candlepin should not allow this, but it does.  Avoid this by calling purgeJSONObjectNamesFromJSONArray(...)
+		jsonProductAttributesToEnable = purgeJSONObjectNamesFromJSONArray(jsonProductAttributesToEnable, "content_override_enabled");
 		jsonProductAttributesToEnable.put(attributesMap);
 		jsonDataToEnable.put("attributes",jsonProductAttributesToEnable);
 		CandlepinTasks.putResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, resourcePath, jsonDataToEnable);
@@ -110,10 +121,13 @@ public class SKULevelContentOverrides extends SubscriptionManagerCLITestScript{
 		resourcePath="/owners/"+ownerKey+"/products/"+subscriptionpool.productId+"?exclude=id&exclude=name&exclude=multiplier&exclude=productContent&exclude=dependentProductIds&exclude=href&exclude=created&exclude=updated&exclude=attributes.created&exclude=attributes.updated";
 		jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,resourcePath));	
 		resourcePath = "/owners/"+ownerKey+"/products/"+subscriptionpool.productId;
+		subscriptionPoolProductIdsTested.add(subscriptionpool.productId); // remember what SKUs we are putting content_overrides on
 		JSONArray jsonProductAttributesToDisable = jsonPool.getJSONArray("attributes");
 		attributesMap.clear();
 		attributesMap.put("name", "content_override_disabled");
 		attributesMap.put("value", repoIdToDisable);
+		// WARNING: if jsonProductAttributesToEnable already contains an attribute(s) with the name "content_override_disabled", then duplicate attributes will get PUT on the SKU.  That's bad.  Candlepin should not allow this, but it does.  Avoid this by calling purgeJSONObjectNamesFromJSONArray(...)
+		jsonProductAttributesToDisable = purgeJSONObjectNamesFromJSONArray(jsonProductAttributesToDisable, "content_override_disabled");
 		jsonProductAttributesToDisable.put(attributesMap);
 		JSONObject jsonDataToDisable = new JSONObject();
 		jsonDataToDisable.put("attributes",jsonProductAttributesToDisable);
@@ -141,13 +155,15 @@ public class SKULevelContentOverrides extends SubscriptionManagerCLITestScript{
 		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		//get all the currently available subscription and attach		
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
-		for (SubscriptionPool pool : pools)
-			//ensure that pool id you are trying attached is different from the pool id attached earlier			
+		for (SubscriptionPool pool : pools) {
+			//ensure that SKU you are trying attached is different from the SKU attached earlier			
 			if(!(pool.productId).equals(subscriptionpool.productId)){
-				clienttasks.subscribe(null, null, pool.poolId, null, null, null, null, null, null, null, null, null);
+				clienttasks.subscribe_(null, null, pool.poolId, null, null, null, null, null, null, null, null, null);
 				//if the repos availble from the attached subscription doesnot contain the disabled repoid from the earlier subscription				
-				if(!(clienttasks.repos(true, null, null,(String) null, null, null, null, null).getStdout().contains(repoId))){
-
+				if(!(clienttasks.repos_(true, null, null,(String) null, null, null, null, null).getStdout().contains(repoId))){
+					
+// TODO: jsefler had trouble reaching this inner loop 
+					
 					//if the disabled repo id from earlier subscription was a created and mapped 
 					if((repoId.equals("foolabelenable")) ){
 						requestBody=CandlepinTasks.createContentRequestBody("foonameenable", contentIDToEnable, "foolabelenable", "yum", "Foo Vendor", "/foo/path", "/foo/path/gpg", null, null, null, null).toString();
@@ -175,18 +191,43 @@ public class SKULevelContentOverrides extends SubscriptionManagerCLITestScript{
 						clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 						clienttasks.subscribe(null, null, pool.poolId, null, null, null, null, null, null, null, null, null);
 						break;
-					}}
+					}
+				}
+// TODO: jsefler: maybe this will help get to the inner loop				clienttasks.unsubscribe_(null, null, subscriptionpool.poolId, null, null, null);	
 			}
+		}
 		//assert that repo is not available in repos list-enabled
 		Assert.assertFalse(clienttasks.repos(null, true, null,(String)null, null, null, null, null).getStdout().contains(repoId));
 		//assert that repo is  available in repos list-disabled
-		Assert.assertTrue(clienttasks.repos(true, null,null,(String)null, null, null, null, null).getStdout().contains(repoId));
+		Assert.assertTrue(clienttasks.repos(null, null,true,(String)null, null, null, null, null).getStdout().contains(repoId));
 		clienttasks.subscribe(null, null, subscriptionpool.poolId, null, null, null, null, null, null, null, null, null);
 		//assert that repo is now available in repos list-enabled after attaching the subscription
 		Assert.assertTrue(clienttasks.repos(null, true, null,(String)null, null, null, null, null).getStdout().contains(repoId));
-
-
 	}
+	
+	/**
+	 * cleanup after running OverrideAtSKULevelTest by removing all of the content overrides for the SKUs tested above
+	 * @throws JSONException
+	 * @throws Exception
+	 * @author jsefler
+	 */
+	@AfterGroups(groups = "cleaup", value = {"OverrideAtSKULevelTest"}, enabled = true)
+	public void removeContentOverridesFromSubscriptionPoolProductIdsTested() throws JSONException, Exception{
+		String ownerKey = clienttasks.getCurrentlyRegisteredOwnerKey();
+		for (String subscriptionPoolProductIdTested : subscriptionPoolProductIdsTested) {
+			String productIdPath="/owners/"+ownerKey+"/products/"+subscriptionPoolProductIdTested+"?exclude=id&exclude=name&exclude=multiplier&exclude=productContent&exclude=dependentProductIds&exclude=href&exclude=created&exclude=updated&exclude=attributes.created&exclude=attributes.updated";
+			JSONObject jsonProductId = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,productIdPath));	
+			JSONArray jsonProductIdAttributes = jsonProductId.getJSONArray("attributes");
+			jsonProductIdAttributes = purgeJSONObjectNamesFromJSONArray(jsonProductIdAttributes, "content_override_enabled");
+			jsonProductIdAttributes = purgeJSONObjectNamesFromJSONArray(jsonProductIdAttributes, "content_override_disabled");
+			productIdPath = "/owners/"+ownerKey+"/products/"+subscriptionPoolProductIdTested;
+			JSONObject jsonAttributes = new JSONObject();
+			jsonAttributes.put("attributes",jsonProductIdAttributes);
+			CandlepinTasks.putResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, productIdPath, jsonAttributes);
+			CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, ownerKey);
+		}
+	}
+	Set<String> subscriptionPoolProductIdsTested = new HashSet<String>();
 
 	@SuppressWarnings("unused")
 	public String getPoolprovidedProducts(String authenticator, String password, String url, String poolId, String attributeName) throws JSONException, Exception {
@@ -225,7 +266,7 @@ public class SKULevelContentOverrides extends SubscriptionManagerCLITestScript{
 			SubscriptionPool pool = availableSubscriptionPoolsMatchingInstalled;
 
 			ll.add(Arrays.asList(new Object[]{null,	pool}));
-			break;
+			break;	// will only add one row to the dataProvider.  This defeats the purpose of a dataProvider.
 
 		}
 		return ll;
@@ -247,7 +288,25 @@ public class SKULevelContentOverrides extends SubscriptionManagerCLITestScript{
 		}
 
 		return contentId;
-
-
-
-	}}
+	}
+	
+	
+	/**
+	 * Given a JSONArray, return a new JSONArray containing the same JSONObjects excluding those with a "name" key equal to name.
+	 * @param jsonArray
+	 * @param name
+	 * @return
+	 * @throws JSONException
+	 * @author jsefler
+	 */
+	JSONArray purgeJSONObjectNamesFromJSONArray(JSONArray jsonArray, String name) throws JSONException {
+		JSONArray purgedJSONArray = new JSONArray();
+		for (int j = 0; j < jsonArray.length(); j++) {
+			JSONObject jsonObject = (JSONObject) jsonArray.get(j);
+			if (!jsonObject.getString("name").equals(name)) {
+				purgedJSONArray.put(jsonObject);
+			}
+		}
+		return purgedJSONArray;
+	}
+}
