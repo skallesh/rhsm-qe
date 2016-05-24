@@ -511,7 +511,9 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		
 		// set the logging level to DEBUG for rhsm.log - effectively reverting the changes from Bug 1266935 - Reduce default log level to INFO (from DEBUG)
 		// this is needed to enable more testing and log more useful info from SubscriptionManagerTasks.logRuntimeErrors(...)
-		smt.updateConfFileParameter(clienttasks.rhsmLoggingConfFile, "handler_rhsm_log", "level", "DEBUG");
+		if (smt.isPackageVersion("subscription-manager", ">=", "1.14.2-1")) {// commit 66aafd77dc629b921379f0e121421c1c21c0b787 Move to fileConfig based logging.
+			smt.updateConfFileParameter(clienttasks.rhsmLoggingConfFile, "handler_rhsm_log", "level", "DEBUG");
+		}
 	}
 	
 	protected static boolean isSetupBeforeSuiteComplete = false;
