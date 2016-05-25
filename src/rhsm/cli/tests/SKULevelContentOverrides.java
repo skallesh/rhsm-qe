@@ -142,6 +142,7 @@ public class SKULevelContentOverrides extends SubscriptionManagerCLITestScript{
 		}
 		String repoId=enabledRepoIds.get(randomGenerator.nextInt(enabledRepoIds.size()));
 		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
+		System.out.println(repoId + "..... repo id is");
 		//get all the currently available subscription and attach		
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		for (SubscriptionPool pool : pools)
@@ -170,16 +171,36 @@ public class SKULevelContentOverrides extends SubscriptionManagerCLITestScript{
 						clienttasks.subscribe(null, null, subscriptionpool.poolId, null, null, null, null, null, null, null, null, null);
 						if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) resourcePath = "/owners/"+ownerKey+resourcePath;
 						CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,resourcePath, requestBody);
-						String productid = getPoolprovidedProducts(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, pool.poolId, "productId");
+						String productid =getPoolprovidedProducts(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, subscriptionpool.poolId, "productId");
+						CandlepinTasks.addContentToProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, ownerKey,productid, "1111111111111111", true);
+
+						productid = getPoolprovidedProducts(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, pool.poolId, "productId");
 						CandlepinTasks.addContentToProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, ownerKey,productid, "1111111111111111", false);
 						CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,resourcePath, requestBody);
-						productid =getPoolprovidedProducts(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, subscriptionpool.poolId, "productId");
-						CandlepinTasks.addContentToProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, ownerKey,productid, "1111111111111111", true);
 						clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 						clienttasks.subscribe(null, null, pool.poolId, null, null, null, null, null, null, null, null, null);
 						break;
 					}}
 			}
+		/*if repos on both sku's are enable */
+		if(clienttasks.repos(null, true, null,(String)null, null, null, null, null).getStdout().contains(repoId)){
+			repoIdToDisable=getContent(sm_serverAdminUsername,sm_serverAdminPassword, sm_serverUrl,disableRepoIds.get(randomGenerator.nextInt(disableRepoIds.size())));
+			resourcePath="/owners/"+ownerKey+"/products/"+subscriptionpool.productId+"?exclude=id&exclude=name&exclude=multiplier&exclude=productContent&exclude=dependentProductIds&exclude=href&exclude=created&exclude=updated&exclude=attributes.created&exclude=attributes.updated";
+			jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,resourcePath));	
+			resourcePath = "/owners/"+ownerKey+"/products/"+subscriptionpool.productId;
+			jsonProductAttributesToDisable = jsonPool.getJSONArray("attributes");
+			attributesMap.clear();
+			attributesMap.put("name", "content_override_disabled");
+			attributesMap.put("value", repoIdToDisable);
+			jsonProductAttributesToDisable.put(attributesMap);
+			JSONObject jsonDataToDisableEnabledRepo = new JSONObject();
+			jsonDataToDisable.put("attributes",jsonDataToDisableEnabledRepo);
+			CandlepinTasks.putResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, resourcePath, jsonDataToDisableEnabledRepo);
+			CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, ownerKey);
+			clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
+			clienttasks.subscribe(null, null, subscriptionpool.poolId, null, null, null, null, null, null, null, null, null);
+		}
+
 		//assert that repo is not available in repos list-enabled
 		Assert.assertFalse(clienttasks.repos(null, true, null,(String)null, null, null, null, null).getStdout().contains(repoId));
 		//assert that repo is  available in repos list-disabled
