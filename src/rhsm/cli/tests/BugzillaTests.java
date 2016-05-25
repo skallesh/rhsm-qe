@@ -1587,22 +1587,12 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		JSONObject jsonContentResource;
 		String requestBody = CandlepinTasks.createContentRequestBody("fooname", contentId, "foolabel", "yum", "Foo Vendor", "/foo/path", "/foo/path/gpg", null, null, null, modifiedProductIds).toString();
 		String resourcePath = "/content/";
-//		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) resourcePath = "/owners/"+sm_clientOrg+resourcePath;
-//Why?	CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,resourcePath, requestBody);	
 		resourcePath = "/content/"+contentId;
-//		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) resourcePath = "/owners/"+sm_clientOrg+resourcePath;
-//Why?		jsonContentResource = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, resourcePath));
 		String contentWithIdMessage = "Content with id "+contentId+" could not be found.";
 		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.7")) contentWithIdMessage = "Content with ID \""+contentId+"\" could not be found.";	// commit 6b63e346c61789837211828043ad9576a756d0e8
-		
-//Why?	Assert.assertContainsNoMatch(jsonActivationKey.toString(), contentWithIdMessage);
-		resourcePath = "/content/"+contentId;
+ 		resourcePath = "/content/"+contentId;
 		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) resourcePath = "/owners/"+sm_clientOrg+resourcePath;
 		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, resourcePath);
-		/* restart_rhsmcertd has nothing to do with testing the ability to DELETE a content resource
-		clienttasks.restart_rhsmcertd(null, null, null);
-		sleep(2*60*1000);
-		 */
 		resourcePath = "/content/"+contentId;
 		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) resourcePath = "/owners/"+sm_clientOrg+resourcePath;
 		jsonContentResource = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, resourcePath));
