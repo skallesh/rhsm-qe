@@ -195,6 +195,26 @@ public class SKULevelContentOverrideTests extends SubscriptionManagerCLITestScri
 				}
 // TODO: jsefler: maybe this will help get to the inner loop				clienttasks.unsubscribe_(null, null, subscriptionpool.poolId, null, null, null);	
 			}
+			
+			/*if repos on both sku's are enable */
+			if(clienttasks.repos(null, true, null,(String)null, null, null, null, null).getStdout().contains(repoId)){
+				repoIdToDisable=getContent(sm_serverAdminUsername,sm_serverAdminPassword, sm_serverUrl,disableRepoIds.get(randomGenerator.nextInt(disableRepoIds.size())));
+				resourcePath="/owners/"+ownerKey+"/products/"+subscriptionpool.productId+"?exclude=id&exclude=name&exclude=multiplier&exclude=productContent&exclude=dependentProductIds&exclude=href&exclude=created&exclude=updated&exclude=attributes.created&exclude=attributes.updated";
+				jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,resourcePath));	
+				resourcePath = "/owners/"+ownerKey+"/products/"+subscriptionpool.productId;
+				jsonProductAttributesToDisable = jsonPool.getJSONArray("attributes");
+				attributesMap.clear();
+				attributesMap.put("name", "content_override_disabled");
+				attributesMap.put("value", repoIdToDisable);
+				jsonProductAttributesToDisable.put(attributesMap);
+				JSONObject jsonDataToDisableEnabledRepo = new JSONObject();
+				jsonDataToDisable.put("attributes",jsonDataToDisableEnabledRepo);
+				CandlepinTasks.putResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, resourcePath, jsonDataToDisableEnabledRepo);
+				CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, ownerKey);
+				clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
+				clienttasks.subscribe(null, null, subscriptionpool.poolId, null, null, null, null, null, null, null, null, null);
+			}
+
 		}
 		//assert that repo is not available in repos list-enabled
 		Assert.assertFalse(clienttasks.repos(null, true, null,(String)null, null, null, null, null).getStdout().contains(repoId));
