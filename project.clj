@@ -1,9 +1,9 @@
 (defproject org.clojars.jsefler/sm "1.0.0-SNAPSHOT"
   :description "Automated tests for Red Hat Subsciption Manager CLI and GUI"
   :java-source-path "src" ;lein1
-  :java-source-paths ["src"]
+  :java-source-paths ["src" "../ssh-tools/src"]
   :main rhsm.runtestng
-  :aot [#"^rhsm.gui.tests" rhsm.runtestng] ;regex to find tests that testng will run
+  ;:aot [#"^rhsm.gui.tests" rhsm.runtestng] ;regex to find tests that testng will run
   :keep-non-project-classes true
   :dependencies [[clj-http "2.0.0"]
                  [com.google.code.guice/guice "1.0"] ;; required for new testng
@@ -31,7 +31,10 @@
                  [slingshot "0.8.0"]
                  ;[test_clj.testng "1.0.1-SNAPSHOT"]
                  [test-clj.testng "1.1.0-SNAPSHOT"]
-                 [levand/immuconf "0.1.0"]]
+                 [levand/immuconf "0.1.0"]
+                 [leiningen #=(leiningen.core.main/leiningen-version)]
+                 [im.chit/vinyasa "0.4.3"]
+                 ]
 
   ;lein1
   :dev-dependencies [[fn.trace "1.3.2.0-SNAPSHOT"]
@@ -39,7 +42,10 @@
   ;lein2
   :profiles {:dev {:dependencies
                    [[fn.trace "1.3.2.0-SNAPSHOT"]]}}
-  :plugins [[lein2-eclipse "2.0.0"]]
+  :plugins [[lein2-eclipse "2.0.0"]
+            [quickie "0.4.1"]]
+  ; regexp of namespaces that contains of tests of our tests. It is used by quickie.
+  :test-matcher #"rhsm\.gui\.tests\..*-test"
   :repositories {"clojars.org" {:url "http://clojars.org/repo"
                                 :snapshots {:update :always}}}
   :javac-options {:debug "on"}
