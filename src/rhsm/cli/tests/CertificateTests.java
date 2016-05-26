@@ -955,6 +955,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 			if (clienttasks.redhatReleaseXY.equals("7.2") && clienttasks.arch.equals("ppc64le")) bugIds.add("1261171"); 	// Bug 1261171 - uncertain of expected release listing on rhel72 ppc64le system
 			if (clienttasks.redhatReleaseXY.equals("7.2") && clienttasks.variant.equals("ComputeNode") && release.equals("7.1")) bugIds.add("1267732"); 	// Bug 1267732 - production CDN productid files 404: Not Found. for ComputeNode releasever 7.1 and 7Server
 			if (clienttasks.redhatReleaseXY.equals("7.2") && clienttasks.variant.equals("ComputeNode") && release.equals("7ComputeNode")) bugIds.add("1267732"); 	// Bug 1267732 - production CDN productid files 404: Not Found. for ComputeNode releasever 7.1 and 7Server
+			if (release.matches("7.2|7Server") && clienttasks.variant.equals("Server") && clienttasks.arch.equals("x86_64")) bugIds.add("1338857"); 	// Bug 1338857 - cdn.redhat.com has the wrong productId version for rhel 7.2
 			
 			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 			
@@ -1146,13 +1147,13 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		}
 		else if (clienttasks.redhatReleaseX.equals("7") && !clienttasks.redhatReleaseXY.equals("7.0") && !clienttasks.redhatReleaseXY.equals("7.1")) {	// Note: this test depends on an available Release level of 7.0 and 7.1 in the release listing file which will not be available until the rhel 7.2 test cycle; skipping until we test rhel 7.2
 			if (clienttasks.variant.equals("ComputeNode")) bugids.add("1267732");	// Bug 1267732 - production CDN productid files 404: Not Found. for ComputeNode releasever 7.1 and 7Server 
-			if (!bugids.isEmpty()) blockedByBugs = new BlockedByBzBug(bugids.toArray(new String[]{}));
-			
+			if (clienttasks.variant.equals("Server") && clienttasks.arch.equals("x86_64")) bugids.add("1338857");	// Bug 1338857 - cdn.redhat.com has the wrong productId version for rhel 7.2
+			blockedByBugs = new BlockedByBzBug(bugids.toArray(new String[]{}));
 			
 			if (!clienttasks.arch.equals("ppc64le") && !clienttasks.arch.equals("aarch64"))	// ppc64le and aarch64 did not exist on 7.0 nor 7.1; exclude this row on these arches
 			ll.add(Arrays.asList(new Object[]{blockedByBugs,	"Red_Hat_Enterprise_Linux-Release_Notes-7-fr-FR" ,	"7.0",		"7.0",	"7.1"}));
 			//ll.add(Arrays.asList(new Object[]{null,	"Red_Hat_Enterprise_Linux-Release_Notes-7-fr-FR",	"7.0 Beta",	"7.0",	"7.1"}));	// There is no 7.0 Beta product cert id 69 that can be updated.  The 7.0 Beta product cert is product id 226 Everything
-			//TODO UNCOMMENT ON RHEL7.3 TESTING ll.add(Arrays.asList(new Object[]{null,	"Red_Hat_Enterprise_Linux-Release_Notes-7-fr-FR",	"7.1 Beta",	"7.1",	"7.2"}));
+			ll.add(Arrays.asList(new Object[]{blockedByBugs,	"Red_Hat_Enterprise_Linux-Release_Notes-7-fr-FR",	"7.1 Beta",	"7.1",	"7.2"}));
 		}
 		else if (Integer.valueOf(clienttasks.redhatReleaseX)>7) {
 			ll.add(Arrays.asList(new Object[]{null,	"FIXME: Unhandled Release",	"1.0 Beta",	"1.0",	"1.1"}));

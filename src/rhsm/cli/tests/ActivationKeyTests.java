@@ -329,32 +329,66 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		
 		// assert the pool is added
 		jsonActivationKey = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,"/activation_keys/"+jsonActivationKey.getString("id")));
-		//# curl -k -u admin:admin https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/activation_keys/8a90f8c63196bb2001319f66afa83cb4 | python -mjson.tool
-		//{
-		//    "created": "2011-08-06T14:02:12.264+0000", 
-		//    "id": "8a90f8c63196bb2001319f66afa83cb4", 
-		//    "name": "ActivationKey1312639332183_ForPool8a90f8c63196bb20013196bc7f6302dc", 
-		//    "owner": {
-		//        "displayName": "Admin Owner", 
-		//        "href": "/owners/admin", 
-		//        "id": "8a90f8c63196bb20013196bb9e210006", 
-		//        "key": "admin"
-		//    }, 
-		//    "pools": [
-		//        {
-		//            "created": "2011-08-06T14:02:12.419+0000", 
-		//            "id": "8a90f8c63196bb2001319f66b0433cb6", 
-		//            "pool": {
-		//                "href": "/pools/8a90f8c63196bb20013196bc7f6302dc", 
-		//                "id": "8a90f8c63196bb20013196bc7f6302dc"
-		//            }, 
-		//            "quantity": 1, 
-		//            "updated": "2011-08-06T14:02:12.419+0000"
-		//        }
-		//    ], 
-		//    "updated": "2011-08-06T14:02:12.264+0000"
-		//}
-		String addedPoolId = ((JSONObject) jsonActivationKey.getJSONArray("pools").get(0)).getJSONObject("pool").getString("id");	// get(0) since there should only be one pool added
+		String addedPoolId = null;
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.12-1")) {	// candlepin commit a868d9706b722cb548d697854c42e7de97a3ec9b Added a DTO for activation keys
+			//	[root@jsefler-rhel7 ~]# curl --stderr /dev/null --insecure --user admin:admin --request GET https://jsefler-candlepin.usersys.redhat.com:8443/candlepin/activation_keys/8a90860f54ce9e030154ceef3f2010b6 | python -m json/tool
+			//	{
+			//	    "autoAttach": null,
+			//	    "contentOverrides": [],
+			//	    "created": "2016-05-20T16:11:06+0000",
+			//	    "description": null,
+			//	    "id": "8a90860f54ce9e030154ceef3f2010b6",
+			//	    "name": "ActivationKey1463760627557_ForPool8a90860f54ce9e030154ce9faf820933_Quantity2",
+			//	    "owner": {
+			//	        "displayName": "Admin Owner",
+			//	        "href": "/owners/admin",
+			//	        "id": "8a90860f54ce9e030154ce9f136c0002",
+			//	        "key": "admin"
+			//	    },
+			//	    "pools": [
+			//	        {
+			//	            "poolId": "8a90860f54ce9e030154ce9faf820933",
+			//	            "quantity": 2
+			//	        }
+			//	    ],
+			//	    "products": [],
+			//	    "releaseVer": {
+			//	        "releaseVer": null
+			//	    },
+			//	    "serviceLevel": null,
+			//	    "updated": "2016-05-20T16:11:06+0000"
+			//	}
+			addedPoolId = ((JSONObject) jsonActivationKey.getJSONArray("pools").get(0)).getString("poolId");	// get(0) since there should only be one pool added
+		} else {
+			//# curl -k -u admin:admin https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/activation_keys/8a90f8c63196bb2001319f66afa83cb4 | python -mjson.tool
+			//{
+			//    "created": "2011-08-06T14:02:12.264+0000", 
+			//    "id": "8a90f8c63196bb2001319f66afa83cb4", 
+			//    "name": "ActivationKey1312639332183_ForPool8a90f8c63196bb20013196bc7f6302dc", 
+			//    "owner": {
+			//        "displayName": "Admin Owner", 
+			//        "href": "/owners/admin", 
+			//        "id": "8a90f8c63196bb20013196bb9e210006", 
+			//        "key": "admin"
+			//    }, 
+			//    "pools": [
+			//        {
+			//            "created": "2011-08-06T14:02:12.419+0000", 
+			//            "id": "8a90f8c63196bb2001319f66b0433cb6", 
+			//            "pool": {
+			//                "href": "/pools/8a90f8c63196bb20013196bc7f6302dc", 
+			//                "id": "8a90f8c63196bb20013196bc7f6302dc"
+			//            }, 
+			//            "quantity": 1, 
+			//            "updated": "2011-08-06T14:02:12.419+0000"
+			//        }
+			//    ], 
+			//    "updated": "2011-08-06T14:02:12.264+0000"
+			//}
+			addedPoolId = ((JSONObject) jsonActivationKey.getJSONArray("pools").get(0)).getJSONObject("pool").getString("id");	// get(0) since there should only be one pool added
+		}
+
+
 		Assert.assertEquals(addedPoolId, poolId, "Pool id '"+poolId+"' appears to be successfully added to activation key: "+jsonActivationKey);
 		if (addQuantity!=null) {
 			Integer addedQuantity = ((JSONObject) jsonActivationKey.getJSONArray("pools").get(0)).getInt("quantity");	// get(0) since there should only be one pool added
@@ -525,21 +559,22 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
-	@Test(	description="create an activation key, add it to a pool with an quantity outside the total possible available range",
+	@Test(	description="create an activation key, add it to a pool with a quantity outside the total possible available.  Also test adding a key with quantity 0 and -1. Also test pools with an unlimited quantity.",
 			groups={"blockedByBug-729125"},
 			dataProvider="getAllMultiEntitlementJSONPoolsData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
 	public void RegisterWithActivationKeyContainingPoolWithQuantityOutsideAvailableQuantity_Test(Object blockedByBug, String keyName, JSONObject jsonPool) throws JSONException, Exception {
-
+		
 		// choose a random pool quantity > totalPoolQuantity)
-		Integer excessiveQuantity = jsonPool.getInt("quantity") + randomGenerator.nextInt(10) +1;
+		Integer jsonPoolQuantity = jsonPool.getInt("quantity");	// can be -1 for an unlimited pool
+		Integer excessiveQuantity = jsonPoolQuantity + 1 + randomGenerator.nextInt(10)/*returns 0 to 9*/;	// can be 0 or more
 		//String keyName = String.format("ActivationKey%s_ForPool%s_", System.currentTimeMillis(), jsonPool.getString("id"));
-
+		
 		RegisterWithActivationKeyContainingPoolWithQuantity_Test(blockedByBug, keyName+"_Quantity"+excessiveQuantity, jsonPool, excessiveQuantity);
-		RegisterWithActivationKeyContainingPoolWithQuantity_Test(blockedByBug, keyName+"_Quantity0", jsonPool, 0);
-		RegisterWithActivationKeyContainingPoolWithQuantity_Test(blockedByBug, keyName+"_Quantity-1", jsonPool, -1);
 		RegisterWithActivationKeyContainingPoolWithQuantity_Test(blockedByBug, keyName+"_Quantity-"+excessiveQuantity, jsonPool, -1*excessiveQuantity);
+		if (!excessiveQuantity.equals(Integer.valueOf(0))/* already tested 0*/) RegisterWithActivationKeyContainingPoolWithQuantity_Test(blockedByBug, keyName+"_Quantity0", jsonPool, 0);
+		if (!excessiveQuantity.equals(Integer.valueOf(1))/* already tested 1*/) RegisterWithActivationKeyContainingPoolWithQuantity_Test(blockedByBug, keyName+"_Quantity-1", jsonPool, -1);
 	}
 	
 	
@@ -605,19 +640,22 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 			JSONObject jsonActivationKeyRequest = new JSONObject(mapActivationKeyRequest);
 
 			// call the candlepin api to create an activation key
-			JSONObject jsonActivationKey = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/owners/" + org + "/activation_keys",jsonActivationKeyRequest.toString()));
+			JSONObject jsonActivationKeyC = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/owners/" + org + "/activation_keys",jsonActivationKeyRequest.toString()));
 
 			// assert that the creation was successful (does not contain a displayMessage)
-			if (jsonActivationKey.has("displayMessage")) {
-				String displayMessage = jsonActivationKey.getString("displayMessage");
+			if (jsonActivationKeyC.has("displayMessage")) {
+				String displayMessage = jsonActivationKeyC.getString("displayMessage");
 				Assert.fail("The creation of an activation key appears to have failed: "+displayMessage);
 			}
 			Assert.assertTrue(true,"The absense of a displayMessage indicates the activation key creation was probably successful.");
 			
 			// now assert that the new activation key is found under /candlepin/activation_keys/<id>
-			JSONObject jsonActivationKeyJ = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,"/activation_keys/"+jsonActivationKey.getString("id")));
-			Assert.assertEquals(jsonActivationKey.toString(), jsonActivationKeyJ.toString(), "Successfully found newly created activation key among all activation keys under /activation_keys.");
-
+			JSONObject jsonActivationKeyJ = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,"/activation_keys/"+jsonActivationKeyC.getString("id")));
+			//Assert.assertEquals(jsonActivationKeyC.toString(), jsonActivationKeyJ.toString(), "Successfully found newly created activation key among all activation keys under /activation_keys.");
+			Assert.assertTrue(areActivationKeysEqual(jsonActivationKeyC,jsonActivationKeyJ),"Successfully found newly created activation key among all activation keys under Candlepin API /activation_keys/<id>."+
+					"\n jsonActivationKeyC='"+jsonActivationKeyC.toString()+"'"+
+					"\n jsonActivationKeyJ='"+jsonActivationKeyJ.toString()+"'");
+			
 			// now let's attempt to register with the activation key using a different org
 			for (String differentOrg : orgs) {
 				if (differentOrg.equals(org)) continue;
@@ -1397,12 +1435,12 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 			JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg);
 			jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, jobDetail,"FINISHED", 5*1000, 1);
 		} else {
+			// more info at Bug 1262435 -  available service levels from subscription pools that have expired are not getting purged
+			Assert.assertEquals(servertasks.getConfFileParameter(servertasks.defaultConfigFile, "pinsetter.org.candlepin.pinsetter.tasks.ExpiredPoolsJob.schedule"),"0 0/2 * * * ?", "This test assumes a configuration setting for candlepin.conf parameter pinsetter.org.candlepin.pinsetter.tasks.ExpiredPoolsJob.schedule to run every two minutes.");
 			// wait 2 minutes for the candlepin ExpiredPoolsJob to execute
 			sleep(2*60*1000);
 			// assume /etc/candlepin/candlepin.conf setting pinsetter.org.candlepin.pinsetter.tasks.ExpiredPoolsJob.schedule=0 0/2 * * * ?
-			log.info("Waiting 2 minutes for the candlepin ExpiredPoolsJob to execute.  This assumes candlepin.conf pinsetter.org.candlepin.pinsetter.tasks.ExpiredPoolsJob.schedule=0 0/2 * * * ?");
-			
-			// more info at Bug 1262435 -  available service levels from subscription pools that have expired are not getting purged
+			log.info("Waiting 2 minutes for the candlepin ExpiredPoolsJob to execute.");
 		}
 		
 		// register with the activation key - should fail because the expired pool was the only one that supported the expiredServiceLevel
@@ -1726,7 +1764,9 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		// pluck out (remove) the providedProducts that have an attribute type=MKT products
 		for (int j = 0; j < jsonProvidedProducts.length(); j++) {
 			JSONObject jsonProvidedProduct = (JSONObject) jsonProvidedProducts.get(j);
-			JSONObject jsonProduct = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,"/products/"+jsonProvidedProduct.getString("productId")));
+			String resourcePath = "/products/"+jsonProvidedProduct.getString("productId");
+			if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion,">=","2.0.11")) resourcePath = jsonPool.getJSONObject("owner").getString("href")+resourcePath;	// starting with candlepin-2.0.11 /products/<ID> are requested by /owners/<KEY>/products/<ID> OR /products/<UUID>
+			JSONObject jsonProduct = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,resourcePath));
 			JSONArray jsonAttributes = jsonProduct.getJSONArray("attributes");
 			for (int k = 0; k < jsonAttributes.length(); k++) {
 				JSONObject jsonAttribute = (JSONObject) jsonAttributes.get(k);

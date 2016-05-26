@@ -870,6 +870,19 @@
 		</groups>
 	</test>
 	
+	<test name="CLI: SKULevelContentOverride Tests">
+		<packages>
+			<package name="rhsm.cli.tests" />
+		</packages>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="SKULevelContentOverrideTests" />
+				<include name="cleanup" />
+			</run>
+		</groups>
+	</test>
+	
 	<test name="CLI: SELinux Tests">
 		<packages>
 			<package name="rhsm.cli.tests" />

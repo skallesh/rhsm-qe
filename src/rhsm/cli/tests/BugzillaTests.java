@@ -16,10 +16,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 import org.apache.xmlrpc.XmlRpcException;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -39,7 +37,6 @@ import com.redhat.qe.auto.testng.TestNGUtils;
 
 import rhsm.base.CandlepinType;
 import rhsm.base.ConsumerType;
-import rhsm.base.SubscriptionManagerBaseTestScript;
 import rhsm.base.SubscriptionManagerCLITestScript;
 import rhsm.cli.tasks.CandlepinTasks;
 import rhsm.cli.tasks.SubscriptionManagerTasks;
@@ -82,7 +79,24 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	List<String> providedProducts = new ArrayList<String>();
 	protected List<File> entitlementCertFiles = new ArrayList<File>();
 	protected final String importCertificatesDir1 = "/tmp/sm-importV1CertificatesDir".toLowerCase();
+	SSHCommandRunner sshCommandRunner=null;
 
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	@Test(	description="verify Product certs not be generated with a tag value of None ",
+			groups={"VerifyProductCertWithNoneTag","blockedByBug-955824"},
+			enabled=true)
+	public void VerifyProductCertWithNoneTag() throws Exception {
+		String baseProductsDir="/usr/share/rhsm/product/RHEL-"+clienttasks.redhatReleaseX;
+		for (ProductCert productCert : clienttasks.getProductCerts(baseProductsDir)) {
+			Assert.assertFalse(productCert.productNamespace.providedTags.equals("None"));
+		}
+	
+	}
+	
 
 	/**
 	 * @author skallesh
@@ -286,6 +300,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@SuppressWarnings("deprecation")
 	@Test(	description="verify if update facts button won't recreate facts.json file",
 			groups={"VerifyFactsFileExistenceAfterUpdate","blockedByBug-627707"},
 			enabled=true)
@@ -827,7 +842,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		client.runCommandAndWait("useradd "+username);
 		//client.runCommandAndWait("echo "+passwords+" | passwd "+username + " --stdin");
 	//	String result=client.runCommandAndWait("su - "+username+" -c subscription-manager").getStderr();
-
 	//	client.runCommandAndWait("su - "+username);
 	//	System.out.println(result + "is the result");
 		String expectedMessage="Error: this command requires root access to execute";
@@ -1573,22 +1587,12 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		JSONObject jsonContentResource;
 		String requestBody = CandlepinTasks.createContentRequestBody("fooname", contentId, "foolabel", "yum", "Foo Vendor", "/foo/path", "/foo/path/gpg", null, null, null, modifiedProductIds).toString();
 		String resourcePath = "/content/";
-//		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) resourcePath = "/owners/"+sm_clientOrg+resourcePath;
-//Why?	CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,resourcePath, requestBody);	
 		resourcePath = "/content/"+contentId;
-//		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) resourcePath = "/owners/"+sm_clientOrg+resourcePath;
-//Why?		jsonContentResource = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, resourcePath));
 		String contentWithIdMessage = "Content with id "+contentId+" could not be found.";
 		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.7")) contentWithIdMessage = "Content with ID \""+contentId+"\" could not be found.";	// commit 6b63e346c61789837211828043ad9576a756d0e8
-		
-//Why?	Assert.assertContainsNoMatch(jsonActivationKey.toString(), contentWithIdMessage);
-		resourcePath = "/content/"+contentId;
+ 		resourcePath = "/content/"+contentId;
 		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) resourcePath = "/owners/"+sm_clientOrg+resourcePath;
 		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, resourcePath);
-		/* restart_rhsmcertd has nothing to do with testing the ability to DELETE a content resource
-		clienttasks.restart_rhsmcertd(null, null, null);
-		sleep(2*60*1000);
-		 */
 		resourcePath = "/content/"+contentId;
 		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) resourcePath = "/owners/"+sm_clientOrg+resourcePath;
 		jsonContentResource = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, resourcePath));
@@ -2372,7 +2376,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		restoreProductCerts();
 		Assert.assertEquals(InstalledProducts.trim(), "No installed products to list");
 		String tailFromMarkedFile = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, LogMarker, null);
-		Assert.assertFalse(doesStringContainMatches(tailFromMarkedFile, "Error"),"'Error' messages in rhsm.log");	// "Error while updating certificates" should NOT be in the rhsm.log
+		//Assert.assertFalse(doesStringContainMatches(tailFromMarkedFile, "Error"),"'Error' messages in rhsm.log");	// "Error while updating certificates" should NOT be in the rhsm.log
+		Assert.assertFalse(doesStringContainMatches(tailFromMarkedFile, "Error while updating certificates using daemon"),"'Error' messages in rhsm.log");	// "Error while updating certificates" should NOT be in the rhsm.log
 		Assert.assertTrue(doesStringContainMatches(tailFromMarkedFile, "Installed product IDs: \\[\\]"), "'Installed product IDs:' list is empty in rhsm.log");
 		Assert.assertTrue(doesStringContainMatches(tailFromMarkedFile, "certs updated:"),"'certs updated:' in rhsm.log");
 	}
@@ -3004,7 +3009,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		int j = randomGenerator.nextInt(serialnums.size());
 		if (i == j) {
 			j = randomGenerator.nextInt(serialnums.size());
-
 		}
  */
 		BigInteger serialOne = serialnums.get(randomGenerator.nextInt(serialnums.size()));	// serialnums.get(i);
@@ -3273,9 +3277,12 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				sm_basicauthproxyPort);
 		basicauthproxyUrl = basicauthproxyUrl.replaceAll(":$", "");
 		SSHCommandResult factsResult = clienttasks.facts_(null, true, basicauthproxyUrl, null,null);
-		String Expect = clienttasks.msg_NetworkErrorUnableToConnect;
-		Expect = "Error updating system data on the server, see /var/log/rhsm/rhsm.log for more details.";	// jsefler 6/17/2014 - the expected error message changed to this value.  Could not find a bugzilla/commit to blame this change.
-		Assert.assertEquals(factsResult.getStdout()+factsResult.getStderr().trim(), Expect);
+		String factsResultExpected = clienttasks.msg_NetworkErrorUnableToConnect;
+		factsResultExpected = "Error updating system data on the server, see /var/log/rhsm/rhsm.log for more details.";	// jsefler 6/17/2014 - the expected error message changed to this value.  Could not find a bugzilla/commit to blame this change.
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.17.6-1")) {	// post commit 7ce6801fc1cc38edcdeb75dfb5f0d1f8a6398c68	1301215: Test proxy connection before making call
+			factsResultExpected = clienttasks.msg_ProxyConnectionFailed;
+		}
+		Assert.assertEquals(factsResult.getStdout().trim()+factsResult.getStderr().trim(), factsResultExpected);
 	}
 
 	/**
@@ -4013,7 +4020,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	public void VerifyRhsmLogsProvidedProducts_Test() {
 		/* re-implementing this test...
 		Boolean actual = true;
-
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
@@ -4025,7 +4031,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				actual =false;
 				clienttasks.subscribe_(null, null, pool.poolId, null, null,
 						null, null, null, null, null, null);
-
 			}
 			}
 		if(actual==false){
@@ -4129,41 +4134,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(assertedFutureSubscriptionIsNowSubscribed,"Verified at least one previously installed product covered by a Future Subscription is now covered by a current subscription after auto-subscribing.");
 	}
 
-/* DELETEME: No need to override these methods from the super class
-	protected Calendar parseISO8601DateString(String dateString, String timeZone) {
-		String iso8601DatePattern = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
-		String datePattern = iso8601DatePattern;
-		if (timeZone == null)
-			datePattern = datePattern.replaceFirst("Z$", ""); // strip off final
-		// timezone
-		// offset symbol
-		// from
-		// iso8601DatePattern
-		return parseDateStringUsingDatePattern(dateString, datePattern,
-				timeZone);
-	}
-
-	protected Calendar parseDateStringUsingDatePattern(String dateString,
-			String datePattern, String timeZone) {
-		try {
-			DateFormat dateFormat = new SimpleDateFormat(datePattern); // format="yyyy-MM-dd'T'HH:mm:ss.SSSZ"
-			// will
-			// parse
-			// dateString="2012-02-08T00:00:00.000+0000"
-			if (timeZone != null)
-				dateFormat.setTimeZone(TimeZone.getTimeZone(timeZone)); // timeZone="GMT"
-			Calendar calendar = new GregorianCalendar();
-			calendar.setTimeInMillis(dateFormat.parse(dateString).getTime());
-			return calendar;
-		} catch (ParseException e) {
-			log.warning("Failed to parse " + (timeZone == null ? "" : timeZone)
-					+ " date string '" + dateString + "' with format '"
-					+ datePattern + "':\n" + e.getMessage());
-			return null;
-		}
-	}
-*/
-	
 	/**
 	 * @author skallesh
 	 * @throws Exception
@@ -4271,17 +4241,12 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		}
 	}
 
-	@BeforeGroups(groups = "setup", value = { /*"VerifyDistinct",*/
-			/*"VerifyStatusForPartialSubscription",*/ /*"AutoHeal",*/
-			/*"AutoHealFailForSLA",*/ /*"VerifyautosubscribeTest",*/
-			/* "BugzillaTests", CAUSES THIS TO RUN BEFORE THE CLASS; NOT WHAT WE WANTED */ /*"autohealPartial",*/
-	/*"VerifyEntitlementStartDate_Test",*/ /*"reregister"*/ }, enabled = true)
+	@BeforeGroups(groups = "setup", value = {}, enabled = true)
 	public void unsubscribeBeforeGroup() {
 		clienttasks.unsubscribe(true, (BigInteger) null, null, null, null, null);
 	}
 
-	@BeforeGroups(groups = "setup", value = { /*"VerifyDistinct",*/ /*"AutoHeal",*/
-	/*"autohealPartial",*/ /*"BugzillaTests" CAUSES THIS TO RUN BEFORE THE CLASS; NOT WHAT WE WANTED */ }, enabled = true)
+	@BeforeGroups(groups = "setup", value = {}, enabled = true)
 	public void unsetServicelevelBeforeGroup() {
 		clienttasks.service_level_(null, null, null, true, null, null, null,
 				null, null, null, null, null);
@@ -4289,9 +4254,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 
 
 
-	@BeforeGroups(groups = "setup", value = { /*"VerifyDistinct",*/ /*"AutoHeal",*/
-			/*"VerifyStatusForPartialSubscription",*/ /*"autohealPartial",*/
-	/*"VerifyEntitlementStartDate_Test",*/ /*"BugzillaTests" CAUSES THIS TO RUN BEFORE THE CLASS; NOT WHAT WE WANTED*/ }, enabled = true)
+	@BeforeGroups(groups = "setup", value = { }, enabled = true)
 	public void setHealFrequencyGroup() {
 		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
 		listOfSectionNameValues.add(new String[] { "rhsmcertd",
@@ -4311,9 +4274,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.config(null, null, true, listOfSectionNameValues);
 	}
 
-	/* this methods looks more like a Test than a BeforeGroups configuration method; changing to a Test...
-	@BeforeGroups(groups = "setup", value = { "BugzillaTests","VerifyEntitlementStartDate_Test","unsubscribeImportedcert" }, enabled = true)
-	 */
 	@Test(	description = "verify that the autoheal attribute of a new system consumer defaults to true",
 			groups = {},
 			enabled = true)
@@ -4323,11 +4283,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				null, null, null, null, (String) null, null, null,
 				null, true, null, null, null, null);
 		String consumerId = clienttasks.getCurrentConsumerId();
-		/* unnecessary; we should be getting the consumer without setting the autoheal attribute
-		JSONObject jsonConsumer = CandlepinTasks.setAutohealForConsumer(
-				sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerId,
-				true);
-		 */
 		JSONObject jsonConsumer = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/consumers/"+consumerId));
 
 		Assert.assertTrue(jsonConsumer.getBoolean("autoheal"),
@@ -4344,14 +4299,11 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	/* this effectively runs BeforeClass since BugzillaTests is tagged to the entire class; this is not what we wanted
-	@BeforeGroups(groups = "setup", value = { "BugzillaTests"}, enabled = true)
-	 */
-	@AfterGroups(groups = {"setup"}, value = {"VerifyRHSMCertdLogging"/*,"AutohealForExpired"*/})
+	
+	@AfterGroups(groups = {"setup"}, value = {"VerifyRHSMCertdLogging"})
 	@AfterClass(groups = "setup")	// called after class for insurance
 	public void restoreConfiguredFrequencies() {
 		if (clienttasks == null) return;
-///*debugTest*/ if (false) // do not run restart_rhsmcertd when debugTesting
 		clienttasks.restart_rhsmcertd(configuredCertFrequency, configuredHealFrequency, null);
 	}
 
@@ -4430,7 +4382,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 
 
 	protected String getEntitlementCertFilesWithPermissions() throws IOException {
-		// client is already instantiated		client = new SSHCommandRunner(sm_clientHostname, sm_sshUser, sm_sshKeyPrivate,sm_sshkeyPassphrase,null);
 		String lsFiles = client.runCommandAndWait(
 				"ls -l " + clienttasks.entitlementCertDir + "/*-key.pem"
 						+ " | cut -d " + "' '" + " -f1,9").getStdout();
@@ -4439,17 +4390,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 
 	protected SSHCommandResult unsubscribeFromMultipleEntitlementsUsingSerialNumber(
 			BigInteger SerialNumOne, BigInteger SerialNumTwo) throws IOException {
-		/* this task is implemented by SubscriptionManagerTasks
-// client is already instantiated		client = new SSHCommandRunner(sm_clientHostname, sm_sshUser, sm_sshKeyPrivate,sm_sshkeyPassphrase,null);
-		String command = clienttasks.command;
-		command += " unsubscribe";
-		if (SerialNumOne != null && SerialNumTwo != null)
-			command += " --serial=" + SerialNumOne + " " + "--serial="
-					+ SerialNumTwo;
-
-		// run command without asserting results
-		return client.runCommandAndWait(command);
-		 */
 		return clienttasks.unsubscribe_(false, Arrays.asList(new BigInteger[]{SerialNumOne,SerialNumTwo}), null, null, null, null);
 	}
 
@@ -4458,7 +4398,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			List<String> productIds, List<String> regtokens, String quantity,
 			String email, String locale, String proxy, String proxyuser,
 			String proxypassword) throws IOException {
-		// client is already instantiated		client = new SSHCommandRunner(sm_clientHostname, sm_sshUser, sm_sshKeyPrivate,sm_sshkeyPassphrase,null);
+		// client is already instantiated
 		String command = clienttasks.command;
 		command += " subscribe";
 		if (poolIdOne != null && poolIdTwo != null)
@@ -4542,7 +4482,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 						log.warning("Could NOT find a unique available package from repo '"+repoLabel+"' after subscribing to SubscriptionPool: "+pool);
 					}
 
-					// String availableGroup, String installedGroup, String repoLabel, SubscriptionPool pool
 					ll.add(Arrays.asList(new Object[]{pkg, repoLabel, pool}));
 				}
 			}
@@ -4563,62 +4502,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 */
 	protected String createTestPool(int startingMinutesFromNow, int endingMinutesFromNow) throws JSONException, Exception  {	
-		/* already implemented; calling CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(...)
-
-		Calendar startCalendar = new GregorianCalendar();
-		startCalendar.add(Calendar.MINUTE, endingMinutesFromNow);
-		Date endDate = startCalendar.getTime();
-		startCalendar.add(Calendar.MINUTE, startingMinutesFromNow);
-		Date startDate = startCalendar.getTime();
-
-		// randomly choose a contract number
-		Integer contractNumber = Integer.valueOf(getRandInt());
-
-		// randomly choose an account number
-		Integer accountNumber = Integer.valueOf(getRandInt());
-
-
-		String productId = randomAvailableProductId;
-
-		providedProducts.add("100000000000002");
-
-		// create the subscription
-		String requestBody = CandlepinTasks.createSubscriptionRequestBody(3, startDate, endDate, productId, contractNumber, accountNumber, providedProducts).toString();
-		JSONObject jsonSubscription = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/owners/" + ownerKey + "/subscriptions", requestBody));
-
-		// refresh the pools
-		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, ownerKey);
-		jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,jobDetail,"FINISHED", 5*1000, 1);
-
-		// assemble an activeon parameter set to the start date so we can pass it on to the REST API call to find the created pool
-		DateFormat iso8601DateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");	
-
-		// "2012-02-08T00:00:00.000+0000"
-		String iso8601FormatedDateString = iso8601DateFormat.format(startDate);
-		iso8601FormatedDateString = iso8601FormatedDateString.replaceFirst("(..$)", ":$1");	
-
-
-		// "2012-02-08T00:00:00.000+00:00"	// see https://bugzilla.redhat.com/show_bug.cgi?id=720493 // http://books.xmlschemata.org/relaxng/ch19-77049.html requires a colon in the time zone for xsd:dateTime
-		String urlEncodedActiveOnDate = java.net.URLEncoder.encode(iso8601FormatedDateString, "UTF-8");	// "2012-02-08T00%3A00%3A00.000%2B00%3A00"	encode the string to escape the colons and plus signs so it can be passed as a parameter on an http call
-
-		// loop through all pools available to owner and find the newly created poolid corresponding to the new subscription id activeon startDate
-		String poolId = null;
-		String subscriptionId=null;
-		JSONArray jsonPools = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,"/owners/"+ownerKey+"/pools"+"?activeon="+urlEncodedActiveOnDate));	
-		for (int i = 0; i < jsonPools.length(); i++) {
-			JSONObject jsonPool = (JSONObject) jsonPools.get(i);
-			//if (contractNumber.equals(jsonPool.getInt("contractNumber"))) {
-			if (jsonPool.getString("subscriptionId").equals(jsonSubscription.getString("id"))) {
-
-				poolId = jsonPool.getString("id");
-				break;
-			}
-		}
-		Assert.assertNotNull(poolId,"Found newly created pool corresponding to the newly created subscription with id: "+jsonSubscription.getString("id"));
-		log.info("The newly created subscription pool with id '"+poolId+"' will start '"+startingMinutesFromNow+"' minutes from now.");
-		log.info("The newly created subscription pool with id '"+poolId+"' will expire '"+endingMinutesFromNow+"' minutes from now.");
-		return poolId; // return poolId to the newly available SubscriptionPool
-		 */
 		return CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, ownerKey, 3, startingMinutesFromNow, endingMinutesFromNow, getRandInt(), getRandInt(), randomAvailableProductId, null,null).getString("id");
 	}
 
@@ -4687,7 +4570,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		if (!pools.isEmpty()) {
 			SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); 
 			randomAvailableProductId = pool.productId;
-///*debugTesting*/randomAvailableProductId = "awesomeos-everything";
 		}
 	}
 
@@ -4696,16 +4578,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		return json.get(jsonName);
 	}
 
-	/* Do not set the server and servertasks.  They should already be set by setupBeforeSuite().
-	 * If they are not set (equal to null), then you are probably testing against the stage
-	 * or production server to which we cannot establish an ssh connection
-	@BeforeClass(groups = "setup")
-	public void SetServerTasks() throws Exception {
-	server = new SSHCommandRunner(sm_serverHostname, sm_sshUser, sm_sshKeyPrivate, sm_sshkeyPassphrase, null);
-	servertasks = new rhsm.cli.tasks.CandlepinTasks(server,sm_serverInstallDir,sm_serverImportDir,sm_serverType,sm_serverBranch);
-	}
-	 */
-	
 	
 	
 	// THE FOLLOWING BEFORE AND AFTER CLASS METHODS ARE USED TO ELIMINATE

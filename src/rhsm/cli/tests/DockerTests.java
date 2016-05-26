@@ -237,18 +237,29 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 		if (!clienttasks.arch.equals("x86_64")) throw new SkipException("Installation of docker.rpm is only applicable on arch x86_64");
 		
 		// install the requested docker packages
-		// old way of installing docker
-		if (false) clienttasks.installSubscriptionManagerRPMs(sm_dockerRpmInstallUrls, null, sm_yumInstallOptions);
-		// new way of installing docker
-		List<String> dockerRpmInstallUrls = new ArrayList<String>();
-		dockerRpmInstallUrls.add(runLocalCommand("./scripts/get-brew-rpm docker --rpmname=docker-selinux --release=el7 --regress --arch="+clienttasks.arch).getStdout());
-		dockerRpmInstallUrls.add(runLocalCommand("./scripts/get-brew-rpm docker --rpmname=docker         --release=el7 --regress --arch="+clienttasks.arch).getStdout());
-		clienttasks.installSubscriptionManagerRPMs(dockerRpmInstallUrls, null, sm_yumInstallOptions);
+		// good way of installing docker
+		if (false) {
+			clienttasks.installSubscriptionManagerRPMs(sm_dockerRpmInstallUrls, null, sm_yumInstallOptions);
+		}
+		// better way of installing docker
+		if (false) {
+			List<String> dockerRpmInstallUrls = new ArrayList<String>();
+			dockerRpmInstallUrls.add(runLocalCommand("./scripts/get-brew-rpm docker --rpmname=docker-selinux --release=el7 --regress --arch="+clienttasks.arch).getStdout());
+			dockerRpmInstallUrls.add(runLocalCommand("./scripts/get-brew-rpm docker --rpmname=docker         --release=el7 --regress --arch="+clienttasks.arch).getStdout());
+			clienttasks.installSubscriptionManagerRPMs(dockerRpmInstallUrls, null, sm_yumInstallOptions);
+		}
+		// best way of installing docker (get it from a RHEL subscription)
+		clienttasks.register(sm_client1Username, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, true, null, null, null, null);
+		if (clienttasks.isRhelProductCertSubscribed()) {
+			if (clienttasks.isPackageInstalled("docker")) {
+				//clienttasks.yumUpdatePackageFromRepo("docker", "rhel-7-server-extras-rpms", "--nogpgcheck");
+				//avoid "No packages marked for update" by ignoring results of yumUpdatePackageFromRepo(...)
+				clienttasks.yumDoPackageFromRepo_("update","docker", "rhel-7-server-extras-rpms", "--nogpgcheck");
 
-//TODO This may be the best way to install docker
-// register and autosubscribe to a RHEL7 subscription
-// yum install docker --enablerepo=rhel-7-server-extras-rpms --nogpgcheck
-// might have trouble with this...  use --no-gpgcheck
+			} else {
+				clienttasks.yumInstallPackageFromRepo("docker", "rhel-7-server-extras-rpms", "--nogpgcheck");
+			}
+		}
 		
 		// assert the docker version is >= 1.0.0-2
 		Assert.assertTrue(clienttasks.isPackageVersion("docker", ">=", "1.0.0-2"), "Expecting docker version to be >= 1.0.0-2 (first RHSM compatible version of docker).");

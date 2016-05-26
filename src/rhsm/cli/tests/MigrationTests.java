@@ -1898,8 +1898,42 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(clienttasks.identity(null, null, null, null, null, null, null).getStdout().trim(),"server type: RHN Classic","Subscription Manager recognizes that we are registered classically.");
 
 		// subscribe to more RHN Classic channels (just to add a little unnecessary fun)
-		addRhnClassicChannels(sm_rhnUsername, sm_rhnPassword, getRandomSubsetOfList(rhnAvailableChildChannels, 1));	// only add 1 child channel to avoid "You are subscribed to channels that have conflicting product certificates."
+		List<String> filteredRhnAvailableChildChannels = new ArrayList<String>(rhnAvailableChildChannels);
+		// Avoid adding beta child channels since they map to a different product cert and can cause the following...
+		//	+-----------------------------------------------------+
+		//	Unable to continue migration!
+		//	+-----------------------------------------------------+
+		//	You are subscribed to channels that have conflicting product certificates.
+		//	The following channels map to product ID 69:
+		//	rhel-x86_64-server-7
+		//	rhel-x86_64-server-optional-7-beta
+		//	Reduce the number of channels per product ID to 1 and run migration again.
+		//	To remove a channel, use 'rhn-channel --remove --channel=<conflicting_channel>'.
+///*debugTesting*/		addRhnClassicChannels(sm_rhnUsername, sm_rhnPassword, Arrays.asList("rhel-x86_64-server-optional-7-beta"));	// only add 1 child channel to avoid "You are subscribed to channels that have conflicting product certificates."
+		for (String rhnAvailableChildChannel : rhnAvailableChildChannels) {
+			if (rhnAvailableChildChannel.contains("-beta")) {
+				filteredRhnAvailableChildChannels.remove(rhnAvailableChildChannel);
+			}
+		}
+		// Avoid adding unmapped child channels since they can cause the following...
+		//	+-----------------------------------------------------+
+		//	No product certificates are mapped to these legacy channels:
+		//	+-----------------------------------------------------+
+		//	rhel-x86_64-server-v2vwin-7-beta-debuginfo
+		//	
+		//	Use --force to ignore these channels and continue the migration.
+///*debugTesting*/		addRhnClassicChannels(sm_rhnUsername, sm_rhnPassword, Arrays.asList("rhel-x86_64-server-v2vwin-7-beta-debuginfo"));
+		for (String rhnAvailableChildChannel : rhnAvailableChildChannels) {
+			if (!channelsToProductCertFilenamesMap.containsKey(rhnAvailableChildChannel)) {
+				filteredRhnAvailableChildChannels.remove(rhnAvailableChildChannel);
+			}
+		}
+		addRhnClassicChannels(sm_rhnUsername, sm_rhnPassword, getRandomSubsetOfList(/*rhnAvailableChildChannels*/filteredRhnAvailableChildChannels, 1));	// only add 1 child channel to avoid "You are subscribed to channels that have conflicting product certificates."
+
 		
+
+
+
 		// attempt to run rhn-migrate-classic-to-rhsm
 		SSHCommandResult sshCommandResult = executeRhnMigrateClassicToRhsm(keepOption+" "+"--destination-url="+originalServerHostname+":"+originalServerPort+originalServerPrefix, null, null, sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null);
 		//	[root@jsefler-os6 ~]# rhn-migrate-classic-to-rhsm --registration-state=keep --destination-url=subscription.rhn.stage.redhat.com:443/subscription
