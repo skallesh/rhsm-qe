@@ -61,7 +61,10 @@ import com.redhat.qe.tools.SSHCommandResult;
  *     https://bugzilla.redhat.com/show_bug.cgi?id=1329349#c4
  *     https://bugzilla.redhat.com/show_bug.cgi?id=1329349#c5
  * 
- * 
+ * Reference Bugs:
+ *   Bug 1184940 - Subscription Manager Container Plugin Requires Config / CA Cert Update
+ *   Bug 1186386 - Docker unable to pull from CDN due to CA failure
+ *   Bug 1328729 - Docker client doesn't link entitlements certs
  */
 @Test(groups={"DockerTests","Tier3Tests"})
 public class DockerTests extends SubscriptionManagerCLITestScript {
