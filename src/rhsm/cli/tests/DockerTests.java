@@ -249,7 +249,7 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 			clienttasks.installSubscriptionManagerRPMs(dockerRpmInstallUrls, null, sm_yumInstallOptions);
 		}
 		// best way of installing docker (get it from a RHEL subscription)
-		clienttasks.register(sm_client1Username, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, true, null, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, true, null, null, null, null);
 		if (clienttasks.isRhelProductCertSubscribed()) {
 			if (clienttasks.isPackageInstalled("docker")) {
 				//clienttasks.yumUpdatePackageFromRepo("docker", "rhel-7-server-extras-rpms", "--nogpgcheck");
