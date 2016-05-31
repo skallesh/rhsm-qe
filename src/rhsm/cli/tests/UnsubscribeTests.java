@@ -50,19 +50,13 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="Unsubscribe product entitlement and re-subscribe",
-			groups={"blockedByBug-584137", "blockedByBug-602852", "blockedByBug-873791","blockedByBug-979492"},
+			groups={"blockedByBug-584137","blockedByBug-602852","blockedByBug-873791","blockedByBug-979492"},
 			//dataProvider="getAllConsumedProductSubscriptionsData",	// 06/04/2014 takes too long; rarely reveals a bug
 			dataProvider="getRandomSubsetOfConsumedProductSubscriptionsData",
 			enabled=true)
 	@ImplementsNitrateTest(caseId=41898)
 	public void ResubscribeAfterUnsubscribe_Test(ProductSubscription productSubscription) throws Exception{
-//		sm.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
-//		sm.unsubscribeFromEachOfTheCurrentlyConsumedProductSubscriptions();
-//		sm.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
-		
-//		// first make sure we are subscribed to all pools
-//		sm.register(username,password,null,null,null,null);
-//		sm.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
+///*debugTesting*/if (!productSubscription.productId.equals("awesomeos-unlimited-quantity")) throw new SkipException("debugTesting");
 		
 		// now loop through each consumed product subscription and unsubscribe/re-subscribe
 		SubscriptionPool pool = clienttasks.getSubscriptionPoolFromProductSubscription(productSubscription,sm_clientUsername,sm_clientPassword);

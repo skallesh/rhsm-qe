@@ -21,6 +21,7 @@ import org.testng.annotations.Test;
 
 import rhsm.base.SubscriptionManagerCLITestScript;
 import rhsm.cli.tasks.CandlepinTasks;
+import rhsm.cli.tasks.SubscriptionManagerTasks;
 import rhsm.data.EntitlementCert;
 import rhsm.data.ProductSubscription;
 import rhsm.data.RevokedCert;
@@ -327,7 +328,7 @@ public class CRLTests extends SubscriptionManagerCLITestScript{
 	 * @param endDate
 	 * @throws SQLException 
 	 */
-	protected void updateSubscriptionPoolDatesOnDatabase(SubscriptionPool pool, Calendar startDate, Calendar endDate) throws SQLException {
+	protected void updateSubscriptionPoolDatesOnDatabase_PRIOR_CANDLEPIN_2(SubscriptionPool pool, Calendar startDate, Calendar endDate) throws SQLException {
 		//DateFormat dateFormat = new SimpleDateFormat(CandlepinAbstraction.dateFormat);
 		String updateSubscriptionPoolEndDateSql = "";
 		String updateSubscriptionPoolStartDateSql = "";
@@ -337,13 +338,17 @@ public class CRLTests extends SubscriptionManagerCLITestScript{
 			updateSubscriptionPoolEndDateSql = "update cp_subscription set enddate='"+AbstractCommandLineData.formatDateString(endDate)+"' where id=(select pool.subscriptionid from cp_pool pool where pool.id='"+pool.poolId+"');";	// valid prior to candlepin commit 86afa233b2fef2581f6eaa4e68a6eca1d4a657a0
 			updateSubscriptionPoolEndDateSql = "update cp_subscription set enddate='"+AbstractCommandLineData.formatDateString(endDate)+"' where id=(select subscriptionid from cp_pool_source_sub where pool_id='"+pool.poolId+"');";
 			updateSubscriptionPoolEndDateSql = "update cp_subscription set enddate='"+formatter.format(endDate.getTime())+"' where id=(select subscriptionid from cp_pool_source_sub where pool_id='"+pool.poolId+"');";
-//			updateSubscriptionPoolEndDateSql = "update cp_subscription set enddate=? where id=(select subscriptionid from cp_pool_source_sub where pool_id=?);";
+			if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">", "2.0.2-1")) {	// candlepin commit 957f5dcc2e47c88973f86317ed32033ad1c4f92f
+				updateSubscriptionPoolEndDateSql = String.format("UPDATE cp_pool SET enddate='%s' WHERE id = (SELECT pool_id FROM cp2_pool_source_sub WHERE subscription_sub_key = 'master' AND subscription_id = (SELECT subscription_id FROM cp2_pool_source_sub WHERE pool_id = '%s'))",formatter.format(endDate.getTime()),pool.poolId);
+			}
 		}
 		if (startDate!=null) {
 			updateSubscriptionPoolStartDateSql = "update cp_subscription set startdate='"+AbstractCommandLineData.formatDateString(startDate)+"' where id=(select pool.subscriptionid from cp_pool pool where pool.id='"+pool.poolId+"');";	// valid prior to candlepin commit 86afa233b2fef2581f6eaa4e68a6eca1d4a657a0
 			updateSubscriptionPoolStartDateSql = "update cp_subscription set startdate='"+AbstractCommandLineData.formatDateString(startDate)+"' where id=(select subscriptionid from cp_pool_source_sub where pool_id='"+pool.poolId+"');";
 			updateSubscriptionPoolStartDateSql = "update cp_subscription set startdate='"+formatter.format(startDate.getTime())+"' where id=(select subscriptionid from cp_pool_source_sub where pool_id='"+pool.poolId+"');";
-//			updateSubscriptionPoolStartDateSql = "update cp_subscription set startdate=? where id=(select subscriptionid from cp_pool_source_sub where pool_id=?);";
+			if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">", "2.0.2-1")) {	// candlepin commit 957f5dcc2e47c88973f86317ed32033ad1c4f92f
+				updateSubscriptionPoolStartDateSql = String.format("UPDATE cp_pool SET startdate='%s' WHERE id = (SELECT pool_id FROM cp2_pool_source_sub WHERE subscription_sub_key = 'master' AND subscription_id = (SELECT subscription_id FROM cp2_pool_source_sub WHERE pool_id = '%s'))",formatter.format(startDate.getTime()),pool.poolId);
+			}
 		}
 		
 		Statement sql = dbConnection.createStatement();
@@ -391,7 +396,11 @@ public class CRLTests extends SubscriptionManagerCLITestScript{
 			sql = dbConnection1.createStatement();
 			String getSubscriptionPoolEndDateSql = String.format("select %s from cp_subscription where id=(select subscriptionid from cp_pool where id='%s');", field, pool.poolId);		// valid prior to candlepin commit 86afa233b2fef2581f6eaa4e68a6eca1d4a657a0
 			       getSubscriptionPoolEndDateSql = String.format("select %s from cp_subscription where id=(select subscriptionid from cp_pool_source_sub where pool_id='%s');", field, pool.poolId);
-			sql.execute(getSubscriptionPoolEndDateSql);
+			if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">", "2.0.2-1")) {	// candlepin commit 957f5dcc2e47c88973f86317ed32033ad1c4f92f
+				getSubscriptionPoolEndDateSql = String.format("SELECT %s from cp_pool WHERE id = (SELECT pool_id FROM cp2_pool_source_sub WHERE subscription_sub_key = 'master' AND subscription_id = (SELECT subscription_id FROM cp2_pool_source_sub WHERE pool_id = '%s'))", field, pool.poolId);	
+			}
+			log.fine("Executing SQL: "+getSubscriptionPoolEndDateSql);
+	        sql.execute(getSubscriptionPoolEndDateSql);
 			ResultSet resultSet = sql.getResultSet();
 			if (resultSet.next()) {
 				java.text.SimpleDateFormat formatter = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");

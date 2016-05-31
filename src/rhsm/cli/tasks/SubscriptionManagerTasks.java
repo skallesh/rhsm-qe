@@ -2548,6 +2548,7 @@ if (false) {
 			String productId = jsonPool.getString("productId");
 			String poolId = jsonPool.getString("id");
 			String quantity = Integer.toString(jsonPool.getInt("quantity"));	// = jsonPool.getString("quantity");
+			if (jsonPool.getInt("quantity")<0)  quantity = "Unlimited";	// a pool quantity of -1 provided unlimited entitlements
 			String endDate = jsonPool.getString("endDate");
 			Boolean multiEntitlement = CandlepinTasks.isPoolProductMultiEntitlement(username,password, candlepinUrl, poolId);
 			SubscriptionPool fromPool = new SubscriptionPool(subscriptionName,productId,poolId,quantity,null,multiEntitlement,endDate);
@@ -5326,7 +5327,7 @@ if (false) {
 		}
 		
 
-		// assert that the remaining SubscriptionPools does NOT contain the pool just subscribed too (unless it is multi-entitleable)
+		// assert that the remaining SubscriptionPools does NOT contain the pool just subscribed to (unless it is multi-entitleable)
 		List<SubscriptionPool> afterSubscriptionPools = getCurrentlyAvailableSubscriptionPools();
 	    if (pool.subscriptionType!=null && pool.subscriptionType.equals("Other") ) {
 	    	Assert.fail("Encountered a subscription pool of type '"+pool.subscriptionType+"'.  Do not know how to assert the remaining availability of this pool after subscribing to it: "+pool);
@@ -5347,7 +5348,7 @@ if (false) {
 					"When the pools product attribute arch '"+poolProductAttributeArch+"' does not support this system arch '"+arch+"', the remaining available subscription pools should never contain the just subscribed to pool: "+pool);
 		} else {
 			Assert.assertTrue(afterSubscriptionPools.contains(pool),
-					"When the pool is multi-entitleable, the remaining available subscription pools still contains the just subscribed to pool: "+pool+" (if this fails, then we likely attached the final entitlements from the pool)");	// TODO fix the assertions for "if this fails"
+					"When the pool is multi-entitleable, the remaining available subscription pools still contains the just subscribed to pool: "+pool+" (TODO: if this fails, then we likely attached the final entitlements from the pool)");	// TODO fix the assertions for "if this fails"
 		}
 		
 		// assert that the remaining SubscriptionPools do NOT contain the same productId just subscribed to

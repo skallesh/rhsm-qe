@@ -61,7 +61,10 @@ import com.redhat.qe.tools.SSHCommandResult;
  *     https://bugzilla.redhat.com/show_bug.cgi?id=1329349#c4
  *     https://bugzilla.redhat.com/show_bug.cgi?id=1329349#c5
  * 
- * 
+ * Reference Bugs:
+ *   Bug 1184940 - Subscription Manager Container Plugin Requires Config / CA Cert Update
+ *   Bug 1186386 - Docker unable to pull from CDN due to CA failure
+ *   Bug 1328729 - Docker client doesn't link entitlements certs
  */
 @Test(groups={"DockerTests","Tier3Tests"})
 public class DockerTests extends SubscriptionManagerCLITestScript {
@@ -249,7 +252,7 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 			clienttasks.installSubscriptionManagerRPMs(dockerRpmInstallUrls, null, sm_yumInstallOptions);
 		}
 		// best way of installing docker (get it from a RHEL subscription)
-		clienttasks.register(sm_client1Username, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, true, null, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, true, null, null, null, null);
 		if (clienttasks.isRhelProductCertSubscribed()) {
 			if (clienttasks.isPackageInstalled("docker")) {
 				//clienttasks.yumUpdatePackageFromRepo("docker", "rhel-7-server-extras-rpms", "--nogpgcheck");
