@@ -255,14 +255,14 @@
   "Asserts that you can't click the register button multiple times
    and open multiple register dialogs"
   [_]
-  (if (not (tasks/ui showing? :register-system))
-    (tasks/unregister))
   (verify (not-nil? (some #{"enabled"} (tasks/ui getallstates :register-system))))
   (tasks/ui click :register-system)
   (verify (nil? (some #{"enabled"} (tasks/ui getallstates :register-system))))
   (tasks/ui click :register-system)
+  (tasks/ui click :register-system)
   (verify (apply distinct? (filter #(substring? "Registration" %) (tasks/ui getwindowlist))))
-  (tasks/ui click :register-close))
+  (tasks/ui click :register-close)
+  )
 
 (defn ^{Test {:groups ["registration"
                        "tier2"
