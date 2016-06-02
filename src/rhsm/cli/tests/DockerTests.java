@@ -244,14 +244,23 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 		if (false) {
 			clienttasks.installSubscriptionManagerRPMs(sm_dockerRpmInstallUrls, null, sm_yumInstallOptions);
 		}
-		// better way of installing docker
-		if (false) {
-			List<String> dockerRpmInstallUrls = new ArrayList<String>();
-			dockerRpmInstallUrls.add(runLocalCommand("./scripts/get-brew-rpm docker --rpmname=docker-selinux --release=el7 --regress --arch="+clienttasks.arch).getStdout());
-			dockerRpmInstallUrls.add(runLocalCommand("./scripts/get-brew-rpm docker --rpmname=docker         --release=el7 --regress --arch="+clienttasks.arch).getStdout());
-			clienttasks.installSubscriptionManagerRPMs(dockerRpmInstallUrls, null, sm_yumInstallOptions);
+		
+		// better way of installing docker (useful on static clients)
+		if (!clienttasks.isPackageInstalled("docker")) {
+			SSHCommandResult localCommandResult = runLocalCommand("rpm -q python-BeautifulSoup");	// Prerequisite on slave: sudo yum install python-BeautifulSoup
+			if (!localCommandResult.getExitCode().equals(Integer.valueOf(0))) Assert.fail("python-BeautifulSoup must be installed on the executing slave in order to run .scripts/get-brew-rpm to install docker from brew.   localCommandResult: "+localCommandResult);
 		}
-		// best way of installing docker (get it from a RHEL subscription)
+		List<String> dockerRpmInstallUrls = new ArrayList<String>();
+		/* no need to install the latest and greatest docker because it has a growing number of dependencies that I cannot keep track of (we'll let yum update get the latest released version from a RHEL subscription in the next step)
+		dockerRpmInstallUrls.add(runLocalCommand("./scripts/get-brew-rpm docker --rpmname=docker-selinux          --release=el7 --regress --arch="+clienttasks.arch).getStdout());
+		dockerRpmInstallUrls.add(runLocalCommand("./scripts/get-brew-rpm docker --rpmname=docker-forward-journald --release=el7 --regress --arch="+clienttasks.arch).getStdout());
+		dockerRpmInstallUrls.add(runLocalCommand("./scripts/get-brew-rpm docker --rpmname=docker-common           --release=el7 --regress --arch="+clienttasks.arch).getStdout());
+		dockerRpmInstallUrls.add(runLocalCommand("./scripts/get-brew-rpm docker --rpmname=docker                  --release=el7 --regress --arch="+clienttasks.arch).getStdout());
+        */
+		dockerRpmInstallUrls.add(runLocalCommand("./scripts/get-brew-rpm docker --rpmname=docker  --version=1.0 --release=el7 --regress --arch="+clienttasks.arch).getStdout());
+		clienttasks.installSubscriptionManagerRPMs(dockerRpmInstallUrls, null, sm_yumInstallOptions);
+
+		// best way of installing/updating docker (from a RHEL subscription)
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, true, null, null, null, null);
 		if (clienttasks.isRhelProductCertSubscribed()) {
 			if (clienttasks.isPackageInstalled("docker")) {
