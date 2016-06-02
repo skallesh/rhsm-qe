@@ -10,7 +10,7 @@
   )
 
 ;; ;; initialization of our testware
-(rhsm.runtestng/before-suite true)
+;; (rhsm.runtestng/before-suite true)
 
 ;; testing of our testware
 (deftest basic-properties-test
