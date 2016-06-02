@@ -63,7 +63,7 @@
                          :server-prefix "sm.server.prefix"
 
                          ;client user information
-                         :owner-key "sm.client1.org.displayName"
+                         :owner-key "sm.client1.org"
                          :password "sm.client1.password"
                          :password1 "sm.client2.password"
                          :username "sm.client1.username"
