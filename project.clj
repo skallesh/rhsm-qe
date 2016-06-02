@@ -3,7 +3,7 @@
   :java-source-path "src" ;lein1
   :java-source-paths ["src" "../ssh-tools/src"]
   :main rhsm.runtestng
-  ;:aot [#"^rhsm.gui.tests" rhsm.runtestng] ;regex to find tests that testng will run
+  :aot [#"^rhsm.gui.tests" rhsm.runtestng] ;regex to find tests that testng will run
   :keep-non-project-classes true
   :dependencies [[clj-http "2.0.0"]
                  [com.google.code.guice/guice "1.0"] ;; required for new testng
