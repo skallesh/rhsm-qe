@@ -6,6 +6,7 @@
              [rhsm.gui.tasks.ui :as ui]
              [rhsm.gui.tasks.test-config :as c]
              [rhsm.runtestng]
+             [slingshot.slingshot :as sl]
              [clojure.string :as s]
              [vinyasa.reimport :refer [reimport]]
              )
@@ -18,35 +19,45 @@
            )
   )
 
+;(reimport '[rhsm.base SubscriptionManagerCLITestScript])
+;; (let [cliscript (rhsm.base.SubscriptionManagerCLITestScript.)]
+;;   (.setupBeforeSuite cliscript))
+
 ;; (reimport '[com.redhat.qe.tools SSHCommandRunner])
 ;; (deftest ssh-command-runner-test
 ;;   (println "def test")
 ;;   (let [ssh (SSHCommandRunner. "192.168.124.137" "root" ".ssh/rhsm-qe" "dog8code" nil)]
 ;;     )
 ;;   )
+;(reimport '[rhsm.cli.tasks CandlepinTasks])
+;(reimport '[rhsm.base SubscriptionManagerCLITestScript])
+;; (let [cliscript (rhsm.base.SubscriptionManagerCLITestScript.)]
+;;   (.setupBeforeSuite cliscript))
+;; (c/init)
+;; (t/connect)
 
 ;;initialization of testing environment
 (rhsm.runtestng/before-suite true)
 
 ;#spy/d @c/config
 
-;; testing of an environment of our tests
-(deftest a11y-configuration-test
-  (testing "is it possible to enable a11y?"
-    (case (tt/get-release)
-             "RHEL7"  (is (s/blank?  (-> "gsettings set org.gnome.desktop.interface toolkit-accessibility true"
-                                        tt/run-command :stderr s/trim)))
-             "RHEL6" nil
-             )
-    )
+;; ;; ;; testing of an environment of our tests
+;; (deftest a11y-configuration-test
+;;   (testing "is it possible to enable a11y?"
+;;     (case (tt/get-release)
+;;              "RHEL7"  (is (s/blank?  (-> "gsettings set org.gnome.desktop.interface toolkit-accessibility true"
+;;                                         tt/run-command :stderr s/trim)))
+;;              "RHEL6" nil
+;;              )
+;;     )
 
-  (case (tt/get-release)
-    "RHEL7" (is (= "true" (-> "gsettings get org.gnome.desktop.interface toolkit-accessibility"
-                             tt/run-command :stdout s/trim)))
-    "RHEL6"  (is (= "true" (-> "gconftool-2 --get /desktop/gnome/interface/accessibility"
-                              tt/run-command :stdout s/trim)))
-    )
-  )
+;;   (case (tt/get-release)
+;;     "RHEL7" (is (= "true" (-> "gsettings get org.gnome.desktop.interface toolkit-accessibility"
+;;                              tt/run-command :stdout s/trim)))
+;;     "RHEL6"  (is (= "true" (-> "gconftool-2 --get /desktop/gnome/interface/accessibility"
+;;                               tt/run-command :stdout s/trim)))
+;;     )
+;;   )
 
 ;; (deftest run-subscription-manager-test
 ;;   (testing "Can we start app?"
@@ -55,9 +66,25 @@
 ;;     )
 ;;   )
 
+;; (deftest all-admins-for-deploy-candlepin-test
+;;   (testing "a demo that shows how to get values of all table cells"
+;;     (t/restart-app)
+;;     (sl/try+ (t/unregister) (catch [:type :not-registered] _))
+;;     (t/register-system)
+;;     (t/ui click :register)
+;;     (t/ui settextvalue :redhat-login (:username @c/config))
+;;     (t/ui settextvalue :password (:password @c/config))
+;;     (t/ui click :register)
+;;     (is (some #{"dlgSystemRegistration"} (t/ui getwindowlist)))
+;;     (is (t/ui showing? :owner-view))
+;;     (is (= (list "Admin Owner" "Snow White") (t/get-table-elements :owner-view 0)))
+;;     )
+;;   )
+
 ;; (deftest owners-dialog-test
 ;;   (testing "I have configured owner the right way"
 ;;     (t/restart-app)
+;;     (sl/try+ (t/unregister) (catch [:type :not-registered] _))
 ;;     (t/register-system)
 ;;     (t/ui click :register)
 ;;     (t/ui settextvalue :redhat-login (:username @c/config))
