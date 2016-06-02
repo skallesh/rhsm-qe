@@ -1,7 +1,7 @@
 (defproject org.clojars.jsefler/sm "1.0.0-SNAPSHOT"
   :description "Automated tests for Red Hat Subsciption Manager CLI and GUI"
   :java-source-path "src" ;lein1
-  :java-source-paths ["src" "../ssh-tools/src"]
+  :java-source-paths ["src"]
   :main rhsm.runtestng
   :aot [#"^rhsm.gui.tests" rhsm.runtestng] ;regex to find tests that testng will run
   :keep-non-project-classes true
