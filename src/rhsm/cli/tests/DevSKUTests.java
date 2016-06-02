@@ -29,7 +29,6 @@ import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 
 import rhsm.base.CandlepinType;
-import rhsm.base.SubscriptionManagerBaseTestScript;
 import rhsm.base.SubscriptionManagerCLITestScript;
 import rhsm.cli.tasks.CandlepinTasks;
 import rhsm.cli.tasks.SubscriptionManagerTasks;
@@ -443,6 +442,13 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
 		clienttasks.facts(null, true, null, null, null);
 		
+		// workaround for "All installed products are covered by valid entitlements. No need to update subscriptions at this time."
+		// which will cause the final assert to fail because the system will have no need to re-autosubscribe to devSku2
+		if (clienttasks.getFactValue("system.entitlements_valid").equalsIgnoreCase("valid")) {
+			// simply remove the devSkuProductSubscription1 subscription
+			clienttasks.unsubscribe_(null, devSkuProductSubscription1.serialNumber, null, null, null, null);
+		}
+		
 		// autosubscribe again
 		clienttasks.subscribe(true, null, null, null, (String)null, null, null, null, null, null, null, null);
 		
@@ -633,7 +639,7 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 		ll.add(Arrays.asList(new Object[]{null,	"dev-mkt-product"/*Development SKU Product*/, "dev-platform"}));	
 		ll.add(Arrays.asList(new Object[]{null,	"dev-sku-product"/*Development SKU Product*/, "dev-platform"}));	
 		ll.add(Arrays.asList(new Object[]{null,	"MCT3295"/*Internal Shadow Sku CDK*/, "vagrant"}));
-		ll.add(Arrays.asList(new Object[]{null,	"awesomeos-everything"/*Awesome OS for x86_64/i686/ia64/ppc/ppc64/s390x/s390*/, "awesomeos-platform"}));	// chose because since it service_level is not set
+		ll.add(Arrays.asList(new Object[]{null,	"awesomeos-everything"/*Awesome OS for x86_64/i686/ia64/ppc/ppc64/s390x/s390*/, "awesomeos-platform"}));	// chosen because its service_level is not set
 		
 		return ll;
 	}
