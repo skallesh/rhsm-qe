@@ -258,6 +258,7 @@
   (try+ (tasks/unregister) (catch [:type :not-registered] _))
   (verify (contains? (set (tasks/ui getallstates :register-system))  "enabled"))
   (tasks/ui click :register-system)
+  (tasks/ui waittillguiexist :register-dialog)
   (verify (nil? (some #{"enabled"} (tasks/ui getallstates :register-system))))
   (tasks/ui click :register-system)
   (tasks/ui click :register-system)
