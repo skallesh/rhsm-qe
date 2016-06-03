@@ -273,6 +273,7 @@
   "Asserts that a traceback does not occur during unregister
    when pools are attached."
   [_]
+  (try+ (tasks/unregister) (catch [:type :not-registered] _))
   (tasks/register-with-creds :re-register true)
   (let [avail (shuffle (ctasks/list-available))
         pools (take 5 (map :id avail))
