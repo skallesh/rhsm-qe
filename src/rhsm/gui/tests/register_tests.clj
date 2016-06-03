@@ -255,7 +255,8 @@
   "Asserts that you can't click the register button multiple times
    and open multiple register dialogs"
   [_]
-  (verify (not-nil? (some #{"enabled"} (tasks/ui getallstates :register-system))))
+  (try+ (tasks/unregister) (catch [:type :not-registered] _))
+  (verify (contains? (set (tasks/ui getallstates :register-system))  "enabled"))
   (tasks/ui click :register-system)
   (verify (nil? (some #{"enabled"} (tasks/ui getallstates :register-system))))
   (tasks/ui click :register-system)
