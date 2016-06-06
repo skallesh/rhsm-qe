@@ -1006,7 +1006,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 				ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1162170"}),		clienttasks.command+" list --pool-only --installed",						new Integer(64),	"","Error: --pool-only is only applicable with --available and/or --consumed"}));
 			}
 			ll.add(Arrays.asList(new Object[]{null,													clienttasks.command+" repo-override --repo",								new Integer(2),		clienttasks.command+": error: --repo option requires an argument",	"Usage: subscription-manager repo-override [OPTIONS]"}));
-			ll.add(Arrays.asList(new Object[]{null,													clienttasks.command+" repo-override --remove",								new Integer(2),		clienttasks.command+": error: --remove option requires an argument",	"Usage: subscription-manager repo-override [OPTIONS]"}));
+			ll.add(Arrays.asList(new Object[]{null,										 			clienttasks.command+" repo-override --remove",								new Integer(2),		clienttasks.command+": error: --remove option requires an argument",	"Usage: subscription-manager repo-override [OPTIONS]"}));
 			ll.add(Arrays.asList(new Object[]{null,													clienttasks.command+" repo-override --add",									new Integer(2),		clienttasks.command+": error: --add option requires an argument",	"Usage: subscription-manager repo-override [OPTIONS]"}));
 			ll.add(Arrays.asList(new Object[]{null,													clienttasks.command+" repo-override --add=foo",								new Integer(2),		clienttasks.command+": error: --add arguments should be in the form of \"name:value\"",	"Usage: subscription-manager repo-override [OPTIONS]"}));
 			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1119688"}),			clienttasks.command+" repo-override --repo=foo",							new Integer(64),	"","Error: The --repo option must be used with --list or --add or --remove."}));
@@ -1046,6 +1046,9 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 			}
 			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1275179"}),			clienttasks.command+" subscribe --quantity=2 --auto",						new Integer(64),	"","Error: --quantity may not be used with an auto-attach"}));	// added by bug 1275179 commit 281c1e5818eefa89bc73ba438c75494e16afc698
 			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1275179"}),			clienttasks.command+" subscribe --quantity=2",								new Integer(64),	"","Error: --quantity may not be used with an auto-attach"}));	// added by bug 1275179 commit 281c1e5818eefa89bc73ba438c75494e16afc698
+			ll.add(Arrays.asList(new Object[]{null,													clienttasks.command+" repo-override --repo=bar --add=\"\":VALUE",			new Integer(1),		"","name: may not be null"}));
+			ll.add(Arrays.asList(new Object[]{null,													clienttasks.command+" repo-override --repo=foo --add=:VALUE",			new Integer(1),		"","name: may not be null"}));
+			ll.add(Arrays.asList(new Object[]{null,													clienttasks.command+" repo-override --repo=foobar --add :VALUE",			new Integer(1),		"","name: may not be null"}));
 			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1275179"}),			clienttasks.command+" attach --auto --quantity=2",							new Integer(64),	"","Error: --quantity may not be used with an auto-attach"}));	// added by bug 1275179 commit 281c1e5818eefa89bc73ba438c75494e16afc698
 			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1119688"}),			clienttasks.command+" subscribe --file=/missing/poolIds.txt",				new Integer(65),	"","Error: The file \"/missing/poolIds.txt\" does not exist or cannot be read."}));	// added by bug 1159974
 			if (clienttasks.isPackageVersion("subscription-manager",">=","1.15.9-12")) {
