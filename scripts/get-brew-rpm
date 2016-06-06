@@ -37,7 +37,7 @@ def find_latest_rpm_url(baseurl, arch, rpm_name, version, release, regress):
     if version == '':
         VREGEX = VERSION_REGEX
     else:
-        VREGEX = version + "[\.\d+]*/"
+        VREGEX = version + "(\.\d+)*/"
     if release == '':
         EREGEX = EPOCH_REGEX
     else:
