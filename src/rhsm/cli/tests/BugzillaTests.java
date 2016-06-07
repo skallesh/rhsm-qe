@@ -81,6 +81,59 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	protected final String importCertificatesDir1 = "/tmp/sm-importV1CertificatesDir".toLowerCase();
 	SSHCommandRunner sshCommandRunner=null;
 
+	/**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	@Test(	description="verify Refresh pools doesn't delete Stack Derived Pools",
+			groups={"VerifyRefreshPoolsDeleteStackDerivedPools","blockedByBug-1337906"},
+			enabled=true)
+	public void VerifyRefreshPoolsDeleteStackDerivedPools() throws Exception {
+		String productId = "test-stack-product";
+		Map<String,String> attributes = new HashMap<String,String>();
+		attributes.clear();
+		attributes.put("virt_limit", "unlimited");
+		attributes.put("stacking_id", "stackme");
+		attributes.put("sockets", "2");
+		attributes.put("multi-entitlement", "yes");
+		attributes.put("type", "SVC");
+		String name = "Test product to verify stack pool";
+		List <String> providedProductIds = new ArrayList<String>();
+		providedProductIds.add("100000000000002");
+		Integer contractNumber = getRandInt();
+		Integer accountNumber = getRandInt();
+		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null));
+		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerId);
+		CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, productId);
+		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, "Test-product", productId, 1, attributes, null);
+		CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, ownerKey, 20, 0, 200*24*60, contractNumber, accountNumber, productId, providedProductIds, null);
+		productId = "test-stack-product-derived";
+		attributes.clear();
+		attributes.put("cores", "2");
+		attributes.put("stacking_id", "stackme-derived");
+		attributes.put("sockets", "4");
+		attributes.put("type", "SVC");
+		CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, productId);
+		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, "Test-product-derivied", productId, 1, attributes, null);
+		CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, ownerKey, 20, 0, 200*24*60, contractNumber, accountNumber, productId, providedProductIds, null);
+		for(SubscriptionPool sub :clienttasks.getCurrentlyAvailableSubscriptionPools()){
+			if(sub.productId.equalsIgnoreCase("test-stack-product")){
+				clienttasks.subscribe(null, null, sub.poolId, null, null, null, null, null, null, null, null, null);
+			}
+		}
+		for(SubscriptionPool sub :clienttasks.getCurrentlyAvailableSubscriptionPools()){
+			if(sub.productId.equalsIgnoreCase("test-stack-product-derived")){
+				clienttasks.subscribe(null, null, sub.poolId, null, null, null, null, null, null, null, null, null);
+			}
+		}
+		clienttasks.unsubscribeFromTheCurrentlyConsumedProductSubscriptionPoolIdsCollectively();
+		for(SubscriptionPool sub :clienttasks.getCurrentlyAvailableSubscriptionPools()){
+			if(sub.productId.equalsIgnoreCase("test-stack-product-derived")){
+				System.out.println("derived pool is not removed yet :( :(");
+			}
+		}
+	}
 	
 	/**
 	 * @author skallesh
