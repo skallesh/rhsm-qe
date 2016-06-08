@@ -95,9 +95,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				(String) null, null, null, null, true, null, null, null, null);
 		String logMessage="Unable to reach server, using cached status";
 		String rhsmLogMarker = System.currentTimeMillis()+" Testing **********************************************";
-		RemoteFileTasks.markFile(server, clienttasks.rhsmLogFile, rhsmLogMarker);
+		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, rhsmLogMarker);
 		SSHCommandResult result=clienttasks.repos(true, null, null,(String) null, null,sm_basicauthproxyHostname+":"+sm_basicauthproxyPort, sm_basicauthproxyUsername, "badproxy");
-		String tailFromRhsmlogFile = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, rhsmLogMarker, " ");
+		String tailFromRhsmlogFile = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, rhsmLogMarker, "cached");
 		System.out.println(tailFromRhsmlogFile +"  rhsm log .........." );
 		Assert.assertContainsNoMatch(result.getStderr(), "Network error, unable to connect to server. Please see /var/log/rhsm/rhsm.log for more information.","   Validated that no network is thrown");
 		Assert.assertTrue(result.getStdout().contains("Available Repositories in /etc/yum.repos.d/redhat.repo"), "Verified that the repo commands succeeds by using the cached status ");
