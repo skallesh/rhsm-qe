@@ -1426,6 +1426,8 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		// verify the current serviceLevel equals the value set in the activation key
 		Assert.assertEquals(clienttasks.getCurrentServiceLevel(), expiredServiceLevel, "After registering with an activation key containing a serviceLevel, the current service level is properly set.");
 		
+		// THIS IS A GOOD BREAKPOINT TO TEST BUG 1344100 - servicelevels returned by candlepin should exclude values from expired pools
+		
 		// wait 1 minute for the pool which is about to expire
 		sleep(1*60*1000);
 		log.info("Waiting 1 minute for available pool with service level '"+expiredServiceLevel+"' to expire.");
