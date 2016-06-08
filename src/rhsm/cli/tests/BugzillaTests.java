@@ -4241,6 +4241,21 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		}
 	}
 
+	/*
+	* @author redakkan
+	* @throws exception
+	* @throws JSONException
+	* 	* */
+
+	@Test (description="Verify the file permissions on /var/lib/rhsm/cache and facts files", groups ={"VerifyCacheAndFactsfilePermissions", "blockedByBug-1297485", "blockedByBug-1297493"}, enabled =true)
+	public void VerifyCacheAndFactsfilePermissions() throws JSONException,Exception{
+		String command = clienttasks.rhsmCacheDir;
+		SSHCommandResult result = client.runCommandAndWait("stat -c '%a' " +command); // gets the File /var/lib/rhsm/cache access rights in octal
+		Assert.assertEquals(result.getStdout(),"750","Expected permission on /var/lib/rhsm/cache is 750"); //post commit 9dec31c377b57b4c98f845c018a5372d6f650d88
+		SSHCommandResult result1=client.runCommandAndWait("stat -c '%a' /var/lib/rhsm/facts"); //gets the File /var/lib/rhsm/facts access rights in octal
+		Assert.assertEquals(result1.getStdout(),"750","Expected permission on /var/lib/rhsm/facts is 750"); //post commit 9dec31c377b57b4c98f845c018a5372d6f650d88
+	}
+
 	@BeforeGroups(groups = "setup", value = {}, enabled = true)
 	public void unsubscribeBeforeGroup() {
 		clienttasks.unsubscribe(true, (BigInteger) null, null, null, null, null);
