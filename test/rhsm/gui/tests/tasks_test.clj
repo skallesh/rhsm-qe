@@ -14,7 +14,17 @@
 ;; ;; initialization of our testware
 ;; (rhsm.runtestng/before-suite true)
 
-(deftest register-with-creds-test
-  (t/restart-app)
-  (t/register-with-creds)
+(deftest window-system-registration-is-available-test
+  (testing "Test such that a window 'System Registration' is named as register_dialog for RHEL7"
+    (case (tt/get-release)
+      "RHEL7" (is (= "register_dialog" (-> :register-dialog ui/windows :id)))
+      "RHEL6" (is (= "System Registration" (-> :register-dialog ui/windows :id)))
+      "default"
+      )
+    )
   )
+
+;; (deftest register-with-creds-test
+;;   (t/restart-app)
+;;   (t/register-with-creds)
+;;   )

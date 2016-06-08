@@ -15,6 +15,6 @@
 ;; initialization of our testware
 (rhsm.runtestng/before-suite true)
 
-(deftest register-with-creds-test
-  (is (contains? #{"Snow White" "Admin Owner"} (ct/get-owner-display-name (:username @c/config) (:password @c/config) (:owner-key @c/config))))
-  )
+;; (deftest register-with-creds-test
+;;   (is (contains? #{"Snow White" "Admin Owner"} (ct/get-owner-display-name (:username @c/config) (:password @c/config) (:owner-key @c/config))))
+;;   )

@@ -1,6 +1,7 @@
 (ns rhsm.gui.tasks.ui
   (:use  [clojure.string :only [join split capitalize]])
-  (:require [gnome.ldtp :as ldtp])
+  (:require [gnome.ldtp :as ldtp]
+            [rhsm.gui.tasks.tools :as tools])
   (:import java.util.NoSuchElementException
            [gnome.ldtp Element Tab Window TabGroup]))
 
@@ -26,39 +27,43 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
 (defn define-windows [m]
   (zipmap (keys m) (for [v (vals m)] (Window. v))))
 
-(def windows (define-windows
-               {:main-window "Subscription Manager"
-                :about-dialog "About Subscription Manager"
-                :credits-dialog "Credits"
-                :license-dialog "License"
-                :contract-selection-dialog "Contract Selection"
-                :date-selection-dialog "Date Selection"
-                :error-dialog "Error"
-                :facts-dialog "Subscription Manager - Facts"
-                :file-chooser "Select A File"
-                :filter-dialog "Filter Options"
-                :firefox-help-window "frmRedHatSubscriptionManagement-MozillaFirefox"
-                :firstboot-proxy-dialog "Proxy Configuration"
-                :firstboot-window "frm0"
-                :help-dialog "Subscription Manager Manual"
-                :import-dialog "Import Certificates"
-                :information-dialog "Information"
-                ;; renamed in 818238
-                ;:progress-dialog "Progress Dialog"
-                :proxy-config-dialog "Proxy Configuration"
-                :question-dialog "Question"
-                ;; does not exist anymore? part of the register-dialog
-                ;:subscribe-system-dialog "Subscribe System"
-                :register-dialog "System Registration"      ;; in RHEL 7.2 is "register_dialog"
-                :search-dialog "Searching"
-                ;;also does not exist anymore > tests have been moved to oldtests folder
-                ;:subscription-assistant-dialog "Subscription Assistant"
-                :subscription-redemption-dialog "Subscription Redemption"
-                :system-preferences-dialog "System Preferences"
-                :warning-dialog "Warning"
-                :repositories-dialog "manage_repositories_dialog"
-                :subscription-attachment-dialog "Subscription Attachment"}))
+(defmulti windows-map-by-family :family)
 
+(def windows (define-windows (windows-map-by-family (tools/get-release true))))
+
+(defmethod windows-map-by-family :default []
+  {:main-window "Subscription Manager"
+   :about-dialog "About Subscription Manager"
+   :credits-dialog "Credits"
+   :license-dialog "License"
+   :contract-selection-dialog "Contract Selection"
+   :date-selection-dialog "Date Selection"
+   :error-dialog "Error"
+   :facts-dialog "Subscription Manager - Facts"
+   :file-chooser "Select A File"
+   :filter-dialog "Filter Options"
+   :firefox-help-window "frmRedHatSubscriptionManagement-MozillaFirefox"
+   :firstboot-proxy-dialog "Proxy Configuration"
+   :firstboot-window "frm0"
+   :help-dialog "Subscription Manager Manual"
+   :import-dialog "Import Certificates"
+   :information-dialog "Information"
+   ;; renamed in 818238
+                                        ;:progress-dialog "Progress Dialog"
+   :proxy-config-dialog "Proxy Configuration"
+   :question-dialog "Question"
+   ;; does not exist anymore? part of the register-dialog
+                                        ;:subscribe-system-dialog "Subscribe System"
+   :register-dialog "System Registration"      ;; in RHEL 7.2 is "register_dialog"
+   :search-dialog "Searching"
+   ;;also does not exist anymore > tests have been moved to oldtests folder
+                                        ;:subscription-assistant-dialog "Subscription Assistant"
+   :subscription-redemption-dialog "Subscription Redemption"
+   :system-preferences-dialog "System Preferences"
+   :warning-dialog "Warning"
+   :repositories-dialog "manage_repositories_dialog"
+   :subscription-attachment-dialog "Subscription Attachment"}
+  )
 
 (def elements
   (merge
