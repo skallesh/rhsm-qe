@@ -598,7 +598,7 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 		}
 	}
 	@Test(	description="Verify that entitlements providing containerimage content are copied to relevant directoried when attached via auto-heal (as governed by the subscription-manager-plugin-container package)",
-			groups={"AcceptanceTests","blockedByBug-1165692"},
+			groups={"AcceptanceTests","blockedByBug-1165692","blockedByBug-1344500"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyContainerConfigurationsAreSetAfterAutoHealingAndUnsubscribing_Test() {
