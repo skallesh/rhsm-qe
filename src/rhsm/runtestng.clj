@@ -6,7 +6,9 @@
             [clojure.tools.cli :as cli]
             [immuconf.config :as cfg]
             [rhsm.gui.tasks.test-config :as config]
-            [rhsm.gui.tasks.tasks :as tasks])
+            [rhsm.gui.tasks.tasks :as tasks]
+            [mount.core :as mount]
+            )
   (:import [org.testng.xml Parser XmlSuite]
            [org.testng TestNG]
            (java.io FileNotFoundException))
@@ -60,6 +62,7 @@ Example: lein run 'GUI: REGISTRATION' 'GUI: FACTS' suites/sm-gui-testng-suite.xm
 
 (defn -main
   [& args]
+  (mount/start)
   (TestNG/main (into-array String args)))
 
 (defn get-config
