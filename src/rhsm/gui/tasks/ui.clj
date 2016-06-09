@@ -1,7 +1,6 @@
 (ns rhsm.gui.tasks.ui
   (:use  [clojure.string :only [join split capitalize]])
-  (:require [gnome.ldtp :as ldtp]
-            [rhsm.gui.tasks.tools :as tools])
+  (:require [gnome.ldtp :as ldtp])
   (:import java.util.NoSuchElementException
            [gnome.ldtp Element Tab Window TabGroup]))
 
@@ -62,8 +61,7 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
    :subscription-attachment-dialog "Subscription Attachment"}
   )
 
-(def windows (define-windows (define-windows (windows-map-by-family {:family :default
-                                                                     :variant :default}))))
+(def windows (define-windows (windows-map-by-family {:family :default :variant :default})))
 
 (def elements
   (merge
