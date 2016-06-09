@@ -46,7 +46,7 @@
   :plugins [[lein2-eclipse "2.0.0"]
             [quickie "0.4.1"]]
   ; regexp of namespaces that contains of tests of our tests. It is used by quickie.
-  :test-matcher #"rhsm\.gui\.tests\..*-test"
+  :test-matcher #"rhsm\..*-test$"
   :repositories {"clojars.org" {:url "http://clojars.org/repo"
                                 :snapshots {:update :always}}}
   :javac-options {:debug "on"}

@@ -26,8 +26,8 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
 (defn define-windows [m]
   (zipmap (keys m) (for [v (vals m)] (Window. v))))
 
-(defmulti windows-map-by-rhel-version (fn [release] [(:family release) (:variant release)]))
-(defmethod windows-map-by-rhel-version [:default :default] [release]
+(defmulti windows-map-by-rhel-version :family)
+(defmethod windows-map-by-rhel-version :default [release]
   {:main-window "Subscription Manager"
    :about-dialog "About Subscription Manager"
    :credits-dialog "Credits"
@@ -45,15 +45,15 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
    :import-dialog "Import Certificates"
    :information-dialog "Information"
    ;; renamed in 818238
-                                        ;:progress-dialog "Progress Dialog"
+   ;: progress-dialog "Progress Dialog"
    :proxy-config-dialog "Proxy Configuration"
    :question-dialog "Question"
    ;; does not exist anymore? part of the register-dialog
-                                        ;:subscribe-system-dialog "Subscribe System"
+   ;: subscribe-system-dialog "Subscribe System"
    :register-dialog "System Registration"      ;; in RHEL 7.2 is "register_dialog"
    :search-dialog "Searching"
-   ;;also does not exist anymore > tests have been moved to oldtests folder
-                                        ;:subscription-assistant-dialog "Subscription Assistant"
+   ;; also does not exist anymore > tests have been moved to oldtests folder
+   ;: subscription-assistant-dialog "Subscription Assistant"
    :subscription-redemption-dialog "Subscription Redemption"
    :system-preferences-dialog "System Preferences"
    :warning-dialog "Warning"
@@ -61,7 +61,7 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
    :subscription-attachment-dialog "Subscription Attachment"}
   )
 
-(def windows (define-windows (windows-map-by-rhel-version [{:family :default :variant :default}])))
+(def windows (define-windows (windows-map-by-rhel-version {:family :default :variant :default})))
 
 (def elements
   (merge
