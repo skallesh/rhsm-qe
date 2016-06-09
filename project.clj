@@ -34,6 +34,7 @@
                  [levand/immuconf "0.1.0"]
                  [leiningen #=(leiningen.core.main/leiningen-version)]
                  [im.chit/vinyasa "0.4.3"]
+                 [mount "0.1.10"]
                  ]
 
   ;lein1
@@ -101,4 +102,4 @@
   ;not used
   (require :reload-all '[rhsm.gui.tests.subscription-assistant-tests :as satest])
   (require :reload-all '[rhsm.gui.tests.acceptance_tests :as actest])
-)
+  )

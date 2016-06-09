@@ -28,10 +28,7 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
   (zipmap (keys m) (for [v (vals m)] (Window. v))))
 
 (defmulti windows-map-by-family :family)
-
-(def windows (define-windows (windows-map-by-family (tools/get-release true))))
-
-(defmethod windows-map-by-family :default []
+(defmethod windows-map-by-family :default [release]
   {:main-window "Subscription Manager"
    :about-dialog "About Subscription Manager"
    :credits-dialog "Credits"
@@ -64,6 +61,9 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
    :repositories-dialog "manage_repositories_dialog"
    :subscription-attachment-dialog "Subscription Attachment"}
   )
+
+(def windows (define-windows (define-windows (windows-map-by-family {:family :default
+                                                                     :variant :default}))))
 
 (def elements
   (merge
