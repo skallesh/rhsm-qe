@@ -19,6 +19,7 @@ import org.testng.annotations.BeforeGroups;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
+import rhsm.base.CandlepinType;
 import rhsm.base.SubscriptionManagerCLITestScript;
 import rhsm.data.ContentNamespace;
 import rhsm.data.EntitlementCert;
@@ -239,6 +240,9 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 		if (Integer.valueOf(clienttasks.redhatReleaseX)<7) throw new SkipException("Installation of docker.rpm is only applicable on RHEL7+");
 		if (!clienttasks.arch.equals("x86_64")) throw new SkipException("Installation of docker.rpm is only applicable on arch x86_64");
 		
+		// make sure ALL docker* packages are removed so we can start from a clean slate (because a reinstall of subscription-manager during setupClient will remove only docker due to dependency) 
+		clienttasks.yumDoPackageFromRepo_("remove", "docker*", null, null);
+		
 		// install the requested docker packages
 		// good way of installing docker
 		if (false) {
@@ -246,30 +250,23 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 		}
 		
 		// better way of installing docker (useful on static clients)
-		if (!clienttasks.isPackageInstalled("docker")) {
-			SSHCommandResult localCommandResult = runLocalCommand("rpm -q python-BeautifulSoup");	// Prerequisite on slave: sudo yum install python-BeautifulSoup
-			if (!localCommandResult.getExitCode().equals(Integer.valueOf(0))) Assert.fail("python-BeautifulSoup must be installed on the executing slave in order to run .scripts/get-brew-rpm to install docker from brew.   localCommandResult: "+localCommandResult);
-		}
+		SSHCommandResult localCommandResult = runLocalCommand("rpm -q python-BeautifulSoup");	// Prerequisite on slave: sudo yum install python-BeautifulSoup
+		if (!localCommandResult.getExitCode().equals(Integer.valueOf(0))) Assert.fail("python-BeautifulSoup must be installed on the executing slave in order to run .scripts/get-brew-rpm to install docker from brew.   localCommandResult: "+localCommandResult);
 		List<String> dockerRpmInstallUrls = new ArrayList<String>();
-		/* no need to install the latest and greatest docker because it has a growing number of dependencies that I cannot keep track of (we'll let yum update get the latest released version from a RHEL subscription in the next step)
-		dockerRpmInstallUrls.add(runLocalCommand("./scripts/get-brew-rpm docker --rpmname=docker-selinux          --release=el7 --regress --arch="+clienttasks.arch).getStdout());
-		dockerRpmInstallUrls.add(runLocalCommand("./scripts/get-brew-rpm docker --rpmname=docker-forward-journald --release=el7 --regress --arch="+clienttasks.arch).getStdout());
-		dockerRpmInstallUrls.add(runLocalCommand("./scripts/get-brew-rpm docker --rpmname=docker-common           --release=el7 --regress --arch="+clienttasks.arch).getStdout());
-		dockerRpmInstallUrls.add(runLocalCommand("./scripts/get-brew-rpm docker --rpmname=docker                  --release=el7 --regress --arch="+clienttasks.arch).getStdout());
-        */
-		dockerRpmInstallUrls.add(runLocalCommand("./scripts/get-brew-rpm docker --rpmname=docker  --version=1.0 --release=el7 --regress --arch="+clienttasks.arch).getStdout());
+		//dockerRpmInstallUrls.add(runLocalCommand("./scripts/get-brew-rpm docker --rpmname=docker                       --release=el7 --regress --arch="+clienttasks.arch).getStdout());
+		//dockerRpmInstallUrls.add(runLocalCommand("./scripts/get-brew-rpm docker --rpmname=docker         --version=1.0 --release=el7 --regress --arch="+clienttasks.arch).getStdout());	// --version=1.0 is blocked by Bug 1121239 - docker pull from custom registry errors on Invalid Namespace Name	// Error: Invalid namespace name (registry.access.redhat.com), only [a-z0-9_] are allowed, size between 4 and 30
+		dockerRpmInstallUrls.add(runLocalCommand("./scripts/get-brew-rpm docker --rpmname=docker           --version=1.1 --release=el7 --regress --arch="+clienttasks.arch).getStdout());
+		dockerRpmInstallUrls.add(runLocalCommand("./scripts/get-brew-rpm docker --rpmname=docker-selinux   --version=1.6 --release=el7 --regress --arch="+clienttasks.arch).getStdout());	// --version=1.6 is the first build with docker-selinux	// avoid: Error response from daemon: Cannot start container fd39344bea2cf56e48467488745ac3b007eb904f185a240853103f112a87bdd3: permission denied
+		//dockerRpmInstallUrls.add(runLocalCommand("./scripts/get-brew-rpm docker --rpmname=docker-forward-journald  --release=el7 --regress --arch="+clienttasks.arch).getStdout());
+		//dockerRpmInstallUrls.add(runLocalCommand("./scripts/get-brew-rpm docker --rpmname=docker-common            --release=el7 --regress --arch="+clienttasks.arch).getStdout());
 		clienttasks.installSubscriptionManagerRPMs(dockerRpmInstallUrls, null, sm_yumInstallOptions);
-
-		// best way of installing/updating docker (from a RHEL subscription)
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, true, null, null, null, null);
-		if (clienttasks.isRhelProductCertSubscribed()) {
-			if (clienttasks.isPackageInstalled("docker")) {
-				//clienttasks.yumUpdatePackageFromRepo("docker", "rhel-7-server-extras-rpms", "--nogpgcheck");
+		
+		// best way of updating docker (from a RHEL subscription) when possible
+		if (!sm_serverType.equals(CandlepinType.standalone)) {
+			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, true, null, null, null, null);
+			if (clienttasks.isRhelProductCertSubscribed()) {
 				//avoid "No packages marked for update" by ignoring results of yumUpdatePackageFromRepo(...)
 				clienttasks.yumDoPackageFromRepo_("update","docker", "rhel-7-server-extras-rpms", "--nogpgcheck");
-
-			} else {
-				clienttasks.yumInstallPackageFromRepo("docker", "rhel-7-server-extras-rpms", "--nogpgcheck");
 			}
 		}
 		
@@ -682,13 +679,13 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 						}
 					}
 					if (entitlementContainsAtLeastOneContainerImageContentNamespaceWithRequiredTagsThatAreProvidedByInstalledProducts) {	
-						Assert.assertTrue(RemoteFileTasks.testExists(client, certFile.getPath()),"Entitlement cert '"+entitlementCert.file+"' '"+entitlementCert.orderNamespace.productName+"' providing a 'containerimage' (case insensitive) was copied to '"+certFile+"' because at least one contentNamespace of type 'containerimage' from the entitlement has required_tags that are provided by the currently installed product certs.");
-						Assert.assertTrue(RemoteFileTasks.testExists(client, keyFile.getPath()),"Corresponding entitlement key '"+clienttasks.getEntitlementCertKeyFileFromEntitlementCert(entitlementCert)+"' providing a 'containerimage' (case insensitive) was copied to '"+keyFile+"' because at least one contentNamespace of type 'containerimage' from the entitlement has required_tags that are provided by the currently installed product certs.");
+						Assert.assertTrue(RemoteFileTasks.testExists(client, certFile.getPath()),"Entitlement cert '"+entitlementCert.file+"' '"+entitlementCert.orderNamespace.productName+"' providing a 'containerimage' (case insensitive) was copied to '"+certFile+"' because at least one contentNamespace of type containerimage from the entitlement has required_tags that are provided by the currently installed product certs.  Entitled content of type containeriamge: "+containerImageContentNamespaces);
+						Assert.assertTrue(RemoteFileTasks.testExists(client, keyFile.getPath()),"Corresponding entitlement key '"+clienttasks.getEntitlementCertKeyFileFromEntitlementCert(entitlementCert)+"' providing a 'containerimage' (case insensitive) was copied to '"+keyFile+"' because at least one contentNamespace of type containerimage from the entitlement has required_tags that are provided by the currently installed product certs.  Entitled content of type containeriamge: "+containerImageContentNamespaces);
 						// also assert that the ca cert corresponding to registry hostname is copied to the directory as a ca.crt, but only if it appears to be a redhat.com CDN
 						verifyCaCertInEtcDockerCertsRegistryHostnameDir(registryHostname);
 					} else {
-						Assert.assertTrue(!RemoteFileTasks.testExists(client, certFile.getPath()),"Entitlement cert '"+entitlementCert.file+"' '"+entitlementCert.orderNamespace.productName+"' providing a 'containerimage' (case insensitive) was NOT copied to '"+certFile+"' because no contentNamespace of type 'containerimage' from the entitlement has required_tags that are provided by the currently installed product certs.");
-						Assert.assertTrue(!RemoteFileTasks.testExists(client, keyFile.getPath()),"Corresponding entitlement key '"+clienttasks.getEntitlementCertKeyFileFromEntitlementCert(entitlementCert)+"' providing a 'containerimage' (case insensitive) was NOT copied to '"+keyFile+"' because no contentNamespace of type 'containerimage' from the entitlement has required_tags that are provided by the currently installed product certs.");
+						Assert.assertTrue(!RemoteFileTasks.testExists(client, certFile.getPath()),"Entitlement cert '"+entitlementCert.file+"' '"+entitlementCert.orderNamespace.productName+"' providing a 'containerimage' (case insensitive) was NOT copied to '"+certFile+"' because no contentNamespace of type containerimage from the entitlement has required_tags that are provided by the currently installed product certs.  Entitled content of type containeriamge: "+containerImageContentNamespaces);
+						Assert.assertTrue(!RemoteFileTasks.testExists(client, keyFile.getPath()),"Corresponding entitlement key '"+clienttasks.getEntitlementCertKeyFileFromEntitlementCert(entitlementCert)+"' providing a 'containerimage' (case insensitive) was NOT copied to '"+keyFile+"' because no contentNamespace of type containerimage from the entitlement has required_tags that are provided by the currently installed product certs.  Entitled content of type containeriamge: "+containerImageContentNamespaces);
 					}
 				}
 			}

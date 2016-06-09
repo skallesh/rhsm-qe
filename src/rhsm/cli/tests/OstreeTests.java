@@ -542,6 +542,12 @@ public class OstreeTests extends SubscriptionManagerCLITestScript {
 	@BeforeGroups(groups={"setup"}, value={"subscribeAndUnsubscribeTests"})
 	protected void setupGiWrapperTool() {
 		if (clienttasks!=null) {
+			
+			// determine the path to giWrapperFilename (because it changed by commit 655b81b5271cba98143b36aaa33938b0abaf1820 )
+			String giWrapperFilename = "gi_wrapper.py";	// provided by subscription-manager-plugin-ostree
+			giWrapperFile = new File(client.runCommandAndWait("rpm -ql subscription-manager-plugin-ostree | grep -e "+giWrapperFilename+"$").getStdout().trim());
+			Assert.assertTrue(!giWrapperFile.getPath().isEmpty(),"Determined full path to source code filename '"+giWrapperFilename+"' (determined value '"+giWrapperFile.getPath()+"')");
+
 			if (!clienttasks.isPackageInstalled("ostree")) {	// create a fake /usr/share/rhsm/subscription_manager/plugin/ostree/gi_wrapper.py
 				// backup gi_wrapper.py
 				if (!RemoteFileTasks.testExists(client, giWrapperFile+".bak")) {
@@ -557,7 +563,7 @@ public class OstreeTests extends SubscriptionManagerCLITestScript {
 		
 		// -bash-4.2# python /usr/share/rhsm/subscription_manager/plugin/ostree/gi_wrapper.py --deployed-origin
 		// /ostree/deploy/rhel-atomic-host/deploy/7ea291ddcec9e2451616f77808386794a62befb274642e07e932bc4f817dd6a1.0.origin
-		SSHCommandResult gi_wrapperResult = client.runCommandAndWait("python /usr/share/rhsm/subscription_manager/plugin/ostree/gi_wrapper.py --deployed-origin");
+		SSHCommandResult gi_wrapperResult = client.runCommandAndWait("python "+giWrapperFile+" --deployed-origin");
 		Assert.assertEquals(gi_wrapperResult.getExitCode(), new Integer(0),"Exit Code from running gi_wrapper.py");
 		Assert.assertEquals(gi_wrapperResult.getStderr(),"","Stderr from running gi_wrapper.py");
 		Assert.assertTrue(!gi_wrapperResult.getStdout().trim().isEmpty(),"Stdout from running gi_wrapper.py is not empty");
@@ -626,7 +632,7 @@ public class OstreeTests extends SubscriptionManagerCLITestScript {
 	// Protected methods ***********************************************************************
 	protected final File oldOstreeRepoConfigFile = new File("/ostree/repo/config");
 	protected File ostreeRepoConfigFile = null;
-	protected final File giWrapperFile = new File("/usr/share/rhsm/subscription_manager/plugin/ostree/gi_wrapper.py");	// provided by subscription-manager-plugin-ostree
+	protected File giWrapperFile = null;
 	protected File ostreeOriginFile = new File("/ostree/deploy/OSNAME/deploy/CHECKSUM.0.origin");
 	protected final File ostreeContentPluginFile = new File("/etc/rhsm/pluginconf.d/ostree_content.OstreeContentPlugin.conf");
 	
