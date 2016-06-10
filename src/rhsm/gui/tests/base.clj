@@ -3,7 +3,9 @@
         [rhsm.gui.tasks.tasks]
         rhsm.gui.tasks.tools)
   (:require [rhsm.gui.tasks.test-config :as config]
-            [clojure.tools.logging :as log])
+            [clojure.tools.logging :as log]
+            [mount.core :as mount]
+            )
   (:import [org.testng.annotations BeforeSuite
             AfterSuite]
            [rhsm.base SubscriptionManagerCLITestScript]
@@ -54,13 +56,21 @@
 (defn ^{BeforeSuite {:groups ["setup"]}}
   startup [_]
   (try
+    (println "----------------------------------- before suite ---------------------------------------")
     (let [cliscript (SubscriptionManagerCLITestScript.)]
       (.setupBeforeSuite cliscript))
+    (println "----------------------------------- before config init ---------------------------------------")
     (config/init)
     (assert-valid-testing-arch)
+    (println "----------------------------------- before update ldtpd ---------------------------------------")
     (update-ldtpd (:ldtpd-source-url @config/config))
+    (println "----------------------------------- before restart vnc ---------------------------------------")
     (restart-vnc)
+    (println "----------------------------------- before connect ---------------------------------------")
     (connect)
+    (println "----------------------------------- before mount/start ---------------------------------------")
+    (mount/start)
+    (println "----------------------------------- before start-app ---------------------------------------")
     (start-app)
     (catch Exception e
       (reset! (skip-groups :suite) true)

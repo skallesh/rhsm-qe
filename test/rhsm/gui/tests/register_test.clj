@@ -15,6 +15,7 @@
 
 ;; ;; initialization of our testware
 ;; (rhsm.runtestng/before-suite true)
+
 (use-fixtures :once (fn [f]
                       (mount/start)
                       (rtests/setup nil)
@@ -29,12 +30,12 @@
     )
   )
 
-;; (deftest auto_to_register_button-test
-;;   (t/restart-app)
-;;   (rtests/check_auto_to_register_button nil)
-;;   )
+(deftest auto_to_register_button-test
+  (t/restart-app)
+  (rtests/check_auto_to_register_button nil)
+  )
 
-;; (deftest register_multi_click-test
-;;   (t/restart-app)
-;;   (rtests/register_multi_click nil)
-;;   )
+(deftest register_multi_click-test
+  (t/restart-app)
+  (rtests/register_multi_click nil)
+  )

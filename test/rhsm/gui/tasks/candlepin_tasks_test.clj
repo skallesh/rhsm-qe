@@ -1,4 +1,4 @@
-(ns rhsm.gui.tests.candlepin-tasks-test
+(ns rhsm.gui.tasks.candlepin-tasks-test
   (:require  [clojure.test :refer :all]
              [rhsm.gui.tests.register_tests :as rtests]
              [rhsm.gui.tasks.tasks :as t]

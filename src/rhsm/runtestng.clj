@@ -62,7 +62,6 @@ Example: lein run 'GUI: REGISTRATION' 'GUI: FACTS' suites/sm-gui-testng-suite.xm
 
 (defn -main
   [& args]
-  (mount/start)
   (TestNG/main (into-array String args)))
 
 (defn get-config
@@ -84,7 +83,6 @@ Example: lein run 'GUI: REGISTRATION' 'GUI: FACTS' suites/sm-gui-testng-suite.xm
 
 
 (def dev-config (get-config))
-(println dev-config)
 
 (defn before-suite
   ([setup]
