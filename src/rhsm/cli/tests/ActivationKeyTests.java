@@ -1400,7 +1400,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="create an activation key, add a service level (for an expired subscription) to it, and then register with the activation key",
-			groups={"RegisterWithActivationKeyContainingExpiredServiceLevel_Test","blockedByBug-1262435"},	// Candlepin commit 387463519444634bb242b456db7bc89cf0eae43e Add SLA functionality to Activation Keys.
+			groups={"RegisterWithActivationKeyContainingExpiredServiceLevel_Test","blockedByBug-1262435","blockedByBug-1344765"},	// Candlepin commit 387463519444634bb242b456db7bc89cf0eae43e Add SLA functionality to Activation Keys.
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
 	public void RegisterWithActivationKeyContainingExpiredServiceLevel_Test() throws JSONException, Exception {
