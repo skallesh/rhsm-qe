@@ -5005,6 +5005,9 @@ if (false) {
 		logRuntimeErrors(sshCommandResult);
 		return sshCommandResult;
 	}
+	/**
+	 * @return SSHCommandResult from subscription-manager repo-override [parameters] without asserting any results
+	 */
 	public SSHCommandResult repo_override_(Boolean list, Boolean removeAll, String repoId, String removeName, Map<String,String> addNameValueMap, String proxy, String proxyuser, String proxypassword) {
 		List<String> repoIds = repoId==null?null:Arrays.asList(new String[]{repoId});
 		List<String> removeNames = removeName==null?null:Arrays.asList(new String[]{removeName});
