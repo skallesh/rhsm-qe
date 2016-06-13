@@ -87,7 +87,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 */
 	@Test(	description="verify Status Cache not used when listing repos with a bad proxy ",
-			groups={"ListingReposWithBadProxy","blockedByBug-1298327"},
+			groups={"ListingReposWithBadProxy","blockedByBug-1298327","blockedByBug-1345962"},
 			enabled=true)
 	public void ListingReposWithBadProxy() throws Exception {
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
