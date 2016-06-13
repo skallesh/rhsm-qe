@@ -4271,7 +4271,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 * @throws exception
 * @throws JSONException
 * 	* */
-	@Test (description="verify repo-override --remove="" doesnot remove the overrides from the given repo", groups ={"blockedByBug-1331739"}, enabled =true)
+	@Test (description="verify repo-override --remove='' doesnot remove the overrides from the given repo", groups ={"blockedByBug-1331739"}, enabled =true)
 	public void VerifyEmptyRepoOverrideRemove_Test() throws JSONException,Exception{
 
 		/*      if (clienttasks.isPackageVersion("subscription-manager", "<", "NOT SURE ABT THE FIX")) {//commenting out untill the fix is in
@@ -4282,6 +4282,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, true, false, null, null, null);
 		// subscribe to a random pool
 		List<YumRepo> originalYumRepos = clienttasks.getCurrentlySubscribedYumRepos();
+		if (originalYumRepos.isEmpty()) throw new SkipException("After registering with auto-subscribe, no yum repos were entitled. This test requires some redhat repos.");
 
 		// choose a random small subset of repos to test repo-override
 		List<YumRepo> originalYumReposSubset = getRandomSubsetOfList(originalYumRepos, 3);
@@ -4303,7 +4304,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		SSHCommandResult listResultAfterRemove = clienttasks.repo_override_(true,null,(String)null,(String)null,null,null,null,null);
 		Assert.assertEquals(listResultBeforeRemove.getStdout().trim(), listResultAfterRemove.getStdout().trim(), "Repo-overrides list After subscription-manager repo-override --repo=<id> --remove='' should be identical to the list before executing the command");
 		Assert.assertEquals(result.getExitCode(),"1","ExitCode of subscription-manager repo-override --remove without names should be 1");
-		Assert.assertEquals(result.getStdout(),"name: may not be null", "subscription-manager repo-override --repo=<id> --remove='' should not delete the overrides");
+		Assert.assertEquals(result.getStdout().trim(),"name: may not be null", "subscription-manager repo-override --repo=<id> --remove='' should not delete the overrides");
 	}
 
 
