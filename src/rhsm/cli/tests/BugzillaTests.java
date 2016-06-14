@@ -4266,6 +4266,48 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(result1.getStdout().trim(),"750","Expected permission on /var/lib/rhsm/facts is 750"); //post commit 9dec31c377b57b4c98f845c018a5372d6f650d88
 	}
 
+	/*
+* @author redakkan
+* @throws exception
+* @throws JSONException
+* 	* */
+	@Test (description="verify repo-override --remove='' doesnot remove the overrides from the given repo", groups ={"blockedByBug-1331739"}, enabled =true)
+	public void VerifyEmptyRepoOverrideRemove_Test() throws JSONException,Exception{
+
+		/*      if (clienttasks.isPackageVersion("subscription-manager", "<", "NOT SURE ABT THE FIX")) {//commenting out untill the fix is in
+            throw new SkipException("This test applies a newer version of subscription manager that includes fixes for bugs 1331739");
+        } */
+
+		// register
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, true, false, null, null, null);
+		// subscribe to a random pool
+		List<YumRepo> originalYumRepos = clienttasks.getCurrentlySubscribedYumRepos();
+		if (originalYumRepos.isEmpty()) throw new SkipException("After registering with auto-subscribe, no yum repos were entitled. This test requires some redhat repos.");
+
+		// choose a random small subset of repos to test repo-override
+		List<YumRepo> originalYumReposSubset = getRandomSubsetOfList(originalYumRepos, 3);
+		Map<String,Map<String,String>> repoOverridesMapOfMaps = new HashMap<String,Map<String,String>>();
+		Map<String,String> repoOverrideNameValueMap = new HashMap<String,String>();
+		repoOverrideNameValueMap.put("enabled", "true");
+		repoOverrideNameValueMap.put("gpgcheck", "false");
+		repoOverrideNameValueMap.put("exclude", "foo-bar");
+		for (YumRepo yumRepo : originalYumReposSubset) repoOverridesMapOfMaps.put(yumRepo.id, repoOverrideNameValueMap);
+		List<String> repoIds = new ArrayList<String>(repoOverridesMapOfMaps.keySet());
+		//Creating repo-overrides on the selected repo
+		clienttasks.repo_override(null, null, repoIds, null, repoOverrideNameValueMap, null, null, null);
+
+		//Gets the current repo-override list from the system
+		SSHCommandResult listResultBeforeRemove = clienttasks.repo_override_(true,null,(String)null,(String)null,null,null,null,null);
+		//repo-override remove with empty set of name values
+		SSHCommandResult result=clienttasks.repo_override_(null,null,repoIds,Arrays.asList(new String[]{""}),null,null,null,null);
+		//Gets the current repo-override list AFTER REMOVE from the system
+		SSHCommandResult listResultAfterRemove = clienttasks.repo_override_(true,null,(String)null,(String)null,null,null,null,null);
+		Assert.assertEquals(listResultBeforeRemove.getStdout().trim(), listResultAfterRemove.getStdout().trim(), "Repo-overrides list After subscription-manager repo-override --repo=<id> --remove='' should be identical to the list before executing the command");
+		Assert.assertEquals(result.getExitCode(),"1","ExitCode of subscription-manager repo-override --remove without names should be 1");
+		Assert.assertEquals(result.getStdout().trim(),"name: may not be null", "subscription-manager repo-override --repo=<id> --remove='' should not delete the overrides");
+	}
+
+
 	@BeforeGroups(groups = "setup", value = {}, enabled = true)
 	public void unsubscribeBeforeGroup() {
 		clienttasks.unsubscribe(true, (BigInteger) null, null, null, null, null);
@@ -4276,6 +4318,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.service_level_(null, null, null, true, null, null, null,
 				null, null, null, null, null);
 	}
+
 
 
 
