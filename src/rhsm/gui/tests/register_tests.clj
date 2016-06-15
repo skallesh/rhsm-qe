@@ -12,6 +12,7 @@
         rhsm.gui.tasks.tools
         gnome.ldtp)
   (:require [rhsm.gui.tasks.tasks :as tasks]
+            [rhsm.gui.tasks.ui :as ui]
             [rhsm.gui.tests.base :as base]
             [clojure.tools.logging :as log]
             [rhsm.gui.tasks.candlepin-tasks :as ctasks])
@@ -262,7 +263,11 @@
   (verify (nil? (some #{"enabled"} (tasks/ui getallstates :register-system))))
   (tasks/ui click :register-system)
   (tasks/ui click :register-system)
-  (verify (apply distinct? (filter #(substring? "Registration" %) (tasks/ui getwindowlist))))
+  (case (get-release)
+    "RHEL6"   (verify (apply distinct? (filter #(= "dlgSystemRegistration" %) (tasks/ui getwindowlist))))
+    "RHEL7"   (verify (apply distinct? (filter #(= "dlgregister_dialog" %) (tasks/ui getwindowlist))))
+    :no-verify
+    )
   (tasks/ui click :register-close)
   )
 

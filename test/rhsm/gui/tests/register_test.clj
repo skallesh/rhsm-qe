@@ -9,15 +9,14 @@
              [rhsm.runtestng]
              [slingshot.slingshot :as sl]
              [clojure.string :as s]
-             [mount.core :as mount]
+             [rhsm.gui.tests.base :as base]
              )
   )
 
 ;; ;; initialization of our testware
-;; (rhsm.runtestng/before-suite true)
 
 (use-fixtures :once (fn [f]
-                      (mount/start)
+                      (base/startup nil)
                       (rtests/setup nil)
                       (f)
                       ))
@@ -38,4 +37,9 @@
 (deftest register_multi_click-test
   (t/restart-app)
   (rtests/register_multi_click nil)
+  )
+
+(deftest check_traceback_unregister-test
+  (t/restart-app)
+  (rtests/check_traceback_unregister nil)
   )
