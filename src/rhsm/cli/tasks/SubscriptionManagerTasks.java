@@ -1234,6 +1234,13 @@ if (false) {
 		}
 	}
 	
+	public void removeConfFileParameter(String confFile, String parameter){
+		log.info("Removing config file '"+confFile+"' parameter: "+parameter);
+		Assert.assertEquals(
+				RemoteFileTasks.searchReplaceFile(sshCommandRunner, confFile, "^"+parameter+"\\s*=.*", ""),
+				0,"Removed '"+confFile+"' parameter: "+parameter);
+	}
+	
 	public void commentConfFileParameter(String confFile, String parameter){
 		log.info("Commenting out config file '"+confFile+"' parameter: "+parameter);
 		Assert.assertEquals(
@@ -4388,7 +4395,7 @@ if (false) {
 			defaultNames.add("proxy_port");
 			defaultNames.add("proxy_user");
 			defaultNames.add("proxy_password");
-			if (isPackageVersion("python-rhsm",">=","1.17.3-1")) defaultNames.add("server_timeout");	// python-rhsm commit 5780140650a59d45a03372a0390f92fd7c3301eb Allow users to set socket timeout.
+			if (isPackageVersion("python-rhsm",">=","1.17.3-1")) defaultNames.add("server_timeout");	// python-rhsm commit 5780140650a59d45a03372a0390f92fd7c3301eb Allow users to set socket timeout.	// Bug 1346417 - Allow users to set socket timeout.
 
 		}
 		if (section.equalsIgnoreCase("rhsm")) {
@@ -6201,6 +6208,20 @@ if (false) {
 	// version module tasks ************************************************************
 	
 	/**
+	 * @return the command line syntax for calling this subscription-manager module with these options
+	 */
+	public String versionCommand(String proxy, String proxyuser, String proxypassword) {
+
+		// assemble the command
+		String command = this.command;	command += " version";	
+		if (proxy!=null)				command += " --proxy="+proxy;
+		if (proxyuser!=null)			command += " --proxyuser="+proxyuser;
+		if (proxypassword!=null)		command += " --proxypassword="+proxypassword;
+		
+		return command;
+	}
+	
+	/**
 	 * version without asserting results
 	 * @param proxy TODO
 	 * @param proxyuser TODO
@@ -6210,10 +6231,11 @@ if (false) {
 	public SSHCommandResult version_(String proxy, String proxyuser, String proxypassword) {
 
 		// assemble the command
-		String command = this.command;	command += " version";	
-		if (proxy!=null)				command += " --proxy="+proxy;
-		if (proxyuser!=null)			command += " --proxyuser="+proxyuser;
-		if (proxypassword!=null)		command += " --proxypassword="+proxypassword;
+//		String command = this.command;	command += " version";	
+//		if (proxy!=null)				command += " --proxy="+proxy;
+//		if (proxyuser!=null)			command += " --proxyuser="+proxyuser;
+//		if (proxypassword!=null)		command += " --proxypassword="+proxypassword;
+		String command = versionCommand(proxy,proxyuser,proxypassword);
 		
 		// run command without asserting results
 		SSHCommandResult sshCommandResult = sshCommandRunner.runCommandAndWait(command);
