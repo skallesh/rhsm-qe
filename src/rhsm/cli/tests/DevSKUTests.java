@@ -29,7 +29,6 @@ import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 
 import rhsm.base.CandlepinType;
-import rhsm.base.SubscriptionManagerBaseTestScript;
 import rhsm.base.SubscriptionManagerCLITestScript;
 import rhsm.cli.tasks.CandlepinTasks;
 import rhsm.cli.tasks.SubscriptionManagerTasks;
@@ -303,7 +302,7 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(ProductSubscription.formatDateString(devSkuProductSubscription2.endDate), ProductSubscription.formatDateString(devSkuProductSubscription1.endDate), "A dev_sku enabled system that has been re-autosubscribed is granted another product subscription with the same end date.");
 		Assert.assertEquals(devSkuProductSubscription2.serviceLevel, devSkuProductSubscription1.serviceLevel, "A dev_sku enabled system that has been re-autosubscribed is granted another product subscription with the same service level.");
 		Assert.assertEquals(devSkuProductSubscription2.quantityUsed, devSkuProductSubscription1.quantityUsed, "A dev_sku enabled system that has been re-autosubscribed is granted another product subscription with the quantity used.");
-		Assert.assertEquals(devSkuProductSubscription2.provides, devSkuProductSubscription1.provides, "A dev_sku enabled system that has been re-autosubscribed is granted another product subscription that provides the same products.");
+		Assert.assertTrue(devSkuProductSubscription2.provides.containsAll(devSkuProductSubscription1.provides)&&devSkuProductSubscription1.provides.containsAll(devSkuProductSubscription2.provides), "A dev_sku enabled system that has been re-autosubscribed is granted another product subscription that provides the same products."+"  devSkuProductSubscription1.provides="+devSkuProductSubscription1.provides+"  devSkuProductSubscription2.provides="+devSkuProductSubscription2.provides);
 		Assert.assertTrue(!devSkuProductSubscription2.poolId.equals(devSkuProductSubscription1.poolId), "A dev_sku enabled system that has been re-autosubscribed is granted another product subscription from a different pool id.");
 		Assert.assertTrue(!devSkuProductSubscription2.serialNumber.equals(devSkuProductSubscription1.serialNumber), "A dev_sku enabled system that has been re-autosubscribed is granted another product subscription with a different serial.");
 	}
@@ -351,7 +350,7 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(ProductSubscription.formatDateString(devSkuProductSubscription2.endDate), ProductSubscription.formatDateString(devSkuProductSubscription1.endDate), "A dev_sku enabled system that has been re-autosubscribed is granted another product subscription with the same end date.");
 		Assert.assertEquals(devSkuProductSubscription2.serviceLevel, devSkuProductSubscription1.serviceLevel, "A dev_sku enabled system that has been re-autosubscribed is granted another product subscription with the same service level.");
 		Assert.assertEquals(devSkuProductSubscription2.quantityUsed, devSkuProductSubscription1.quantityUsed, "A dev_sku enabled system that has been re-autosubscribed is granted another product subscription with the quantity used.");
-		Assert.assertEquals(devSkuProductSubscription2.provides, devSkuProductSubscription1.provides, "A dev_sku enabled system that has been re-autosubscribed is granted another product subscription that provides the same products.");
+		Assert.assertTrue(devSkuProductSubscription2.provides.containsAll(devSkuProductSubscription1.provides)&&devSkuProductSubscription1.provides.containsAll(devSkuProductSubscription2.provides), "A dev_sku enabled system that has been re-autosubscribed is granted another product subscription that provides the same products."+"  devSkuProductSubscription1.provides="+devSkuProductSubscription1.provides+"  devSkuProductSubscription2.provides="+devSkuProductSubscription2.provides);
 		if (complianceStatus.equalsIgnoreCase("valid")) {
 			Assert.assertTrue(devSkuProductSubscription2.poolId.equals(devSkuProductSubscription1.poolId), "When system is already compliant, a dev_sku enabled system that has been re-autosubscribed will not be granted another product subscription from a different pool id (should not be needed since system is already green).");
 			Assert.assertTrue(devSkuProductSubscription2.serialNumber.equals(devSkuProductSubscription1.serialNumber), "When system is already compliant, a dev_sku enabled system that has been re-autosubscribed will not be granted another product subscription with a different serial (should not be needed since system is already green).");
@@ -442,6 +441,13 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 		factsMap.put("dev_platform","dev_platform_for_"+devSku2);
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
 		clienttasks.facts(null, true, null, null, null);
+		
+		// workaround for "All installed products are covered by valid entitlements. No need to update subscriptions at this time."
+		// which will cause the final assert to fail because the system will have no need to re-autosubscribe to devSku2
+		if (clienttasks.getFactValue("system.entitlements_valid").equalsIgnoreCase("valid")) {
+			// simply remove the devSkuProductSubscription1 subscription
+			clienttasks.unsubscribe_(null, devSkuProductSubscription1.serialNumber, null, null, null, null);
+		}
 		
 		// autosubscribe again
 		clienttasks.subscribe(true, null, null, null, (String)null, null, null, null, null, null, null, null);
@@ -633,7 +639,7 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 		ll.add(Arrays.asList(new Object[]{null,	"dev-mkt-product"/*Development SKU Product*/, "dev-platform"}));	
 		ll.add(Arrays.asList(new Object[]{null,	"dev-sku-product"/*Development SKU Product*/, "dev-platform"}));	
 		ll.add(Arrays.asList(new Object[]{null,	"MCT3295"/*Internal Shadow Sku CDK*/, "vagrant"}));
-		ll.add(Arrays.asList(new Object[]{null,	"awesomeos-everything"/*Awesome OS for x86_64/i686/ia64/ppc/ppc64/s390x/s390*/, "awesomeos-platform"}));	// chose because since it service_level is not set
+		ll.add(Arrays.asList(new Object[]{null,	"awesomeos-everything"/*Awesome OS for x86_64/i686/ia64/ppc/ppc64/s390x/s390*/, "awesomeos-platform"}));	// chosen because its service_level is not set
 		
 		return ll;
 	}

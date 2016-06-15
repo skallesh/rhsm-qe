@@ -37,7 +37,7 @@ def find_latest_rpm_url(baseurl, arch, rpm_name, version, release, regress):
     if version == '':
         VREGEX = VERSION_REGEX
     else:
-        VREGEX = version + "[\.\d+]*/"
+        VREGEX = version + "(\.\d+)*/"
     if release == '':
         EREGEX = EPOCH_REGEX
     else:
@@ -73,11 +73,11 @@ if __name__ in "__main__":
     parser.add_option("--rpmname", action="store", type="string",
         dest="rpmname", default='', help="RPM name for specific sub-package.")
     parser.add_option("--arch", action="store", type="string",
-        dest="arch", default='x86_64', help="Arch of rpm pacages desired.")
+        dest="arch", default='x86_64', help="Arch of rpm packages desired.")
     parser.add_option("--version", action="store", type="string",
-        dest="version", default='', help="Version of rpm pacages desired.")
+        dest="version", default='', help="Version of rpm packages desired.")
     parser.add_option("--release", action="store", type="string",
-        dest="release", default='', help="Release of rpm pacages desired.")
+        dest="release", default='', help="Release of rpm packages desired.")
     parser.add_option("--regress", action="store_true",
         dest="regress", help="Regress to latest working version.")
 

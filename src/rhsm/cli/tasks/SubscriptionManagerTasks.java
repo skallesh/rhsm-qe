@@ -2548,6 +2548,7 @@ if (false) {
 			String productId = jsonPool.getString("productId");
 			String poolId = jsonPool.getString("id");
 			String quantity = Integer.toString(jsonPool.getInt("quantity"));	// = jsonPool.getString("quantity");
+			if (jsonPool.getInt("quantity")<0)  quantity = "Unlimited";	// a pool quantity of -1 provided unlimited entitlements
 			String endDate = jsonPool.getString("endDate");
 			Boolean multiEntitlement = CandlepinTasks.isPoolProductMultiEntitlement(username,password, candlepinUrl, poolId);
 			SubscriptionPool fromPool = new SubscriptionPool(subscriptionName,productId,poolId,quantity,null,multiEntitlement,endDate);
@@ -5004,6 +5005,9 @@ if (false) {
 		logRuntimeErrors(sshCommandResult);
 		return sshCommandResult;
 	}
+	/**
+	 * @return SSHCommandResult from subscription-manager repo-override [parameters] without asserting any results
+	 */
 	public SSHCommandResult repo_override_(Boolean list, Boolean removeAll, String repoId, String removeName, Map<String,String> addNameValueMap, String proxy, String proxyuser, String proxypassword) {
 		List<String> repoIds = repoId==null?null:Arrays.asList(new String[]{repoId});
 		List<String> removeNames = removeName==null?null:Arrays.asList(new String[]{removeName});
@@ -5326,7 +5330,7 @@ if (false) {
 		}
 		
 
-		// assert that the remaining SubscriptionPools does NOT contain the pool just subscribed too (unless it is multi-entitleable)
+		// assert that the remaining SubscriptionPools does NOT contain the pool just subscribed to (unless it is multi-entitleable)
 		List<SubscriptionPool> afterSubscriptionPools = getCurrentlyAvailableSubscriptionPools();
 	    if (pool.subscriptionType!=null && pool.subscriptionType.equals("Other") ) {
 	    	Assert.fail("Encountered a subscription pool of type '"+pool.subscriptionType+"'.  Do not know how to assert the remaining availability of this pool after subscribing to it: "+pool);
@@ -5347,7 +5351,7 @@ if (false) {
 					"When the pools product attribute arch '"+poolProductAttributeArch+"' does not support this system arch '"+arch+"', the remaining available subscription pools should never contain the just subscribed to pool: "+pool);
 		} else {
 			Assert.assertTrue(afterSubscriptionPools.contains(pool),
-					"When the pool is multi-entitleable, the remaining available subscription pools still contains the just subscribed to pool: "+pool+" (if this fails, then we likely attached the final entitlements from the pool)");	// TODO fix the assertions for "if this fails"
+					"When the pool is multi-entitleable, the remaining available subscription pools still contains the just subscribed to pool: "+pool+" (TODO: if this fails, then we likely attached the final entitlements from the pool)");	// TODO fix the assertions for "if this fails"
 		}
 		
 		// assert that the remaining SubscriptionPools do NOT contain the same productId just subscribed to
@@ -6994,25 +6998,25 @@ if (false) {
 	}
 	
 	/**
-	 * @param installUpdateOrDowngrade - without asserting any results
+	 * @param command - "install" or "update" or "downgrade" or "remove" - without asserting any results
 	 * @param pkg
 	 * @param repoLabel
 	 * @param options
 	 * @return SSHCommandResult result
 	 */
-	public SSHCommandResult yumDoPackageFromRepo_ (String installUpdateOrDowngrade, String pkg, String repoLabel, String options) {
+	public SSHCommandResult yumDoPackageFromRepo_ (String command, String pkg, String repoLabel, String options) {
 		
 		// extract pkgName=devtoolset-1.1-valgrind-openmpi from pkg=devtoolset-1.1-valgrind-openmpi.i386
 		String pkgName = pkg;
 		if (pkg.lastIndexOf(".")!=-1) pkgName=pkg.substring(0,pkg.lastIndexOf("."));
 		
 		// install or update the package with repoLabel enabled
-		String command = "yum -y "+installUpdateOrDowngrade+" "+pkg;
-		command += " --disableplugin=rhnplugin";	// --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
-		if (repoLabel!=null) command += " --enablerepo="+repoLabel;
-		if (options!=null) command += " "+options; 
+		String yumCommand = "yum -y "+command+" "+pkg;
+		yumCommand += " --disableplugin=rhnplugin";	// --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
+		if (repoLabel!=null) yumCommand += " --enablerepo="+repoLabel;
+		if (options!=null) yumCommand += " "+options; 
 		//SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(sshCommandRunner,command, 0, "^Complete!$",null);
-		SSHCommandResult result = sshCommandRunner.runCommandAndWait(command);
+		SSHCommandResult result = sshCommandRunner.runCommandAndWait(yumCommand);
 		return (result);
 	}
 	
@@ -7021,7 +7025,7 @@ if (false) {
 		String pkgName = pkg;
 		if (pkg.lastIndexOf(".")!=-1) pkgName=pkg.substring(0,pkg.lastIndexOf("."));
 		
-		SSHCommandResult result = yumDoPackageFromRepo_ (installUpdateOrDowngrade, pkg, repoLabel, options);
+		SSHCommandResult result = yumDoPackageFromRepo_(installUpdateOrDowngrade, pkg, repoLabel, options);
 		Assert.assertTrue(!result.getStderr().toLowerCase().contains("error"), "Stderr from command '"+command+"' did not report an error.");
 		Assert.assertTrue(result.getStdout().contains("\nComplete!"), "Stdout from command '"+command+"' reported a successful \"Complete!\".");
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(0), "ExitCode from command '"+command+"'.");

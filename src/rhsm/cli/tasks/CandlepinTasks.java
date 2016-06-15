@@ -657,7 +657,7 @@ schema generation failed
 		// Example: curl --insecure --user testuser1:password --request GET https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/consumers/e60d7786-1f61-4dec-ad19-bde068dd3c19 | python -mjson.tool
 		String user		= (authenticator==null || authenticator.isEmpty())? "":"--user "+authenticator+":"+password+" ";
 		String request	= "--request "+get.getName()+" ";
-		log.info("SSH alternative to HTTP request: curl --stderr /dev/null --insecure "+user+request+get.getURI()+" | python -m simplejson/tool");
+		log.info("SSH alternative to HTTP request: curl --stderr /dev/null --insecure "+user+request+"'"+get.getURI()+"'"+" | python -m simplejson/tool");
 		
 		String response = getHTTPResponseAsString(client, get, authenticator, password);
 /* 8/21/2015 DELETEME IF TRY CATCH BLOCK IN doHTTPRequest WORKS BETTER
