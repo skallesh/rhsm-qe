@@ -14,12 +14,7 @@
   )
 
 ;; ;; initialization of our testware
-
-(use-fixtures :once (fn [f]
-                      (base/startup nil)
-                      (rtests/setup nil)
-                      (f)
-                      ))
+(use-fixtures :once (fn [f] (base/startup nil) (rtests/setup nil) (f) ))
 
 (deftest simple-register-test
   (testing "Simple Register Tests"
@@ -39,7 +34,21 @@
   (rtests/register_multi_click nil)
   )
 
+(deftest unregister_traceback-test
+  (t/restart-app)
+  (rtests/unregister_traceback nil)
+  )
+
 (deftest check_traceback_unregister-test
   (t/restart-app)
-  (rtests/check_traceback_unregister nil)
+  (case (tt/get-release)
+    "RHEL6"    (rtests/check_traceback_unregister nil)
+    "RHEL7"    (try
+                 (rtests/check_traceback_unregister nil)
+                 (catch java.lang.AssertionError _
+                   (is (= (@c/config :server-hostname) (t/conf-file-value "hostname")))
+                   )
+                 )
+    :no-test
+    )
   )
