@@ -32,8 +32,6 @@
                  ;[test_clj.testng "1.0.1-SNAPSHOT"]
                  [test-clj.testng "1.1.0-SNAPSHOT"]
                  [levand/immuconf "0.1.0"]
-                 [leiningen #=(leiningen.core.main/leiningen-version)]
-                 [im.chit/vinyasa "0.4.3"]
                  [mount "0.1.10"]
                  ]
 
