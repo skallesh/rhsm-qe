@@ -1,6 +1,7 @@
 package rhsm.cli.tests;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -9,6 +10,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.testng.SkipException;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterGroups;
 import org.testng.annotations.BeforeClass;
@@ -18,9 +20,11 @@ import org.testng.annotations.Test;
 import com.redhat.qe.Assert;
 import com.redhat.qe.auto.bugzilla.BlockedByBzBug;
 import com.redhat.qe.auto.testng.TestNGUtils;
+
 import rhsm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
+import com.redhat.qe.tools.SSHCommandRunner;
 
 /**
  * @author jsefler
@@ -421,9 +425,9 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 		
 		// this bug is specifically designed to test Bug 988085 - After running subscription-manager config --remove server.hostname, different default values available from GUI and CLI
 
-		serverHostnameConfigured = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "hostname");
-		serverPortConfigured = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "port");
-		serverPrefixConfigured = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "prefix");
+		if (serverHostnameConfigured==null) serverHostnameConfigured = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "hostname");
+		if (serverPortConfigured==null) serverPortConfigured = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "port");
+		if (serverPrefixConfigured==null) serverPrefixConfigured = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "prefix");
 		
 		// use the config command to remove the server configurations
 		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
@@ -523,10 +527,82 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
-	
-	
-	
-	
+	@Test(	description="verify the [server]server_timeout can be configured and function properly when the server does not respond within the timeout seconds",
+			groups={"blockedByBug-1346417","VerifyConfigServerTimeouts_Test"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void VerifyConfigServerTimeouts_Test() throws IOException {
+		// this bug is specifically designed to test Bug 1346417 - [RFE] Allow users to set socket timeout.
+		if (clienttasks.isPackageVersion("python-rhsm", "<", "1.17.3-1")) {  // python-rhsm commit 5780140650a59d45a03372a0390f92fd7c3301eb Allow users to set socket timeout.
+			throw new SkipException("This test applies a newer version of python-rhsm that includes an implementation for RFE Bug 1346417 - Allow users to set socket timeout.");
+		}
+		
+		// before we test this bug, assert that the manual setup service is running...
+		// instructions for setting this up are in scripts/timeout_listener.sh
+		// let's use the auto-services.usersys.redhat.com as the timeout listener server sm_basicauthproxyHostname
+		SSHCommandRunner timeoutServerCommandRunner = new SSHCommandRunner(sm_basicauthproxyHostname, sm_basicauthproxySSHUser, sm_sshKeyPrivate, sm_sshkeyPassphrase, null);
+		SSHCommandResult timeoutServerServiceResult = timeoutServerCommandRunner.runCommandAndWait("systemctl is-active timeout_listener.service");
+		Assert.assertContainsMatch(timeoutServerServiceResult.getStdout().trim(), "^active$","The timeout_listener.service is running.  If this fails, then a one-time setup of the timeout_listener server on '"+sm_basicauthproxyHostname+"' is needed.  See the instructions in the automation scripts/timeout_listener.sh file.");
+		
+		// fetch the timeout_listener server  CA Cert
+		log.info("Fetching timeout_listener CA cert...");
+		File remoteTimeoutServerCaCertFile = new File ("/root/timeout_listener/timeout_listener.pem");	// manually created on the timeoutServer as follows...
+		//	[root@auto-services timeout_listener]# openssl genrsa -out timeout_listener.key 4096
+		//	[root@auto-services timeout_listener]# openssl req -new -x509 -key timeout_listener.key -out timeout_listener.pem -days 3650 -subj '/CN=auto-services.usersys.redhat.com/C=US/L=Raleigh'
+		File localTimeoutServerCaCertFile = new File((getProperty("automation.dir", "/tmp")+"/tmp/"+remoteTimeoutServerCaCertFile.getName().replace("tmp/tmp", "tmp")));
+		RemoteFileTasks.getFile(timeoutServerCommandRunner.getConnection(), localTimeoutServerCaCertFile.getParent(), remoteTimeoutServerCaCertFile.getPath());
+		RemoteFileTasks.putFile(client.getConnection(), localTimeoutServerCaCertFile.getPath(), clienttasks.caCertDir+"/", "0644");
+		
+		// remember originally configured server configs
+		if (serverHostnameConfigured==null) serverHostnameConfigured = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "hostname");
+		if (serverPortConfigured==null) serverPortConfigured = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "port");
+		
+		// make sure server_timeout configuration is absent from the rhsm.conf file
+		clienttasks.removeConfFileParameter(clienttasks.rhsmConfFile, "server_timeout");
+		
+		// use the config command to set rhsm configurations to point to the timeout server
+		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
+		listOfSectionNameValues.add(new String[] { "server", "hostname", sm_basicauthproxyHostname});
+		listOfSectionNameValues.add(new String[] { "server", "port", "8883"});	// manually created on the timeoutServer as follows...
+		//	[root@auto-services timeout_listener]# yum install nmap-ncat
+		//	[root@auto-services timeout_listener]# nc --ssl --ssl-key ./timeout_listener.key --ssl-cert ./timeout_listener.pem --listen --keep-open 8883
+		clienttasks.config(null, null, true, listOfSectionNameValues);
+		
+		// test the default server_time value of 180 seconds
+		//	[root@jsefler-rhel7 ca]# time subscription-manager version 
+		//	Unable to verify server's identity: timed out
+		//
+		//	real	3m0.568s
+		//	user	0m0.226s
+		//	sys		0m0.036s
+		String serverDefaultTimeout = "180";	// seconds (assumed hard-coded default)
+		String command = "time "+clienttasks.versionCommand(null, null, null);
+		Long sshCommandTimeout = new Long(200); // seconds	// default server_timeout is 180 seconds
+		SSHCommandResult result = client.runCommandAndWait(command, Long.valueOf(sshCommandTimeout *1000));
+		List<String> realTimeList = getSubstringMatches(result.getStderr(), "real\\s+.*");	// extract the matches to: real	3m0.568s
+		if (realTimeList.size()!=1) Assert.fail("Failed to find the real time it took to run command '"+command+"'.  (The automated test gave up waiting for the server to reply after '"+sshCommandTimeout+"' seconds.  Is the server hung?)");
+		Assert.assertTrue(realTimeList.get(0).replaceFirst("real\\s+", "").startsWith("3m0."),"Testing server_timeout="+serverDefaultTimeout+" seconds");	// using startsWith() to tolerate fractional seconds
+		
+		// test a server_time value of N seconds
+		for (String server_timeout : Arrays.asList("4","10")) {	// seconds
+			listOfSectionNameValues.clear();
+			listOfSectionNameValues.add(new String[] { "server", "server_timeout", server_timeout});
+			clienttasks.config(null, null, true, listOfSectionNameValues);
+			command = "time "+clienttasks.versionCommand(null, null, null);
+			sshCommandTimeout = new Long(200); // seconds	// default server_timeout is 180 seconds
+			result = client.runCommandAndWait(command, Long.valueOf(sshCommandTimeout *1000));
+			realTimeList = getSubstringMatches(result.getStderr(), "real\\s+.*");	// extract the matches to: real	3m0.568s
+			if (realTimeList.size()!=1) Assert.fail("Failed to find the real time it took to run command '"+command+"'.  (The automated test gave up waiting for the server to reply after '"+sshCommandTimeout+"' seconds.  Is the server hung?)");
+			Assert.assertTrue(realTimeList.get(0).replaceFirst("real\\s+", "").startsWith("0m"+server_timeout+"."),"Testing server_timeout="+server_timeout+" seconds");	// using startsWith() to tolerate fractional seconds
+		}
+	}
+	@AfterGroups(value={"VerifyConfigServerTimeouts_Test"},groups={"setup"})
+	public void afterVerifyConfigServerTimeouts_Test() {
+		if (serverHostnameConfigured!=null) clienttasks.config(null,null,true, new String[]{"server","hostname",serverHostnameConfigured});
+		if (serverPortConfigured!=null) clienttasks.config(null,null,true, new String[]{"server","port",serverPortConfigured});
+		//clienttasks.config_(null, true, null, new String[]{"server","server_timeout"});	// will actually leave "server_timeout = 180" set in the rhsm.conf file
+		clienttasks.removeConfFileParameter(clienttasks.rhsmConfFile, "server_timeout");
+	}
 	
 	
 	// Candidates for an automated Test:
