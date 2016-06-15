@@ -1,16 +1,21 @@
 (ns rhsm.gui.tests.configuration-test
   (:require  [clojure.test :refer :all]
-             [rhsm.gui.tests.register_tests :as rtests]
              [rhsm.gui.tasks.tasks :as t]
              [rhsm.gui.tasks.tools :as tt]
              [rhsm.gui.tasks.test-config :as c]
+             [rhsm.gui.tests.base :as base]
              [rhsm.runtestng]
              [clojure.string :as s]
              )
   )
 
 ;; ;; initialization of our testware
-;; (rhsm.runtestng/before-suite true)
+(use-fixtures :once (fn [f]
+                      (println "use fixtures for proxy")
+                      (base/startup nil)
+                      (f)
+                      ))
+
 
 ;; testing of our testware
 (deftest basic-properties-test

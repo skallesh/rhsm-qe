@@ -2,6 +2,7 @@
   (:require  [clojure.test :refer :all]
              [rhsm.gui.tests.register_tests :as rtests]
              [rhsm.gui.tasks.tasks :as t]
+             [rhsm.gui.tests.base :as base]
              [rhsm.gui.tasks.candlepin-tasks :as ct]
              [rhsm.gui.tasks.tools :as tt]
              [rhsm.gui.tasks.test-config :as c]
@@ -12,9 +13,9 @@
              )
   )
 
-;; initialization of our testware
-(rhsm.runtestng/before-suite true)
+(use-fixtures :once (fn [f] (base/startup nil)(f)))
 
+;; initialization of our testware
 (deftest register-with-creds-test
   (is (contains? #{"Snow White" "Admin Owner"} (ct/get-owner-display-name (:username @c/config) (:password @c/config) (:owner-key @c/config))))
   )

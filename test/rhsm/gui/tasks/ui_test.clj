@@ -1,11 +1,11 @@
 (ns rhsm.gui.tasks.ui-test
   (:require [rhsm.gui.tasks.ui :as ui]
             [clojure.test :refer :all]
-            [mount.core :as mount]
+            [rhsm.gui.tests.base :as base]
             [rhsm.gui.tasks.tools :as tt]
             ))
 
-(use-fixtures :once (fn [f] (mount/start) (f)))
+(use-fixtures :once (fn [f] (base/startup nil) (f)))
 
 (deftest window-system-registration-is-available-test
   (testing "Test such that a window 'System Registration' is named as register_dialog for RHEL7"
