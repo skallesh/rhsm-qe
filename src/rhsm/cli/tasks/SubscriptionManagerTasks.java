@@ -5916,6 +5916,7 @@ if (false) {
 			expectedStdoutMsg = "Unsuccessfully unsubscribed serial numbers:";	// added by bug 867766
 			expectedStdoutMsg = "Unsuccessfully removed serial numbers:";	// changed by bug 874749
 			expectedStdoutMsg = "Serial numbers unsuccessfully removed at the server:";	// changed by bug 895447 subscription-manager commit 8e10e76fb5951e0b5d6c867c6c7209d8ec80dead
+			if (isPackageVersion("subscription-manager", ">=", "1.17.8-1")) expectedStdoutMsg = "The entitlement server failed to remove these serial numbers:";	// commit f64d5a6b012f49bb4d6d6653441d4de9bf373660  1319678: Alter the return message for removing entitlements at server
 			Assert.assertTrue(result.getStdout().contains(expectedStdoutMsg), "Stdout from unsubscribe contains expected message: "+expectedStdoutMsg);
 			if (isPackageVersion("subscription-manager", ">=", "1.16.6-1")) {	// commit 0d80caacf5e9483d4f10424030d6a5b6f472ed88 1285004: Adds check for access to the required manager capabilty
 				//	[root@jsefler-6 ~]# subscription-manager remove --serial 8375727538260415740 --serial 2872676222813362535
@@ -5963,6 +5964,7 @@ if (false) {
 		expectedStdoutMsg = "Successfully unsubscribed serial numbers:";	// added by bug 867766
 		expectedStdoutMsg = "Successfully removed serial numbers:";	// changed by bug 874749
 		expectedStdoutMsg = "Serial numbers successfully removed at the server:";	// changed by bug 895447 subscription-manager commit 8e10e76fb5951e0b5d6c867c6c7209d8ec80dead
+		if (isPackageVersion("subscription-manager", ">=", "1.17.8-1")) expectedStdoutMsg = "The entitlement server successfully removed these serial numbers:";	// commit f64d5a6b012f49bb4d6d6653441d4de9bf373660  1319678: Alter the return message for removing entitlements at server
 		Assert.assertTrue(result.getStdout().contains(expectedStdoutMsg), "Stdout from unsubscribe contains expected message: "+expectedStdoutMsg);
 		expectedStdoutMsg = "   "+serialNumber;	// added by bug 867766
 		Assert.assertTrue(result.getStdout().contains(expectedStdoutMsg), "Stdout from unsubscribe contains expected message: "+expectedStdoutMsg);

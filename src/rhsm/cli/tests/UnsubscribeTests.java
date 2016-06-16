@@ -368,6 +368,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		expectedStdoutMsg = "Successfully unsubscribed serial numbers:";	// changed by bug 874749
 		expectedStdoutMsg = "Successfully removed serial numbers:";
 		expectedStdoutMsg = "Serial numbers successfully removed at the server:";	// changed by bug 895447 subscription-manager commit 8e10e76fb5951e0b5d6c867c6c7209d8ec80dead
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.17.8-1")) expectedStdoutMsg = "The entitlement server successfully removed these serial numbers:";	// commit f64d5a6b012f49bb4d6d6653441d4de9bf373660  1319678: Alter the return message for removing entitlements at server
 		for (BigInteger serial : serials) expectedStdoutMsg+="\n   "+serial;	// NOTE: This expectedStdoutMsg makes a huge assumption about the order of the unsubscribed serial numbers printed to stdout
 		Assert.assertEquals(actualStdoutMsg, expectedStdoutMsg, "Stdout feedback when unsubscribing from all the currently consumed subscriptions.");
 		
@@ -401,11 +402,17 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		expectedStdoutMsg = "Successfully unsubscribed serial numbers:";	// added by bug 867766	// changed by bug 874749
 		expectedStdoutMsg = "Successfully removed serial numbers:";
 		expectedStdoutMsg = "Serial numbers successfully removed at the server:";	// changed by bug 895447 subscription-manager commit 8e10e76fb5951e0b5d6c867c6c7209d8ec80dead
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.17.8-1")) expectedStdoutMsg = "The entitlement server successfully removed these serial numbers:";	// commit f64d5a6b012f49bb4d6d6653441d4de9bf373660  1319678: Alter the return message for removing entitlements at server
 		for (BigInteger serial : serials) if (!revokedSerials.contains(serial)) expectedStdoutMsg+="\n   "+serial;	// NOTE: This expectedStdoutMsg makes a huge assumption about the order of the unsubscribed serial numbers printed to stdout
 		expectedStdoutMsg +="\n";
-		//expectedStdoutMsg += "Unsuccessfully unsubscribed serial numbers:";	// added by bug 867766	// changed by bug 874749
-		//expectedStdoutMsg += "Unsuccessfully removed serial numbers:";
-		expectedStdoutMsg += "Serial numbers unsuccessfully removed at the server:";	// changed by bug 895447 subscription-manager commit 8e10e76fb5951e0b5d6c867c6c7209d8ec80dead
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.17.8-1")) {
+			expectedStdoutMsg += "The entitlement server failed to remove these serial numbers:";	// commit f64d5a6b012f49bb4d6d6653441d4de9bf373660  1319678: Alter the return message for removing entitlements at server
+		}
+		else {
+			//expectedStdoutMsg += "Unsuccessfully unsubscribed serial numbers:";	// added by bug 867766	// changed by bug 874749
+			//expectedStdoutMsg += "Unsuccessfully removed serial numbers:";
+			expectedStdoutMsg += "Serial numbers unsuccessfully removed at the server:";	// changed by bug 895447 subscription-manager commit 8e10e76fb5951e0b5d6c867c6c7209d8ec80dead		
+		}
 		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.16.6-1")) {	// commit 0d80caacf5e9483d4f10424030d6a5b6f472ed88 1285004: Adds check for access to the required manager capabilty
 			for (BigInteger revokedSerial : revokedSerials) expectedStdoutMsg+="\n   "+revokedSerial;	// NOTE: This expectedStdoutMsg makes a huge assumption about the order of the unsubscribed serial numbers printed to stdout			
 		} else {
@@ -653,6 +660,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		//String expectedStdout = String.format("Pools successfully removed at the server:\n   %s\nSerial numbers successfully removed at the server:\n   %s\n   %s\n%d local certificates have been deleted.", pool.poolId, serials.get(0), serials.get(1), serials.size());
 		//Assert.assertEquals(result.getStdout().trim(),expectedStdout,"Stdout when attempting to unsubscribe from a valid pool id.");
 		String expectedStdoutRegex = String.format("Pools successfully removed at the server:\n   %s\nSerial numbers successfully removed at the server:\n   %s\n   %s\n%d local certificates have been deleted.", pool.poolId, "("+serials.get(0)+"|"+serials.get(1)+")", "("+serials.get(0)+"|"+serials.get(1)+")", serials.size());
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.17.8-1")) expectedStdoutRegex = String.format("The entitlement server successfully removed these pools:\n   %s\nThe entitlement server successfully removed these serial numbers:\n   %s\n   %s\n%d local certificates have been deleted.", pool.poolId, "("+serials.get(0)+"|"+serials.get(1)+")", "("+serials.get(0)+"|"+serials.get(1)+")", serials.size());	// commit f64d5a6b012f49bb4d6d6653441d4de9bf373660  1319678: Alter the return message for removing entitlements at server
 		Assert.assertMatch(result.getStdout().trim(), expectedStdoutRegex);
 		Assert.assertEquals(result.getStderr(), "", "Stderr when attempting to unsubscribe from a valid pool id.");
 	}
@@ -716,13 +724,17 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		successfulStdoutSerialsMsgLabel = "Successfully unsubscribed serial numbers:";
 		successfulStdoutSerialsMsgLabel = "Successfully removed serial numbers:";	// changed by bug 874749
 		successfulStdoutSerialsMsgLabel = "Serial numbers successfully removed at the server:";	// changed by bug 895447 subscription-manager commit 8e10e76fb5951e0b5d6c867c6c7209d8ec80dead
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.17.8-1")) successfulStdoutSerialsMsgLabel = "The entitlement server successfully removed these serial numbers:";	// commit f64d5a6b012f49bb4d6d6653441d4de9bf373660  1319678: Alter the return message for removing entitlements at server
 		String successfulStdoutPoolIdsMsgLabel;
 		successfulStdoutPoolIdsMsgLabel = "Pools successfully removed at the server:";
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.17.8-1")) successfulStdoutPoolIdsMsgLabel = "The entitlement server successfully removed these pools:";	// commit f64d5a6b012f49bb4d6d6653441d4de9bf373660  1319678: Alter the return message for removing entitlements at server
 
 		String unsuccessfulStdoutSerialsMsgLabel;
 		unsuccessfulStdoutSerialsMsgLabel = "Serial numbers unsuccessfully removed at the server:";
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.17.8-1")) unsuccessfulStdoutSerialsMsgLabel = "The entitlement server failed to remove these serial numbers:";	// commit f64d5a6b012f49bb4d6d6653441d4de9bf373660  1319678: Alter the return message for removing entitlements at server
 		String unsuccessfulStdoutPoolsMsgLabel;
 		unsuccessfulStdoutPoolsMsgLabel = "Pools unsuccessfully removed at the server:";
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.17.8-1")) unsuccessfulStdoutPoolsMsgLabel = "The entitlement server failed to remove these pools:";	// commit f64d5a6b012f49bb4d6d6653441d4de9bf373660  1319678: Alter the return message for removing entitlements at server
 		
 		Set<String>expectedPoolIds = new HashSet<String>();
 		Set<String>expectedSerials = new HashSet<String>();
