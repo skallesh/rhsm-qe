@@ -568,6 +568,12 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 		//	[root@auto-services timeout_listener]# nc --ssl --ssl-key ./timeout_listener.key --ssl-cert ./timeout_listener.pem --listen --keep-open 8883
 		clienttasks.config(null, null, true, listOfSectionNameValues);
 		
+		String command;
+		Long sshCommandTimeout;
+		SSHCommandResult result;
+		List<String> realTimeList;
+		String expectedStderr = "Unable to verify server's identity: timed out";
+		
 		// test the default server_time value of 180 seconds
 		//	[root@jsefler-rhel7 ca]# time subscription-manager version 
 		//	Unable to verify server's identity: timed out
@@ -576,13 +582,14 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 		//	user	0m0.226s
 		//	sys		0m0.036s
 		String serverDefaultTimeout = "180";	// seconds (assumed hard-coded default)
-		String command = "time "+clienttasks.versionCommand(null, null, null);
-		Long sshCommandTimeout = new Long(200); // seconds	// default server_timeout is 180 seconds
-		SSHCommandResult result = client.runCommandAndWait(command, Long.valueOf(sshCommandTimeout *1000));
-		List<String> realTimeList = getSubstringMatches(result.getStderr(), "real\\s+.*");	// extract the matches to: real	3m0.568s
+		command = "time "+clienttasks.versionCommand(null, null, null);
+		sshCommandTimeout = new Long(200); // seconds	// default server_timeout is 180 seconds
+		result = client.runCommandAndWait(command, Long.valueOf(sshCommandTimeout *1000));
+		realTimeList = getSubstringMatches(result.getStderr(), "real\\s+.*");	// extract the matches to: real	3m0.568s
 		if (realTimeList.size()!=1) Assert.fail("Failed to find the real time it took to run command '"+command+"'.  (The automated test gave up waiting for the server to reply after '"+sshCommandTimeout+"' seconds.  Is the server hung?)");
 		Assert.assertTrue(realTimeList.get(0).replaceFirst("real\\s+", "").startsWith("3m0."),"Testing server_timeout="+serverDefaultTimeout+" seconds");	// using startsWith() to tolerate fractional seconds
-		
+		Assert.assertTrue(result.getStderr().startsWith(expectedStderr),"When a server_timeout occurs, subscription-manager should report '"+expectedStderr+"'.");
+
 		// test a server_time value of N seconds
 		for (String server_timeout : Arrays.asList("4","10")) {	// seconds
 			listOfSectionNameValues.clear();
@@ -594,6 +601,7 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 			realTimeList = getSubstringMatches(result.getStderr(), "real\\s+.*");	// extract the matches to: real	3m0.568s
 			if (realTimeList.size()!=1) Assert.fail("Failed to find the real time it took to run command '"+command+"'.  (The automated test gave up waiting for the server to reply after '"+sshCommandTimeout+"' seconds.  Is the server hung?)");
 			Assert.assertTrue(realTimeList.get(0).replaceFirst("real\\s+", "").startsWith("0m"+server_timeout+"."),"Testing server_timeout="+server_timeout+" seconds");	// using startsWith() to tolerate fractional seconds
+			Assert.assertTrue(result.getStderr().startsWith(expectedStderr),"When a server_timeout occurs, subscription-manager should report '"+expectedStderr+"'.");
 		}
 	}
 	@AfterGroups(value={"VerifyConfigServerTimeouts_Test"},groups={"setup"})
