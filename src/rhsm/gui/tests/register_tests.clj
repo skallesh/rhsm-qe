@@ -191,7 +191,7 @@
                        "blockedByBug-1034429"
                        "blockedByBug-1170324"]}}
   check_traceback_unregister
-  "checks for traceback if any during unregister with GUI open"
+  "Check there is no Tracebacks during unregister with GUI open"
   [_]
   (if (not (tasks/ui showing? :register-system))
     (tasks/unregister))
