@@ -7,8 +7,7 @@
             [immuconf.config :as cfg]
             [rhsm.gui.tasks.test-config :as config]
             [rhsm.gui.tasks.tasks :as tasks]
-            [mount.core :as mount]
-            )
+            [mount.core :as mount])
   (:import [org.testng.xml Parser XmlSuite]
            [org.testng TestNG]
            (java.io FileNotFoundException))
@@ -52,12 +51,12 @@ Example: lein run 'GUI: REGISTRATION' 'GUI: FACTS' suites/sm-gui-testng-suite.xm
           tests (filter (fn [x] (nil? (re-matches #".*\.xml" x))) args)
           testng (new TestNG)]
       (cond
-       (:list-testnames options)
-       (doseq [s suites] (println (str "\n" s ":")) (pprint (get-test-names s)))
-       :else (do
-               (when psuite (.setXmlSuites testng psuite))
-               (if-not (empty? tests) (.setTestNames testng tests))
-               (when psuite (.run testng)))))))
+        (:list-testnames options)
+        (doseq [s suites] (println (str "\n" s ":")) (pprint (get-test-names s)))
+        :else (do
+                (when psuite (.setXmlSuites testng psuite))
+                (if-not (empty? tests) (.setTestNames testng tests))
+                (when psuite (.run testng)))))))
 
 
 (defn -main

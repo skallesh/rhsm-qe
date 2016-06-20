@@ -8,14 +8,11 @@
              [rhsm.runtestng]
              [slingshot.slingshot :as sl]
              [clojure.string :as s]
-             [mount.core :as mount]
-             )
-  )
+             [mount.core :as mount]))
 
 
 (use-fixtures :once (fn [f] (base/startup nil)(f)))
 
 (deftest register-with-creds-test
   (t/restart-app)
-  (t/register-with-creds)
-  )
+  (t/register-with-creds))

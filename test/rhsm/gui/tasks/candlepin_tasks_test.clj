@@ -9,13 +9,10 @@
              [rhsm.runtestng]
              [slingshot.slingshot :as sl]
              [clojure.string :as s]
-             [mount.core :as mount]
-             )
-  )
+             [mount.core :as mount]))
 
 (use-fixtures :once (fn [f] (base/startup nil)(f)))
 
 ;; initialization of our testware
 (deftest register-with-creds-test
-  (is (contains? #{"Snow White" "Admin Owner"} (ct/get-owner-display-name (:username @c/config) (:password @c/config) (:owner-key @c/config))))
-  )
+  (is (contains? #{"Snow White" "Admin Owner"} (ct/get-owner-display-name (:username @c/config) (:password @c/config) (:owner-key @c/config)))))
