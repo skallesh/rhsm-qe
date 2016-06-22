@@ -1,0 +1,12 @@
+[Unit]
+Description=Socket listener for testing network timeouts
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/root/timeout_listener/timeout_listener.sh
+WorkingDirectory=/root/timeout_listener
+Restart=always
+
+[Install]
+WantedBy=default.target
