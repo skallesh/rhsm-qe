@@ -32,8 +32,7 @@
                  ;[test_clj.testng "1.0.1-SNAPSHOT"]
                  [test-clj.testng "1.1.0-SNAPSHOT"]
                  [levand/immuconf "0.1.0"]
-                 [mount "0.1.10"]
-                 ]
+                 [mount "0.1.10"]]
 
   ;lein1
   :dev-dependencies [[fn.trace "1.3.2.0-SNAPSHOT"]
@@ -51,8 +50,7 @@
   ;:javac-options ["-target" "1.7" "-source" "1.7"]
   ;:jvm-opts ["-Xdebug" "-Xrunjdwp:transport=dt_socket,address=13172,server=y,suspend=n"]
 
-  :repl-options {:timeout 120000}
-  )
+  :repl-options {:timeout 120000})
 
 (comment
   (do
@@ -82,9 +80,7 @@
       (require :reload-all '[rhsm.gui.tests.product_status_tests :as pstest])
       (require :reload-all '[rhsm.gui.tests.subscription_status_tests :as substattest])
       (require :reload-all '[rhsm.gui.tests.search_status_tests :as sstattest])
-
-      (import '[rhsm.base SubscriptionManagerCLITestScript])
-      )
+      (import '[rhsm.base SubscriptionManagerCLITestScript]))
 
     (let [cliscript (SubscriptionManagerCLITestScript.)]
       (.setupBeforeSuite cliscript))
@@ -94,10 +90,8 @@
       (tasks/connect)
       (use 'gnome.ldtp))
     (log/info "INITIALIZATION COMPLETE!!")
-    "INITIALIZATION COMPLETE!!"
-    )      ;<< Here for all of it
+    "INITIALIZATION COMPLETE!!")      ;<< Here for all of it
 
   ;not used
   (require :reload-all '[rhsm.gui.tests.subscription-assistant-tests :as satest])
-  (require :reload-all '[rhsm.gui.tests.acceptance_tests :as actest])
-  )
+  (require :reload-all '[rhsm.gui.tests.acceptance_tests :as actest]))
