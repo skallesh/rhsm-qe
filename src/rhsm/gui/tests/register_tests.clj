@@ -12,6 +12,7 @@
         rhsm.gui.tasks.tools
         gnome.ldtp)
   (:require [rhsm.gui.tasks.tasks :as tasks]
+            [rhsm.gui.tasks.ui :as ui]
             [rhsm.gui.tests.base :as base]
             [clojure.tools.logging :as log]
             [rhsm.gui.tasks.candlepin-tasks :as ctasks])
@@ -190,7 +191,7 @@
                        "blockedByBug-1034429"
                        "blockedByBug-1170324"]}}
   check_traceback_unregister
-  "checks for traceback if any during unregister with GUI open"
+  "Check there is no Tracebacks during unregister with GUI open"
   [_]
   (if (not (tasks/ui showing? :register-system))
     (tasks/unregister))
@@ -255,13 +256,17 @@
   "Asserts that you can't click the register button multiple times
    and open multiple register dialogs"
   [_]
-  (if (not (tasks/ui showing? :register-system))
-    (tasks/unregister))
-  (verify (not-nil? (some #{"enabled"} (tasks/ui getallstates :register-system))))
+  (try+ (tasks/unregister) (catch [:type :not-registered] _))
+  (verify (contains? (set (tasks/ui getallstates :register-system))  "enabled"))
   (tasks/ui click :register-system)
+  (tasks/ui waittillguiexist :register-dialog)
   (verify (nil? (some #{"enabled"} (tasks/ui getallstates :register-system))))
   (tasks/ui click :register-system)
-  (verify (apply distinct? (filter #(substring? "Registration" %) (tasks/ui getwindowlist))))
+  (tasks/ui click :register-system)
+  (case (get-release)
+    "RHEL6"   (verify (apply distinct? (filter #(= "dlgSystemRegistration" %) (tasks/ui getwindowlist))))
+    "RHEL7"   (verify (apply distinct? (filter #(= "dlgregister_dialog" %) (tasks/ui getwindowlist))))
+    :no-verify)
   (tasks/ui click :register-close))
 
 (defn ^{Test {:groups ["registration"
@@ -271,6 +276,7 @@
   "Asserts that a traceback does not occur during unregister
    when pools are attached."
   [_]
+  (try+ (tasks/unregister) (catch [:type :not-registered] _))
   (tasks/register-with-creds :re-register true)
   (let [avail (shuffle (ctasks/list-available))
         pools (take 5 (map :id avail))

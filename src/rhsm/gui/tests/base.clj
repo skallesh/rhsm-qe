@@ -3,7 +3,8 @@
         [rhsm.gui.tasks.tasks]
         rhsm.gui.tasks.tools)
   (:require [rhsm.gui.tasks.test-config :as config]
-            [clojure.tools.logging :as log])
+            [clojure.tools.logging :as log]
+            [mount.core :as mount])
   (:import [org.testng.annotations BeforeSuite
             AfterSuite]
            [rhsm.base SubscriptionManagerCLITestScript]
@@ -24,7 +25,7 @@
   (when url
     (if (= "RHEL5" (get-release))
       (let [;path (str "/home/" user "/bin/ldtpd")
-        path (str "/root/bin/ldtpd")]
+            path (str "/root/bin/ldtpd")]
         (run-and-assert (str "wget " url " -O " path))
         (run-and-assert (str "chmod +x " path))))))
 
@@ -33,18 +34,18 @@
   []
   (if (= "RHEL7" (get-release))
     (do (run-command "systemctl stop vncserver@:2.service")
-        ( . Thread (sleep 5000))
+        (. Thread (sleep 5000))
         ;;yup systemd sucks
         (run-command "killall -9 Xvnc")
         (run-command "rm -f /tmp/.X2-lock; rm -f /tmp/.X11-unix/X2")
         (run-and-assert "systemctl start vncserver@:2.service"))
     (do
       (run-command "service vncserver stop")
-      ( . Thread (sleep 5000))
+      (. Thread (sleep 5000))
       (run-command "rm -f /tmp/.X2-lock; rm -f /tmp/.X11-unix/X2")
       (run-and-assert "service vncserver start")))
   (run-command "echo -n \"Waiting for startup.\" & until $(netstat -lnt | awk '$6 == \"LISTEN\" && $4 ~ \".4118\"' | grep -q .); do echo -n \".\"; sleep 2; done; echo")
-  ( . Thread (sleep 10000))
+  (. Thread (sleep 10000))
   (comment (if (= "RHEL7" (get-release))
              (do
                (run-command "gsettings set org.gnome.settings-daemon.plugins.a11y-settings active false")
@@ -54,13 +55,21 @@
 (defn ^{BeforeSuite {:groups ["setup"]}}
   startup [_]
   (try
+    (println "----------------------------------- before suite ---------------------------------------")
     (let [cliscript (SubscriptionManagerCLITestScript.)]
       (.setupBeforeSuite cliscript))
+    (println "----------------------------------- before config init ---------------------------------------")
     (config/init)
     (assert-valid-testing-arch)
+    (println "----------------------------------- before update ldtpd ---------------------------------------")
     (update-ldtpd (:ldtpd-source-url @config/config))
+    (println "----------------------------------- before restart vnc ---------------------------------------")
     (restart-vnc)
+    (println "----------------------------------- before connect ---------------------------------------")
     (connect)
+    (println "----------------------------------- before mount/start ---------------------------------------")
+    (mount/start)
+    (println "----------------------------------- before start-app ---------------------------------------")
     (start-app)
     (catch Exception e
       (reset! (skip-groups :suite) true)
