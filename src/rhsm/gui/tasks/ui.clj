@@ -2,8 +2,7 @@
   (:use  [clojure.string :only [join split capitalize]])
   (:require [gnome.ldtp :as ldtp]
             [mount.core :refer [defstate]]
-            [rhsm.gui.tasks.tools :as tt]
-            )
+            [rhsm.gui.tasks.tools :as tt])
   (:import java.util.NoSuchElementException
            [gnome.ldtp Element Tab Window TabGroup]))
 
