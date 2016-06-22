@@ -25,14 +25,7 @@
 
 (deftest check_traceback_unregister-test
   (tasks/restart-app)
-  ;(rtests/check_traceback_unregister nil)
-  (case (tt/get-release)
-    "RHEL6"    (rtests/check_traceback_unregister nil)
-    "RHEL7"    (try
-                 (rtests/check_traceback_unregister nil)
-                 (catch java.lang.AssertionError _
-                   (is (= (@c/config :server-hostname) (tasks/conf-file-value "hostname")))))
-    :no-test))
+  (rtests/check_traceback_unregister nil))
 
 (deftest simple-register-test
   (testing "Simple Register Tests"
