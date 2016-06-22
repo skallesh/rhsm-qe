@@ -1000,7 +1000,79 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 			Assert.assertNull(clientFactsMap.get(macAddressFact), "After fix for bug 838123, the '"+macAddressFact+"' fact should not exist.");
 		}
 	}
-
+	
+	
+	@Test(	description="assert the addition of new facts collected to capture multiple IPs per network interface device - net.interface.<device>.ipv<4|6>_<addressinfo>_list",
+			groups={"blockedByBug-874735", "AcceptanceTests"}, dependsOnGroups={},
+			enabled=true)
+	// Polarion RHEL7-55562 RHSM-TC : facts collection of interfaces with multiple addresses
+	//@ImplementsNitrateTest(caseId=)
+	public void AssertNewFactsAreCollectedForMultipleIPsPerNetworkInterface_Test() {
+		if (clienttasks.isPackageVersion("subscription-manager", "<", "1.17.8-1")) {  // subscription-manager commit e3121cb1a426ab02440810cbbf38c3a2e228f079: 874735: Support fact collection of multiple ips per interface
+			throw new SkipException("This test applies a newer version of subscription manager that includes fixes for bugs 1297493 and 1297485.");
+		}
+		
+		//	[root@jsefler-rhel7 ~]# subscription-manager facts --list | grep  net.interface
+		//	net.interface.docker0.ipv4_address: 172.17.0.1
+		//	net.interface.docker0.ipv4_address_list: 172.17.0.1						<==== new comma delimited list
+		//	net.interface.docker0.ipv4_broadcast: Unknown
+		//	net.interface.docker0.ipv4_broadcast_list: Unknown						<==== new comma delimited list
+		//	net.interface.docker0.ipv4_netmask: 16
+		//	net.interface.docker0.ipv4_netmask_list: 16								<==== new comma delimited list
+		//	net.interface.docker0.ipv6_address.link: fe80::42:c6ff:fe18:dfcf
+		//	net.interface.docker0.ipv6_address.link_list: fe80::42:c6ff:fe18:dfcf	<==== new comma delimited list
+		//	net.interface.docker0.ipv6_netmask.link: 64
+		//	net.interface.docker0.ipv6_netmask.link_list: 64						<==== new comma delimited list
+		//	net.interface.docker0.mac_address: 02:42:C6:18:DF:CF
+		//	net.interface.eth0.ipv4_address: 10.16.7.221
+		//	net.interface.eth0.ipv4_address_list: 10.16.7.221						<==== new comma delimited list
+		//	net.interface.eth0.ipv4_broadcast: 10.16.7.255
+		//	net.interface.eth0.ipv4_broadcast_list: 10.16.7.255						<==== new comma delimited list
+		//	net.interface.eth0.ipv4_netmask: 22
+		//	net.interface.eth0.ipv4_netmask_list: 22								<==== new comma delimited list
+		//	net.interface.eth0.mac_address: 52:54:00:CC:25:0E
+		//	net.interface.lo.ipv4_address: 127.0.0.1
+		//	net.interface.lo.ipv4_address_list: 127.0.0.1							<==== new comma delimited list
+		//	net.interface.lo.ipv4_broadcast: Unknown
+		//	net.interface.lo.ipv4_broadcast_list: Unknown							<==== new comma delimited list
+		//	net.interface.lo.ipv4_netmask: 8
+		//	net.interface.lo.ipv4_netmask_list: 8									<==== new comma delimited list
+		//	net.interface.lo.ipv6_address.host: ::1
+		//	net.interface.lo.ipv6_address.host_list: ::1							<==== new comma delimited list
+		//	net.interface.lo.ipv6_netmask.host: 128
+		//	net.interface.lo.ipv6_netmask.host_list: 128							<==== new comma delimited list
+		//	net.interface.virbr0-nic.mac_address: 52:54:00:45:79:2A
+		//	net.interface.virbr0.ipv4_address: 192.168.122.1
+		//	net.interface.virbr0.ipv4_address_list: 192.168.122.1					<==== new comma delimited list
+		//	net.interface.virbr0.ipv4_broadcast: 192.168.122.255
+		//	net.interface.virbr0.ipv4_broadcast_list: 192.168.122.255				<==== new comma delimited list
+		//	net.interface.virbr0.ipv4_netmask: 24
+		//	net.interface.virbr0.ipv4_netmask_list: 24								<==== new comma delimited list
+		//	net.interface.virbr0.mac_address: 52:54:00:45:79:2A
+		
+		Map<String,String> netInterfaceFactsMap = clienttasks.getFacts("net.interface");
+		String netInterfaceDeviceIPvRegex = "net\\.interface\\.(.+).ipv(\\d)_(.+)";	// matches net.interface.lo.ipv6_address.host as well as net.interface.lo.ipv6_netmask.host_list
+		int netInterfaceListFactCount = 0;
+		
+		for (String key : netInterfaceFactsMap.keySet()) {
+			if (key.endsWith("_list")) continue;	// Example: net.interface.virbr0.ipv4_address_list
+			String netInterfaceListFact = key+"_list";	
+			if (key.matches(netInterfaceDeviceIPvRegex)) {	// Example: net.interface.virbr0.ipv4_address
+				netInterfaceListFactCount++;
+				// assert the existence of the new _list fact
+				Assert.assertTrue(netInterfaceFactsMap.containsKey(netInterfaceListFact), "New network interface list fact for '"+netInterfaceListFact+"' exists and corresponds to network interface IPv(4|6) fact '"+key+"'.");
+				// assert that the final value in the new _list fact matches the corresponding netInterfaceDeviceIPv fact.
+				List<String> netInterfaceDeviceIPvList = Arrays.asList((netInterfaceFactsMap.get(netInterfaceListFact)).split(" *, *"));
+				Assert.assertEquals(netInterfaceDeviceIPvList.get(netInterfaceDeviceIPvList.size()-1),netInterfaceFactsMap.get(key), "The last item in the values for new network interface list fact '"+netInterfaceListFact+"' (comma delimited values '"+netInterfaceFactsMap.get(netInterfaceListFact)+"') matches the corresponding network interface IPv(4|6) fact '"+key+"' (value '"+netInterfaceFactsMap.get(key)+"').");
+			} else {
+				Assert.assertTrue(!netInterfaceFactsMap.containsKey(netInterfaceListFact), "New network interface list fact for '"+netInterfaceListFact+"' does NOT exist because '"+key+"' is NOT an IPv(4|6) fact.");
+			}
+		}
+		
+		// make sure that at least one of the new facts was tested 
+		Assert.assertTrue(netInterfaceListFactCount>0,"Encountered at least one net.interface.<device>.ipv<4|6>_<addressinfo> fact. (actual='"+netInterfaceListFactCount+"').  If no facts were encountered then there is no networking which means something is crazy wrong.");
+	}
+	
 	
 	protected String rhsm_report_package_profile = null;
 	@BeforeGroups(value={"EnablementOfReportPackageProfile_Test"}, groups={"setup"})
