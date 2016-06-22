@@ -186,8 +186,7 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
     (define-elements (windows :contract-selection-dialog)
       {:contract-selection-table "SLA Selection Table"
        :cancel-contract-selection "Cancel"
-       :attach-contract-selection "Attach"
-       })
+       :attach-contract-selection "Attach"})
     (define-elements (windows :proxy-config-dialog)
        (merge (same-name capitalize [:proxy-checkbox
                                      :authentication-checkbox
@@ -270,12 +269,10 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
        :close-about-dialog "Close"})
     (define-elements (windows :credits-dialog)
       {;;these info fields are meant to be used by running gettext on them
-       :close-credits-dialog "Close"}
-      )
+       :close-credits-dialog "Close"})
     (define-elements (windows :license-dialog)
       {;;these info fields are meant to be used by running gettext on them
-       :close-license-dialog "Close"}
-      )
+       :close-license-dialog "Close"})
     (define-elements (windows :repositories-dialog)
       {:repo-table "Repository View"
        :repo-message "No repositories are available*"
