@@ -200,7 +200,7 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 	protected String consumerId=null;
 	
 	
-	@Test(	description="Verify that subscription-manager-container-plugin production needed registry_hostnames and CA certs",
+	@Test(	description="Verify that subscription-manager-container-plugin provides needed registry_hostnames and CA certs",
 			groups={"AcceptanceTests","blockedByBug-1184940","blockedByBug-1186386"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -215,8 +215,8 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 		List<String> expectedRegistryHostnames = new ArrayList<String>();
 		expectedRegistryHostnames.add("registry.access.redhat.com");
 		expectedRegistryHostnames.add("cdn.redhat.com");
-		//if (clienttasks.isPackageVersion("subscription-manager-plugin-container", ">", "1.13.17-1"))
-		expectedRegistryHostnames.add("access.redhat.com");	// added by bug 1184940
+		if (clienttasks.isPackageVersion("subscription-manager-plugin-container", ">", "1.13.17-1")) expectedRegistryHostnames.add("access.redhat.com");	// subscription-manager commit 829fc36133cf13289fce87dc55f4ce746cfec7b8	// Bug 1184940 dup of Bug 1186386 - Docker unable to pull from CDN due to CA failure
+		if (clienttasks.isPackageVersion("subscription-manager-plugin-container", ">=", "1.17.7-1")) expectedRegistryHostnames.add("registry.redhat.io");	// subscription-manager commit 0b34b2ee13c12cd32a804dc074e39b5d5edac589	// Bug 1328729 - Docker client doesn't link entitlements certs
 		for (String expectedRegistryHostname : expectedRegistryHostnames) {
 			Assert.assertTrue(registryHostnames.contains(expectedRegistryHostname), "Container plugin file '"+containerContentPluginFile+"' configuration for registry_hostnames includes expected '"+expectedRegistryHostname+"'.  Actual='"+registry_hostnames+"'");
 		}
