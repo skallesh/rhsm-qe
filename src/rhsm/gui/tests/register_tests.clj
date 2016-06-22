@@ -266,10 +266,8 @@
   (case (get-release)
     "RHEL6"   (verify (apply distinct? (filter #(= "dlgSystemRegistration" %) (tasks/ui getwindowlist))))
     "RHEL7"   (verify (apply distinct? (filter #(= "dlgregister_dialog" %) (tasks/ui getwindowlist))))
-    :no-verify
-    )
-  (tasks/ui click :register-close)
-  )
+    :no-verify)
+  (tasks/ui click :register-close))
 
 (defn ^{Test {:groups ["registration"
                        "tier2"
