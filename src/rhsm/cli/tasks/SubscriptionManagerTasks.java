@@ -1234,6 +1234,13 @@ if (false) {
 		}
 	}
 	
+	public void removeConfFileParameter(String confFile, String parameter){
+		log.info("Removing config file '"+confFile+"' parameter: "+parameter);
+		Assert.assertEquals(
+				RemoteFileTasks.searchReplaceFile(sshCommandRunner, confFile, "^"+parameter+"\\s*=.*", ""),
+				0,"Removed '"+confFile+"' parameter: "+parameter);
+	}
+	
 	public void commentConfFileParameter(String confFile, String parameter){
 		log.info("Commenting out config file '"+confFile+"' parameter: "+parameter);
 		Assert.assertEquals(
@@ -4388,6 +4395,7 @@ if (false) {
 			defaultNames.add("proxy_port");
 			defaultNames.add("proxy_user");
 			defaultNames.add("proxy_password");
+			if (isPackageVersion("python-rhsm",">=","1.17.3-1")) defaultNames.add("server_timeout");	// python-rhsm commit 5780140650a59d45a03372a0390f92fd7c3301eb Allow users to set socket timeout.	// Bug 1346417 - Allow users to set socket timeout.
 
 		}
 		if (section.equalsIgnoreCase("rhsm")) {
@@ -5908,6 +5916,7 @@ if (false) {
 			expectedStdoutMsg = "Unsuccessfully unsubscribed serial numbers:";	// added by bug 867766
 			expectedStdoutMsg = "Unsuccessfully removed serial numbers:";	// changed by bug 874749
 			expectedStdoutMsg = "Serial numbers unsuccessfully removed at the server:";	// changed by bug 895447 subscription-manager commit 8e10e76fb5951e0b5d6c867c6c7209d8ec80dead
+			if (isPackageVersion("subscription-manager", ">=", "1.17.8-1")) expectedStdoutMsg = "The entitlement server failed to remove these serial numbers:";	// commit f64d5a6b012f49bb4d6d6653441d4de9bf373660  1319678: Alter the return message for removing entitlements at server
 			Assert.assertTrue(result.getStdout().contains(expectedStdoutMsg), "Stdout from unsubscribe contains expected message: "+expectedStdoutMsg);
 			if (isPackageVersion("subscription-manager", ">=", "1.16.6-1")) {	// commit 0d80caacf5e9483d4f10424030d6a5b6f472ed88 1285004: Adds check for access to the required manager capabilty
 				//	[root@jsefler-6 ~]# subscription-manager remove --serial 8375727538260415740 --serial 2872676222813362535
@@ -5955,6 +5964,7 @@ if (false) {
 		expectedStdoutMsg = "Successfully unsubscribed serial numbers:";	// added by bug 867766
 		expectedStdoutMsg = "Successfully removed serial numbers:";	// changed by bug 874749
 		expectedStdoutMsg = "Serial numbers successfully removed at the server:";	// changed by bug 895447 subscription-manager commit 8e10e76fb5951e0b5d6c867c6c7209d8ec80dead
+		if (isPackageVersion("subscription-manager", ">=", "1.17.8-1")) expectedStdoutMsg = "The entitlement server successfully removed these serial numbers:";	// commit f64d5a6b012f49bb4d6d6653441d4de9bf373660  1319678: Alter the return message for removing entitlements at server
 		Assert.assertTrue(result.getStdout().contains(expectedStdoutMsg), "Stdout from unsubscribe contains expected message: "+expectedStdoutMsg);
 		expectedStdoutMsg = "   "+serialNumber;	// added by bug 867766
 		Assert.assertTrue(result.getStdout().contains(expectedStdoutMsg), "Stdout from unsubscribe contains expected message: "+expectedStdoutMsg);
@@ -6200,6 +6210,20 @@ if (false) {
 	// version module tasks ************************************************************
 	
 	/**
+	 * @return the command line syntax for calling this subscription-manager module with these options
+	 */
+	public String versionCommand(String proxy, String proxyuser, String proxypassword) {
+
+		// assemble the command
+		String command = this.command;	command += " version";	
+		if (proxy!=null)				command += " --proxy="+proxy;
+		if (proxyuser!=null)			command += " --proxyuser="+proxyuser;
+		if (proxypassword!=null)		command += " --proxypassword="+proxypassword;
+		
+		return command;
+	}
+	
+	/**
 	 * version without asserting results
 	 * @param proxy TODO
 	 * @param proxyuser TODO
@@ -6209,10 +6233,11 @@ if (false) {
 	public SSHCommandResult version_(String proxy, String proxyuser, String proxypassword) {
 
 		// assemble the command
-		String command = this.command;	command += " version";	
-		if (proxy!=null)				command += " --proxy="+proxy;
-		if (proxyuser!=null)			command += " --proxyuser="+proxyuser;
-		if (proxypassword!=null)		command += " --proxypassword="+proxypassword;
+//		String command = this.command;	command += " version";	
+//		if (proxy!=null)				command += " --proxy="+proxy;
+//		if (proxyuser!=null)			command += " --proxyuser="+proxyuser;
+//		if (proxypassword!=null)		command += " --proxypassword="+proxypassword;
+		String command = versionCommand(proxy,proxyuser,proxypassword);
 		
 		// run command without asserting results
 		SSHCommandResult sshCommandResult = sshCommandRunner.runCommandAndWait(command);

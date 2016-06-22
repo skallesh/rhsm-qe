@@ -2976,6 +2976,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		expected +=	"   " + serialTwo.multiply(serialOne) + " is not a valid value for serial";
 		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.10-1")) {	// commit bb482c63d7386b358e5ba32817e729d1b423a421	// Bug 1268491: RestEasy 3 changed behavior when a JAX-RS resource's parameter is not parseable. In the past BadRequestException was handled. Defensively adding the same handling behavior to NotFoundException
 			expected =	"Serial numbers unsuccessfully removed at the server:" + "\n";
+			if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.17.8-1")) expected = "The entitlement server failed to remove these serial numbers:"+"\n";	// commit f64d5a6b012f49bb4d6d6653441d4de9bf373660  1319678: Alter the return message for removing entitlements at server
 			expected +=	"   " + serialOne.multiply(serialTwo);
 		}
 		Assert.assertEquals(result.trim(), expected);
@@ -3025,6 +3026,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 
 		String expected = "";
 		expected +=	"Serial numbers successfully removed at the server:" + "\n";
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.17.8-1")) expected = "The entitlement server successfully removed these serial numbers:"+"\n";	// commit f64d5a6b012f49bb4d6d6653441d4de9bf373660  1319678: Alter the return message for removing entitlements at server
 		expected +=	"   " + serialOne + "\n";
 		expected +=	"   " + serialTwo + "\n";
 		expected += "2 local certificates have been deleted.";
