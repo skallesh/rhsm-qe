@@ -226,8 +226,7 @@
     ;; else leave sla dialog open
     (when sla
       (sleep 2000)
-      (ui click :register-dialog sla))
-    ))
+      (ui click :register-dialog sla))))
 
 (comment
   "This is the old register function that was refactored...keeping here for now"

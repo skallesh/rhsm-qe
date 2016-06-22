@@ -1,6 +1,8 @@
 (ns rhsm.gui.tasks.ui
   (:use  [clojure.string :only [join split capitalize]])
-  (:require [gnome.ldtp :as ldtp])
+  (:require [gnome.ldtp :as ldtp]
+            [mount.core :refer [defstate]]
+            [rhsm.gui.tasks.tools :as tt])
   (:import java.util.NoSuchElementException
            [gnome.ldtp Element Tab Window TabGroup]))
 
@@ -26,42 +28,57 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
 (defn define-windows [m]
   (zipmap (keys m) (for [v (vals m)] (Window. v))))
 
-(def windows (define-windows
-               {:main-window "Subscription Manager"
-                :about-dialog "About Subscription Manager"
-                :credits-dialog "Credits"
-                :license-dialog "License"
-                :contract-selection-dialog "Contract Selection"
-                :date-selection-dialog "Date Selection"
-                :error-dialog "Error"
-                :facts-dialog "Subscription Manager - Facts"
-                :file-chooser "Select A File"
-                :filter-dialog "Filter Options"
-                :firefox-help-window "frmRedHatSubscriptionManagement-MozillaFirefox"
-                :firstboot-proxy-dialog "Proxy Configuration"
-                :firstboot-window "frm0"
-                :help-dialog "Subscription Manager Manual"
-                :import-dialog "Import Certificates"
-                :information-dialog "Information"
-                ;; renamed in 818238
-                ;:progress-dialog "Progress Dialog"
-                :proxy-config-dialog "Proxy Configuration"
-                :question-dialog "Question"
-                ;; does not exist anymore? part of the register-dialog
-                ;:subscribe-system-dialog "Subscribe System"
-                :register-dialog "System Registration"      ;; in RHEL 7.2 is "register_dialog"
-                :search-dialog "Searching"
-                ;;also does not exist anymore > tests have been moved to oldtests folder
-                ;:subscription-assistant-dialog "Subscription Assistant"
-                :subscription-redemption-dialog "Subscription Redemption"
-                :system-preferences-dialog "System Preferences"
-                :warning-dialog "Warning"
-                :repositories-dialog "manage_repositories_dialog"
-                :subscription-attachment-dialog "Subscription Attachment"}))
+(def default-windows  {:main-window "Subscription Manager"
+                       :about-dialog "About Subscription Manager"
+                       :credits-dialog "Credits"
+                       :license-dialog "License"
+                       :contract-selection-dialog "Contract Selection"
+                       :date-selection-dialog "Date Selection"
+                       :error-dialog "Error"
+                       :facts-dialog "Subscription Manager - Facts"
+                       :file-chooser "Select A File"
+                       :filter-dialog "Filter Options"
+                       :firefox-help-window "frmRedHatSubscriptionManagement-MozillaFirefox"
+                       :firstboot-proxy-dialog "Proxy Configuration"
+                       :firstboot-window "frm0"
+                       :help-dialog "Subscription Manager Manual"
+                       :import-dialog "Import Certificates"
+                       :information-dialog "Information"
+                       ;; renamed in 818238
+                                        ;: progress-dialog "Progress Dialog"
+                       :proxy-config-dialog "Proxy Configuration"
+                       :question-dialog "Question"
+                       ;; does not exist anymore? part of the register-dialog
+                                        ;: subscribe-system-dialog "Subscribe System"
+                       :register-dialog "System Registration"      ;; in RHEL 7.2 is "register_dialog"
+                       :search-dialog "Searching"
+                       ;; also does not exist anymore > tests have been moved to oldtests folder
+                                        ;: subscription-assistant-dialog "Subscription Assistant"
+                       :subscription-redemption-dialog "Subscription Redemption"
+                       :system-preferences-dialog "System Preferences"
+                       :warning-dialog "Warning"
+                       :repositories-dialog "manage_repositories_dialog"
+                       :subscription-attachment-dialog "Subscription Attachment"})
 
+(defn version-dispatcher [release]
+  (let [version (:family release)
+        valid #{"RHEL5" "RHEL6" "RHEL7"}]
+    (some valid [version])))
 
-(def elements
-  (merge
+(defmulti windows-map-by-rhel-version version-dispatcher)
+
+(defmethod windows-map-by-rhel-version nil [release]
+  (throw (Exception. (format "Version %s is not implemented." (:family release)))))
+
+(defmethod windows-map-by-rhel-version "RHEL5" [release] default-windows)
+(defmethod windows-map-by-rhel-version "RHEL6" [release] default-windows)
+(defmethod windows-map-by-rhel-version "RHEL7" [release]
+  (assoc default-windows :register-dialog "register_dialog"))
+
+(defstate windows :start (define-windows (windows-map-by-rhel-version (tt/get-release true))))
+
+(defstate elements
+  :start (merge
     (define-elements (windows :main-window)
       (merge (same-name capitalize [:about
                                     :all-available-subscriptions
@@ -169,8 +186,7 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
     (define-elements (windows :contract-selection-dialog)
       {:contract-selection-table "SLA Selection Table"
        :cancel-contract-selection "Cancel"
-       :attach-contract-selection "Attach"
-       })
+       :attach-contract-selection "Attach"})
     (define-elements (windows :proxy-config-dialog)
        (merge (same-name capitalize [:proxy-checkbox
                                      :authentication-checkbox
@@ -253,12 +269,10 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
        :close-about-dialog "Close"})
     (define-elements (windows :credits-dialog)
       {;;these info fields are meant to be used by running gettext on them
-       :close-credits-dialog "Close"}
-      )
+       :close-credits-dialog "Close"})
     (define-elements (windows :license-dialog)
       {;;these info fields are meant to be used by running gettext on them
-       :close-license-dialog "Close"}
-      )
+       :close-license-dialog "Close"})
     (define-elements (windows :repositories-dialog)
       {:repo-table "Repository View"
        :repo-message "No repositories are available*"
@@ -278,19 +292,20 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
                       :attach-close "close_button"})))      ;; the Close button
 
 
-(def tabs (define-tabs (elements :main-tabgroup)
+(defstate tabs
+  :start (define-tabs (elements :main-tabgroup)
             (same-name capitalize [:all-available-subscriptions
                                    :my-subscriptions
                                    :my-installed-products])))
 
-(def all-elements (merge windows elements tabs))
+(defstate all-elements :start (merge windows elements tabs))
 
 ;; let clojure keywords represent locators.  When you call locator on
 ;; a keyword, it looks up that keyword in the all-elements map.
 
 (extend-protocol ldtp/LDTPLocatable
   clojure.lang.Keyword
-  (locator [this] (let [locatable (all-elements this)]
+  (locator [this] (let [locatable (get all-elements this)]
                     (if-not locatable
                       (throw (IllegalArgumentException. (str "Key not found in UI mapping: " this))))
                     (ldtp/locator locatable))))
