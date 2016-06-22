@@ -52,7 +52,9 @@ Example: lein run 'GUI: REGISTRATION' 'GUI: FACTS' suites/sm-gui-testng-suite.xm
           testng (new TestNG)]
       (cond
         (:list-testnames options)
-        (doseq [s suites] (println (str "\n" s ":")) (pprint (get-test-names s)))
+        (doseq [s suites]
+          (println (str "\n" s ":"))
+          (pprint (get-test-names s)))
         :else (do
                 (when psuite (.setXmlSuites testng psuite))
                 (if-not (empty? tests) (.setTestNames testng tests))
