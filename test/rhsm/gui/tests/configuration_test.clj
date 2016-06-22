@@ -9,7 +9,6 @@
 
 ;; ;; initialization of our testware
 (use-fixtures :once (fn [f]
-                      (println "use fixtures for proxy")
                       (base/startup nil)
                       (f)))
 

@@ -11,7 +11,7 @@
   (:require [clojure.tools.logging :as log]
             [rhsm.gui.tasks.tasks :as tasks]
             [rhsm.gui.tests.base :as base]
-             rhsm.gui.tasks.ui)
+            rhsm.gui.tasks.ui)
   (:import [org.testng.annotations
             AfterClass
             BeforeClass
