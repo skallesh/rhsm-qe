@@ -61,7 +61,15 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
                        :repositories-dialog "manage_repositories_dialog"
                        :subscription-attachment-dialog "Subscription Attachment"})
 
-(defmulti windows-map-by-rhel-version :family)
+(defn version-dispatcher [release]
+  (let [version (:family release)
+        valid #{"RHEL5" "RHEL6" "RHEL7"}]
+    (some valid [version])))
+
+(defmulti windows-map-by-rhel-version version-dispatcher)
+
+(defmethod windows-map-by-rhel-version nil [release]
+  (throw (Exception. (format "Version %s is not implemented." (:family release)))))
 
 (defmethod windows-map-by-rhel-version "RHEL5" [release] default-windows)
 (defmethod windows-map-by-rhel-version "RHEL6" [release] default-windows)
