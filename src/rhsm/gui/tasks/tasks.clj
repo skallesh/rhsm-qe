@@ -126,7 +126,8 @@
         (if (and (not result?) force?)
           (do
             (run-command "killall -9 subscription-manager-gui")
-            (ui waittillwindownotexist :main-window 30))))
+            (ui waittillwindownotexist :main-window 30)
+            (run-command "pkill rhsmd"))))
       (sleep 1000))
   ([]
      (if (= "RHEL7" (get-release))
