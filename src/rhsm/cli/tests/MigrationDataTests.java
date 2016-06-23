@@ -1398,6 +1398,22 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				bugIds.add("1320647");
 			}
 			
+			// Bug 1349584 - RHN RHEL Channels 'rhel-x86_64-<VARIANT>-7-thirdparty-oracle-java' map to a '7.2' version cert; should be '7.3'
+			if (rhnChannel.equals("rhel-x86_64-client-7-thirdparty-oracle-java") ||
+				rhnChannel.equals("rhel-x86_64-hpc-node-7-thirdparty-oracle-java") ||
+				rhnChannel.equals("rhel-x86_64-server-7-thirdparty-oracle-java") ||
+				rhnChannel.equals("rhel-x86_64-workstation-7-thirdparty-oracle-java")) {
+				bugIds.add("1349584");
+			}
+			
+			// Bug 1349592 - RHN RHEL Channels 'rhel-x86_64-<VARIANT>-7-thirdparty-oracle-java-beta' map to a '7.2' version cert; should be '7.3 Beta'
+			if (rhnChannel.equals("rhel-x86_64-client-7-thirdparty-oracle-java-beta") ||
+				rhnChannel.equals("rhel-x86_64-hpc-node-7-thirdparty-oracle-java-beta") ||
+				rhnChannel.equals("rhel-x86_64-server-7-thirdparty-oracle-java-beta") ||
+				rhnChannel.equals("rhel-x86_64-workstation-7-thirdparty-oracle-java-beta")) {
+				bugIds.add("1349592");
+			}
+			
 			// Object bugzilla, String productBaselineRhnChannel, String productBaselineProductId
 			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 			ll.add(Arrays.asList(new Object[]{blockedByBzBug,	rhnChannel}));
@@ -2700,6 +2716,22 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				rhnAvailableChildChannel.equals("rhel-x86_64-server-7-rhevh-beta-debuginfo")) {
 				// Bug 1333545 - rhel-x86_64-server-7-rhevh channel maps are absent from channel-cert-mapping.txt
 				bugIds.add("1333545");
+			}
+			
+			if (rhnAvailableChildChannel.equals("rhel-x86_64-server-7-ost-8") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-7-ost-8-debuginfo") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-7-ost-8-director") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-7-ost-8-director-debuginfo") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-7-ost-8-optools") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-7-ost-8-optools-debuginfo")) {
+				// Bug 1349533 - rhel-x86_64-server-7-ost-8 channel maps are absent from channel-cert-mapping.txt
+				bugIds.add("1349533");
+			}
+			
+			if (rhnAvailableChildChannel.equals("rhel-x86_64-server-7-rh-gluster-3-client") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-7-rh-gluster-3-client-debuginfo")) {
+				// Bug 1349538 - rhel-x86_64-server-7-rh-gluster-3-client channel maps are absent from channel-cert-mapping.txt
+				bugIds.add("1349538");
 			}
 			
 			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
