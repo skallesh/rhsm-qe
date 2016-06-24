@@ -70,20 +70,23 @@
 (defn setup-entitlement-certs
   "Generates entitlement certs into directory imp-ent-cert-dir"
   [^String imp-ent-cert-dir]
-  (run-command "killall -9 yum")                            ;; prevent yum from blowing up
+  (run-command "killall -9 yum") ;; prevent yum from blowing up
   (safe-delete imp-ent-cert-dir)
   (make-dir imp-ent-cert-dir)
   (let [[user pw org] (for [x [:username :password :owner-key]] (x @config))
-        _ (run-command (format "subscription-manager register --user=%s --password=%s --org=%s" user pw org))
-        orig-ent-cert-dir (tasks/conf-file-value "entitlementCertDir")
-        _ (tasks/set-conf-file-value "entitlementCertDir" imp-ent-cert-dir)
-        pools (random-from-pool (map :id (ctasks/list-available true)) 5)
-        args (apply str " --pool=" (interpose " --pool=" pools))
-        _ (run-command (str "subscription-manager attach " args))]
-    ;; Copy all of the entitlement .pem files to entitle-dir because unregistering deletes the *.pem files
-    (tasks/set-conf-file-value "entitlementCertDir" orig-ent-cert-dir)
-    ;; unregistering will delete all the entitlements, , then restore
-    (run-command "subscription-manager unregister")))
+        orig-ent-cert-dir (tasks/conf-file-value "entitlementCertDir")]
+    (run-command (format "subscription-manager register --user=%s --password=%s --org=%s" user pw org))
+    (try
+      (tasks/set-conf-file-value "entitlementCertDir" imp-ent-cert-dir)
+      (let [pools (random-from-pool (map :id (ctasks/list-available true)) 5)
+            args (apply str " --pool=" (interpose " --pool=" pools))]
+        (run-command (str "subscription-manager attach " args)))
+      (finally
+        (log/info "moving entitlementCertDir back to original state")
+        ;; Copy all of the entitlement .pem files to entitle-dir because unregistering deletes the *.pem files
+        (tasks/set-conf-file-value "entitlementCertDir" orig-ent-cert-dir)
+        ;; unregistering will delete all the entitlements, , then restore
+        (run-command "subscription-manager unregister")))))
 
 (defn make-importable-cert
   "Given a path to entitlement cert, generate an importable cert and store it in import-path"

@@ -291,7 +291,8 @@
                                           (tasks/unregister)))))))
 
 (defn ^{Test {:groups ["registration"
-                       "acceptance"]}}
+                       "acceptance"
+                       "blockedByBug-1330054"]}}
   check_default_subscription_url
   [_]
   (let [subman-ver (subman-version)
@@ -304,7 +305,7 @@
     (sleep 1000)
     (try
       (let [url (tasks/ui gettextvalue :register-server)]
-        (verify (= url "subscription.rhsm.redhat.com")))
+        (verify (= url "subscription.rhsm.redhat.com:443/subscription")))
       (finally
         (tasks/ui click :register-close)))))
 
