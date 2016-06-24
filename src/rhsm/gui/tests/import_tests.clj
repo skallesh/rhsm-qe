@@ -70,8 +70,7 @@
 (defn setup-entitlement-certs
   "Generates entitlement certs into directory imp-ent-cert-dir"
   [^String imp-ent-cert-dir]
-  (run-command "killall -9 yum")
-  ;; prevent yum from blowing up
+  (run-command "killall -9 yum") ;; prevent yum from blowing up
   (safe-delete imp-ent-cert-dir)
   (make-dir imp-ent-cert-dir)
   (let [[user pw org] (for [x [:username :password :owner-key]] (x @config))

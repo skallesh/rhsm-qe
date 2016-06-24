@@ -109,7 +109,6 @@
     [["sdf" ""] :no-password]
     [[(@config :username) (@config :password) :system-name-input ""] :no-system-name]])
 
-;; 11
 (defn ^{Test {:groups ["registration"
                        "tier1"
                        "acceptance"]}}
@@ -215,7 +214,6 @@
     (verify (not (substring? "Traceback" logout)))
     (verify (not (substring? "Traceback" @cmdout)))))
 
-;; 11
 (defn ^{Test {:groups ["registration"
                        "tier1"
                        "blockedByBug-891621"
