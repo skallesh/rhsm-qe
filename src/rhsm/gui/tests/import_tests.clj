@@ -87,9 +87,7 @@
         ;; Copy all of the entitlement .pem files to entitle-dir because unregistering deletes the *.pem files
         (tasks/set-conf-file-value "entitlementCertDir" orig-ent-cert-dir)
         ;; unregistering will delete all the entitlements, , then restore
-        (run-command "subscription-manager unregister")
-        ;; /usr/libexec/rhsmd remembers an older version of rhsm.conf. So we will reload it.
-        (run-command "pkill rhsmd")))))
+        (run-command "subscription-manager unregister")))))
 
 (defn make-importable-cert
   "Given a path to entitlement cert, generate an importable cert and store it in import-path"
