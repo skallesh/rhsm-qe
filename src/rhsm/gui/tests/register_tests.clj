@@ -247,7 +247,7 @@
   (tasks/set-conf-file-value "hostname" (@config :server-hostname))
   (tasks/set-conf-file-value "port" (@config :server-port))
   (tasks/set-conf-file-value "prefix" (@config :server-prefix))
-  (tasks/restart-app))
+  (tasks/restart-app :force-kill? true))
 
 (defn ^{Test {:groups ["registration"
                        "tier1"

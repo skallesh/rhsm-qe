@@ -867,10 +867,12 @@
 (defn restart-app
   "Restarts subscription-manager-gui"
   [& {:keys [unregister?
-             reregister?]
+             reregister?
+             force-kill?]
       :or {unregister? false
-           reregister? false}}]
-  (kill-app)
+           reregister? false
+           force-kill? false}}]
+  (kill-app force-kill?)
   (if (or unregister? reregister?)
     (run-command "subscription-manager unregister"))
   (start-app)
