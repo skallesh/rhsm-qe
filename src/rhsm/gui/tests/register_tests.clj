@@ -109,6 +109,7 @@
     [["sdf" ""] :no-password]
     [[(@config :username) (@config :password) :system-name-input ""] :no-system-name]])
 
+;; 11
 (defn ^{Test {:groups ["registration"
                        "tier1"
                        "acceptance"]}}
@@ -214,6 +215,7 @@
     (verify (not (substring? "Traceback" logout)))
     (verify (not (substring? "Traceback" @cmdout)))))
 
+;; 11
 (defn ^{Test {:groups ["registration"
                        "tier1"
                        "blockedByBug-891621"
@@ -291,7 +293,8 @@
                                           (tasks/unregister)))))))
 
 (defn ^{Test {:groups ["registration"
-                       "acceptance"]}}
+                       "acceptance"
+                       "blockedByBug-1330054"]}}
   check_default_subscription_url
   [_]
   (let [subman-ver (subman-version)
@@ -304,7 +307,7 @@
     (sleep 1000)
     (try
       (let [url (tasks/ui gettextvalue :register-server)]
-        (verify (= url "subscription.rhsm.redhat.com")))
+        (verify (= url "subscription.rhsm.redhat.com:443/subscription")))
       (finally
         (tasks/ui click :register-close)))))
 
