@@ -3090,6 +3090,62 @@ schema generation failed
 		
 		return providedProductModifiedIds;
 	}
+	public static JSONArray getPoolProvidedProductContent (String authenticator, String password, String url, String poolId, String providedProductId) throws JSONException, Exception {
+		JSONObject jsonStatus = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(/*authenticator*/null,/*password*/null,url,"/status"));
+		JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(authenticator,password,url,"/pools/"+poolId));
+		
+		// get the productContents
+		String path = "/products/"+providedProductId;
+		if (SubscriptionManagerTasks.isVersion(jsonStatus.getString("version"),">=","2.0.11")) path = jsonPool.getJSONObject("owner").getString("href")+path;	// starting with candlepin-2.0.11 /products/<ID> are requested by /owners/<KEY>/products/<ID> OR /products/<UUID>
+		
+		JSONObject jsonProduct = new JSONObject(getResourceUsingRESTfulAPI(authenticator,password,url,path));	
+		JSONArray jsonProductContents = jsonProduct.getJSONArray("productContent");
+
+		//    "productContent": [
+		//           {
+		//               "content": {
+		//                   "arches": null,
+		//                   "contentUrl": "/path/to/awesomeos/ia64",
+		//                   "created": "2016-06-26T04:59:27+0000",
+		//                   "gpgUrl": "/path/to/awesomeos/gpg/",
+		//                   "id": "11125",
+		//                   "label": "awesomeos-ia64",
+		//                   "metadataExpire": 3600,
+		//                   "modifiedProductIds": [],
+		//                   "name": "awesomeos-ia64",
+		//                   "releaseVer": null,
+		//                   "requiredTags": null,
+		//                   "type": "yum",
+		//                   "updated": "2016-06-26T04:59:27+0000",
+		//                   "uuid": "8a9086f4558b12b601558b13a2a50048",
+		//                   "vendor": "Red Hat"
+		//               },
+		//               "enabled": false
+		//           },
+		//           {
+		//               "content": {
+		//                   "arches": null,
+		//                   "contentUrl": "/path/to/awesomeos/s390x",
+		//                   "created": "2016-06-26T04:59:27+0000",
+		//                   "gpgUrl": "/path/to/awesomeos/gpg/",
+		//                   "id": "11121",
+		//                   "label": "awesomeos-s390x",
+		//                   "metadataExpire": 3600,
+		//                   "modifiedProductIds": [],
+		//                   "name": "awesomeos-s390x",
+		//                   "releaseVer": null,
+		//                   "requiredTags": null,
+		//                   "type": "yum",
+		//                   "updated": "2016-06-26T04:59:27+0000",
+		//                   "uuid": "8a9086f4558b12b601558b13a2d3004a",
+		//                   "vendor": "Red Hat"
+		//               },
+		//               "enabled": false
+		//           }
+		//    ]
+		
+		return jsonProductContents;
+	}
 	
 	/**
 	 * @param authenticator
