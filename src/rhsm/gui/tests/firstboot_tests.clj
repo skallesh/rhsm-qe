@@ -79,15 +79,15 @@
            ["7" (a :guard #(>= (Integer. %) 2))] (throw (SkipException. "Firsboot only applies to RHEL < 7.2"))
            ["8" _]   (throw (SkipException. "Firsboot only applies to RHEL < 7.2"))
            ["5" "7"] (throw (SkipException. "Skipping firstboot tests on RHEL 5.7 as the tool is not updated"))
-           :else :no-match)))
+           :else [major minor])))
 
 (defn ^{BeforeClass {:groups ["setup"]}}
   firstboot_init [_]
   (try
-    (skip-by-rhel-release (get-release :true)) ; release related exceptions
-    (skip-if-bz-open "922806")
-    (skip-if-bz-open "1016643" (= "RHEL7" (get-release)))
-    (if (= "RHEL7" (get-release)) (base/startup nil))
+    (let [[rhel-version-major rhel-version-minor] (skip-by-rhel-release (get-release :true)) ]
+      (skip-if-bz-open "922806")
+      (skip-if-bz-open "1016643" (= rhel-version-major "7"))
+      (when (= rhel-version-major "7") (base/startup nil)))
     ;; new rhsm and classic have to be totally clean for this to run
     (run-command "subscription-manager clean")
     (let [sysidpath "/etc/sysconfig/rhn/systemid"]

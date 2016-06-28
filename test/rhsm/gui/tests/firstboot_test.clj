@@ -21,8 +21,18 @@
 (deftest skip-by-rhel-release-test
   (testing "A method raises SkipException is some cases."
     (is (thrown? SkipException (ftests/skip-by-rhel-release {:family "RHEL5" :variant "Server" :version "5.7"})))
-    (ftests/skip-by-rhel-release {:family "RHEL6" :variant "Server" :version "6.8"})
-    (ftests/skip-by-rhel-release {:family "RHEL7" :variant "Server" :version "7.0"})
+    (let [[rhel-version-major rhel-version-minor] (ftests/skip-by-rhel-release {:family "RHEL6" :variant "Server" :version "6.8"})]
+      (is (= "6" rhel-version-major))
+      (is (= "8" rhel-version-minor)))
+
+    (let [[rhel-version-major rhel-version-minor] (ftests/skip-by-rhel-release {:family "RHEL7" :variant "Server" :version "7.0"})]
+      (is (= "7" rhel-version-major))
+      (is (= "0" rhel-version-minor)))
+
+    (let [[rhel-version-major rhel-version-minor] (ftests/skip-by-rhel-release {:family "RHEL7" :variant "Server" :version "7.1"})]
+      (is (= "7" rhel-version-major))
+      (is (= "1" rhel-version-minor)))
+
     (ftests/skip-by-rhel-release {:family "RHEL7" :variant "Server" :version "7.1"})
     (is (thrown? SkipException (ftests/skip-by-rhel-release {:family "RHEL7" :variant "Server" :version "7.2"})))
     (is (thrown? SkipException (ftests/skip-by-rhel-release {:family "RHEL7" :variant "Server" :version "7.3"})))

@@ -81,10 +81,10 @@
 (defn ^{BeforeClass {:groups ["setup"]}}
   firstboot_proxy_init [_]
   (try
-    (ftests/skip-by-rhel-release (get-release :true)) ; release related exceptions
-    (skip-if-bz-open "922806")
-    (skip-if-bz-open "1016643" (= "RHEL7" (get-release)))
-    (if (= "RHEL7" (get-release)) (base/startup nil))
+    (let [[rhel-version-major rhel-version-minor] (ftests/skip-by-rhel-release (get-release :true))]
+      (skip-if-bz-open "922806")
+      (skip-if-bz-open "1016643" (= rhel-version-major "7"))
+      (when (= rhel-version-major "7") (base/startup nil)))
     ;; new rhsm and classic have to be totally clean for this to run
     (run-command "subscription-manager clean")
     (let [sysidpath "/etc/sysconfig/rhn/systemid"]
