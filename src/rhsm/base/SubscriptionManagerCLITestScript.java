@@ -540,9 +540,49 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	public void ensureSELinuxIsEnforcingBeforeSuite() {
 		for (SubscriptionManagerTasks clienttasks : Arrays.asList(client1tasks,client2tasks)) {
 			if (clienttasks!=null) {
-				Assert.assertEquals(clienttasks.sshCommandRunner.runCommandAndWait("getenforce").getStdout().trim(), "Enforcing", "SELinux mode is set to enforcing on client "+clienttasks.sshCommandRunner.getConnection().getHostname());
+				
+				// mark the audit.log file so it can be asserted for denials in verifyNoSELinuxDenialsWereLoggedAfterClass()
 				RemoteFileTasks.markFile(clienttasks.sshCommandRunner, clienttasks.auditLogFile, selinuxSuiteMarker);
-
+				
+				// TEMPORARY WORKAROUND
+				boolean invokeWorkaroundWhileBugIsOpen = true;
+				String bugId="1257940";	// Bug 1257940 - systemd-hwdb should be confined 
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				if (invokeWorkaroundWhileBugIsOpen) {
+					log.warning("Skipping BeforeSuite assertion that selinux is Enforcing while bug "+bugId+" is open.");
+					continue;
+				}
+				// END OF WORKAROUND
+				// TEMPORARY WORKAROUND
+				invokeWorkaroundWhileBugIsOpen = true;
+				bugId="1342401";	// Bug 1342401 - Allow NetworkManager to create temporary /etc/resolv.conf.XXXXXX file 
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				if (invokeWorkaroundWhileBugIsOpen) {
+					log.warning("Skipping BeforeSuite assertion that selinux is Enforcing while bug "+bugId+" is open.");
+					continue;
+				}
+				// END OF WORKAROUND
+				// TEMPORARY WORKAROUND
+				invokeWorkaroundWhileBugIsOpen = true;
+				bugId="1343648";	// Bug 1343648 - SELinux label for /etc/udev/hwdb.bin is etc_t instead of systemd_hwdb_etc_t after "#systemd-hwdb update" 
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				if (invokeWorkaroundWhileBugIsOpen) {
+					log.warning("Skipping BeforeSuite assertion that selinux is Enforcing while bug "+bugId+" is open.");
+					continue;
+				}
+				// END OF WORKAROUND
+				// TEMPORARY WORKAROUND
+				invokeWorkaroundWhileBugIsOpen = true;
+				bugId="1350756";	// Bug 1350756 - SELinux label for /etc/udev/hwdb.bin is etc_t instead of systemd_hwdb_etc_t after "#systemd-hwdb update" 
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				if (invokeWorkaroundWhileBugIsOpen) {
+					log.warning("Skipping BeforeSuite assertion that selinux is Enforcing while bug "+bugId+" is open.");
+					continue;
+				}
+				// END OF WORKAROUND
+				
+				// assert selinux is Enforcing
+				Assert.assertEquals(clienttasks.sshCommandRunner.runCommandAndWait("getenforce").getStdout().trim(), "Enforcing", "SELinux mode is set to enforcing on client "+clienttasks.sshCommandRunner.getConnection().getHostname());
 			}
 		}
 	}
