@@ -219,11 +219,10 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance), factValueForSystemCompliance,
 				"When a system has products installed for which ALL are covered by available subscription pools with a common service level, the system should become compliant (see value for fact '"+factNameForSystemCompliance+"')");
 		for (ProductSubscription productSubscription : clienttasks.getCurrentlyConsumedProductSubscriptions()) {
-//TODO		// The assertion below should probably be updated to tolerate entitlements granted from pools with null/"" support_level regardless of the specified service level
-//			if (clienttasks.isVersion(servertasks.statusVersion, ">="/*TODO ">" is technically correct*/, "2.0.2-1")) {	// commit 9cefb6e23baefcc4ee2e14423f205edd37eecf22	// Bug 1223560 - Service levels on an activation key prevent custom products from attaching at registration if auto-attach enabled (reported by Christine Fouant)
-//				// TODO placeholder
-//			}
-if (!servicelevel.equalsIgnoreCase(productSubscription.serviceLevel) && productSubscription.serviceLevel.isEmpty()) log.warning("This testcase has an open TODO to tolerate Bug 1223560.");
+			// catch the special case when autosubscribe grants a subscription with an empty service level in support of 1335371
+			if (!servicelevel.equalsIgnoreCase(productSubscription.serviceLevel) && productSubscription.serviceLevel.isEmpty() && clienttasks.isVersion(servertasks.statusVersion, ">", "2.0.2-1")) {	// commit 9cefb6e23baefcc4ee2e14423f205edd37eecf22	// Bug 1223560 - Service levels on an activation key prevent custom products from attaching at registration if auto-attach enabled (reported by Christine Fouant)
+				Assert.assertTrue(productSubscription.serviceLevel.isEmpty(),"After the implementation of Bug 1223560, autosubscribe can potentially grant a product subscription with an empty service level despite specifying a service level preference '"+servicelevel+"'.  In this case, product subscription ("+productSubscription+") with an empty service level was granted for coverage of the installed product(s).  For justification, review https://bugzilla.redhat.com/show_bug.cgi?id=1335371.");
+			} else
 			//CASE SENSITIVE ASSERTION Assert.assertEquals(productSubscription.serviceLevel, servicelevel, "When a system has been registered with autosubscribe specifying a common service level, then all consumed product subscriptions must provide that service level.");
 			Assert.assertTrue(servicelevel.equalsIgnoreCase(productSubscription.serviceLevel),
 				"When a system has been registered with autosubscribe specifying a common service level '"+servicelevel+"', then this auto consumed product subscription ("+productSubscription+") must provide case-insensitive match to the requested service level.");
@@ -239,6 +238,9 @@ if (!servicelevel.equalsIgnoreCase(productSubscription.serviceLevel) && productS
 		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance), factValueForSystemCompliance,
 				"When a system has products installed for which ALL are covered by available subscription pools with a common service level, the system should become compliant (see value for fact '"+factNameForSystemCompliance+"')");
 		for (ProductSubscription productSubscription : clienttasks.getCurrentlyConsumedProductSubscriptions()) {
+			if (!servicelevel.equalsIgnoreCase(productSubscription.serviceLevel) && productSubscription.serviceLevel.isEmpty() && clienttasks.isVersion(servertasks.statusVersion, ">", "2.0.2-1")) {	// commit 9cefb6e23baefcc4ee2e14423f205edd37eecf22	// Bug 1223560 - Service levels on an activation key prevent custom products from attaching at registration if auto-attach enabled (reported by Christine Fouant)
+				Assert.assertTrue(productSubscription.serviceLevel.isEmpty(),"After the implementation of Bug 1223560, autosubscribe can potentially grant a product subscription with an empty service level despite specifying a service level preference '"+servicelevel+"'.  In this case, product subscription ("+productSubscription+") with an empty service level was granted for coverage of the installed product(s).  For justification, review https://bugzilla.redhat.com/show_bug.cgi?id=1335371.");
+			} else
 			//CASE SENSITIVE ASSERTION Assert.assertEquals(productSubscription.serviceLevel, servicelevel, "When a system has been registered with autosubscribe without specifying a common service level, then all consumed product subscriptions must provide the consumer's service level preference.");
 			Assert.assertTrue(servicelevel.equalsIgnoreCase(productSubscription.serviceLevel),
 				"When a system has been registered with autosubscribe without specifying a common service level, then this auto consumed product subscription ("+productSubscription+") must provide a case-insensitive match to the consumer's service level preference '"+servicelevel+"'.");
