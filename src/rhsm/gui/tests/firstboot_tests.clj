@@ -77,10 +77,9 @@
   (let [[_ major minor] (re-find #"(\d)\.(\d)" version)]
     (match [major minor]
            ["7" (a :guard #(>= (Integer. %) 2))] (throw (SkipException. "Firsboot only applies to RHEL < 7.2"))
-           ["8" _] (throw (SkipException. "Firsboot only applies to RHEL < 7.2"))
+           ["8" _]   (throw (SkipException. "Firsboot only applies to RHEL < 7.2"))
            ["5" "7"] (throw (SkipException. "Skipping firstboot tests on RHEL 5.7 as the tool is not updated"))
-           [_ _] nil ; nothing to todo
-           )))
+           :else :no-match)))
 
 (defn ^{BeforeClass {:groups ["setup"]}}
   firstboot_init [_]
