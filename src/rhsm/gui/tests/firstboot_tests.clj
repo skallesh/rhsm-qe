@@ -11,6 +11,7 @@
   (:require [clojure.tools.logging :as log]
             [rhsm.gui.tasks.tasks :as tasks]
             [rhsm.gui.tests.base :as base]
+            [clojure.core.match :refer [match]]
             rhsm.gui.tasks.ui)
   (:import [org.testng.annotations
             AfterClass
@@ -70,15 +71,23 @@
   (zero-proxy-values)
   (start_firstboot))
 
+(defn skip-by-rhel-release [{:keys [family variant version]}]
+  "It raises a skipException in some cases. The main purpose of this function is to ensure
+  that firstboot related tests are skipped for newer versions of RHEL. They are obsolete in such case."
+  (let [[_ major minor] (re-find #"(\d)\.(\d)" version)]
+    (match [major minor]
+           ["7" (a :guard #(>= (Integer. %) 2))] (throw (SkipException. "Firsboot only applies to RHEL < 7.2"))
+           ["8" _]   (throw (SkipException. "Firsboot only applies to RHEL < 7.2"))
+           ["5" "7"] (throw (SkipException. "Skipping firstboot tests on RHEL 5.7 as the tool is not updated"))
+           :else [major minor])))
+
 (defn ^{BeforeClass {:groups ["setup"]}}
   firstboot_init [_]
   (try
-    (if (= "RHEL7" (get-release)) (base/startup nil))
-    (if (= "5.7" (:version (get-release :true)))
-      (throw (SkipException.
-              (str "Skipping firstboot tests on RHEL 5.7 as the tool is not updated"))))
-    (skip-if-bz-open "922806")
-    (skip-if-bz-open "1016643" (= "RHEL7" (get-release)))
+    (let [[rhel-version-major rhel-version-minor] (skip-by-rhel-release (get-release :true)) ]
+      (skip-if-bz-open "922806")
+      (skip-if-bz-open "1016643" (= rhel-version-major "7"))
+      (when (= rhel-version-major "7") (base/startup nil)))
     ;; new rhsm and classic have to be totally clean for this to run
     (run-command "subscription-manager clean")
     (let [sysidpath "/etc/sysconfig/rhn/systemid"]

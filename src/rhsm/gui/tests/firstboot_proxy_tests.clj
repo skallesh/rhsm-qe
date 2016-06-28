@@ -13,7 +13,8 @@
   (:require [clojure.tools.logging :as log]
             [rhsm.gui.tasks.tasks :as tasks]
             [rhsm.gui.tests.base :as base]
-             rhsm.gui.tasks.ui)
+            [rhsm.gui.tests.firstboot_tests :as ftests]
+            rhsm.gui.tasks.ui)
   (:import [org.testng.annotations
             AfterClass
             BeforeClass
@@ -80,12 +81,10 @@
 (defn ^{BeforeClass {:groups ["setup"]}}
   firstboot_proxy_init [_]
   (try
-    (if (= "RHEL7" (get-release)) (base/startup nil))
-    (if (= "5.7" (:version (get-release :true)))
-      (throw (SkipException.
-              (str "Skipping firstboot tests on RHEL 5.7 as the tool is not updated"))))
-    (skip-if-bz-open "922806")
-    (skip-if-bz-open "1016643" (= "RHEL7" (get-release)))
+    (let [[rhel-version-major rhel-version-minor] (ftests/skip-by-rhel-release (get-release :true))]
+      (skip-if-bz-open "922806")
+      (skip-if-bz-open "1016643" (= rhel-version-major "7"))
+      (when (= rhel-version-major "7") (base/startup nil)))
     ;; new rhsm and classic have to be totally clean for this to run
     (run-command "subscription-manager clean")
     (let [sysidpath "/etc/sysconfig/rhn/systemid"]

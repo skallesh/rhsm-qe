@@ -18,6 +18,7 @@
                  [gnome.ldtp "1.2.1-SNAPSHOT"
                   :exclusions [org.clojure/clojure]]
                  [matchure "0.10.1"]
+                 [org.clojure/core.match "0.3.0-alpha4"]
                  [net.java.dev.rome/rome "1.0.0"]
                  [org.clojure/clojure "1.7.0"]
                  [org.clojure/data.json "0.1.2"]
