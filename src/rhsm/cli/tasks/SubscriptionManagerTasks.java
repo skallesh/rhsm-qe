@@ -716,7 +716,8 @@ if (false) {
 		pkgs.add(0,"gettext");	// used for Pofilter and Translation testing - msgunfmt
 		pkgs.add(0,"policycoreutils-python");	// used for Docker testing - required by docker-selinux package 
 		pkgs.add(0,"net-tools");	// provides netstat which is used to know when vncserver is up
-	
+		pkgs.add(0,"ntp");	// used to synchronize a computer's time with another reference time source.
+		
 		// TEMPORARY WORKAROUND FOR BUG
 		String bugId = "790116"; boolean invokeWorkaroundWhileBugIsOpen = true;
 		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
