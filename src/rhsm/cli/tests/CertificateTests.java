@@ -951,11 +951,13 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 			if (release.equals("6.2")) bugIds.add("1214856"); 	// Bug 1214856 - cdn.redhat.com has the wrong productId version for rhel 6.2 and 6.4
 			if (release.equals("6.4")) bugIds.add("1214856"); 	// Bug 1214856 - cdn.redhat.com has the wrong productId version for rhel 6.2 and 6.4
 			if (release.equals("6.6") && clienttasks.variant.matches("Client|Server") && clienttasks.arch.matches("i\\d86")) bugIds.add("1302409"); 	// Bug 1302409 - cdn.redhat.com has the wrong productId version for rhel 6.6
-			if (clienttasks.redhatReleaseXY.equals("7.2") && clienttasks.arch.equals("aarch64")) bugIds.add("1261163"); 	// Bug 1261163 -  uncertain of expected release listing on rhel72 arm system
+			if (clienttasks.redhatReleaseXY.equals("7.2") && clienttasks.arch.equals("aarch64")) bugIds.add("1261163"); 	// Bug 1261163 - uncertain of expected release listing on rhel72 arm system
 			if (clienttasks.redhatReleaseXY.equals("7.2") && clienttasks.arch.equals("ppc64le")) bugIds.add("1261171"); 	// Bug 1261171 - uncertain of expected release listing on rhel72 ppc64le system
 			if (clienttasks.redhatReleaseXY.equals("7.2") && clienttasks.variant.equals("ComputeNode") && release.equals("7.1")) bugIds.add("1267732"); 	// Bug 1267732 - production CDN productid files 404: Not Found. for ComputeNode releasever 7.1 and 7Server
 			if (clienttasks.redhatReleaseXY.equals("7.2") && clienttasks.variant.equals("ComputeNode") && release.equals("7ComputeNode")) bugIds.add("1267732"); 	// Bug 1267732 - production CDN productid files 404: Not Found. for ComputeNode releasever 7.1 and 7Server
 			if (release.matches("7.2|7Server") && clienttasks.variant.equals("Server") && clienttasks.arch.equals("x86_64")) bugIds.add("1338857"); 	// Bug 1338857 - cdn.redhat.com has the wrong productId version for rhel 7.2
+			if (release.matches("7.*") && clienttasks.variant.equals("Server") && clienttasks.arch.equals("ppc64le")) bugIds.add("1351754"); 	// Bug 1351754 - production CDN productid files 404: Not Found. for Power, little endian releasever 7.1, 7.2, and 7Server
+			if (release.matches("7.*") && clienttasks.variant.equals("Server") && clienttasks.arch.equals("aarch64")) bugIds.add("1351800"); 	// Bug 1351800 - production CDN productid files 404: Not Found. for ARM releasever 7.1, 7.2, and 7Server
 			
 			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 			
