@@ -267,6 +267,11 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		// ensure we are unregistered
 		clienttasks.unregister(null, null, null);
 		
+		// QE NOTE: The easiest way to create an account (without accepting terms and conditions) is to
+		// use the http://account-manager-stage.app.eng.rdu2.redhat.com/#create to with the Accept Terms and Conditions checkbox unchecked
+		// and BE SURE TO INCLUDE A SUBSCRIPTION SKU!  If there is not subscription in the created org, then there will be no requirement to
+		// accept terms and conditions.
+		
 		log.info("Attempting to register to a candlepin server using an account that has not yet accepted the Red Hat Terms and Conditions");
 		String stderr = "You must first accept Red Hat's Terms and conditions. Please visit https://www.redhat.com/wapps/ugc .";
 		stderr += " You may have to log out of and back into the  Customer Portal in order to see the terms.";	// added by Bug 1068766 - (US48790, US51354, US55017) Subscription-manager register leads to unclear message
