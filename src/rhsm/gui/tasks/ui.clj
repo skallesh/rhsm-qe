@@ -73,7 +73,9 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
 (defmethod windows-map-by-rhel-version "RHEL5" [release] default-windows)
 (defmethod windows-map-by-rhel-version "RHEL6" [release] default-windows)
 (defmethod windows-map-by-rhel-version "RHEL7" [release]
-  (assoc default-windows :register-dialog "register_dialog"))
+  (-> default-windows
+     (assoc :register-dialog "register_dialog")
+     (assoc :about-dialog "dlgAboutsubscription-manager-gui")))
 
 (defstate windows :start (define-windows (windows-map-by-rhel-version (tt/get-release true))))
 
@@ -113,8 +115,7 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
                      :no-subscriptions-label "no_subs_label"
                      ;; now called auto-attach
                      ;:autosubscribe "Auto-subscribe"
-                     :auto-attach "Auto-attach"
-                     }
+                     :auto-attach "Auto-attach"}
                     ;dynamic text fields for details sections:
                     (text-field [:arch
                                  :certificate-status
@@ -139,7 +140,7 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
                      :contract-number "Contract Number Text"
                      :bundled-products "Bundeled Products Table"
                      :all-available-bundled-products "All Available Bundled Product Table"}))
-                    {:main-tabgroup (TabGroup. (windows :main-window) "ptl0")}
+    {:main-tabgroup (TabGroup. (windows :main-window) "ptl0")}
     (define-elements (windows :register-dialog)
         {:redhat-login "account_login"
          :password "account_password"
