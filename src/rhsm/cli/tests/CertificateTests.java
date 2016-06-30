@@ -1137,25 +1137,30 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 
 		// Object blockedByBug, String testPackage, String oldProductCertVersion, String oldRelease, String newerRelease
 		if (clienttasks.redhatReleaseX.equals("5")) {
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1086301","1102107","1119809"}),	"zsh",	"5.8",		"5.8",	"5.9"}));
 			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1086301","1102107","1119809"}),	"zsh",	"5.8 Beta",	"5.8",	"5.9"}));
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1086301","1102107","1119809"}),	"zsh",	"5.8",		"5.8",	"5.9"}));
 		}
 		else if (clienttasks.redhatReleaseX.equals("6")) {
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1035115","1000281","1120573","1214856"}),	"zsh",	"6.3",		"6.3",	"6.4"}));
 			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1035115","1000281","1120573","1214856"}),	"zsh",	"6.3 Beta",	"6.3",	"6.4"}));
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1035115","1000281","1120573"}),	"zsh",	"6.1",		"6.1",	"6.5"}));
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1035115","1000281","1120573","1214856"}),	"zsh",	"6.3",		"6.3",	"6.4"}));
 			//ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1035115","1000281","1120573"}),	"zsh",	"6.1-Beta",	"6.1",	"6.5"}));	// will fail on ppc64 and s390x because the 6.1-Beta product cert tags do not provide any content (on ppc64 rhel-6.1-beta productId=74 Tags: rhel-6,rhel-6-premium-architectures) (on s390x rhel-6.1-beta productId=72 Tags: rhel-6,rhel-6-mainframe)  Not opening any bug since it was a Beta.
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1035115","1000281","1120573"}),	"zsh",	"6.1",		"6.1",	"6.5"}));
 			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1035115","1000281","1120573"}),	"zsh",	"6.3 Beta",	"6.3",	"6.5"}));
 		}
 		else if (clienttasks.redhatReleaseX.equals("7") && !clienttasks.redhatReleaseXY.equals("7.0") && !clienttasks.redhatReleaseXY.equals("7.1")) {	// Note: this test depends on an available Release level of 7.0 and 7.1 in the release listing file which will not be available until the rhel 7.2 test cycle; skipping until we test rhel 7.2
 			if (clienttasks.variant.equals("ComputeNode")) bugids.add("1267732");	// Bug 1267732 - production CDN productid files 404: Not Found. for ComputeNode releasever 7.1 and 7Server 
 			if (clienttasks.variant.equals("Server") && clienttasks.arch.equals("x86_64")) bugids.add("1338857");	// Bug 1338857 - cdn.redhat.com has the wrong productId version for rhel 7.2
+			if (clienttasks.variant.equals("Server") && clienttasks.arch.equals("ppc64le")) bugids.add("1351754");	// Bug 1351754 - production CDN productid files 404: Not Found. for Power, little endian releasever 7.1, 7.2, and 7Server
+			if (clienttasks.variant.equals("Server") && clienttasks.arch.equals("aarch64")) bugids.add("1351800");	// Bug 1351800 - production CDN productid files 404: Not Found. for ARM releasever 7.1, 7.2, and 7Server
 			blockedByBugs = new BlockedByBzBug(bugids.toArray(new String[]{}));
 			
 			if (!clienttasks.arch.equals("ppc64le") && !clienttasks.arch.equals("aarch64"))	// ppc64le and aarch64 did not exist on 7.0 nor 7.1; exclude this row on these arches
 			ll.add(Arrays.asList(new Object[]{blockedByBugs,	"Red_Hat_Enterprise_Linux-Release_Notes-7-fr-FR" ,	"7.0",		"7.0",	"7.1"}));
 			//ll.add(Arrays.asList(new Object[]{null,	"Red_Hat_Enterprise_Linux-Release_Notes-7-fr-FR",	"7.0 Beta",	"7.0",	"7.1"}));	// There is no 7.0 Beta product cert id 69 that can be updated.  The 7.0 Beta product cert is product id 226 Everything
+			if (!clienttasks.arch.equals("ppc64le") && !clienttasks.arch.equals("aarch64"))	// ppc64le and aarch64 did not exist on 7.0 nor 7.1; exclude this row on these arches
 			ll.add(Arrays.asList(new Object[]{blockedByBugs,	"Red_Hat_Enterprise_Linux-Release_Notes-7-fr-FR",	"7.1 Beta",	"7.1",	"7.2"}));
+//TODO UNCOMMENT FOR RHEL74	TESTING		ll.add(Arrays.asList(new Object[]{blockedByBugs,	"Red_Hat_Enterprise_Linux-Release_Notes-7-fr-FR",	"7.2 Beta",	"7.2",	"7.3"}));
+//TODO UNCOMMENT FOR RHEL74	TESTING		ll.add(Arrays.asList(new Object[]{blockedByBugs,	"Red_Hat_Enterprise_Linux-Release_Notes-7-fr-FR",	"7.2",		"7.2",	"7.3"}));
 		}
 		else if (Integer.valueOf(clienttasks.redhatReleaseX)>7) {
 			ll.add(Arrays.asList(new Object[]{null,	"FIXME: Unhandled Release",	"1.0 Beta",	"1.0",	"1.1"}));
