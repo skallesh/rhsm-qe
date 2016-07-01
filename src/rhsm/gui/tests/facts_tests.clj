@@ -17,6 +17,7 @@
             [rhsm.gui.tests.base :as base]
             [rhsm.gui.tasks.candlepin-tasks :as ctasks]
             rhsm.gui.tasks.ui
+            [clojure.core.match :refer [match]]
             [clojure.tools.logging :as log])
   (:import [org.testng.annotations
             BeforeClass
@@ -225,6 +226,10 @@
   verify_about_information
   "Asserts that all the information in the about dialog is correct."
   [_]
+  (let [[_ major minor] (re-find #"(\d)\.(\d)" (-> :true get-release :version))]
+    (match [major minor]
+           ["7" (a :guard #(>= (Integer. %) 3))] (throw (SkipException. "Button 'Close' has been removed in RHEL7.3+"))
+           :else nil))
   (try
     (tasks/restart-app)
     (tasks/ui click :about)
@@ -245,6 +250,38 @@
       (verify (= gui-rhsm-service cli-rhsm-service)))
     (finally (if (bool (tasks/ui guiexist :about-dialog))
                (tasks/ui click :close-about-dialog)))))
+
+(defn ^{Test {:groups ["facts"
+                       "tier1"
+                       "blockedByBug-829900"]}}
+  verify_about_information_without_close_button
+  "Asserts that all the information in the about dialog is correct."
+  [_]
+  (let [[_ major minor] (re-find #"(\d)\.(\d)" (-> :true get-release :version))]
+    (match [major minor]
+           ["7" (a :guard #(< (Integer. %) 3))] (throw (SkipException. "Button 'Close' has been removed in RHEL7.3+"))
+           ["6" _] (throw (SkipException. "This test is just for RHEL7.3+"))
+           :else nil))
+  (try
+    (tasks/restart-app)
+    (tasks/ui click :about)
+    (tasks/ui waittillwindowexist :about-dialog 10)
+    (let [get-gui-version (fn [k] (last (split (tasks/ui gettextvalue k) #" ")))
+          gui-pyrhsm (get-gui-version :python-rhsm-version)
+          gui-rhsm (get-gui-version :rhsm-version)
+          gui-rhsm-service (get-gui-version :rhsm-service-version)
+          rpm-qi (fn [p s] (trim (:stdout
+                                 (run-command
+                                  (str "rpm -qi " p " | grep " s " | awk '{print $3}'")))))
+          get-cli-version (fn [p] (str (rpm-qi p "Version") "-" (rpm-qi p "Release")))
+          cli-pyrhsm (trim (get-cli-version "python-rhsm"))
+          cli-rhsm (trim (get-cli-version "subscription-manager-gui"))
+          cli-rhsm-service (trim (ctasks/get-rhsm-service-version))]
+      (verify (= gui-pyrhsm cli-pyrhsm))
+      (verify (= gui-rhsm cli-rhsm))
+      (verify (= gui-rhsm-service cli-rhsm-service)))
+    (finally (if (bool (tasks/ui guiexist :about-dialog))
+               (tasks/ui closewindow :about-dialog)))))
 
 (defn ^{Test {:groups ["facts"
                        "tier1"
