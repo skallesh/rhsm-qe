@@ -33,5 +33,4 @@
   (rtests/check_default_subscription_url nil))
 
 (deftest unregister_traceback-test
-  (rtests/unregister_traceback nil)
-  )
+  (rtests/unregister_traceback nil))
