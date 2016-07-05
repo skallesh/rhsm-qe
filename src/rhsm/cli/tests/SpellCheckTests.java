@@ -138,6 +138,7 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 			msgId = msgId.replace("GPLv2", "General Public License, version 2");
 			msgId = msgId.replace("MERCHANTABILITY", "MERCHANTABLE");
 			msgId = msgId.replace("{dateexample}", "");	// python variable used in msgid: Date entered is invalid. Date should be in YYYY-MM-DD format (example: {dateexample})
+			msgId = msgId.replace("'subscription-manager plugins'", "subscription-manager plugins");
 			msgId = msgId.replace("'subscription-manager register --help'", "subscription-manager register --help");
 			msgId = msgId.replace("'Subscription Manager'", "Subscription Manager");
 			msgId = msgId.replace("'release --list'", "release --list");
