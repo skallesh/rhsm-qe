@@ -48,10 +48,12 @@ public class CRLTests extends SubscriptionManagerCLITestScript{
 			dependsOnGroups={},
 			//dataProvider="getAvailableSubscriptionPoolsData",	// very thorough, but takes too long to execute and rarely finds more bugs
 			//dataProvider="getRandomSubsetOfAvailableSubscriptionPoolsData",
+			//dataProvider="getAvailableNonTemporarySubscriptionPoolsData",
 			dataProvider="getRandomSubsetOfAvailableNonTemporarySubscriptionPoolsData",
 			enabled=true)
 	@ImplementsNitrateTest(caseId=56025)
 	public void ChangeSubscriptionPoolStartEndDatesAndRefreshSubscriptionPools_Test(SubscriptionPool originalPool) throws Exception {
+///*debugTesting*/if (!originalPool.productId.equals("awesomeos-instancebased")) throw new SkipException("DebugTesting");
 		//		https://tcms.engineering.redhat.com/case/56025/?from_plan=2634
 		//		Actions:
 		//
@@ -71,7 +73,6 @@ public class CRLTests extends SubscriptionManagerCLITestScript{
 		//			* the original entitlement certificates on the client should be removed
 		//		   	* new certs should be dropped to the client
 		//			* the crl list on the server should be poplulated w/ the old entitlement cert serials
-
 		if (dbConnection==null) throw new SkipException("This testcase requires a connection to the candlepin database.");
 		
 		/* https://bugzilla.redhat.com/show_bug.cgi?id=663455#c1 < DUE TO THESE IMPLEMENTED CHANGES, THE FOLLOWING IS NO LONGER APPROPRIATE...

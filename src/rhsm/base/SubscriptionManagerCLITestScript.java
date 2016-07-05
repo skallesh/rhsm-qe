@@ -1473,10 +1473,12 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		resultSet.next();	// assume only one row was returned
 		String masterPoolId = resultSet.getString(1); // assumes only one column was returned
 		sql.close();
-				
+		
 		// get the json pool
 		String poolResource = "/pools/"+pool.poolId;
 			   poolResource = "/pools/"+masterPoolId;
+		JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, poolResource));
+		String instanceMultiplier = CandlepinTasks.getPoolProductAttributeValue(jsonPool, "instance_multiplier");
 		String exclude = "?exclude=created"	// excluding data feels like the right thing to do, but could be the wrong thing if it is not calculated data - TODO: review with devel
 				+ "&exclude=consumed"
 				+ "&exclude=calculatedAttributes"
@@ -1488,7 +1490,12 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 				+ "&exclude=derivedProductName"
 				+ "&exclude=derivedProvidedProducts"
 				+ "&exclude=derivedProductAttributes";
-		JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, poolResource+exclude));
+		jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, poolResource+exclude));
+		
+		// re-adjust the quantity on the json pool when instance based
+		if (instanceMultiplier!=null) {
+			jsonPool.put("quantity", jsonPool.getInt("quantity")/Integer.valueOf(instanceMultiplier));
+		}
 		
 		// change the start/end dates on the json pool
 		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
