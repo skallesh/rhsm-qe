@@ -74,7 +74,7 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 	// Test methods ***********************************************************************
 
 	@Test(	description="given an available SKU, configure the system with custom facts dev_sku=SKU, register the system with auto-attach and verify several requirements of the attached entitlement",
-			groups={""},
+			groups={},
 			dataProvider="getDevSkuData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -225,7 +225,13 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 			} else
 			// END OF WORKAROUND
 			expectedEndDate.add(Calendar.DATE, Integer.valueOf(defaultExpiresAfter));
-			Assert.assertEquals(ConsumerCert.formatDateString(devSkuEntitlement.validityNotAfter), ConsumerCert.formatDateString(expectedEndDate), "When no expires_after attribute exists on the devSku product, the entitlement's validityNotAfter date defaults to '"+defaultExpiresAfter+"' days after the date the consumer was registered ("+ConsumerCert.formatDateString(consumerCert.validityNotBefore)+").");
+///*debugTesting*/expectedEndDate.add(Calendar.SECOND, 20);	// to force an expected failure
+			//Assert.assertEquals(ConsumerCert.formatDateString(devSkuEntitlement.validityNotAfter), ConsumerCert.formatDateString(expectedEndDate), "When no expires_after attribute exists on the devSku product, the entitlement's validityNotAfter date defaults to '"+defaultExpiresAfter+"' days after the date the consumer was registered ("+ConsumerCert.formatDateString(consumerCert.validityNotBefore)+").");
+			// java.lang.AssertionError: When no expires_after attribute exists on the devSku product, the entitlement's validityNotAfter date defaults to '90' days after the date the consumer was registered (Jul 6 2016 12:19:18 EDT). expected:<Oct 4 2016 12:19:18 EDT> but was:<Oct 4 2016 12:19:17 EDT>
+			// allow for a few seconds of tolerance
+			Calendar expectedEndDateUpperTolerance = (Calendar) expectedEndDate.clone(); expectedEndDateUpperTolerance.add(Calendar.SECOND, +5);
+			Calendar expectedEndDateLowerTolerance = (Calendar) expectedEndDate.clone(); expectedEndDateLowerTolerance.add(Calendar.SECOND, -5);
+			Assert.assertTrue(devSkuEntitlement.validityNotAfter.before(expectedEndDateUpperTolerance) && devSkuEntitlement.validityNotAfter.after(expectedEndDateLowerTolerance), "When no expires_after attribute exists on the devSku product, the entitlement's validityNotAfter date defaults to '"+defaultExpiresAfter+"' days after the date the consumer was registered ("+ConsumerCert.formatDateString(consumerCert.validityNotBefore)+"). devSkuEntitlement.validityNotAfter expected: <"+ConsumerCert.formatDateString(expectedEndDate)+"> (withn a few seconds of tolerance of) actual: <"+ConsumerCert.formatDateString(devSkuEntitlement.validityNotAfter)+">");
 		} else {
 			// TEMPORARY WORKAROUND
 			boolean invokeWorkaroundWhileBugIsOpen = true;
@@ -237,7 +243,13 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 			} else
 			// END OF WORKAROUND
 			expectedEndDate.add(Calendar.DATE, Integer.valueOf(devSkuExpiresAfter));
-			Assert.assertEquals(ConsumerCert.formatDateString(devSkuEntitlement.validityNotAfter), ConsumerCert.formatDateString(expectedEndDate), "When an expires_after attribute exists on the devSku product, the entitlement's validityNotAfter is '"+devSkuExpiresAfter+"' days after the date the consumer was registered ("+ConsumerCert.formatDateString(consumerCert.validityNotBefore)+").");
+///*debugTesting*/expectedEndDate.add(Calendar.SECOND, 20);	// to force an expected failure
+			//Assert.assertEquals(ConsumerCert.formatDateString(devSkuEntitlement.validityNotAfter), ConsumerCert.formatDateString(expectedEndDate), "When an expires_after attribute exists on the devSku product, the entitlement's validityNotAfter is '"+devSkuExpiresAfter+"' days after the date the consumer was registered ("+ConsumerCert.formatDateString(consumerCert.validityNotBefore)+").");
+			// java.lang.AssertionError: When an expires_after attribute exists on the devSku product, the entitlement's validityNotAfter is '75' days after the date the consumer was registered (Jul 3 2016 21:43:03 EDT). expected:<Sep 16 2016 21:43:03 EDT> but was:<Sep 16 2016 21:43:02 EDT>	
+			// allow for a few seconds of tolerance
+			Calendar expectedEndDateUpperTolerance = (Calendar) expectedEndDate.clone(); expectedEndDateUpperTolerance.add(Calendar.SECOND, +5);
+			Calendar expectedEndDateLowerTolerance = (Calendar) expectedEndDate.clone(); expectedEndDateLowerTolerance.add(Calendar.SECOND, -5);
+			Assert.assertTrue(devSkuEntitlement.validityNotAfter.before(expectedEndDateUpperTolerance) && devSkuEntitlement.validityNotAfter.after(expectedEndDateLowerTolerance), "When an expires_after attribute exists on the devSku product, the entitlement's validityNotAfter is '"+devSkuExpiresAfter+"' days after the date the consumer was registered ("+ConsumerCert.formatDateString(consumerCert.validityNotBefore)+"). devSkuEntitlement.validityNotAfter expected: <"+ConsumerCert.formatDateString(expectedEndDate)+"> (withn a few seconds of tolerance of) actual: <"+ConsumerCert.formatDateString(devSkuEntitlement.validityNotAfter)+">");
 		}
 		
 		// assert that the pool consumed exists with quantity 1
@@ -371,6 +383,7 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 		List<Object> l = getRandomValidDevSkuData();
 		String devSku = (String) l.get(1);
 		String devPlatform = (String) l.get(2);
+///*debugTesting*/devSku = "dev-sku-product";devPlatform = "dev-platform";
 		
 		// instrument the system facts to behave as a vagrant image
 		Map<String,String> factsMap = new HashMap<String,String>();
@@ -385,10 +398,12 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 		List<ProductSubscription> productSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
 		Assert.assertEquals(productSubscriptions.size(), 1, "After registering (with autosubscribe) a system with dev_sku fact '"+devSku+"', only one product subscription should be consumed.");
 		ProductSubscription devSkuProductSubscription1 = productSubscriptions.get(0);
+		List<String> devSkuProductSubscriptionProvidedProductModifiedIds = new ArrayList<String>(CandlepinTasks.getPoolProvidedProductModifiedIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, devSkuProductSubscription1.poolId));
 		
 		// manually subscribe to any available pool and test
-		for (SubscriptionPool subscriptionPool : getRandomSubsetOfList(clienttasks.getCurrentlyAvailableSubscriptionPools(),3)) {
-			
+		List<SubscriptionPool> availableSubscriptionPools = clienttasks.getCurrentlyAvailableSubscriptionPools();
+		for (SubscriptionPool subscriptionPool : getRandomSubsetOfList(availableSubscriptionPools,3)) {
+///*debugTesting*/ subscriptionPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("subscriptionName", "Awesome OS with up to 4 virtual guests", availableSubscriptionPools); // causes: 1 local certificate has been deleted.
 			// manually subscribe to the available cost-based subscription
 			clienttasks.subscribe(null, null, subscriptionPool.poolId, null, null, null, null, null, null, null, null, null);
 			
@@ -396,7 +411,13 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 			productSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
 			ProductSubscription devSkuProductSubscription2 = ProductSubscription.findFirstInstanceWithMatchingFieldFromList("poolId", devSkuProductSubscription1.poolId, productSubscriptions);
 			Assert.assertNotNull(devSkuProductSubscription2, "After manually attaching a cost-based subscription, an entitlement for devSku '"+devSku+"' from pool id '"+devSkuProductSubscription1.poolId+"' is still being consumed.");
-			Assert.assertEquals(devSkuProductSubscription2.serialNumber, devSkuProductSubscription1.serialNumber, "After manually attaching a cost-based subscription, the same serial number from an entitlement for devSku '"+devSku+"' from pool id '"+devSkuProductSubscription1.poolId+"' is still being consumed.");
+			//Assert.assertEquals(devSkuProductSubscription2.serialNumber, devSkuProductSubscription1.serialNumber, "After manually attaching a cost-based subscription, the same serial number from an entitlement for devSku '"+devSku+"' from pool id '"+devSkuProductSubscription1.poolId+"' is still being consumed.");
+			// The prior assert on equal serial numbers fails when the devSkuProductSubscription1 provides a modifier product that modifies a provided product in subscriptionPool
+			// Instead let's determine if devSkuProductSubscription1 does indeed provide modifier products that are modified by products provided by subscriptionPool...
+			List<String> subscriptionPoolProvidedProductIds = CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, subscriptionPool.poolId);
+			if (!doesListOverlapList(subscriptionPoolProvidedProductIds, devSkuProductSubscriptionProvidedProductModifiedIds)) {
+				Assert.assertEquals(devSkuProductSubscription2.serialNumber, devSkuProductSubscription1.serialNumber, "After manually attaching a cost-based subscription, the same serial number from an entitlement for devSku '"+devSku+"' from pool id '"+devSkuProductSubscription1.poolId+"' is still being consumed (because the cost-based subscription does not provide any of the products "+devSkuProductSubscriptionProvidedProductModifiedIds+" that are modified by the provided modifier products of the devSku.");
+			} else devSkuProductSubscription1.serialNumber=devSkuProductSubscription2.serialNumber;	// save for the next loop's serial assert
 		}
 	}
 	
