@@ -808,7 +808,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		
 	
 	@Test(	description="Using curl, set the default service level for an org and then register using org credentials to verify consumer's service level",
-			groups={},
+			groups={"SetDefaultServiceLevelForOrgAndRegister_Test"},
 			// dataProvider="getAllAvailableServiceLevelData",	// 06/05/2014 takes too long; rarely reveals a bug
 			dataProvider="getRandomSubsetOfAllAvailableServiceLevelData",
 			enabled=true)
@@ -816,29 +816,38 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 	public void SetDefaultServiceLevelForOrgAndRegister_Test(Object bugzilla, String defaultServiceLevel) throws JSONException, Exception {
 		
 		// update the defaultServiceLevel on the Org
-		String org = clienttasks.getCurrentlyRegisteredOwnerKey();
-		JSONObject jsonOrg = CandlepinTasks.setAttributeForOrg(sm_clientUsername, sm_clientPassword, sm_serverUrl, org, "defaultServiceLevel", defaultServiceLevel);
-		Assert.assertEquals(jsonOrg.get("defaultServiceLevel"), defaultServiceLevel, "The defaultServiceLevel update to org '"+org+"' appears successful on the candlepin server.");
+		if (orgForSetDefaultServiceLevelForOrgAndRegister_Test==null) orgForSetDefaultServiceLevelForOrgAndRegister_Test = clienttasks.getCurrentlyRegisteredOwnerKey();
+		JSONObject jsonOrg = CandlepinTasks.setAttributeForOrg(sm_clientUsername, sm_clientPassword, sm_serverUrl, orgForSetDefaultServiceLevelForOrgAndRegister_Test, "defaultServiceLevel", defaultServiceLevel);
+		Assert.assertEquals(jsonOrg.get("defaultServiceLevel"), defaultServiceLevel, "The defaultServiceLevel update to org '"+orgForSetDefaultServiceLevelForOrgAndRegister_Test+"' appears successful on the candlepin server.");
 		
 		// register and assert the consumer's service level is set to the new org default
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg/*will either be null or equal to orgForSetDefaultServiceLevelForOrgAndRegister_Test*/, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null);
 		Assert.assertEquals(clienttasks.getCurrentServiceLevel(), defaultServiceLevel, "Immediately upon registering, the consumer's service level preference was set to the org's default.");
+	}
+	protected String orgForSetDefaultServiceLevelForOrgAndRegister_Test = null;
+	@AfterGroups(value={"SetDefaultServiceLevelForOrgAndRegister_Test"},groups={"setup"})
+	public void afterSetDefaultServiceLevelForOrgAndRegister_Test() throws Exception {
+		// update the defaultServiceLevel on the Org (setting to "" will nullify the attribute on the org; setting to JSONObject.NULL does not work)
+		if (orgForSetDefaultServiceLevelForOrgAndRegister_Test!=null) {
+			JSONObject jsonOrg = CandlepinTasks.setAttributeForOrg(sm_clientUsername, sm_clientPassword, sm_serverUrl, orgForSetDefaultServiceLevelForOrgAndRegister_Test, "defaultServiceLevel", "");
+			jsonOrg.get("defaultServiceLevel"); // should be null
+		}
 	}
 	
 	
 	@Test(	description="Using curl, unset the default service level for an org and then register using org credentials to verify consumer's service level is not set",
 			groups={},
-			dependsOnMethods={"SetDefaultServiceLevelForOrgAndRegister_Test"}, alwaysRun=true,
+			dependsOnMethods={"SetDefaultServiceLevelForOrgAndRegister_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void UnsetDefaultServiceLevelForOrgAndRegister_Test() throws JSONException, Exception {
 		
 		// update the defaultServiceLevel on the Org (setting to "" will nullify the attribute on the org; setting to JSONObject.NULL does not work)
-		JSONObject jsonOrg = CandlepinTasks.setAttributeForOrg(sm_clientUsername, sm_clientPassword, sm_serverUrl, sm_clientOrg, "defaultServiceLevel", "");
+		JSONObject jsonOrg = CandlepinTasks.setAttributeForOrg(sm_clientUsername, sm_clientPassword, sm_serverUrl, orgForSetDefaultServiceLevelForOrgAndRegister_Test, "defaultServiceLevel", "");
 		Assert.assertEquals(jsonOrg.get("defaultServiceLevel"), JSONObject.NULL, "The defaultServiceLevel update to the org appears successful on the candlepin server.");
 		
 		// register and assert the consumer's service level is not set
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, orgForSetDefaultServiceLevelForOrgAndRegister_Test, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null);
 		Assert.assertEquals(clienttasks.getCurrentServiceLevel(), "", "Immediately upon registering, the consumer's service level preference was set to the org's default (which was unset).");
 	}
 	
