@@ -165,7 +165,8 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			if (Boolean.valueOf(getProperty("sm.debug.fetchProductCerts","true"))) {
 			log.info("Fetching the generated product certs...");
 			//SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(server, "find "+serverInstallDir+servertasks.generatedProductsDir+" -name '*.pem'", 0);
-			SSHCommandResult result = server.runCommandAndWait("find "+sm_serverInstallDir+servertasks.generatedProductsDir+" -name '*.pem'");
+			//SSHCommandResult result = server.runCommandAndWait("find "+sm_serverInstallDir+servertasks.generatedProductsDir+" -name '*.pem'");	// find /root/candlepin/server/generated_certs -name '*.pem'
+			SSHCommandResult result = server.runCommandAndWait("find "+sm_serverInstallDir+" -name '*.pem' | grep generated_certs");	// find /home/candlepin/candlepin -name '*.pem' | grep generated_certs
 			String[] remoteFilesAsString = result.getStdout().trim().split("\\n");
 			if (remoteFilesAsString.length==1 && remoteFilesAsString[0].equals("")) remoteFilesAsString = new String[]{};
 			if (remoteFilesAsString.length==0) log.warning("No generated product certs were found on the candlpin server for use in testing.");
