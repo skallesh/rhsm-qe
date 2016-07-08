@@ -209,7 +209,10 @@
   (try+
    (tasks/enableproxy "doesnotexist.redhat.com")
    (test_proxy "Proxy connection failed")
-   (finally (tasks/disableproxy))))
+   (finally
+     (if (bool (tasks/ui guiexist :error-dialog))
+       (tasks/ui click :ok-error))
+     (tasks/disableproxy))))
 
 (defn ^{Test {:groups ["proxy"
                        "tier1"]}}
