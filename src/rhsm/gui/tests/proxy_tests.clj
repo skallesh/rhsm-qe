@@ -27,8 +27,7 @@
 
 (defn ^{BeforeClass {:groups ["setup"]}}
   setup [_]
-  (try+ (if (= "RHEL7" (get-release)) (base/startup nil))
-        (skip-if-bz-open "1142918")
+  (try+ (skip-if-bz-open "1142918")
         (if (not (bool (tasks/ui guiexist :main-window)))
           (tasks/start-app))
         (tasks/unregister)
@@ -230,6 +229,8 @@
     (finally
      (if (bool (tasks/ui guiexist :register-dialog))
        (tasks/ui click :register-close))
+     (if (bool (tasks/ui guiexist :error-dialog))
+       (tasks/ui click :ok-error))
      (disable_proxy nil))))
 
 (defn ^{Test {:groups ["proxy"
@@ -255,6 +256,7 @@
     (finally
      (if (bool (tasks/ui guiexist :facts-dialog))
        (tasks/ui click :close-facts))
+
      (disable_proxy nil))))
 
 (defn ^{Test {:groups ["proxy"
