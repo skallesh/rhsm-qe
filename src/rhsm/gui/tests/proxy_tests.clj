@@ -256,7 +256,8 @@
     (finally
      (if (bool (tasks/ui guiexist :facts-dialog))
        (tasks/ui click :close-facts))
-
+     (if (bool (tasks/ui guiexist :error-dialog))
+       (tasks/ui click :ok-error))
      (disable_proxy nil))))
 
 (defn ^{Test {:groups ["proxy"
