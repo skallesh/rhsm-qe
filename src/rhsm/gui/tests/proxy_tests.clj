@@ -210,8 +210,7 @@
    (tasks/enableproxy "doesnotexist.redhat.com")
    (test_proxy "Proxy connection failed")
    (finally
-     (if (bool (tasks/ui guiexist :error-dialog))
-       (tasks/ui click :ok-error))
+     (tasks/close-error-dialog)
      (tasks/disableproxy))))
 
 (defn ^{Test {:groups ["proxy"
@@ -228,14 +227,12 @@
       (tasks/verify-conf-proxies hostname port "" ""))
     (let [thrown-error (try+ (register)
                              (catch Object e (:type e)))]
-      (verify (= thrown-error :network-error))
-      (verify (bool (tasks/ui guiexist :error-dialog))))
+      (verify (= thrown-error :network-error)))
     (finally
-     (if (bool (tasks/ui guiexist :register-dialog))
-       (tasks/ui click :register-close))
-     (if (bool (tasks/ui guiexist :error-dialog))
-       (tasks/ui click :ok-error))
-     (disable_proxy nil))))
+      (if (bool (tasks/ui guiexist :register-dialog))
+        (tasks/ui click :register-close))
+      (tasks/close-error-dialog)
+      (disable_proxy nil))))
 
 (defn ^{Test {:groups ["proxy"
                        "tier2"
@@ -260,8 +257,7 @@
     (finally
      (if (bool (tasks/ui guiexist :facts-dialog))
        (tasks/ui click :close-facts))
-     (if (bool (tasks/ui guiexist :error-dialog))
-       (tasks/ui click :ok-error))
+     (tasks/close-error-dialog)
      (disable_proxy nil))))
 
 (defn ^{Test {:groups ["proxy"

@@ -58,6 +58,11 @@
   [object]
   (.trim (ui getobjectproperty object "label")))
 
+(defn close-error-dialog
+  []
+  (if (ui guiexist :error-dialog)
+    (ui click :ok-error)))
+
 (defn checkforerror
   "Checks for the error dialog for 3 seconds and logs the error message.
   Allows for recovery of the error message.
