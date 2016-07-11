@@ -863,7 +863,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		Boolean all = getRandomListItem(Arrays.asList(new Boolean[]{Boolean.TRUE,Boolean.FALSE}));
 		Boolean matchInstalled = getRandomListItem(Arrays.asList(new Boolean[]{Boolean.TRUE,Boolean.FALSE}));
 		Boolean noOverlap = getRandomListItem(Arrays.asList(new Boolean[]{Boolean.TRUE,Boolean.FALSE}));
-///*debugTesting*/ matchInstalled=false; all=false; noOverlap=false;
+///*debugTesting*/ matchInstalled=false; all=false; noOverlap=true;
 		log.info("Testing with all="+all);
 		log.info("Testing with matchInstalled="+matchInstalled);
 		log.info("Testing with noOverlap="+noOverlap);
@@ -881,7 +881,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		SubscriptionPool randomAvailablePool = getRandomListItem(availableSubscriptionPools);
 ///*debugTesting*/ randomAvailablePool	= SubscriptionPool.findFirstInstanceWithCaseInsensitiveMatchingFieldFromList("productId", "RH0802940", availableSubscriptionPools);
 ///*debugTesting*/ randomAvailablePool	= SubscriptionPool.findFirstInstanceWithCaseInsensitiveMatchingFieldFromList("productId", "awesomeos-x86_64", availableSubscriptionPools);
-///*debugTesting*/ randomAvailablePool	= SubscriptionPool.findFirstInstanceWithCaseInsensitiveMatchingFieldFromList("poolId", "8a9086f4558b12b601558b142e7c059c", availableSubscriptionPools);
+///*debugTesting*/ randomAvailablePool	= SubscriptionPool.findFirstInstanceWithCaseInsensitiveMatchingFieldFromList("poolId", "8a99f9815582f734015585f9a0345206", availableSubscriptionPools);
 		log.info("Testing with randomAvailablePool="+randomAvailablePool);
 		
 		// Test 1: test exact --matches on Subscription Name:
@@ -949,6 +949,16 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			assertActualResultOfListAvailableWithMatches(matchesString,actualSubscriptionPoolMatches,availableSubscriptionPools);
 		} else log.warning("Skipping list --available --matches test on a Provides ProductId item since the provides list is empty on our random available subscription: "+randomAvailablePool);		
 		
+		// TEMPORARY WORKAROUND
+		boolean invokeWorkaroundWhileBugIsOpen = true;
+		String bugId="1354665";	// Bug 1354665 - subscription-manager list --available --matches="CONTENT" is not finding matches on valid Repo ID or Name
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
+			log.warning("Skipping Test 7: test exact --matches on a Content Name provided by a Provided ProductId while bug "+bugId+" is open.");
+			log.warning("Skipping Test 8: test exact --matches on a Content Label provided by a Provided ProductId while bug "+bugId+" is open.");
+			return;
+		}
+		// END OF WORKAROUND
 		
 		// Test 7: test exact --matches on a Content Name provided by a Provided ProductId
 		if (!randomAvailablePool.provides.isEmpty()) {
@@ -958,6 +968,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 				JSONObject randomjsonProductContent = (JSONObject) jsonProductContents.get(randomGenerator.nextInt(jsonProductContents.length()));
 				JSONObject jsonContent = randomjsonProductContent.getJSONObject("content");
 				matchesString = jsonContent.getString("name");
+///*debugTesting*/matchesString = "Red Hat Satellite Tools 6.1 (for RHEL Server for ARM Development Preview) (RPMs)";
 				actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, matchesString, null, null, null, null).getStdout());
 				assertActualResultOfListAvailableWithMatches(matchesString,actualSubscriptionPoolMatches,availableSubscriptionPools);
 			} else log.warning("Skipping list --available --matches test on a Provides ProductId Content Name since the random provided product id '"+randomProvidedProductId+"' content list is empty on our random available subscription: "+randomAvailablePool);
