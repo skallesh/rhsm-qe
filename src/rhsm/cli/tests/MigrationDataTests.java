@@ -2728,6 +2728,18 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				bugIds.add("1349533");
 			}
 			
+			if (rhnAvailableChildChannel.equals("rhel-s390x-server-ha-7-beta") ||
+				rhnAvailableChildChannel.equals("rhel-s390x-server-ha-7-beta-debuginfo")) {
+				// Bug 1354653 - rhel-s390x-server-ha-7-beta channel maps are absent from channel-cert-mapping.txt
+				bugIds.add("1354653");
+			}
+			
+			if (rhnAvailableChildChannel.equals("rhel-s390x-server-rs-7-beta") ||
+				rhnAvailableChildChannel.equals("rhel-s390x-server-rs-7-beta-debuginfo")) {
+				// Bug 1354655 - rhel-s390x-server-rs-7-beta channel maps are absent from channel-cert-mapping.txt
+				bugIds.add("1354655");
+			}
+			
 			if (rhnAvailableChildChannel.equals("rhel-x86_64-server-7-rh-gluster-3-client") ||
 				rhnAvailableChildChannel.equals("rhel-x86_64-server-7-rh-gluster-3-client-debuginfo")) {
 				// Bug 1349538 - rhel-x86_64-server-7-rh-gluster-3-client channel maps are absent from channel-cert-mapping.txt
