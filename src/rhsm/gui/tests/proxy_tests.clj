@@ -228,7 +228,8 @@
       (tasks/verify-conf-proxies hostname port "" ""))
     (let [thrown-error (try+ (register)
                              (catch Object e (:type e)))]
-      (verify (= thrown-error :network-error)))
+      (verify (= thrown-error :network-error))
+      (verify (bool (tasks/ui guiexist :error-dialog))))
     (finally
      (if (bool (tasks/ui guiexist :register-dialog))
        (tasks/ui click :register-close))
