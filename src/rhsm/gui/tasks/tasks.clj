@@ -60,7 +60,7 @@
 
 (defn close-error-dialog
   []
-  (if (ui guiexist :error-dialog)
+  (if (bool (ui guiexist :error-dialog))
     (ui click :ok-error)))
 
 (defn checkforerror
