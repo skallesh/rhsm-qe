@@ -14,6 +14,9 @@ import com.redhat.qe.tools.RemoteFileTasks;
  *   Includes Overview: http://wiki.test.redhat.com/mmalik/SELinuxTroubleshootingChart?action=AttachFile&do=view&target=detailed-slides.pdf
  *   Includes Tutorial: http://wiki.test.redhat.com/mmalik/SELinuxTroubleshootingChart?action=AttachFile&do=view&target=SELinux-for-QA.pdf
  *
+ * SELinux HowToTest Instructions
+ *   https://wiki.test.redhat.com/BaseOs/Security/SelinuxTestOnlyBugs#SELinuxHowToTestInstructions
+ *
  * Notes: To investigate a denial in the /var/log/audit/audit.log...
  * http://docs.redhat.com/docs/en-US/Red_Hat_Enterprise_Linux/6/html/Security-Enhanced_Linux/sect-Security-Enhanced_Linux-Fixing_Problems-Searching_For_and_Viewing_Denials.html
  * 1. yum install setroubleshoot-server
