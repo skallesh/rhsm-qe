@@ -269,7 +269,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		
 		// QE NOTE: The easiest way to create an account (without accepting terms and conditions) is to
 		// use the http://account-manager-stage.app.eng.rdu2.redhat.com/#create to with the Accept Terms and Conditions checkbox unchecked
-		// and BE SURE TO INCLUDE A SUBSCRIPTION SKU!  If there is not subscription in the created org, then there will be no requirement to
+		// and BE SURE TO INCLUDE A SUBSCRIPTION SKU!  If there is no subscription in the created org, then there will be no requirement to
 		// accept terms and conditions.
 		
 		log.info("Attempting to register to a candlepin server using an account that has not yet accepted the Red Hat Terms and Conditions");
