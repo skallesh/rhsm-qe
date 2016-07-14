@@ -958,6 +958,11 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			log.warning("Skipping Test 8: test exact --matches on a Content Label provided by a Provided ProductId while bug "+bugId+" is open.");
 			return;
 		}
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, "<", "2.0.4-1")) {	// candlepin commit db5801ea	https://bugzilla.redhat.com/show_bug.cgi?id=1354665#c1
+			log.warning("Skipping Test 7: test exact --matches on a Content Name provided by a Provided ProductId since this was not implemented until candlepin-2.0.4-1");
+			log.warning("Skipping Test 8: test exact --matches on a Content Label provided by a Provided ProductId since this was not implemented until candlepin-2.0.4-1");
+			return;	
+		}
 		// END OF WORKAROUND
 		
 		// Test 7: test exact --matches on a Content Name provided by a Provided ProductId
