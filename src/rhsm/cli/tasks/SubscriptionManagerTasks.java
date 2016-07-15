@@ -2215,7 +2215,8 @@ if (false) {
 		}
 		
 		// assert that only one rhel product cert is installed
-		Assert.assertEquals(rhelProductCerts.size(), 1, "Only one product cert is installed that provides RHEL tag '"+providingTag+"' (this assert accounts for /etc/pki/product-default certs that are trumped by /etc/pki/product certs)");
+		if (rhelProductCerts.size()>1) log.warning("These '"+providingTag+"' product certs are installed: "+rhelProductCerts); 
+		Assert.assertEquals(rhelProductCerts.size(), 1, "Only one product cert is installed that provides RHEL tag '"+providingTag+"' (this assert accounts for /etc/pki/product-default/ certs that are trumped by /etc/pki/product/ certs)");
 		Assert.assertTrue(rhelProductCerts.size()<=1, "No more than one product cert is installed that provides RHEL tag '"+providingTag+"' (actual='"+rhelProductCerts.size()+"').");
 		
 		// return it
