@@ -35,7 +35,7 @@
 
 (defn ^{BeforeClass {:groups ["setup"]}}
   setup [_]
-  (try+ (if (= "RHEL7" (get-release)) (base/startup nil))
+  (try+ ;(if (= "RHEL7" (get-release)) (base/startup nil))
         (tasks/unregister)
         (catch [:type :not-registered] _)
         (catch Exception e
@@ -80,8 +80,9 @@
   [register-args expected-error]
   (skip-if-bz-open "1194365")
   (try+ (tasks/unregister) (catch [:type :not-registered] _))
-  (if (bool (tasks/ui guiexist :register-dialog))
-    (tasks/ui closewindow :register-dialog))
+  (when (or (bool (tasks/ui guiexist :register-dialog))
+            (bool (tasks/ui guiexist :error-dialog)))
+    (tasks/restart-app :force-kill? true))
   (let [test-fn (fn [args]
                   (try+ (apply tasks/register args)
                         (catch
@@ -90,7 +91,9 @@
                           type)))]
     (let [thrown-error (test-fn register-args)]
       (verify (and (= thrown-error expected-error) (action exists? :register-system)))
-      (verify (bool (tasks/ui guiexist :register-dialog))))))
+      (verify (bool (tasks/ui guiexist :register-dialog)))
+      (tasks/ui click :register-close)
+      (tasks/close-error-dialog))))
 
 (data-driven register_bad_credentials {Test {:groups ["registration"
                                                       "tier1"
