@@ -77,7 +77,7 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 		List <ProductSubscription> currentlyConsumedProductSubscriptions = ProductSubscription.parse(clienttasks.list(null,null,true, null, null, null, null, null, null, null, null, null, null).getStdout());
 		for (ProductSubscription expiringProductSubscription : expiringProductSubscriptions) {
 			ProductSubscription expiredProductSubscription = ProductSubscription.findFirstInstanceWithMatchingFieldFromList("serialNumber", expiringProductSubscription.serialNumber, currentlyConsumedProductSubscriptions);
-			Assert.assertNotNull(expiredProductSubscription, "Immediately after the consumed subscription '"+expiringProductSubscription.productName+"' serial '"+expiringProductSubscription.serialNumber+"' expires, it should still be found the list of consumed product subscriptions.");
+			Assert.assertNotNull(expiredProductSubscription, "Immediately after the consumed subscription '"+expiringProductSubscription.productName+"' serial '"+expiringProductSubscription.serialNumber+"' expires, it should still be found the list of consumed product subscriptions (assuming that rhsmcertd on certFrequency='"+certFrequency+"'min has not yet triggered before this assert).");
 			Assert.assertTrue(!expiredProductSubscription.isActive, "Immediately after the consumed subscription '"+expiringProductSubscription.productName+"' serial '"+expiringProductSubscription.serialNumber+"' expires, the list of consumed product subscriptions should show it as inActive.");
 		}
 		
