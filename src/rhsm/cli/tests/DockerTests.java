@@ -555,6 +555,98 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
+	@Test(	description="verify a running container has access to all the entitlement certs from the host",
+			groups={"AcceptanceTests","blockedByBug-1353433"},
+			dependsOnMethods={"VerifyYumRepolistOnRunningDockerImageConsumedFromHostEntitlements_Test"},
+			dataProvider="getDockerImageData",
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void VerifyAllHostEntitlementsAreSharedWithRunningDockerImage_Test(Object bugzilla, String dockerImage) {
+		
+		// Note: the secret sauce for sharing host files to a running container are these two soft links from the container to the host...
+		//	[root@hp-sl2x170zg6-01 ~]# docker run --rm docker-registry.usersys.redhat.com/brew/rhel7:latest ls -l /etc/pki/entitlement-host
+		//	lrwxrwxrwx. 1 root root 32 Jul 27  2015 /etc/pki/entitlement-host -> /run/secrets/etc-pki-entitlement
+		//	[root@hp-sl2x170zg6-01 ~]# docker run --rm docker-registry.usersys.redhat.com/brew/rhel7:latest ls -l /etc/rhsm-host
+		//	lrwxrwxrwx. 1 root root 17 Jul 27  2015 /etc/rhsm-host -> /run/secrets/rhsm
+		//	
+		//	
+		//	[root@hp-sl2x170zg6-01 ~]# docker run --rm docker-registry.usersys.redhat.com/brew/rhel7:latest ls -R /run/secrets/
+		//	/run/secrets/:
+		//	etc-pki-entitlement
+		//	rhel7.repo
+		//	rhsm
+		//
+		//	/run/secrets/etc-pki-entitlement:
+		//	6528422180188702523-key.pem
+		//	6528422180188702523.pem
+		//
+		//	/run/secrets/rhsm:
+		//	ca
+		//	logging.conf
+		//	pluginconf.d
+		//	rhsm.conf
+		//
+		//	/run/secrets/rhsm/ca:
+		//	redhat-entitlement-authority.pem
+		//	redhat-uep.pem
+		//
+		//	/run/secrets/rhsm/pluginconf.d:
+		//	container_content.ContainerContentPlugin.conf
+		//	ostree_content.OstreeContentPlugin.conf
+		
+		
+		// make sure we are already registered (from VerifyYumRepolistOnRunningDockerImageConsumedFromHostEntitlements_Test)
+		Assert.assertNotNull(clienttasks.getCurrentConsumerCert(),"This test assumes a consumer has already been registered on '"+clienttasks.hostname+"'.");
+		
+		// make sure we are auto-subscribed to a minimal number of entitlements
+		clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null, null);
+		clienttasks.subscribe(true, null, (String)null, (String)null, null, null, null, null, null, null, null, null);
+		
+		// get the current entitlements on the host
+		//	[root@hp-sl2x170zg6-01 ~]# ls /etc/pki/entitlement | sort
+		//	162581295513405082-key.pem
+		//	162581295513405082.pem
+		String entitlementDir = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "entitlementCertDir");
+		SSHCommandResult entitlementCertListingResult = client.runCommandAndWait("ls "+entitlementDir+" | sort");
+		// and get the EntitlementCerts
+		List<EntitlementCert> entitlementCerts = clienttasks.getCurrentEntitlementCerts();
+		
+		// get the current entitlements in the container
+		//	[root@hp-sl2x170zg6-01 ~]# docker run --rm docker-registry.usersys.redhat.com/brew/rhel7:latest ls /etc/pki/entitlement-host | sort
+		//	162581295513405082-key.pem
+		//	162581295513405082.pem
+		SSHCommandResult entitlementHostCertListingResult = client.runCommandAndWait("docker run --rm "+dockerImage+" ls "+entitlementHostDir+" | sort");
+		// and get the EntitlementCerts
+		clienttasks.sshCommandRunner.runCommandAndWaitWithoutLogging("docker run --rm "+dockerImage+" find "+entitlementHostDir.replaceAll("/$", "")+"/"+" -regex \"/.+/[0-9]+.pem\" -exec rct cat-cert {} \\;");
+		String certificates = clienttasks.sshCommandRunner.getStdout();
+		List<EntitlementCert> entitlementHostCerts = EntitlementCert.parse(certificates);
+		
+		// Test 1A: assert the listed filenames match
+		Assert.assertEquals(entitlementCertListingResult.getStdout().trim(), entitlementHostCertListingResult.getStdout().trim(), "The entitlement cert files accessible in directory '"+entitlementHostDir+"' within a running container match the entitlment cert files found in the host's directory '"+entitlementDir+"'.");
+		
+		// Test 1B: assert entitlementHostCerts are equivalent to entitlementCerts
+		for (EntitlementCert entitlementCert : entitlementCerts) {
+			EntitlementCert entitlementHostCert = EntitlementCert.findFirstInstanceWithMatchingFieldFromList("serialString", entitlementCert.serialString, entitlementHostCerts);
+			Assert.assertNotNull(entitlementHostCert, "Found entitlement serial '"+entitlementCert.serialNumber+"' from running container that matches entitlement serial from the host.");
+			Assert.assertEquals(entitlementHostCert.productNamespaces.size(), entitlementCert.productNamespaces.size(), "Entitlement serial '"+entitlementCert.serialNumber+"' from running container has the same number of productNamespaces as the host's entitlement.");
+			Assert.assertEquals(entitlementHostCert.contentNamespaces.size(), entitlementCert.contentNamespaces.size(), "Entitlement serial '"+entitlementCert.serialNumber+"' from running container has the same number of contentNamespaces as the host's entitlement.");
+			// TODO: could add more precise equivalence to EntitlementCert comparison (implement a .equals method within EntitlementCert)
+		}
+		
+		// now let's attach more entitlements on the host and make sure they are also available in the container.
+		clienttasks.subscribeToTheCurrentlyAllAvailableSubscriptionPoolsCollectively();
+		
+		// get the current entitlements on the host
+		entitlementCertListingResult = client.runCommandAndWait("ls "+entitlementDir+" | sort");
+		
+		// get the current entitlements in the container
+		entitlementHostCertListingResult = client.runCommandAndWait("docker run --rm "+dockerImage+" ls "+entitlementHostDir+" | sort");
+		
+		// Test 2: assert the listed filenames match (after more entitlements have been attached to the host)
+		Assert.assertEquals(entitlementCertListingResult.getStdout().trim(), entitlementHostCertListingResult.getStdout().trim(), "The entitlement cert files accessible in directory '"+entitlementHostDir+"' within a running container match the entitlment cert files found in the host's directory '"+entitlementDir+"'.");
+	}
+	
+	
 	@Test(	description="Verify that entitlements providing containerimage content are copied to relevant directories when attached via auto-subscribe (as governed by the subscription-manager-plugin-container package)",
 			groups={"AcceptanceTests"},
 			enabled=true)
@@ -597,7 +689,7 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 			}
 		}
 	}
-	@Test(	description="Verify that entitlements providing containerimage content are copied to relevant directoried when attached via auto-heal (as governed by the subscription-manager-plugin-container package)",
+	@Test(	description="Verify that entitlements providing containerimage content are copied to relevant directories when attached via auto-heal (as governed by the subscription-manager-plugin-container package)",
 			groups={"AcceptanceTests","blockedByBug-1165692","blockedByBug-1344500"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
