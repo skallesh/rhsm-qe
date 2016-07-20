@@ -8329,6 +8329,7 @@ if (false) {
 		//	RemoteServerException: Server error attempting a DELETE to /subscription/consumers/892d9649-8079-43fe-ad04-2c3a83673f6e returned status 500
 		
 		if ((result.getStdout()+result.getStderr()).toLowerCase().contains("Runtime Error".toLowerCase()) ||
+			(result.getStdout()+result.getStderr()).toLowerCase().contains("Error updating system data on the server".toLowerCase()) ||
 			(result.getStdout()+result.getStderr()).toLowerCase().contains("undefined method".toLowerCase()) ||
 			(result.getStdout()+result.getStderr()).toLowerCase().contains("The proxy server received an invalid response from an upstream server".toLowerCase()) ||
 			(result.getStdout()+result.getStderr()).toLowerCase().contains("Problem encountered".toLowerCase()) ||
@@ -8486,6 +8487,58 @@ if (false) {
 			issue = "SSLTimeoutError: timed out";
 			if (getTracebackCommandResult.getStdout().contains(issue)) {
 				String bugId = "1165239"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1165239 - subscription-manager encounters frequent SSLTimeoutErrors from stage IT-Candlepin
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				if (invokeWorkaroundWhileBugIsOpen) {
+					throw new SkipException("Encounterd a '"+issue+"' from the server and could not complete this test while bug '"+bugId+"' is open.");
+				}
+			}
+			// END OF WORKAROUND
+			
+			
+			// TEMPORARY WORKAROUND FOR BUG
+			//	2016-07-20 16:59:05,912 [DEBUG] subscription-manager:31469 @connection.py:573 - Making request: PUT /subscription/consumers/a508bc4a-0986-4795-be1f-8a058a2b44a4/packages
+			//	2016-07-20 16:59:36,992 [DEBUG] subscription-manager:31469 @connection.py:602 - Response: status=500
+			//	2016-07-20 16:59:36,993 [ERROR] subscription-manager:31469 @connection.py:631 - Response: 500
+			//	2016-07-20 16:59:36,993 [ERROR] subscription-manager:31469 @connection.py:632 - JSON parsing error: No JSON object could be decoded
+			//	2016-07-20 16:59:36,993 [ERROR] subscription-manager:31469 @cache.py:166 - Error updating system data on the server
+			//	2016-07-20 16:59:36,993 [ERROR] subscription-manager:31469 @cache.py:167 - Server error attempting a PUT to /subscription/consumers/a508bc4a-0986-4795-be1f-8a058a2b44a4/packages returned status 500
+			//	Traceback (most recent call last):
+			//	  File "/usr/lib/python2.7/site-packages/subscription_manager/cache.py", line 158, in update_check
+			//	    self._sync_with_server(uep, consumer_uuid)
+			//	  File "/usr/lib/python2.7/site-packages/subscription_manager/cache.py", line 417, in _sync_with_server
+			//	    self.current_profile.collect())
+			//	  File "/usr/lib64/python2.7/site-packages/rhsm/connection.py", line 1055, in updatePackageProfile
+			//	    ret = self.conn.request_put(method, pkg_dicts)
+			//	  File "/usr/lib64/python2.7/site-packages/rhsm/connection.py", line 703, in request_put
+			//	    return self._request("PUT", method, params)
+			//	  File "/usr/lib64/python2.7/site-packages/rhsm/connection.py", line 611, in _request
+			//	    self.validateResponse(result, request_type, handler)
+			//	  File "/usr/lib64/python2.7/site-packages/rhsm/connection.py", line 667, in validateResponse
+			//	    handler=handler)
+			//	RemoteServerException: Server error attempting a PUT to /subscription/consumers/a508bc4a-0986-4795-be1f-8a058a2b44a4/packages returned status 500
+			//	2016-07-20 16:59:36,995 [ERROR] subscription-manager:31469 @managercli.py:174 - exception caught in subscription-manager
+			//	2016-07-20 16:59:36,995 [ERROR] subscription-manager:31469 @managercli.py:175 - Error updating system data on the server, see /var/log/rhsm/rhsm.log for more details.
+			//	Traceback (most recent call last):
+			//	  File "/usr/sbin/subscription-manager", line 81, in <module>
+			//	    sys.exit(abs(main() or 0))
+			//	  File "/usr/sbin/subscription-manager", line 72, in main
+			//	    return managercli.ManagerCLI().main()
+			//	  File "/usr/lib/python2.7/site-packages/subscription_manager/managercli.py", line 2732, in main
+			//	    return CLI.main(self)
+			//	  File "/usr/lib/python2.7/site-packages/subscription_manager/cli.py", line 160, in main
+			//	    return cmd.main()
+			//	  File "/usr/lib/python2.7/site-packages/subscription_manager/managercli.py", line 526, in main
+			//	    return_code = self._do_command()
+			//	  File "/usr/lib/python2.7/site-packages/subscription_manager/managercli.py", line 1161, in _do_command
+			//	    profile_mgr.update_check(self.cp, consumer['uuid'], True)
+			//	  File "/usr/lib/python2.7/site-packages/subscription_manager/cache.py", line 405, in update_check
+			//	    return CacheManager.update_check(self, uep, consumer_uuid, force)
+			//	  File "/usr/lib/python2.7/site-packages/subscription_manager/cache.py", line 168, in update_check
+			//	    raise Exception(_("Error updating system data on the server, see /var/log/rhsm/rhsm.log "
+			//	Exception: Error updating system data on the server, see /var/log/rhsm/rhsm.log for more details.
+			issue = "Error updating system data on the server";
+			if (getTracebackCommandResult.getStdout().contains(issue)) {
+				String bugId = "1358508"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1358508 - Error updating system data on the server
 				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 				if (invokeWorkaroundWhileBugIsOpen) {
 					throw new SkipException("Encounterd a '"+issue+"' from the server and could not complete this test while bug '"+bugId+"' is open.");
