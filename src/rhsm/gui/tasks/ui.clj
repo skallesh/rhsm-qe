@@ -279,8 +279,8 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
        :repo-message "No repositories are available*"
        :close-repo-dialog "close_button"
        :repo-remove-override "remove_all_overrides_button"
-       :base-url "SKU Text"
-       :repo-name "Subscription Text"
+       :base-url "Base URL" ; the value was "SKU Text" previously
+       :repo-name "Name" ; the value was "Subscription Text" previously
        :gpg-check-text "gpgcheck_readonly"
        :gpg-check-combobox "gpgcheck_combobox"
        :gpg-check-edit "gpgcheck_edit_button"
