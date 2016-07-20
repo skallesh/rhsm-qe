@@ -863,7 +863,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		Boolean all = getRandomListItem(Arrays.asList(new Boolean[]{Boolean.TRUE,Boolean.FALSE}));
 		Boolean matchInstalled = getRandomListItem(Arrays.asList(new Boolean[]{Boolean.TRUE,Boolean.FALSE}));
 		Boolean noOverlap = getRandomListItem(Arrays.asList(new Boolean[]{Boolean.TRUE,Boolean.FALSE}));
-///*debugTesting*/ matchInstalled=false; all=false; noOverlap=true;
+///*debugTesting*/ matchInstalled=false; all=true; noOverlap=false;
 		log.info("Testing with all="+all);
 		log.info("Testing with matchInstalled="+matchInstalled);
 		log.info("Testing with noOverlap="+noOverlap);
@@ -881,7 +881,8 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		SubscriptionPool randomAvailablePool = getRandomListItem(availableSubscriptionPools);
 ///*debugTesting*/ randomAvailablePool	= SubscriptionPool.findFirstInstanceWithCaseInsensitiveMatchingFieldFromList("productId", "RH0802940", availableSubscriptionPools);
 ///*debugTesting*/ randomAvailablePool	= SubscriptionPool.findFirstInstanceWithCaseInsensitiveMatchingFieldFromList("productId", "awesomeos-x86_64", availableSubscriptionPools);
-///*debugTesting*/ randomAvailablePool	= SubscriptionPool.findFirstInstanceWithCaseInsensitiveMatchingFieldFromList("poolId", "8a99f9815582f734015585f9a0345206", availableSubscriptionPools);
+///*debugTesting*/ randomAvailablePool	= SubscriptionPool.findFirstInstanceWithCaseInsensitiveMatchingFieldFromList("poolId", "8a99f9815582f734015585f9a7c952b9", availableSubscriptionPools);
+///*debugTesting*/ randomAvailablePool	= SubscriptionPool.findFirstInstanceWithCaseInsensitiveMatchingFieldFromList("productId", "RH0802940", availableSubscriptionPools);	// useful against stage with Test 2: debugTesting matchesString="dotNET on RHEL (for RHEL Server)";
 		log.info("Testing with randomAvailablePool="+randomAvailablePool);
 		
 		// Test 1: test exact --matches on Subscription Name:
@@ -898,6 +899,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		if (!randomAvailablePool.provides.isEmpty()) {
 			matchesString = getRandomListItem(randomAvailablePool.provides);
 ///*debugTesting*/ matchesString="Red Hat Beta";
+///*debugTesting*/ matchesString="dotNET on RHEL (for RHEL Server)";	// useful to assert matches on derivedProvidedProducts (finding a match on a data center subscription: RH00001  Red Hat Enterprise Linux for Virtual Datacenters, Premium)
 			actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, matchesString, null, null, null, null).getStdout());
 			assertActualResultOfListAvailableWithMatches(matchesString,actualSubscriptionPoolMatches,availableSubscriptionPools);
 			// also test case insensitivity
@@ -1135,7 +1137,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			
 			// Test for match on Subscription Name:
 			if (subscriptionPool.subscriptionName.toLowerCase().matches(regexString)) {
-				log.info("Found a hit on matches '"+matchesString+"' against the available subscription '"+subscriptionPool.subscriptionName+"' Subscription Name: "+subscriptionPool.subscriptionName);
+				log.info("Found a hit on matches '"+matchesString+"' against the available subscription '"+subscriptionPool.subscriptionName+"' SKU '"+subscriptionPool.productId+"'.  The match is in Subscription Name: "+subscriptionPool.subscriptionName);
 				if (!expectedSubscriptionPoolMatches.contains(subscriptionPool)) {
 					expectedSubscriptionPoolMatches.add(subscriptionPool);
 					continue availableSubscriptionPoolsLoop;
@@ -1145,7 +1147,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			// Test for match on Provides:
 			for (String providesName : subscriptionPool.provides) {
 				if (providesName.toLowerCase().matches(regexString)) {
-					log.info("Found a hit on matches '"+matchesString+"' against the available subscription '"+subscriptionPool.subscriptionName+"' Provides: "+subscriptionPool.provides);
+					log.info("Found a hit on matches '"+matchesString+"' against the available subscription '"+subscriptionPool.subscriptionName+"' SKU '"+subscriptionPool.productId+"'.  The match is in Provides: "+subscriptionPool.provides);
 					if (!expectedSubscriptionPoolMatches.contains(subscriptionPool)) {
 						expectedSubscriptionPoolMatches.add(subscriptionPool);
 						continue availableSubscriptionPoolsLoop;
@@ -1155,7 +1157,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			
 			// Test for match on SKU:
 			if (subscriptionPool.productId.toLowerCase().matches(regexString)) {
-				log.info("Found a hit on matches '"+matchesString+"' against the available subscription '"+subscriptionPool.subscriptionName+"' SKU: "+subscriptionPool.productId);
+				log.info("Found a hit on matches '"+matchesString+"' against the available subscription '"+subscriptionPool.subscriptionName+"' SKU '"+subscriptionPool.productId+"'.  The match is in SKU: "+subscriptionPool.productId);
 				if (!expectedSubscriptionPoolMatches.contains(subscriptionPool)) {
 					expectedSubscriptionPoolMatches.add(subscriptionPool);
 					continue availableSubscriptionPoolsLoop;
@@ -1164,7 +1166,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			
 			// Test for match on Contract:
 			if (subscriptionPool.contract.toLowerCase().matches(regexString)) {
-				log.info("Found a hit on matches '"+matchesString+"' against the available subscription '"+subscriptionPool.subscriptionName+"' Contract: "+subscriptionPool.contract);
+				log.info("Found a hit on matches '"+matchesString+"' against the available subscription '"+subscriptionPool.subscriptionName+"' SKU '"+subscriptionPool.productId+"'.  The match is in Contract: "+subscriptionPool.contract);
 				if (!expectedSubscriptionPoolMatches.contains(subscriptionPool)) {
 					expectedSubscriptionPoolMatches.add(subscriptionPool);
 					continue availableSubscriptionPoolsLoop;
@@ -1173,7 +1175,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			
 			// Test for match on Service Level:
 			if (subscriptionPool.serviceLevel.toLowerCase().matches(regexString)) {
-				log.info("Found a hit on matches '"+matchesString+"' against the available subscription '"+subscriptionPool.subscriptionName+"' Service Level: "+subscriptionPool.serviceLevel);
+				log.info("Found a hit on matches '"+matchesString+"' against the available subscription '"+subscriptionPool.subscriptionName+"' SKU '"+subscriptionPool.productId+"'.  The match is in Service Level: "+subscriptionPool.serviceLevel);
 				if (!expectedSubscriptionPoolMatches.contains(subscriptionPool)) {
 					expectedSubscriptionPoolMatches.add(subscriptionPool);
 					continue availableSubscriptionPoolsLoop;
@@ -1183,7 +1185,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			// Test for match on Provided ProductId:
 			for (String providedProductId : CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, subscriptionPool.poolId)) {
 				if (providedProductId.toLowerCase().matches(regexString)) {
-					log.info("Found a hit on matches '"+matchesString+"' against the available subscription '"+subscriptionPool.subscriptionName+"' Provided Product ID: "+providedProductId);
+					log.info("Found a hit on matches '"+matchesString+"' against the available subscription '"+subscriptionPool.subscriptionName+"' SKU '"+subscriptionPool.productId+"'.  The match is in Provided Product ID: "+providedProductId);
 					if (!expectedSubscriptionPoolMatches.contains(subscriptionPool)) {
 						expectedSubscriptionPoolMatches.add(subscriptionPool);		
 						continue availableSubscriptionPoolsLoop;
@@ -1191,34 +1193,33 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 				}
 			}
 			
-			/* I BELIEVE THESE TWO TESTS ON Derived Provided ProductId WERE A MISTAKE.  THE SUBSEQUENT Test for match on Provided ProductId Content Names and Labels IS WHAT I SHOULD HAVE TESTED IN THE FIRST PLACE.
 			// Test for match on Derived Provided ProductId:
 			// NOTE: list --available --matches is implemented server-side and appears to be searching the derivedProvidedProducts for product id matches.  Although unexpected, this feature has some benefit.
 			// This behavior is in contrast to list --consumed --matches which is implemented client-side and does NOT search the derivedProvidedProducts for match on product id.
 			// 10/31/2014 Verbal scrum discussion with devel decided to keep this behavior.
 			for (String derivedProvidedProductId : CandlepinTasks.getPoolDerivedProvidedProductIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, subscriptionPool.poolId)) {
 				if (derivedProvidedProductId.toLowerCase().matches(regexString)) {
-					log.info("Found a hit on matches '"+matchesString+"' against the available subscription '"+subscriptionPool.subscriptionName+"' Derived Provided Product ID: "+derivedProvidedProductId);
+					log.info("Found a hit on matches '"+matchesString+"' against the available subscription '"+subscriptionPool.subscriptionName+"' SKU '"+subscriptionPool.productId+"'.  The match is in Derived Provided Product ID: "+derivedProvidedProductId);
 					if (!expectedSubscriptionPoolMatches.contains(subscriptionPool)) {
 						expectedSubscriptionPoolMatches.add(subscriptionPool);		
 						continue availableSubscriptionPoolsLoop;
 					}
 				}
 			}
+			
 			// Test for match on Derived Provided ProductName:
 			// NOTE: list --available --matches is implemented server-side and appears to be searching the derivedProvidedProducts for product name matches.  Although unexpected, this feature has some benefit.
 			// This behavior is in contrast to list --consumed --matches which is implemented client-side and does NOT search the derivedProvidedProducts for match on product name.
 			// 10/31/2014 Verbal scrum discussion with devel decided to keep this behavior.
 			for (String derivedProvidedProductName : CandlepinTasks.getPoolDerivedProvidedProductNames(sm_clientUsername, sm_clientPassword, sm_serverUrl, subscriptionPool.poolId)) {
 				if (derivedProvidedProductName.toLowerCase().matches(regexString)) {
-					log.info("Found a hit on matches '"+matchesString+"' against the available subscription '"+subscriptionPool.subscriptionName+"' Derived Provided Product Name: "+derivedProvidedProductName);
+					log.info("Found a hit on matches '"+matchesString+"' against the available subscription '"+subscriptionPool.subscriptionName+"' SKU '"+subscriptionPool.productId+"'.  The match is in Derived Provided Product Name: "+derivedProvidedProductName);
 					if (!expectedSubscriptionPoolMatches.contains(subscriptionPool)) {
 						expectedSubscriptionPoolMatches.add(subscriptionPool);		
 						continue availableSubscriptionPoolsLoop;
 					}
 				}
 			}
-			*/
 			
 			// Test for match on Provided ProductId Content Names and Labels:
 			for (String providedProductId : CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, subscriptionPool.poolId)) {
@@ -1232,7 +1233,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 					
 					// does the content name match the regexString
 					if (name.toLowerCase().matches(regexString)) {
-						log.info("Found a hit on matches '"+matchesString+"' against the available subscription '"+subscriptionPool.subscriptionName+"' Provided Product ID '"+providedProductId+"' Content Name: "+name);
+						log.info("Found a hit on matches '"+matchesString+"' against the available subscription '"+subscriptionPool.subscriptionName+"' SKU '"+subscriptionPool.productId+"'.  The match is in Provided Product ID '"+providedProductId+"' Content Name: "+name);
 						if (!expectedSubscriptionPoolMatches.contains(subscriptionPool)) {
 							expectedSubscriptionPoolMatches.add(subscriptionPool);		
 							continue availableSubscriptionPoolsLoop;
@@ -1241,7 +1242,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 					
 					// does the content label match the regexString
 					if (label.toLowerCase().matches(regexString)) {
-						log.info("Found a hit on matches '"+matchesString+"' against the available subscription '"+subscriptionPool.subscriptionName+"' Provided Product ID '"+providedProductId+"' Content Label: "+label);
+						log.info("Found a hit on matches '"+matchesString+"' against the available subscription '"+subscriptionPool.subscriptionName+"' SKU '"+subscriptionPool.productId+"'.  The match is in Provided Product ID '"+providedProductId+"' Content Label: "+label);
 						if (!expectedSubscriptionPoolMatches.contains(subscriptionPool)) {
 							expectedSubscriptionPoolMatches.add(subscriptionPool);		
 							continue availableSubscriptionPoolsLoop;
