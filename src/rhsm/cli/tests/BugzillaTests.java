@@ -434,7 +434,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		endCalendar.add(Calendar.MINUTE, endingMinutesFromNow);
 		DateFormat yyyy_MM_dd_DateFormat = new SimpleDateFormat("M/d/yy h:mm aaa");
 		String EndingDate=yyyy_MM_dd_DateFormat.format(endCalendar.getTime());
-		sleep(endingMinutesFromNow*60*1000);
+		sleep(endingMinutesFromNow*60*500);
 		new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/activation_keys/" + jsonActivationKey.getString("id") + "/pools/" +expiringPoolId+(addQuantity==null?"":"?quantity="+addQuantity), null));
 		clienttasks.unregister(null, null, null);
 		SSHCommandResult registerResult=clienttasks.register_(null, null, sm_clientOrg, null, null, null, null, null, null, null, name, null, null, null, true, null, null, null, null);			
@@ -1420,10 +1420,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 
 		// attaching from the pool that is about to expire should still be successful
 		File expiringEntitlementFile = clienttasks.subscribeToSubscriptionPool(expiringSubscriptionPool,sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl);
-		/* takes too much time, just unsubscribe without any assertions
-		EntitlementCert expiringEntitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(expiringEntitlementFile);
-		clienttasks.unsubscribeFromSerialNumber(expiringEntitlementCert.serialNumber);
-		 */
 		clienttasks.unsubscribe_(null, clienttasks.getSerialNumberFromEntitlementCertFile(expiringEntitlementFile),null,null,null,null);
 		Calendar c2 = new GregorianCalendar();
 
@@ -2949,7 +2945,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		expected +=	"   " + serialTwo.multiply(serialOne) + " is not a valid value for serial";
 		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.10-1")) {	// commit bb482c63d7386b358e5ba32817e729d1b423a421	// Bug 1268491: RestEasy 3 changed behavior when a JAX-RS resource's parameter is not parseable. In the past BadRequestException was handled. Defensively adding the same handling behavior to NotFoundException
 			expected =	"Serial numbers unsuccessfully removed at the server:" + "\n";
-			if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.17.8-1")) expected = "The entitlement server failed to remove these serial numbers:"+"\n";	// commit f64d5a6b012f49bb4d6d6653441d4de9bf373660  1319678: Alter the return message for removing entitlements at server
 			expected +=	"   " + serialOne.multiply(serialTwo);
 		}
 		Assert.assertEquals(result.trim(), expected);
@@ -2999,7 +2994,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 
 		String expected = "";
 		expected +=	"Serial numbers successfully removed at the server:" + "\n";
-		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.17.8-1")) expected = "The entitlement server successfully removed these serial numbers:"+"\n";	// commit f64d5a6b012f49bb4d6d6653441d4de9bf373660  1319678: Alter the return message for removing entitlements at server
 		expected +=	"   " + serialOne + "\n";
 		expected +=	"   " + serialTwo + "\n";
 		expected += "2 local certificates have been deleted.";
