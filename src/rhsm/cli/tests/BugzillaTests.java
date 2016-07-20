@@ -51,6 +51,7 @@ import rhsm.data.Repo;
 import rhsm.data.RevokedCert;
 import rhsm.data.SubscriptionPool;
 import rhsm.data.YumRepo;
+import sun.util.locale.provider.AvailableLanguageTags;
 
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
@@ -231,7 +232,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		InstalledProduct installedProductAfterRHSM = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", "100000000000002", clienttasks.getCurrentlyInstalledProducts());
 
 		for(ProductSubscription consumedProductSubscription:clienttasks.getCurrentlyConsumedProductSubscriptions()){
-				if (consumedProductSubscription.provides.contains(installedProductAfterRHSM.productName)) {
+			if (consumedProductSubscription.provides.contains(installedProductAfterRHSM.productName)) {
 				Assert.assertTrue(!installedProductAfterRHSM.startDate.after(consumedProductSubscription.startDate), "Comparing Start Date '"+InstalledProduct.formatDateString(installedProductAfterRHSM.startDate)+"' of Installed Product '"+installedProductAfterRHSM.productName+"' to Start Date '"+InstalledProduct.formatDateString(consumedProductSubscription.startDate)+"' of Consumed Subscription '"+consumedProductSubscription.productName+"'.  (Installed Product startDate should be <= Consumed Subscription startDate)");
 				if(!consumedProductSubscription.isActive){
 					Assert.assertEquals(installedProductAfterRHSM.endDate, consumedProductSubscription.endDate);
@@ -529,69 +530,41 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null);
 		clienttasks.autoheal(null, null, true, null, null, null);
-		int sockets = 4;
+		clienttasks.register(sm_clientUsername, sm_clientPassword,sm_clientOrg, null, null, null, null, null, null, null,(String) null, null, null, null, true, null, null, null, null);
+		clienttasks.autoheal(null, null, true, null, null, null);
+		int sockets = 8;
+		int core = 4;
+		int ram = 20;
+
 		Map<String, String> factsMap = new HashMap<String, String>();
-		factsMap.put("virt.is_guest", Boolean.FALSE.toString());	// stacking subscriptions based on sockets is only applicable on Physical systems now that vcpu compliance has been added to candlepin
 		factsMap.put("cpu.cpu_socket(s)", String.valueOf(sockets));
+		factsMap.put("cpu.core(s)_per_socket", String.valueOf(core));
+		factsMap.put("memory.memtotal", String.valueOf(GBToKBConverter(ram)));
+		factsMap.put("virt.is_guest", String.valueOf(Boolean.FALSE));
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
 		clienttasks.facts(null, true, null, null, null);
+
 		Calendar startCalendar = new GregorianCalendar();
 		DateFormat yyyy_MM_dd_DateFormat = new SimpleDateFormat("yyyy-MM-dd");
-
-		// attach future stackable subscriptions for "awesomeos-x86_64"
-		InstalledProduct awesomeos_x86_64_bits = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", "100000000000002", clienttasks.getCurrentlyInstalledProducts());
-		String consumerId = clienttasks.getCurrentConsumerId();
-		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, consumerId);
-		String name,productId;
-		List<String> providedProductIds = new ArrayList<String>();
-		name = "Test product to check pool refresh";
-		productId = "test-product";
-		Map<String,String> attributes = new HashMap<String,String>();
-		attributes.clear();
-		attributes.put("version", "1.0");
-		attributes.put("variant", "server");
-		attributes.put("arch", "ALL");
-		attributes.put("warning_period", "30");
-		attributes.put("type", "MKT");
-		attributes.put("type", "SVC");
-		providedProductIds.add("100000000000002");
-		Integer contractNumber = getRandInt();
-		Integer accountNumber = getRandInt();
-		Calendar endCalendar = new GregorianCalendar();
-		endCalendar.set(Calendar.HOUR_OF_DAY, 0);endCalendar.set(Calendar.MINUTE, 0);endCalendar.set(Calendar.SECOND, 0);	// avoid times in the middle of the day
-		endCalendar.add(Calendar.YEAR, 2);		// 15 days from today
-		Date endDate = endCalendar.getTime();
-		startCalendar.set(Calendar.HOUR_OF_DAY, 0);startCalendar.set(Calendar.MINUTE, 0);startCalendar.set(Calendar.SECOND, 0);	// avoid times in the middle of the day
-		startCalendar.add(Calendar.YEAR, 1);
-		startCalendar.add(Calendar.DATE, 1);
 		String onDateToTest = yyyy_MM_dd_DateFormat.format(startCalendar.getTime());
-		Date startDate = startCalendar.getTime();		
-		CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, productId);
-		String resourcePath = "/products/"+productId;
-		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) resourcePath = "/owners/"+sm_clientOrg+resourcePath;
-		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, resourcePath);
-		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, name, productId, 1, attributes, null);
-		String requestBody = CandlepinTasks.createSubscriptionRequestBody(20, startDate, endDate, productId, contractNumber, accountNumber, providedProductIds,null).toString();
-		new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,"/owners/" + ownerKey + "/subscriptions",requestBody));
-		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,ownerKey);
-		jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,jobDetail,"FINISHED", 5*1000, 1);
-		for(SubscriptionPool availOnDate :getAvailableFutureSubscriptionsOndate(onDateToTest)){
-			if(availOnDate.productId.equalsIgnoreCase("test-product")){
-				clienttasks.subscribe(null, null, availOnDate.poolId, null, null,null, null, null, null, null, null, null);
+
+		String providedProductId=null;
+		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
+			if(pool.subscriptionType.equals("Stackable")){
+				clienttasks.subscribe(null, null, pool.poolId, null, null,"2", null, null, null, null, null, null);
+				providedProductId=pool.productId; 
+				break;
+				
+
 			}
 		}
+		InstalledProduct  BeforeAttaching= InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productName", providedProductId, clienttasks.getCurrentlyInstalledProducts());
+		Assert.assertEquals(BeforeAttaching.status, "Partially Subscribed","Verified that installed product is partially subscribed");
+		SubscriptionPool futureSubscriptionPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", providedProductId, clienttasks.getAvailableFutureSubscriptionsOndate(onDateToTest));		
+		clienttasks.subscribe(null, null, futureSubscriptionPool.poolId, null, null,null, null, null, null, null, null, null);
 
-		List<ProductSubscription> futureConsumedProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
-		Assert.assertTrue(!futureConsumedProductSubscriptions.isEmpty(), "Future subscriptions for awesomeos-x86_64 have been attached.");
-
-		// attach one currently available stackable subscription for "awesomeos-x86_64"
-		SubscriptionPool awesomeos_x86_64_pool = SubscriptionPool.findFirstInstanceWithCaseInsensitiveMatchingFieldFromList("productId","awesomeos-x86_64", clienttasks.getCurrentlyAvailableSubscriptionPools());
-		Assert.assertNotNull(awesomeos_x86_64_pool, "Found a currently available pool for awesomeos-x86_64.");
-		clienttasks.subscribe(null, null, awesomeos_x86_64_pool.poolId, null, null,"2", null, null, null, null, null, null);
-
-		/*InstalledProduct*/ awesomeos_x86_64_bits = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", "100000000000002", clienttasks.getCurrentlyInstalledProducts());
-		Assert.assertNotNull(awesomeos_x86_64_bits, "Found a currently installed product for awesomeos-x86_64 bits.");
-		Assert.assertEquals(awesomeos_x86_64_bits.status, "Partially Subscribed", "The future stackable subscriptions for awesomeos-x86_64 that are attached should NOT stack with the currently active subscription.  The result should be a partially covered installed product.");
+		InstalledProduct  AfterAttaching= InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productName", providedProductId, clienttasks.getCurrentlyInstalledProducts());
+		Assert.assertEquals(AfterAttaching.status, "Partially Subscribed","Verified that installed product is partially subscribed even after attaching a future subscription");
 	}
 
 
@@ -3323,48 +3296,34 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	@Test(description = "Verify if stacking entitlements reports as distinct entries in cli list --installed", groups = {
 			"VerifyDistinct", "blockedByBug-733327" }, enabled = true)
 	public void VerifyDistinctStackingEntires() throws Exception {
-
-
 		String poolId = null;
 		clienttasks.register(sm_clientUsername, sm_clientPassword,sm_clientOrg, null, null, null, null, null, null, null,(String) null, null, null, null, true, null, null, null, null);
 		clienttasks.autoheal(null, null, true, null, null, null);
-		int sockets = 4;
+		int sockets = 8;
+		int core = 4;
+		int ram = 20;
+
 		Map<String, String> factsMap = new HashMap<String, String>();
 		factsMap.put("cpu.cpu_socket(s)", String.valueOf(sockets));
+		factsMap.put("cpu.core(s)_per_socket", String.valueOf(core));
+		factsMap.put("memory.memtotal", String.valueOf(GBToKBConverter(ram)));
 		factsMap.put("virt.is_guest", String.valueOf(Boolean.FALSE));
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
 		clienttasks.facts(null, true, null, null, null);
 
-		boolean testResourceFound=false;
+		String providedProductId=null;
 		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
-			if(pool.productId.equals("awesomeos-x86_64")){
+			if(pool.subscriptionType.equals("Stackable")){
 				clienttasks.subscribe(null, null, pool.poolId, null, null,"2", null, null, null, null, null, null);
 				poolId = pool.poolId;
-				testResourceFound=true; break;
+				providedProductId=pool.productId; break;
 			}
 		}
-		Assert.assertTrue(testResourceFound, "Found a pool corresponding to productId awesomeos-x86_64 needed for this test.");
-
-		testResourceFound=false;
-		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
-			if(installed.productId.equals("100000000000002")){
-				Assert.assertEquals(installed.status, "Partially Subscribed");
-				testResourceFound=true; break;
-			}
-		}
-		Assert.assertTrue(testResourceFound, "Found the installed productId 100000000000002 provided by subscription productId awesomeos-x86_64 needed for this test.");
-
-		clienttasks.subscribe(null, null, poolId, null, null, "2",null, null, null, null, null, null);
-		testResourceFound=false;
-		for (InstalledProduct installedProduct : clienttasks.getCurrentlyInstalledProducts()) {
-			if(installedProduct.productId.equals("100000000000002")){
-				Assert.assertEquals(installedProduct.status, "Subscribed");
-				testResourceFound=true; break;
-			}
-		}
-		Assert.assertTrue(testResourceFound, "Found the installed productId 100000000000002 provided by subscription productId awesomeos-x86_64 needed for this test.");
-
-
+		InstalledProduct  BeforeAttaching= InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productName", providedProductId, clienttasks.getCurrentlyInstalledProducts());
+		Assert.assertEquals(BeforeAttaching.status, "Partially Subscribed","Verified that installed product is partially subscribed");
+		clienttasks.subscribe(null, null, poolId, null, null, null,null, null, null, null, null, null);
+		InstalledProduct  AfterAttaching= InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productName", providedProductId, clienttasks.getCurrentlyInstalledProducts());
+		Assert.assertEquals(AfterAttaching.status, "Subscribed","Verified that installed product is fully subscribed after attaching one more quantity of multi-entitleable stackable subscription");
 	}
 
 
@@ -4251,10 +4210,10 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	}
 
 	/*
-	* @author redakkan
-	* @throws exception
-	* @throws JSONException
-	* 	* */
+	 * @author redakkan
+	 * @throws exception
+	 * @throws JSONException
+	 * 	* */
 
 	@Test (description="Verify the file permissions on /var/lib/rhsm/cache and facts files", groups ={"blockedByBug-1297485", "blockedByBug-1297493"}, enabled =true)
 	public void VerifyCacheAndFactsfilePermissions_Test() throws JSONException,Exception{
@@ -4269,10 +4228,10 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	}
 
 	/*
-* @author redakkan
-* @throws exception
-* @throws JSONException
-* 	* */
+	 * @author redakkan
+	 * @throws exception
+	 * @throws JSONException
+	 * 	* */
 	@Test (description="verify repo-override --remove='' doesnot remove the overrides from the given repo", groups ={"blockedByBug-1331739"}, enabled =true)
 	public void VerifyEmptyRepoOverrideRemove_Test() throws JSONException,Exception{
 
@@ -4648,7 +4607,11 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		return json.get(jsonName);
 	}
 
-
+	static public int GBToKBConverter(int gb) {
+		int value=(int) 1.049e+6;	// KB per GB
+		int result=(gb*value);
+		return result;
+	}
 
 	// THE FOLLOWING BEFORE AND AFTER CLASS METHODS ARE USED TO ELIMINATE
 	// THE INFLUENCE THAT /etc/pki/product-default/ CERTS HAVE ON THESE TESTS
