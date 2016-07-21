@@ -516,6 +516,18 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		if (smt.isPackageVersion("subscription-manager", ">=", "1.14.2-1")) {// commit 66aafd77dc629b921379f0e121421c1c21c0b787 Move to fileConfig based logging.
 			smt.updateConfFileParameter(clienttasks.rhsmLoggingConfFile, "handler_rhsm_log", "level", "DEBUG");
 		}
+		
+		// TEMPORARY WORKAROUND
+		if (CandlepinType.hosted.equals(sm_serverType)) {
+			boolean invokeWorkaroundWhileBugIsOpen = true;
+			String bugId="1358508";	// Bug 1358508 - Error updating system data on the server
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			if (invokeWorkaroundWhileBugIsOpen) {
+				//smt.updateConfFileParameter(smt.rhsmConfFile, "rhsm", "report_package_profile", "0");
+				smt.config(null, null, true, new String[]{"rhsm", "report_package_profile", "0"});
+			}
+		}
+		// END OF WORKAROUND
 	}
 	
 	protected static boolean isSetupBeforeSuiteComplete = false;
