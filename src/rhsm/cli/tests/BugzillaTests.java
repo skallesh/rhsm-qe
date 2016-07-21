@@ -51,8 +51,6 @@ import rhsm.data.Repo;
 import rhsm.data.RevokedCert;
 import rhsm.data.SubscriptionPool;
 import rhsm.data.YumRepo;
-import sun.util.locale.provider.AvailableLanguageTags;
-
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 import com.redhat.qe.tools.SSHCommandRunner;
