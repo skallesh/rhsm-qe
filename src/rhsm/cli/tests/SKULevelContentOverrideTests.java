@@ -188,7 +188,10 @@ public class SKULevelContentOverrideTests extends SubscriptionManagerCLITestScri
 		// VERIFICATION 6: Verify that the content_override_enabled and content_override_disabled list can specify a comma delimited string of content ids 
 		String contentIdToEnable1 = null;
 		for(String repoIdToEnable1:repoIdsDisabledByDefault){
-			if(!(repoIdToEnable.equals(repoIdToEnable1))){
+			if(repoIdToEnable.equals(repoIdToEnable1)){
+				continue;
+				}
+			else {
 			contentIdToEnable1=getContent(sm_serverAdminUsername,sm_serverAdminPassword, sm_serverUrl,repoIdToEnable1);
 			resourcePath="/owners/"+ownerKey+"/products/"+subscriptionpool.productId+"?exclude=id&exclude=name&exclude=multiplier&exclude=productContent&exclude=dependentProductIds&exclude=href&exclude=created&exclude=updated&exclude=attributes.created&exclude=attributes.updated";
 			JSONObject	jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,resourcePath));	
