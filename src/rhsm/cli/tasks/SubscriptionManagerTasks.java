@@ -2214,10 +2214,29 @@ if (false) {
 			}
 		}
 		
-		// assert that only one rhel product cert is installed
-		if (rhelProductCerts.size()>1) log.warning("These '"+providingTag+"' product certs are installed: "+rhelProductCerts); 
+		// log a warning when more than one product cert providing tag rhel-X is installed 
+		if (rhelProductCerts.size()>1) log.warning("These "+rhelProductCerts.size()+" '"+providingTag+"' product certs are installed: "+rhelProductCerts); 
+
+		// HTB Product Certs (230, 231) also provide the base rhel-7 tags and the content sets for *rhel-7-<variant>-htb-rpms repos require tag rhel-7-<variant>; hence all of the rhel7 htb products are "OS" branded products  (not the same for rhel6)
+		// let's ignore it since it could have been legitimately added by installing a package from an htb repo 
+		//	Product:
+		//		ID: 230
+		//		Name: Red Hat Enterprise Linux 7 Server High Touch Beta
+		//		Version: 7.2 HTB
+		//		Arch: x86_64
+		//		Tags: rhel-7,rhel-7-server
+		//		Brand Type: 
+		//		Brand Name: 
+		for (String htbProductId : Arrays.asList(new String[]{"230","231"})) {
+			ProductCert htbProductCert = ProductCert.findFirstInstanceWithCaseInsensitiveMatchingFieldFromList("productId", htbProductId, rhelProductCerts);
+			if (htbProductCert!=null && htbProductCert.productNamespace.providedTags.contains(providingTag)) {
+				log.warning("Ignoring this installed HTB product cert prior to assertion that only one installed product provides RHEL tag '"+providingTag+"': "+htbProductCert);
+				rhelProductCerts.remove(htbProductCert);
+			}
+		}
+		
+		// assert that only one rhel product cert is installed (after purging HTB and an untrumped product-default cert)
 		Assert.assertEquals(rhelProductCerts.size(), 1, "Only one product cert is installed that provides RHEL tag '"+providingTag+"' (this assert accounts for /etc/pki/product-default/ certs that are trumped by /etc/pki/product/ certs)");
-		Assert.assertTrue(rhelProductCerts.size()<=1, "No more than one product cert is installed that provides RHEL tag '"+providingTag+"' (actual='"+rhelProductCerts.size()+"').");
 		
 		// return it
 		if (rhelProductCerts.isEmpty()) return null;
