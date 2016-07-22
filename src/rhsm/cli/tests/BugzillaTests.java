@@ -18,6 +18,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import org.apache.xmlrpc.XmlRpcException;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -34,6 +35,9 @@ import com.redhat.qe.Assert;
 import com.redhat.qe.auto.bugzilla.BzChecker;
 import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.TestNGUtils;
+import com.redhat.qe.tools.RemoteFileTasks;
+import com.redhat.qe.tools.SSHCommandResult;
+import com.redhat.qe.tools.SSHCommandRunner;
 
 import rhsm.base.CandlepinType;
 import rhsm.base.ConsumerType;
@@ -51,14 +55,11 @@ import rhsm.data.Repo;
 import rhsm.data.RevokedCert;
 import rhsm.data.SubscriptionPool;
 import rhsm.data.YumRepo;
-import com.redhat.qe.tools.RemoteFileTasks;
-import com.redhat.qe.tools.SSHCommandResult;
-import com.redhat.qe.tools.SSHCommandRunner;
 
 /**
  * @author skallesh
- * 
- * 
+ *
+ *
  */
 @Test(groups = { "BugzillaTests", "Tier3Tests" })
 public class BugzillaTests extends SubscriptionManagerCLITestScript {
@@ -131,13 +132,14 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	public void VerifyrhsmDebugWithNoArchive() throws Exception {
 		String path = "/tmp/rhsmDebug/";
 		client.runCommandAndWait("rm -rf " + path + " && mkdir -p " + path); // pre
-																				// cleanup
+		// cleanup
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null,
 				null, (String) null, null, null, null, true, null, null, null, null);
 		SSHCommandResult result = client
 				.runCommandAndWait(clienttasks.rhsmDebugSystemCommand(path, true, null, null, null, null, null, null));
 		Assert.assertContainsMatch(result.getStdout(), "Wrote: " + path + "rhsm-debug-system");
-		client.runCommandAndWait("rm -rf " + path); // post cleanup
+		client.runCommandAndWait("rm -rf " + path);
+
 	}
 
 	/**
@@ -159,7 +161,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		client.runCommandAndWait("cat " + file);
 		SSHCommandResult sshCommandResult = clienttasks.subscribe_(null, (String) null, (String) null, (String) null,
 				null, null, null, null, file, null, null, null);
-		String expectedStderr = String.format("Error: The file \"%s\" does not contain any pool IDs.", file); 
+		String expectedStderr = String.format("Error: The file \"%s\" does not contain any pool IDs.", file);
 		Assert.assertEquals(sshCommandResult.getStderr().trim(), expectedStderr,
 				"The stderr result from subscribe with an empty file of poolIds.");
 	}
@@ -215,10 +217,10 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		factsMap.put("cpu.cpu_socket(s)", String.valueOf(4));
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
 		clienttasks.facts(null, true, null, null, null); // [jsefler] I believe
-															// facts --update
-															// should be called
-															// after overriding
-															// facts
+		// facts --update
+		// should be called
+		// after overriding
+		// facts
 		clienttasks.autoheal(null, null, true, null, null, null);
 		for (SubscriptionPool AvailablePools : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
 			if (AvailablePools.productId.equals("awesomeos-x86_64")) {
@@ -284,7 +286,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		expectedStatus = "Overall Status: Current";
 		Assert.assertTrue(result.contains(expectedStatus),
 				"System status displays '" + expectedStatus + "' because no products are installed.");
-		client.runCommandAndWait("cp " + installedProductCert32060.file + " " + tmpProductCertDir); 
+		client.runCommandAndWait("cp " + installedProductCert32060.file + " " + tmpProductCertDir);
 		result = clienttasks.status(null, null, null, null).getStdout();
 		expectedStatus = "Overall Status: Invalid";
 		Assert.assertTrue(result.contains(expectedStatus),
@@ -463,14 +465,14 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				+ randomAvailableProductId + " expired on: " + EndingDate + ".";
 		if (clienttasks.isVersion(servertasks.statusVersion, ">", "0.9.30-1"))
 			expected_message = "No activation key was applied successfully."; // Follows:
-																				// candlepin-0.9.30-1
-																				// //
-																				// https://github.com/candlepin/candlepin/commit/bcb4b8fd8ee009e86fc9a1a20b25f19b3dbe6b2a
+		// candlepin-0.9.30-1
+		// //
+		// https://github.com/candlepin/candlepin/commit/bcb4b8fd8ee009e86fc9a1a20b25f19b3dbe6b2a
 		Assert.assertEquals(registerResult.getStderr().trim(), expected_message);
 		SSHCommandResult identityResult = clienttasks.identity_(null, null, null, null, null, null, null);
 		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.9-1")) { // post
-																						// commit
-																						// a695ef2d1da882c5f851fde90a24f957b70a63ad
+			// commit
+			// a695ef2d1da882c5f851fde90a24f957b70a63ad
 			Assert.assertEquals(identityResult.getStderr().trim(), clienttasks.msg_ConsumerNotRegistered, "stderr");
 		} else {
 			Assert.assertEquals(identityResult.getStdout().trim(), clienttasks.msg_ConsumerNotRegistered, "stdout");
@@ -682,14 +684,14 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		endCalendar.set(Calendar.HOUR_OF_DAY, 0);
 		endCalendar.set(Calendar.MINUTE, 0);
 		endCalendar.set(Calendar.SECOND, 0); // avoid times in the middle of the
-												// day
+		// day
 		endCalendar.add(Calendar.MINUTE, 15 * 24 * 60); // 15 days from today
 		Date endDate = endCalendar.getTime();
 		Calendar startCalendar = new GregorianCalendar();
 		startCalendar.set(Calendar.HOUR_OF_DAY, 0);
 		startCalendar.set(Calendar.MINUTE, 0);
 		startCalendar.set(Calendar.SECOND, 0); // avoid times in the middle of
-												// the day
+		// the day
 		startCalendar.add(Calendar.MINUTE, -1 * 24 * 60); // 1 day ago
 
 		Date startDate = startCalendar.getTime();
@@ -773,8 +775,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		listOfSectionNameValues.add(new String[] { "server", "prefix", prefixValueBeforeExecution.trim() });
 		clienttasks.config(null, null, true, listOfSectionNameValues);
 		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.9-1")) { // post
-																						// commit
-																						// a695ef2d1da882c5f851fde90a24f957b70a63ad
+			// commit
+			// a695ef2d1da882c5f851fde90a24f957b70a63ad
 			Assert.assertEquals(registerResult.getStderr().trim(), Expected_Message, "stderr");
 		} else {
 			Assert.assertEquals(registerResult.getStdout().trim(), Expected_Message, "stdout");
@@ -850,8 +852,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 
 	}
 
-	
-
 	/**
 	 * @author skallesh
 	 * @throws Exception
@@ -916,7 +916,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		if (availOnDate.size() == 0)
 			throw new SkipException("Sufficient future pools are not available");
 		int i = -1;
-		availOnDate = getRandomSubsetOfList(availOnDate, availOnDate.size()); 
+		availOnDate = getRandomSubsetOfList(availOnDate, availOnDate.size());
 		for (int j = 0; j < availOnDate.size(); j++) {
 			if (!availOnDate.get(j).provides.isEmpty()) {
 				i = j;
@@ -987,14 +987,14 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		endCalendar.set(Calendar.HOUR_OF_DAY, 0);
 		endCalendar.set(Calendar.MINUTE, 0);
 		endCalendar.set(Calendar.SECOND, 0); // avoid times in the middle of the
-												// day
+		// day
 		endCalendar.add(Calendar.MINUTE, 15 * 24 * 60); // 15 days from today
 		Date endDate = endCalendar.getTime();
 		Calendar startCalendar = new GregorianCalendar();
 		startCalendar.set(Calendar.HOUR_OF_DAY, 0);
 		startCalendar.set(Calendar.MINUTE, 0);
 		startCalendar.set(Calendar.SECOND, 0); // avoid times in the middle of
-												// the day
+		// the day
 		startCalendar.add(Calendar.MINUTE, -1 * 24 * 60); // 1 day ago
 
 		Date startDate = startCalendar.getTime();
@@ -1075,10 +1075,10 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 
 		clienttasks.unsubscribe(null, serialNumber, null, null, null, null);
 		sleep(2/* min */ * 60 * 1000); // give the server time to update;
-										// schedule is set in
-										// /etc/candlepin/candlepin.conf
-										// pinsetter.org.candlepin.pinsetter.tasks.CertificateRevocationListTask.schedule=0
-										// 0/2 * * * ?
+		// schedule is set in
+		// /etc/candlepin/candlepin.conf
+		// pinsetter.org.candlepin.pinsetter.tasks.CertificateRevocationListTask.schedule=0
+		// 0/2 * * * ?
 		RevokedCert revokedCert = RevokedCert.findFirstInstanceWithMatchingFieldFromList("serialNumber", serialNumber,
 				servertasks.getCurrentlyRevokedCerts());
 		Assert.assertNotNull(revokedCert,
@@ -1171,7 +1171,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 */
 	@Test(description = "do not persist --serverurl option values to rhsm.conf when calling subscription-manager modules: orgs, environment, service-level", groups = {
-			"AcceptanceTests", "Tier1Tests", "blockedByBug-889573" }, enabled = false) 
+			"AcceptanceTests", "Tier1Tests", "blockedByBug-889573" }, enabled = false)
 	public void ServerUrloptionValuesInRHSMFile() throws JSONException, Exception {
 		if (!sm_serverType.equals(CandlepinType.hosted))
 			throw new SkipException("To be run against Stage only");
@@ -1238,8 +1238,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		result = clienttasks.register_(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, "", consumerId,
 				null, null, null, (String) null, null, null, null, true, null, null, null, null);
 		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.8-1")) { // post
-																						// commit
-																						// df95529a5edd0be456b3528b74344be283c4d258
+			// commit
+			// df95529a5edd0be456b3528b74344be283c4d258
 			Assert.assertEquals(result.getStderr().trim(), "Error: system name can not be empty.", "stderr");
 		} else {
 			Assert.assertEquals(result.getStdout().trim(), "Error: system name can not be empty.", "stdout");
@@ -1247,8 +1247,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		result = clienttasks.register_(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, "", null, null,
 				null, null, (String) null, null, null, null, true, null, null, null, null);
 		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.8-1")) { // post
-																						// commit
-																						// df95529a5edd0be456b3528b74344be283c4d258
+			// commit
+			// df95529a5edd0be456b3528b74344be283c4d258
 			Assert.assertEquals(result.getStderr().trim(), "Error: system name can not be empty.", "stderr");
 		} else {
 			Assert.assertEquals(result.getStdout().trim(), "Error: system name can not be empty.", "stdout");
@@ -1383,8 +1383,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				null, null, null, null, null, null);
 		String expected = "Error: Activation keys do not require user credentials.";
 		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.9-1")) { // post
-																						// commit
-																						// a695ef2d1da882c5f851fde90a24f957b70a63ad
+			// commit
+			// a695ef2d1da882c5f851fde90a24f957b70a63ad
 			Assert.assertEquals(registerResult.getStderr().trim(), expected, "stderr");
 		} else {
 			Assert.assertEquals(registerResult.getStdout().trim(), expected, "stdout");
@@ -1453,10 +1453,10 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			expectedResult = "Unable to verify server's identity: tlsv1 alert unknown ca";
 		}
 		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.15.0-1"))
-			expectedResult = "Invalid credentials."; 
+			expectedResult = "Invalid credentials.";
 		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.9-1")) { // post
-																						// commit
-																						// a695ef2d1da882c5f851fde90a24f957b70a63ad
+			// commit
+			// a695ef2d1da882c5f851fde90a24f957b70a63ad
 			Assert.assertEquals(result.getStderr().trim(), expectedResult, "stderr");
 		} else {
 			Assert.assertEquals(result.getStdout().trim(), expectedResult, "stdout");
@@ -1482,10 +1482,10 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		Calendar endCalendar = new GregorianCalendar();
 		endCalendar.add(Calendar.MINUTE, endingMinutesFromNow);
 		Date endDate = endCalendar.getTime(); // caution - if the next call to
-												// createTestPool does not occur
-												// within this minute; endDate
-												// will be 1 minute behind
-												// reality
+		// createTestPool does not occur
+		// within this minute; endDate
+		// will be 1 minute behind
+		// reality
 		String expiringPoolId = createTestPool(-60 * 24, endingMinutesFromNow);
 		Calendar c1 = new GregorianCalendar();
 		SubscriptionPool expiringSubscriptionPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList(
@@ -1537,7 +1537,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	@Test(description = "verify if Entitlement certs are downloaded if subscribed to expired pool", groups = {
 			"SubscribeToexpiredEntitlement", "blockedByBug-907638" }, enabled = true)
 	public void SubscribeToexpiredEntitlement() throws JSONException, Exception {
-		
+
 		int endingMinutesFromNow = 1;
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
 				null, (String) null, null, null, null, true, false, null, null, null);
@@ -1580,7 +1580,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		calendar.set(Calendar.HOUR_OF_DAY, 0);
 		calendar.set(Calendar.MINUTE, 0);
 		calendar.set(Calendar.SECOND, 0); // avoid times in the middle of the
-											// day
+		// day
 		Date futureDate = calendar.getTime();
 		Map<String, String> attributes = new HashMap<String, String>();
 		attributes.put("sockets", "8");
@@ -1656,7 +1656,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		String contentWithIdMessage = "Content with id " + contentId + " could not be found.";
 		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.7"))
 			contentWithIdMessage = "Content with ID \"" + contentId + "\" could not be found."; // commit
-																								// 6b63e346c61789837211828043ad9576a756d0e8
+		// 6b63e346c61789837211828043ad9576a756d0e8
 		resourcePath = "/content/" + contentId;
 		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0"))
 			resourcePath = "/owners/" + sm_clientOrg + resourcePath;
@@ -1753,7 +1753,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				null);
 		for (SubscriptionPool pool : pools) {
 			expectedSyslogMessage = String.format("%s: Added subscription for '%s' contract '%s'", clienttasks.command,
-					pool.subscriptionName, pool.contract.isEmpty() ? "None" : pool.contract); 
+					pool.subscriptionName, pool.contract.isEmpty() ? "None" : pool.contract);
 			Assert.assertTrue(tailFromSyslogFile.contains(expectedSyslogMessage),
 					"After subscribing to '" + pool.subscriptionName + "', syslog '" + clienttasks.messagesLogFile
 							+ "' contains expected message '" + expectedSyslogMessage + "'.");
@@ -1815,17 +1815,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			expectedSyslogMessage = String.format("%s: Removed subscription for '%s' contract '%s'",
 					clienttasks.command, productSubscription.productName,
 					productSubscription.contractNumber == null ? "None" : productSubscription.contractNumber); // Note
-																												// that
-																												// a
-																												// null/missing
-																												// contract
-																												// will
-																												// be
-																												// reported
-																												// as
-																												// None.
-																												// Seems
-																												// reasonable.
+			// that
+			// a
+			// null/missing
+			// contract
+			// will
+			// be
+			// reported
+			// as
+			// None.
+			// Seems
+			// reasonable.
 			Assert.assertTrue(tailFromSyslogFile.contains(expectedSyslogMessage),
 					"After unsubscribing from '" + productSubscription.productName + "', syslog '"
 							+ clienttasks.messagesLogFile + "' contains expected message '" + expectedSyslogMessage
@@ -2111,7 +2111,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		for (int i = 0; i < jsonSubscriptions.length(); i++) {
 			JSONObject jsonSubscription = (JSONObject) jsonSubscriptions.get(i);
 
-			JSONObject jsonProduct = (JSONObject) jsonSubscription.getJSONObject("product");
+			JSONObject jsonProduct = jsonSubscription.getJSONObject("product");
 			String productName = jsonProduct.getString("name");
 			if (productId.equals(jsonProduct.getString("id"))) {
 				subscriptionId = jsonSubscription.getString("id");
@@ -2178,9 +2178,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 */
 	@Test(description = "verify if system.entitlements_valid goes from valid to partial after oversubscribing", // TODO
-																												// fix
-																												// this
-																												// description
+	// fix
+	// this
+	// description
 	groups = { "VerifyRHELWorkstationSubscription", "blockedByBug-739790" }, enabled = true)
 	public void VerifyRHELWorkstationSubscription() throws JSONException, Exception {
 		InstalledProduct workstation = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", "71",
@@ -2216,9 +2216,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 */
 	@Test(description = "verify OwnerInfo is displayed only for pools that are active right now, for all the stats", // TODO,
-																														// correct
-																														// this
-																														// description
+	// correct
+	// this
+	// description
 	groups = { "certificateStacking", "blockedByBug-726409", "blockedByBug-1183175" }, enabled = true)
 	public void certificateStacking() throws JSONException, Exception {
 		Map<String, String> attributes = new HashMap<String, String>();
@@ -2256,7 +2256,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		listOfSectionNameValues.add(new String[] { "rhsmcertd", "autoAttachInterval".toLowerCase(), "1440" });
 		clienttasks.config(null, null, true, listOfSectionNameValues);
 		Map<String, String> factsMap = new HashMap<String, String>();
-		factsMap.put("virt.is_guest", String.valueOf(Boolean.FALSE)); 
+		factsMap.put("virt.is_guest", String.valueOf(Boolean.FALSE));
 		factsMap.put("cpu.cpu_socket(s)", String.valueOf(sockets));
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
 		clienttasks.facts(null, true, null, null, null);
@@ -2330,7 +2330,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		futureCalendar.set(Calendar.HOUR_OF_DAY, 0);
 		futureCalendar.set(Calendar.MINUTE, 0);
 		futureCalendar.set(Calendar.SECOND, 0); // avoid times in the middle of
-												// the day
+		// the day
 		futureCalendar.add(Calendar.YEAR, 1);
 
 		String futurceDate = yyyy_MM_dd_DateFormat.format(futureCalendar.getTime());
@@ -2479,7 +2479,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		listOfSectionNameValues.add(new String[] { "rhsm", "manage_repos", "0" });
 		clienttasks.config(null, null, true, listOfSectionNameValues);
 		clienttasks.getYumRepolist("all"); // needed to trigger
-											// subscription-manager yum plugin
+		// subscription-manager yum plugin
 		originalRepos = clienttasks.getCurrentlySubscribedYumRepos();
 		Assert.assertTrue(originalRepos.isEmpty());
 
@@ -2595,7 +2595,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	@Test(description = "verify rhsm log for Update With No Installed Products", groups = {
 			"UpdateWithNoInstalledProducts", "blockedByBug-746241" }, enabled = true)
 	public void UpdateWithNoInstalledProducts() throws JSONException, Exception {
-		client.runCommandAndWait("rm -f " + clienttasks.rhsmLogFile); 
+		client.runCommandAndWait("rm -f " + clienttasks.rhsmLogFile);
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
 				null, (String) null, null, null, null, true, false, null, null, null);
 
@@ -2615,8 +2615,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		Assert.assertFalse(
 				doesStringContainMatches(tailFromMarkedFile, "Error while updating certificates using daemon"),
 				"'Error' messages in rhsm.log"); // "Error while updating
-													// certificates" should NOT
-													// be in the rhsm.log
+		// certificates" should NOT
+		// be in the rhsm.log
 		Assert.assertTrue(doesStringContainMatches(tailFromMarkedFile, "Installed product IDs: \\[\\]"),
 				"'Installed product IDs:' list is empty in rhsm.log");
 		Assert.assertTrue(doesStringContainMatches(tailFromMarkedFile, "certs updated:"),
@@ -2766,15 +2766,13 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				null, jsonActivationKey.get("name").toString(), null, null, null, true, null, null, null, null);
 		String expected_msg = "Error: Activation keys cannot be used with --auto-attach.";
 		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.9-1")) { // post
-																						// commit
-																						// a695ef2d1da882c5f851fde90a24f957b70a63ad
+			// commit
+			// a695ef2d1da882c5f851fde90a24f957b70a63ad
 			Assert.assertEquals(result.getStderr().trim(), expected_msg, "stderr");
 		} else {
 			Assert.assertEquals(result.getStdout().trim(), expected_msg, "stdout");
 		}
 	}
-
-	
 
 	/**
 	 * @author skallesh
@@ -2848,8 +2846,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				null, null, null);
 		String expected = "This system is not yet registered. Try 'subscription-manager register --help' for more information.";
 		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.8-1")) { // post
-																						// commit
-																						// df95529a5edd0be456b3528b74344be283c4d258
+			// commit
+			// df95529a5edd0be456b3528b74344be283c4d258
 			Assert.assertEquals(listResult.getStderr().trim(), expected, "stderr");
 		} else {
 			Assert.assertEquals(listResult.getStdout().trim(), expected, "stdout");
@@ -2914,7 +2912,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.unregister(null, null, null);
 
 		clienttasks.restart_rhsmcertd(autoAttachInterval, null, false);
-		clienttasks.waitForRegexInRhsmcertdLog("Update failed", 1); 
+		clienttasks.waitForRegexInRhsmcertdLog("Update failed", 1);
 
 	}
 
@@ -2962,7 +2960,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		String expectedStdout = "The system with UUID " + consumerId + " has been unregistered";
 		String expectedStderr = "Consumer with id " + invalidconsumerId + " could not be found.";
 		Boolean force = true;
-		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.16.2-1")) { 
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.16.2-1")) {
 			clienttasks.unregister(null, null, null);
 			force = false;
 			expectedStdout = "";
@@ -2972,7 +2970,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				null);
 		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.15.9-2"))
 			expectedStdout += String.format("\n" + "Registering to: %s:%s%s", clienttasks.getConfParameter("hostname"),
-					clienttasks.getConfParameter("port"), clienttasks.getConfParameter("prefix")); 
+					clienttasks.getConfParameter("port"), clienttasks.getConfParameter("prefix"));
 		Assert.assertEquals(result.getStdout().trim(), expectedStdout.trim(), "stdout");
 		Assert.assertEquals(result.getStderr().trim(), expectedStderr.trim(), "stderr");
 	}
@@ -2993,8 +2991,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		SSHCommandResult result = clienttasks.list_(null, true, null, null, null, null, null, null, null, null, null,
 				null, null);
 		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.8-1")) { // post
-																						// commit
-																						// df95529a5edd0be456b3528b74344be283c4d258
+			// commit
+			// df95529a5edd0be456b3528b74344be283c4d258
 			Assert.assertEquals(result.getStderr().trim(), clienttasks.msg_ConsumerNotRegistered, "stderr");
 		} else {
 			Assert.assertEquals(result.getStdout().trim(), clienttasks.msg_ConsumerNotRegistered, "stdout");
@@ -3046,7 +3044,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		List<InstalledProduct> currentlyInstalledProducts = clienttasks.getCurrentlyInstalledProducts();
 		clienttasks.unsubscribeFromTheCurrentlyConsumedSerialsCollectively();
 		clienttasks.autoheal(null, null, true, null, null, null); // disabling
-																	// autoheal
+		// autoheal
 		Calendar now = new GregorianCalendar();
 		DateFormat yyyy_MM_dd_DateFormat = new SimpleDateFormat("yyyy-MM-dd");
 		now.add(Calendar.YEAR, 1);
@@ -3107,23 +3105,23 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			throw new SkipException("None of the provided products from consumed future subscription '"
 					+ futureConsumedProductSubscription + "' are installed for testing.");
 		clienttasks.autoheal(null, true, null, null, null, null); // enabling
-																	// autoheal
+		// autoheal
 		clienttasks.run_rhsmcertd_worker(true);
 		boolean assertedFutureSubscriptionIsNowSubscribed = false;
 		InstalledProduct installedProductAfterAutoHealing = InstalledProduct.findFirstInstanceWithMatchingFieldFromList(
 				"productId", productId, clienttasks.getCurrentlyInstalledProducts());
 		List<String> installedProductArches = new ArrayList<String>(
 				Arrays.asList(installedProductAfterAutoHealing.arch.trim().split(" *, *"))); // Note:
-																								// the
-																								// arch
-																								// can
-																								// be
-																								// a
-																								// comma
-																								// separated
-																								// list
-																								// of
-																								// values
+		// the
+		// arch
+		// can
+		// be
+		// a
+		// comma
+		// separated
+		// list
+		// of
+		// values
 		if (installedProductArches.contains("x86")) {
 			installedProductArches.addAll(Arrays.asList("i386", "i486", "i586", "i686"));
 		} // Note: x86 is a general alias to cover all 32-bit intel
@@ -3157,7 +3155,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
 				null, (String) null, null, null, null, true, null, null, null, null);
 		clienttasks.unsubscribe_(true, (BigInteger) null, null, null, null, null);
-		
+
 		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
 		if (clienttasks.getCurrentlyConsumedProductSubscriptions().isEmpty())
 			throw new SkipException("Sufficient pools are not available");
@@ -3180,7 +3178,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		expected += "Serial numbers unsuccessfully removed at the server:" + "\n";
 		expected += "   " + serialOne.multiply(serialTwo) + " is not a valid value for serial" + "\n";
 		expected += "   " + serialTwo.multiply(serialOne) + " is not a valid value for serial";
-		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.10-1")) { 
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.10-1")) {
 			expected = "Serial numbers unsuccessfully removed at the server:" + "\n";
 			expected += "   " + serialOne.multiply(serialTwo);
 		}
@@ -3439,8 +3437,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				null, null, null, null, null, (String) null, null, null, null, null, null, null, null, null);
 		String Expected = "Bad CA certificate: " + FilePath;
 		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.9-1")) { // post
-																						// commit
-																						// a695ef2d1da882c5f851fde90a24f957b70a63ad
+			// commit
+			// a695ef2d1da882c5f851fde90a24f957b70a63ad
 			Assert.assertEquals(result.getStderr().trim(), Expected, "stderr");
 		} else {
 			Assert.assertEquals(result.getStdout().trim(), Expected, "stdout");
@@ -3461,8 +3459,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		basicauthproxyUrl = basicauthproxyUrl.replaceAll(":$", "");
 		SSHCommandResult factsResult = clienttasks.facts_(null, true, basicauthproxyUrl, null, null);
 		String factsResultExpected = clienttasks.msg_NetworkErrorUnableToConnect;
-		factsResultExpected = "Error updating system data on the server, see /var/log/rhsm/rhsm.log for more details."; 
-		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.17.6-1")) { 
+		factsResultExpected = "Error updating system data on the server, see /var/log/rhsm/rhsm.log for more details.";
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.17.6-1")) {
 			factsResultExpected = clienttasks.msg_ProxyConnectionFailed;
 		}
 		Assert.assertEquals(factsResult.getStdout().trim() + factsResult.getStderr().trim(), factsResultExpected);
@@ -3630,8 +3628,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				name, null, null, null, null, (String) null, null, null, null, true, null, null, null, null);
 		String expectedMsg = String.format("Error: system name can not be empty.");
 		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.8-1")) { // post
-																						// commit
-																						// df95529a5edd0be456b3528b74344be283c4d258
+			// commit
+			// df95529a5edd0be456b3528b74344be283c4d258
 			Assert.assertEquals(result.getStderr().trim(), expectedMsg, "stderr");
 			Assert.assertEquals(result.getExitCode(), new Integer(64));
 		} else {
@@ -3692,8 +3690,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		result = clienttasks.service_level_(null, false, null, null, sm_clientUsername, sm_clientPassword, "MyOrg",
 				null, null, null, null, null);
 		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.9-1")) { // post
-																						// commit
-																						// a695ef2d1da882c5f851fde90a24f957b70a63ad
+			// commit
+			// a695ef2d1da882c5f851fde90a24f957b70a63ad
 			Assert.assertEquals(result.getStderr().trim(), "Error: --org is only supported with the --list option",
 					"stderr");
 		} else {
@@ -3744,7 +3742,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null,
 				null, (String) null, null, null, null, true, null, null, null, null);
 		clienttasks.autoheal(null, null, true, null, null, null); // disable
-																	// autoheal
+		// autoheal
 		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
 
 			if (CandlepinTasks.isPoolProductMultiEntitlement(sm_clientUsername, sm_clientPassword, sm_serverUrl,
@@ -3777,7 +3775,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(!productIds.isEmpty(), "Found installed products that are partially subscribed after adding "
 				+ moreSockets + " more cpu.cpu_socket(s).");
 		clienttasks.autoheal(null, true, null, null, null, null); // enable
-																	// autoheal
+		// autoheal
 		clienttasks.run_rhsmcertd_worker(true); // trigger autoheal
 		for (InstalledProduct installedProduct : clienttasks.getCurrentlyInstalledProducts()) {
 			for (String productId : productIds) {
@@ -3794,7 +3792,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 * @throws Exception
 	 */
-	@Test(description = "Verify healing only attaches with a service-level that is set on the system's preference", groups = { "AutoHealWithSLA", "blockedByBug-907638", "blockedByBug-907400" }, enabled = true)
+	@Test(description = "Verify healing only attaches with a service-level that is set on the system's preference", groups = {
+			"AutoHealWithSLA", "blockedByBug-907638", "blockedByBug-907400" }, enabled = true)
 	public void VerifyAutohealWithSLA() throws JSONException, Exception {
 		/*
 		 * not necessary; will use clienttasks.run_rhsmcertd_worker(true) to
@@ -3831,7 +3830,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			// implementation of Bug 1066088 - [RFE] expose an option to the
 			// servicelevels api to return exempt service levels
 			if (!sm_exemptServiceLevelsInUpperCase.contains("Exempt SLA".toUpperCase()))
-				sm_exemptServiceLevelsInUpperCase.add("Exempt SLA".toUpperCase()); 
+				sm_exemptServiceLevelsInUpperCase.add("Exempt SLA".toUpperCase());
 			// WORKAROUND for bug 1066088
 			if (sm_exemptServiceLevelsInUpperCase.contains(productSubscription.serviceLevel.toUpperCase())) {
 				Assert.assertTrue(
@@ -3840,7 +3839,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 								+ "' has been granted with an exempt service level '" + productSubscription.serviceLevel
 								+ "'.");
 			} else if ((productSubscription.serviceLevel == null || productSubscription.serviceLevel.isEmpty())
-					&& clienttasks.isVersion(servertasks.statusVersion, ">", "2.0.2-1")) { 
+					&& clienttasks.isVersion(servertasks.statusVersion, ">", "2.0.2-1")) {
 				log.info("Due to Bug 1223560, Autoheal with serviceLevel '" + currentServiceLevel
 						+ "' granted this system coverage from subscription '" + productSubscription.productName
 						+ "' which actually has no service level.");
@@ -3860,7 +3859,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	public void AutohealTurnedOff() throws Exception {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
 				null, (String) null, null, null, null, true, null, null, null, null);
-		
+
 		clienttasks.autoheal(null, null, true, null, null, null);
 		clienttasks.run_rhsmcertd_worker(true);
 		List<EntitlementCert> certs = clienttasks.getCurrentEntitlementCerts();
@@ -3987,8 +3986,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 */
 	@Test(description = "Auto-heal with SLA", // TODO Add some more description;
-												// has same description as
-												// VerifyAutohealWithSLA()
+	// has same description as
+	// VerifyAutohealWithSLA()
 	groups = { "AutoHealFailForSLA" }, enabled = true)
 	public void VerifyAutohealFailForSLA() throws JSONException, Exception {
 
@@ -4131,7 +4130,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	@Test(description = "Verify that rhsm.log reports all products provided by an attached subsubscription.", groups = {
 			"blockedByBug-668032"/* ,"blockedByBug-1016300" */ }, enabled = true)
 	public void VerifyRhsmLogsProvidedProducts_Test() {
-			client.runCommandAndWait("rm -f " + clienttasks.rhsmLogFile); 
+		client.runCommandAndWait("rm -f " + clienttasks.rhsmLogFile);
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
 				null, (String) null, null, null, null, true, false, null, null, null);
 		boolean foundSubscriptionProvidingMultipleProducts = false;
@@ -4173,8 +4172,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				for (String providedProduct : pool.provides) {
 					if (providedProduct.equals("Awesome OS Server Bundled"))
 						continue; // avoid Bug 1016300 - the "Provides:" field
-									// in subscription-manager list --available
-									// should exclude "MKT" products.
+					// in subscription-manager list --available
+					// should exclude "MKT" products.
 					String expectedLogMessage = String.format("[sn:%s (%s,) @ %s]", serialNumber.toString(),
 							providedProduct, serialFile.getPath());
 					Assert.assertTrue(rhsmLogTail.contains(expectedLogMessage),
@@ -4221,7 +4220,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		boolean assertedFutureSubscriptionIsNowSubscribed = false;
 
 		List<String> installedProductArches = new ArrayList<String>(
-				Arrays.asList(installedPro.arch.trim().split(" *, *"))); 
+				Arrays.asList(installedPro.arch.trim().split(" *, *")));
 		// Note: the arch can be a comma separated list of values
 		if (installedProductArches.contains("x86")) {
 			installedProductArches.addAll(Arrays.asList("i386", "i486", "i586", "i686"));
@@ -4337,9 +4336,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 
 	/*
 	 * @author redakkan
-	 * 
+	 *
 	 * @throws exception
-	 * 
+	 *
 	 * @throws JSONException *
 	 */
 
@@ -4347,48 +4346,48 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			"blockedByBug-1297485", "blockedByBug-1297493" }, enabled = true)
 	public void VerifyCacheAndFactsfilePermissions_Test() throws JSONException, Exception {
 		if (clienttasks.isPackageVersion("subscription-manager", "<", "1.17.7-1")) { // subscription-manager
-																						// commit
-																						// 9dec31c377b57b4c98f845c018a5372d6f650d88
-																						// 1297493,
-																						// 1297485:
-																						// Restrict
-																						// visibility
-																						// of
-																						// subscription-manager
-																						// caches.
+			// commit
+			// 9dec31c377b57b4c98f845c018a5372d6f650d88
+			// 1297493,
+			// 1297485:
+			// Restrict
+			// visibility
+			// of
+			// subscription-manager
+			// caches.
 			throw new SkipException(
 					"This test applies a newer version of subscription manager that includes fixes for bugs 1297493 and 1297485.");
 		}
 		String command = clienttasks.rhsmCacheDir;
 		SSHCommandResult result = client.runCommandAndWait("stat -c '%a' " + command); // gets
-																						// the
-																						// File
-																						// /var/lib/rhsm/cache
-																						// access
-																						// rights
-																						// in
-																						// octal
+		// the
+		// File
+		// /var/lib/rhsm/cache
+		// access
+		// rights
+		// in
+		// octal
 		Assert.assertEquals(result.getStdout().trim(), "750", "Expected permission on /var/lib/rhsm/cache is 750"); // post
-																													// commit
-																													// 9dec31c377b57b4c98f845c018a5372d6f650d88
+		// commit
+		// 9dec31c377b57b4c98f845c018a5372d6f650d88
 		SSHCommandResult result1 = client.runCommandAndWait("stat -c '%a' /var/lib/rhsm/facts"); // gets
-																									// the
-																									// File
-																									// /var/lib/rhsm/facts
-																									// access
-																									// rights
-																									// in
-																									// octal
+		// the
+		// File
+		// /var/lib/rhsm/facts
+		// access
+		// rights
+		// in
+		// octal
 		Assert.assertEquals(result1.getStdout().trim(), "750", "Expected permission on /var/lib/rhsm/facts is 750"); // post
-																														// commit
-																														// 9dec31c377b57b4c98f845c018a5372d6f650d88
+		// commit
+		// 9dec31c377b57b4c98f845c018a5372d6f650d88
 	}
 
 	/*
 	 * @author redakkan
-	 * 
+	 *
 	 * @throws exception
-	 * 
+	 *
 	 * @throws JSONException *
 	 */
 	@Test(description = "verify repo-override --remove='' doesnot remove the overrides from the given repo", groups = {
