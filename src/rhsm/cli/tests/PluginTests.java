@@ -210,6 +210,7 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		if (rhsmLogLevel.equals("DEBUG")||rhsmLogLevel.equals("INFO"))	expectedLogInfo.add("Running pre_register_consumer_hook 1: consumer facts count is "+facts.values().size());
 		if (rhsmLogLevel.equals("DEBUG"))								expectedLogInfo.add("Running post_register_consumer_hook in register_consumer_test1.RegisterConsumerTestPlugin");
 		if (rhsmLogLevel.equals("DEBUG")||rhsmLogLevel.equals("INFO"))	expectedLogInfo.add("Running post_register_consumer_hook 1: consumer uuid "+consumerId+" is now registered.");
+		if (            !(logTail.replaceAll("\n","").matches(".*"+joinListToString(expectedLogInfo,".*")+".*"))) log.fine(RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, logMarker, null));	// used for debugging
 		Assert.assertTrue(logTail.replaceAll("\n","").matches(".*"+joinListToString(expectedLogInfo,".*")+".*"), "The '"+clienttasks.rhsmLogFile+"' reports expected log messages: "+expectedLogInfo);
 	}
 	
@@ -289,6 +290,7 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		if (rhsmLogLevel.equals("DEBUG")||rhsmLogLevel.equals("INFO"))	expectedLogInfo.add("Running post_register_consumer_hook 1: consumer uuid "+consumerId+" is now registered.");
 		if (rhsmLogLevel.equals("DEBUG"))								expectedLogInfo.add("Running post_register_consumer_hook in register_consumer_test2.RegisterConsumerTestPlugin");
 		if (rhsmLogLevel.equals("DEBUG")||rhsmLogLevel.equals("INFO"))	expectedLogInfo.add("Running post_register_consumer_hook 2: consumer uuid "+consumerId+" is now registered.");
+		if (            !(logTail.replaceAll("\n","").matches(".*"+joinListToString(expectedLogInfo,".*")+".*"))) log.fine(RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, logMarker, null));	// used for debugging
 		Assert.assertTrue(logTail.replaceAll("\n","").matches(".*"+joinListToString(expectedLogInfo,".*")+".*"), "The '"+clienttasks.rhsmLogFile+"' reports expected log messages: "+expectedLogInfo);
 	}
 	
@@ -355,6 +357,7 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		List<String> expectedLogInfo = new ArrayList<String>();
 		if (rhsmLogLevel.equals("DEBUG"))								expectedLogInfo.add("Running post_facts_collection_hook in facts_collection_test.FactsCollectionTestPlugin");
 		if (rhsmLogLevel.equals("DEBUG")||rhsmLogLevel.equals("INFO"))	expectedLogInfo.add("Running post_facts_collection_hook: consumer facts count is "+facts.values().size());
+		if (            !(logTail.replaceAll("\n","").matches(".*"+joinListToString(expectedLogInfo,".*")+".*"))) log.fine(RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, logMarker, null));	// used for debugging
 		Assert.assertTrue(logTail.replaceAll("\n","").matches(".*"+joinListToString(expectedLogInfo,".*")+".*"), "The '"+clienttasks.rhsmLogFile+"' reports expected log messages: "+expectedLogInfo);
 		
 		// add 1 extra post_facts_collection_hook_fact and run update
@@ -372,6 +375,7 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		expectedLogInfo.clear();
 		if (rhsmLogLevel.equals("DEBUG"))								expectedLogInfo.add("Running post_facts_collection_hook in facts_collection_test.FactsCollectionTestPlugin");
 		if (rhsmLogLevel.equals("DEBUG")||rhsmLogLevel.equals("INFO"))	expectedLogInfo.add("Running post_facts_collection_hook: consumer facts count is "+(facts.values().size()+1));			
+		if (            !(logTail.replaceAll("\n","").matches(".*"+joinListToString(expectedLogInfo,".*")+".*"))) log.fine(RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, logMarker, null));	// used for debugging
 		Assert.assertTrue(logTail.replaceAll("\n","").matches(".*"+joinListToString(expectedLogInfo,".*")+".*"), "The '"+clienttasks.rhsmLogFile+"' reports expected log messages: "+expectedLogInfo);
 	}
 	
@@ -462,6 +466,7 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		if (rhsmLogLevel.equals("DEBUG")||rhsmLogLevel.equals("INFO"))	expectedLogInfo.add("Running post_subscribe_hook: system just subscribed");
 		if (rhsmLogLevel.equals("DEBUG")||rhsmLogLevel.equals("INFO"))	expectedLogInfo.add("Running post_subscribe_hook: subscribed consumer is "+consumerId);
 		if (rhsmLogLevel.equals("DEBUG")||rhsmLogLevel.equals("INFO"))	expectedLogInfo.add("Running post_subscribe_hook: subscribed from pool id "+pool.poolId);
+		if (            !(logTail.replaceAll("\n","").matches(".*"+joinListToString(expectedLogInfo,".*")+".*"))) log.fine(RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, logMarker, null));	// used for debugging
 		Assert.assertTrue(logTail.replaceAll("\n","").matches(".*"+joinListToString(expectedLogInfo,".*")+".*"), "The '"+clienttasks.rhsmLogFile+"' reports log messages: "+expectedLogInfo);
 	}
 	
@@ -576,6 +581,7 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		if (rhsmLogLevel.equals("DEBUG")||rhsmLogLevel.equals("INFO"))	expectedLogInfo.add("Running post_auto_attach_hook: system just auto-attached");
 		if (rhsmLogLevel.equals("DEBUG")||rhsmLogLevel.equals("INFO"))	expectedLogInfo.add("Running post_auto_attach_hook: auto-attached consumer is "+consumerId);
 		if (rhsmLogLevel.equals("DEBUG")||rhsmLogLevel.equals("INFO"))	expectedLogInfo.add("Running post_auto_attach_hook: auto-attached \\d+ entitlements");
+		if (            !(logTail.replaceAll("\n","").matches(".*"+joinListToString(expectedLogInfo,".*")+".*"))) log.fine(RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, logMarker, null));	// used for debugging
 		Assert.assertTrue(logTail.replaceAll("\n","").matches(".*"+joinListToString(expectedLogInfo,".*")+".*"), "The '"+clienttasks.rhsmLogFile+"' reports log messages: "+expectedLogInfo);
 	}
 	@AfterGroups(groups={"setup"},value="verifyEnabledAutoAttachTestPluginHooksAreCalled_Test", alwaysRun=true)
