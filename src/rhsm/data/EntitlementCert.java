@@ -743,7 +743,9 @@ public class EntitlementCert extends AbstractCommandLineData {
 			}
 			
 			// assert that there is only one group of certData found in the list
-			if (certDataList.size()!=1) Assert.fail("Error when parsing raw entitlement certificate.  Expected to parse only one group of certificate data.");
+			if (certDataList.size()!=1) {
+				Assert.fail("Error when parsing raw entitlement certificate.  Expected to parse only one group of certificate data.");
+			}
 			Map<String,String> certData = certDataList.get(0);
 			
 			// create a new EntitlementCert

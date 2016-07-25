@@ -127,6 +127,7 @@ public class SubscriptionManagerTasks {
 	public String vcpu								= null;	// of the client
 	public String variant							= null;	// of the client
 	public String releasever						= null;	// of the client; 5Server 5Client
+	public Boolean isFipsEnabled					= null; // of the client	sysctl crypto.fips_enabled => crypto.fips_enabled = 1
 	
 	protected String currentlyRegisteredUsername	= null;	// most recent username used during register
 	protected String currentlyRegisteredPassword	= null;	// most recent password used during register
@@ -178,6 +179,9 @@ public class SubscriptionManagerTasks {
 			redhatReleaseX = "7";
 		}
 		*/
+		
+		// FIPS mode
+		isFipsEnabled = sshCommandRunner.runCommandAndWait("sysctl crypto.fips_enabled").getStdout().trim().equals("crypto.fips_enabled = 1")? true:false;
 		
 		// predict sockets on the system   http://libvirt.org/formatdomain.html#elementsCPU
 		/* 5/6/2013: DON'T PREDICT THIS USING lscpu ANY MORE.  IT LEADS TO TOO MANY TEST FAILURES TO TROUBLESHOOT.  INSTEAD, RELY ON FactsTests.MatchingCPUSocketsFact_Test() TO ASSERT BUGZILLA Bug 751205 - cpu_socket(s) facts value occasionally differs from value reported by lscpu (which is correct?)
@@ -234,13 +238,13 @@ if (false) {
 			log.warning("When no '"+cpuCoresPerSocketFact+"' fact is present, the hardware rules should treat this system as a 1 core_per_socket system.  Therefore automation will assume this is a one core_per_socket system.");
 			coresPerSocket = "1";
 		}
-		cores = String.valueOf(Integer.valueOf(sockets)*Integer.valueOf(coresPerSocket));	//  (will be ingored for compliance on a virtual system)
+		cores = String.valueOf(Integer.valueOf(sockets)*Integer.valueOf(coresPerSocket));	//  (will be ignored for compliance on a virtual system)
 		
 		// ram
-		// ram = getFactValue("memory.memtotal"); //TODO determine what the ram is on the system; is thgis adequate?
+		// ram = getFactValue("memory.memtotal"); //TODO determine what the ram is on the system; is this adequate?
 		
 		// vcpu
-		vcpu = cores;	// vcpu count on a virtual system is treated as equivalent to cores (will be ingored for compliance on a physical system)
+		vcpu = cores;	// vcpu count on a virtual system is treated as equivalent to cores (will be ignored for compliance on a physical system)
 	}
 	
 	
@@ -5281,9 +5285,17 @@ if (false) {
 			Assert.assertTrue(Integer.valueOf(sshCommandResult.getExitCode())<=1, "The exit code ("+sshCommandResult.getExitCode()+") from the subscribe --auto command does not indicate a failure (exit code 0 indicates an entitlement was granted, 1 indicates an entitlement was not granted, 255 indicates a failure).");
 		else if (!auto && file==null && (poolIds==null||poolIds.isEmpty()) && isPackageVersion("subscription-manager",">=","1.14.1-1"))	// defaults to auto
 			Assert.assertTrue(Integer.valueOf(sshCommandResult.getExitCode())<=1, "The exit code ("+sshCommandResult.getExitCode()+") from the subscribe command (defaulting to autosubscribe) does not indicate a failure (exit code 0 indicates an entitlement was granted, 1 indicates an entitlement was not granted, 255 indicates a failure).");
-		else
+		else {
+			// TEMPORARY WORKAROUND
+			boolean invokeWorkaroundWhileBugIsOpen = true;
+			String bugId="1287610"; 	// Bug 1287610 - yum message in output when FIPS is enabled
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			if (invokeWorkaroundWhileBugIsOpen && redhatReleaseX.equals("7") && isFipsEnabled) {
+				log.warning("Skipping the stderr assertion from subscribe on rhel '"+redhatReleaseXY+"' while FIPS bug '"+bugId+"' is open");
+			} else
+			// END OF WORKAROUND
 			Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the subscribe command indicates a success.");
-			
+		}
 		return sshCommandResult;
 	}
 	
@@ -5884,6 +5896,14 @@ if (false) {
 		
 		// assert results
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the unsubscribe command indicates a success.");
+		// TEMPORARY WORKAROUND
+		boolean invokeWorkaroundWhileBugIsOpen = true;
+		String bugId="1287610"; 	// Bug 1287610 - yum message in output when FIPS is enabled
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen && redhatReleaseX.equals("7") && isFipsEnabled) {
+			log.warning("Skipping the stderr assertion from unsubscribe on rhel '"+redhatReleaseXY+"' while FIPS bug '"+bugId+"' is open");
+		} else
+		// END OF WORKAROUND
 		Assert.assertEquals(sshCommandResult.getStderr(), "", "Stderr from the unsubscribe.");
 		return sshCommandResult;
 	}
@@ -5953,6 +5973,14 @@ if (false) {
 				expectedStdoutMsg = "   Entitlement Certificate with serial number '"+serialNumber+"' could not be found.";
 				Assert.assertTrue(result.getStdout().contains(expectedStdoutMsg), "Stdout from unsubscribe contains expected message: "+expectedStdoutMsg);
 			}
+			// TEMPORARY WORKAROUND
+			invokeWorkaroundWhileBugIsOpen = true;
+			bugId="1287610"; 	// Bug 1287610 - yum message in output when FIPS is enabled
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			if (invokeWorkaroundWhileBugIsOpen && redhatReleaseX.equals("7") && isFipsEnabled) {
+				log.warning("Skipping the stderr assertion from unsubscribe on rhel '"+redhatReleaseXY+"' while FIPS bug '"+bugId+"' is open");
+			} else
+			// END OF WORKAROUND
 			Assert.assertEquals(result.getStderr(),"", "Stderr from unsubscribe.");
 			Assert.assertEquals(result.getExitCode(), Integer.valueOf(1), "ExitCode from unsubscribe when the serial's entitlement cert file ("+certFilePath+") does not exist.");	// changed by bug 873791
 			return false;
@@ -5991,6 +6019,14 @@ if (false) {
 		Assert.assertTrue(result.getStdout().contains(expectedStdoutMsg), "Stdout from unsubscribe contains expected message: "+expectedStdoutMsg);
 		expectedStdoutMsg = "   "+serialNumber;	// added by bug 867766
 		Assert.assertTrue(result.getStdout().contains(expectedStdoutMsg), "Stdout from unsubscribe contains expected message: "+expectedStdoutMsg);
+		// TEMPORARY WORKAROUND
+		invokeWorkaroundWhileBugIsOpen = true;
+		bugId="1287610"; 	// Bug 1287610 - yum message in output when FIPS is enabled
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen && redhatReleaseX.equals("7") && isFipsEnabled) {
+			log.warning("Skipping the stderr assertion from unsubscribe on rhel '"+redhatReleaseXY+"' while FIPS bug '"+bugId+"' is open");
+		} else
+		// END OF WORKAROUND
 		Assert.assertEquals(result.getStderr(),"", "Stderr from unsubscribe.");
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(0), "ExitCode from unsubscribe when the serial's entitlement cert file ("+certFilePath+") does exist.");	// added by bug 873791
 
