@@ -392,13 +392,12 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(!entitlementCertsOnHost.isEmpty(),"When the host has registered with autosubscribe, we expect to have been granted at least one entitlement.");
 		
 		// determine what products are installed on the running docker image
-		String productCertDir = clienttasks.getConfParameter("productcertdir").replaceFirst("/$", "");	// strip of trailing /
-		SSHCommandResult lsResultOnRunningDockerImage = client.runCommandAndWait("docker run --rm "+dockerImage+" ls "+productCertDir);
-		//	201407071248:40.755 - FINE: ssh root@jsefler-7.usersys.redhat.com docker run --rm docker-registry.usersys.redhat.com/brew/rhel7:latest ls /etc/pki/product
-		//	201407071248:41.023 - FINE: Stdout: 69.pem
+		SSHCommandResult lsResultOnRunningDockerImage = client.runCommandAndWait("docker run --rm "+dockerImage+" find /etc/pki/product* -name *.pem");	// assumes the productCertDir config within the image is /etc/pki/product
+		//	[root@bkr-hv03-guest07 ~]# docker run --rm registry.access.redhat.com/rhel7:latest find /etc/pki/product* -name *.pem
+		//	/etc/pki/product/69.pem
+		//	/etc/pki/product-default/69.pem
 		List<ProductCert> productCertsOnRunningDockerImage = new ArrayList<ProductCert>();
 		for (String productCertFileOnRunningDockerImage : lsResultOnRunningDockerImage.getStdout().trim().split("\n")) {
-			productCertFileOnRunningDockerImage = productCertDir+"/"+productCertFileOnRunningDockerImage;
 			SSHCommandResult rctCatCertResultOnRunningDockerImage = RemoteFileTasks.runCommandAndAssert(client, "docker run --rm "+dockerImage+" rct cat-cert "+productCertFileOnRunningDockerImage, 0);
 			//	201407071250:40.755 - FINE: ssh root@jsefler-7.usersys.redhat.com docker run --rm docker-registry.usersys.redhat.com/brew/rhel7:latest rct cat-cert /etc/pki/product/69.pem
 			//	201407071250:43.954 - FINE: Stdout: 
