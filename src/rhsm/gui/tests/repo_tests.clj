@@ -276,6 +276,8 @@
       (sleep 1000)
       (tasks/ui checkrow :repo-table row-num 1)
       (sleep 1000)
+      (tasks/ui click :apply)
+      (sleep 2000)
       (if-not (and (tasks/has-state? :repo-remove-override "enabled")
                    (tasks/has-state? :repo-remove-override "sensitive"))
         (do
