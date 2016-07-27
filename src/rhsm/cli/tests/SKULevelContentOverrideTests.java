@@ -11,7 +11,6 @@ import java.util.Set;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.testng.SkipException;
 import org.testng.annotations.AfterGroups;
 import org.testng.annotations.BeforeGroups;
 import org.testng.annotations.DataProvider;
@@ -303,42 +302,78 @@ public class SKULevelContentOverrideTests extends SubscriptionManagerCLITestScri
 		String RepoId2 = null;
 		String contentId1 = null;
 		String contentId2 = null;
-		if (!(repoIdsDisabledByDefault.isEmpty()) && repoIdsDisabledByDefault.size() >= 2) {
-			RepoId1 = repoIdsDisabledByDefault.get(repoIdsDisabledByDefault.size() - 1);
-			RepoId2 = repoIdsDisabledByDefault.get(repoIdsDisabledByDefault.size() - 2);
-			contentId1 = getContent(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, RepoId1);
-			contentId2 = getContent(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, RepoId2);
+		if ((repoIdsDisabledByDefault.isEmpty()) && repoIdsDisabledByDefault.size() >= 2) {
+			requestBody = CandlepinTasks.createContentRequestBody("fooname (DisabledByDefault_1)", contentIDToEnable,
+					"foolabel_DisabledByDefault_1", "yum", "Foo Vendor", "/foo/path", "/foo/path/gpg", null, null, null,
+					null).toString();
+			resourcePath = "/content";
+			if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0"))
+				resourcePath = "/owners/" + ownerKey + resourcePath;
+			CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,
+					resourcePath, requestBody);
+			String productid = getPoolprovidedProducts(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,
+					subscriptionpool.poolId, "productId");
+			CandlepinTasks.addContentToProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword,
+					sm_serverUrl, ownerKey, productid, contentIDToEnable, false);
+			CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,
+					resourcePath, requestBody);
+			requestBody = CandlepinTasks.createContentRequestBody("fooname (DisabledByDefault_2)",
+					contentIDToEnable + "1", "foolabel_DisabledByDefault_2", "yum", "Foo Vendor", "/foo/path",
+					"/foo/path/gpg", null, null, null, null).toString();
+			resourcePath = "/content";
+			if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0"))
+				resourcePath = "/owners/" + ownerKey + resourcePath;
+			CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,
+					resourcePath, requestBody);
+			productid = getPoolprovidedProducts(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,
+					subscriptionpool.poolId, "productId");
+			CandlepinTasks.addContentToProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword,
+					sm_serverUrl, ownerKey, productid, contentIDToEnable, false);
+			CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,
+					resourcePath, requestBody);
+			clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
+			clienttasks.subscribe(null, null, subscriptionpool.poolId, null, null, null, null, null, null, null, null,
+					null);
+			availableRepos = clienttasks.getCurrentlySubscribedRepos();
+			for (Repo repo : availableRepos) {
+				if (!(repo.enabled)) {
+					repoIdsDisabledByDefault.add(repo.repoId);
+				}
+			}
+		}
 
-			resourcePath = "/owners/" + ownerKey + "/products/" + subscriptionpool.productId
-					+ "?exclude=id&exclude=name&exclude=multiplier&exclude=productContent&exclude=dependentProductIds&exclude=href&exclude=created&exclude=updated&exclude=attributes.created&exclude=attributes.updated";
+		RepoId1 = repoIdsDisabledByDefault.get(repoIdsDisabledByDefault.size() - 1);
+		RepoId2 = repoIdsDisabledByDefault.get(repoIdsDisabledByDefault.size() - 2);
+		contentId1 = getContent(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, RepoId1);
+		contentId2 = getContent(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, RepoId2);
 
-			JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,
-					sm_serverAdminPassword, sm_serverUrl, resourcePath));
-			resourcePath = "/owners/" + ownerKey + "/products/" + subscriptionpool.productId;
-			JSONArray jsonProductAttributes = jsonPool.getJSONArray("attributes");
-			jsonProductAttributes = purgeJSONObjectNamesFromJSONArray(jsonProductAttributesToEnable,
-					"content_override_enabled");
-			jsonDataToEnable = new JSONObject();
+		resourcePath = "/owners/" + ownerKey + "/products/" + subscriptionpool.productId
+				+ "?exclude=id&exclude=name&exclude=multiplier&exclude=productContent&exclude=dependentProductIds&exclude=href&exclude=created&exclude=updated&exclude=attributes.created&exclude=attributes.updated";
 
-			attributesMap.clear();
-			attributesMap.put("name", "content_override_enabled");
-			attributesMap.put("value", contentId1 + "," + contentId2);
+		JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,
+				sm_serverAdminPassword, sm_serverUrl, resourcePath));
+		resourcePath = "/owners/" + ownerKey + "/products/" + subscriptionpool.productId;
+		JSONArray jsonProductAttributes = jsonPool.getJSONArray("attributes");
+		jsonProductAttributes = purgeJSONObjectNamesFromJSONArray(jsonProductAttributesToEnable,
+				"content_override_enabled");
+		jsonDataToEnable = new JSONObject();
 
-			System.out.println(attributesMap + " attribute map is ");
-			// WARNING: if jsonProductAttributesToEnable already contains an //
-			// attribute(s) with the name "content_override_enabled", then //
-			// duplicate attributes will get PUT on the SKU. That's bad. //
-			// Candlepin should not allow this, but it does. Avoid this by //
-			// calling purgeJSONObjectNamesFromJSONArray(...)
-			jsonProductAttributes.put(attributesMap);
-			JSONObject jsonData = new JSONObject();
-			jsonData.put("attributes", jsonProductAttributes);
-			CandlepinTasks.putResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,
-					resourcePath, jsonData);
-			CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,
-					ownerKey);
-		} else
-			throw new SkipException("Enough repos are not available for testing");
+		attributesMap.clear();
+		attributesMap.put("name", "content_override_enabled");
+		attributesMap.put("value", contentId1 + "," + contentId2);
+
+		// WARNING: if jsonProductAttributesToEnable already contains an //
+		// attribute(s) with the name "content_override_enabled", then //
+		// duplicate attributes will get PUT on the SKU. That's bad. //
+		// Candlepin should not allow this, but it does. Avoid this by //
+		// calling purgeJSONObjectNamesFromJSONArray(...)
+		jsonProductAttributes.put(attributesMap);
+		JSONObject jsonData = new JSONObject();
+		jsonData.put("attributes", jsonProductAttributes);
+		CandlepinTasks.putResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,
+				resourcePath, jsonData);
+		CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,
+				ownerKey);
 		String path = "/pools/" + subscriptionpool.poolId + "?include=productAttributes";
 		String result = CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword,
 				sm_serverUrl, path);

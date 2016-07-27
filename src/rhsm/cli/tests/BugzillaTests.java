@@ -436,6 +436,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				System.currentTimeMillis());
 		Map<String, String> mapActivationKeyRequest = new HashMap<String, String>();
 		mapActivationKeyRequest.put("name", name);
+		mapActivationKeyRequest.put("autoAttach", "false");
 		JSONObject jsonActivationKeyRequest = new JSONObject(mapActivationKeyRequest);
 		JSONObject jsonActivationKey = new JSONObject(
 				CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl,
@@ -451,7 +452,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		endCalendar.add(Calendar.MINUTE, endingMinutesFromNow);
 		DateFormat yyyy_MM_dd_DateFormat = new SimpleDateFormat("M/d/yy h:mm aaa");
 		String EndingDate = yyyy_MM_dd_DateFormat.format(endCalendar.getTime());
-		sleep(endingMinutesFromNow * 60 * 500);
+		sleep(endingMinutesFromNow * 60 * 1000);
 		new JSONObject(
 				CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername,
 						sm_clientPassword, sm_serverUrl, "/activation_keys/" + jsonActivationKey.getString("id")
@@ -460,7 +461,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.unregister(null, null, null);
 		SSHCommandResult registerResult = clienttasks.register_(null, null, sm_clientOrg, null, null, null, null, null,
 				null, null, name, null, null, null, true, null, null, null, null);
-		System.out.println(EndingDate);
 		String expected_message = "Unable to attach pool with ID '" + expiringPoolId + "'.: Subscriptions for "
 				+ randomAvailableProductId + " expired on: " + EndingDate + ".";
 		if (clienttasks.isVersion(servertasks.statusVersion, ">", "0.9.30-1"))
@@ -551,7 +551,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.autoheal(null, null, true, null, null, null);
 		int sockets = 8;
 		int core = 4;
-		int ram = 20;
+		int ram = 16;
 
 		Map<String, String> factsMap = new HashMap<String, String>();
 		factsMap.put("cpu.cpu_socket(s)", String.valueOf(sockets));
@@ -1862,7 +1862,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		// Feb 3 12:50:47 jsefler-7 subscription-manager: Registered system with
 		// identity: eddfaf6d-e916-49e3-aa71-e33a2c54e1dd
 		expectedSyslogMessage = String.format("%s: Registered system with identity: %s", clienttasks.command, identity);
-		Assert.assertTrue(tailFromSyslogFile.contains(expectedSyslogMessage), "After registering', syslog '"
+		Assert.assertTrue(tailFromSyslogFile.contains(expectedSyslogMessage.trim()), "After registering', syslog '"
 				+ clienttasks.messagesLogFile + "' contains expected message '" + expectedSyslogMessage + "'.");
 
 		logMarker = System.currentTimeMillis() + " Testing Unregister **********************";
@@ -1874,7 +1874,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		// with identity: 231c2b52-4bc8-4458-8d0a-252b1dd82877
 		expectedSyslogMessage = String.format("%s: Unregistered machine with identity: %s", clienttasks.command,
 				identity);
-		Assert.assertTrue(tailFromSyslogFile.contains(expectedSyslogMessage), "After unregistering', syslog '"
+		Assert.assertTrue(tailFromSyslogFile.contains(expectedSyslogMessage.trim()), "After unregistering', syslog '"
 				+ clienttasks.messagesLogFile + "' contains expected message '" + expectedSyslogMessage + "'.");
 	}
 
@@ -3182,6 +3182,10 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			expected = "Serial numbers unsuccessfully removed at the server:" + "\n";
 			expected += "   " + serialOne.multiply(serialTwo);
 		}
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.16-1")) {
+			expected = "The entitlement server failed to remove these serial numbers:" + "\n";
+			expected += "   " + serialOne.multiply(serialTwo);
+		}
 		Assert.assertEquals(result.trim(), expected);
 	}
 
@@ -3222,6 +3226,10 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		expected += "   " + serialOne + "\n";
 		expected += "   " + serialTwo + "\n";
 		expected += "2 local certificates have been deleted.";
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.16-1")) {
+			expected = "The entitlement server successfully removed these serial numbers:" + "\n";
+			expected += "   " + serialOne.multiply(serialTwo);
+		}
 		Assert.assertEquals(result.trim(), expected);
 	}
 
@@ -3499,7 +3507,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.autoheal(null, null, true, null, null, null);
 		int sockets = 8;
 		int core = 4;
-		int ram = 20;
+		int ram = 16;
 
 		Map<String, String> factsMap = new HashMap<String, String>();
 		factsMap.put("cpu.cpu_socket(s)", String.valueOf(sockets));
@@ -3508,11 +3516,13 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		factsMap.put("virt.is_guest", String.valueOf(Boolean.FALSE));
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
 		clienttasks.facts(null, true, null, null, null);
-
+		int quantity = 0;
 		List<String> providedProductId = null;
 		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
 			if (pool.subscriptionType.equals("Stackable")) {
-				clienttasks.subscribe(null, null, pool.poolId, null, null, "2", null, null, null, null, null, null);
+				quantity = pool.suggested / 2;
+				clienttasks.subscribe(null, null, pool.poolId, null, null, Integer.toString(quantity), null, null, null,
+						null, null, null);
 				poolId = pool.poolId;
 				providedProductId = pool.provides;
 				break;
@@ -3522,7 +3532,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				providedProductId.get(providedProductId.size() - 1), clienttasks.getCurrentlyInstalledProducts());
 		Assert.assertEquals(BeforeAttaching.status, "Partially Subscribed",
 				"Verified that installed product is partially subscribed");
-		clienttasks.subscribe(null, null, poolId, null, null, null, null, null, null, null, null, null);
+		clienttasks.subscribe(null, null, poolId, null, null, Integer.toString(quantity), null, null, null, null, null,
+				null);
 		InstalledProduct AfterAttaching = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productName",
 				providedProductId.get(providedProductId.size() - 1), clienttasks.getCurrentlyInstalledProducts());
 		Assert.assertEquals(AfterAttaching.status, "Subscribed",
