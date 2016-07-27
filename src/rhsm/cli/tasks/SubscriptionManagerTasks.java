@@ -6687,8 +6687,11 @@ if (false) {
 	}
 	
 	
-	@Deprecated	// replaced by public ArrayList<String> getYumListAvailable (String options)
+	//@Deprecated	// replaced by public ArrayList<String> getYumListAvailable (String options)
 	public ArrayList<String> getYumListOfAvailablePackagesFromRepo (String repoLabel) {
+		if (true) return getYumListAvailable("--disablerepo=* --enablerepo="+repoLabel);
+		// the deprecated implementation of this method follows...
+		
 		ArrayList<String> packages = new ArrayList<String>();
 		sshCommandRunner.runCommandAndWaitWithoutLogging("killall -9 yum");
 
@@ -6952,7 +6955,9 @@ if (false) {
 
 			// choose a group that has "Mandatory Packages:"
 			String mandatoryPackages = "Mandatory Packages:";
-			if (sshCommandRunner.runCommandAndWait("yum groupinfo \""+groups.get(i)+"\" | grep \""+mandatoryPackages+"\"").getStdout().trim().equals(mandatoryPackages)) return group;
+			if (sshCommandRunner.runCommandAndWait("yum groupinfo \""+groups.get(i)+"\" | grep \""+mandatoryPackages+"\"").getStdout().trim().equals(mandatoryPackages)) {
+				return group;
+			}
 		}
 		return null;
 	}
@@ -7571,11 +7576,30 @@ if (false) {
 		return yumRemovePackage (pkg, null);
 	}
 	
+	/**
+	 * Attempt to: yum -y groupinstall "group" AND assert a "Complete!" result
+	 * @param group
+	 * @return SSHCommandResult from the attempt to groupinstall
+	 *  TODO IS THIS TRUE? WARNING: Just because a group appears in yum grouplist, that does not mean the package members in the group are available for install.  There are also some rules regarding how packages are marked to indicate whether or not the group is considered installed (see man yum)
+	 *  Learn more about groups at https://www.certdepot.net/rhel7-get-started-package-groups/
+	 */
 	public SSHCommandResult yumInstallGroup (String group) {
-		String command = "yum -y groupinstall \""+group+"\" --disableplugin=rhnplugin"; // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
-		SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(sshCommandRunner,command, 0, "^Complete!$",null);
+		SSHCommandResult result = yumInstallGroup_(group);
+		Assert.assertEquals(result.getExitCode(), Integer.valueOf(0), "ExitCode from attempt to yum groupinstall '"+group+"'.");
+		Assert.assertContainsMatch(result.getStdout(), "^Complete!$", "Stdout from attempt to yum groupinstall '"+group+"'.");
 		Assert.assertTrue(!this.yumGroupList("Available", ""/*"--disablerepo=* --enablerepo="+repo*/).contains(group),"Yum group is NOT Available after calling '"+command+"'.");
 		return result;
+	}
+	/**
+	 * Attempt to: yum -y groupinstall "group" WITHOUT asserting result
+	 * @param group
+	 * @return SSHCommandResult from the attempt to groupinstall
+	 *  WARNING: Just because a group appears in yum grouplist, that does not mean the package members in the group are available for install.  There are also some rules regarding how packages are marked to indicate whether or not the group is considered installed (see man yum)
+	 *  Learn more about groups at https://www.certdepot.net/rhel7-get-started-package-groups/
+	 */
+	public SSHCommandResult yumInstallGroup_ (String group) {
+		String command = "yum -y groupinstall \""+group+"\" --disableplugin=rhnplugin"; // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
+		return this.sshCommandRunner.runCommandAndWait(command);
 	}
 	
 	public SSHCommandResult yumRemoveGroup (String group) {
