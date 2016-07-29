@@ -568,9 +568,13 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		String onDateToTest = yyyy_MM_dd_DateFormat.format(now.getTime());
 		List<String> providedProductId = null;
 		String productId = null;
+		int quantity = 0;
+
 		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
 			if (pool.subscriptionType.equals("Stackable")) {
-				clienttasks.subscribe(null, null, pool.poolId, null, null, "2", null, null, null, null, null, null);
+				quantity = pool.suggested / 2;
+				clienttasks.subscribe(null, null, pool.poolId, null, null, Integer.toString(quantity), null, null, null,
+						null, null, null);
 				providedProductId = pool.provides;
 				productId = pool.productId;
 				break;
@@ -3228,7 +3232,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		expected += "2 local certificates have been deleted.";
 		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.16-1")) {
 			expected = "The entitlement server successfully removed these serial numbers:" + "\n";
-			expected += "   " + serialOne.multiply(serialTwo);
+			expected += "   " + serialOne + "\n";
+			expected += "   " + serialTwo + "\n";
+			expected += "2 local certificates have been deleted.";
 		}
 		Assert.assertEquals(result.trim(), expected);
 	}
@@ -3525,7 +3531,10 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 						null, null, null);
 				poolId = pool.poolId;
 				providedProductId = pool.provides;
-				break;
+				if (!(providedProductId.isEmpty())) {
+					break;
+
+				}
 			}
 		}
 		InstalledProduct BeforeAttaching = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productName",
@@ -3536,8 +3545,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				null);
 		InstalledProduct AfterAttaching = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productName",
 				providedProductId.get(providedProductId.size() - 1), clienttasks.getCurrentlyInstalledProducts());
-		Assert.assertEquals(AfterAttaching.status, "Subscribed",
-				"Verified that installed product is fully subscribed after attaching one more quantity of multi-entitleable stackable subscription");
+		Assert.assertEquals(AfterAttaching.status, "Subscribed", "Verified that installed product"
+				+ AfterAttaching.productName
+				+ "is fully subscribed after attaching one more quantity of multi-entitleable stackable subscription");
 	}
 
 	/**
