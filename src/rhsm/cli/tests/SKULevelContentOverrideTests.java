@@ -378,8 +378,8 @@ public class SKULevelContentOverrideTests extends SubscriptionManagerCLITestScri
 		String result = CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword,
 				sm_serverUrl, path);
 		System.out.println(result + "    result is ");
-		Assert.assertTrue(result.contains(contentIdToEnable) && result.contains(contentId1),
-				"After overriding the content at SKU level '" + contentIdToEnable + "' and '" + contentId1
+		Assert.assertTrue(result.contains(contentId1) && result.contains(contentId2),
+				"After overriding the content at SKU level '" + contentId2 + "' and '" + contentId2
 						+ "'are present in the product attribute list of the pool");
 	}
 
