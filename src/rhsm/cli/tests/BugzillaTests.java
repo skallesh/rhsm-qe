@@ -573,11 +573,13 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
 			if (pool.subscriptionType.equals("Stackable")) {
 				quantity = pool.suggested / 2;
-				clienttasks.subscribe(null, null, pool.poolId, null, null, Integer.toString(quantity), null, null, null,
-						null, null, null);
-				providedProductId = pool.provides;
-				productId = pool.productId;
-				break;
+				if (!(pool.suggested == 1)) {
+					clienttasks.subscribe(null, null, pool.poolId, null, null, Integer.toString(quantity), null, null,
+							null, null, null, null);
+					providedProductId = pool.provides;
+					productId = pool.productId;
+					break;
+				}
 			}
 		}
 		InstalledProduct BeforeAttaching = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productName",
@@ -3505,7 +3507,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 */
 	@Test(description = "Verify if stacking entitlements reports as distinct entries in cli list --installed", groups = {
-			"VerifyDistinct", "blockedByBug-733327" }, enabled = true)
+			"VerifyDistinctStackingEntires", "blockedByBug-733327" }, enabled = true)
 	public void VerifyDistinctStackingEntires() throws Exception {
 		String poolId = null;
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
@@ -3527,8 +3529,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
 			if (pool.subscriptionType.equals("Stackable")) {
 				quantity = pool.suggested / 2;
-				clienttasks.subscribe(null, null, pool.poolId, null, null, Integer.toString(quantity), null, null, null,
-						null, null, null);
+				if (!(pool.suggested == 1))
+					clienttasks.subscribe(null, null, pool.poolId, null, null, Integer.toString(quantity), null, null,
+							null, null, null, null);
 				poolId = pool.poolId;
 				providedProductId = pool.provides;
 				if (!(providedProductId.isEmpty())) {
