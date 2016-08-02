@@ -81,12 +81,13 @@
                        "blockedByBug-1283749"
                        "blockedByBug-718045"
                        "blockedByBug-1194365"
-                       "blockedByBug-1249723"]
+                       "blockedByBug-1249723"
+                       "blockedByBug-1194365"]
               :dataProvider "bad-credentials and corresponding errors"}}
   register_bad_credentials
   "Checks error messages upon registering with bad credentials."
   [_ register-args expected-error]
-  (skip-if-bz-open "1194365")
+  ;(skip-if-bz-open "1194365")
   (try+ (tasks/unregister) (catch [:type :not-registered] _))
   (when (or (bool (tasks/ui guiexist :register-dialog))
             (bool (tasks/ui guiexist :error-dialog)))
