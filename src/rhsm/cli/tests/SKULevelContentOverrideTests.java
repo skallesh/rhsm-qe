@@ -302,7 +302,7 @@ public class SKULevelContentOverrideTests extends SubscriptionManagerCLITestScri
 		String RepoId2 = null;
 		String contentId1 = null;
 		String contentId2 = null;
-		if ((repoIdsDisabledByDefault.isEmpty()) && repoIdsDisabledByDefault.size() >= 2) {
+		if (!(repoIdsDisabledByDefault.isEmpty()) && repoIdsDisabledByDefault.size() >= 2) {
 			requestBody = CandlepinTasks.createContentRequestBody("fooname (DisabledByDefault_1)", contentIDToEnable,
 					"foolabel_DisabledByDefault_1", "yum", "Foo Vendor", "/foo/path", "/foo/path/gpg", null, null, null,
 					null).toString();
