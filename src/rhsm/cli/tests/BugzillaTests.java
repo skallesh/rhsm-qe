@@ -452,7 +452,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		endCalendar.add(Calendar.MINUTE, endingMinutesFromNow);
 		DateFormat yyyy_MM_dd_DateFormat = new SimpleDateFormat("M/d/yy h:mm aaa");
 		String EndingDate = yyyy_MM_dd_DateFormat.format(endCalendar.getTime());
-		sleep(endingMinutesFromNow * 60 * 1000);
+		sleep(endingMinutesFromNow * 59 * 1000);
 		new JSONObject(
 				CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername,
 						sm_clientPassword, sm_serverUrl, "/activation_keys/" + jsonActivationKey.getString("id")
