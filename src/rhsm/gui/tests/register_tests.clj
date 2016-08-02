@@ -75,10 +75,19 @@
       (finally (if (bool (tasks/ui guiexist :facts-dialog))
                  (tasks/ui click :close-facts))))))
 
-(defn register_bad_credentials
+(defn ^{Test {:groups ["registration"
+                       "tier1"
+                       "blockedByBug-1255805"
+                       "blockedByBug-1283749"
+                       "blockedByBug-718045"
+                       "blockedByBug-1194365"
+                       "blockedByBug-1249723"
+                       "blockedByBug-1194365"]
+              :dataProvider "bad-credentials and corresponding errors"}}
+  register_bad_credentials
   "Checks error messages upon registering with bad credentials."
-  [register-args expected-error]
-  (skip-if-bz-open "1194365")
+  [_ register-args expected-error]
+  ;(skip-if-bz-open "1194365")
   (try+ (tasks/unregister) (catch [:type :not-registered] _))
   (when (or (bool (tasks/ui guiexist :register-dialog))
             (bool (tasks/ui guiexist :error-dialog)))
@@ -94,23 +103,6 @@
       (verify (bool (tasks/ui guiexist :register-dialog)))
       (tasks/ui click :register-close)
       (tasks/close-error-dialog))))
-
-(data-driven register_bad_credentials {Test {:groups ["registration"
-                                                      "tier1"
-                                                      "blockedByBug-1255805"
-                                                      "blockedByBug-1283749"]}}
-   [^{Test {:groups ["blockedByBug-718045"
-                     "blockedByBug-1194365"
-                     "blockedByBug-1249723"]}}
-    [["sdf" "sdf"] :invalid-credentials]
-    ;^{Test {:groups ["blockedByBug-719378"]}}
-    [["test user" "password"] :invalid-credentials]
-    [["test user" ""] :no-password]
-    [["  " "  "] :no-username]
-    [["" ""] :no-username]
-    [["" "password"] :no-username]
-    [["sdf" ""] :no-password]
-    [[(@config :username) (@config :password) :system-name-input ""] :no-system-name]])
 
 (defn ^{Test {:groups ["registration"
                        "tier1"
@@ -338,6 +330,19 @@
         (if-not debug
           (to-array-2d data)
           data)))
+    (to-array-2d [])))
+
+(defn ^{DataProvider {:name "bad-credentials and corresponding errors"}}
+  get_bad_credentials_and_corresponding_errors [ _ ]
+  (if-not (assert-skip :register)
+    (to-array-2d [[["sdf" "sdf"] :invalid-credentials]
+                  [["test user" "password"] :invalid-credentials]
+                  [["test user" ""] :no-password]
+                  [["  " "  "] :no-username]
+                  [["" ""] :no-username]
+                  [["" "password"] :no-username]
+                  [["sdf" ""] :no-password]
+                  [[(@config :username) (@config :password) :system-name-input ""] :no-system-name]])
     (to-array-2d [])))
 
 (gen-class-testng)
