@@ -150,7 +150,7 @@ public class TemporaryPoolTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="given an available unmapped_guests_only pool, attach it and verify the status details of the consumed subscription, installed product, and system status.",	// TODO
-			groups={"VerifyAvailabilityOfUnmappedGuestsOnlySubpool_Test"},
+			groups={"VerifyAvailabilityOfUnmappedGuestsOnlySubpool_Test","blockedByBug-1362701"},
 			dataProvider="getAvailableUnmappedGuestsOnlySubscriptionPoolsData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
