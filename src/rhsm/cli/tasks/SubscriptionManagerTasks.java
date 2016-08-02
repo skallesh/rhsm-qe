@@ -8384,6 +8384,12 @@ if (false) {
 		//	Stderr:
 		//	ExitCode: null
 		
+		//	ssh root@ibm-z10-77.rhts.eng.bos.redhat.com subscription-manager list --available
+		//	Stdout:
+		//	Stderr: Unable to serialize objects to JSON.
+		//	ExitCode: 70
+		
+		
 		//	2014-04-08 16:41:56,930 [INFO] subscription-manager @managercli.py:299 - Server Versions: {'candlepin': 'Unknown', 'server-type': 'Red Hat Subscription Management'}
 		//	2014-04-08 16:41:56,933 [DEBUG] subscription-manager @connection.py:418 - Loaded CA certificates from /etc/rhsm/ca/: candlepin-stage.pem, redhat-uep.pem
 		//	2014-04-08 16:41:56,933 [DEBUG] subscription-manager @connection.py:450 - Making request: DELETE /subscription/consumers/892d9649-8079-43fe-ad04-2c3a83673f6e
@@ -8875,6 +8881,56 @@ if (false) {
 			issue = "[Errno -3] Temporary failure in name resolution";
 			if (getTracebackCommandResult.getStdout().contains(issue) || result.getStderr().contains(issue)) {
 				String bugId = "1302798"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1302798 - gaierror: [Errno -3] Temporary failure in name resolution
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				if (invokeWorkaroundWhileBugIsOpen) {
+					throw new SkipException("Encounterd a '"+issue+"' and could not complete this test while bug '"+bugId+"' is open.");
+				}
+			}
+			// END OF WORKAROUND
+			
+			// TEMPORARY WORKAROUND FOR BUG
+			//	2016-08-01 20:00:32.143  FINE: ssh root@ibm-z10-77.rhts.eng.bos.redhat.com subscription-manager list --available
+			//	2016-08-01 20:00:51.651  FINE: Stdout:
+			//	2016-08-01 20:00:51.651  FINE: Stderr: Unable to serialize objects to JSON.
+			//
+			//	2016-08-01 20:00:51.651  FINE: ExitCode: 70
+			//	2016-08-01 20:00:51.651  FINE: ssh root@ibm-z10-77.rhts.eng.bos.redhat.com LINE_NUMBER=$(grep --line-number 'Making request:' /var/log/rhsm/rhsm.log | tail --lines=1 | cut --delimiter=':' --field=1); if [ -n "$LINE_NUMBER" ]; then tail -n +$LINE_NUMBER /var/log/rhsm/rhsm.log; fi;
+			//	2016-08-01 20:00:51.815  WARNING: Last request from /var/log/rhsm/rhsm.log:
+			//	2016-08-01 20:00:58,186 [DEBUG] subscription-manager:30729 @connection.py:573 - Making request: GET /subscription/owners/7964055/pools?consumer=4b7a3fff-2b66-4a82-9741-fb4821e4b364
+			//	2016-08-01 20:01:14,852 [DEBUG] subscription-manager:30729 @connection.py:602 - Response: status=500
+			//	2016-08-01 20:01:14,852 [ERROR] subscription-manager:30729 @managercli.py:174 - exception caught in subscription-manager
+			//	2016-08-01 20:01:14,852 [ERROR] subscription-manager:30729 @managercli.py:175 - Unable to serialize objects to JSON.
+			//	Traceback (most recent call last):
+			//	  File "/usr/sbin/subscription-manager", line 81, in <module>
+			//	    sys.exit(abs(main() or 0))
+			//	  File "/usr/sbin/subscription-manager", line 72, in main
+			//	    return managercli.ManagerCLI().main()
+			//	  File "/usr/lib/python2.7/site-packages/subscription_manager/managercli.py", line 2732, in main
+			//	    return CLI.main(self)
+			//	  File "/usr/lib/python2.7/site-packages/subscription_manager/cli.py", line 160, in main
+			//	    return cmd.main()
+			//	  File "/usr/lib/python2.7/site-packages/subscription_manager/managercli.py", line 526, in main
+			//	    return_code = self._do_command()
+			//	  File "/usr/lib/python2.7/site-packages/subscription_manager/managercli.py", line 2321, in _do_command
+			//	    filter_string=self.options.filter_string)
+			//	  File "/usr/lib/python2.7/site-packages/subscription_manager/managerlib.py", line 314, in get_available_entitlements
+			//	    overlapping, uninstalled, text, filter_string)
+			//	  File "/usr/lib/python2.7/site-packages/subscription_manager/managerlib.py", line 519, in get_filtered_pools_list
+			//	    self.identity.uuid, self.facts, active_on=active_on, filter_string=filter_string):
+			//	  File "/usr/lib/python2.7/site-packages/subscription_manager/managerlib.py", line 278, in list_pools
+			//	    active_on=active_on, owner=ownerid, filter_string=filter_string)
+			//	  File "/usr/lib64/python2.7/site-packages/rhsm/connection.py", line 1260, in getPoolsList
+			//	    results = self.conn.request_get(method)
+			//	  File "/usr/lib64/python2.7/site-packages/rhsm/connection.py", line 694, in request_get
+			//	    return self._request("GET", method)
+			//	  File "/usr/lib64/python2.7/site-packages/rhsm/connection.py", line 611, in _request
+			//	    self.validateResponse(result, request_type, handler)
+			//	  File "/usr/lib64/python2.7/site-packages/rhsm/connection.py", line 661, in validateResponse
+			//	    raise RestlibException(response['status'], error_msg, response.get('headers'))
+			//	RestlibException: Unable to serialize objects to JSON.
+			issue = "Unable to serialize objects to JSON.";
+			if (getTracebackCommandResult.getStdout().contains(issue) || result.getStderr().contains(issue)) {
+				String bugId = "1362535"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1362535 - Unable to serialize objects to JSON.
 				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 				if (invokeWorkaroundWhileBugIsOpen) {
 					throw new SkipException("Encounterd a '"+issue+"' and could not complete this test while bug '"+bugId+"' is open.");
