@@ -2507,6 +2507,16 @@ if (false) {
 			Assert.assertMatch(ipv4_address, "\\d+\\.\\d+\\.\\d+\\.\\d+", "Validated format of ipv4 address '"+ipv4_address+"' detected from openstack curl query above.");
 		}
 		
+		// some beaker systems (e.g. cloud-qe-05.idmqe.lab.eng.bos.redhat.com and tigger.idmqe.lab.eng.bos.redhat.com) started failing with a network.ipv4_address=127.0.0.1 which leads to test failures
+		// Solution: https://github.com/martinp/ipd has been installed on auto-services.usersys.redhat.com:5555
+		//	[root@jsefler-rhel7 ~]# curl auto-services.usersys.redhat.com:5555
+		//	10.16.7.221
+		ipv4_address = "127.0.0.1";
+		if (ipv4_address.equals("127.0.0.1")) {
+			log.warning("This system could not determine it's own network.ipv4_address fact.  Assuming https://github.com/martinp/ipd is installed on "+SubscriptionManagerBaseTestScript.getProperty("sm.noauthproxy.hostname","auto-services.usersys.redhat.comXX")+":5555 to detect the ipaddress of this system.");
+			ipv4_address = RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "curl --stderr /dev/null "+SubscriptionManagerBaseTestScript.getProperty("sm.noauthproxy.hostname","auto-services.usersys.redhat.comXX")+":5555", 0).getStdout().trim();
+		}
+		
 		return ipv4_address;
 	}
 	
