@@ -287,7 +287,7 @@ public class TemporaryPoolTests extends SubscriptionManagerCLITestScript {
 		
 		// assert that no additional entitlements were added (test for Bug 1198494 - Auto-heal continuously attaches subscriptions to make the system compliant on a guest machine)
 		Assert.assertTrue(entitlementCertFileAfterSubscribed.containsAll(entitlementCertFileAfterAutoHeal1) && entitlementCertFileAfterAutoHeal1.containsAll(entitlementCertFileAfterSubscribed),
-				"The entitlement certs remained the same after first attempt to auto-heal despite the attched temporary pool. (Assuming that the initial registration with autosubcribe provided as much coverage as possible for the installed products from subscriptions with plenty of available quantity, repeated attempts to auto-heal should not consume more entitlements.)");
+				"The entitlement certs remained the same after first attempt to auto-heal despite the attached temporary pool. (Assuming that the initial registration with autosubcribe provided as much coverage as possible for the installed products from subscriptions with plenty of available quantity, repeated attempts to auto-heal should not consume more entitlements.)");
 
 		// trigger a second auto-heal event
 		clienttasks.autoheal(null, true, null, null, null, null);
@@ -298,7 +298,7 @@ public class TemporaryPoolTests extends SubscriptionManagerCLITestScript {
 		
 		// assert that no additional entitlements were added (test for Bug 1198494 - Auto-heal continuously attaches subscriptions to make the system compliant on a guest machine)
 		Assert.assertTrue(entitlementCertFileAfterSubscribed.containsAll(entitlementCertFileAfterAutoHeal2) && entitlementCertFileAfterAutoHeal2.containsAll(entitlementCertFileAfterSubscribed),
-				"The entitlement certs remained the same after a second attempt to auto-heal despite the attched temporary pool. (Assuming that the initial registration with autosubcribe provided as much coverage as possible for the installed products from subscriptions with plenty of available quantity, repeated attempts to auto-heal should not consume more entitlements.)");
+				"The entitlement certs remained the same after a second attempt to auto-heal despite the attached temporary pool. (Assuming that the initial registration with autosubcribe provided as much coverage as possible for the installed products from subscriptions with plenty of available quantity, repeated attempts to auto-heal should not consume more entitlements.)");
 	}
 	
 	
