@@ -493,6 +493,11 @@ schema generation failed
 	}
 	
 	public void reportAPI() throws IOException {
+		// does the apicrawler exist?
+		if (!RemoteFileTasks.testExists(sshCommandRunner, serverInstallDir+"/apicrawl/src/main/java/org/candlepin/util/apicrawl/ApiCrawler.java")) {
+			log.info ("The apicrawl project was deleted in candlepin-2.0.16-1 and replaced by swagger.  Visit https://HOSTNAME:8443/candlepin/docs/");
+			return;	
+		}
 		
 		/*
 		 * cd /root/candlepin/proxy
