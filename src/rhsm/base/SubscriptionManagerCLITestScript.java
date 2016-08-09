@@ -511,8 +511,12 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		smt.candlepinUrl = sm_serverUrl.isEmpty() ? getServerUrl(smt.getConfFileParameter(smt.rhsmConfFile,"hostname"), smt.getConfFileParameter(smt.rhsmConfFile,"port"), smt.getConfFileParameter(smt.rhsmConfFile,"prefix")) : sm_serverUrl;
 		sm_serverUrl = smt.candlepinUrl;	// rewrite it back to sm_serverUrl to make it easier for tests to access
 		
-		// set the logging level to DEBUG for rhsm.log - effectively reverting the changes from Bug 1266935 - Reduce default log level to INFO (from DEBUG)
+		// set the rhsm.log logging level to DEBUG - effectively reverting the changes from Bug 1266935 - Reduce default log level to INFO (from DEBUG)
 		// this is needed to enable more testing and log more useful info from SubscriptionManagerTasks.logRuntimeErrors(...)
+		if (smt.isPackageVersion("subscription-manager", ">=", "1.17.10-1")) {// RHEL7.3 commit d84b15f42c2e4521e130b939039960c0846b849c 1334916: Move logging configuration to rhsm.conf
+			smt.updateConfFileParameter(clienttasks.rhsmConfFile, "logging", "default_log_level", "DEBUG");
+			//smt.config(null, null, true, new String[]{"logging","default_log_level","DEBUG"});
+		} else
 		if (smt.isPackageVersion("subscription-manager", ">=", "1.14.2-1")) {// commit 66aafd77dc629b921379f0e121421c1c21c0b787 Move to fileConfig based logging.
 			smt.updateConfFileParameter(clienttasks.rhsmLoggingConfFile, "handler_rhsm_log", "level", "DEBUG");
 		}

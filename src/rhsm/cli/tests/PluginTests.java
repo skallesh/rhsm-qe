@@ -182,8 +182,15 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		clienttasks.unregister(null,null,null);
 		Map<String,String> facts = clienttasks.getFacts();
 		
-		// get the [handler_rhsm_log] level from /etc/rhsm/logging.conf	// needed after Bug 1266935 - Reduce default log level to INFO (from DEBUG)
-		String rhsmLogLevel = clienttasks.getConfFileParameter(clienttasks.rhsmLoggingConfFile, "handler_rhsm_log", "level");
+		// get the current rhsm logging level; INFO or DEBUG
+		String rhsmLogLevel=null;
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.17.10-1")) {	// RHEL7.3 commit d84b15f42c2e4521e130b939039960c0846b849c 1334916: Move logging configuration to rhsm.conf
+			rhsmLogLevel = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "logging", "default_log_level");
+		} else if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.14.2-1")) {	// commit 66aafd77dc629b921379f0e121421c1c21c0b787 Move to fileConfig based logging.
+			rhsmLogLevel = clienttasks.getConfFileParameter(clienttasks.rhsmLoggingConfFile, "handler_rhsm_log", "level");
+		} else {
+			rhsmLogLevel="DEBUG";	 // default
+		}
 		
 		// mark the rhsm.log file
 		String logMarker = System.currentTimeMillis()+" Testing verifyEnabledRegisterConsumerTestPluginHooksAreCalled_Test1...";
@@ -259,8 +266,15 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		clienttasks.unregister(null,null,null);
 		Map<String,String> facts = clienttasks.getFacts();
 		
-		// get the [handler_rhsm_log] level from /etc/rhsm/logging.conf	// needed after Bug 1266935 - Reduce default log level to INFO (from DEBUG)
-		String rhsmLogLevel = clienttasks.getConfFileParameter(clienttasks.rhsmLoggingConfFile, "handler_rhsm_log", "level");
+		// get the current rhsm logging level; INFO or DEBUG
+		String rhsmLogLevel=null;
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.17.10-1")) {	// RHEL7.3 commit d84b15f42c2e4521e130b939039960c0846b849c 1334916: Move logging configuration to rhsm.conf
+			rhsmLogLevel = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "logging", "default_log_level");
+		} else if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.14.2-1")) {	// commit 66aafd77dc629b921379f0e121421c1c21c0b787 Move to fileConfig based logging.
+			rhsmLogLevel = clienttasks.getConfFileParameter(clienttasks.rhsmLoggingConfFile, "handler_rhsm_log", "level");
+		} else {
+			rhsmLogLevel="DEBUG";	 // default
+		}
 		
 		// mark the rhsm.log file
 		String logMarker = System.currentTimeMillis()+" Testing verifyEnabledRegisterConsumerTestPluginHooksAreCalled_Test2...";
@@ -340,8 +354,15 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		clienttasks.unregister(null,null,null);
 		Map<String,String> facts = clienttasks.getFacts();
 		
-		// get the [handler_rhsm_log] level from /etc/rhsm/logging.conf	// needed after Bug 1266935 - Reduce default log level to INFO (from DEBUG)
-		String rhsmLogLevel = clienttasks.getConfFileParameter(clienttasks.rhsmLoggingConfFile, "handler_rhsm_log", "level");
+		// get the current rhsm logging level; INFO or DEBUG
+		String rhsmLogLevel=null;
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.17.10-1")) {	// RHEL7.3 commit d84b15f42c2e4521e130b939039960c0846b849c 1334916: Move logging configuration to rhsm.conf
+			rhsmLogLevel = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "logging", "default_log_level");
+		} else if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.14.2-1")) {	// commit 66aafd77dc629b921379f0e121421c1c21c0b787 Move to fileConfig based logging.
+			rhsmLogLevel = clienttasks.getConfFileParameter(clienttasks.rhsmLoggingConfFile, "handler_rhsm_log", "level");
+		} else {
+			rhsmLogLevel="DEBUG";	 // default
+		}
 		
 		// mark the rhsm.log file
 		String logMarker = System.currentTimeMillis()+" Testing verifyEnabledFactsCollectionTestPluginHooksAreCalled_Test...";
@@ -431,8 +452,15 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		clienttasks.unregister(null,null,null);
 		Map<String,String> facts = clienttasks.getFacts();
 		
-		// get the [handler_rhsm_log] level from /etc/rhsm/logging.conf	// needed after Bug 1266935 - Reduce default log level to INFO (from DEBUG)
-		String rhsmLogLevel = clienttasks.getConfFileParameter(clienttasks.rhsmLoggingConfFile, "handler_rhsm_log", "level");
+		// get the current rhsm logging level; INFO or DEBUG
+		String rhsmLogLevel=null;
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.17.10-1")) {	// RHEL7.3 commit d84b15f42c2e4521e130b939039960c0846b849c 1334916: Move logging configuration to rhsm.conf
+			rhsmLogLevel = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "logging", "default_log_level");
+		} else if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.14.2-1")) {	// commit 66aafd77dc629b921379f0e121421c1c21c0b787 Move to fileConfig based logging.
+			rhsmLogLevel = clienttasks.getConfFileParameter(clienttasks.rhsmLoggingConfFile, "handler_rhsm_log", "level");
+		} else {
+			rhsmLogLevel="DEBUG";	 // default
+		}
 		
 		// register and get the current available subscription list
 		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null,true,null,null,null,null));
@@ -539,8 +567,15 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		clienttasks.unregister(null,null,null);
 		Map<String,String> facts = clienttasks.getFacts();
 		
-		// get the [handler_rhsm_log] level from /etc/rhsm/logging.conf	// needed after Bug 1266935 - Reduce default log level to INFO (from DEBUG)
-		String rhsmLogLevel = clienttasks.getConfFileParameter(clienttasks.rhsmLoggingConfFile, "handler_rhsm_log", "level");
+		// get the current rhsm logging level; INFO or DEBUG
+		String rhsmLogLevel=null;
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.17.10-1")) {	// RHEL7.3 commit d84b15f42c2e4521e130b939039960c0846b849c 1334916: Move logging configuration to rhsm.conf
+			rhsmLogLevel = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "logging", "default_log_level");
+		} else if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.14.2-1")) {	// commit 66aafd77dc629b921379f0e121421c1c21c0b787 Move to fileConfig based logging.
+			rhsmLogLevel = clienttasks.getConfFileParameter(clienttasks.rhsmLoggingConfFile, "handler_rhsm_log", "level");
+		} else {
+			rhsmLogLevel="DEBUG";	 // default
+		}
 		
 		// register
 		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,false,null,null,(List<String>)null,null,null,null,true,null,null,null,null));
@@ -642,8 +677,15 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 	public void verifyEnabledProductIdInstallTestPluginHooksAreCalled_Test() {
 		removeRhsmLog();
 		
-		// get the [handler_rhsm_log] level from /etc/rhsm/logging.conf	// needed after Bug 1266935 - Reduce default log level to INFO (from DEBUG)
-		String rhsmLogLevel = clienttasks.getConfFileParameter(clienttasks.rhsmLoggingConfFile, "handler_rhsm_log", "level");
+		// get the current rhsm logging level; INFO or DEBUG
+		String rhsmLogLevel=null;
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.17.10-1")) {	// RHEL7.3 commit d84b15f42c2e4521e130b939039960c0846b849c 1334916: Move logging configuration to rhsm.conf
+			rhsmLogLevel = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "logging", "default_log_level");
+		} else if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.14.2-1")) {	// commit 66aafd77dc629b921379f0e121421c1c21c0b787 Move to fileConfig based logging.
+			rhsmLogLevel = clienttasks.getConfFileParameter(clienttasks.rhsmLoggingConfFile, "handler_rhsm_log", "level");
+		} else {
+			rhsmLogLevel="DEBUG";	 // default
+		}
 		
 		// register
 		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null,true,null,null,null,null));
@@ -813,8 +855,15 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		clienttasks.unregister(null,null,null);
 		Map<String,String> facts = clienttasks.getFacts();
 		
-		// get the [handler_rhsm_log] level from /etc/rhsm/logging.conf	// needed after Bug 1266935 - Reduce default log level to INFO (from DEBUG)
-		String rhsmLogLevel = clienttasks.getConfFileParameter(clienttasks.rhsmLoggingConfFile, "handler_rhsm_log", "level");
+		// get the current rhsm logging level; INFO or DEBUG
+		String rhsmLogLevel=null;
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.17.10-1")) {	// RHEL7.3 commit d84b15f42c2e4521e130b939039960c0846b849c 1334916: Move logging configuration to rhsm.conf
+			rhsmLogLevel = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "logging", "default_log_level");
+		} else if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.14.2-1")) {	// commit 66aafd77dc629b921379f0e121421c1c21c0b787 Move to fileConfig based logging.
+			rhsmLogLevel = clienttasks.getConfFileParameter(clienttasks.rhsmLoggingConfFile, "handler_rhsm_log", "level");
+		} else {
+			rhsmLogLevel="DEBUG";	 // default
+		}
 		
 		// mark the rhsm.log file
 		String logMarker = System.currentTimeMillis()+" Testing verifyEnabledAllSlotsTestPluginHooksAreCalled_Test...";
