@@ -514,6 +514,11 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 			throw new SkipException("High Availability is not offered on arch '"+clienttasks.arch+"'.");
 		}
 		
+		if (clienttasks.arch.equals("aarch64")) {
+			serverProductId = "294";	// Red Hat Enterprise Linux Server for ARM
+			throw new SkipException("High Availability is not offered on arch '"+clienttasks.arch+"'.");
+		}
+		
 		if (clienttasks.redhatReleaseX.equals("5")) {
 			haPackage1	= "ipvsadm";	// or  Cluster_Administration-as-IN
 			haPackage2	= "system-config-cluster";	// or Cluster_Administration-bn-IN
