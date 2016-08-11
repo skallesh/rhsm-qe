@@ -21,6 +21,10 @@ import dbus.glib
 from subscription_manager.base_plugin import SubManPlugin
 requires_api_version = "1.0"
 
+# imported to support logging in subscription-manager >= 1.17.10-1 from Bug 1334916: Move logging configuration to rhsm.conf
+import logging
+log = logging.getLogger('rhsm-app.' + __name__)
+
 
 class AllSlotsTestPlugin(SubManPlugin):
     """Plugin with hooks for all slots"""
@@ -32,12 +36,12 @@ class AllSlotsTestPlugin(SubManPlugin):
 
     def __getattr__(self, attrname):
         if attrname.endswith('_hook'):
-           # if we get asked for a hook method, create one based on
-           # "handler", set a slot_name attribute on it, and bind it
-           # to our class with correct attribute name
+            # if we get asked for a hook method, create one based on
+            # "handler", set a slot_name attribute on it, and bind it
+            # to our class with correct attribute name
             def handler(self, conduit):
-                  conduit.log.info("Running handler for %s from slot %s defined in %s." % \
-                                    (attrname, handler.slot_name, self.name))
+                  conduit.log.info("Running handler for %s from slot %s defined in %s." % (attrname, handler.slot_name, self.name))
+                  log.info        ("Running handler for %s from slot %s defined in %s." % (attrname, handler.slot_name, self.name))
 
             # add a slot_name attr to the handler method obj itself
             setattr(handler, 'slot_name', attrname[:-5])

@@ -16,6 +16,10 @@
 from subscription_manager.base_plugin import SubManPlugin
 requires_api_version = "1.0"
 
+# imported to support logging in subscription-manager >= 1.17.10-1 from Bug 1334916: Move logging configuration to rhsm.conf
+import logging
+log = logging.getLogger('rhsm-app.' + __name__)
+
 
 class AutoAttachTestPlugin(SubManPlugin):
     """Plugin triggered when a consumer auto_attaches entitlements"""
@@ -30,7 +34,9 @@ class AutoAttachTestPlugin(SubManPlugin):
         #print dir(conduit)
         #print conduit.consumer_uuid
         conduit.log.info("Running pre_auto_attach_hook: system is about to auto-attach")
+        log.info        ("Running pre_auto_attach_hook: system is about to auto-attach")
         conduit.log.info("Running pre_auto_attach_hook: auto-attaching consumer is %s" % conduit.consumer_uuid)
+        log.info        ("Running pre_auto_attach_hook: auto-attaching consumer is %s" % conduit.consumer_uuid)
 
     def post_auto_attach_hook(self, conduit):
         """`post_auto_attach` hook
@@ -41,9 +47,13 @@ class AutoAttachTestPlugin(SubManPlugin):
         #print dir(conduit)
         #print conduit.consumer_uuid
         conduit.log.info("Running post_auto_attach_hook: system just auto-attached")
+        log.info        ("Running post_auto_attach_hook: system just auto-attached")
         conduit.log.info("Running post_auto_attach_hook: auto-attached consumer is %s" % conduit.consumer_uuid)
+        log.info        ("Running post_auto_attach_hook: auto-attached consumer is %s" % conduit.consumer_uuid)
         if conduit.entitlement_data is None:
             conduit.log.info("Running post_auto_attach_hook: auto-attached %d entitlements" % 0)
+            log.info        ("Running post_auto_attach_hook: auto-attached %d entitlements" % 0)
         else:
             conduit.log.info("Running post_auto_attach_hook: auto-attached %d entitlements" % len(conduit.entitlement_data))
+            log.info        ("Running post_auto_attach_hook: auto-attached %d entitlements" % len(conduit.entitlement_data))
 

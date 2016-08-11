@@ -16,6 +16,10 @@
 from subscription_manager.base_plugin import SubManPlugin
 requires_api_version = "1.0"
 
+# imported to support logging in subscription-manager >= 1.17.10-1 from Bug 1334916: Move logging configuration to rhsm.conf
+import logging
+log = logging.getLogger('rhsm-app.' + __name__)
+
 
 class RegisterConsumerTestPlugin(SubManPlugin):
     """Plugin triggered when a consumer registers"""
@@ -28,7 +32,9 @@ class RegisterConsumerTestPlugin(SubManPlugin):
             conduit: A RegistrationConduit()
         """
         conduit.log.info("Running pre_register_consumer_hook 2: system name %s is about to be registered." % conduit.name)
+        log.info        ("Running pre_register_consumer_hook 2: system name %s is about to be registered." % conduit.name)
         conduit.log.info("Running pre_register_consumer_hook 2: consumer facts count is %s" % len(conduit.facts))
+        log.info        ("Running pre_register_consumer_hook 2: consumer facts count is %s" % len(conduit.facts))
 
     def post_register_consumer_hook(self, conduit):
         """`post_register_consumer` hook
@@ -37,4 +43,5 @@ class RegisterConsumerTestPlugin(SubManPlugin):
             conduit: A RegistrationConduit()
         """
         conduit.log.info("Running post_register_consumer_hook 2: consumer uuid %s is now registered." % conduit.consumer['uuid'])
+        log.info        ("Running post_register_consumer_hook 2: consumer uuid %s is now registered." % conduit.consumer['uuid'])
 

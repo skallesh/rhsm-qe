@@ -16,6 +16,10 @@
 from subscription_manager.base_plugin import SubManPlugin
 requires_api_version = "1.0"
 
+# imported to support logging in subscription-manager >= 1.17.10-1 from Bug 1334916: Move logging configuration to rhsm.conf
+import logging
+log = logging.getLogger('rhsm-app.' + __name__)
+
 
 class ProductIdInstallTestPlugin(SubManPlugin):
     """Plugin triggered when product id certs are installed"""
@@ -30,7 +34,9 @@ class ProductIdInstallTestPlugin(SubManPlugin):
         #print dir(conduit)
         #print conduit.consumer_uuid
         conduit.log.info("Running pre_product_id_install_hook: yum product-id plugin is about to install a product cert")
+        log.info        ("Running pre_product_id_install_hook: yum product-id plugin is about to install a product cert")
         #conduit.log.info("Running pre_product_id_install_hook: %s product_ids are about to be installed" % len(conduit.product_list))
+        #log.info        ("Running pre_product_id_install_hook: %s product_ids are about to be installed" % len(conduit.product_list))
 
     def post_product_id_install_hook(self, conduit):
         """`post_product_id_install` hook
@@ -41,7 +47,9 @@ class ProductIdInstallTestPlugin(SubManPlugin):
         #print dir(conduit)
         #print conduit.consumer_uuid
         conduit.log.info("Running post_product_id_install_hook: yum product-id plugin just installed a product cert")
+        log.info        ("Running post_product_id_install_hook: yum product-id plugin just installed a product cert")
         conduit.log.info("Running post_product_id_install_hook: %s product_ids were just installed" % len(conduit.product_list))
+        log.info        ("Running post_product_id_install_hook: %s product_ids were just installed" % len(conduit.product_list))
 
         # print out the product cert list
         for product_cert in conduit.product_list:
@@ -53,4 +61,5 @@ class ProductIdInstallTestPlugin(SubManPlugin):
             #print dir(product_cert.products[0])
             for product in product_cert.products:
                 conduit.log.info("Running post_product_id_install_hook: product_id %s was just installed" % product.id)
+                log.info        ("Running post_product_id_install_hook: product_id %s was just installed" % product.id)
         
