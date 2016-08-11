@@ -11,6 +11,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.xmlrpc.XmlRpcException;
 import org.testng.SkipException;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterGroups;
@@ -28,6 +29,7 @@ import rhsm.data.YumRepo;
 
 import com.redhat.qe.Assert;
 import com.redhat.qe.auto.bugzilla.BlockedByBzBug;
+import com.redhat.qe.auto.bugzilla.BzChecker;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
@@ -348,6 +350,9 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 		// verify the image will run subscription-manager >= 1.12.4-1
 		//	[root@jsefler-7 ~]# docker run --rm docker-registry.usersys.redhat.com/brew/rhel7:latest rpm -q subscription-manager
 		//	subscription-manager-1.12.4-1.el7.x86_64
+		// Bug 1343139 - Docker containers don't start when using user namespace and selinux
+		//	[root@bkr-hv03-guest29 ~]# docker run --rm registry.access.redhat.com/rhel7:latest rpm -q subscription-manager
+		//	docker: Error response from daemon: Cannot start container cb6d22bc66ac3304e2b11482b7d9b64091fbdf536482ae69aa8dbb22d35d904e: [9] System error: exit status 1.
 		SSHCommandResult versionResult = RemoteFileTasks.runCommandAndAssert(client, "docker run --rm "+dockerImage+" rpm -q subscription-manager", 0);
 		String subscriptionManagerVersionInDockerImage = versionResult.getStdout().trim().replace("subscription-manager"+"-", "");
 		Assert.assertTrue(clienttasks.isVersion(subscriptionManagerVersionInDockerImage, ">=", "1.12.4-1"), "Expecting the version of subscription-manager baked inside image '"+dockerImage+"' to be >= 1.12.4-1 (first docker compatible version of subscription-manager)");
@@ -392,13 +397,12 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(!entitlementCertsOnHost.isEmpty(),"When the host has registered with autosubscribe, we expect to have been granted at least one entitlement.");
 		
 		// determine what products are installed on the running docker image
-		String productCertDir = clienttasks.getConfParameter("productcertdir").replaceFirst("/$", "");	// strip of trailing /
-		SSHCommandResult lsResultOnRunningDockerImage = client.runCommandAndWait("docker run --rm "+dockerImage+" ls "+productCertDir);
-		//	201407071248:40.755 - FINE: ssh root@jsefler-7.usersys.redhat.com docker run --rm docker-registry.usersys.redhat.com/brew/rhel7:latest ls /etc/pki/product
-		//	201407071248:41.023 - FINE: Stdout: 69.pem
+		SSHCommandResult lsResultOnRunningDockerImage = client.runCommandAndWait("docker run --rm "+dockerImage+" find /etc/pki/product* -name *.pem");	// assumes the productCertDir config within the image is /etc/pki/product
+		//	[root@bkr-hv03-guest07 ~]# docker run --rm registry.access.redhat.com/rhel7:latest find /etc/pki/product* -name *.pem
+		//	/etc/pki/product/69.pem
+		//	/etc/pki/product-default/69.pem
 		List<ProductCert> productCertsOnRunningDockerImage = new ArrayList<ProductCert>();
 		for (String productCertFileOnRunningDockerImage : lsResultOnRunningDockerImage.getStdout().trim().split("\n")) {
-			productCertFileOnRunningDockerImage = productCertDir+"/"+productCertFileOnRunningDockerImage;
 			SSHCommandResult rctCatCertResultOnRunningDockerImage = RemoteFileTasks.runCommandAndAssert(client, "docker run --rm "+dockerImage+" rct cat-cert "+productCertFileOnRunningDockerImage, 0);
 			//	201407071250:40.755 - FINE: ssh root@jsefler-7.usersys.redhat.com docker run --rm docker-registry.usersys.redhat.com/brew/rhel7:latest rct cat-cert /etc/pki/product/69.pem
 			//	201407071250:43.954 - FINE: Stdout: 
@@ -690,7 +694,7 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 		}
 	}
 	@Test(	description="Verify that entitlements providing containerimage content are copied to relevant directories when attached via auto-heal (as governed by the subscription-manager-plugin-container package)",
-			groups={"AcceptanceTests","blockedByBug-1165692","blockedByBug-1344500"},
+			groups={"AcceptanceTests","blockedByBug-1165692","blockedByBug-1344500","blockedByBug-1343139"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyContainerConfigurationsAreSetAfterAutoHealingAndUnsubscribing_Test() {
@@ -873,6 +877,37 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 			}
 		}
 	}
+	
+	
+	
+	// TEMPORARY WORKAROUND FOR BUG 1343139 - Docker containers don't start when using user namespace and selinux
+	@BeforeClass(groups={"setup"})
+	public void workaroundBug1343139BeforeClass() {
+		if (clienttasks!=null) {
+			String bugId="1343139"; // Bug 1343139 - Docker containers don't start when using user namespace and selinux
+			boolean invokeWorkaroundWhileBugIsOpen = true;
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			if (invokeWorkaroundWhileBugIsOpen && selinuxModeBeforeClass==null) {
+				String bug1343139ErrorMsg = "docker: Error response from daemon: Cannot start container ab37bcb60f893a49ebd6b62f02de4a2ca9b2b753f6fc0240d0b367badb7bdb39: [9] System error: exit status 1.";
+				log.warning("Turning off selinux while bug '"+bugId+"' is open to avoid: "+bug1343139ErrorMsg);
+
+				selinuxModeBeforeClass = client.runCommandAndWait("getenforce").getStdout().trim();	// Enforcing
+				client.runCommandAndWait("setenforce Permissive");
+			}
+		}
+	}
+	@AfterClass(groups={"setup"})
+	public void workaroundBug1343139AfterClass() {
+		if (clienttasks!=null) {
+			if (selinuxModeBeforeClass!=null) {
+				// restore selinux back to its original mode captured in workaroundBug1343139BeforeClass()
+				client.runCommandAndWait("setenforce "+selinuxModeBeforeClass);
+			}
+		}
+
+	}
+	protected String selinuxModeBeforeClass=null;	// Enforcing or Permissive
+	// END OF WORKAROUND
 	
 	
 	// Protected methods ***********************************************************************

@@ -65,7 +65,7 @@ public class SubscriptionManagerTasks {
 	public final String command				= "subscription-manager";
 	public final String redhatRepoFile		= "/etc/yum.repos.d/redhat.repo";
 	public final String rhsmConfFile		= "/etc/rhsm/rhsm.conf";
-	public final String rhsmLoggingConfFile	= "/etc/rhsm/logging.conf";
+	public final String rhsmLoggingConfFile	= "/etc/rhsm/logging.conf";	// NO LONGER EXISTS in subscription-manager-1.17.10-1	// RHEL7.3 commit d84b15f42c2e4521e130b939039960c0846b849c 1334916: Move logging configuration to rhsm.conf
 	public final String factsDir			= "/etc/rhsm/facts";
 	public final String rhsmUpdateFile		= "/var/run/rhsm/update";
 	public final String yumPluginConfFileForSubscriptionManager	= "/etc/yum/pluginconf.d/subscription-manager.conf"; // "/etc/yum/pluginconf.d/rhsmplugin.conf"; renamed by dev on 11/24/2010
@@ -127,6 +127,7 @@ public class SubscriptionManagerTasks {
 	public String vcpu								= null;	// of the client
 	public String variant							= null;	// of the client
 	public String releasever						= null;	// of the client; 5Server 5Client
+	public Boolean isFipsEnabled					= null; // of the client	sysctl crypto.fips_enabled => crypto.fips_enabled = 1
 	
 	protected String currentlyRegisteredUsername	= null;	// most recent username used during register
 	protected String currentlyRegisteredPassword	= null;	// most recent password used during register
@@ -146,9 +147,8 @@ public class SubscriptionManagerTasks {
 		//ipaddr			= sshCommandRunner.runCommandAndWait("for DEVICE in $(ip addr show | egrep 'state (UP|UNKNOWN)' | cut -f2 -d':' | sed 's/ //'); do ip addr show $DEVICE | egrep 'scope global .*'$DEVICE | cut -d'/' -f1 | sed 's/ *inet *//g'; done;").getStdout().trim();	// state is UNKNOWN on ppc64	// does not know how to choose when you have a physical system with two active ip devices - default and bridge
 		ipaddr			= sshCommandRunner.runCommandAndWait("ip addr show $(ip route | awk '$1 == \"default\" {print $5}' | uniq) | egrep 'inet [[:digit:]]+\\.[[:digit:]]+\\.[[:digit:]]+\\.[[:digit:]]+.* scope global' | awk '{print $2}' | cut -d'/' -f1").getStdout().trim();	// Note: this value is identical to facts net.interface.eth0.ipv4_address and network.ipv4_address but NOT on an openstack instance where network.ipv4_address is different
 		arch			= sshCommandRunner.runCommandAndWait("uname --machine").getStdout().trim();  // uname -i --hardware-platform :print the hardware platform or "unknown"	// uname -m --machine :print the machine hardware name
-		releasever		= sshCommandRunner.runCommandAndWait("rpm -q --qf \"%{VERSION}\\n\" --whatprovides /etc/redhat-release").getStdout().trim();  // e.g. 5Server		// cut -f 5 -d : /etc/system-release-cpe	// rpm -q --queryformat "%{VERSION}\n" --whatprovides system-release		// rpm -q --queryformat "%{VERSION}\n" --whatprovides /etc/redhat-release
-
-		// TODO NOTES: on rhel7 releasever is 7.0, we may need to use info in cat /etc/system-release-cpe or cat /etc/os-release  see: rpm -ql redhat-release-server
+		//releasever		= sshCommandRunner.runCommandAndWait("rpm -q --qf \"%{VERSION}\\n\" --whatprovides /etc/redhat-release").getStdout().trim();  // e.g. 5Server		// cut -f 5 -d : /etc/system-release-cpe	// rpm -q --queryformat "%{VERSION}\n" --whatprovides system-release		// rpm -q --queryformat "%{VERSION}\n" --whatprovides /etc/redhat-release	// does not work on RHEL7, returns "7.0" instead of "7Server"
+		releasever		= sshCommandRunner.runCommandAndWait("python -c 'import yum, pprint; yb = yum.YumBase(); pprint.pprint(yb.conf.yumvar[\"releasever\"], width=1)' | grep -v 'Loaded plugins' | cut -f 2 -d \\'").getStdout().trim();  // e.g. 5Server 6Server 7Server	// python -c 'import yum, pprint; yb = yum.YumBase(); pprint.pprint(yb.conf.yumvar["releasever"], width=1)' | grep -v 'Loaded plugins' | cut -f 2 -d \'
 		
 		//		rhsmComplianceD	= sshCommandRunner.runCommandAndWait("rpm -ql subscription-manager | grep libexec/rhsm").getStdout().trim();
 		redhatRelease	= sshCommandRunner.runCommandAndWait("cat /etc/redhat-release").getStdout().trim();
@@ -178,6 +178,9 @@ public class SubscriptionManagerTasks {
 			redhatReleaseX = "7";
 		}
 		*/
+		
+		// FIPS mode
+		isFipsEnabled = sshCommandRunner.runCommandAndWait("sysctl crypto.fips_enabled").getStdout().trim().equals("crypto.fips_enabled = 1")? true:false;
 		
 		// predict sockets on the system   http://libvirt.org/formatdomain.html#elementsCPU
 		/* 5/6/2013: DON'T PREDICT THIS USING lscpu ANY MORE.  IT LEADS TO TOO MANY TEST FAILURES TO TROUBLESHOOT.  INSTEAD, RELY ON FactsTests.MatchingCPUSocketsFact_Test() TO ASSERT BUGZILLA Bug 751205 - cpu_socket(s) facts value occasionally differs from value reported by lscpu (which is correct?)
@@ -234,13 +237,13 @@ if (false) {
 			log.warning("When no '"+cpuCoresPerSocketFact+"' fact is present, the hardware rules should treat this system as a 1 core_per_socket system.  Therefore automation will assume this is a one core_per_socket system.");
 			coresPerSocket = "1";
 		}
-		cores = String.valueOf(Integer.valueOf(sockets)*Integer.valueOf(coresPerSocket));	//  (will be ingored for compliance on a virtual system)
+		cores = String.valueOf(Integer.valueOf(sockets)*Integer.valueOf(coresPerSocket));	//  (will be ignored for compliance on a virtual system)
 		
 		// ram
-		// ram = getFactValue("memory.memtotal"); //TODO determine what the ram is on the system; is thgis adequate?
+		// ram = getFactValue("memory.memtotal"); //TODO determine what the ram is on the system; is this adequate?
 		
 		// vcpu
-		vcpu = cores;	// vcpu count on a virtual system is treated as equivalent to cores (will be ingored for compliance on a physical system)
+		vcpu = cores;	// vcpu count on a virtual system is treated as equivalent to cores (will be ignored for compliance on a physical system)
 	}
 	
 	
@@ -2214,10 +2217,29 @@ if (false) {
 			}
 		}
 		
-		// assert that only one rhel product cert is installed
-		if (rhelProductCerts.size()>1) log.warning("These '"+providingTag+"' product certs are installed: "+rhelProductCerts); 
+		// log a warning when more than one product cert providing tag rhel-X is installed 
+		if (rhelProductCerts.size()>1) log.warning("These "+rhelProductCerts.size()+" '"+providingTag+"' product certs are installed: "+rhelProductCerts); 
+
+		// HTB Product Certs (230, 231) also provide the base rhel-7 tags and the content sets for *rhel-7-<variant>-htb-rpms repos require tag rhel-7-<variant>; hence all of the rhel7 htb products are "OS" branded products  (not the same for rhel6)
+		// let's ignore it since it could have been legitimately added by installing a package from an htb repo 
+		//	Product:
+		//		ID: 230
+		//		Name: Red Hat Enterprise Linux 7 Server High Touch Beta
+		//		Version: 7.2 HTB
+		//		Arch: x86_64
+		//		Tags: rhel-7,rhel-7-server
+		//		Brand Type: 
+		//		Brand Name: 
+		for (String htbProductId : Arrays.asList(new String[]{"230","231"})) {
+			ProductCert htbProductCert = ProductCert.findFirstInstanceWithCaseInsensitiveMatchingFieldFromList("productId", htbProductId, rhelProductCerts);
+			if (htbProductCert!=null && htbProductCert.productNamespace.providedTags.contains(providingTag)) {
+				log.warning("Ignoring this installed HTB product cert prior to assertion that only one installed product provides RHEL tag '"+providingTag+"': "+htbProductCert);
+				rhelProductCerts.remove(htbProductCert);
+			}
+		}
+		
+		// assert that only one rhel product cert is installed (after purging HTB and an untrumped product-default cert)
 		Assert.assertEquals(rhelProductCerts.size(), 1, "Only one product cert is installed that provides RHEL tag '"+providingTag+"' (this assert accounts for /etc/pki/product-default/ certs that are trumped by /etc/pki/product/ certs)");
-		Assert.assertTrue(rhelProductCerts.size()<=1, "No more than one product cert is installed that provides RHEL tag '"+providingTag+"' (actual='"+rhelProductCerts.size()+"').");
 		
 		// return it
 		if (rhelProductCerts.isEmpty()) return null;
@@ -2483,6 +2505,16 @@ if (false) {
 			SSHCommandResult ipv4_addressResult = RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "curl --stderr /dev/null http://169.254.169.254/latest/meta-data/public-ipv4", 0);		// will timeout on a non-openstack instance and then fail the exit code assert (probably with code 7)
 			ipv4_address = ipv4_addressResult.getStdout().trim();
 			Assert.assertMatch(ipv4_address, "\\d+\\.\\d+\\.\\d+\\.\\d+", "Validated format of ipv4 address '"+ipv4_address+"' detected from openstack curl query above.");
+		}
+		
+		// some beaker systems (e.g. cloud-qe-05.idmqe.lab.eng.bos.redhat.com and tigger.idmqe.lab.eng.bos.redhat.com) started failing with a network.ipv4_address=127.0.0.1 which leads to test failures
+		// Solution: https://github.com/martinp/ipd has been installed on auto-services.usersys.redhat.com:5555
+		//	[root@jsefler-rhel7 ~]# curl auto-services.usersys.redhat.com:5555
+		//	10.16.7.221
+		ipv4_address = "127.0.0.1";
+		if (ipv4_address.equals("127.0.0.1")) {
+			log.warning("This system could not determine it's own network.ipv4_address fact.  Assuming https://github.com/martinp/ipd is installed on "+SubscriptionManagerBaseTestScript.getProperty("sm.noauthproxy.hostname","auto-services.usersys.redhat.comXX")+":5555 to detect the ipaddress of this system.");
+			ipv4_address = RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "curl --stderr /dev/null "+SubscriptionManagerBaseTestScript.getProperty("sm.noauthproxy.hostname","auto-services.usersys.redhat.comXX")+":5555", 0).getStdout().trim();
 		}
 		
 		return ipv4_address;
@@ -5262,9 +5294,17 @@ if (false) {
 			Assert.assertTrue(Integer.valueOf(sshCommandResult.getExitCode())<=1, "The exit code ("+sshCommandResult.getExitCode()+") from the subscribe --auto command does not indicate a failure (exit code 0 indicates an entitlement was granted, 1 indicates an entitlement was not granted, 255 indicates a failure).");
 		else if (!auto && file==null && (poolIds==null||poolIds.isEmpty()) && isPackageVersion("subscription-manager",">=","1.14.1-1"))	// defaults to auto
 			Assert.assertTrue(Integer.valueOf(sshCommandResult.getExitCode())<=1, "The exit code ("+sshCommandResult.getExitCode()+") from the subscribe command (defaulting to autosubscribe) does not indicate a failure (exit code 0 indicates an entitlement was granted, 1 indicates an entitlement was not granted, 255 indicates a failure).");
-		else
+		else {
+			// TEMPORARY WORKAROUND
+			boolean invokeWorkaroundWhileBugIsOpen = true;
+			String bugId="1287610"; 	// Bug 1287610 - yum message in output when FIPS is enabled
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			if (invokeWorkaroundWhileBugIsOpen && redhatReleaseX.equals("7") && isFipsEnabled) {
+				log.warning("Skipping the stderr assertion from subscribe on rhel '"+redhatReleaseXY+"' while FIPS bug '"+bugId+"' is open");
+			} else
+			// END OF WORKAROUND
 			Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the subscribe command indicates a success.");
-			
+		}
 		return sshCommandResult;
 	}
 	
@@ -5865,6 +5905,14 @@ if (false) {
 		
 		// assert results
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the unsubscribe command indicates a success.");
+		// TEMPORARY WORKAROUND
+		boolean invokeWorkaroundWhileBugIsOpen = true;
+		String bugId="1287610"; 	// Bug 1287610 - yum message in output when FIPS is enabled
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen && redhatReleaseX.equals("7") && isFipsEnabled) {
+			log.warning("Skipping the stderr assertion from unsubscribe on rhel '"+redhatReleaseXY+"' while FIPS bug '"+bugId+"' is open");
+		} else
+		// END OF WORKAROUND
 		Assert.assertEquals(sshCommandResult.getStderr(), "", "Stderr from the unsubscribe.");
 		return sshCommandResult;
 	}
@@ -5934,6 +5982,14 @@ if (false) {
 				expectedStdoutMsg = "   Entitlement Certificate with serial number '"+serialNumber+"' could not be found.";
 				Assert.assertTrue(result.getStdout().contains(expectedStdoutMsg), "Stdout from unsubscribe contains expected message: "+expectedStdoutMsg);
 			}
+			// TEMPORARY WORKAROUND
+			invokeWorkaroundWhileBugIsOpen = true;
+			bugId="1287610"; 	// Bug 1287610 - yum message in output when FIPS is enabled
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			if (invokeWorkaroundWhileBugIsOpen && redhatReleaseX.equals("7") && isFipsEnabled) {
+				log.warning("Skipping the stderr assertion from unsubscribe on rhel '"+redhatReleaseXY+"' while FIPS bug '"+bugId+"' is open");
+			} else
+			// END OF WORKAROUND
 			Assert.assertEquals(result.getStderr(),"", "Stderr from unsubscribe.");
 			Assert.assertEquals(result.getExitCode(), Integer.valueOf(1), "ExitCode from unsubscribe when the serial's entitlement cert file ("+certFilePath+") does not exist.");	// changed by bug 873791
 			return false;
@@ -5972,6 +6028,14 @@ if (false) {
 		Assert.assertTrue(result.getStdout().contains(expectedStdoutMsg), "Stdout from unsubscribe contains expected message: "+expectedStdoutMsg);
 		expectedStdoutMsg = "   "+serialNumber;	// added by bug 867766
 		Assert.assertTrue(result.getStdout().contains(expectedStdoutMsg), "Stdout from unsubscribe contains expected message: "+expectedStdoutMsg);
+		// TEMPORARY WORKAROUND
+		invokeWorkaroundWhileBugIsOpen = true;
+		bugId="1287610"; 	// Bug 1287610 - yum message in output when FIPS is enabled
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen && redhatReleaseX.equals("7") && isFipsEnabled) {
+			log.warning("Skipping the stderr assertion from unsubscribe on rhel '"+redhatReleaseXY+"' while FIPS bug '"+bugId+"' is open");
+		} else
+		// END OF WORKAROUND
 		Assert.assertEquals(result.getStderr(),"", "Stderr from unsubscribe.");
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(0), "ExitCode from unsubscribe when the serial's entitlement cert file ("+certFilePath+") does exist.");	// added by bug 873791
 
@@ -6632,8 +6696,11 @@ if (false) {
 	}
 	
 	
-	@Deprecated	// replaced by public ArrayList<String> getYumListAvailable (String options)
+	//@Deprecated	// replaced by public ArrayList<String> getYumListAvailable (String options)
 	public ArrayList<String> getYumListOfAvailablePackagesFromRepo (String repoLabel) {
+		if (true) return getYumListAvailable("--disablerepo=* --enablerepo="+repoLabel);
+		// the deprecated implementation of this method follows...
+		
 		ArrayList<String> packages = new ArrayList<String>();
 		sshCommandRunner.runCommandAndWaitWithoutLogging("killall -9 yum");
 
@@ -6897,7 +6964,9 @@ if (false) {
 
 			// choose a group that has "Mandatory Packages:"
 			String mandatoryPackages = "Mandatory Packages:";
-			if (sshCommandRunner.runCommandAndWait("yum groupinfo \""+groups.get(i)+"\" | grep \""+mandatoryPackages+"\"").getStdout().trim().equals(mandatoryPackages)) return group;
+			if (sshCommandRunner.runCommandAndWait("yum groupinfo \""+groups.get(i)+"\" | grep \""+mandatoryPackages+"\"").getStdout().trim().equals(mandatoryPackages)) {
+				return group;
+			}
 		}
 		return null;
 	}
@@ -7516,11 +7585,30 @@ if (false) {
 		return yumRemovePackage (pkg, null);
 	}
 	
+	/**
+	 * Attempt to: yum -y groupinstall "group" AND assert a "Complete!" result
+	 * @param group
+	 * @return SSHCommandResult from the attempt to groupinstall
+	 *  TODO IS THIS TRUE? WARNING: Just because a group appears in yum grouplist, that does not mean the package members in the group are available for install.  There are also some rules regarding how packages are marked to indicate whether or not the group is considered installed (see man yum)
+	 *  Learn more about groups at https://www.certdepot.net/rhel7-get-started-package-groups/
+	 */
 	public SSHCommandResult yumInstallGroup (String group) {
-		String command = "yum -y groupinstall \""+group+"\" --disableplugin=rhnplugin"; // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
-		SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(sshCommandRunner,command, 0, "^Complete!$",null);
+		SSHCommandResult result = yumInstallGroup_(group);
+		Assert.assertEquals(result.getExitCode(), Integer.valueOf(0), "ExitCode from attempt to yum groupinstall '"+group+"'.");
+		Assert.assertContainsMatch(result.getStdout(), "^Complete!$", "Stdout from attempt to yum groupinstall '"+group+"'.");
 		Assert.assertTrue(!this.yumGroupList("Available", ""/*"--disablerepo=* --enablerepo="+repo*/).contains(group),"Yum group is NOT Available after calling '"+command+"'.");
 		return result;
+	}
+	/**
+	 * Attempt to: yum -y groupinstall "group" WITHOUT asserting result
+	 * @param group
+	 * @return SSHCommandResult from the attempt to groupinstall
+	 *  WARNING: Just because a group appears in yum grouplist, that does not mean the package members in the group are available for install.  There are also some rules regarding how packages are marked to indicate whether or not the group is considered installed (see man yum)
+	 *  Learn more about groups at https://www.certdepot.net/rhel7-get-started-package-groups/
+	 */
+	public SSHCommandResult yumInstallGroup_ (String group) {
+		String command = "yum -y groupinstall \""+group+"\" --disableplugin=rhnplugin"; // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
+		return this.sshCommandRunner.runCommandAndWait(command);
 	}
 	
 	public SSHCommandResult yumRemoveGroup (String group) {
@@ -8305,6 +8393,12 @@ if (false) {
 		//	Stderr:
 		//	ExitCode: null
 		
+		//	ssh root@ibm-z10-77.rhts.eng.bos.redhat.com subscription-manager list --available
+		//	Stdout:
+		//	Stderr: Unable to serialize objects to JSON.
+		//	ExitCode: 70
+		
+		
 		//	2014-04-08 16:41:56,930 [INFO] subscription-manager @managercli.py:299 - Server Versions: {'candlepin': 'Unknown', 'server-type': 'Red Hat Subscription Management'}
 		//	2014-04-08 16:41:56,933 [DEBUG] subscription-manager @connection.py:418 - Loaded CA certificates from /etc/rhsm/ca/: candlepin-stage.pem, redhat-uep.pem
 		//	2014-04-08 16:41:56,933 [DEBUG] subscription-manager @connection.py:450 - Making request: DELETE /subscription/consumers/892d9649-8079-43fe-ad04-2c3a83673f6e
@@ -8796,6 +8890,56 @@ if (false) {
 			issue = "[Errno -3] Temporary failure in name resolution";
 			if (getTracebackCommandResult.getStdout().contains(issue) || result.getStderr().contains(issue)) {
 				String bugId = "1302798"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1302798 - gaierror: [Errno -3] Temporary failure in name resolution
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				if (invokeWorkaroundWhileBugIsOpen) {
+					throw new SkipException("Encounterd a '"+issue+"' and could not complete this test while bug '"+bugId+"' is open.");
+				}
+			}
+			// END OF WORKAROUND
+			
+			// TEMPORARY WORKAROUND FOR BUG
+			//	2016-08-01 20:00:32.143  FINE: ssh root@ibm-z10-77.rhts.eng.bos.redhat.com subscription-manager list --available
+			//	2016-08-01 20:00:51.651  FINE: Stdout:
+			//	2016-08-01 20:00:51.651  FINE: Stderr: Unable to serialize objects to JSON.
+			//
+			//	2016-08-01 20:00:51.651  FINE: ExitCode: 70
+			//	2016-08-01 20:00:51.651  FINE: ssh root@ibm-z10-77.rhts.eng.bos.redhat.com LINE_NUMBER=$(grep --line-number 'Making request:' /var/log/rhsm/rhsm.log | tail --lines=1 | cut --delimiter=':' --field=1); if [ -n "$LINE_NUMBER" ]; then tail -n +$LINE_NUMBER /var/log/rhsm/rhsm.log; fi;
+			//	2016-08-01 20:00:51.815  WARNING: Last request from /var/log/rhsm/rhsm.log:
+			//	2016-08-01 20:00:58,186 [DEBUG] subscription-manager:30729 @connection.py:573 - Making request: GET /subscription/owners/7964055/pools?consumer=4b7a3fff-2b66-4a82-9741-fb4821e4b364
+			//	2016-08-01 20:01:14,852 [DEBUG] subscription-manager:30729 @connection.py:602 - Response: status=500
+			//	2016-08-01 20:01:14,852 [ERROR] subscription-manager:30729 @managercli.py:174 - exception caught in subscription-manager
+			//	2016-08-01 20:01:14,852 [ERROR] subscription-manager:30729 @managercli.py:175 - Unable to serialize objects to JSON.
+			//	Traceback (most recent call last):
+			//	  File "/usr/sbin/subscription-manager", line 81, in <module>
+			//	    sys.exit(abs(main() or 0))
+			//	  File "/usr/sbin/subscription-manager", line 72, in main
+			//	    return managercli.ManagerCLI().main()
+			//	  File "/usr/lib/python2.7/site-packages/subscription_manager/managercli.py", line 2732, in main
+			//	    return CLI.main(self)
+			//	  File "/usr/lib/python2.7/site-packages/subscription_manager/cli.py", line 160, in main
+			//	    return cmd.main()
+			//	  File "/usr/lib/python2.7/site-packages/subscription_manager/managercli.py", line 526, in main
+			//	    return_code = self._do_command()
+			//	  File "/usr/lib/python2.7/site-packages/subscription_manager/managercli.py", line 2321, in _do_command
+			//	    filter_string=self.options.filter_string)
+			//	  File "/usr/lib/python2.7/site-packages/subscription_manager/managerlib.py", line 314, in get_available_entitlements
+			//	    overlapping, uninstalled, text, filter_string)
+			//	  File "/usr/lib/python2.7/site-packages/subscription_manager/managerlib.py", line 519, in get_filtered_pools_list
+			//	    self.identity.uuid, self.facts, active_on=active_on, filter_string=filter_string):
+			//	  File "/usr/lib/python2.7/site-packages/subscription_manager/managerlib.py", line 278, in list_pools
+			//	    active_on=active_on, owner=ownerid, filter_string=filter_string)
+			//	  File "/usr/lib64/python2.7/site-packages/rhsm/connection.py", line 1260, in getPoolsList
+			//	    results = self.conn.request_get(method)
+			//	  File "/usr/lib64/python2.7/site-packages/rhsm/connection.py", line 694, in request_get
+			//	    return self._request("GET", method)
+			//	  File "/usr/lib64/python2.7/site-packages/rhsm/connection.py", line 611, in _request
+			//	    self.validateResponse(result, request_type, handler)
+			//	  File "/usr/lib64/python2.7/site-packages/rhsm/connection.py", line 661, in validateResponse
+			//	    raise RestlibException(response['status'], error_msg, response.get('headers'))
+			//	RestlibException: Unable to serialize objects to JSON.
+			issue = "Unable to serialize objects to JSON.";
+			if (getTracebackCommandResult.getStdout().contains(issue) || result.getStderr().contains(issue)) {
+				String bugId = "1362535"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1362535 - Unable to serialize objects to JSON.
 				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 				if (invokeWorkaroundWhileBugIsOpen) {
 					throw new SkipException("Encounterd a '"+issue+"' and could not complete this test while bug '"+bugId+"' is open.");

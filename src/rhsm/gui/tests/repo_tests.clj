@@ -276,6 +276,8 @@
       (sleep 1000)
       (tasks/ui checkrow :repo-table row-num 1)
       (sleep 1000)
+      (tasks/ui click :apply)
+      (sleep 2000)
       (if-not (and (tasks/has-state? :repo-remove-override "enabled")
                    (tasks/has-state? :repo-remove-override "sensitive"))
         (do
@@ -293,6 +295,9 @@
   enable_repo_remove_all_overrides
   "Enable all repos and click remove all override and check state"
   [_ repo]
+  (when (-> (get-release :true) :version (= "7.3"))
+    (throw (SkipException.
+            (str "Skip due to a problem with toggle checkbox in RHEL7.3"))))
   (assert-and-open-repo-dialog)
   (tasks/ui selectrow :repo-table repo)
   (sleep 3000)

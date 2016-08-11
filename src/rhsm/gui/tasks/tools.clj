@@ -130,10 +130,10 @@
                     locale
                     "'); print locale.nl_langinfo(locale.D_FMT)\"")
            pyformat (clojure.string/trim (:stdout (run-command cmd)))
-           transform (fn [s] (cond (= s "%d") "\\\\d{2}"
-                                  (= s "%m") "\\\\d{2}"
-                                  (= s "%y") "\\\\d{2}"
-                                  (= s "%Y") "\\\\d{4}"))]
+           transform (fn [s] (cond (= s "%d") "\\d{2}"
+                                  (= s "%m") "\\d{2}"
+                                  (= s "%y") "\\d{2}"
+                                  (= s "%Y") "\\d{4}"))]
        (re-pattern (clojure.string/replace pyformat #"%\w{1}" #(transform %1)))))
   ([]
      (get-locale-regex (get-default-locale))))

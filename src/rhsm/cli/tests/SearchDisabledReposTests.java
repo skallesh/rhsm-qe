@@ -820,15 +820,26 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(0),"Exit code from attempt to successfully install '"+rhelOptionalPackage+"' that requires '"+rhelBasePackage+"'.");
 		
 		// assert stderr results
-		// TEMPORARY WORKAROUND
-		boolean invokeWorkaroundWhileBugIsOpen = true;
-		String bugId="1276747"; // Bug 1276747 - rhel-7-for-system-z-rpms/7Server/s390x/productid [Errno -1] Metadata file does not match checksum
-		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
-		if (invokeWorkaroundWhileBugIsOpen && rhelBaseRepoId.equals("rhel-7-for-system-z-rpms")) {
-			log.warning("Skipping stderr assertion while bugId '"+bugId+"' is open.");
-		} else
-		// END OF WORKAROUND
-		// TEMPORARY WORKAROUND
+		String stderrFiltered = result.getStderr();
+		// NOTE: The following stderr is possible when new products have not yet been released?
+		//       Let's workaround this by filtering it from stderr before asserting an empty stderr
+
+		// 201607291254:11.409 - FINE: Stderr: 
+		//	https://cdn.redhat.com/content/dist/rhel/workstation/7/7Workstation/x86_64/insights-client/1/os/repodata/repomd.xml: [Errno 14] HTTPS Error 404 - Not Found
+		//	Trying other mirror.
+		//	To address this issue please refer to the below knowledge base article 
+		//
+		//	https://access.redhat.com/articles/1320623
+		//
+		//	If above article doesn't help to resolve this issue please open a ticket with Red Hat Support.
+		//
+		//	https://cdn.redhat.com/content/dist/rhel/workstation/7/7Workstation/x86_64/openstack-tools/9/os/repodata/repomd.xml: [Errno 14] HTTPS Error 404 - Not Found
+		//	Trying other mirror.
+		//	https://cdn.redhat.com/content/dist/rhel/workstation/7/7Workstation/x86_64/ceph-tools/2/os/repodata/repomd.xml: [Errno 14] HTTPS Error 404 - Not Found
+		//	Trying other mirror.
+		//	https://cdn.redhat.com/content/dist/rhel/workstation/7/7Workstation/x86_64/openstack-tools/10/os/repodata/repomd.xml: [Errno 14] HTTPS Error 404 - Not Found
+		//	Trying other mirror.
+		
 		//	[root@hp-dl585g5-01 ~]# cat /tmp/stderr 
 		//	https://cdn.redhat.com/content/dist/rhel/computenode/6/6ComputeNode/x86_64/sat-tools/6.2/os/repodata/repomd.xml: [Errno 14] PYCURL ERROR 22 - "The requested URL returned error: 404 Not Found"
 		//	Trying other mirror.
@@ -837,9 +848,7 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 		//	https://access.redhat.com/articles/1320623
 		//
 		//	If above article doesn't help to resolve this issue please open a ticket with Red Hat Support.
-		if (clienttasks.redhatReleaseX.equals("6") && result.getStderr().contains("/sat-tools/6.2/os/repodata/repomd.xml: [Errno 14] PYCURL ERROR 22")) {
-			log.warning("Skipping stderr.isEmpty() assertion on [Errno 14] PYCURL ERROR 22 for 404 Not Found /sat-tools/6.2/os/repodata/repomd.xml");
-		} else
+		
 		//	201607121645:50.724 - FINE: Stderr: 
 		//	https://cdn.redhat.com/content/dist/rhel/arm/7/7Server/aarch64/sat-tools/6.2/os/repodata/repomd.xml: [Errno 14] HTTPS Error 404 - Not Found
 		//	Trying other mirror.
@@ -848,12 +857,50 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 		//	https://access.redhat.com/articles/1320623
 		//
 		//	If above article doesn't help to resolve this issue please open a ticket with Red Hat Support.
-		if (clienttasks.redhatReleaseX.equals("7") && result.getStderr().contains("/sat-tools/6.2/os/repodata/repomd.xml: [Errno 14] HTTPS Error 404")) {
-			log.warning("Skipping stderr.isEmpty() assertion on [Errno 14] HTTPS Error 404 Not Found /sat-tools/6.2/os/repodata/repomd.xml");
+		
+		String stderrNotFoundRegex = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsm", "baseurl")+".* HTTPS Error 404 - Not Found\nTrying other mirror.";
+		String stderrNotFoundInfo = "To address this issue please refer to the below knowledge base article \n\nhttps://access.redhat.com/articles/1320623\n\nIf above article doesn't help to resolve this issue please open a ticket with Red Hat Support.";
+		if (stderrFiltered.contains(stderrNotFoundInfo)) log.warning("Ignoring stderr for all \"404 - Not Found\" errors since their discovery is not the purpose of this test.");
+		stderrFiltered = stderrFiltered.replace(stderrNotFoundInfo, "");
+		stderrFiltered = stderrFiltered.replaceAll(stderrNotFoundRegex, "");
+		stderrFiltered = stderrFiltered.trim();
+		
+		// TEMPORARY WORKAROUND
+		boolean invokeWorkaroundWhileBugIsOpen = true;
+		String bugId="1276747"; // Bug 1276747 - rhel-7-for-system-z-rpms/7Server/s390x/productid [Errno -1] Metadata file does not match checksum
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen && rhelBaseRepoId.equals("rhel-7-for-system-z-rpms")) {
+			log.warning("Skipping stderr assertion while bugId '"+bugId+"' is open.");
 		} else
 		// END OF WORKAROUND
-		Assert.assertEquals(result.getStderr().trim(),"", "Stderr from attempt to successfully install '"+rhelOptionalPackage+"' that requires '"+rhelBasePackage+"'.");
-
+// DELETEME
+//		// TEMPORARY WORKAROUND
+//		//	[root@hp-dl585g5-01 ~]# cat /tmp/stderr 
+//		//	https://cdn.redhat.com/content/dist/rhel/computenode/6/6ComputeNode/x86_64/sat-tools/6.2/os/repodata/repomd.xml: [Errno 14] PYCURL ERROR 22 - "The requested URL returned error: 404 Not Found"
+//		//	Trying other mirror.
+//		//	To address this issue please refer to the below knowledge base article 
+//		//
+//		//	https://access.redhat.com/articles/1320623
+//		//
+//		//	If above article doesn't help to resolve this issue please open a ticket with Red Hat Support.
+//		if (clienttasks.redhatReleaseX.equals("6") && result.getStderr().contains("/sat-tools/6.2/os/repodata/repomd.xml: [Errno 14] PYCURL ERROR 22")) {
+//			log.warning("Skipping stderr.isEmpty() assertion on [Errno 14] PYCURL ERROR 22 for 404 Not Found /sat-tools/6.2/os/repodata/repomd.xml");
+//		} else
+//		//	201607121645:50.724 - FINE: Stderr: 
+//		//	https://cdn.redhat.com/content/dist/rhel/arm/7/7Server/aarch64/sat-tools/6.2/os/repodata/repomd.xml: [Errno 14] HTTPS Error 404 - Not Found
+//		//	Trying other mirror.
+//		//	To address this issue please refer to the below knowledge base article 
+//		//
+//		//	https://access.redhat.com/articles/1320623
+//		//
+//		//	If above article doesn't help to resolve this issue please open a ticket with Red Hat Support.
+//		if (clienttasks.redhatReleaseX.equals("7") && result.getStderr().contains("/sat-tools/6.2/os/repodata/repomd.xml: [Errno 14] HTTPS Error 404")) {
+//			log.warning("Skipping stderr.isEmpty() assertion on [Errno 14] HTTPS Error 404 Not Found /sat-tools/6.2/os/repodata/repomd.xml");
+//		} else
+//		// END OF WORKAROUND
+//		Assert.assertEquals(result.getStderr().trim(),"", "Stderr from attempt to successfully install '"+rhelOptionalPackage+"' that requires '"+rhelBasePackage+"'.");
+		Assert.assertEquals(stderrFiltered,"", "Ignoring all \"404 - Not Found\" errors, stderr from attempt to successfully install '"+rhelOptionalPackage+"' that requires '"+rhelBasePackage+"'.");
+		
 		// assert stdout results
 		String prompt;
 		String requiresMessage = "Requires: "+rhelBasePackage;
@@ -1014,7 +1061,26 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(1),"Exit code from attempt to successfully install '"+rhelOptionalPackage+"' that requires '"+rhelBasePackage+"'.");
 		
 		// assert stderr results
-		// TEMPORARY WORKAROUND
+		String stderrFiltered = result.getStderr();
+		// NOTE: The following stderr is possible when new products have not yet been released?
+		//       Let's workaround this by filtering it from stderr before asserting an empty stderr
+
+		// 201607291254:11.409 - FINE: Stderr: 
+		//	https://cdn.redhat.com/content/dist/rhel/workstation/7/7Workstation/x86_64/insights-client/1/os/repodata/repomd.xml: [Errno 14] HTTPS Error 404 - Not Found
+		//	Trying other mirror.
+		//	To address this issue please refer to the below knowledge base article 
+		//
+		//	https://access.redhat.com/articles/1320623
+		//
+		//	If above article doesn't help to resolve this issue please open a ticket with Red Hat Support.
+		//
+		//	https://cdn.redhat.com/content/dist/rhel/workstation/7/7Workstation/x86_64/openstack-tools/9/os/repodata/repomd.xml: [Errno 14] HTTPS Error 404 - Not Found
+		//	Trying other mirror.
+		//	https://cdn.redhat.com/content/dist/rhel/workstation/7/7Workstation/x86_64/ceph-tools/2/os/repodata/repomd.xml: [Errno 14] HTTPS Error 404 - Not Found
+		//	Trying other mirror.
+		//	https://cdn.redhat.com/content/dist/rhel/workstation/7/7Workstation/x86_64/openstack-tools/10/os/repodata/repomd.xml: [Errno 14] HTTPS Error 404 - Not Found
+		//	Trying other mirror.
+		
 		//	[root@hp-dl585g5-01 ~]# cat /tmp/stderr 
 		//	https://cdn.redhat.com/content/dist/rhel/computenode/6/6ComputeNode/x86_64/sat-tools/6.2/os/repodata/repomd.xml: [Errno 14] PYCURL ERROR 22 - "The requested URL returned error: 404 Not Found"
 		//	Trying other mirror.
@@ -1023,10 +1089,8 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 		//	https://access.redhat.com/articles/1320623
 		//
 		//	If above article doesn't help to resolve this issue please open a ticket with Red Hat Support.
-		if (clienttasks.redhatReleaseX.equals("6") && result.getStderr().contains("/sat-tools/6.2/os/repodata/repomd.xml: [Errno 14] PYCURL ERROR 22")) {
-			log.warning("Skipping stderr.isEmpty() assertion on [Errno 14] PYCURL ERROR 22 for 404 Not Found /sat-tools/6.2/os/repodata/repomd.xml");
-		} else
-		//	201607121646:36.645 - FINE: Stderr: 
+		
+		//	201607121645:50.724 - FINE: Stderr: 
 		//	https://cdn.redhat.com/content/dist/rhel/arm/7/7Server/aarch64/sat-tools/6.2/os/repodata/repomd.xml: [Errno 14] HTTPS Error 404 - Not Found
 		//	Trying other mirror.
 		//	To address this issue please refer to the below knowledge base article 
@@ -1034,11 +1098,41 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 		//	https://access.redhat.com/articles/1320623
 		//
 		//	If above article doesn't help to resolve this issue please open a ticket with Red Hat Support.
-		if (clienttasks.redhatReleaseX.equals("7") && result.getStderr().contains("/sat-tools/6.2/os/repodata/repomd.xml: [Errno 14] HTTPS Error 404")) {
-			log.warning("Skipping stderr.isEmpty() assertion on [Errno 14] HTTPS Error 404 Not Found /sat-tools/6.2/os/repodata/repomd.xml");
-		} else
-		// END OF WORKAROUND
-		Assert.assertEquals(result.getStderr().trim(),"", "Stderr from attempt to successfully install '"+rhelOptionalPackage+"' that requires '"+rhelBasePackage+"'.");
+		
+		String stderrNotFoundRegex = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsm", "baseurl")+".* HTTPS Error 404 - Not Found\nTrying other mirror.";
+		String stderrNotFoundInfo = "To address this issue please refer to the below knowledge base article \n\nhttps://access.redhat.com/articles/1320623\n\nIf above article doesn't help to resolve this issue please open a ticket with Red Hat Support.";
+		if (stderrFiltered.contains(stderrNotFoundInfo)) log.warning("Ignoring stderr for all \"404 - Not Found\" errors since their discovery is not the purpose of this test.");
+		stderrFiltered = stderrFiltered.replace(stderrNotFoundInfo, "");
+		stderrFiltered = stderrFiltered.replaceAll(stderrNotFoundRegex, "");
+		stderrFiltered = stderrFiltered.trim();
+
+// DELETEME
+//		// TEMPORARY WORKAROUND
+//		//	[root@hp-dl585g5-01 ~]# cat /tmp/stderr 
+//		//	https://cdn.redhat.com/content/dist/rhel/computenode/6/6ComputeNode/x86_64/sat-tools/6.2/os/repodata/repomd.xml: [Errno 14] PYCURL ERROR 22 - "The requested URL returned error: 404 Not Found"
+//		//	Trying other mirror.
+//		//	To address this issue please refer to the below knowledge base article 
+//		//
+//		//	https://access.redhat.com/articles/1320623
+//		//
+//		//	If above article doesn't help to resolve this issue please open a ticket with Red Hat Support.
+//		if (clienttasks.redhatReleaseX.equals("6") && result.getStderr().contains("/sat-tools/6.2/os/repodata/repomd.xml: [Errno 14] PYCURL ERROR 22")) {
+//			log.warning("Skipping stderr.isEmpty() assertion on [Errno 14] PYCURL ERROR 22 for 404 Not Found /sat-tools/6.2/os/repodata/repomd.xml");
+//		} else
+//		//	201607121646:36.645 - FINE: Stderr: 
+//		//	https://cdn.redhat.com/content/dist/rhel/arm/7/7Server/aarch64/sat-tools/6.2/os/repodata/repomd.xml: [Errno 14] HTTPS Error 404 - Not Found
+//		//	Trying other mirror.
+//		//	To address this issue please refer to the below knowledge base article 
+//		//
+//		//	https://access.redhat.com/articles/1320623
+//		//
+//		//	If above article doesn't help to resolve this issue please open a ticket with Red Hat Support.
+//		if (clienttasks.redhatReleaseX.equals("7") && result.getStderr().contains("/sat-tools/6.2/os/repodata/repomd.xml: [Errno 14] HTTPS Error 404")) {
+//			log.warning("Skipping stderr.isEmpty() assertion on [Errno 14] HTTPS Error 404 Not Found /sat-tools/6.2/os/repodata/repomd.xml");
+//		} else
+//		// END OF WORKAROUND
+//		Assert.assertEquals(result.getStderr().trim(),"", "Stderr from attempt to successfully install '"+rhelOptionalPackage+"' that requires '"+rhelBasePackage+"'.");
+		Assert.assertEquals(stderrFiltered,"", "Ignoring all \"404 - Not Found\" errors, stderr from attempt to successfully install '"+rhelOptionalPackage+"' that requires '"+rhelBasePackage+"'.");
 
 		// assert stdout results
 		String prompt;

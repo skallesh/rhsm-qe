@@ -423,8 +423,29 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		Assert.assertNotNull(entitlementCertFile, "Found the entitlement cert file that was granted after subscribing to pool: "+pool);
 		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
 		
-		// install and remove availableGroup
+		
+		// avoid htb repos that have no content (due to snapshot timing - see Bug 1360491 - no packages available from https://cdn.redhat.com/content/htb/rhel/computenode/7/x86_64/os 
+		if (clienttasks.getYumListOfAvailablePackagesFromRepo(repoLabel).isEmpty()) {
+			if (repoLabel.contains("-htb-")) {
+				throw new SkipException("Skipping an attempt to groupinstall from repo '"+repoLabel+"' because it is empty.  Assuming we are not within a RHEL Snapshot phase, HTB repositories are cleared out after GA and before Snapshot 1.  See https://bugzilla.redhat.com/show_bug.cgi?id=1360491#c1");
+			} else {
+				//	201607261756:37.637 - FINE: ssh root@hp-dl380pgen8-02-vm-7.lab.bos.redhat.com yum -y groupinstall "Compatibility Libraries" --disableplugin=rhnplugin
+				//	201607261756:39.737 - FINE: Stdout: 
+				//	Loaded plugins: product-id, search-disabled-repos, subscription-manager
+				//	No packages in any requested group available to install or update
+				//	201607261756:39.739 - FINE: Stderr: 
+				//	Warning: Group compat-libraries does not have any packages to install.
+				//	Maybe run: yum groups mark install (see man yum)
+				//	201607261756:39.741 - FINE: ExitCode: 0
+				String expectedStdout = "No packages in any requested group available to install or update";
+				log.warning("This test will likely fail with '"+expectedStdout+"' because there are no available packages from repo '"+repoLabel+"'.");
+			}
+		}
+
+		// install availableGroup
 		clienttasks.yumInstallGroup(availableGroup);
+		
+		// remove availableGroup
 		clienttasks.yumRemoveGroup(availableGroup);
 		
 		// TODO: add asserts for the products that get installed or deleted in stdout as a result of yum group install/remove: 
@@ -438,7 +459,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	@Test(	description="subscription-manager Yum plugin: ensure yum groups can be removed/re-installed",
 			groups={},
 			dataProvider="getYumInstalledGroupFromEnabledRepoAndSubscriptionPoolData",
-			enabled=false)	// jsefler - I don't like this test becasue groups installed from the latest compose will have newer packages and required packages than available from the subscription CDN content
+			enabled=false)	// jsefler - I don't like this test because groups installed from the latest compose will have newer packages and required packages than available from the subscription CDN content
 	//@ImplementsNitrateTest(caseId=) //TODO Find a tcms caseId for
 	public void RemoveAndInstallYumGroupFromEnabledRepoAfterSubscribingToPool_Test(String installedGroup, String repoLabel, SubscriptionPool pool) throws JSONException, Exception {
 		if (installedGroup==null) throw new SkipException("No yum groups corresponding to enabled repo '"+repoLabel+" were found after subscribing to pool: "+pool);
@@ -1763,25 +1784,32 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, ConsumerType.system, null, null, null, null, null, (String)null, null, null, null, Boolean.TRUE, false, null, null, null);
 		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
 			
+			// avoid throttling RateLimitExceededException from IT-Candlepin
+			if (CandlepinType.hosted.equals(sm_serverType)) {	// strategically get a new consumer to avoid 60 repeated API calls from the same consumer
+				// re-register as a new consumer
+				clienttasks.register_(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, ConsumerType.system, null, null, null, null, null, (String)null, null, null, null, Boolean.TRUE, false, null, null, null);
+			}
+			
 			File entitlementCertFile = clienttasks.subscribeToSubscriptionPool_(pool);
 			Assert.assertNotNull(entitlementCertFile, "Found the entitlement cert file that was granted after subscribing to pool: "+pool);
 			EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
 			for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
 				if (!contentNamespace.type.equalsIgnoreCase("yum")) continue;
+				
 				if (contentNamespace.enabled && clienttasks.areAllRequiredTagsInContentNamespaceProvidedByProductCerts(contentNamespace, currentProductCerts)) {
 					String repoLabel = contentNamespace.label;
-
+					
 					// find first available group provided by this repo
 					String availableGroup = clienttasks.findAnAvailableGroupFromRepo(repoLabel);
 					// find first installed group provided by this repo
 					String installedGroup = clienttasks.findAnInstalledGroupFromRepo(repoLabel);
-
+					
 					// String availableGroup, String installedGroup, String repoLabel, SubscriptionPool pool
 					ll.add(Arrays.asList(new Object[]{availableGroup, installedGroup, repoLabel, pool}));
 				}
 			}
 			clienttasks.unsubscribeFromSerialNumber(clienttasks.getSerialNumberFromEntitlementCertFile(entitlementCertFile));
-
+			
 			// minimize the number of dataProvided rows (useful during automated testcase development)
 			if (Boolean.valueOf(getProperty("sm.debug.dataProviders.minimize","false"))) break;
 		}

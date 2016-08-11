@@ -494,6 +494,7 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 		if (clienttasks.arch.equals("x86_64")) {
 			if (clienttasks.redhatReleaseX.equals("5")) haPackage1Fetch = "http://download.devel.redhat.com/released/RHEL-5-Server/U7/x86_64/os/Cluster/ipvsadm-1.24-13.el5.x86_64.rpm";
 			if (clienttasks.redhatReleaseX.equals("6")) haPackage1Fetch = "http://download.devel.redhat.com/released/RHEL-6/6.1/Server/x86_64/os/Packages/ccs-0.16.2-35.el6.x86_64.rpm";
+			if (clienttasks.redhatReleaseX.equals("7")) haPackage1Fetch = "http://download.devel.redhat.com/released/RHEL-7/7.0/Server/x86_64/os/addons/HighAvailability/omping-0.0.4-6.el7.x86_64.rpm";
 		}
 		if (clienttasks.arch.startsWith("i")) {			// i386 i686
 			if (clienttasks.redhatReleaseX.equals("5")) haPackage1Fetch = "http://download.devel.redhat.com/released/RHEL-5-Server/U7/i386/os/Cluster/ipvsadm-1.24-13.el5.i386.rpm";
@@ -506,9 +507,15 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 			serverProductId = "74";	// Red Hat Enterprise Linux for IBM POWER
 			if (clienttasks.redhatReleaseX.equals("5")) haPackage1Fetch = "http://download.devel.redhat.com/released/RHEL-5-Server/U7/ppc/os/Cluster/ipvsadm-1.24-13.el5.ppc.rpm";
 			if (clienttasks.redhatReleaseX.equals("6")) throw new SkipException("Although available for consumption, High Availability content is not offered on RHEL6 arch '"+clienttasks.arch+"'.");
+			if (clienttasks.redhatReleaseX.equals("7")) throw new SkipException("Although available for consumption, High Availability content is not offered on RHEL7 arch '"+clienttasks.arch+"'.");
 		}
 		if (clienttasks.arch.startsWith("s390")) {		// s390 s390x
 			serverProductId = "72";	// Red Hat Enterprise Linux for IBM System z
+			throw new SkipException("High Availability is not offered on arch '"+clienttasks.arch+"'.");
+		}
+		
+		if (clienttasks.arch.equals("aarch64")) {
+			serverProductId = "294";	// Red Hat Enterprise Linux Server for ARM
 			throw new SkipException("High Availability is not offered on arch '"+clienttasks.arch+"'.");
 		}
 		
@@ -521,6 +528,11 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 			haPackage1	= "ccs";
 			haPackage2	= "cluster-glue-libs";
 			haSupportedArches	= Arrays.asList("x86_64","x86","i386","i686");
+		}
+		if (clienttasks.redhatReleaseX.equals("7")) {
+			haPackage1	= "omping";
+			haPackage2	= "resource-agents";
+			haSupportedArches	= Arrays.asList("x86_64");
 		}
 	}
 

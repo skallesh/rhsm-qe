@@ -1928,8 +1928,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 				filteredRhnAvailableChildChannels.remove(rhnAvailableChildChannel);
 			}
 		}
-		//addRhnClassicChannels(sm_rhnUsername, sm_rhnPassword, getRandomSubsetOfList(rhnAvailableChildChannels, 1));	// only add 1 child channel to reduce the chance of "You are subscribed to channels that have conflicting product certificates."
-		addRhnClassicChannels(sm_rhnUsername, sm_rhnPassword, getRandomSubsetOfList(/*rhnAvailableChildChannels*/filteredRhnAvailableChildChannels, 3));	// use filteredRhnAvailableChildChannels instead of rhnAvailableChildChannels to avoid "You are subscribed to channels that have conflicting product certificates."
+		addRhnClassicChannels(sm_rhnUsername, sm_rhnPassword, getRandomSubsetOfList(filteredRhnAvailableChildChannels, /*5*/1));	// only add 1 child channel to reduce the chance of "You are subscribed to channels that have conflicting product certificates."
 		
 		
 		
@@ -2043,9 +2042,8 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 				filteredRhnAvailableChildChannels.remove(rhnAvailableChildChannel);
 			}
 		}
-		//addRhnClassicChannels(sm_rhnUsername, sm_rhnPassword, getRandomSubsetOfList(rhnAvailableChildChannels, 1));	// only add 1 child channel to reduce the chance of "You are subscribed to channels that have conflicting product certificates."
-		addRhnClassicChannels(sm_rhnUsername, sm_rhnPassword, getRandomSubsetOfList(/*rhnAvailableChildChannels*/filteredRhnAvailableChildChannels, 5));	// use filteredRhnAvailableChildChannels instead of rhnAvailableChildChannels to avoid "You are subscribed to channels that have conflicting product certificates."
-		
+		addRhnClassicChannels(sm_rhnUsername, sm_rhnPassword, getRandomSubsetOfList(filteredRhnAvailableChildChannels, /*5*/1));	// only add 1 child channel to reduce the chance of "You are subscribed to channels that have conflicting product certificates."
+
 		
 		
 		// attempt to run rhn-migrate-classic-to-rhsm
