@@ -712,7 +712,9 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		
 		// now login with the HighAvailability credentials and install a package and assert the pre/post_product_id_install_hooks are called
 		if (sm_haUsername.equals("")) throw new SkipException("Skipping this test when no value was given for the High Availability username.");
-
+		String haProductId = "83"; // Red Hat Enterprise Linux High Availability (for RHEL Server)
+		if (clienttasks.arch.startsWith("s390")) haProductId = "300"; // Red Hat Enterprise Linux High Availability (for IBM z Systems)
+		
 		// register to an account that offers High Availability subscriptions
 		consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_haUsername,sm_haPassword,sm_haOrg,null,null,null,null,null,null,null,(String)null,null,null, null, true, null, null, null, null));
 
@@ -720,15 +722,15 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		for (String haPackage : sm_haPackages) {
 			if (clienttasks.isPackageInstalled(haPackage)) clienttasks.yumRemovePackage(haPackage);
 		}
-		InstalledProduct haInstalledProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", HighAvailabilityTests.haProductId, clienttasks.getCurrentlyInstalledProducts());
+		InstalledProduct haInstalledProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", haProductId, clienttasks.getCurrentlyInstalledProducts());
 		if (haInstalledProduct!=null) {
-			ProductCert haInstalledProductCert = ProductCert.findFirstInstanceWithMatchingFieldFromList("productId", HighAvailabilityTests.haProductId, clienttasks.getCurrentProductCerts());
+			ProductCert haInstalledProductCert = ProductCert.findFirstInstanceWithMatchingFieldFromList("productId", haProductId, clienttasks.getCurrentProductCerts());
 			log.warning("Manually removing installed High Availability product cert and restoring '"+clienttasks.productIdJsonFile+"' (you are probably running a RHEL5 client)...");
 			client.runCommandAndWait("rm -f "+haInstalledProductCert.file.getPath());
 			restoreProductIdJsonFileAfterClass();
-			haInstalledProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", HighAvailabilityTests.haProductId, clienttasks.getCurrentlyInstalledProducts());
+			haInstalledProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", haProductId, clienttasks.getCurrentlyInstalledProducts());
 		}
-		Assert.assertNull(haInstalledProduct, "The High Availability product id '"+HighAvailabilityTests.haProductId+"' should NOT be installed after successful removal of all High Availability packages.");
+		Assert.assertNull(haInstalledProduct, "The High Availability product id '"+haProductId+"' should NOT be installed after successful removal of all High Availability packages.");
 		
 		// Subscribe to the High Availability subscription SKU
 		List<SubscriptionPool> availableSubscriptionPools = clienttasks.getCurrentlyAvailableSubscriptionPools();
@@ -766,7 +768,7 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		if (rhsmLogLevel.equals("DEBUG"))								expectedLogInfo.add("Running post_product_id_install_hook in product_id_install_test.ProductIdInstallTestPlugin");
 		if (rhsmLogLevel.equals("DEBUG")||rhsmLogLevel.equals("INFO"))	expectedLogInfo.add("Running post_product_id_install_hook: yum product-id plugin just installed a product cert");
 		//if (rhsmLogLevel.equals("DEBUG")||rhsmLogLevel.equals("INFO"))	expectedLogInfo.add("Running post_product_id_install_hook: 1 product_ids were just installed");	// probably correct, but not necessary to verify post_product_id_install_hook was called
-		if (rhsmLogLevel.equals("DEBUG")||rhsmLogLevel.equals("INFO"))	expectedLogInfo.add("Running post_product_id_install_hook: product_id "+HighAvailabilityTests.haProductId+" was just installed");
+		if (rhsmLogLevel.equals("DEBUG")||rhsmLogLevel.equals("INFO"))	expectedLogInfo.add("Running post_product_id_install_hook: product_id "+haProductId+" was just installed");
 		
 		// Product Name:   Red Hat Enterprise Linux High Availability (for RHEL Server)
 		// Product ID:     83
@@ -781,6 +783,10 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 			priority=710, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void verifyPluginsListWithEnabledProductIdRemoveTestPlugin_Test() {
+		
+		String haProductId = "83"; // Red Hat Enterprise Linux High Availability (for RHEL Server)
+		if (clienttasks.arch.startsWith("s390")) haProductId = "300"; // Red Hat Enterprise Linux High Availability (for IBM z Systems)
+		
 		// TEMPORARY WORKAROUND FOR BUG
 		String bugId = "922882"; boolean invokeWorkaroundWhileBugIsOpen = true;
 		// RFE Bug 922882 was CLOSED NOTABUG and will be re-opened when actually needed.  However, we still need to invoke this workaround to remove the ccs package from the prior test
@@ -792,15 +798,15 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 			}
 			
 			// remove the HA product cert too
-			InstalledProduct haInstalledProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", HighAvailabilityTests.haProductId, clienttasks.getCurrentlyInstalledProducts());
+			InstalledProduct haInstalledProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", haProductId, clienttasks.getCurrentlyInstalledProducts());
 			if (haInstalledProduct!=null) {
-				ProductCert haInstalledProductCert = ProductCert.findFirstInstanceWithMatchingFieldFromList("productId", HighAvailabilityTests.haProductId, clienttasks.getCurrentProductCerts());
+				ProductCert haInstalledProductCert = ProductCert.findFirstInstanceWithMatchingFieldFromList("productId", haProductId, clienttasks.getCurrentProductCerts());
 				log.warning("Manually removing installed High Availability product cert and restoring '"+clienttasks.productIdJsonFile+"' (you are probably running a RHEL5 client)...");
 				client.runCommandAndWait("rm -f "+haInstalledProductCert.file.getPath());
 				restoreProductIdJsonFileAfterClass();
-				haInstalledProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", HighAvailabilityTests.haProductId, clienttasks.getCurrentlyInstalledProducts());
+				haInstalledProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", haProductId, clienttasks.getCurrentlyInstalledProducts());
 			}
-			Assert.assertNull(haInstalledProduct, "The High Availability product id '"+HighAvailabilityTests.haProductId+"' should NOT be installed after successful removal of all High Availability packages.");
+			Assert.assertNull(haInstalledProduct, "The High Availability product id '"+haProductId+"' should NOT be installed after successful removal of all High Availability packages.");
 			
 			throw new SkipException("Skipping test while bug '"+bugId+"' is not implemented.");
 		}

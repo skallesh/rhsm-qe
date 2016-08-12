@@ -246,6 +246,12 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyHighAvailabilityPackagesAreAvailabile_Test() {
 		
+		// INFO: rhel-ha-for-rhel-7-server-rpms/7Server/x86_64 is enabled by default
+		// INFO: rhel-ha-for-rhel-7-for-system-z-rpms/7Server/s390x is NOT enabled by default
+		if (clienttasks.redhatReleaseX.equals("7") && clienttasks.arch.equals("s390x")) {
+			clienttasks.repos(null, null, null, "rhel-ha-for-rhel-7-for-system-z-rpms", null, null, null, null);
+		}
+		
 		List<String> availablePackages = clienttasks.getYumListAvailable(null);
 		boolean foundAllExpectedPkgs = true;
 		for (String expectedPkg: sm_haPackages) {
@@ -490,6 +496,7 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 		//                          }, 
 		
 		serverProductId = "69";	// Red Hat Enterprise Linux Server
+		haProductId		= "83"; // Red Hat Enterprise Linux High Availability (for RHEL Server)
 		
 		if (clienttasks.arch.equals("x86_64")) {
 			if (clienttasks.redhatReleaseX.equals("5")) haPackage1Fetch = "http://download.devel.redhat.com/released/RHEL-5-Server/U7/x86_64/os/Cluster/ipvsadm-1.24-13.el5.x86_64.rpm";
@@ -511,7 +518,13 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 		}
 		if (clienttasks.arch.startsWith("s390")) {		// s390 s390x
 			serverProductId = "72";	// Red Hat Enterprise Linux for IBM System z
-			throw new SkipException("High Availability is not offered on arch '"+clienttasks.arch+"'.");
+			if (clienttasks.redhatReleaseX.equals("5")) throw new SkipException("High Availability is not offered on arch '"+clienttasks.arch+"'.");
+			if (clienttasks.redhatReleaseX.equals("6")) throw new SkipException("High Availability is not offered on arch '"+clienttasks.arch+"'.");
+			if (clienttasks.redhatReleaseX.equals("7")) {
+				haProductId = "300"; // Red Hat Enterprise Linux High Availability (for IBM z Systems)
+				haPackage1Fetch = "http://download.devel.redhat.com/released/RHEL-7/7.2/Server/s390x/os/addons/HighAvailability/omping-0.0.4-6.el7.s390x.rpm";
+			}
+			if (Float.valueOf(clienttasks.redhatReleaseXY)<7.2) throw new SkipException("High Availability is not offered on arch '"+clienttasks.arch+"' release '"+clienttasks.redhatReleaseXY+"'.");
 		}
 		
 		if (clienttasks.arch.equals("aarch64")) {
@@ -532,7 +545,7 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 		if (clienttasks.redhatReleaseX.equals("7")) {
 			haPackage1	= "omping";
 			haPackage2	= "resource-agents";
-			haSupportedArches	= Arrays.asList("x86_64");
+			haSupportedArches	= Arrays.asList("x86_64","s390x");
 		}
 	}
 
@@ -603,7 +616,7 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 	protected String haPackage2						= null;	// set in assertRhelServerBeforeClass()
 	File haEntitlementCertFile						= null;
 	public List<String> haSupportedArches			= null; // set in assertRhelServerBeforeClass()
-	public static final String haProductId			= "83";	// Red Hat Enterprise Linux High Availability (for RHEL Server)
+	protected String haProductId					= null;	// set in assertRhelServerBeforeClass()
 
 	
 	
