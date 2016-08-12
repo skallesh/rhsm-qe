@@ -8948,6 +8948,45 @@ if (false) {
 			// END OF WORKAROUND
 			
 			// TEMPORARY WORKAROUND FOR BUG
+			//	2016-08-12 00:33:35.448  FINE: ssh root@wolverine.idmqe.lab.eng.bos.redhat.com subscription-manager subscribe --pool=8a99f9815582f734015585f99da5513f --pool=8a99f9815582f734015585f99c47511c --pool=8a99f9815582f734015585f99add50f4 --pool=8a99f9815582f734015585f99a0950b9 --pool=8a99f9815582f734015585f99e9d519d --pool=8a99f9815582f734015585f9a7c952b9 --pool=8a99f9815582f734015585f9a654524a --pool=8a99f9815582f734015585f9989d5047 --pool=8a99f9815582f734015585f9a0c4521d --pool=8a99f9815582f734015585f99f4051c9 --pool=8a99f9815582f734015585f9995e5080 --pool=8a99f9815582f734015585f99fc851ee --pool=8a99f9815582f734015585f99b72510a
+			//	2016-08-12 00:33:57.891  FINE: Stdout: 
+			//	Successfully attached a subscription for: Red Hat Enterprise Linux for Virtual Datacenters, Premium
+			//	Successfully attached a subscription for: Red Hat Enterprise Linux Server, Standard (Physical or Virtual Nodes)
+			//	Successfully attached a subscription for: Red Hat Enterprise Linux for IBM POWER, Standard (4 sockets) (Up to 30 LPARs) with Smart Management
+			//	Successfully attached a subscription for: Red Hat Enterprise Linux Workstation, Standard
+			//
+			//	2016-08-12 00:33:57.891  FINE: Stderr: Runtime Error org.hibernate.exception.LockAcquisitionException: could not execute statement at sun.reflect.NativeConstructorAccessorImpl.newInstance0:-2
+			//
+			//	2016-08-12 00:33:57.891  FINE: ExitCode: 70
+			//	2016-08-12 00:33:57.892  FINE: ssh root@wolverine.idmqe.lab.eng.bos.redhat.com LINE_NUMBER=$(grep --line-number 'Making request:' /var/log/rhsm/rhsm.log | tail --lines=1 | cut --delimiter=':' --field=1); if [ -n "$LINE_NUMBER" ]; then tail -n +$LINE_NUMBER /var/log/rhsm/rhsm.log; fi;
+			//	2016-08-12 00:33:58.129  WARNING: Last request from /var/log/rhsm/rhsm.log:
+			//	2016-08-12 00:33:50,844 [DEBUG] subscription-manager:2690:MainThread @connection.py:573 - Making request: POST /subscription/consumers/b8f5adea-bfea-44c4-a522-955f58a61a70/entitlements?pool=8a99f9815582f734015585f99e9d519d
+			//	2016-08-12 00:33:51,919 [DEBUG] subscription-manager:2690:MainThread @connection.py:602 - Response: status=500
+			//	2016-08-12 00:33:51,920 [ERROR] subscription-manager:2690:MainThread @managercli.py:1566 - Runtime Error org.hibernate.exception.LockAcquisitionException: could not execute statement at sun.reflect.NativeConstructorAccessorImpl.newInstance0:-2
+			//	Traceback (most recent call last):
+			//	  File "/usr/lib/python2.7/site-packages/subscription_manager/managercli.py", line 1556, in _do_command
+			//	    ents = self.cp.bindByEntitlementPool(self.identity.uuid, pool, self.options.quantity)
+			//	  File "/usr/lib64/python2.7/site-packages/rhsm/connection.py", line 1169, in bindByEntitlementPool
+			//	    return self.conn.request_post(method)
+			//	  File "/usr/lib64/python2.7/site-packages/rhsm/connection.py", line 697, in request_post
+			//	    return self._request("POST", method, params)
+			//	  File "/usr/lib64/python2.7/site-packages/rhsm/connection.py", line 611, in _request
+			//	    self.validateResponse(result, request_type, handler)
+			//	  File "/usr/lib64/python2.7/site-packages/rhsm/connection.py", line 661, in validateResponse
+			//	    raise RestlibException(response['status'], error_msg, response.get('headers'))
+			//	RestlibException: Runtime Error org.hibernate.exception.LockAcquisitionException: could not execute statement at sun.reflect.NativeConstructorAccessorImpl.newInstance0:-2
+			issue = "Runtime Error org.hibernate.exception.LockAcquisitionException: could not execute statement";
+			if (getTracebackCommandResult.getStdout().contains(issue) || result.getStderr().contains(issue)) {
+				String bugId = "1366772"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1366772 - Runtime Error org.hibernate.exception.LockAcquisitionException: could not execute statement at sun.reflect.NativeConstructorAccessorImpl.newInstance0:-2
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				if (invokeWorkaroundWhileBugIsOpen) {
+					throw new SkipException("Encounterd a '"+issue+"' and could not complete this test while bug '"+bugId+"' is open.");
+				}
+			}
+			// END OF WORKAROUND
+			
+			
+			// TEMPORARY WORKAROUND FOR BUG
 			//	2015-10-12 17:58:54,620 [DEBUG] subscription-manager:44349 @connection.py:523 - Making request: PUT /subscription/consumers/d8018dbc-7e66-4c0a-b322-9c28037fd8cf
 			//	2015-10-12 17:58:55,094 [DEBUG] subscription-manager:44349 @connection.py:555 - Response: status=429
 			//	2015-10-12 17:58:55,095 [ERROR] subscription-manager:44349 @managercli.py:1746 -
