@@ -36,6 +36,8 @@ class RegisterConsumerTestPlugin(SubManPlugin):
         log.info        ("Running pre_register_consumer_hook 1: system name %s is about to be registered." % conduit.name)
         conduit.log.info("Running pre_register_consumer_hook 1: consumer facts count is %s" % len(conduit.facts))
         log.info        ("Running pre_register_consumer_hook 1: consumer facts count is %s" % len(conduit.facts))
+        conduit.log.info("consumer conduit facts:\n%s" % conduit.facts)
+        log.info        ("consumer conduit facts:\n%s" % conduit.facts)
 
     def post_register_consumer_hook(self, conduit):
         """`post_register_consumer` hook
