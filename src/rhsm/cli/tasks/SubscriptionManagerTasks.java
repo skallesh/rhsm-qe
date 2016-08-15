@@ -8439,7 +8439,8 @@ if (false) {
 			(result.getStdout()+result.getStderr()).toLowerCase().contains(("See "+rhsmLogFile).toLowerCase()) ||
 			(result.getStdout()+result.getStderr()).toLowerCase().contains("''".toLowerCase()) ||
 			(result.getStdout()+result.getStderr()).toLowerCase().trim().isEmpty() ||
-			(result.getExitCode()==null)) {
+			(result.getExitCode()==null) ||
+			(result.getExitCode() > (Integer.valueOf(1)))) {	// some commands legitimately return 1
 			// [root@jsefler-7 ~]# LINE_NUMBER=$(grep --line-number 'Making request:' /var/log/rhsm/rhsm.log | tail --lines=1 | cut --delimiter=':' --field=1); if [ -n "$LINE_NUMBER" ]; then tail -n +$LINE_NUMBER /var/log/rhsm/rhsm.log; fi;
 			String getTracebackCommand = "LINE_NUMBER=$(grep --line-number 'Making request:' "+rhsmLogFile+" | tail --lines=1 | cut --delimiter=':' --field=1); if [ -n \"$LINE_NUMBER\" ]; then tail -n +$LINE_NUMBER "+rhsmLogFile+"; fi;";
 			SSHCommandResult getTracebackCommandResult = sshCommandRunner.runCommandAndWaitWithoutLogging(getTracebackCommand);
