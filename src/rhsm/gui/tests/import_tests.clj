@@ -60,6 +60,10 @@
   [^String cert-dir ^String entitle-dir]
   (safe-delete cert-dir)
   (make-dir cert-dir)
+  (-> (format "semanage fcontext -a -s system_u -t cert_t \"%s(/.*)?\""  (clojure.string/replace cert-dir #"/*$" ""))
+     run-command)
+  (-> (format "restorecon -v -R \"%s\"" cert-dir)
+     run-command)
   (let [entitlements (split (:stdout (run-command (format "ls -A %s | grep -v key " entitle-dir))) #"\.pem\n")]
     (doseq [ent entitlements]
       (let [e (str entitle-dir "/" ent)
@@ -73,6 +77,10 @@
   (run-command "killall -9 yum") ;; prevent yum from blowing up
   (safe-delete imp-ent-cert-dir)
   (make-dir imp-ent-cert-dir)
+  (-> (format "semanage fcontext -a -s system_u -t cert_t \"%s(/.*)?\""  (clojure.string/replace imp-ent-cert-dir #"/*$" ""))
+     run-command)
+  (-> (format "restorecon -v -R \"%s\"" imp-ent-cert-dir)
+     run-command)
   (let [[user pw org] (for [x [:username :password :owner-key]] (x @config))
         orig-ent-cert-dir (tasks/conf-file-value "entitlementCertDir")]
     (run-command (format "subscription-manager register --user=%s --password=%s --org=%s" user pw org))

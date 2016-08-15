@@ -35,12 +35,15 @@
 
 (defn ^{BeforeClass {:groups ["setup"]}}
   setup [_]
-  (try+ ;(if (= "RHEL7" (get-release)) (base/startup nil))
-        (tasks/unregister)
-        (catch [:type :not-registered] _)
-        (catch Exception e
-          (reset! (skip-groups :register) true)
-          (throw e))))
+  (try+
+   (tasks/unregister)
+   (catch [:type :not-registered] _)
+   (catch Exception e
+     (reset! (skip-groups :register) true)
+     (throw e)))
+  (when (or (bool (tasks/ui guiexist :register-dialog))
+            (bool (tasks/ui guiexist :error-dialog)))
+    (tasks/restart-app :force-kill? true)))
 
 (defn ^{Test {:groups ["registration"
                        "tier1"
