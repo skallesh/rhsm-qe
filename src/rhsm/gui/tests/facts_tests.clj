@@ -61,7 +61,6 @@
 (defn ^{BeforeClass {:groups ["setup"]}}
   register [_]
   (try
-    (if (= "RHEL7" (get-release)) (base/startup nil))
     (tasks/register-with-creds)
     (reset! gui-facts (tasks/get-all-facts))
     (reset! cli-facts (get-cli-facts))
@@ -176,10 +175,6 @@
   check_available_releases
   "Checks that all avaiable releases are shown in the GUI properly."
   [_]
-  (if (= "RHEL7" (get-release))
-     (throw (SkipException.
-             (str "Skipping 'check_available_releases' test on RHEL7.
-                   Cannot access sub-menus/dropdown through ldtp !!!!"))))
   (try
     (tasks/register-with-creds)
     (tasks/subscribe_all)
