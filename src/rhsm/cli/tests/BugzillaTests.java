@@ -32,6 +32,7 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import com.redhat.qe.Assert;
+import com.redhat.qe.auto.bugzilla.BlockedByBzBug;
 import com.redhat.qe.auto.bugzilla.BzChecker;
 import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.TestNGUtils;
@@ -79,6 +80,164 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	protected List<File> entitlementCertFiles = new ArrayList<File>();
 	protected final String importCertificatesDir1 = "/tmp/sm-importV1CertificatesDir".toLowerCase();
 	SSHCommandRunner sshCommandRunner = null;
+
+	@Test(description = "Verify that the EUS RHEL product certs on the CDN for each release correctly reflect the release version.  For example, this affects users that want use subcription-manager release --set=6.3 to keep yum updates fixed to an older release.", groups = {
+			"VerifyEUSRHELProductCertVersionFromEachCDNReleaseVersion_Test", "AcceptanceTests",
+			"Tier1Tests" }, dataProvider = "VerifyEUSRHELProductCertVersionFromEachCDNReleaseVersion_TestData", enabled = true)
+	// @ImplementsNitrateTest(caseId=)
+	public void VerifyEUSRHELProductCertVersionFromEachCDNReleaseVersion_Test(Object blockedByBug, String release,
+			String rhelRepoUrl, File eusEntitlementCertFile, File caCertFile) throws JSONException, Exception {
+		String rhelPackage = "zsh";
+		String rhelProductId = "69";
+		String eusProductId = "70";
+		System.out.println(eusEntitlementCertFile + " ..........." + rhelRepoUrl);
+		File certFile = eusEntitlementCertFile;
+		File keyFile = clienttasks.getEntitlementCertKeyFileCorrespondingToEntitlementCertFile(eusEntitlementCertFile);
+		if (clienttasks.isPackageInstalled(rhelPackage)) {
+			clienttasks.yumRemovePackage(rhelPackage, "--disablerepo=beaker-*");
+			clienttasks.removeAllCerts(false, false, true);
+		}
+		List<ProductCert> currentProductCerts = clienttasks.getCurrentProductCerts();
+		ProductCert rhelProductCert = ProductCert.findFirstInstanceWithMatchingFieldFromList("productId", rhelProductId,
+				currentProductCerts);
+		if (rhelProductCert == null)
+			throw new SkipException(
+					"Extended Update Support is not offered on this variant '" + clienttasks.variant + "' of RHEL.");
+		ProductCert jbossProductCert = ProductCert.findFirstInstanceWithMatchingFieldFromList("productId", eusProductId,
+				currentProductCerts);
+		Assert.assertNull(jbossProductCert,
+				"Do not expect the EUS product to be installed at the beginning of this test.");
+		List<InstalledProduct> currentlyInstalledProducts = clienttasks.getCurrentlyInstalledProducts();
+		InstalledProduct rhelInstalledProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId",
+				rhelProductId, currentlyInstalledProducts);
+		Assert.assertNotNull(rhelInstalledProduct,
+				"Expecting the installed RHEL Server product '" + rhelProductId + "' to be installed.");
+		log.info("Configuring a temporary product cert directory...");
+
+		clienttasks.yumInstallPackage(rhelPackage);
+		currentlyInstalledProducts = clienttasks.getCurrentlyInstalledProducts();
+		InstalledProduct jbossInstalledProduct = InstalledProduct
+				.findFirstInstanceWithMatchingFieldFromList("productId", eusProductId, currentlyInstalledProducts);
+		Assert.assertNotNull(jbossInstalledProduct, "After installing rhel package '" + rhelPackage
+				+ "' from enabled eus repo ', the eus product id '" + eusProductId + "' is installed.");
+
+		// RemoteFileTasks.runCommandAndAssert(client, "yum install zsh -y");
+
+		// determine the exact path to the productid on the CDN
+		// Repo URL:
+		// https://cdn.redhat.com/content/dist/rhel/server/6/$releasever/$basearch/os
+		// ProductId:
+		// https://cdn.redhat.com/content/dist/rhel/server/6/$releasever/$basearch/os/repodata/productid
+		String basearch = clienttasks.arch;
+		if (basearch.equals("i686") || basearch.equals("i586") || basearch.equals("i486"))
+			basearch = "i386"; // releng content for these systems is published
+								// under arch i386
+		String rhelRepoUrlToProductId = rhelRepoUrl.replace("$releasever", release).replace("$basearch", basearch)
+				+ "/repodata/productid";
+
+		// use the entitlement certificates to get the productid
+		File localProductIdFile = new File("/tmp/productid");
+		RemoteFileTasks
+				.runCommandAndAssert(client,
+						"curl --stderr /dev/null --insecure --tlsv1 --cert " + certFile + " --key " + keyFile + " 	"
+								+ rhelRepoUrlToProductId,
+						Integer.valueOf(0), null, "-> \"" + localProductIdFile + "\"");
+		// create a ProductCert corresponding to the productid file
+		ProductCert productIdCert = clienttasks.getProductCertFromProductCertFile(localProductIdFile);
+		log.info("Actual product cert from CDN '" + rhelRepoUrlToProductId + "': " + productIdCert);
+		System.out.println("productIdCert ..." + productIdCert);
+		// assert the expected productIdCert release version
+		String expectedRelease = release;
+		if (!isFloat(expectedRelease)) { // happens when release is 6Server
+			// in this case of 6Server, the newset release version should be
+			// expected (TODO, not sure this is entirely true)
+			expectedRelease = getNewestReleaseFromReleases(clienttasks.getCurrentlyAvailableReleases(null, null, null));
+		}
+		Assert.assertEquals(productIdCert.productNamespace.version, expectedRelease,
+				"Version of the productid on the CDN at '" + rhelRepoUrlToProductId
+						+ "' that will be installed by the yum product-id plugin after setting the subscription-manager release to '"
+						+ release + "'.");
+	}
+
+	@DataProvider(name = "VerifyEUSRHELProductCertVersionFromEachCDNReleaseVersion_TestData")
+	public Object[][] getVerifyEUSRHELProductCertVersionFromEachCDNReleaseVersion_TestDataAs2dArray() {
+		return TestNGUtils.convertListOfListsTo2dArray(
+				getVerifyEUSRHELProductCertVersionFromEachCDNReleaseVersion_TestDataAsListOfLists());
+	}
+
+	protected List<List<Object>> getVerifyEUSRHELProductCertVersionFromEachCDNReleaseVersion_TestDataAsListOfLists() {
+		List<List<Object>> ll = new ArrayList<List<Object>>();
+		if (!isSetupBeforeSuiteComplete)
+			return ll;
+		if (clienttasks == null)
+			return ll;
+
+		// unregister
+		clienttasks.unregister(null, null, null);
+
+		// get the currently installed RHEL product cert
+		ProductCert rhelProductCert = clienttasks.getCurrentRhelProductCert();
+		if (rhelProductCert == null)
+			throw new SkipException("Failed to find an installed RHEL product cert.");
+		// register
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null,
+				null, (String) null, null, null, null, null, null, null, null, null);
+		SubscriptionPool subscriptionPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList(
+				"subscriptionName", "Extended Update Support", clienttasks.getCurrentlyAvailableSubscriptionPools());
+		clienttasks.subscribe(null, null, subscriptionPool.poolId, null, null, null, null, null, null, null, null,
+				null);
+
+		// find the autosubscribed entitlement that provides access to RHEL
+		// content
+		EntitlementCert eusEntitlementCerts = clienttasks
+				.getEntitlementCertCorrespondingToSubscribedPool(subscriptionPool);
+		if (eusEntitlementCerts == null)
+
+		{
+			log.warning("Could not find an entitlement to a EUS subscription.");
+			return ll;
+		}
+
+		// get the cacert file
+		File caCertFile = new File(clienttasks.getConfParameter("repo_ca_cert"));
+
+		String rhelRepoUrl = null;
+		for (Repo disabledRepo : Repo.parse(
+				clienttasks.repos(null, false, true, (String) null, (String) null, null, null, null).getStdout()))
+
+		{
+			if ((disabledRepo.repoId.matches("rhel-[0-9]+-server-eus-rpms"))) {
+				clienttasks.repos(null, null, null, disabledRepo.repoId, (String) null, null, null, null);
+			}
+		}
+		for (
+
+		Repo enabledRepo : Repo.parse(
+				clienttasks.repos(null, true, false, (String) null, (String) null, null, null, null).getStdout())) {
+			if (enabledRepo.enabled) {
+				if (enabledRepo.repoId.matches("rhel-[0-9]+-server-eus-rpms")) {
+					rhelRepoUrl = enabledRepo.repoUrl;
+				}
+			}
+		}
+
+		// add each available release as a row to the dataProvider
+		for (
+
+		String release : clienttasks.getCurrentlyAvailableReleases(null, null, null))
+
+		{
+			List<String> bugIds = new ArrayList<String>();
+			if (release.matches("6.7") && clienttasks.variant.equals("Server") && clienttasks.arch.equals("x86_64"))
+				bugIds.add("1352162");
+			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[] {}));
+			ll.add(Arrays.asList(
+					new Object[] { blockedByBzBug, release, rhelRepoUrl, eusEntitlementCerts.file, caCertFile }));
+		}
+
+		return ll;
+
+	}
 
 	/**
 	 * @author skallesh
@@ -263,6 +422,26 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				}
 			}
 		}
+	}
+
+	/**
+	 * @param releases
+	 *            - from getCurrentlyAvailableReleases() Example: [6.1, 6.2,
+	 *            6.3, 6.4, 6.5, 6.6, 6Server] 6.6 is the newest
+	 * @return
+	 */
+	String getNewestReleaseFromReleases(List<String> releases) {
+		String newestRelease = null;
+		for (String release : releases) {
+			if (isFloat(release)) {
+				if (newestRelease == null) {
+					newestRelease = release;
+				} else if (Float.valueOf(release) > Float.valueOf(newestRelease)) {
+					newestRelease = release;
+				}
+			}
+		}
+		return newestRelease;
 	}
 
 	/**
@@ -4603,6 +4782,24 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	public void restoreProductCerts() throws IOException {
 		client.runCommandAndWait("mv " + "/root/temp1/*" + " " + clienttasks.productCertDir);
 		client.runCommandAndWait("rm -rf " + "/root/temp1");
+	}
+
+	@AfterGroups(groups = "setup", value = {
+			"VerifyEUSRHELProductCertVersionFromEachCDNReleaseVersion_Test" }, enabled = true)
+	public void restoreProductCertDir() {
+		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir", tmpProductCertDir);
+	}
+
+	@BeforeGroups(groups = "setup", value = {
+			"VerifyEUSRHELProductCertVersionFromEachCDNReleaseVersion_Test" }, enabled = true)
+	public void configureProductCertDir() {
+		if (rhsmProductCertDir == null) {
+			rhsmProductCertDir = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsm", "productCertDir");
+			Assert.assertNotNull(rhsmProductCertDir);
+		} // remember the original so it can be restored later
+		RemoteFileTasks.runCommandAndAssert(client, "mkdir -p " + tmpProductCertDir, Integer.valueOf(0));
+		RemoteFileTasks.runCommandAndAssert(client, "rm -f " + tmpProductCertDir + "/*.pem", Integer.valueOf(0));
+		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir", tmpProductCertDir);
 	}
 
 	@AfterGroups(groups = { "setup" }, value = { /* "VerifyautosubscribeTest", */"VerifyStatusForPartialSubscription",
