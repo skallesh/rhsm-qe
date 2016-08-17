@@ -90,12 +90,11 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		String rhelPackage = "zsh";
 		String rhelProductId = "69";
 		String eusProductId = "70";
-		System.out.println(eusEntitlementCertFile + " ..........." + rhelRepoUrl);
 		File certFile = eusEntitlementCertFile;
 		File keyFile = clienttasks.getEntitlementCertKeyFileCorrespondingToEntitlementCertFile(eusEntitlementCertFile);
 		if (clienttasks.isPackageInstalled(rhelPackage)) {
 			clienttasks.yumRemovePackage(rhelPackage, "--disablerepo=beaker-*");
-			clienttasks.removeAllCerts(false, false, true);
+			moveProductCertFiles(eusProductId + ".pem");
 		}
 		List<ProductCert> currentProductCerts = clienttasks.getCurrentProductCerts();
 		ProductCert rhelProductCert = ProductCert.findFirstInstanceWithMatchingFieldFromList("productId", rhelProductId,
@@ -103,9 +102,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		if (rhelProductCert == null)
 			throw new SkipException(
 					"Extended Update Support is not offered on this variant '" + clienttasks.variant + "' of RHEL.");
-		ProductCert jbossProductCert = ProductCert.findFirstInstanceWithMatchingFieldFromList("productId", eusProductId,
+		ProductCert eusProductCert = ProductCert.findFirstInstanceWithMatchingFieldFromList("productId", eusProductId,
 				currentProductCerts);
-		Assert.assertNull(jbossProductCert,
+		Assert.assertNull(eusProductCert,
 				"Do not expect the EUS product to be installed at the beginning of this test.");
 		List<InstalledProduct> currentlyInstalledProducts = clienttasks.getCurrentlyInstalledProducts();
 		InstalledProduct rhelInstalledProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId",
@@ -116,9 +115,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 
 		clienttasks.yumInstallPackage(rhelPackage);
 		currentlyInstalledProducts = clienttasks.getCurrentlyInstalledProducts();
-		InstalledProduct jbossInstalledProduct = InstalledProduct
-				.findFirstInstanceWithMatchingFieldFromList("productId", eusProductId, currentlyInstalledProducts);
-		Assert.assertNotNull(jbossInstalledProduct, "After installing rhel package '" + rhelPackage
+		InstalledProduct eusInstalledProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId",
+				eusProductId, currentlyInstalledProducts);
+		Assert.assertNotNull(eusInstalledProduct, "After installing rhel package '" + rhelPackage
 				+ "' from enabled eus repo ', the eus product id '" + eusProductId + "' is installed.");
 
 		// RemoteFileTasks.runCommandAndAssert(client, "yum install zsh -y");
@@ -177,6 +176,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 
 		// get the currently installed RHEL product cert
 		ProductCert rhelProductCert = clienttasks.getCurrentRhelProductCert();
+		System.out.println("inside rhelproductcert provider ................." + rhelProductCert);
+
 		if (rhelProductCert == null)
 			throw new SkipException("Failed to find an installed RHEL product cert.");
 		// register
@@ -4869,6 +4870,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			client.runCommandAndWait("mkdir " + installDir);
 		}
 		client.runCommandAndWait("mv " + clienttasks.productCertDir + "/" + filename + " " + "/root/temp1/");
+		System.out.println(clienttasks.productCertDir + "........................");
 	}
 
 	protected String getEntitlementCertFilesWithPermissions() throws IOException {
