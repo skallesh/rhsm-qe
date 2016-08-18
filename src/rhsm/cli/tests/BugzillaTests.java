@@ -176,7 +176,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 
 		// get the currently installed RHEL product cert
 		ProductCert rhelProductCert = clienttasks.getCurrentRhelProductCert();
-		System.out.println("inside rhelproductcert provider ................." + rhelProductCert);
 
 		if (rhelProductCert == null)
 			throw new SkipException("Failed to find an installed RHEL product cert.");
@@ -4791,8 +4790,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir", tmpProductCertDir);
 	}
 
-	@BeforeGroups(groups = "setup", value = {
-			"VerifyEUSRHELProductCertVersionFromEachCDNReleaseVersion_Test" }, enabled = true)
+	@BeforeGroups(groups = "setup", value = {}, enabled = true)
 	public void configureProductCertDir() {
 		if (rhsmProductCertDir == null) {
 			rhsmProductCertDir = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsm", "productCertDir");
