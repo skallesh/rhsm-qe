@@ -218,8 +218,8 @@
 
 
 (defn- register-dialog-sla [& {:keys [auto-select-sla sla]
-                             :or {auto-select-sla true
-                                  sla false}}]
+                               :or {auto-select-sla true
+                                    sla false}}]
   (if (and auto-select-sla (bool (ui guiexist :register-dialog "Confirm Subscriptions")))
     ;; sla selection is presented
     (do
