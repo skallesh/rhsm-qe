@@ -217,7 +217,9 @@
   (checkforerror 10))
 
 
-(defn- register-dialog-sla [auto-select-sla sla]
+(defn- register-dialog-sla [& {:keys [auto-select-sla sla]
+                               :or {auto-select-sla true
+                                    sla false}}]
   (if (and auto-select-sla (bool (ui guiexist :register-dialog "Confirm Subscriptions")))
     ;; sla selection is presented
     (do
@@ -340,7 +342,7 @@
     (when (bool (ui guiexist :register-dialog))
       (register-dialog-owners own))
     (when (bool (ui guiexist :register-dialog))
-      (register-dialog-sla sla auto))
+      (register-dialog-sla :sla sla :auto-select-sla auto))
     (checkforerror)
     (catch Object e
      ;; this was rewritten, though hackey, this is prefered over adding a hard wait.
