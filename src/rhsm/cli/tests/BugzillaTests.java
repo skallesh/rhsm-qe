@@ -93,6 +93,10 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		File keyFile = clienttasks.getEntitlementCertKeyFileCorrespondingToEntitlementCertFile(eusEntitlementCertFile);
 		if (clienttasks.isPackageInstalled(rhelPackage)) {
 			clienttasks.yumRemovePackage(rhelPackage, "--disablerepo=beaker-*");
+
+		}
+		if ((!(ProductCert.findFirstInstanceWithMatchingFieldFromList("productId", eusProductId,
+				clienttasks.getCurrentProductCerts()) == null))) {
 			moveProductCertFiles(eusProductId + ".pem");
 		}
 		List<ProductCert> currentProductCerts = clienttasks.getCurrentProductCerts();
@@ -135,14 +139,14 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		ProductCert productIdCert = clienttasks.getProductCertFromProductCertFile(localProductIdFile);
 		log.info("Actual product cert from CDN '" + rhelRepoUrlToProductId + "': " + productIdCert);
 		// assert the expected productIdCert release version
-		String expectedRelease = release;
-		if (!isFloat(expectedRelease)) {
-			expectedRelease = getNewestReleaseFromReleases(clienttasks.getCurrentlyAvailableReleases(null, null, null));
-		}
-		Assert.assertEquals(productIdCert.productNamespace.version, expectedRelease,
+
+		Assert.assertEquals(productIdCert.productNamespace.version, release,
 				"Version of the productid on the CDN at '" + rhelRepoUrlToProductId
 						+ "' that will be installed by the yum product-id plugin after setting the subscription-manager release to '"
 						+ release + "'.");
+		Assert.assertEquals(eusInstalledProduct.version, release,
+				"version of the product cert downloaded after setting the subscription-manager release to '" + release
+						+ "'.");
 	}
 
 	@DataProvider(name = "VerifyEUSRHELProductCertVersionFromEachCDNReleaseVersion_TestData")
