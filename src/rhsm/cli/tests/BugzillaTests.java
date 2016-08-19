@@ -84,7 +84,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	@Test(description = "Verify that the EUS RHEL product certs on the CDN for each release correctly reflect the release version.  For example, this affects users that want use subcription-manager release --set=6.3 to keep yum updates fixed to an older release.", groups = {
 			"VerifyEUSRHELProductCertVersionFromEachCDNReleaseVersion_Test", "AcceptanceTests",
 			"Tier1Tests" }, dataProvider = "VerifyEUSRHELProductCertVersionFromEachCDNReleaseVersion_TestData", enabled = true)
-	// @ImplementsNitrateTest(caseId=)
 	public void VerifyEUSRHELProductCertVersionFromEachCDNReleaseVersion_Test(Object blockedByBug, String release,
 			String rhelRepoUrl, File eusEntitlementCertFile, File caCertFile) throws JSONException, Exception {
 		String rhelPackage = "zsh";
@@ -119,37 +118,25 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				eusProductId, currentlyInstalledProducts);
 		Assert.assertNotNull(eusInstalledProduct, "After installing rhel package '" + rhelPackage
 				+ "' from enabled eus repo ', the eus product id '" + eusProductId + "' is installed.");
-
-		// RemoteFileTasks.runCommandAndAssert(client, "yum install zsh -y");
-
-		// determine the exact path to the productid on the CDN
-		// Repo URL:
-		// https://cdn.redhat.com/content/dist/rhel/server/6/$releasever/$basearch/os
-		// ProductId:
-		// https://cdn.redhat.com/content/dist/rhel/server/6/$releasever/$basearch/os/repodata/productid
 		String basearch = clienttasks.arch;
 		if (basearch.equals("i686") || basearch.equals("i586") || basearch.equals("i486"))
-			basearch = "i386"; // releng content for these systems is published
-								// under arch i386
+			basearch = "i386";
 		String rhelRepoUrlToProductId = rhelRepoUrl.replace("$releasever", release).replace("$basearch", basearch)
 				+ "/repodata/productid";
 
-		// use the entitlement certificates to get the productid
+		// using the entitlement certificates to get the productid
 		File localProductIdFile = new File("/tmp/productid");
 		RemoteFileTasks
-				.runCommandAndAssert(client,
-						"curl --stderr /dev/null --insecure --tlsv1 --cert " + certFile + " --key " + keyFile + " 	"
-								+ rhelRepoUrlToProductId,
-						Integer.valueOf(0), null, "-> \"" + localProductIdFile + "\"");
+				.runCommandAndAssert(
+						client, "curl --stderr /dev/null --insecure --tlsv1 --cert " + certFile + " --key " + keyFile
+								+ " 	" + rhelRepoUrlToProductId,
+						Integer.valueOf(0), null, "| tee " + localProductIdFile);
 		// create a ProductCert corresponding to the productid file
 		ProductCert productIdCert = clienttasks.getProductCertFromProductCertFile(localProductIdFile);
 		log.info("Actual product cert from CDN '" + rhelRepoUrlToProductId + "': " + productIdCert);
-		System.out.println("productIdCert ..." + productIdCert);
 		// assert the expected productIdCert release version
 		String expectedRelease = release;
-		if (!isFloat(expectedRelease)) { // happens when release is 6Server
-			// in this case of 6Server, the newset release version should be
-			// expected (TODO, not sure this is entirely true)
+		if (!isFloat(expectedRelease)) {
 			expectedRelease = getNewestReleaseFromReleases(clienttasks.getCurrentlyAvailableReleases(null, null, null));
 		}
 		Assert.assertEquals(productIdCert.productNamespace.version, expectedRelease,
@@ -173,12 +160,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 
 		// unregister
 		clienttasks.unregister(null, null, null);
-
-		// get the currently installed RHEL product cert
-		ProductCert rhelProductCert = clienttasks.getCurrentRhelProductCert();
-
-		if (rhelProductCert == null)
-			throw new SkipException("Failed to find an installed RHEL product cert.");
 		// register
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null,
 				null, (String) null, null, null, null, null, null, null, null, null);
@@ -186,9 +167,12 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				"subscriptionName", "Extended Update Support", clienttasks.getCurrentlyAvailableSubscriptionPools());
 		clienttasks.subscribe(null, null, subscriptionPool.poolId, null, null, null, null, null, null, null, null,
 				null);
+		ProductCert rhelProductCert = clienttasks.getCurrentRhelProductCert();
+
+		if (rhelProductCert == null)
+			throw new SkipException("Failed to find an installed RHEL product cert.");
 
 		// find the autosubscribed entitlement that provides access to RHEL
-		// content
 		EntitlementCert eusEntitlementCerts = clienttasks
 				.getEntitlementCertCorrespondingToSubscribedPool(subscriptionPool);
 		if (eusEntitlementCerts == null)
@@ -206,6 +190,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				clienttasks.repos(null, false, true, (String) null, (String) null, null, null, null).getStdout()))
 
 		{
+			// enable only rhel-7-server-eus-rpms repo , assuming its run only
+			// on server variant
+
 			if ((disabledRepo.repoId.matches("rhel-[0-9]+-server-eus-rpms"))) {
 				clienttasks.repos(null, null, null, disabledRepo.repoId, (String) null, null, null, null);
 			}
@@ -4774,18 +4761,24 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.restart_rhsmcertd(configuredCertFrequency, configuredHealFrequency, null);
 	}
 
+	@AfterGroups(groups = { "setup" }, value = { "VerifyEUSRHELProductCertVersionFromEachCDNReleaseVersion_Test" })
+	@AfterClass(groups = "setup")
+	public void removeinstalledProduct() throws IOException {
+		clienttasks.yumRemovePackage("zsh");
+	}
+
 	@AfterGroups(groups = { "setup" }, value = { "VerifySubscriptionOf", "VerifySystemCompliantFact",
 			"ValidityAfterOversubscribing", "UpdateWithNoInstalledProducts", "VerifyStatusCheck",
 			"VerifyStartEndDateOfSubscription"/* ,"InstalledProductMultipliesAfterSubscription" */,
-			"AutoHealFailForSLA", "VerifyautosubscribeIgnoresSocketCount_Test" })
+			"AutoHealFailForSLA", "VerifyautosubscribeIgnoresSocketCount_Test",
+			"VerifyEUSRHELProductCertVersionFromEachCDNReleaseVersion_Test" })
 	@AfterClass(groups = "setup")
 	public void restoreProductCerts() throws IOException {
 		client.runCommandAndWait("mv " + "/root/temp1/*" + " " + clienttasks.productCertDir);
 		client.runCommandAndWait("rm -rf " + "/root/temp1");
 	}
 
-	@AfterGroups(groups = "setup", value = {
-			"VerifyEUSRHELProductCertVersionFromEachCDNReleaseVersion_Test" }, enabled = true)
+	@AfterGroups(groups = "setup", value = {}, enabled = true)
 	public void restoreProductCertDir() {
 		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir", tmpProductCertDir);
 	}
@@ -5106,7 +5099,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				"This test class was developed before the addition of /etc/pki/product-default/ certs (Bug 1123029).  Therefore, let's back them up before running this test class.");
 		for (File productCertFile : clienttasks.getCurrentProductCertFiles()) {
 			if (productCertFile.getPath().startsWith(clienttasks.productCertDefaultDir)) {
-				client.runCommandAndWait("mv " + productCertFile + " " + productCertFile + ".bak");
+				client.runCommandAndWait("cp " + productCertFile + " " + productCertFile + ".bak");
 			}
 		}
 	}
