@@ -4465,7 +4465,73 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				"subscription-manager repo-override --repo=<id> --remove='' should not delete the overrides");
 	}
 
-	@BeforeGroups(groups = "setup", value = {}, enabled = true)
+    /**
+     * @author redakkan
+     * @throws Exception JSON Exception
+     */
+    @Test(description = "Verify the newly added content set is immediatly available on the client", groups = {
+            "blockedByBug-1360909"}, enabled = true)
+    public void VerifyNewContentAvailability_Test() throws JSONException, Exception {
+        String resourcePath = null;
+        String requestBody = null;
+        String ProductId = "32060";
+        String contentId="1234";
+        clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String) null, null, null, null, true, false, null, null, null);
+        clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
+
+        //checking subscribed repos
+        List<Repo> subscribedRepo = clienttasks.getCurrentlySubscribedRepos();
+        if (subscribedRepo.isEmpty())
+            throw new SkipException("There are no entitled yum repos available for this test.");
+
+        // getting the list of all  enabled repos
+        SSHCommandResult sshCommandResult = clienttasks.repos(null, true, false, (String) null, (String) null, null, null, null);
+        // in test data verifying that already enabled repos are not available
+        List<Repo> listEnabledRepos = Repo.parse(sshCommandResult.getStdout());
+        Assert.assertTrue(listEnabledRepos.isEmpty(), "No attached subscriptions provides a enabled repos .");
+
+        //Create a new content "Newcontent_foo"
+        requestBody = CandlepinTasks.createContentRequestBody("Newcontent_foo", contentId, "Newcontent_foo", "yum", "Foo Vendor", "/foo/path", "/foo/path/gpg", null, null, null, null).toString();
+        resourcePath = "/content";
+
+        if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0"))
+            resourcePath = "/owners/" + sm_clientOrg + resourcePath;
+        CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, resourcePath, requestBody);
+        //Link the newly created content to product id , by default the repo is enabled
+        CandlepinTasks.addContentToProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, ProductId, contentId, true);
+        CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, resourcePath, requestBody);
+
+        //any newly added content to the product should be immediately available when using server > 2.0
+
+        if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) {
+            //look for the newly added content  available in  repo list-enabled by getting the list of currently enabled repos
+            sshCommandResult = clienttasks.repos(null, true, null, (String) null, (String) null, null, null, null);
+            listEnabledRepos = Repo.parse(sshCommandResult.getStdout());
+            Assert.assertNotNull(listEnabledRepos, "Enabled repo [" + listEnabledRepos + "] is included in the report of repos --list-enabled.");
+        } else if (clienttasks.isVersion(servertasks.statusVersion, "<", "2.0.0") && (clienttasks.isPackageVersion("subscription-manager",">=","1.17.10-1"))){ //commit c38ae2c2e2f0e59674aa670d8ff3264d66737ede Bug 1360909 - Clients unable to access newly released content (Satellite 6.2 GA)
+
+            // remember the currently consumed product subscriptions
+            List<ProductSubscription> consumedProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
+
+            // refresh to update the entitlement certs on the client
+            log.info("Refresh...");
+            clienttasks.refresh(null, null, null);
+
+            sshCommandResult = clienttasks.repos(null, true, null, (String) null, (String) null, null, null, null);
+            listEnabledRepos = Repo.parse(sshCommandResult.getStdout());
+            Assert.assertNotNull(listEnabledRepos, "Enabled repo [" + listEnabledRepos + "] is included in the report of repos --list-enabled.");
+
+            // Assert the entitlement certs are restored after the refresh
+            log.info("After running refresh, assert that the entitlement certs are restored...");
+
+            Assert.assertEquals(clienttasks.getCurrentlyConsumedProductSubscriptions().size(),consumedProductSubscriptions.size(),"all the consumed product subscriptions have been restored.");
+
+        } else {throw new SkipException("Bugzilla 1360909 was not fixed in this old version of subscription-manager.");}
+
+    }
+
+
+    @BeforeGroups(groups = "setup", value = {}, enabled = true)
 	public void unsubscribeBeforeGroup() {
 		clienttasks.unsubscribe(true, (BigInteger) null, null, null, null, null);
 	}
