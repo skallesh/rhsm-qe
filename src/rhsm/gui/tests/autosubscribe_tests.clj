@@ -43,6 +43,8 @@
 (def sla-list (atom nil))
 (def entitlement-map (atom nil))
 
+(def product-cert-dir (atom nil))
+
 (defn- dirsetup? [dir]
   (and
    (= "exists" (trim
@@ -64,6 +66,7 @@
     (verify (not (.isBugOpen (BzChecker/getInstance) "1040119")))
     (if (= "RHEL7" (get-release)) (base/startup nil))
     (tasks/kill-app)
+    (reset! product-cert-dir (tasks/conf-file-value "productCertDir"))
     (reset! complytests (ComplianceTests. ))
     (.setupProductCertDirsBeforeClass @complytests)
     (let [safe-upper (fn [s] (if s (.toUpperCase s) nil))]
@@ -85,7 +88,7 @@
   (assert-valid-testing-arch)
   (run-command "subscription-manager unregister")
   (.configureProductCertDirAfterClass @complytests)
-  (tasks/set-conf-file-value "productCertDir" (@config :sm-rhsm-product-cert-dir))
+  (tasks/set-conf-file-value "productCertDir" @product-cert-dir)
   (tasks/restart-app))
 
 (defn ^{Test {:groups ["autosubscribe"

@@ -210,7 +210,8 @@
   [_]
   (let [certdir (tasks/conf-file-value "productCertDir")
         rhelcerts ["68" "69" "71" "72" "74" "76"]
-        certlist (map #(str certdir "/" % ".pem") rhelcerts)
+        certlist (into (map #(str certdir "/" % ".pem") rhelcerts)
+                       (map #(str certdir "-default/" % ".pem") rhelcerts))
         certexist? (map #(= 0 (:exitcode
                                (run-command (str "test -f " %))))
                         certlist)]
