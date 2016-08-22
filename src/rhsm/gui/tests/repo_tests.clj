@@ -150,7 +150,9 @@
   [_]
   (tasks/restart-app :unregister? true)
   (tasks/ui click :main-window "System")
-  (verify (not (tasks/has-state? :repositories "enabled"))))
+  (if (= "RHEL7" (get-release))
+    (verify (not (tasks/has-state? :repositories "enabled")))
+    (verify (not (tasks/visible? :repositories)))))
 
 (defn ^{Test {:groups ["repo"
                        "tier1"
