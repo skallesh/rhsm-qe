@@ -85,46 +85,59 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			"VerifyEUSRHELProductCertVersionFromEachCDNReleaseVersion_Test", "AcceptanceTests",
 			"Tier1Tests" }, dataProvider = "VerifyEUSRHELProductCertVersionFromEachCDNReleaseVersion_TestData", enabled = true)
 	public void VerifyEUSRHELProductCertVersionFromEachCDNReleaseVersion_Test(Object blockedByBug, String release,
-			String rhelRepoUrl, File eusEntitlementCertFile, File caCertFile) throws JSONException, Exception {
+			String rhelRepoUrl, File eusEntitlementCertFile) throws JSONException, Exception {
 		String rhelPackage = "zsh";
 		String rhelProductId = "69";
 		String eusProductId = "70";
 		File certFile = eusEntitlementCertFile;
 		File keyFile = clienttasks.getEntitlementCertKeyFileCorrespondingToEntitlementCertFile(eusEntitlementCertFile);
+
+		// if the product zsh is already installled remove it
 		if (clienttasks.isPackageInstalled(rhelPackage)) {
 			clienttasks.yumRemovePackage(rhelPackage, "--disablerepo=beaker-*");
-
 		}
+
+		// if the product cert70.pem is already installed , remove it
 		if ((!(ProductCert.findFirstInstanceWithMatchingFieldFromList("productId", eusProductId,
 				clienttasks.getCurrentProductCerts()) == null))) {
 			moveProductCertFiles(eusProductId + ".pem");
 		}
+
+		// get the current product certs
 		List<ProductCert> currentProductCerts = clienttasks.getCurrentProductCerts();
 		ProductCert rhelProductCert = ProductCert.findFirstInstanceWithMatchingFieldFromList("productId", rhelProductId,
 				currentProductCerts);
-		if (rhelProductCert == null)
-			throw new SkipException(
-					"Extended Update Support is not offered on this variant '" + clienttasks.variant + "' of RHEL.");
+
+		// Assert that installed product certs doesnot have eus product cert
+		// i.e. 70.pem in it
 		ProductCert eusProductCert = ProductCert.findFirstInstanceWithMatchingFieldFromList("productId", eusProductId,
 				currentProductCerts);
 		Assert.assertNull(eusProductCert,
 				"Do not expect the EUS product to be installed at the beginning of this test.");
+
+		// Assert that installed product list features a rhelproduct cert in it
 		List<InstalledProduct> currentlyInstalledProducts = clienttasks.getCurrentlyInstalledProducts();
 		InstalledProduct rhelInstalledProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId",
 				rhelProductId, currentlyInstalledProducts);
 		Assert.assertNotNull(rhelInstalledProduct,
 				"Expecting the installed RHEL Server product '" + rhelProductId + "' to be installed.");
-		log.info("Configuring a temporary product cert directory...");
 
+		// now install package zsh
 		clienttasks.yumInstallPackage(rhelPackage);
+
+		// now get the installed product list and assert that eus product cert
+		// 70.pem is downloaded
 		currentlyInstalledProducts = clienttasks.getCurrentlyInstalledProducts();
 		InstalledProduct eusInstalledProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId",
 				eusProductId, currentlyInstalledProducts);
 		Assert.assertNotNull(eusInstalledProduct, "After installing rhel package '" + rhelPackage
 				+ "' from enabled eus repo ', the eus product id '" + eusProductId + "' is installed.");
+
 		String basearch = clienttasks.arch;
 		if (basearch.equals("i686") || basearch.equals("i586") || basearch.equals("i486"))
 			basearch = "i386";
+
+		// set the release and baseurl
 		String rhelRepoUrlToProductId = rhelRepoUrl.replace("$releasever", release).replace("$basearch", basearch)
 				+ "/repodata/productid";
 
@@ -135,9 +148,11 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 						client, "curl --stderr /dev/null --insecure --tlsv1 --cert " + certFile + " --key " + keyFile
 								+ " 	" + rhelRepoUrlToProductId,
 						Integer.valueOf(0), null, "| tee " + localProductIdFile);
+
 		// create a ProductCert corresponding to the productid file
 		ProductCert productIdCert = clienttasks.getProductCertFromProductCertFile(localProductIdFile);
 		log.info("Actual product cert from CDN '" + rhelRepoUrlToProductId + "': " + productIdCert);
+
 		// assert the expected productIdCert release version
 
 		Assert.assertEquals(productIdCert.productNamespace.version, release,
@@ -167,46 +182,69 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		// register
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null,
 				null, (String) null, null, null, null, null, null, null, null, null);
+
+		// find a subscription that provides Extended Update products
 		SubscriptionPool subscriptionPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList(
 				"subscriptionName", "Extended Update Support", clienttasks.getCurrentlyAvailableSubscriptionPools());
+
+		// and attach eus subscription
 		clienttasks.subscribe(null, null, subscriptionPool.poolId, null, null, null, null, null, null, null, null,
 				null);
+
+		// get current product cert and verify that rhelproduct is installed on
+		// the system
 		ProductCert rhelProductCert = clienttasks.getCurrentRhelProductCert();
 
 		if (rhelProductCert == null)
 			throw new SkipException("Failed to find an installed RHEL product cert.");
 
-		// find the autosubscribed entitlement that provides access to RHEL
+		// find the entitlement that provides access to RHEL and EUS
+
 		EntitlementCert eusEntitlementCerts = clienttasks
 				.getEntitlementCertCorrespondingToSubscribedPool(subscriptionPool);
 		if (eusEntitlementCerts == null)
 
 		{
-			log.warning("Could not find an entitlement to a EUS subscription.");
-			return ll;
+			throw new SkipException("Could not find an entitlement to a EUS subscription.");
+
 		}
 
-		// get the cacert file
-		File caCertFile = new File(clienttasks.getConfParameter("repo_ca_cert"));
-
+		// if eus repo is not enabled , enable it
 		String rhelRepoUrl = null;
 		for (Repo disabledRepo : Repo.parse(
 				clienttasks.repos(null, false, true, (String) null, (String) null, null, null, null).getStdout()))
 
 		{
-			// enable only rhel-7-server-eus-rpms repo , assuming its run only
-			// on server variant
+			String variant = null;
+			if (clienttasks.variant.equals("ComputeNode"))
+				variant = "ComputeNode";
+			if (clienttasks.variant.equals("Client"))
+				variant = "client";
+			if (clienttasks.variant.equals("Server"))
+				variant = "server";
+			if (clienttasks.variant.equals("Workstation"))
+				variant = "workstation";
 
-			if ((disabledRepo.repoId.matches("rhel-[0-9]+-server-eus-rpms"))) {
+			if ((disabledRepo.repoId.matches("rhel-[0-9]+-" + variant + "-eus-rpms"))) {
 				clienttasks.repos(null, null, null, disabledRepo.repoId, (String) null, null, null, null);
 			}
 		}
 		for (
-
+		// if eus repo is enabled then add it to the data provider
 		Repo enabledRepo : Repo.parse(
 				clienttasks.repos(null, true, false, (String) null, (String) null, null, null, null).getStdout())) {
 			if (enabledRepo.enabled) {
-				if (enabledRepo.repoId.matches("rhel-[0-9]+-server-eus-rpms")) {
+
+				String variant = null;
+				if (clienttasks.variant.equals("ComputeNode"))
+					variant = "ComputeNode";
+				if (clienttasks.variant.equals("Client"))
+					variant = "client";
+				if (clienttasks.variant.equals("Server"))
+					variant = "server";
+				if (clienttasks.variant.equals("Workstation"))
+					variant = "workstation";
+				if (enabledRepo.repoId.matches("rhel-[0-9]+-" + variant + "-eus-rpms")) {
 					rhelRepoUrl = enabledRepo.repoUrl;
 				}
 			}
@@ -222,8 +260,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			if (release.matches("6.7") && clienttasks.variant.equals("Server") && clienttasks.arch.equals("x86_64"))
 				bugIds.add("1352162");
 			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[] {}));
-			ll.add(Arrays.asList(
-					new Object[] { blockedByBzBug, release, rhelRepoUrl, eusEntitlementCerts.file, caCertFile }));
+			ll.add(Arrays.asList(new Object[] { blockedByBzBug, release, rhelRepoUrl, eusEntitlementCerts.file }));
 		}
 
 		return ll;
@@ -4640,73 +4677,103 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				"subscription-manager repo-override --repo=<id> --remove='' should not delete the overrides");
 	}
 
-    /**
-     * @author redakkan
-     * @throws Exception JSON Exception
-     */
-    @Test(description = "Verify the newly added content set is immediatly available on the client", groups = {
-            "blockedByBug-1360909"}, enabled = true)
-    public void VerifyNewContentAvailability_Test() throws JSONException, Exception {
-        String resourcePath = null;
-        String requestBody = null;
-        String ProductId = "32060";
-        String contentId="1234";
-        clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String) null, null, null, null, true, false, null, null, null);
-        clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
+	/**
+	 * @author redakkan
+	 * @throws Exception
+	 *             JSON Exception
+	 */
+	@Test(description = "Verify the newly added content set is immediatly available on the client", groups = {
+			"blockedByBug-1360909" }, enabled = true)
+	public void VerifyNewContentAvailability_Test() throws JSONException, Exception {
+		String resourcePath = null;
+		String requestBody = null;
+		String ProductId = "32060";
+		String contentId = "1234";
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
+				null, (String) null, null, null, null, true, false, null, null, null);
+		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
 
-        //checking subscribed repos
-        List<Repo> subscribedRepo = clienttasks.getCurrentlySubscribedRepos();
-        if (subscribedRepo.isEmpty())
-            throw new SkipException("There are no entitled yum repos available for this test.");
+		// checking subscribed repos
+		List<Repo> subscribedRepo = clienttasks.getCurrentlySubscribedRepos();
+		if (subscribedRepo.isEmpty())
+			throw new SkipException("There are no entitled yum repos available for this test.");
 
-        // getting the list of all  enabled repos
-        SSHCommandResult sshCommandResult = clienttasks.repos(null, true, false, (String) null, (String) null, null, null, null);
-        // in test data verifying that already enabled repos are not available
-        List<Repo> listEnabledRepos = Repo.parse(sshCommandResult.getStdout());
-        Assert.assertTrue(listEnabledRepos.isEmpty(), "No attached subscriptions provides a enabled repos .");
+		// getting the list of all enabled repos
+		SSHCommandResult sshCommandResult = clienttasks.repos(null, true, false, (String) null, (String) null, null,
+				null, null);
+		// in test data verifying that already enabled repos are not available
+		List<Repo> listEnabledRepos = Repo.parse(sshCommandResult.getStdout());
+		Assert.assertTrue(listEnabledRepos.isEmpty(), "No attached subscriptions provides a enabled repos .");
 
-        //Create a new content "Newcontent_foo"
-        requestBody = CandlepinTasks.createContentRequestBody("Newcontent_foo", contentId, "Newcontent_foo", "yum", "Foo Vendor", "/foo/path", "/foo/path/gpg", null, null, null, null).toString();
-        resourcePath = "/content";
+		// Create a new content "Newcontent_foo"
+		requestBody = CandlepinTasks.createContentRequestBody("Newcontent_foo", contentId, "Newcontent_foo", "yum",
+				"Foo Vendor", "/foo/path", "/foo/path/gpg", null, null, null, null).toString();
+		resourcePath = "/content";
 
-        if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0"))
-            resourcePath = "/owners/" + sm_clientOrg + resourcePath;
-        CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, resourcePath, requestBody);
-        //Link the newly created content to product id , by default the repo is enabled
-        CandlepinTasks.addContentToProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, ProductId, contentId, true);
-        CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, resourcePath, requestBody);
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0"))
+			resourcePath = "/owners/" + sm_clientOrg + resourcePath;
+		CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,
+				resourcePath, requestBody);
+		// Link the newly created content to product id , by default the repo is
+		// enabled
+		CandlepinTasks.addContentToProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,
+				sm_clientOrg, ProductId, contentId, true);
+		CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,
+				resourcePath, requestBody);
 
-        //any newly added content to the product should be immediately available when using server > 2.0
+		// any newly added content to the product should be immediately
+		// available when using server > 2.0
 
-        if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) {
-            //look for the newly added content  available in  repo list-enabled by getting the list of currently enabled repos
-            sshCommandResult = clienttasks.repos(null, true, null, (String) null, (String) null, null, null, null);
-            listEnabledRepos = Repo.parse(sshCommandResult.getStdout());
-            Assert.assertNotNull(listEnabledRepos, "Enabled repo [" + listEnabledRepos + "] is included in the report of repos --list-enabled.");
-        } else if (clienttasks.isVersion(servertasks.statusVersion, "<", "2.0.0") && (clienttasks.isPackageVersion("subscription-manager",">=","1.17.10-1"))){ //commit c38ae2c2e2f0e59674aa670d8ff3264d66737ede Bug 1360909 - Clients unable to access newly released content (Satellite 6.2 GA)
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) {
+			// look for the newly added content available in repo list-enabled
+			// by getting the list of currently enabled repos
+			sshCommandResult = clienttasks.repos(null, true, null, (String) null, (String) null, null, null, null);
+			listEnabledRepos = Repo.parse(sshCommandResult.getStdout());
+			Assert.assertNotNull(listEnabledRepos,
+					"Enabled repo [" + listEnabledRepos + "] is included in the report of repos --list-enabled.");
+		} else if (clienttasks.isVersion(servertasks.statusVersion, "<", "2.0.0")
+				&& (clienttasks.isPackageVersion("subscription-manager", ">=", "1.17.10-1"))) { // commit
+																								// c38ae2c2e2f0e59674aa670d8ff3264d66737ede
+																								// Bug
+																								// 1360909
+																								// -
+																								// Clients
+																								// unable
+																								// to
+																								// access
+																								// newly
+																								// released
+																								// content
+																								// (Satellite
+																								// 6.2
+																								// GA)
 
-            // remember the currently consumed product subscriptions
-            List<ProductSubscription> consumedProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
+			// remember the currently consumed product subscriptions
+			List<ProductSubscription> consumedProductSubscriptions = clienttasks
+					.getCurrentlyConsumedProductSubscriptions();
 
-            // refresh to update the entitlement certs on the client
-            log.info("Refresh...");
-            clienttasks.refresh(null, null, null);
+			// refresh to update the entitlement certs on the client
+			log.info("Refresh...");
+			clienttasks.refresh(null, null, null);
 
-            sshCommandResult = clienttasks.repos(null, true, null, (String) null, (String) null, null, null, null);
-            listEnabledRepos = Repo.parse(sshCommandResult.getStdout());
-            Assert.assertNotNull(listEnabledRepos, "Enabled repo [" + listEnabledRepos + "] is included in the report of repos --list-enabled.");
+			sshCommandResult = clienttasks.repos(null, true, null, (String) null, (String) null, null, null, null);
+			listEnabledRepos = Repo.parse(sshCommandResult.getStdout());
+			Assert.assertNotNull(listEnabledRepos,
+					"Enabled repo [" + listEnabledRepos + "] is included in the report of repos --list-enabled.");
 
-            // Assert the entitlement certs are restored after the refresh
-            log.info("After running refresh, assert that the entitlement certs are restored...");
+			// Assert the entitlement certs are restored after the refresh
+			log.info("After running refresh, assert that the entitlement certs are restored...");
 
-            Assert.assertEquals(clienttasks.getCurrentlyConsumedProductSubscriptions().size(),consumedProductSubscriptions.size(),"all the consumed product subscriptions have been restored.");
+			Assert.assertEquals(clienttasks.getCurrentlyConsumedProductSubscriptions().size(),
+					consumedProductSubscriptions.size(), "all the consumed product subscriptions have been restored.");
 
-        } else {throw new SkipException("Bugzilla 1360909 was not fixed in this old version of subscription-manager.");}
+		} else {
+			throw new SkipException("Bugzilla 1360909 was not fixed in this old version of subscription-manager.");
+		}
 
-    }
+	}
 
-
-    @BeforeGroups(groups = "setup", value = {}, enabled = true)
+	@BeforeGroups(groups = "setup", value = {}, enabled = true)
 	public void unsubscribeBeforeGroup() {
 		clienttasks.unsubscribe(true, (BigInteger) null, null, null, null, null);
 	}
