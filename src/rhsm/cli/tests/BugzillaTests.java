@@ -499,23 +499,23 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@Test(description = "verify if subscription manager cli uses product name comparisons in the list command ", groups = {
-			"InstalledProductMultipliesAfterSubscription", "AcceptanceTests", "Tier1Tests",
-			"blockedByBug-709412" }, enabled = true)
+	@Test(description = "Verify the fix for Bug 709412 - subscription manager cli uses product name comparisons in the list command",
+		  groups = {"InstalledProductMultipliesAfterSubscription", "AcceptanceTests", "Tier1Tests", "blockedByBug-709412" },
+		  enabled = true)
 	public void InstalledProductMultipliesAfterSubscription() throws Exception {
-		if (!sm_serverType.equals(CandlepinType.hosted))
-			throw new SkipException("To be run against Stage only");
+		if (!sm_serverType.equals(CandlepinType.hosted)) throw new SkipException("To be run against Stage only");
 
 		String serverUrl = getServerUrl(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "hostname"),
 				clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "port"),
 				clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "prefix"));
 		clienttasks.register(sm_clientUsername, sm_clientPassword, null, null, null, null, null, null, null, null,
 				(String) null, serverUrl, null, null, true, null, null, null, null);
-		productCertDir = clienttasks.productCertDir;
+		productCertDirBeforeInstalledProductMultipliesAfterSubscription = clienttasks.productCertDir;
 		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir",
 				"/usr/share/rhsm/product/RHEL-" + clienttasks.redhatReleaseX);
 		List<InstalledProduct> InstalledProducts = clienttasks.getCurrentlyInstalledProducts();
 
+/* [jsefler] too time consuming to subscribe to each pool; subscribing to all pools at once will equivalently test bug 709412 
 		List<SubscriptionPool> AvailablePools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		for (SubscriptionPool pools : AvailablePools) {
 			clienttasks.subscribe(null, null, pools.poolId, null, null, null, null, null, null, null, null, null);
@@ -524,15 +524,20 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			// clienttasks.unsubscribeFromTheCurrentlyConsumedProductSubscriptionsCollectively();
 			clienttasks.unsubscribe(true, (BigInteger) null, null, null, null, null);
 		}
+*/
+		clienttasks.subscribeToTheCurrentlyAllAvailableSubscriptionPoolsCollectively();
+		List<InstalledProduct> InstalledProductsAfterSubscribing = clienttasks.getCurrentlyInstalledProducts();
+		Assert.assertEquals(InstalledProducts.size(), InstalledProductsAfterSubscribing.size(), "The number installed products listed by subscription manager should remained unchanged after attaching all available subscriptions.");
+		clienttasks.unsubscribe(true, (BigInteger) null, null, null, null, null);
 	}
 
 	@AfterGroups(groups = { "setup" }, value = { "InstalledProductMultipliesAfterSubscription" })
 	public void afterInstalledProductMultipliesAfterSubscription() throws IOException {
-		if (productCertDir != null)
-			clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir", productCertDir);
+		if (productCertDirBeforeInstalledProductMultipliesAfterSubscription != null)
+			clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir", productCertDirBeforeInstalledProductMultipliesAfterSubscription);
 	}
 
-	String productCertDir = null;
+	String productCertDirBeforeInstalledProductMultipliesAfterSubscription = null;
 
 	/**
 	 * @author skallesh
