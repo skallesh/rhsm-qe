@@ -87,7 +87,15 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	public void VerifyEUSRHELProductCertVersionFromEachCDNReleaseVersion_Test(Object blockedByBug, String release,
 			String rhelRepoUrl, File eusEntitlementCertFile) throws JSONException, Exception {
 		String rhelPackage = "zsh";
-		String rhelProductId = "69";
+		String rhelProductId = null;
+		if (clienttasks.variant.equals("Server"))
+			rhelProductId = "69";
+		if (clienttasks.variant.equals("ComputeNode"))
+			rhelProductId = "76";
+		if (clienttasks.variant.equals("Client"))
+			rhelProductId = "68";
+		if (clienttasks.variant.equals("Workstation"))
+			rhelProductId = "71";
 		String eusProductId = "70";
 		File certFile = eusEntitlementCertFile;
 		File keyFile = clienttasks.getEntitlementCertKeyFileCorrespondingToEntitlementCertFile(eusEntitlementCertFile);
@@ -105,9 +113,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 
 		// get the current product certs
 		List<ProductCert> currentProductCerts = clienttasks.getCurrentProductCerts();
-		ProductCert rhelProductCert = ProductCert.findFirstInstanceWithMatchingFieldFromList("productId", rhelProductId,
-				currentProductCerts);
-
 		// Assert that installed product certs doesnot have eus product cert
 		// i.e. 70.pem in it
 		ProductCert eusProductCert = ProductCert.findFirstInstanceWithMatchingFieldFromList("productId", eusProductId,
@@ -133,6 +138,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		Assert.assertNotNull(eusInstalledProduct, "After installing rhel package '" + rhelPackage
 				+ "' from enabled eus repo ', the eus product id '" + eusProductId + "' is installed.");
 
+		// different arch
 		String basearch = clienttasks.arch;
 		if (basearch.equals("i686") || basearch.equals("i586") || basearch.equals("i486"))
 			basearch = "i386";
@@ -3756,8 +3762,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				providedProductId.get(providedProductId.size() - 1), clienttasks.getCurrentlyInstalledProducts());
 		Assert.assertEquals(BeforeAttaching.status, "Partially Subscribed",
 				"Verified that installed product is partially subscribed");
-		clienttasks.subscribe(null, null, poolId, null, null, Integer.toString(quantity), null, null, null, null, null,
-				null);
+		clienttasks.subscribe(null, null, poolId, null, null, Integer.toString(quantity) + 2, null, null, null, null,
+				null, null);
 		InstalledProduct AfterAttaching = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productName",
 				providedProductId.get(providedProductId.size() - 1), clienttasks.getCurrentlyInstalledProducts());
 		Assert.assertEquals(AfterAttaching.status, "Subscribed", "Verified that installed product"
@@ -4683,7 +4689,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 *             JSON Exception
 	 */
 	@Test(description = "Verify the newly added content set is immediatly available on the client", groups = {
-			"blockedByBug-1360909" }, enabled = true)
+			"VerifyNewContentAvailability", "blockedByBug-1360909" }, enabled = true)
 	public void VerifyNewContentAvailability_Test() throws JSONException, Exception {
 		String resourcePath = null;
 		String requestBody = null;
@@ -4832,8 +4838,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.restart_rhsmcertd(configuredCertFrequency, configuredHealFrequency, null);
 	}
 
-	@AfterGroups(groups = { "setup" }, value = { "VerifyEUSRHELProductCertVersionFromEachCDNReleaseVersion_Test" })
-	@AfterClass(groups = "setup")
+	@AfterGroups(groups = "setup", value = {
+			"VerifyEUSRHELProductCertVersionFromEachCDNReleaseVersion_Test" }, enabled = true)
 	public void removeinstalledProduct() throws IOException {
 		clienttasks.yumRemovePackage("zsh");
 	}
