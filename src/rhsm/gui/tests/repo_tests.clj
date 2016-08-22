@@ -150,7 +150,7 @@
   [_]
   (tasks/restart-app :unregister? true)
   (tasks/ui click :main-window "System")
-  (verify (not (tasks/visible? :repositories))))
+  (verify (not (tasks/has-state? :repositories "enabled"))))
 
 (defn ^{Test {:groups ["repo"
                        "tier1"
