@@ -96,29 +96,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			rhelProductId = "68";
 		if (clienttasks.variant.equals("Workstation"))
 			rhelProductId = "71";
-		String eusProductId = "70";
+		String eusProductId = "70";// add eus productid for other variants
 		File certFile = eusEntitlementCertFile;
 		File keyFile = clienttasks.getEntitlementCertKeyFileCorrespondingToEntitlementCertFile(eusEntitlementCertFile);
-
-		// if the product zsh is already installled remove it
-		if (clienttasks.isPackageInstalled(rhelPackage)) {
-			clienttasks.yumRemovePackage(rhelPackage, "--disablerepo=beaker-*");
-		}
-
-		// if the product cert70.pem is already installed , remove it
-		if ((!(ProductCert.findFirstInstanceWithMatchingFieldFromList("productId", eusProductId,
-				clienttasks.getCurrentProductCerts()) == null))) {
-			moveProductCertFiles(eusProductId + ".pem");
-		}
-
-		// get the current product certs
-		List<ProductCert> currentProductCerts = clienttasks.getCurrentProductCerts();
-		// Assert that installed product certs doesnot have eus product cert
-		// i.e. 70.pem in it
-		ProductCert eusProductCert = ProductCert.findFirstInstanceWithMatchingFieldFromList("productId", eusProductId,
-				currentProductCerts);
-		Assert.assertNull(eusProductCert,
-				"Do not expect the EUS product to be installed at the beginning of this test.");
 
 		// Assert that installed product list features a rhelproduct cert in it
 		List<InstalledProduct> currentlyInstalledProducts = clienttasks.getCurrentlyInstalledProducts();
@@ -126,17 +106,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				rhelProductId, currentlyInstalledProducts);
 		Assert.assertNotNull(rhelInstalledProduct,
 				"Expecting the installed RHEL Server product '" + rhelProductId + "' to be installed.");
-
-		// now install package zsh
-		clienttasks.yumInstallPackage(rhelPackage);
-
-		// now get the installed product list and assert that eus product cert
-		// 70.pem is downloaded
-		currentlyInstalledProducts = clienttasks.getCurrentlyInstalledProducts();
-		InstalledProduct eusInstalledProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId",
-				eusProductId, currentlyInstalledProducts);
-		Assert.assertNotNull(eusInstalledProduct, "After installing rhel package '" + rhelPackage
-				+ "' from enabled eus repo ', the eus product id '" + eusProductId + "' is installed.");
 
 		// different arch
 		String basearch = clienttasks.arch;
@@ -165,9 +134,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				"Version of the productid on the CDN at '" + rhelRepoUrlToProductId
 						+ "' that will be installed by the yum product-id plugin after setting the subscription-manager release to '"
 						+ release + "'.");
-		Assert.assertEquals(eusInstalledProduct.version, release,
-				"version of the product cert downloaded after setting the subscription-manager release to '" + release
-						+ "'.");
+
 	}
 
 	@DataProvider(name = "VerifyEUSRHELProductCertVersionFromEachCDNReleaseVersion_TestData")
@@ -223,14 +190,14 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		{
 			String variant = null;
 			if (clienttasks.variant.equals("ComputeNode"))
-				variant = "ComputeNode";
+				variant = "computenode";
 			if (clienttasks.variant.equals("Client"))
 				variant = "client";
 			if (clienttasks.variant.equals("Server"))
 				variant = "server";
 			if (clienttasks.variant.equals("Workstation"))
 				variant = "workstation";
-
+			// add repos for eus-source rpms and debug rpms
 			if ((disabledRepo.repoId.matches("rhel-[0-9]+-" + variant + "-eus-rpms"))) {
 				clienttasks.repos(null, null, null, disabledRepo.repoId, (String) null, null, null, null);
 			}
