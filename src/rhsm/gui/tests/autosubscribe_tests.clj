@@ -68,6 +68,7 @@
     (tasks/kill-app)
     (reset! product-cert-dir (tasks/conf-file-value "productCertDir"))
     (reset! complytests (ComplianceTests. ))
+    (.moveOriginalProductCertDefaultDirFilesBeforeClass @complytests)
     (.setupProductCertDirsBeforeClass @complytests)
     (let [safe-upper (fn [s] (if s (.toUpperCase s) nil))]
       (reset! common-sla
@@ -87,6 +88,7 @@
   cleanup [_]
   (assert-valid-testing-arch)
   (run-command "subscription-manager unregister")
+  (.restoreOriginalProductCertDefaultDirFilesAfterClass @complytests)
   (.configureProductCertDirAfterClass @complytests)
   (tasks/set-conf-file-value "productCertDir" @product-cert-dir)
   (tasks/restart-app))
