@@ -86,17 +86,20 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			"Tier1Tests" }, dataProvider = "VerifyEUSRHELProductCertVersionFromEachCDNReleaseVersion_TestData", enabled = true)
 	public void VerifyEUSRHELProductCertVersionFromEachCDNReleaseVersion_Test(Object blockedByBug, String release,
 			String rhelRepoUrl, File eusEntitlementCertFile) throws JSONException, Exception {
-		String rhelPackage = "zsh";
 		String rhelProductId = null;
-		if (clienttasks.variant.equals("Server"))
+		if ((clienttasks.arch.equals("ppc64")) && (clienttasks.variant.equals("Server")))
+			rhelProductId = "74";
+		else if ((clienttasks.arch.equals("x86_64")) && (clienttasks.variant.equals("Server")))
 			rhelProductId = "69";
-		if (clienttasks.variant.equals("ComputeNode"))
+		else if ((clienttasks.arch.equals("s390x")) && (clienttasks.variant.equals("Server")))
+			rhelProductId = "72";
+		else if ((clienttasks.arch.equals("x86_64")) && (clienttasks.variant.equals("ComputeNode")))
 			rhelProductId = "76";
-		if (clienttasks.variant.equals("Client"))
-			rhelProductId = "68";
-		if (clienttasks.variant.equals("Workstation"))
-			rhelProductId = "71";
-		String eusProductId = "70";// add eus productid for other variants
+		else if (clienttasks.variant.equals("Client"))
+			throw new SkipException("Test is not supported for this variant");
+		else if (clienttasks.variant.equals("Workstation"))
+			throw new SkipException("Test is not supported for this variant");
+
 		File certFile = eusEntitlementCertFile;
 		File keyFile = clienttasks.getEntitlementCertKeyFileCorrespondingToEntitlementCertFile(eusEntitlementCertFile);
 
@@ -113,6 +116,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			basearch = "i386";
 
 		// set the release and baseurl
+		System.out.println(rhelRepoUrl + " .......is the repo url");
 		String rhelRepoUrlToProductId = rhelRepoUrl.replace("$releasever", release).replace("$basearch", basearch)
 				+ "/repodata/productid";
 
@@ -121,8 +125,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		RemoteFileTasks
 				.runCommandAndAssert(
 						client, "curl --stderr /dev/null --insecure --tlsv1 --cert " + certFile + " --key " + keyFile
-								+ " 	" + rhelRepoUrlToProductId,
-						Integer.valueOf(0), null, "| tee " + localProductIdFile);
+								+ " " + rhelRepoUrlToProductId + " " + " | tee " + localProductIdFile,
+						Integer.valueOf(0));
 
 		// create a ProductCert corresponding to the productid file
 		ProductCert productIdCert = clienttasks.getProductCertFromProductCertFile(localProductIdFile);
@@ -138,32 +142,49 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	}
 
 	@DataProvider(name = "VerifyEUSRHELProductCertVersionFromEachCDNReleaseVersion_TestData")
-	public Object[][] getVerifyEUSRHELProductCertVersionFromEachCDNReleaseVersion_TestDataAs2dArray() {
+	public Object[][] getVerifyEUSRHELProductCertVersionFromEachCDNReleaseVersion_TestDataAs2dArray()
+			throws JSONException, Exception {
 		return TestNGUtils.convertListOfListsTo2dArray(
 				getVerifyEUSRHELProductCertVersionFromEachCDNReleaseVersion_TestDataAsListOfLists());
 	}
 
-	protected List<List<Object>> getVerifyEUSRHELProductCertVersionFromEachCDNReleaseVersion_TestDataAsListOfLists() {
+	protected List<List<Object>> getVerifyEUSRHELProductCertVersionFromEachCDNReleaseVersion_TestDataAsListOfLists()
+			throws JSONException, Exception {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		if (!isSetupBeforeSuiteComplete)
 			return ll;
 		if (clienttasks == null)
 			return ll;
-
+		String eusProductId = null;
+		if ((clienttasks.arch.equals("ppc64")) && (clienttasks.variant.equals("Server")))
+			eusProductId = "75";
+		else if ((clienttasks.arch.equals("x86_64")) && (clienttasks.variant.equals("Server")))
+			eusProductId = "70";
+		else if ((clienttasks.arch.equals("x86_64")) && clienttasks.variant.equals("ComputeNode"))
+			eusProductId = "217";
+		else if ((clienttasks.arch.equals("ppc64le")) && (clienttasks.variant.equals("Server"))) {
+			eusProductId = "292";
+			throw new SkipException("blocked by bug 1369516"); // for now
+																// skipping test
+																// on this arch
+																// due to
+																// unavailable
+																// subscriptions
+																// due to wrong
+																// productid
+																// mapping
+			// for now skipping the
+		} else if ((clienttasks.arch.equals("s390x")) && (clienttasks.variant.equals("Server")))
+			eusProductId = "73";
+		else if (clienttasks.variant.equals("Client"))
+			throw new SkipException("Test is not supported for this variant");
+		else if (clienttasks.variant.equals("Workstation"))
+			throw new SkipException("Test is not supported for this variant");
 		// unregister
 		clienttasks.unregister(null, null, null);
 		// register
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null,
 				null, (String) null, null, null, null, null, null, null, null, null);
-
-		// find a subscription that provides Extended Update products
-		SubscriptionPool subscriptionPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList(
-				"subscriptionName", "Extended Update Support", clienttasks.getCurrentlyAvailableSubscriptionPools());
-
-		// and attach eus subscription
-		clienttasks.subscribe(null, null, subscriptionPool.poolId, null, null, null, null, null, null, null, null,
-				null);
-
 		// get current product cert and verify that rhelproduct is installed on
 		// the system
 		ProductCert rhelProductCert = clienttasks.getCurrentRhelProductCert();
@@ -171,10 +192,36 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		if (rhelProductCert == null)
 			throw new SkipException("Failed to find an installed RHEL product cert.");
 
+		// find a subscription that provides Extended Update products
+
+		/*
+		 * List<String> providedProducts = new ArrayList<String>();
+		 * providedProducts.add(rhelProductCert.productName); SubscriptionPool
+		 * eusSubscriptionPool =
+		 * SubscriptionPool.findFirstInstanceWithMatchingFieldFromList(
+		 * "subscriptionName", rhelProductCert.productId,
+		 * SubscriptionPool.parse(clienttasks .list(null, true, null, null,
+		 * null, null, null, null, "*Extended*", null, null, null, null)
+		 * .getStdout()));
+		 */
+
+		SubscriptionPool pool = null;
+		for (SubscriptionPool eusSubscriptionPool : SubscriptionPool.parse(
+				clienttasks.list(null, true, null, null, null, null, null, null, "*Extended*", null, null, null, null)
+						.getStdout())) {
+			if ((CandlepinTasks.getPoolProvidedProductIds(sm_client1Username, sm_client1Password, sm_serverUrl,
+					eusSubscriptionPool.poolId).contains(eusProductId))) {
+				// and attach eus subscription
+				clienttasks.subscribe(null, null, eusSubscriptionPool.poolId, null, null, null, null, null, null, null,
+						null, null);
+				pool = eusSubscriptionPool;
+				break;
+			}
+		}
 		// find the entitlement that provides access to RHEL and EUS
 
-		EntitlementCert eusEntitlementCerts = clienttasks
-				.getEntitlementCertCorrespondingToSubscribedPool(subscriptionPool);
+		EntitlementCert eusEntitlementCerts = clienttasks.getEntitlementCertCorrespondingToSubscribedPool(pool);
+		System.out.println(eusEntitlementCerts + "is eus cert entitlement");
 		if (eusEntitlementCerts == null)
 
 		{
@@ -189,14 +236,15 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 
 		{
 			String variant = null;
-			if (clienttasks.variant.equals("ComputeNode"))
-				variant = "computenode";
-			if (clienttasks.variant.equals("Client"))
-				variant = "client";
-			if (clienttasks.variant.equals("Server"))
-				variant = "server";
-			if (clienttasks.variant.equals("Workstation"))
-				variant = "workstation";
+			if (clienttasks.arch.equals("x86_64")) {
+				if (clienttasks.variant.equals("ComputeNode"))
+					variant = "hpc-node";
+				if (clienttasks.variant.equals("Server"))
+					variant = "server";
+			} else if (clienttasks.arch.equals("ppc64") || (clienttasks.arch.equals("ppc64le"))) {
+				variant = "for-power";
+			} else if (clienttasks.arch.equals("s390x"))
+				variant = "for-system-z";
 			// add repos for eus-source rpms and debug rpms
 			if ((disabledRepo.repoId.matches("rhel-[0-9]+-" + variant + "-eus-rpms"))) {
 				clienttasks.repos(null, null, null, disabledRepo.repoId, (String) null, null, null, null);
@@ -209,14 +257,16 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			if (enabledRepo.enabled) {
 
 				String variant = null;
-				if (clienttasks.variant.equals("ComputeNode"))
-					variant = "ComputeNode";
-				if (clienttasks.variant.equals("Client"))
-					variant = "client";
-				if (clienttasks.variant.equals("Server"))
-					variant = "server";
-				if (clienttasks.variant.equals("Workstation"))
-					variant = "workstation";
+				if (clienttasks.arch.equals("x86_64")) {
+					if (clienttasks.variant.equals("ComputeNode"))
+						variant = "hpc-node";
+					if (clienttasks.variant.equals("Server"))
+						variant = "server";
+				} else if (clienttasks.arch.equals("ppc64") || (clienttasks.arch.equals("ppc64le"))) {
+					variant = "for-power";
+				} else if (clienttasks.arch.equals("s390x"))
+					variant = "for-system-z";
+
 				if (enabledRepo.repoId.matches("rhel-[0-9]+-" + variant + "-eus-rpms")) {
 					rhelRepoUrl = enabledRepo.repoUrl;
 				}
@@ -229,11 +279,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		String release : clienttasks.getCurrentlyAvailableReleases(null, null, null))
 
 		{
-			List<String> bugIds = new ArrayList<String>();
-			if (release.matches("6.7") && clienttasks.variant.equals("Server") && clienttasks.arch.equals("x86_64"))
-				bugIds.add("1352162");
-			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[] {}));
-			ll.add(Arrays.asList(new Object[] { blockedByBzBug, release, rhelRepoUrl, eusEntitlementCerts.file }));
+			if (!((release.matches("7.0")) || (release.matches("7Server")))) {
+				List<String> bugIds = new ArrayList<String>();
+				if (release.matches("6.7") && clienttasks.variant.equals("Server") && clienttasks.arch.equals("x86_64"))
+					bugIds.add("1352162");
+				else if (release.matches("7.1"))
+					// && clienttasks.variant.equals("Server"))
+					bugIds.add("1369920");
+
+				BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[] {}));
+				ll.add(Arrays.asList(new Object[] { blockedByBzBug, release, rhelRepoUrl, eusEntitlementCerts.file }));
+			}
 		}
 
 		return ll;
@@ -679,11 +735,12 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@Test(description = "Verify the fix for Bug 709412 - subscription manager cli uses product name comparisons in the list command",
-		  groups = {"InstalledProductMultipliesAfterSubscription", "AcceptanceTests", "Tier1Tests", "blockedByBug-709412" },
-		  enabled = true)
+	@Test(description = "Verify the fix for Bug 709412 - subscription manager cli uses product name comparisons in the list command", groups = {
+			"InstalledProductMultipliesAfterSubscription", "AcceptanceTests", "Tier1Tests",
+			"blockedByBug-709412" }, enabled = true)
 	public void InstalledProductMultipliesAfterSubscription() throws Exception {
-		if (!sm_serverType.equals(CandlepinType.hosted)) throw new SkipException("To be run against Stage only");
+		if (!sm_serverType.equals(CandlepinType.hosted))
+			throw new SkipException("To be run against Stage only");
 
 		String serverUrl = getServerUrl(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "hostname"),
 				clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "port"),
@@ -695,26 +752,18 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				"/usr/share/rhsm/product/RHEL-" + clienttasks.redhatReleaseX);
 		List<InstalledProduct> InstalledProducts = clienttasks.getCurrentlyInstalledProducts();
 
-/* [jsefler] too time consuming to subscribe to each pool; subscribing to all pools at once will equivalently test bug 709412 
-		List<SubscriptionPool> AvailablePools = clienttasks.getCurrentlyAvailableSubscriptionPools();
-		for (SubscriptionPool pools : AvailablePools) {
-			clienttasks.subscribe(null, null, pools.poolId, null, null, null, null, null, null, null, null, null);
-			List<InstalledProduct> InstalledProductsAfterSubscribing = clienttasks.getCurrentlyInstalledProducts();
-			Assert.assertEquals(InstalledProducts.size(), InstalledProductsAfterSubscribing.size());
-			// clienttasks.unsubscribeFromTheCurrentlyConsumedProductSubscriptionsCollectively();
-			clienttasks.unsubscribe(true, (BigInteger) null, null, null, null, null);
-		}
-*/
 		clienttasks.subscribeToTheCurrentlyAllAvailableSubscriptionPoolsCollectively();
 		List<InstalledProduct> InstalledProductsAfterSubscribing = clienttasks.getCurrentlyInstalledProducts();
-		Assert.assertEquals(InstalledProducts.size(), InstalledProductsAfterSubscribing.size(), "The number installed products listed by subscription manager should remained unchanged after attaching all available subscriptions.");
+		Assert.assertEquals(InstalledProducts.size(), InstalledProductsAfterSubscribing.size(),
+				"The number installed products listed by subscription manager should remained unchanged after attaching all available subscriptions.");
 		clienttasks.unsubscribe(true, (BigInteger) null, null, null, null, null);
 	}
 
 	@AfterGroups(groups = { "setup" }, value = { "InstalledProductMultipliesAfterSubscription" })
 	public void afterInstalledProductMultipliesAfterSubscription() throws IOException {
 		if (productCertDirBeforeInstalledProductMultipliesAfterSubscription != null)
-			clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir", productCertDirBeforeInstalledProductMultipliesAfterSubscription);
+			clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir",
+					productCertDirBeforeInstalledProductMultipliesAfterSubscription);
 	}
 
 	String productCertDirBeforeInstalledProductMultipliesAfterSubscription = null;
@@ -767,6 +816,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				}
 			}
 		}
+		System.out.println(providedProductId.get(providedProductId.size() - 1) + " provided");
 		InstalledProduct BeforeAttaching = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productName",
 				providedProductId.get(providedProductId.size() - 1), clienttasks.getCurrentlyInstalledProducts());
 		Assert.assertEquals(BeforeAttaching.status, "Partially Subscribed",
@@ -2208,6 +2258,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		String consumerId = clienttasks.getCurrentConsumerId();
 		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_clientUsername, sm_clientPassword, sm_serverUrl,
 				consumerId);
+		Map<String, String> factsMap = new HashMap<String, String>();
+		factsMap.put("virt.is_guest", "true");
+		clienttasks.facts(null, true, null, null, null);
 		Calendar cal = new GregorianCalendar(); // right now
 		cal.set(Calendar.HOUR_OF_DAY, 0);
 		cal.set(Calendar.MINUTE, 0);
@@ -2215,7 +2268,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		Date todaysDate = cal.getTime();
 		cal.add(Calendar.YEAR, 1);
 		cal.add(Calendar.DATE, 10);
-		Date futureDate = cal.getTime(); // one year and 10 days from tomorrow
 		Map<String, String> attributes = new HashMap<String, String>();
 		attributes.put("virt_limit", "4");
 		attributes.put("arch", "ALL");
@@ -3597,10 +3649,19 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null,
 				null, (String) null, null, null, null, true, false, null, null, null);
+		String consumerId = clienttasks.getCurrentConsumerId();
+		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,
+				consumerId);
+		String expiringPoolId = createTestPool(-60 * 24, 1);
+		clienttasks.subscribe(null, null, expiringPoolId, null, null, null, null, null, null, null, null, null);
 
-		File expectCertFile = new File(System.getProperty("automation.dir", null) + "/certs/Expiredcert.pem");
-		RemoteFileTasks.putFile(client.getConnection(), expectCertFile.toString(), "/root/", "0755");
-		clienttasks.importCertificate("/root/Expiredcert.pem");
+		Calendar c1 = new GregorianCalendar();
+		Calendar c2 = new GregorianCalendar();
+		// wait for the pool to expire
+		// sleep(endingMinutesFromNow*60*1000);
+		// trying to reduce the wait time for the expiration by subtracting off
+		// some expensive test time
+		sleep(1 * 60 * 1000 - (c2.getTimeInMillis() - c1.getTimeInMillis()));
 		List<ProductSubscription> consumedProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
 		List<ProductSubscription> activeProductSubscriptions = ProductSubscription
 				.findAllInstancesWithMatchingFieldFromList("isActive", Boolean.TRUE, consumedProductSubscriptions);
@@ -3714,14 +3775,15 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
 			if (pool.subscriptionType.equals("Stackable")) {
 				quantity = pool.suggested / 2;
-				if (!(pool.suggested == 1))
+				if (!(pool.suggested == 1)) {
 					clienttasks.subscribe(null, null, pool.poolId, null, null, Integer.toString(quantity), null, null,
 							null, null, null, null);
-				poolId = pool.poolId;
-				providedProductId = pool.provides;
-				if (!(providedProductId.isEmpty())) {
-					break;
+					poolId = pool.poolId;
+					providedProductId = pool.provides;
+					if (!(providedProductId.isEmpty())) {
+						break;
 
+					}
 				}
 			}
 		}
@@ -3729,7 +3791,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				providedProductId.get(providedProductId.size() - 1), clienttasks.getCurrentlyInstalledProducts());
 		Assert.assertEquals(BeforeAttaching.status, "Partially Subscribed",
 				"Verified that installed product is partially subscribed");
-		clienttasks.subscribe(null, null, poolId, null, null, Integer.toString(quantity) + 2, null, null, null, null,
+		clienttasks.subscribe(null, null, poolId, null, null, Integer.toString(quantity + 2), null, null, null, null,
 				null, null);
 		InstalledProduct AfterAttaching = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productName",
 				providedProductId.get(providedProductId.size() - 1), clienttasks.getCurrentlyInstalledProducts());
@@ -4135,34 +4197,47 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		List<String> Expiredproductid = new ArrayList<String>();
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
 				null, (String) null, null, null, null, true, null, null, null, null);
+		String consumerId = clienttasks.getCurrentConsumerId();
+		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,
+				consumerId);
 		clienttasks.service_level(null, null, null, true, null, null, null, null, null, null, null, null);
 		clienttasks.run_rhsmcertd_worker(true);
-		InstalledProduct Shared_beforeExpiry = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId",
-				"88888", clienttasks.getCurrentlyInstalledProducts());
-		if (Shared_beforeExpiry.status.equals("Not Subscribed")) {
-			throw new SkipException("No subscriptions are available for testing");
+		String expiringPoolId = createTestPool(-60 * 24, 1);
+		clienttasks.subscribe(null, null, expiringPoolId, null, null, null, null, null, null, null, null, null);
+
+		Calendar c1 = new GregorianCalendar();
+		Calendar c2 = new GregorianCalendar();
+		// wait for the pool to expire
+		// sleep(endingMinutesFromNow*60*1000);
+		// trying to reduce the wait time for the expiration by subtracting off
+		// some expensive test time
+		sleep(1 * 60 * 1000 - (c2.getTimeInMillis() - c1.getTimeInMillis()));
+		InstalledProduct productCertBeforeHealing = ProductCert.findFirstInstanceWithMatchingFieldFromList("status",
+				"Expired", clienttasks.getCurrentlyInstalledProducts());
+		/*
+		 * for (InstalledProduct product :
+		 * clienttasks.getCurrentlyInstalledProducts()) { if
+		 * (product.status.equals("Expired"))
+		 * Expiredproductid.add(product.productId); }
+		 */
+		if (!(productCertBeforeHealing.status.equals("Expired"))) {
+			throw new SkipException("No expired products are available for testing");
 		} else {
-			File expectCertFile = new File(System.getProperty("automation.dir", null) + "/certs/Expiredcert.pem");
-			RemoteFileTasks.putFile(client.getConnection(), expectCertFile.toString(), "/root/", "0755");
-			clienttasks.importCertificate_("/root/Expiredcert.pem");
-
-			for (InstalledProduct product : clienttasks.getCurrentlyInstalledProducts()) {
-				if (product.status.equals("Expired"))
-					Expiredproductid.add(product.productId);
-			}
-			if ((Expiredproductid.size() == 0)) {
-				throw new SkipException("No expired products are available for testing");
-			} else {
-				clienttasks.run_rhsmcertd_worker(true);
-				for (InstalledProduct product : clienttasks.getCurrentlyInstalledProducts()) {
-					for (int i = 0; i < Expiredproductid.size(); i++) {
-
-						if (product.productId.equals(Expiredproductid.get(i)))
-							Assert.assertEquals(product.status, "Subscribed");
-
-					}
-				}
-			}
+			clienttasks.run_rhsmcertd_worker(true);
+			InstalledProduct productCertAfterHealing = ProductCert.findFirstInstanceWithMatchingFieldFromList(
+					"productId", productCertBeforeHealing.productId, clienttasks.getCurrentlyInstalledProducts());
+			Assert.assertEquals(productCertAfterHealing.status, "Subscribed");
+			/*
+			 * for (InstalledProduct product :
+			 * clienttasks.getCurrentlyInstalledProducts()) {
+			 * 
+			 * for (int i = 0; i < Expiredproductid.size(); i++) {
+			 * 
+			 * if (product.productId.equals(Expiredproductid.get(i)))
+			 * Assert.assertEquals(product.status, "Subscribed");
+			 * 
+			 * } }
+			 */
 		}
 	}
 
@@ -4418,7 +4493,13 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			throw new SkipException("Sufficient future pools are not available");
 		int i = randomGenerator.nextInt(availOnDate.size());
 		List<String> productId = availOnDate.get(i).provides;
-
+		clienttasks.subscribe(true, null, (String) null, null, null, null, null, null, null, null, null, null);
+		InstalledProduct installedProductList = InstalledProduct.findFirstInstanceWithMatchingFieldFromList(
+				"productName", productId.get(productId.size() - 1), installedproducts);
+		if ((installedProductList.status.equals("Not Subscribed"))) {
+			throw new SkipException("Suffient pools not available for testing");
+		}
+		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		clienttasks.subscribe(null, null, availOnDate.get(i).poolId, null, null, null, null, null, null, null, null,
 				null);
 		Assert.assertTrue(!(productId.isEmpty()),
@@ -4803,12 +4884,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		if (clienttasks == null)
 			return;
 		clienttasks.restart_rhsmcertd(configuredCertFrequency, configuredHealFrequency, null);
-	}
-
-	@AfterGroups(groups = "setup", value = {
-			"VerifyEUSRHELProductCertVersionFromEachCDNReleaseVersion_Test" }, enabled = true)
-	public void removeinstalledProduct() throws IOException {
-		clienttasks.yumRemovePackage("zsh");
 	}
 
 	@AfterGroups(groups = { "setup" }, value = { "VerifySubscriptionOf", "VerifySystemCompliantFact",
