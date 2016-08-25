@@ -95,18 +95,25 @@
   "Asserts that status message displayed in main-window is right after attaching subscriptions"
   [_]
   (try
-    (let
-  	[subscribed-products (atom (int 0))
-         after-subscribe (atom (int 0))]
-      (tasks/search :match-installed? true)
-      (dotimes [n 3]
+    (tasks/search :match-installed? true)
+    (log/info "'Overall status' at the beginning of this test: " (tasks/ui gettextvalue :overall-status))
+    (log/info "Num of subscriptions that can be attached: " (tasks/ui getrowcount :all-subscriptions-view))
+    ;; (dotimes [n (min 3 (Integer. (tasks/ui getrowcount :all-subscriptions-view)))] ;; max 3 times repeat that
+    (loop [n 3
+           num-of-subscriptions (Integer. (tasks/ui getrowcount :all-subscriptions-view))]
+      (when (> (min n num-of-subscriptions) 0)
         (tasks/subscribe (tasks/ui getcellvalue :all-subscriptions-view
-                                   (rand-int (tasks/ui getrowcount :all-subscriptions-view)) 0)))
-      (reset! subscribed-products (count (filter #(= "Subscribed" %)
-                                                 (tasks/get-table-elements :installed-view 2))))
-      (reset! after-subscribe (Integer. (re-find #"\d*"
-                                                 (tasks/ui gettextvalue :overall-status))))
-      (verify (= @after-subscribe (- @status-before-subscribe @subscribed-products))))))
+                                   (rand-int num-of-subscriptions) 0))
+        (when (bool (tasks/ui guiexist :all-subscriptions-view))
+          (recur (dec n) (Integer. (tasks/ui getrowcount :all-subscriptions-view))))))
+    (log/info "'Overall status' at the end of this test: " (tasks/ui gettextvalue :overall-status))
+    (let [subscribed-products (count (filter #(= "Subscribed" %)
+                                             (tasks/get-table-elements :installed-view 2)))
+          after-subscribe (if-let [num (re-find #"^\d+" (tasks/ui gettextvalue :overall-status))]
+                            (Integer. num)
+                            0)
+          before-subscribe @status-before-subscribe]
+      (verify (= after-subscribe (- before-subscribe subscribed-products))))))
 
 (defn ^{Test {:groups ["subscription_status"
                        "tier1"
