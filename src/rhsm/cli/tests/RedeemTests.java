@@ -21,6 +21,8 @@ import rhsm.base.CandlepinType;
 import rhsm.base.SubscriptionManagerBaseTestScript;
 import rhsm.base.SubscriptionManagerCLITestScript;
 import rhsm.cli.tasks.CandlepinTasks;
+import rhsm.cli.tasks.SubscriptionManagerTasks;
+
 import com.redhat.qe.tools.SSHCommandResult;
 
 /**
@@ -101,16 +103,20 @@ public class RedeemTests extends SubscriptionManagerCLITestScript {
 		SSHCommandResult redeemResult = clienttasks.redeem("tester@redhat.com",null,null,null,null, null);
 		
 		// assert redemption results
+		String expectedMsgFromCandlepin = "Standalone candlepin does not support redeeming a subscription for dmi.system.manufacturer:";
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.7-1")) {	// candlepin commit 676ce6c2786203a33ec5eedc8dadcd664a62f09e 1263474: Standalone candlepin now returns the expected error message and code
+			expectedMsgFromCandlepin = "Standalone candlepin does not support redeeming a subscription.";
+		}
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.9-1")) {	// post commit a695ef2d1da882c5f851fde90a24f957b70a63ad
-			Assert.assertTrue(redeemResult.getStderr().trim().startsWith("Standalone candlepin does not support redeeming a subscription for dmi.system.manufacturer:"),"stderr indicates: Standalone candlepin does not support redeeming a subscription for dmi.system.manufacturer:");
+			Assert.assertTrue(redeemResult.getStderr().trim().startsWith(expectedMsgFromCandlepin),"stderr indicates '"+expectedMsgFromCandlepin+"'");
 			Assert.assertEquals(redeemResult.getExitCode(), Integer.valueOf(70)/*EX_SOFTWARE*/,"Exit code from redeem when executed against a standalone candlepin server.");
 		} else if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
-			Assert.assertTrue(redeemResult.getStdout().trim().startsWith("Standalone candlepin does not support redeeming a subscription for dmi.system.manufacturer:"),"stdout indicates: Standalone candlepin does not support redeeming a subscription for dmi.system.manufacturer:");
+			Assert.assertTrue(redeemResult.getStdout().trim().startsWith(expectedMsgFromCandlepin),"stdout indicates: '"+expectedMsgFromCandlepin+"'");
 			Assert.assertEquals(redeemResult.getExitCode(), Integer.valueOf(70)/*EX_SOFTWARE*/,"Exit code from redeem when executed against a standalone candlepin server.");
 		} else {
 			//Assert.assertEquals(redeemResult.getStdout().trim(), "Standalone candlepin does not support activation.","Standalone candlepin does not support activation.");
 			//Assert.assertEquals(redeemResult.getStdout().trim(), "Standalone candlepin does not support redeeming a subscription.","Standalone candlepin does not support redeeming a subscription.");
-			Assert.assertTrue(redeemResult.getStdout().trim().startsWith("Standalone candlepin does not support redeeming a subscription for dmi.system.manufacturer:"),"stdout indicates: Standalone candlepin does not support redeeming a subscription for dmi.system.manufacturer:");
+			Assert.assertTrue(redeemResult.getStdout().trim().startsWith(expectedMsgFromCandlepin),"stdout indicates: '"+expectedMsgFromCandlepin+"'");
 			Assert.assertEquals(redeemResult.getExitCode(), Integer.valueOf(255),"Exit code from redeem when executed against a standalone candlepin server.");
 		}
 	}
