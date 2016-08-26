@@ -4,6 +4,7 @@
                                            clientcmd
                                            cli-tasks
                                            candlepin-runner)]
+        [slingshot.slingshot :only (try+ throw+)]
         [com.redhat.qe.verify :only (verify)]
         [clojure.string :only (split
                                blank?)]
@@ -94,26 +95,30 @@
   check_status_message_after_attaching
   "Asserts that status message displayed in main-window is right after attaching subscriptions"
   [_]
-  (try
-    (tasks/search :match-installed? true)
-    (log/info "'Overall status' at the beginning of this test: " (tasks/ui gettextvalue :overall-status))
-    (log/info "Num of subscriptions that can be attached: " (tasks/ui getrowcount :all-subscriptions-view))
-    ;; (dotimes [n (min 3 (Integer. (tasks/ui getrowcount :all-subscriptions-view)))] ;; max 3 times repeat that
-    (loop [n 3
-           num-of-subscriptions (Integer. (tasks/ui getrowcount :all-subscriptions-view))]
-      (when (> (min n num-of-subscriptions) 0)
-        (tasks/subscribe (tasks/ui getcellvalue :all-subscriptions-view
-                                   (rand-int num-of-subscriptions) 0))
-        (when (bool (tasks/ui guiexist :all-subscriptions-view))
-          (recur (dec n) (Integer. (tasks/ui getrowcount :all-subscriptions-view))))))
-    (log/info "'Overall status' at the end of this test: " (tasks/ui gettextvalue :overall-status))
-    (let [subscribed-products (count (filter #(= "Subscribed" %)
-                                             (tasks/get-table-elements :installed-view 2)))
-          after-subscribe (if-let [num (re-find #"^\d+" (tasks/ui gettextvalue :overall-status))]
-                            (Integer. num)
-                            0)
-          before-subscribe @status-before-subscribe]
-      (verify (= after-subscribe (- before-subscribe subscribed-products))))))
+  (tasks/search :match-installed? true)
+  (when (not (bool (tasks/ui guiexist :all-subscriptions-view)))
+    (throw (SkipException.
+            (str "There is no subscription available for future subscription."))))
+  (log/info "'Overall status' at the beginning of this test: " (tasks/ui gettextvalue :overall-status))
+  (log/info "Num of subscriptions that can be attached: " (tasks/ui getrowcount :all-subscriptions-view))
+  ;; (dotimes [n (min 3 (Integer. (tasks/ui getrowcount :all-subscriptions-view)))] ;; max 3 times repeat that
+  (loop [n 3
+         num-of-subscriptions (if (bool (tasks/ui guiexist :all-subscriptions-view))
+                                (Integer. (tasks/ui getrowcount :all-subscriptions-view))
+                                0)]
+    (when (> (min n num-of-subscriptions) 0)
+      (tasks/subscribe (tasks/ui getcellvalue :all-subscriptions-view
+                                 (rand-int num-of-subscriptions) 0))
+      (when (bool (tasks/ui guiexist :all-subscriptions-view))
+        (recur (dec n) (Integer. (tasks/ui getrowcount :all-subscriptions-view))))))
+  (log/info "'Overall status' at the end of this test: " (tasks/ui gettextvalue :overall-status))
+  (let [subscribed-products (count (filter #(= "Subscribed" %)
+                                           (tasks/get-table-elements :installed-view 2)))
+        after-subscribe (if-let [num (re-find #"^\d+" (tasks/ui gettextvalue :overall-status))]
+                          (Integer. num)
+                          0)
+        before-subscribe @status-before-subscribe]
+    (verify (= after-subscribe (- before-subscribe subscribed-products)))))
 
 (defn ^{Test {:groups ["subscription_status"
                        "tier1"
@@ -125,33 +130,71 @@
   "Asserts that status message displayed in main-window is right after attaching future
    subscriptions"
   [_]
-  (if (= "RHEL7" (get-release))
-    (throw
-     (SkipException.
-      (str "Cannot generate keyevents in RHEL7 !!
-            Skipping Test 'check_status_message_future_subscriptions'."))))
-  (try
-    (let
-        [subscribed-products-date (atom (int 0))
-         after-date-products (atom (int 0))
-         present-date (do (tasks/ui selecttab :all-available-subscriptions)
-                          (tasks/ui gettextvalue :date-entry))
-         date-split (split present-date #"-")
-         year (first date-split)
-         month (second date-split)
-         day (last date-split)
-         new-year (+ (Integer. (re-find  #"\d+" year)) 1)]
-      (tasks/ui enterstring :date-entry (str new-year "-" month "-" day))
-      (tasks/search :match-installed? true)
-      (dotimes [n 3]
+  (let [present-date (do (tasks/ui selecttab :all-available-subscriptions)
+                         (tasks/ui gettextvalue :date-entry))
+        [year month day] (apply vector (split present-date #"-"))
+        new-year (+ (Integer. (re-find  #"\d+" year)) 1)]
+    (tasks/ui enterstring :date-entry (str new-year "-" month "-" day))
+    (tasks/search :match-installed? true)
+    (when (not (bool (tasks/ui guiexist :all-subscriptions-view)))
+      (throw (SkipException.
+              (str "There is no subscription available for future subscription."))))
+    (loop [n 3
+           num-of-subscriptions (if (bool (tasks/ui guiexist :all-subscriptions-view))
+                                  (Integer. (tasks/ui getrowcount :all-subscriptions-view))
+                                  0)]
+      (when (> (min n num-of-subscriptions) 0)
         (tasks/subscribe (tasks/ui getcellvalue :all-subscriptions-view
-                                   (rand-int (tasks/ui getrowcount :all-subscriptions-view)) 0)))
-      (reset! subscribed-products-date (count
-                                        (filter #(= "Subscribed" %)
-                                                (tasks/get-table-elements :installed-view 2))))
-      (reset! after-date-products (Integer. (re-find #"\d*"
-                                                     (tasks/ui gettextvalue :overall-status))))
-      (verify (= @after-date-products (- @status-before-subscribe @subscribed-products-date))))))
+                                   (rand-int num-of-subscriptions) 0))
+        (when (bool (tasks/ui guiexist :all-subscriptions-view))
+          (recur (dec n) (Integer. (tasks/ui getrowcount :all-subscriptions-view))))))
+    (let [subscribed-products-date (count
+                                    (filter #(= "Subscribed" %)
+                                            (tasks/get-table-elements :installed-view 2)))
+          after-date-products (if-let [num (re-find #"^\d+" (tasks/ui gettextvalue :overall-status)) ]
+                                (Integer. num)
+                                0)
+          before-subscribe @status-before-subscribe]
+      (verify (= after-date-products (- before-subscribe subscribed-products-date))))))
+
+(defn ^{Test {:groups ["subscription_status"
+                       "tier1"
+                       "blockedByBug-1012501"
+                       "blockedByBug-1040119"
+                       "blockedByBug-1199671"]
+              :dependsOnMethods ["check_status_message_after_attaching"]}}
+  check_status_message_future_temporary_subscriptions
+  "Asserts that a dialog with an error is risen right after attaching future temporary subscription"
+  [_]
+  (let [present-date (do (tasks/ui selecttab :all-available-subscriptions)
+                         (tasks/ui gettextvalue :date-entry))
+        [year month day] (apply vector (split present-date #"-"))
+        new-year (+ (Integer. (re-find  #"\d+" year)) 1)]
+    (tasks/ui enterstring :date-entry (str new-year "-" month "-" day))
+    (tasks/search :match-installed? true)
+    (when (not (bool (tasks/ui guiexist :all-subscriptions-view)))
+      (throw (SkipException.
+              (str "There is no subscription available for future subscription."))))
+    (let [thrown-error (try+
+                        (loop [n 3
+                               num-of-subscriptions (if (bool (tasks/ui guiexist :all-subscriptions-view))
+                                                      (Integer. (tasks/ui getrowcount :all-subscriptions-view))
+                                                      0)]
+                          (when (> (min n num-of-subscriptions) 0)
+                            (tasks/subscribe (tasks/ui getcellvalue :all-subscriptions-view
+                                                       (rand-int num-of-subscriptions) 0))
+                            (when (bool (tasks/ui guiexist :all-subscriptions-view))
+                              (recur (dec n) (Integer. (tasks/ui getrowcount :all-subscriptions-view))))))
+                        (catch Object e (:type e)))]
+      (verify (= thrown-error :sm-error))
+      (let [subscribed-products-date (count
+                                      (filter #(= "Subscribed" %)
+                                              (tasks/get-table-elements :installed-view 2)))
+            after-date-products (if-let [num (re-find #"^\d+" (tasks/ui gettextvalue :overall-status)) ]
+                                  (Integer. num)
+                                  0)
+            before-subscribe @status-before-subscribe]
+        (verify (= after-date-products (- before-subscribe subscribed-products-date)))))))
 
 ;; Commenting out this test as changing dates on the server can have drastic effects
 (comment
