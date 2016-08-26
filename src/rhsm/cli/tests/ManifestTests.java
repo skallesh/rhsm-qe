@@ -145,9 +145,108 @@ public class ManifestTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void RCTCatManifest_Test(Object bugzilla, File manifestFile) throws Exception {
+		verifyRCTCatManifestWithOptions(manifestFile, null);
+	}
+	
+	
+	@Test(	description="execute rct cat-manifest with --no-content option against all of the test manifest files",
+			groups={"blockedByBug-1336883"},
+			dependsOnMethods={"RCTDumpManifestDestination_Test"}, // to populate manifestFileContentMap
+			alwaysRun=true,	// run even when there are failures or skips in RCTDumpManifestDestination_Test
+			dataProvider="ManifestFilesData",
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void RCTCatManifestNoContent_Test(Object bugzilla, File manifestFile) throws Exception {
+		if (clienttasks.isPackageVersion("subscription-manager","<","1.17.10-1")) { // RHEL7.3 commit 860b178e0eb5b91df01c424dad29c521e1c23767  Bug 1336883 - [RFE] Update the 'rct' command to allow not outputting content-set data
+			throw new SkipException("This  version of subscription-manager does not include the --no-content option.  (RFE Bug 1336883 was first inc1uded in subscription-manager-1.17.10-1)");
+		}
+		verifyRCTCatManifestWithOptions(manifestFile, Arrays.asList("--no-content"));
+	}
+	
+	
+	@Test(	description="execute rct cat-manifest against a non-zip file (e.g. the identity cert)",
+			groups={"blockedByBug-994344"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void RCTCatManifestWithNonZipFile_Test() {
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg);
+		
+		// execute and assert rct cat-manifest against the consumer cert pem file
+		SSHCommandResult result = client.runCommandAndWait("rct cat-manifest "+clienttasks.consumerCertFile());
+		Assert.assertEquals(result.getStdout().trim(), "Manifest zip is invalid.", "Stdout from rct cat-manifest with a non-zip file.");
+		Assert.assertEquals(result.getStderr().trim(), "", "Stderr from rct cat-manifest with a non-zip file.");
+		Assert.assertEquals(result.getExitCode(), Integer.valueOf(1), "Exitcode from rct cat-manifest with a non-zip file.");
+	}
+	
+	
+	@Test(	description="execute rct dump-manifest against a non-zip file (e.g. the identity cert)",
+			groups={"blockedByBug-994344"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void RCTDumpManifestWithNonZipFile_Test() {
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg);
+		
+		// execute and assert rct dump-manifest against the consumer cert pem file
+		SSHCommandResult result = client.runCommandAndWait("rct dump-manifest "+clienttasks.consumerCertFile());
+		Assert.assertEquals(result.getStdout().trim(), "Manifest zip is invalid.", "Stdout from rct dump-manifest with a non-zip file.");
+		Assert.assertEquals(result.getStderr().trim(), "", "Stderr from rct dump-manifest with a non-zip file.");
+		Assert.assertEquals(result.getExitCode(), Integer.valueOf(1), "Exitcode from rct dump-manifest with a non-zip file.");
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	// Candidates for an automated Test:
+	// see https://github.com/RedHatQE/rhsm-qe/issues
+	
+	// Configuration methods ***********************************************************************
+
+	@BeforeClass(groups={"setup"})
+	public void fetchManifestsBeforeClass() {
+		if (clienttasks==null) return;
+		
+		// fetch the manifest files
+		RemoteFileTasks.runCommandAndAssert(client, "rm -rf "+manifestsDir+" && mkdir -p "+manifestsDir, Integer.valueOf(0));
+		if (!sm_manifestsUrl.isEmpty()) {
+			log.info("Fetching test manifests from "+sm_manifestsUrl+" for use by this test class...");
+			RemoteFileTasks.runCommandAndAssert(client, "cd "+manifestsDir+" && wget --quiet --recursive --level 1 --no-parent --accept .zip "+sm_manifestsUrl, Integer.valueOf(0)/*,null,"Downloaded: \\d+ files"*/);
+		}
+		
+		// store the manifest files in a list
+		SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(client, "find "+manifestsDir+" -name \"*.zip\"", 0);
+		for (String manifestPathname : result.getStdout().split("\\s*\\n\\s*")) {
+			if (manifestPathname.isEmpty()) continue;
+			manifestFiles.add(new File(manifestPathname));
+		}
+	}
+	@BeforeClass(groups={"setup"})
+	public void cleanDumpDestinationBeforeClass() {
+		if (clienttasks==null) return;
+		RemoteFileTasks.runCommandAndAssert(client, "rm -rf "+dumpDestination, Integer.valueOf(0));
+	}
+
+	
+	// Protected methods ***********************************************************************
+	
+	protected final String dumpDestination = "/tmp/sm-rctDumpManifest";
+	protected final String manifestsDir	= "/tmp/sm-testManifestsDir";
+	protected List<File> manifestFiles	= new ArrayList<File>();
+	protected Map<File,List<File>> manifestFileContentMap = new HashMap<File,List<File>>();
+	
+	
+	protected void verifyRCTCatManifestWithOptions(File manifestFile, List<String> options) throws Exception {
+		
+		// flatten the list of options into a single string for the runCommand
+		String optionsAsString = " ";
+		if (options!=null) for (String option : options) optionsAsString += option+" ";
 		
 		// execute and assert rct cat-manifest MANIFEST_FILE
-		SSHCommandResult catManifestResult = RemoteFileTasks.runCommandAndAssert(client, "rct cat-manifest "+manifestFile, 0);
+		SSHCommandResult catManifestResult = RemoteFileTasks.runCommandAndAssert(client, "rct cat-manifest"+optionsAsString+manifestFile, 0);
 		
 		// parse the output from catManifestResult into a Manifest object
 		List<Manifest> catManifests = Manifest.parse(catManifestResult.getStdout());
@@ -265,88 +364,18 @@ public class ManifestTests extends SubscriptionManagerCLITestScript {
 			Assert.assertEquals(manifestSubscription.certificateVersion,entitlementCert.version, "Subscription Certificate Version value comes from entitlementCert.version");
 			List<String> actualProvidedProducts = manifestSubscription.providedProducts;
 			List<String> expectedProvidedProducts = new ArrayList<String>(); for (ProductNamespace productNamespace : entitlementCert.productNamespaces) expectedProvidedProducts.add(String.format("%s: %s", productNamespace.id, productNamespace.name));
-			Assert.assertTrue(actualProvidedProducts.containsAll(expectedProvidedProducts)&&expectedProvidedProducts.containsAll(actualProvidedProducts), "Subscription Provided Products contains all entitlementCert.productNamespaces=>\"id: name\": "+expectedProvidedProducts);
+			Assert.assertTrue(actualProvidedProducts.containsAll(expectedProvidedProducts)&&expectedProvidedProducts.containsAll(actualProvidedProducts), "Manifest Subscription '"+manifestSubscription.name+"' Provided Products "+actualProvidedProducts+" contains all entitlementCert.productNamespaces=>\"id: name\": "+expectedProvidedProducts);
 			List<String> actualContentSets = new ArrayList<String>(); if (manifestSubscription.contentSets!=null) actualContentSets.addAll(manifestSubscription.contentSets);
 			List<String> expectedContentSets = new ArrayList<String>();
 			for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) expectedContentSets.add(contentNamespace.downloadUrl);
-			Assert.assertTrue(actualContentSets.containsAll(expectedContentSets)&&expectedContentSets.containsAll(actualContentSets), "Subscription Content Sets contains all entitlementCert.contentNamespaces=>downloadUrl: "/* +expectedContentSets is too long to print*/);
+			if (options!=null && options.contains("--no-content")) {
+				Assert.assertNull(manifestSubscription.contentSets, "The cat-manifest report does not include any Subscription Content Sets when the '--no-content' option is specified.");
+			} else {
+				Assert.assertTrue(actualContentSets.containsAll(expectedContentSets)&&expectedContentSets.containsAll(actualContentSets), "Subscription Content Sets contains all entitlementCert.contentNamespaces=>downloadUrl: (too long to print)"/* +expectedContentSets */);				
+			}
 		}
 	}
 	
-	
-	@Test(	description="execute rct cat-manifest against a non-zip file (e.g. the identity cert)",
-			groups={"blockedByBug-994344"},
-			enabled=true)
-	//@ImplementsNitrateTest(caseId=)
-	public void RCTCatManifestWithNonZipFile_Test() {
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg);
-		
-		// execute and assert rct cat-manifest against the consumer cert pem file
-		SSHCommandResult result = client.runCommandAndWait("rct cat-manifest "+clienttasks.consumerCertFile());
-		Assert.assertEquals(result.getStdout().trim(), "Manifest zip is invalid.", "Stdout from rct cat-manifest with a non-zip file.");
-		Assert.assertEquals(result.getStderr().trim(), "", "Stderr from rct cat-manifest with a non-zip file.");
-		Assert.assertEquals(result.getExitCode(), Integer.valueOf(1), "Exitcode from rct cat-manifest with a non-zip file.");
-	}
-	
-	
-	@Test(	description="execute rct dump-manifest against a non-zip file (e.g. the identity cert)",
-			groups={"blockedByBug-994344"},
-			enabled=true)
-	//@ImplementsNitrateTest(caseId=)
-	public void RCTDumpManifestWithNonZipFile_Test() {
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg);
-		
-		// execute and assert rct dump-manifest against the consumer cert pem file
-		SSHCommandResult result = client.runCommandAndWait("rct dump-manifest "+clienttasks.consumerCertFile());
-		Assert.assertEquals(result.getStdout().trim(), "Manifest zip is invalid.", "Stdout from rct dump-manifest with a non-zip file.");
-		Assert.assertEquals(result.getStderr().trim(), "", "Stderr from rct dump-manifest with a non-zip file.");
-		Assert.assertEquals(result.getExitCode(), Integer.valueOf(1), "Exitcode from rct dump-manifest with a non-zip file.");
-	}
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	// Candidates for an automated Test:
-	// see https://github.com/RedHatQE/rhsm-qe/issues
-	
-	// Configuration methods ***********************************************************************
-
-	@BeforeClass(groups={"setup"})
-	public void fetchManifestsBeforeClass() {
-		if (clienttasks==null) return;
-		
-		// fetch the manifest files
-		RemoteFileTasks.runCommandAndAssert(client, "rm -rf "+manifestsDir+" && mkdir -p "+manifestsDir, Integer.valueOf(0));
-		if (!sm_manifestsUrl.isEmpty()) {
-			log.info("Fetching test manifests from "+sm_manifestsUrl+" for use by this test class...");
-			RemoteFileTasks.runCommandAndAssert(client, "cd "+manifestsDir+" && wget --quiet --recursive --level 1 --no-parent --accept .zip "+sm_manifestsUrl, Integer.valueOf(0)/*,null,"Downloaded: \\d+ files"*/);
-		}
-		
-		// store the manifest files in a list
-		SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(client, "find "+manifestsDir+" -name \"*.zip\"", 0);
-		for (String manifestPathname : result.getStdout().split("\\s*\\n\\s*")) {
-			if (manifestPathname.isEmpty()) continue;
-			manifestFiles.add(new File(manifestPathname));
-		}
-	}
-	@BeforeClass(groups={"setup"})
-	public void cleanDumpDestinationBeforeClass() {
-		if (clienttasks==null) return;
-		RemoteFileTasks.runCommandAndAssert(client, "rm -rf "+dumpDestination, Integer.valueOf(0));
-	}
-
-	
-	// Protected methods ***********************************************************************
-	
-	protected final String dumpDestination = "/tmp/sm-rctDumpManifest";
-	protected final String manifestsDir	= "/tmp/sm-testManifestsDir";
-	protected List<File> manifestFiles	= new ArrayList<File>();
-	protected Map<File,List<File>> manifestFileContentMap = new HashMap<File,List<File>>();
 	
 	// Data Providers ***********************************************************************
 	

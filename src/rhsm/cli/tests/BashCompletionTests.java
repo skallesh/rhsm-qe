@@ -263,6 +263,9 @@ public class BashCompletionTests extends SubscriptionManagerCLITestScript{
 			// Bug 1004318 - rct [cat-cert cat-manifest dump-manifest stat-cert] does not bash complete its options
 			if (bashCommand.startsWith("rct ")) bugIds.add("1004318");
 			
+			// Bug 1369522 - rct cat-manifest is not bash-completing new option --no-content
+			if (bashCommand.startsWith("rct cat-manifest ")) bugIds.add("1369522");
+			
 			// Bug 1004385 - rhsm-icon bash completions should not end with a comma
 			if (bashCommand.startsWith("rhsm-icon ")) bugIds.add("1004385");
 			

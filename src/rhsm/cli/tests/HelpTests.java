@@ -1355,6 +1355,9 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		module = "cat-manifest";
 		options.clear();
 		options.add("-h, --help");
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.17.10-1")) { // RHEL7.3 commit 860b178e0eb5b91df01c424dad29c521e1c23767  Bug 1336883 - [RFE] Update the 'rct' command to allow not outputting content-set data
+			options.add("--no-content");
+		}
 		for (String commandHelp : new String[]{command+" "+module+" -h",command+" "+module+" --help"}) {
 			List <String> usages = new ArrayList<String>();
 			String usage = String.format("Usage: %s %s [OPTIONS] MANIFEST_FILE",command,module);
