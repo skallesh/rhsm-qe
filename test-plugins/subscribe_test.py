@@ -16,6 +16,10 @@
 from subscription_manager.base_plugin import SubManPlugin
 requires_api_version = "1.0"
 
+# imported to support logging in subscription-manager >= 1.17.10-1 from Bug 1334916: Move logging configuration to rhsm.conf
+import logging
+log = logging.getLogger('rhsm-app.' + __name__)
+
 
 class SubscribeTestPlugin(SubManPlugin):
     """Plugin triggered when a consumer subscribes to an entitlement"""
@@ -30,7 +34,9 @@ class SubscribeTestPlugin(SubManPlugin):
         #print dir(conduit)
         #print conduit.consumer_uuid
         conduit.log.info("Running pre_subscribe_hook: system is about to subscribe")
+        log.info        ("Running pre_subscribe_hook: system is about to subscribe")
         conduit.log.info("Running pre_subscribe_hook: subscribing consumer is %s" % conduit.consumer_uuid)
+        log.info        ("Running pre_subscribe_hook: subscribing consumer is %s" % conduit.consumer_uuid)
 
     def post_subscribe_hook(self, conduit):
         """`post_subscribe` hook
@@ -42,7 +48,10 @@ class SubscribeTestPlugin(SubManPlugin):
         #print conduit.consumer_uuid
         #print conduit.entitlement_data[0]['pool']['id']
         conduit.log.info("Running post_subscribe_hook: system just subscribed")
+        log.info        ("Running post_subscribe_hook: system just subscribed")
         conduit.log.info("Running post_subscribe_hook: subscribed consumer is %s" % conduit.consumer_uuid)
+        log.info        ("Running post_subscribe_hook: subscribed consumer is %s" % conduit.consumer_uuid)
         conduit.log.info("Running post_subscribe_hook: subscribed from pool id %s" % conduit.entitlement_data[0]['pool']['id'])
+        log.info        ("Running post_subscribe_hook: subscribed from pool id %s" % conduit.entitlement_data[0]['pool']['id'])
         
         

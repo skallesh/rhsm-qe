@@ -194,8 +194,12 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 	public void teardownVerifySubscriptionManagementEntitlementsInContainerMode_Test() {
 		teardownContainerMode();
 		if (consumerId!=null) {
-			clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,consumerId,null,null,null,(String)null,null,null, null, true, null, null, null, null);
-			clienttasks.unregister_(null, null, null);
+			//clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,consumerId,null,null,null,(String)null,null,null, null, true, null, null, null, null);
+			//	Error: Can not force registration while attempting to recover registration with consumerid. Please use --force without --consumerid to re-register or use the clean command and try again without --force.
+			clienttasks.clean_(null, null, null);
+			clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,consumerId,null,null,null,(String)null,null,null, null, false, null, null, null, null);
+			
+			clienttasks.unregister_(null, null, null);	// which will also return any consumed entitlements
 			consumerId=null;
 		}
 	}

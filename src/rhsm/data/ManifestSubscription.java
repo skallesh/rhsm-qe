@@ -224,13 +224,18 @@ public class ManifestSubscription extends AbstractCommandLineData {
 		regexes.put("entitlementFile",		"^\\s+Entitlement File: (.+)");
 		regexes.put("certificateFile",		"^\\s+Certificate File: (.+)");
 		regexes.put("certificateVersion",	"^\\s+Certificate Version: (.+)");
-		regexes.put("providedProducts",		"^\\s+Provided Products:(.*(\\n.*?)+)^\\s+Content Sets:");	// assumes "Content Sets:" is the next group
-		regexes.put("contentSets",			"^\\s+Content Sets:(.*(\\n.*?)+)(?:[\\s\\w]+:|$)");
+//		regexes.put("providedProducts",		"^\\s+Provided Products:(.*(\\n.*?)+)^\\s+Content Sets:");	// assumes "Content Sets:" is the next group	// DOES NOT WORK WHEN USING --no-content
+		regexes.put("providedProducts",		"^\\s+Provided Products:(.*(\\n.*?)*)(?:^\\s+Content Sets:|$)");	// assumes "Content Sets:" or $ is the next group
+//		regexes.put("providedProducts",		"^\\s+Provided Products:(.*(\\n.*?)*)(?:[\\D]+?:|$)");	// assumes "non-digit Label:" or $ is the next group	// does not work because the final provided product name get's lumped with next "non-digit Label:"  could try to make \D not match new line char
+		regexes.put("contentSets",			"^\\s+Content Sets:(.*(\\n.*?)+)(?:[\\s\\w]+:|$)");	// assumes "Any Label:" or $ is the next group
 
 		
 		// find all the raw "Subscription:" groupings and then create one ManifestSubscription per raw "Subscription:" grouping
 		String rawSubscrtionRegex = "Subscription:((\\n.+)+)";
 		List<ManifestSubscription> manifestSubscriptions = new ArrayList<ManifestSubscription>();
+		// WORKAROUND FOR BUG 1369577 - when calling rct cat-manifest --no-content, substitute an empty line in place of the Content Sets:
+		rawManifest = rawManifest.replaceAll("\nSubscription:", "\n\nSubscription:"); // used to avoid: java.lang.AssertionError: Error when parsing raw subscription group.  Expected to parse only one group of subscription data from:
+		// END OF WORKAROUND
 		Matcher m = Pattern.compile(rawSubscrtionRegex, Pattern.MULTILINE).matcher(rawManifest);
 		while (m.find()) {
 			String rawSubscription = m.group(1);

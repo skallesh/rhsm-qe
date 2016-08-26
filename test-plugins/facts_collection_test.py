@@ -16,9 +16,15 @@
 from subscription_manager.base_plugin import SubManPlugin
 requires_api_version = "1.0"
 
+# imported to support logging in subscription-manager >= 1.17.10-1 from Bug 1334916: Move logging configuration to rhsm.conf
+import logging
+log = logging.getLogger('rhsm-app.' + __name__)
+
 #import subprocess
+
 #import simplejson as json
 #import json
+
 
 class FactsCollectionTestPlugin(SubManPlugin):
     """Plugin for adding additional facts to subscription-manager facts"""
@@ -31,4 +37,6 @@ class FactsCollectionTestPlugin(SubManPlugin):
             conduit: A FactsConduit()
         """
         conduit.log.debug("Debugging post_facts_collection_hook: consumer conduit.facts: %s" % conduit.facts)
+        log.debug        ("Debugging post_facts_collection_hook: consumer conduit.facts: %s" % conduit.facts)
         conduit.log.info("Running post_facts_collection_hook: consumer facts count is %s" % len(conduit.facts))
+        log.info        ("Running post_facts_collection_hook: consumer facts count is %s" % len(conduit.facts))

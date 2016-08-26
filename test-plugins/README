@@ -2,7 +2,7 @@ The test plugins in this directory originated from https://github.com/candlepin/
 
 For testing purposes, they have been modified.
 
-For testing purposes, these files are actually copied to the following web server from a BeforeClass method uses wget to fetch them...
+For testing purposes, these files are actually copied to the following web server from a BeforeClass method that uses wget to fetch them...
 [root@auto-services test-plugins]# hostname
 auto-services.usersys.redhat.com
 [root@auto-services test-plugins]# ls -l

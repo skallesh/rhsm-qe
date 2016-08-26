@@ -61,7 +61,6 @@
 (defn ^{BeforeClass {:groups ["setup"]}}
   register [_]
   (try
-    (if (= "RHEL7" (get-release)) (base/startup nil))
     (tasks/register-with-creds)
     (reset! gui-facts (tasks/get-all-facts))
     (reset! cli-facts (get-cli-facts))
@@ -141,7 +140,8 @@
                        "tier2"
                        "blockedByBug-909294"
                        "blockedByBug-839772"
-                       "blockedByBug-1245557"]}}
+                       "blockedByBug-1245557"
+                       "blockedByBug-1333904"]}}
   check_available_service_levels
   "Checks that all available service levels are shown in the GUI properly."
   [_]
@@ -172,14 +172,11 @@
                        "blockedByBug-909294"
                        "blockedByBug-908954"
                        "blockedByBug-839772"
-                       "blockedBybug-1245557"]}}
+                       "blockedByBug-1245557"
+                       "blockedByBug-1333906"]}}
   check_available_releases
   "Checks that all avaiable releases are shown in the GUI properly."
   [_]
-  (if (= "RHEL7" (get-release))
-     (throw (SkipException.
-             (str "Skipping 'check_available_releases' test on RHEL7.
-                   Cannot access sub-menus/dropdown through ldtp !!!!"))))
   (try
     (tasks/register-with-creds)
     (tasks/subscribe_all)
@@ -213,10 +210,15 @@
   [_]
   (let [certdir (tasks/conf-file-value "productCertDir")
         rhelcerts ["68" "69" "71" "72" "74" "76"]
-        certlist (map #(str certdir "/" % ".pem") rhelcerts)
+        certlist (into (map #(str certdir "/" % ".pem") rhelcerts)
+                       (map #(str certdir "-default/" % ".pem") rhelcerts))
         certexist? (map #(= 0 (:exitcode
                                (run-command (str "test -f " %))))
                         certlist)]
+    ;; it is handy information before we verify that some cert exists.
+    (->> certdir
+       (format "ls -al \"%s\"")
+       (run-command))
     (verify (some true? certexist?)))
   (check_available_releases nil))
 

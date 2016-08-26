@@ -85,6 +85,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	@ImplementsNitrateTest(caseId=41678)
 	public void EnsureHardwareMatchingSubscriptionsAreListedAsAvailable_Test(String productId, JSONArray bundledProductDataAsJSONArray) throws JSONException, Exception {
 //if (!productId.equals("awesomeos-virt-unlmtd-phys")) throw new SkipException("debugTesting productId="+productId);
+//if (!productId.equals("RH0103708")) throw new SkipException("debugTesting productId="+productId);
 		// implicitly registered in dataProvider; no need to register with force; saves time
 		//clienttasks.register(clientusername, clientpassword, null, null, null, null, true, null, null, null);
 		SubscriptionPool pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", productId, clienttasks.getCurrentlyAvailableSubscriptionPools());
@@ -105,14 +106,30 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 //			}	
 //		}
 		// special case...
-		if (pool==null) {	// when pool is null, another likely cause is that all of the available subscriptions from the pools are being consumed, let's check...
+		if (pool==null) {
+			// when pool is null, another likely cause is that all of the available subscriptions from the pools are being consumed, let's check...
 			for (String poolId: CandlepinTasks.getPoolIdsForProductId(sm_clientUsername, sm_clientPassword, sm_serverUrl, clienttasks.getCurrentlyRegisteredOwnerKey(), productId)) {
 				int quantity = (Integer) CandlepinTasks.getPoolValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, poolId, "quantity");
 				int consumed = (Integer) CandlepinTasks.getPoolValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, poolId, "consumed");
 				if (consumed>=quantity) {
 					log.warning("It appears that the total quantity '"+quantity+"' of subscriptions from poolId '"+poolId+"' for product '"+productId+"' are being consumed.");
 				}
-			}	
+			}
+			// another possible cause is that the pool.productAttributes.arch list on the pool is older than the subscription.product.attributes.arch
+			SubscriptionPool poolFromAllAvailable = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", productId, clienttasks.getCurrentlyAllAvailableSubscriptionPools());
+			if (poolFromAllAvailable!=null) {
+				String poolArch = (String) CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, poolFromAllAvailable.poolId, "arch");
+				List <String> poolArches = new ArrayList<String>(); poolArches.addAll(Arrays.asList(poolArch.trim().split(" *, *")));	// Note: the arch attribute can be a comma separated list of values
+
+				String subscriptionId = CandlepinTasks.getSubscriptionIdForPoolId(sm_clientUsername, sm_clientPassword, sm_serverUrl, poolFromAllAvailable.poolId);
+				JSONObject jsonSubscription = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,"/subscriptions/"+subscriptionId));
+				String subscriptionArch = CandlepinTasks.getResourceAttributeValue(jsonSubscription.getJSONObject("product"), "arch");
+				List <String> subscriptionArches = new ArrayList<String>(); subscriptionArches.addAll(Arrays.asList(subscriptionArch.trim().split(" *, *")));	// Note: the arch attribute can be a comma separated list of values
+				
+				if (!poolArches.containsAll(subscriptionArches) || !subscriptionArches.containsAll(poolArches)) {
+					log.warning("There is an all available pool for product '"+productId+"' whose arch "+poolArches+" does not match its corresponding subscription arch "+subscriptionArches+".  Likely, there was an upstream SKU change by dev-ops that requires an org level pool refresh.");
+				}
+			}
 		}
 		Assert.assertNotNull(pool, "Expected SubscriptionPool with ProductId '"+productId+"' is listed as available for subscribing.  (Look for warnings above to explain a failure. A pool refresh may also fix a failure.)");
 	}

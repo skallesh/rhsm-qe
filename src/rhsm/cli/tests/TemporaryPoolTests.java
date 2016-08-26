@@ -325,6 +325,15 @@ public class TemporaryPoolTests extends SubscriptionManagerCLITestScript {
 		clienttasks.mapSystemAsAGuestOfItself();
 		
 		// trigger a rhsmcertd checkin (either of these calls are valid - randomly choose)
+		// TEMPORARY WORKAROUND FOR BUG
+		String bugId = "1366301";	// Bug 1366301 - Server error attempting a PUT to /subscription/consumers/<UUID>/certificates?lazy_regen=true returned status 404
+		boolean invokeWorkaroundWhileBugIsOpen = true;
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen && CandlepinType.hosted.equals(sm_serverType)) {
+			log.warning("Skipping a random call to refresh local certificates while bug '"+bugId+"' is open.");
+			clienttasks.run_rhsmcertd_worker(null);	// no need to pass autoheal option because it is already set true on the consumer
+		} else
+		// END OF WORKAROUND
 		if (getRandomListItem(Arrays.asList(true,false))) 
 			clienttasks.refresh(null, null, null);
 		else
@@ -362,6 +371,15 @@ public class TemporaryPoolTests extends SubscriptionManagerCLITestScript {
 		clienttasks.mapSystemAsAGuestOfItself();
 		
 		// trigger a rhsmcertd checkin (either of these calls are valid - randomly choose)
+		// TEMPORARY WORKAROUND FOR BUG
+		String bugId = "1366301";	// Bug 1366301 - Server error attempting a PUT to /subscription/consumers/<UUID>/certificates?lazy_regen=true returned status 404
+		boolean invokeWorkaroundWhileBugIsOpen = true;
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen && CandlepinType.hosted.equals(sm_serverType)) {
+			log.warning("Skipping a random call to refresh local certificates while bug '"+bugId+"' is open.");
+			clienttasks.run_rhsmcertd_worker(null);	// no need to pass autoheal option because it is already set true on the consumer
+		} else
+		// END OF WORKAROUND
 		if (getRandomListItem(Arrays.asList(true,false))) 
 			clienttasks.refresh(null, null, null);
 		else
