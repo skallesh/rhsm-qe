@@ -4451,6 +4451,9 @@ if (false) {
 			defaultNames.add(/*"certFrequency" CHANGED BY BUG 882459 TO*/"certCheckInterval");
 			defaultNames.add(/*"healFrequency" CHANGED BY BUG 882459 TO*/"autoAttachInterval");
 		}
+		if (section.equalsIgnoreCase("logging")) {
+			defaultNames.add("default_log_level");
+		}
 
 
 		

@@ -512,6 +512,9 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 		allExpectedConfFileParameterNames.addAll(clienttasks.defaultConfFileParameterNames("server",true));
 		allExpectedConfFileParameterNames.addAll(clienttasks.defaultConfFileParameterNames("rhsm",true));
 		allExpectedConfFileParameterNames.addAll(clienttasks.defaultConfFileParameterNames("rhsmcertd",true));
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.17.10-1")) {// RHEL7.3 commit d84b15f42c2e4521e130b939039960c0846b849c 1334916: Move logging configuration to rhsm.conf
+		allExpectedConfFileParameterNames.addAll(clienttasks.defaultConfFileParameterNames("logging",true));
+		}
 		
 		// assert that only the expected list of configuration parameters are listed
 		boolean allActualConfFileParameterNameAreExpected=true;
