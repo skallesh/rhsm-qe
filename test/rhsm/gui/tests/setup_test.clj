@@ -12,4 +12,4 @@
 ;; lein test rhsm.gui.tests.setup-test
 ;; this test is to run the whole testng machinery with our tests
 (deftest setup-consistency-test
-  (TestNG/main (into-array String ["suites/sm-gui-testng-suite.xml"])))
+  (TestNG/main (into-array String ["suites/sm-gui-acceptance-testng-suite.xml"])))
