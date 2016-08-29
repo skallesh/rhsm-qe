@@ -6,7 +6,6 @@
              [rhsm.gui.tasks.ui :as ui]
              [rhsm.gui.tasks.test-config :as c]
              [rhsm.gui.tests.base :as base]
-             ;[rhsm.gui.tests.testbase :as testbase]
              ))
 
 ;; ;; initialization of our testware
@@ -18,19 +17,7 @@
 
 (deftest simple_autosubscribe-test
   (testing "run of one test for autosubscribe"
-    ;; (println "----> product cert dir: " (tasks/conf-file-value "productCertDir"))
-    ;; (println "----> num of certs:" (-> "ls -1 /tmp/sm-allProductsSubscribableByOneCommonServiceLevel | wc -l" tools/run-command :stdout clojure.string/trim))
-    ;; (println "----------- moveOriginalProductCertDefaultDirFilesBeforeClass ----------------")
     (.moveOriginalProductCertDefaultDirFilesBeforeClass @tests/complytests)
-    ;; (println "----> product cert dir: " (tasks/conf-file-value "productCertDir"))
-    ;; (println "----> num of certs:" (-> "ls -1 /tmp/sm-allProductsSubscribableByOneCommonServiceLevel | wc -l" tools/run-command :stdout clojure.string/trim))
-    ;; (println "----------- setupProductCertDirsBeforeClass ----------------")
     (.setupProductCertDirsBeforeClass @tests/complytests)
-    ;; (println "----> product cert dir: " (tasks/conf-file-value "productCertDir"))
-    ;; (println "----> num of certs:" (-> "ls -1 /tmp/sm-allProductsSubscribableByOneCommonServiceLevel | wc -l" tools/run-command :stdout clojure.string/trim))
-    ;; (println "----------- configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevel ----------------")
     (.configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevel @tests/complytests)
-    ;; (println "----> product cert dir: " (tasks/conf-file-value "productCertDir"))
-    ;; (println "----> num of certs:" (-> "ls -1 /tmp/sm-allProductsSubscribableByOneCommonServiceLevel | wc -l" tools/run-command :stdout clojure.string/trim))
-    ;; (println "----------- simple_autosubscribe ----------------")
     (tests/simple_autosubscribe nil)))

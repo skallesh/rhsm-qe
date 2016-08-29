@@ -30,3 +30,6 @@
                    (tests/enable_repo_remove_all_overrides nil (-> repos first first))))
       (tests/enable_repo_remove_all_overrides nil (-> repos first first))))
   (tests/after_enable_repo_remove_all_overrides nil))
+
+(deftest check_repo_visible-test
+  (tests/check_repo_visible nil))
