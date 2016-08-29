@@ -150,51 +150,56 @@
   simple_autosubscribe
   "Tests simple autosubscribe when all products can be covered by one service level."
   [_]
-   (run-command "subscription-manager unregister")
-   (tasks/restart-app)
-   (verify (dirsetup? one-sla-dir))
-   (tasks/register-with-creds)
-   (let [beforesubs (tasks/warn-count)
-         temp-prod-dir (tasks/conf-file-value "productCertDir")
-         temp-prod-pems (into #{} (filter #(.endsWith % ".pem")
-                                          (-> (run-command (format "ls %s" temp-prod-dir)) :stdout (split #"\s+"))))
-         ;; Should we count /etc/pki/product-default?
-         prod-default (into #{} (filter #(.endsWith % ".pem")
-                                        (-> (run-command "ls /etc/pki/product-default") :stdout (split #"\s+"))))
-         all-pems (clojure.set/union temp-prod-pems prod-default)
-         dircount (count all-pems)
-         user (@config :username)
-         pass (@config :password)
-         key  (@config :owner-key)
-         ownername (ctasks/get-owner-display-name user pass key)]
-     (tasks/unregister)
-     (verify (= beforesubs dircount))
-     (if (= 0 (Integer. beforesubs))
-      (verify (tasks/compliance?))
-      (do
-        (tasks/register user
-                        pass
-                        :skip-autosubscribe false
-                        :owner ownername)
-             ;; old code: long wait times were used because
-             ;; autosubscribe used to take a long time
-        ;(tasks/ui waittillwindownotexist :register-dialog 600)
-        (sleep 4000)
-        (cond
-          (bool (tasks/ui guiexist :register-dialog "Please enter the following for this system"))
-          (do
-            ;(throw (Exception. "'Enter Activation Key' window should not be displayed"))
-            (sleep 2000)
-            (tasks/ui click :register-close))
-          (bool (tasks/ui guiexist :subscription-attachment-dialog))
-          (do
-            (tasks/ui comboselect :drop-down "Standard")
-            (tasks/ui click :attach-next)                   ;; Called Next button here
-            (tasks/ui click :attach-next)
-            (sleep 5000))
-          :else (log/info "No dialog appeared"))
-        (verify (<= (tasks/warn-count) beforesubs))
-        (verify (tasks/compliance?))))))
+  (run-command "subscription-manager unregister")
+  (tasks/write-facts "{\"virt.is_guest\": \"false\"}" :filename "simple_autosubscribe.facts")
+  (try
+    (tasks/restart-app)
+    (verify (dirsetup? one-sla-dir))
+    (tasks/register-with-creds)
+    (let [beforesubs (tasks/warn-count)
+          temp-prod-dir (tasks/conf-file-value "productCertDir")
+          temp-prod-pems (into #{} (filter #(.endsWith % ".pem")
+                                           (-> (run-command (format "ls %s" temp-prod-dir)) :stdout (split #"\s+"))))
+          ;; Should we count /etc/pki/product-default?
+          prod-default (into #{} (filter #(.endsWith % ".pem")
+                                         (-> (run-command "ls /etc/pki/product-default") :stdout (split #"\s+"))))
+          all-pems (clojure.set/union temp-prod-pems prod-default)
+          dircount (count all-pems)
+          user (@config :username)
+          pass (@config :password)
+          key  (@config :owner-key)
+          ownername (ctasks/get-owner-display-name user pass key)]
+      (tasks/unregister)
+      (verify (= beforesubs dircount))
+      (if (= 0 (Integer. beforesubs))
+        (verify (tasks/compliance?))
+        (do
+          (tasks/register user
+                          pass
+                          :skip-autosubscribe false
+                          :owner ownername)
+          ;; old code: long wait times were used because
+          ;; autosubscribe used to take a long time
+          ;;(tasks/ui waittillwindownotexist :register-dialog 600)
+          (sleep 4000)
+          (cond
+            (bool (tasks/ui guiexist :register-dialog "Please enter the following for this system"))
+            (do
+              ;;(throw (Exception. "'Enter Activation Key' window should not be displayed"))
+              (sleep 2000)
+              (tasks/ui click :register-close))
+            (bool (tasks/ui guiexist :subscription-attachment-dialog))
+            (do
+              (tasks/ui comboselect :drop-down "Standard")
+              (tasks/ui click :attach-next)                   ;; Called Next button here
+              (tasks/ui click :attach-next)
+              (sleep 5000))
+            :else (log/info "No dialog appeared"))
+          (verify (<= (tasks/warn-count) beforesubs))
+          (verify (tasks/compliance?)))))
+    (finally
+      (run-command "rm -f /etc/rhsm/facts/simple_autosubscribe.facts")
+      (run-command "subscription-manager facts --update"))))
 
 (defn ^{Test {:groups ["autosubscribe"
                        "tier1"
