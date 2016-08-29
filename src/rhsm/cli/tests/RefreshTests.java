@@ -65,8 +65,32 @@ public class RefreshTests extends SubscriptionManagerCLITestScript {
 		
 		// Assert the entitlement certs are restored after the refresh
 		log.info("After running refresh, assert that the entitlement certs are restored...");
-		Assert.assertEquals(clienttasks.getCurrentEntitlementCerts(),entitlementCerts,"Original entitlements have been restored.");
-		Assert.assertEquals(clienttasks.getCurrentlyConsumedProductSubscriptions(),consumedProductSubscriptions,"Original consumed product subscriptions have been restored.");
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.17.10-1")) {	// 1360909: Added functionality for regenerating entitlement certificates
+			// after the for Bug 1360909 - Clients unable to access newly released content (Satellite 6.2 GA)
+			// subscription-manager refresh will grant a new entitlement serial, but the contents are usually identical (unless a content set has been updated)
+			// let's verify most everything is the same as before except the serials...
+			List<EntitlementCert> entitlementCertsAfterRefresh = clienttasks.getCurrentEntitlementCerts();
+			List<ProductSubscription> consumedProductSubscriptionsAfterRefresh = clienttasks.getCurrentlyConsumedProductSubscriptions();
+			Assert.assertEquals(entitlementCertsAfterRefresh.size(), entitlementCerts.size(), "The number of entitlement certs granted after refresh should match the number before refresh.");
+			Assert.assertEquals(consumedProductSubscriptionsAfterRefresh.size(), consumedProductSubscriptions.size(), "The number of consumed Product Subscriptions after refresh should match the number before refresh.");
+			// The following asserts assume that one one entitlement was granted from a single pool
+			Assert.assertEquals(entitlementCertsAfterRefresh.size(),1,"The remaining assertions in this test assume that an entitlement from only one pool was subscribed.  (If this test fails, then this test requires logic updates.)");
+			Assert.assertTrue(!entitlementCertsAfterRefresh.get(0).serialString.equals(entitlementCerts.get(0).serialString),"Serial '"+entitlementCertsAfterRefresh.get(0).serialString+"' in the refreshed entitlement should NOT match serial '"+entitlementCerts.get(0).serialString+"' from the original entitlement.");
+			Assert.assertEquals(entitlementCertsAfterRefresh.get(0).version,entitlementCerts.get(0).version,"Version in the refreshed entitlement should match the version from the original entitlement.");
+			Assert.assertEquals(entitlementCertsAfterRefresh.get(0).validityNotBefore,entitlementCerts.get(0).validityNotBefore,"ValidityNotBefore in the refreshed entitlement should match the ValidityNotBefore from the original entitlement.");
+			Assert.assertEquals(entitlementCertsAfterRefresh.get(0).validityNotAfter,entitlementCerts.get(0).validityNotAfter,"ValidityNotAfter in the refreshed entitlement should match the ValidityNotAfter from the original entitlement.");
+			Assert.assertEquals(entitlementCertsAfterRefresh.get(0).orderNamespace,entitlementCerts.get(0).orderNamespace,"Order information in the refreshed entitlement should match the order information from the original entitlement.");
+			Assert.assertEquals(entitlementCertsAfterRefresh.get(0).productNamespaces,entitlementCerts.get(0).productNamespaces,"Product information in the refreshed entitlement should match the product information from the original entitlement. (IF THIS FAILS, THEN THERE WAS AN UPSTREAM PROVIDED PRODUCT MODIFICATION LIKE THE SCENARIO IN BUG 1360909. HIGHLY UNLIKELY BETWEEN NOW AND THE START OF THIS TEST.)");
+			Assert.assertEquals(entitlementCertsAfterRefresh.get(0).contentNamespaces,entitlementCerts.get(0).contentNamespaces,"Content information in the refreshed entitlement should match the content information from the original entitlement. (IF THIS FAILS, THEN THERE WAS AN UPSTREAM CONTENT MODIFICATION LIKE THE SCENARIO IN BUG 1360909. HIGHLY UNLIKELY BETWEEN NOW AND THE START OF THIS TEST.)");
+			Assert.assertEquals(consumedProductSubscriptionsAfterRefresh.size(),1,"The remaining assertions in this test assume that an only one pool was subscribed.  (If this test fails, then this test requires logic updates.)");
+			Assert.assertTrue(!consumedProductSubscriptionsAfterRefresh.get(0).serialNumber.equals(consumedProductSubscriptions.get(0).serialNumber),"Serial Number '"+consumedProductSubscriptionsAfterRefresh.get(0).serialNumber+"' in the refreshed product subscription should NOT match serial number '"+consumedProductSubscriptions.get(0).serialNumber+"' from the original product subscription.");
+			Assert.assertEquals(consumedProductSubscriptionsAfterRefresh.get(0).poolId,consumedProductSubscriptions.get(0).poolId,"PoolId in the refreshed consumed product subscription should match the pool id from the original consumed product subscription.");
+			// TODO continue asserting equality between fields of the consumedProductSubscriptions (all should be equal except serialNumber which was already asserted above)
+		} else {
+			// assert the exact same entitlement was restored
+			Assert.assertEquals(clienttasks.getCurrentEntitlementCerts(),entitlementCerts,"Original entitlements have been restored.");
+			Assert.assertEquals(clienttasks.getCurrentlyConsumedProductSubscriptions(),consumedProductSubscriptions,"Original consumed product subscriptions have been restored.");
+		}
 	}
 	
 	
