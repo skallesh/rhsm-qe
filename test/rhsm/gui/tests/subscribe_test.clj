@@ -24,3 +24,14 @@
 (deftest check_contract_selection_dates-test
   (let [subscriptions (tests/get_multi_contract_subscriptions nil :debug true)]
     (tests/check_contract_selection_dates nil #spy/d (-> subscriptions first first))))
+
+(deftest check_multiplier_logic-test
+  (let [subscriptions #spy/d (tests/get_subscriptions nil)]
+    (tests/check_multiplier_logic nil (-> subscriptions first))))
+
+(deftest unsubscribe_each-test
+  (let [subscriptions (tests/get_subscriptions nil)]
+    (for [subscription subscriptions]
+      (tests/subscribe_each nil subscription))
+    (for [subscription subscriptions]
+      (tests/unsubscribe_each nil subscription))))
