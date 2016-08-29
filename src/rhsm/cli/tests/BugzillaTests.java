@@ -66,6 +66,7 @@ import rhsm.data.YumRepo;
 public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	protected String ownerKey = "";
 	protected String randomAvailableProductId = null;
+	protected List<String> providedProduct = null;
 	protected EntitlementCert expiringCert = null;
 	protected String EndingDate;
 	protected final String importCertificatesDir = "/tmp/sm-importExpiredCertificatesDir".toLowerCase();
@@ -571,7 +572,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			}
 
 		}
-		String result = clienttasks.status(null, null, null, null).getStdout();
+		clienttasks.status(null, null, null, null).getStdout();
 		clienttasks.autoheal(null, true, null, null, null, null);
 	}
 
@@ -699,7 +700,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				null, null, name, null, null, null, true, null, null, null, null);
 		String expected_message = "Unable to attach pool with ID '" + expiringPoolId + "'.: Subscriptions for "
 				+ randomAvailableProductId + " expired on: " + EndingDate + ".";
-		if (clienttasks.isVersion(servertasks.statusVersion, ">", "0.9.30-1"))
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">", "0.9.30-1"))
 			expected_message = "No activation key was applied successfully."; // Follows:
 		// candlepin-0.9.30-1
 		// //
@@ -801,39 +802,40 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		now.add(Calendar.DATE, 1);
 		String onDateToTest = yyyy_MM_dd_DateFormat.format(now.getTime());
 		List<String> providedProductId = null;
-		String productId = null;
 		int quantity = 0;
+		List<SubscriptionPool> futureSubscriptionPools = SubscriptionPool.findAllInstancesWithMatchingFieldFromList(
+				"subscriptionType", "Stackable", clienttasks.getAvailableFutureSubscriptionsOndate(onDateToTest));
+		for (SubscriptionPool futurepoolMatchingActivePool : futureSubscriptionPools) {
 
-		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
-			if (pool.subscriptionType.equals("Stackable")) {
-				quantity = pool.suggested / 2;
-				if (!(pool.suggested == 1)) {
-					clienttasks.subscribe(null, null, pool.poolId, null, null, Integer.toString(quantity), null, null,
+			for (SubscriptionPool availableSubscriptionPool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
+				if (availableSubscriptionPool.subscriptionName.equals(futurepoolMatchingActivePool.subscriptionName)) {
+					clienttasks.subscribe(null, null, futurepoolMatchingActivePool.poolId, null, null, null, null, null,
 							null, null, null, null);
-					providedProductId = pool.provides;
-					productId = pool.productId;
-					break;
+					if (!(availableSubscriptionPool.suggested == 1)) {
+						quantity = availableSubscriptionPool.suggested / 2;
+
+						clienttasks.subscribe(null, null, availableSubscriptionPool.poolId, null, null,
+								Integer.toString(quantity), null, null, null, null, null, null);
+						providedProductId = availableSubscriptionPool.provides;
+					}
+
+					InstalledProduct BeforeAttaching = InstalledProduct.findFirstInstanceWithMatchingFieldFromList(
+							"productName", providedProductId.get(providedProductId.size() - 1),
+							clienttasks.getCurrentlyInstalledProducts());
+
+					Assert.assertEquals(BeforeAttaching.status, "Partially Subscribed",
+							"Verified that installed product is partially subscribed");
+
+					InstalledProduct AfterAttaching = InstalledProduct.findFirstInstanceWithMatchingFieldFromList(
+							"productName", providedProductId, clienttasks.getCurrentlyInstalledProducts());
+					Assert.assertEquals(AfterAttaching.status, "Partially Subscribed",
+							"Verified that installed product is partially subscribed even after attaching a future subscription");
+
 				}
 			}
+			break;
 		}
-		System.out.println(providedProductId.get(providedProductId.size() - 1) + " provided");
-		InstalledProduct BeforeAttaching = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productName",
-				providedProductId.get(providedProductId.size() - 1), clienttasks.getCurrentlyInstalledProducts());
-		Assert.assertEquals(BeforeAttaching.status, "Partially Subscribed",
-				"Verified that installed product is partially subscribed");
-		SubscriptionPool futureSubscriptionPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList(
-				"productId", productId, clienttasks.getAvailableFutureSubscriptionsOndate(onDateToTest));
-		if (!(futureSubscriptionPool == null)) {
-			clienttasks.subscribe(null, null, futureSubscriptionPool.poolId, null, null, null, null, null, null, null,
-					null, null);
 
-			InstalledProduct AfterAttaching = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productName",
-					providedProductId, clienttasks.getCurrentlyInstalledProducts());
-			Assert.assertEquals(AfterAttaching.status, "Partially Subscribed",
-					"Verified that installed product is partially subscribed even after attaching a future subscription");
-
-		} else
-			throw new SkipException("Couldnot find the specific future subscription for testing");
 	}
 
 	/**
@@ -1369,7 +1371,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword,
 				sm_serverUrl, sm_clientOrg, 20, -1 * 24 * 60/* 1 day ago */,
 				15 * 24 * 60/* 15 days from now */, getRandInt(), getRandInt(), productId, providedProductIds, null);
-		server.runCommandAndWait("rm -rf " + servertasks.candlepinCRLFile);
+		server.runCommandAndWait("rm -rf " + CandlepinTasks.candlepinCRLFile);
 		for (SubscriptionPool pool : clienttasks.getCurrentlyAllAvailableSubscriptionPools()) {
 			if (pool.productId.equals(productId)) {
 				entitlementCertFile = clienttasks.subscribeToSubscriptionPool(pool, sm_serverAdminUsername,
@@ -1797,6 +1799,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@SuppressWarnings("unused")
 	@Test(description = "verify if no multiple repos are created,if subscribed to a product that share one or more engineering subscriptions", groups = {
 			"NoMultipleReposCreated" }, enabled = true)
 	public void NoMultipleReposCreated() throws JSONException, Exception {
@@ -2245,107 +2248,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(actual, "invalid", "Value of system fact '" + factname + "'.");
 	}
 
-	/**
-	 * @author skallesh
-	 * @throws Exception
-	 * @throws JSONException
-	 */
-	@Test(description = "verify if able to entitle consumer to the pool virt_only,pool_derived,bonus pool ", groups = {
-			"VerifyVirtOnlyPoolsRemoved", "blockedByBug-887287" }, enabled = true)
-	public void VerifyVirtOnlyPoolsRemoved() throws JSONException, Exception {
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
-				null, (List<String>) null, (String) null, null, null, true, null, null, null, null);
-		String consumerId = clienttasks.getCurrentConsumerId();
-		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_clientUsername, sm_clientPassword, sm_serverUrl,
-				consumerId);
-		Map<String, String> factsMap = new HashMap<String, String>();
-		factsMap.put("virt.is_guest", "true");
-		clienttasks.facts(null, true, null, null, null);
-		Calendar cal = new GregorianCalendar(); // right now
-		cal.set(Calendar.HOUR_OF_DAY, 0);
-		cal.set(Calendar.MINUTE, 0);
-		cal.set(Calendar.SECOND, 0);// avoid times in the middle of the day
-		Date todaysDate = cal.getTime();
-		cal.add(Calendar.YEAR, 1);
-		cal.add(Calendar.DATE, 10);
-		Map<String, String> attributes = new HashMap<String, String>();
-		attributes.put("virt_limit", "4");
-		attributes.put("arch", "ALL");
-		attributes.put("type", "MKT");
-		attributes.put("multi-entitlement", "no");
-		List<String> providedProducts = new ArrayList<String>();
-		providedProducts.add("27060");
-		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,
-				"/subscriptions/" + "virtualPool");
-		String resourcePath = "/products/virtual-pool";
-		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0"))
-			resourcePath = "/owners/" + sm_clientOrg + resourcePath;
-		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,
-				resourcePath);
-
-		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,
-				sm_clientOrg, "virtual-product", "virtualPool", 1, attributes, null);
-		CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword,
-				sm_serverUrl, sm_clientOrg, 4, 0/* 100 days from now */,
-				200 * 24 * 60/* 200 days from now */, getRandInt(), getRandInt(), "virtualPool", providedProducts,
-				null);
-		boolean flag = false;
-		String poolId = null;
-		for (SubscriptionPool pools : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
-			if (pools.subscriptionName.equals("virtual-product")) {
-				flag = true;
-				poolId = pools.poolId;
-			}
-		}
-		Assert.assertTrue(flag, "Pool is created");
-		if (clienttasks.getFactValue("virt.is_guest").equals("False")) {
-			clienttasks.subscribe(null, null, poolId, null, null, "1", null, null, null, null, null, null);
-
-			List<String> poolsAvailableForParticularProduct = CandlepinTasks.getPoolIdsForProductId(
-					sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, "virtualPool");
-			Assert.assertEquals(poolsAvailableForParticularProduct.size(), 2);
-			clienttasks.unsubscribeFromTheCurrentlyConsumedProductSubscriptionSerialsCollectively();
-
-			String sub = "{\"attributes\":[{\"name\":\"virt_limit\",\"value\":\"0\"}]}";
-			JSONObject jsonData = new JSONObject(sub);
-
-			CandlepinTasks.putResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,
-					"/products/virtualPool", jsonData);
-
-			JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverAdminUsername,
-					sm_serverAdminPassword, sm_serverUrl, ownerKey);
-			CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword,
-					sm_serverUrl, jobDetail, "FINISHED", 5 * 1000, 1);
-
-			clienttasks.subscribe(null, null, poolId, null, null, "1", null, null, null, null, null, null);
-
-			List<String> poolsAvailableForParticularProductAfterSettingVirt_limit = CandlepinTasks
-					.getPoolIdsForProductId(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg,
-							"virtualPool");
-			Assert.assertEquals(poolsAvailableForParticularProductAfterSettingVirt_limit.size(), 1);
-			clienttasks.unsubscribeFromTheCurrentlyConsumedProductSubscriptionSerialsCollectively();
-			sub = "{\"attributes\":[{\"name\":\"virt_limit\",\"value\":\"null\"}]}";
-			jsonData = new JSONObject(sub);
-			CandlepinTasks.putResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,
-					"/products/virtualPool", jsonData);
-
-			jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword,
-					sm_serverUrl, ownerKey);
-			CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword,
-					sm_serverUrl, jobDetail, "FINISHED", 5 * 1000, 1);
-
-			clienttasks.subscribe(null, null, poolId, null, null, "1", null, null, null, null, null, null);
-
-			List<String> poolsAvailableForParticularProductAfterSettingVirt_limitToNull = CandlepinTasks
-					.getPoolIdsForProductId(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg,
-							"virtualPool");
-			Assert.assertEquals(poolsAvailableForParticularProductAfterSettingVirt_limitToNull.size(), 1);
-		} else {
-			throw new SkipException("no Instance based subscriptions are available for testing");
-
-		}
-	}
-
 	public String getSubscriptionID(String authenticator, String password, String url, String ownerKey,
 			String productId) throws JSONException, Exception {
 		String subscriptionId = null;
@@ -2355,7 +2257,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			JSONObject jsonSubscription = (JSONObject) jsonSubscriptions.get(i);
 
 			JSONObject jsonProduct = jsonSubscription.getJSONObject("product");
-			String productName = jsonProduct.getString("name");
+
 			if (productId.equals(jsonProduct.getString("id"))) {
 				subscriptionId = jsonSubscription.getString("id");
 			}
@@ -2944,7 +2846,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
 				null, (String) null, null, null, null, true, false, null, null, null);
 		DateFormat yyyy_MM_dd_DateFormat = new SimpleDateFormat("yyyy-MM-dd");
-		Calendar now = new GregorianCalendar();
 		Calendar nextYear = new GregorianCalendar();
 		nextYear.add(Calendar.YEAR, 1);
 		nextYear.add(Calendar.DATE, -7); // one week less than one year
@@ -3599,10 +3500,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				+ " cert validity before regeneration");
 		Calendar StartTimeBeforeRHSM = clienttasks.getCurrentConsumerCert().validityNotBefore;
 		Calendar EndTimeBeforeRHSM = clienttasks.getCurrentConsumerCert().validityNotAfter;
-		String EndDateBeforeRHSM = yyyy_MM_dd_DateFormat
-				.format(clienttasks.getCurrentConsumerCert().validityNotAfter.getTime());
-		String StartDateBeforeRHSM = yyyy_MM_dd_DateFormat
-				.format(clienttasks.getCurrentConsumerCert().validityNotBefore.getTime());
 		String existingCertdate = client.runCommandAndWait("ls -lart /etc/pki/consumer/cert.pem | cut -d ' ' -f6,7,8")
 				.getStdout();
 		String StartDate = setDate(sm_serverHostname, sm_serverSSHUser, sm_sshKeyPrivate, sm_sshkeyPassphrase,
@@ -3810,7 +3707,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	public void VerifyDeletionOfSubscribedProduct_Test() throws JSONException, Exception {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
 				null, (List<String>) null, null, null, null, true, null, null, null, null);
-		String consumerid = clienttasks.getCurrentConsumerId();
 		clienttasks.subscribe_(true, null, null, (String) null, null, null, null, null, null, null, null, null);
 		if (clienttasks.getCurrentlyConsumedProductSubscriptions().isEmpty()) {
 			throw new SkipException("no installed products are installed");
@@ -4110,7 +4006,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 								+ "' has been granted with an exempt service level '" + productSubscription.serviceLevel
 								+ "'.");
 			} else if ((productSubscription.serviceLevel == null || productSubscription.serviceLevel.isEmpty())
-					&& clienttasks.isVersion(servertasks.statusVersion, ">", "2.0.2-1")) {
+					&& SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">", "2.0.2-1")) {
 				log.info("Due to Bug 1223560, Autoheal with serviceLevel '" + currentServiceLevel
 						+ "' granted this system coverage from subscription '" + productSubscription.productName
 						+ "' which actually has no service level.");
@@ -4194,48 +4090,45 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	@Test(description = "Auto-heal for Expired subscription", groups = { "AutohealForExpired", "blockedByBug-746088",
 			"blockedByBug-907638", "blockedByBug-907400" }, enabled = true)
 	public void VerifyAutohealForExpiredSubscription() throws JSONException, Exception {
-		List<String> Expiredproductid = new ArrayList<String>();
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
 				null, (String) null, null, null, null, true, null, null, null, null);
 		String consumerId = clienttasks.getCurrentConsumerId();
 		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,
 				consumerId);
-		clienttasks.service_level(null, null, null, true, null, null, null, null, null, null, null, null);
-		clienttasks.run_rhsmcertd_worker(true);
 		String expiringPoolId = createTestPool(-60 * 24, 1);
 		clienttasks.subscribe(null, null, expiringPoolId, null, null, null, null, null, null, null, null, null);
-
+		System.out.println(clienttasks.getCurrentlyConsumedProductSubscriptions());
 		Calendar c1 = new GregorianCalendar();
 		Calendar c2 = new GregorianCalendar();
 		// wait for the pool to expire
 		// sleep(endingMinutesFromNow*60*1000);
 		// trying to reduce the wait time for the expiration by subtracting off
 		// some expensive test time
-		sleep(1 * 60 * 1000 - (c2.getTimeInMillis() - c1.getTimeInMillis()));
+		sleep(1 * 58 * 1000 - (c2.getTimeInMillis() - c1.getTimeInMillis()));
+
+		System.out.println(clienttasks.getCurrentlyConsumedProductSubscriptions() + "  after expiry");
+
 		InstalledProduct productCertBeforeHealing = ProductCert.findFirstInstanceWithMatchingFieldFromList("status",
 				"Expired", clienttasks.getCurrentlyInstalledProducts());
-		/*
-		 * for (InstalledProduct product :
-		 * clienttasks.getCurrentlyInstalledProducts()) { if
-		 * (product.status.equals("Expired"))
-		 * Expiredproductid.add(product.productId); }
-		 */
+
 		if (!(productCertBeforeHealing.status.equals("Expired"))) {
 			throw new SkipException("No expired products are available for testing");
 		} else {
 			clienttasks.run_rhsmcertd_worker(true);
+			System.out.println(productCertBeforeHealing.productId);
 			InstalledProduct productCertAfterHealing = ProductCert.findFirstInstanceWithMatchingFieldFromList(
 					"productId", productCertBeforeHealing.productId, clienttasks.getCurrentlyInstalledProducts());
+			System.out.println(productCertAfterHealing);
 			Assert.assertEquals(productCertAfterHealing.status, "Subscribed");
 			/*
 			 * for (InstalledProduct product :
 			 * clienttasks.getCurrentlyInstalledProducts()) {
-			 * 
+			 *
 			 * for (int i = 0; i < Expiredproductid.size(); i++) {
-			 * 
+			 *
 			 * if (product.productId.equals(Expiredproductid.get(i)))
 			 * Assert.assertEquals(product.status, "Subscribed");
-			 * 
+			 *
 			 * } }
 			 */
 		}
@@ -4255,7 +4148,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(clienttasks.getCurrentEntitlementCerts().isEmpty(),
 				"After immediately registering with force, there are no entitlements attached.");
 		clienttasks.run_rhsmcertd_worker(true);
-		List<EntitlementCert> certs = clienttasks.getCurrentEntitlementCerts();
 		List<ProductSubscription> consumed = clienttasks.getCurrentlyConsumedProductSubscriptions();
 		log.info("Currently the consumed products are" + consumed.size());
 		// this assertion assumes that the currently available subscriptions
@@ -4571,8 +4463,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		// InstalledProduct installedProduct =
 		// InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId",
 		// "1000000000000023", clienttasks.getCurrentlyInstalledProducts());
-
-		String socketvalue = null;
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
 				null, (String) null, null, null, null, true, false, null, null, null);
 
@@ -4785,7 +4675,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			listEnabledRepos = Repo.parse(sshCommandResult.getStdout());
 			Assert.assertNotNull(listEnabledRepos,
 					"Enabled repo [" + listEnabledRepos + "] is included in the report of repos --list-enabled.");
-		} else if (clienttasks.isVersion(servertasks.statusVersion, "<", "2.0.0")
+		} else if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, "<", "2.0.0")
 				&& (clienttasks.isPackageVersion("subscription-manager", ">=", "1.17.10-1"))) { // commit
 																								// c38ae2c2e2f0e59674aa670d8ff3264d66737ede
 																								// Bug
@@ -5124,7 +5014,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			throws JSONException, Exception {
 		return CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername,
 				sm_serverAdminPassword, sm_serverUrl, ownerKey, 3, startingMinutesFromNow, endingMinutesFromNow,
-				getRandInt(), getRandInt(), randomAvailableProductId, null, null).getString("id");
+				getRandInt(), getRandInt(), randomAvailableProductId, providedProduct, null).getString("id");
 	}
 
 	@AfterGroups(groups = { "setup" }, value = { "VerifyrhsmcertdRefreshIdentityCert" })
@@ -5190,10 +5080,26 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	public void findRandomAvailableProductIdBeforeClass() throws Exception {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
 				null, (String) null, null, null, null, true, false, null, null, null);
-		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
-		if (!pools.isEmpty()) {
-			SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size()));
-			randomAvailableProductId = pool.productId;
+		List<SubscriptionPool> pools = clienttasks.getAvailableSubscriptionsMatchingInstalledProducts();
+		// int i = randomGenerator.nextInt(pools.size());
+		for (SubscriptionPool availablepools : pools) {
+			String resourcePath = "/pools/" + availablepools.poolId;
+			JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,
+					sm_clientPassword, sm_serverUrl, resourcePath));
+			String isVirtonly = CandlepinTasks.getPoolAttributeValue(jsonPool, "virt_only");
+			String physicalOnly = CandlepinTasks.getPoolAttributeValue(jsonPool, "physical_only");
+			String pool_derived = CandlepinTasks.getPoolAttributeValue(jsonPool, "pool_derived");
+			System.out.println(
+					"isVirtonly  ... " + isVirtonly + "......" + physicalOnly + "......" + Boolean.valueOf(pool_derived)
+							+ "....." + Boolean.valueOf(isVirtonly) + "......" + Boolean.valueOf(physicalOnly));
+			if (!(availablepools.subscriptionType.contains("Temporary")) || (pool_derived == null && isVirtonly == null
+					&& physicalOnly == null && (Boolean.valueOf(physicalOnly)) && (Boolean.valueOf(pool_derived))
+					&& (Boolean.valueOf(isVirtonly)))) {
+				randomAvailableProductId = availablepools.productId;
+				providedProduct = CandlepinTasks.getPoolProvidedProductIds(sm_serverAdminUsername,
+						sm_serverAdminPassword, sm_serverUrl, availablepools.poolId);
+				break;
+			}
 		}
 	}
 
