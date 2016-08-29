@@ -117,7 +117,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			basearch = "i386";
 
 		// set the release and baseurl
-		System.out.println(rhelRepoUrl + " .......is the repo url");
 		String rhelRepoUrlToProductId = rhelRepoUrl.replace("$releasever", release).replace("$basearch", basearch)
 				+ "/repodata/productid";
 
@@ -222,7 +221,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		// find the entitlement that provides access to RHEL and EUS
 
 		EntitlementCert eusEntitlementCerts = clienttasks.getEntitlementCertCorrespondingToSubscribedPool(pool);
-		System.out.println(eusEntitlementCerts + "is eus cert entitlement");
 		if (eusEntitlementCerts == null)
 
 		{
@@ -962,7 +960,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				poolId = pools.poolId;
 			}
 		}
-		System.out.println("string is ........  " + jsonSubscription);
 		providedProductIds.remove("37060");
 		providedProductIds.add("100000000000002");
 
@@ -975,7 +972,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			}
 		jsonSubscription.remove("derivedProvidedProducts");
 		jsonSubscription.put("providedProducts", pprods);
-		System.out.println(jsonSubscription);
 
 		// String sub="{\"quantity\":\"8\"}]}";
 		// JSONObject jsonData= new JSONObject(jsonSubscription);
@@ -3396,7 +3392,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		String result = clienttasks.register_(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null,
 				consumerid, null, null, null, (String) null, null, null, null, true, null, null, null, null)
 				.getStderr();
-		System.out.println("result  " + result);
 		Assert.assertNotNull(result);
 	}
 
@@ -3525,7 +3520,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		log.info("Changed the date of candlepin" + client.runCommandAndWait("hostname"));
 		setDate(sm_clientHostname, sm_clientSSHUser, sm_sshKeyPrivate, sm_sshkeyPassphrase,
 				"date -s '15 year ago 9 month ago' +'%F'");
-		System.out.println();
 		Assert.assertEquals(StartDateAfterRHSM, StartDate);
 		Assert.assertEquals(EndDateAfterRHSM, EndDate);
 		Assert.assertNotSame(StartTimeBeforeRHSM.getTime(), StartTimeAfterRHSM.getTime());
@@ -3935,7 +3929,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 
 		for (InstalledProduct installedProduct : clienttasks.getCurrentlyInstalledProducts()) {
 			if (productIds.contains(installedProduct.productId)) {
-				System.out.println(installedProduct.productName);
 				Assert.assertEquals(installedProduct.status, "Partially Subscribed");
 			}
 		}
@@ -4097,7 +4090,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				consumerId);
 		String expiringPoolId = createTestPool(-60 * 24, 1);
 		clienttasks.subscribe(null, null, expiringPoolId, null, null, null, null, null, null, null, null, null);
-		System.out.println(clienttasks.getCurrentlyConsumedProductSubscriptions());
 		Calendar c1 = new GregorianCalendar();
 		Calendar c2 = new GregorianCalendar();
 		// wait for the pool to expire
@@ -4106,8 +4098,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		// some expensive test time
 		sleep(1 * 58 * 1000 - (c2.getTimeInMillis() - c1.getTimeInMillis()));
 
-		System.out.println(clienttasks.getCurrentlyConsumedProductSubscriptions() + "  after expiry");
-
 		InstalledProduct productCertBeforeHealing = ProductCert.findFirstInstanceWithMatchingFieldFromList("status",
 				"Expired", clienttasks.getCurrentlyInstalledProducts());
 
@@ -4115,10 +4105,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			throw new SkipException("No expired products are available for testing");
 		} else {
 			clienttasks.run_rhsmcertd_worker(true);
-			System.out.println(productCertBeforeHealing.productId);
 			InstalledProduct productCertAfterHealing = ProductCert.findFirstInstanceWithMatchingFieldFromList(
 					"productId", productCertBeforeHealing.productId, clienttasks.getCurrentlyInstalledProducts());
-			System.out.println(productCertAfterHealing);
 			Assert.assertEquals(productCertAfterHealing.status, "Subscribed");
 			/*
 			 * for (InstalledProduct product :
@@ -4194,7 +4182,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		List<ProductSubscription> consumed = clienttasks.getCurrentlyConsumedProductSubscriptions();
 		Assert.assertTrue((consumed.isEmpty()), "autoheal has failed");
 		List<EntitlementCert> certs = clienttasks.getCurrentEntitlementCerts();
-		System.out.println(certs.size());
 	}
 
 	/**
@@ -4825,8 +4812,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 					Integer.valueOf(0));
 		}
 
-		System.out.println(
-				RemoteFileTasks.runCommandExpectingNoTracebacks(client, "ls -l " + tmpProductCertDir).getStdout());
 		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir", tmpProductCertDir);
 	}
 
@@ -4870,7 +4855,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			client.runCommandAndWait("mkdir " + installDir);
 		}
 		client.runCommandAndWait("mv " + clienttasks.productCertDir + "/" + filename + " " + "/root/temp1/");
-		System.out.println(clienttasks.productCertDir + "........................");
 	}
 
 	protected String getEntitlementCertFilesWithPermissions() throws IOException {
@@ -5089,9 +5073,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			String isVirtonly = CandlepinTasks.getPoolAttributeValue(jsonPool, "virt_only");
 			String physicalOnly = CandlepinTasks.getPoolAttributeValue(jsonPool, "physical_only");
 			String pool_derived = CandlepinTasks.getPoolAttributeValue(jsonPool, "pool_derived");
-			System.out.println(
-					"isVirtonly  ... " + isVirtonly + "......" + physicalOnly + "......" + Boolean.valueOf(pool_derived)
-							+ "....." + Boolean.valueOf(isVirtonly) + "......" + Boolean.valueOf(physicalOnly));
+
 			if (!(availablepools.subscriptionType.contains("Temporary")) || (pool_derived == null && isVirtonly == null
 					&& physicalOnly == null && (Boolean.valueOf(physicalOnly)) && (Boolean.valueOf(pool_derived))
 					&& (Boolean.valueOf(isVirtonly)))) {
