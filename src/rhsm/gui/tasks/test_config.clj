@@ -46,7 +46,7 @@
                          :noauth-proxy-port "sm.noauthproxy.port"
                          :noauth-proxy-log (DefaultMapKey.
                                              "sm.noauthproxy.log"
-                                             "/var/log/tinyproxy.log")
+                                             "/var/log/tinyproxy/tinyproxy.log")
 
                          ;binary paths
                          :binary-path (DefaultMapKey.
