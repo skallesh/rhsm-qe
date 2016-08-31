@@ -188,7 +188,8 @@
 
 (defn ^{Test {:groups ["proxy"
                        "tier1"
-                       "blockedByBug-927340"]
+                       "blockedByBug-927340"
+                       "blockedByBug-1371632"]
               :dependsOnMethods ["disable_proxy"]}}
   test_proxy_with_blank_credentials
   "Test whether 'Test Connection' returns appropriate message when User and Password fields are empty"
