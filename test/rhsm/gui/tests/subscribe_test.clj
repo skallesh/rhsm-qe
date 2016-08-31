@@ -7,7 +7,6 @@
   (:require  [clojure.test :refer :all]
              [rhsm.gui.tests.subscribe_tests :as tests]
              [rhsm.gui.tasks.tasks :as tasks]
-
              [rhsm.gui.tasks.ui :as ui]
              [rhsm.gui.tasks.test-config :as c]
              [rhsm.gui.tests.base :as base]))
@@ -35,3 +34,7 @@
       (tests/subscribe_each nil subscription))
     (for [subscription subscriptions]
       (tests/unsubscribe_each nil subscription))))
+
+(deftest check_contracts_and_virt_type-test
+  (let [subscriptions #spy/d (tests/get_multi_contract_subscriptions nil)]
+    (tests/check_contracts_and_virt_type nil (-> subscriptions first first))))
