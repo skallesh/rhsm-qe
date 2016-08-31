@@ -87,6 +87,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			"Tier1Tests" }, dataProvider = "VerifyEUSRHELProductCertVersionFromEachCDNReleaseVersion_TestData", enabled = true)
 	public void VerifyEUSRHELProductCertVersionFromEachCDNReleaseVersion_Test(Object blockedByBug, String release,
 			String rhelRepoUrl, File eusEntitlementCertFile) throws JSONException, Exception {
+		if (!sm_serverType.equals(CandlepinType.hosted))
+			throw new SkipException("To be run against Stage only");
 		String rhelProductId = null;
 		if ((clienttasks.arch.equals("ppc64")) && (clienttasks.variant.equals("Server")))
 			rhelProductId = "74";
@@ -2750,14 +2752,10 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(InstalledProducts.trim(), "No installed products to list");
 		String tailFromMarkedFile = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, LogMarker,
 				null);
-		// Assert.assertFalse(doesStringContainMatches(tailFromMarkedFile,
-		// "Error"),"'Error' messages in rhsm.log"); // "Error while updating
-		// certificates" should NOT be in the rhsm.log
 		Assert.assertFalse(
 				doesStringContainMatches(tailFromMarkedFile, "Error while updating certificates using daemon"),
 				"'Error' messages in rhsm.log"); // "Error while updating
-		// certificates" should NOT
-		// be in the rhsm.log
+
 		Assert.assertTrue(doesStringContainMatches(tailFromMarkedFile, "Installed product IDs: \\[\\]"),
 				"'Installed product IDs:' list is empty in rhsm.log");
 		Assert.assertTrue(doesStringContainMatches(tailFromMarkedFile, "certs updated:"),
@@ -4088,6 +4086,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		String consumerId = clienttasks.getCurrentConsumerId();
 		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,
 				consumerId);
+
 		String expiringPoolId = createTestPool(-60 * 24, 1);
 		clienttasks.subscribe(null, null, expiringPoolId, null, null, null, null, null, null, null, null, null);
 		Calendar c1 = new GregorianCalendar();
@@ -4996,9 +4995,41 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	protected String createTestPool(int startingMinutesFromNow, int endingMinutesFromNow)
 			throws JSONException, Exception {
+		String name = "AutoHealTestProduct";
+		String productId = "AutoHealForExpiredProduct";
+		Map<String, String> attributes = new HashMap<String, String>();
+		attributes.clear();
+		attributes.put("version", "1.0");
+		attributes.put("variant", "server");
+		attributes.put("arch", "ALL");
+		attributes.put("warning_period", "30");
+		attributes.put("type", "MKT");
+		attributes.put("type", "SVC");
+
+		CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword,
+				sm_serverUrl, sm_clientOrg, productId);
+		String resourcePath = "/products/" + productId;
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0"))
+			resourcePath = "/owners/" + sm_clientOrg + resourcePath;
+		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,
+				resourcePath);
+		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,
+				sm_clientOrg, name + " BITS", productId, 1, attributes, null);
 		return CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername,
 				sm_serverAdminPassword, sm_serverUrl, ownerKey, 3, startingMinutesFromNow, endingMinutesFromNow,
 				getRandInt(), getRandInt(), randomAvailableProductId, providedProduct, null).getString("id");
+	}
+
+	@AfterClass(groups = { "setup" })
+	protected void DeleteTestPool() throws Exception {
+		String productId = "AutoHealForExpiredProduct";
+		CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword,
+				sm_serverUrl, sm_clientOrg, productId);
+		String resourcePath = "/products/" + productId;
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0"))
+			resourcePath = "/owners/" + sm_clientOrg + resourcePath;
+		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,
+				resourcePath);
 	}
 
 	@AfterGroups(groups = { "setup" }, value = { "VerifyrhsmcertdRefreshIdentityCert" })
@@ -5067,22 +5098,12 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		List<SubscriptionPool> pools = clienttasks.getAvailableSubscriptionsMatchingInstalledProducts();
 		// int i = randomGenerator.nextInt(pools.size());
 		for (SubscriptionPool availablepools : pools) {
-			String resourcePath = "/pools/" + availablepools.poolId;
-			JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,
-					sm_clientPassword, sm_serverUrl, resourcePath));
-			String isVirtonly = CandlepinTasks.getPoolAttributeValue(jsonPool, "virt_only");
-			String physicalOnly = CandlepinTasks.getPoolAttributeValue(jsonPool, "physical_only");
-			String pool_derived = CandlepinTasks.getPoolAttributeValue(jsonPool, "pool_derived");
-
-			if (!(availablepools.subscriptionType.contains("Temporary")) || (pool_derived == null && isVirtonly == null
-					&& physicalOnly == null && (Boolean.valueOf(physicalOnly)) && (Boolean.valueOf(pool_derived))
-					&& (Boolean.valueOf(isVirtonly)))) {
-				randomAvailableProductId = availablepools.productId;
-				providedProduct = CandlepinTasks.getPoolProvidedProductIds(sm_serverAdminUsername,
-						sm_serverAdminPassword, sm_serverUrl, availablepools.poolId);
-				break;
-			}
+			randomAvailableProductId = availablepools.productId;
+			providedProduct = CandlepinTasks.getPoolProvidedProductIds(sm_serverAdminUsername, sm_serverAdminPassword,
+					sm_serverUrl, availablepools.poolId);
+			break;
 		}
+
 	}
 
 	public static Object getJsonObjectValue(JSONObject json, String jsonName) throws JSONException, Exception {
@@ -5106,11 +5127,13 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				"This test class was developed before the addition of /etc/pki/product-default/ certs (Bug 1123029).  Therefore, let's back them up before running this test class.");
 		for (File productCertFile : clienttasks.getCurrentProductCertFiles()) {
 			if (productCertFile.getPath().startsWith(clienttasks.productCertDefaultDir)) {
-				client.runCommandAndWait("cp " + productCertFile + " " + productCertFile + ".bak");
+				client.runCommandAndWait("mv " + productCertFile + " " + productCertFile + ".bak");
 			}
 		}
 	}
 
+	@BeforeGroups(groups = "setup", value = { "VerifyEUSRHELProductCertVersionFromEachCDNReleaseVersion_Test",
+			"InstalledProductMultipliesAfterSubscription", "AcceptanceTests" }, enabled = true)
 	@AfterClass(groups = "setup")
 	public void restoreProductDefaultCerts() {
 		client.runCommandAndWait("ls -1 " + clienttasks.productCertDefaultDir + "/*.bak");
