@@ -164,6 +164,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			eusProductId = "70";
 		else if ((clienttasks.arch.equals("x86_64")) && clienttasks.variant.equals("ComputeNode"))
 			eusProductId = "217";
+		else if ((clienttasks.arch.equals("s390x")) && (clienttasks.variant.equals("Server")))
+			eusProductId = "73";
+/* do not throw SkipExceptions from a dataProvider, it will fail all the rows of the test
 		else if ((clienttasks.arch.equals("ppc64le")) && (clienttasks.variant.equals("Server"))) {
 			eusProductId = "292";
 			throw new SkipException("blocked by bug 1369516"); // for now
@@ -176,12 +179,18 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 																// productid
 																// mapping
 			// for now skipping the
-		} else if ((clienttasks.arch.equals("s390x")) && (clienttasks.variant.equals("Server")))
-			eusProductId = "73";
+
+		} 
 		else if (clienttasks.variant.equals("Client"))
 			throw new SkipException("Test is not supported for this variant");
 		else if (clienttasks.variant.equals("Workstation"))
 			throw new SkipException("Test is not supported for this variant");
+*/
+		if (eusProductId==null) {
+			log.warning("This test does not yet cover variant '"+clienttasks.variant+"' on arch '"+clienttasks.arch+"'.");
+			 return ll; // return no rows and no test will be run
+		}
+		
 		// unregister
 		clienttasks.unregister(null, null, null);
 		// register
@@ -191,9 +200,10 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		// the system
 		ProductCert rhelProductCert = clienttasks.getCurrentRhelProductCert();
 
+/* do not throw SkipException from a dataProvider, it will fail all the rows of the test
 		if (rhelProductCert == null)
 			throw new SkipException("Failed to find an installed RHEL product cert.");
-
+*/
 		// find a subscription that provides Extended Update products
 
 		/*
@@ -220,14 +230,18 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				break;
 			}
 		}
+		if (pool==null) {
+			log.warning("Could not find an available EUS subscription that covers EUS product '"+eusProductId+"'.");
+			return ll; // return no rows and no test will be run
+		}
+		
 		// find the entitlement that provides access to RHEL and EUS
-
 		EntitlementCert eusEntitlementCerts = clienttasks.getEntitlementCertCorrespondingToSubscribedPool(pool);
 		if (eusEntitlementCerts == null)
-
 		{
+/* do not throw SkipException from a dataProvider, it will fail all the rows of the test
 			throw new SkipException("Could not find an entitlement to a EUS subscription.");
-
+*/ return ll; // instead, return no rows and no test will be run
 		}
 
 		// if eus repo is not enabled , enable it
@@ -275,6 +289,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		}
 
 		// add each available release as a row to the dataProvider
+//TODO bug 1369516 should be added to the BlockedByBzBug for all rows against ppc64le
 		for (
 
 		String release : clienttasks.getCurrentlyAvailableReleases(null, null, null))
