@@ -82,6 +82,26 @@ Hash: rhsmcertd-worke,rhsmcertd_t,user_tmp_t,file,open
  * To fix the above avc denial, run the following...   Reference: https://bugzilla.redhat.com/show_bug.cgi?id=1084557#c3
  * 4. restorecon -Rv /usr/lib/python2.7/site-packages
  *
+ *
+ *
+ *
+Another example of setting a Temporary Policy is in https://bugzilla.redhat.com/show_bug.cgi?id=1351370#c7
+In this example, the context for a /tmp path is changed after setting the rhsm.conf productCertDir to /tmp/product-default/
+[root@jsefler-rhel7 ~]# semanage fcontext -a -t cert_t -s system_u "/tmp/product-default(/.*)?"
+[root@jsefler-rhel7 ~]# restorecon -R -v /tmp/product-default
+restorecon reset /tmp/product-default context unconfined_u:object_r:user_tmp_t:s0->unconfined_u:object_r:cert_t:s0
+restorecon reset /tmp/product-default/69.pem context unconfined_u:object_r:user_tmp_t:s0->unconfined_u:object_r:cert_t:s0
+
+Then the test is performed. (semanage fcontext -l  will list the contexts include the newly added one)
+After completed, the context is removed...
+
+[root@jsefler-rhel7 ~]# semanage fcontext -d "/tmp/product-default(/.*)?"
+[root@jsefler-rhel7 ~]# restorecon -R -v /tmp/product-default
+restorecon:  Warning no default label for /tmp/product-default
+restorecon:  Warning no default label for /tmp/product-default/69.pem
+
+And then the altered files should be deleted because the will still have the context from the workaround
+[root@jsefler-rhel7 ~]# rm -rf /tmp/product-default
  */
 @Test(groups={"SELinuxTests","AcceptanceTests","Tier1Tests","Tier2Tests","Tier3Tests","FipsTests"})
 public class SELinuxTests extends SubscriptionManagerCLITestScript {
