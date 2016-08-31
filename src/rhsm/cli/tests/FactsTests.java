@@ -1289,6 +1289,10 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 			throw new SkipException("Collection of proc_cpuinfo facts was not available in this version of subscription-manager '"+clienttasks.installedPackageVersionMap.get("subscription-manager")+"'.");
 		}
 		
+		// log info about virt-what
+		client.runCommandAndWait("rpm -q virt-what");
+		client.runCommandAndWait("virt-what");
+		
 		// this is the list of base facts in English
 		Map<String,String> procCpuInfoFacts = clienttasks.getFacts("proc_cpuinfo.common");
 		
