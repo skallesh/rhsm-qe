@@ -4,8 +4,7 @@
              [rhsm.gui.tests.import_tests :as itests]
              [rhsm.gui.tasks.tasks :as tasks]
              [rhsm.gui.tasks.test-config :as c]
-             [rhsm.gui.tests.base :as base]
-             [rhsm.gui.tests.testbase :as testbase]))
+             [rhsm.gui.tests.base :as base]))
 
 ;; initialization of our testware
 (use-fixtures :once (fn [f]

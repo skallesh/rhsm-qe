@@ -435,7 +435,7 @@
               6. Runs the list --consumed command to verify that product is still consumed
               7. Verifies that the product shows in the My Subscriptions tab"}}
   import_validate_cert_shows_in_consumed
-  []
+  [_]
   (tasks/restart-app)
   (try+ (tasks/register-with-creds :re-register? false)
         (catch [:type :already-registered] _))
@@ -468,7 +468,7 @@
               :dependsOnMethods ["import_validate_cert_shows_in_consumed"]
               :description "Verifies that a product that was attached via an import can be removed"}}
   import_validate_cert_removal
-  []
+  [_]
   ;; We can't be sure which product we imported through the cert, so remove all of them
   (tasks/do-to-all-rows-in :my-subscriptions-view 0 tasks/unsubscribe)
   ;; Verify that there are no more subscriptions
