@@ -5,8 +5,7 @@
              [rhsm.gui.tasks.tools :as tools]
              [rhsm.gui.tasks.ui :as ui]
              [rhsm.gui.tests.base :as base]
-             [rhsm.gui.tasks.test-config :as c]
-             [rhsm.gui.tests.testbase :as testbase]))
+             [rhsm.gui.tasks.test-config :as c]))
 
 ;; ;; initialization of our testware
 (use-fixtures :once (fn [f]
