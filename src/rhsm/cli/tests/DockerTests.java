@@ -360,6 +360,7 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 		//	[root@bkr-hv03-guest29 ~]# docker run --rm registry.access.redhat.com/rhel7:latest rpm -q subscription-manager
 		//	docker: Error response from daemon: Cannot start container cb6d22bc66ac3304e2b11482b7d9b64091fbdf536482ae69aa8dbb22d35d904e: [9] System error: exit status 1.
 		// 2016/08/31 Update: 1343139 was moved to component docker-latest which does not immediately fix docker, so let's employ workaround https://bugzilla.redhat.com/show_bug.cgi?id=1343139#c37 as needed
+		// TODO An alternative workaround was suggested here: https://bugzilla.redhat.com/show_bug.cgi?id=1322909#c31
 		if (versionResult.getStderr().trim().startsWith("docker: Error response from daemon: Cannot start container")) {
 			log.warning("Despite the fixed status of bug 1343139, employing selinux workaround to avoid: "+bug1343139ErrorMsg);
 			// re-run docker run command in permissive mode
