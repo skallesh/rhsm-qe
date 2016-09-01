@@ -1359,16 +1359,23 @@ if (false) { // DO NOT RUN, BUT NOT READY TO DELETE CODE
 //				} else
 //				// END OF WORKAROUND
 				// TEMPORARY WORKAROUND FOR BUG
-				String bugId = "1372108"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1372108 - facts related to the identification of a virtual/physical system on ppc64le are conflicting
+				String bugId = "1372108"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1372108 - facts related to the identification of a virtual/physical system on ppc64/ppc64le are conflicting
 				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 				if (virtIsGuest==false && invokeWorkaroundWhileBugIsOpen) {
 					log.warning("Skipping the assertion for fact virt.is_guest:True on a '"+clienttasks.arch+"' '"+procCpuInfoFacts.get("proc_cpuinfo.common.model")+"' '"+procCpuInfoFacts.get("proc_cpuinfo.common.platform")+"' platform.");
 				} else
 				// END OF WORKAROUND
-				Assert.assertTrue(virtIsGuest, "The virt.is_guest fact value is true on a '"+clienttasks.arch+"' '"+procCpuInfoFacts.get("proc_cpuinfo.common.model")+"' '"+procCpuInfoFacts.get("proc_cpuinfo.common.platform")+"' platform.");
+				Assert.assertTrue(virtIsGuest, "The virt.is_guest fact value is true on a '"+clienttasks.arch+"' '"+procCpuInfoFacts.get("proc_cpuinfo.common.model")+"' '"+procCpuInfoFacts.get("proc_cpuinfo.common.platform")+"' platform because file '"+procDeviceTreeVmUuidFile+"' exists.");
 			} else {
+				// TEMPORARY WORKAROUND FOR BUG
+				String bugId = "1372108"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1372108 - facts related to the identification of a virtual/physical system on ppc64/ppc64le are conflicting
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				if (virtIsGuest==true && invokeWorkaroundWhileBugIsOpen) {
+					log.warning("Skipping the assertion for fact virt.is_guest:False on a '"+clienttasks.arch+"' '"+procCpuInfoFacts.get("proc_cpuinfo.common.model")+"' '"+procCpuInfoFacts.get("proc_cpuinfo.common.platform")+"' platform.");
+				} else
+				// END OF WORKAROUND
 				// assert virt.is_guest is False
-				Assert.assertEquals(virtIsGuest, Boolean.FALSE, "The virt.is_guest fact value is false on a '"+clienttasks.arch+"' '"+procCpuInfoFacts.get("proc_cpuinfo.common.model")+"' '"+procCpuInfoFacts.get("proc_cpuinfo.common.platform")+"' platform.");
+				Assert.assertEquals(virtIsGuest, Boolean.FALSE, "The virt.is_guest fact value is false on a '"+clienttasks.arch+"' '"+procCpuInfoFacts.get("proc_cpuinfo.common.model")+"' '"+procCpuInfoFacts.get("proc_cpuinfo.common.platform")+"' platform because file '"+procDeviceTreeVmUuidFile+"' does not exist.");
 				// assert virt.uuid is null
 				Assert.assertNull(virtUuid, "The virt.uuid fact is null on a '"+clienttasks.arch+"' '"+procCpuInfoFacts.get("proc_cpuinfo.common.model")+"' '"+procCpuInfoFacts.get("proc_cpuinfo.common.platform")+"' platform.");
 			}
