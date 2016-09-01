@@ -5037,6 +5037,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 
 	@AfterClass(groups = { "setup" })
 	protected void DeleteTestPool() throws Exception {
+		if (CandlepinType.hosted.equals(sm_serverType)) return;	// make sure we don't run this against stage/prod environment 
+		if (sm_clientOrg==null) return;	// must have an owner when calling candlepin APIs to delete resources 
 		String productId = "AutoHealForExpiredProduct";
 		CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword,
 				sm_serverUrl, sm_clientOrg, productId);
