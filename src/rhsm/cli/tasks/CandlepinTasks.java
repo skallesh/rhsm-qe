@@ -705,7 +705,7 @@ schema generation failed
 					log.warning("Re-attempting one more time to get a valid JSON response from the server...");
 					response = getHTTPResponseAsString(client, get, authenticator, password);
 					if (!response.startsWith("[") && !response.startsWith("{") && response.contains("502 Proxy Error")) {	// we still get a 502 Proxy Error
-						throw new SkipException("Encounterd a 502 response from the server and could not complete this test while bug '"+bugId+"' is open.");
+						throw new SkipException("Encountered a 502 response from the server and could not complete this test while bug '"+bugId+"' is open.");
 					} else {
 						log.fine("Workaround succeeded.");
 					}
@@ -742,7 +742,7 @@ schema generation failed
 //						log.warning("Re-attempting one more time to get a valid JSON response from the server...");
 //						jsonString = getHTTPResponseAsString(client, get, authenticator, password);
 //						if (jsonString.startsWith("{\"errors\":") && jsonString.contains(invalidServerResponseMessage)) {	// we still get a 502 Proxy Error
-//							throw new SkipException("Encounterd another '"+invalidServerResponseMessage+"' and could not complete this test while bug '"+bugId+"' is open.");
+//							throw new SkipException("Encountered another '"+invalidServerResponseMessage+"' and could not complete this test while bug '"+bugId+"' is open.");
 //						} else {
 //							log.fine("Workaround succeeded.");
 //						}
@@ -767,7 +767,7 @@ schema generation failed
 					log.warning("Re-attempting one more time to get a valid response from the server...");
 					response = getHTTPResponseAsString(client, get, authenticator, password);
 					if (response.startsWith("{\"errors\":") && response.contains(invalidServerResponseMessage)) {	// we still get a 502 Proxy Error
-						throw new SkipException("Encounterd another '"+invalidServerResponseMessage+"' and could not complete this test while bug '"+bugId+"' is open.");
+						throw new SkipException("Encountered another '"+invalidServerResponseMessage+"' and could not complete this test while bug '"+bugId+"' is open.");
 					} else {
 						log.fine("Workaround succeeded.");
 					}

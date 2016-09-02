@@ -427,7 +427,7 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 				log.warning("Re-attempting one more time to get a valid response from the server...");
 				result = client.runCommandAndWait(rhsmDebugSystemCommand);
 				if (result.getStderr().contains(invalidServerResponseMessage)) {	// we still get a 502 Proxy Error
-					throw new SkipException("Encounterd another '"+invalidServerResponseMessage+"' and could not complete this test while bug '"+bugId+"' is open.");
+					throw new SkipException("Encountered another '"+invalidServerResponseMessage+"' and could not complete this test while bug '"+bugId+"' is open.");
 				} else {
 					log.fine("Workaround succeeded.");
 				}
