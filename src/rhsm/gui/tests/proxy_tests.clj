@@ -175,7 +175,8 @@
 
 (defn ^{Test {:groups ["proxy"
                        "tier1"
-                       "blockedByBug-927340"]
+                       "blockedByBug-927340"
+                       "blockedByBug-1371632"]
               :dependsOnMethods ["disable_proxy"]}}
   test_proxy_with_blank_proxy
   "Test whether 'Test Connection' returns appropriate message when 'Location Proxy' is empty"
