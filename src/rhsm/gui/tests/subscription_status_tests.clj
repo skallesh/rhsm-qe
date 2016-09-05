@@ -143,7 +143,7 @@
            num-of-subscriptions (if (bool (tasks/ui guiexist :all-subscriptions-view))
                                   (Integer. (tasks/ui getrowcount :all-subscriptions-view))
                                   0)]
-      (when (> (min n num-of-subscriptions) 0)
+      (when (> (min n (max num-of-subscriptions 0)) 0)
         (tasks/subscribe (tasks/ui getcellvalue :all-subscriptions-view
                                    (rand-int num-of-subscriptions) 0))
         (when (bool (tasks/ui guiexist :all-subscriptions-view))
