@@ -449,7 +449,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		options.add("--rhsmcertd.consumercertdir=RHSMCERTD.CONSUMERCERTDIR");
 		*/
 		// add the expected default configurations
-		for (String section : new String[]{"server","rhsm","rhsmcertd"}) {
+		for (String section : new String[]{"server","rhsm","rhsmcertd","logging"/* added by bug 1334916 */}) {
 //			for (String confFileParameterName : clienttasks.defaultConfFileParameterNames(null)) {	// valid before bug 988476
 			for (String confFileParameterName : clienttasks.defaultConfFileParameterNames(section,null)) {
 				options.add(String.format("--%s.%s=%s.%s",section.toLowerCase(),confFileParameterName.toLowerCase(),section.toUpperCase(),confFileParameterName.toUpperCase()));

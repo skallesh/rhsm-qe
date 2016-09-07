@@ -25,8 +25,6 @@
                       (ftests/register nil)
                       (f)))
 
-
-
 (deftest window-system-registration-is-available-test
   (testing "Test such that a window 'System Registration' is named as register_dialog for RHEL7"
     (case (tt/get-release)
@@ -55,7 +53,20 @@
 (deftest verify_about_information_without_close_button-test
   (testing "A test which verifies that a test verify_about_information_without_close_button raises SkipException for older RHEL versions than 7.3"
     (let [[_ major minor] (re-find #"(\d)\.(\d)" (-> :true tt/get-release :version))]
-      (match [ #spy/d major #spy/d minor]
+      (match [ major minor]
              ["6" _] (is (thrown? SkipException (ftests/verify_about_information_without_close_button nil)))
              ["7" (a :guard #(>= (Integer. %) 3))] (ftests/verify_about_information_without_close_button nil)
              :else (is (thrown? SkipException (ftests/verify_about_information_without_close_button nil)))))))
+
+
+(deftest check_available_releases
+  (ftests/check_available_releases nil))
+
+(deftest check_releases
+  (ftests/check_releases nil))
+
+(deftest check_available_releases
+  (ftests/check_available_service_levels nil))
+
+(deftest verify_update_facts-test
+  (ftests/verify_update_facts nil))

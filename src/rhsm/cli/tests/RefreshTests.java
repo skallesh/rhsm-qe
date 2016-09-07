@@ -58,15 +58,62 @@ public class RefreshTests extends SubscriptionManagerCLITestScript {
 		clienttasks.removeAllCerts(false,true, false);
 		Assert.assertEquals(clienttasks.getCurrentEntitlementCerts().size(),0,"Entitlements have been removed.");
 		Assert.assertEquals(clienttasks.getCurrentlyConsumedProductSubscriptions().size(),0,"Consumed subscription pools do NOT exist after entitlements have been removed.");
-
+		
+		// mark the rhsm.log file
+		String rhsmLogMarker = System.currentTimeMillis()+" Testing RefreshEntitlements_Test...";
+		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, rhsmLogMarker);
+		// The following was implemented by to temporarily avoid an IT blocked candlepin end point as described by https://bugzilla.redhat.com/show_bug.cgi?id=1366301#c2
+		// python-rhsm-1.17.7-1 commits...
+		// python-rhsm RHEL7.3 commit 2debbb619cba05727f44f6823ea60a2aa6b3e269 1366301: Entitlement regeneration no longer propagates server errors
+		// python-rhsm RHEL7.3 commit cd43496585d5990500c4b272af9c4fa5e28661aa Update fix to include BadStatusLine responses from the server
+		// python-rhsm RHEL7.3 commit c021772a21c34d07542b8e9a01dcfadfc223624b Ensure both cert regen methods succeed despite BadStatusLine from server
+		// subscription-manager RHEL7.3 commit a07c9d7b890034a2e8e7e39fe32782b69def1736 1366301: Entitlement regeneration failure no longer aborts refresh
+		//	2016-08-30 08:23:19,642 [DEBUG] subscription-manager:20105:MainThread @connection.py:573 - Making request: PUT /subscription/consumers/b29e0643-44b4-4d75-9912-47cf127be7ca/certificates?lazy_regen=true
+		//	2016-08-30 08:23:20,070 [DEBUG] subscription-manager:20105:MainThread @connection.py:602 - Response: status=404
+		//	2016-08-30 08:23:20,071 [DEBUG] subscription-manager:20105:MainThread @connection.py:1365 - Unable to refresh entitlement certificates: Service currently unsupported.
+		//	2016-08-30 08:23:20,071 [DEBUG] subscription-manager:20105:MainThread @connection.py:1366 - Server error attempting a PUT to /subscription/consumers/b29e0643-44b4-4d75-9912-47cf127be7ca/certificates?lazy_regen=true returned status 404
+		//	2016-08-30 08:23:20,072 [DEBUG] subscription-manager:20105:MainThread @managercli.py:652 - Warning: Unable to refresh entitlement certificates; service likely unavailable
+		String warningMsg = "Warning: Unable to refresh entitlement certificates; service likely unavailable";	// 	subscription-manager RHEL7.3 commit a07c9d7b890034a2e8e7e39fe32782b69def1736 1366301: Entitlement regeneration failure no longer aborts refresh
+		// "Unable to refresh entitlement certificates: Service currently unsupported."	// python-rhsm RHEL7.3 commit 2debbb619cba05727f44f6823ea60a2aa6b3e269 1366301: Entitlement regeneration no longer propagates server errors
+		
 		// refresh
 		log.info("Refresh...");
 		clienttasks.refresh(null, null, null);
 		
+		// was subscription-manager "Unable to refresh" as a result of a 404 trying to PUT?
+		String rhsmLogTail = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, rhsmLogMarker, "Unable to refresh");
+		boolean unableToRefresh = rhsmLogTail.contains(warningMsg);
+		// if yes, then refresh behavior prior to Bug 1360909 will be tested
+		if (unableToRefresh) log.warning("Due to encountered warning '"+warningMsg+"', the original refresh behavior prior to Bug 1360909 will be asserted...");
+		
 		// Assert the entitlement certs are restored after the refresh
 		log.info("After running refresh, assert that the entitlement certs are restored...");
-		Assert.assertEquals(clienttasks.getCurrentEntitlementCerts(),entitlementCerts,"Original entitlements have been restored.");
-		Assert.assertEquals(clienttasks.getCurrentlyConsumedProductSubscriptions(),consumedProductSubscriptions,"Original consumed product subscriptions have been restored.");
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.17.10-1") && !unableToRefresh) {	// 1360909: Added functionality for regenerating entitlement certificates
+			// after the for Bug 1360909 - Clients unable to access newly released content (Satellite 6.2 GA)
+			// subscription-manager refresh will grant a new entitlement serial, but the contents are usually identical (unless a content set has been updated)
+			// assert nearly the same entitlement was restored (should only differ by serial number)
+			List<EntitlementCert> entitlementCertsAfterRefresh = clienttasks.getCurrentEntitlementCerts();
+			List<ProductSubscription> consumedProductSubscriptionsAfterRefresh = clienttasks.getCurrentlyConsumedProductSubscriptions();
+			Assert.assertEquals(entitlementCertsAfterRefresh.size(), entitlementCerts.size(), "The number of entitlement certs granted after refresh should match the number before refresh.");
+			Assert.assertEquals(consumedProductSubscriptionsAfterRefresh.size(), consumedProductSubscriptions.size(), "The number of consumed Product Subscriptions after refresh should match the number before refresh.");
+			// The following asserts assume that one one entitlement was granted from a single pool
+			Assert.assertEquals(entitlementCertsAfterRefresh.size(),1,"The remaining assertions in this test assume that an entitlement from only one pool was subscribed.  (If this test fails, then this test requires logic updates.)");
+			Assert.assertTrue(!entitlementCertsAfterRefresh.get(0).serialString.equals(entitlementCerts.get(0).serialString),"Serial '"+entitlementCertsAfterRefresh.get(0).serialString+"' in the refreshed entitlement should NOT match serial '"+entitlementCerts.get(0).serialString+"' from the original entitlement.");
+			Assert.assertEquals(entitlementCertsAfterRefresh.get(0).version,entitlementCerts.get(0).version,"Version in the refreshed entitlement should match the version from the original entitlement.");
+			Assert.assertEquals(entitlementCertsAfterRefresh.get(0).validityNotBefore,entitlementCerts.get(0).validityNotBefore,"ValidityNotBefore in the refreshed entitlement should match the ValidityNotBefore from the original entitlement.");
+			Assert.assertEquals(entitlementCertsAfterRefresh.get(0).validityNotAfter,entitlementCerts.get(0).validityNotAfter,"ValidityNotAfter in the refreshed entitlement should match the ValidityNotAfter from the original entitlement.");
+			Assert.assertEquals(entitlementCertsAfterRefresh.get(0).orderNamespace,entitlementCerts.get(0).orderNamespace,"Order information in the refreshed entitlement should match the order information from the original entitlement.");
+			Assert.assertEquals(entitlementCertsAfterRefresh.get(0).productNamespaces,entitlementCerts.get(0).productNamespaces,"Product information in the refreshed entitlement should match the product information from the original entitlement. (IF THIS FAILS, THEN THERE WAS AN UPSTREAM PROVIDED PRODUCT MODIFICATION LIKE THE SCENARIO IN BUG 1360909. HIGHLY UNLIKELY BETWEEN NOW AND THE START OF THIS TEST.)");
+			Assert.assertEquals(entitlementCertsAfterRefresh.get(0).contentNamespaces,entitlementCerts.get(0).contentNamespaces,"Content information in the refreshed entitlement should match the content information from the original entitlement. (IF THIS FAILS, THEN THERE WAS AN UPSTREAM CONTENT MODIFICATION LIKE THE SCENARIO IN BUG 1360909. HIGHLY UNLIKELY BETWEEN NOW AND THE START OF THIS TEST.)");
+			Assert.assertEquals(consumedProductSubscriptionsAfterRefresh.size(),1,"The remaining assertions in this test assume that an only one pool was subscribed.  (If this test fails, then this test requires logic updates.)");
+			Assert.assertTrue(!consumedProductSubscriptionsAfterRefresh.get(0).serialNumber.equals(consumedProductSubscriptions.get(0).serialNumber),"Serial Number '"+consumedProductSubscriptionsAfterRefresh.get(0).serialNumber+"' in the refreshed product subscription should NOT match serial number '"+consumedProductSubscriptions.get(0).serialNumber+"' from the original product subscription.");
+			Assert.assertEquals(consumedProductSubscriptionsAfterRefresh.get(0).poolId,consumedProductSubscriptions.get(0).poolId,"PoolId in the refreshed consumed product subscription should match the pool id from the original consumed product subscription.");
+			// TODO continue asserting equality between fields of the consumedProductSubscriptions (all should be equal except serialNumber which was already asserted above)
+		} else {
+			// assert the exact same entitlement was restored
+			Assert.assertEquals(clienttasks.getCurrentEntitlementCerts(),entitlementCerts,"Original entitlements have been restored.");
+			Assert.assertEquals(clienttasks.getCurrentlyConsumedProductSubscriptions(),consumedProductSubscriptions,"Original consumed product subscriptions have been restored.");
+		}
 	}
 	
 	

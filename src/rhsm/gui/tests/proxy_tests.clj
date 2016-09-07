@@ -19,8 +19,6 @@
             BeforeGroups
             AfterGroups]))
 
-(def auth-log "/var/log/squid/access.log")
-(def noauth-log "/var/log/tinyproxy.log")
 (def rhsm-log "/var/log/rhsm/rhsm.log")
 (def ldtpd-log "/var/log/ldtpd/ldtpd.log")
 (def proxy-success "Proxy connection succeeded")
@@ -86,7 +84,7 @@
   [_]
   (enable_proxy_auth nil)
   (let [logoutput (get-logging @auth-proxyrunner
-                               auth-log
+                               (@config :basicauth-proxy-log)
                                "proxy-auth-connect"
                                nil
                                (register))]
@@ -100,7 +98,7 @@
   [_]
   (enable_proxy_noauth nil)
   (let [logoutput (get-logging @noauth-proxyrunner
-                               noauth-log
+                               (@config :noauth-proxy-log)
                                "proxy-noauth-connect"
                                nil
                                (register))]
@@ -115,13 +113,13 @@
   (disable_proxy nil)
   ;; note: if this takes forever, blank out the proxy log file.
   (let [logoutput (get-logging @auth-proxyrunner
-                               auth-log
+                               (@config :basicauth-proxy-log)
                                "disabled-auth-connect"
                                nil
                                (register))]
     (verify (clojure.string/blank? logoutput)))
   (let [logoutput (get-logging @noauth-proxyrunner
-                               noauth-log
+                               (@config :noauth-proxy-log)
                                "disabled-noauth-connect"
                                nil
                                (register))]
@@ -177,7 +175,8 @@
 
 (defn ^{Test {:groups ["proxy"
                        "tier1"
-                       "blockedByBug-927340"]
+                       "blockedByBug-927340"
+                       "blockedByBug-1371632"]
               :dependsOnMethods ["disable_proxy"]}}
   test_proxy_with_blank_proxy
   "Test whether 'Test Connection' returns appropriate message when 'Location Proxy' is empty"
@@ -190,7 +189,8 @@
 
 (defn ^{Test {:groups ["proxy"
                        "tier1"
-                       "blockedByBug-927340"]
+                       "blockedByBug-927340"
+                       "blockedByBug-1371632"]
               :dependsOnMethods ["disable_proxy"]}}
   test_proxy_with_blank_credentials
   "Test whether 'Test Connection' returns appropriate message when User and Password fields are empty"

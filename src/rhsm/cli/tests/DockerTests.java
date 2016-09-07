@@ -354,10 +354,24 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 		// verify the image will run subscription-manager >= 1.12.4-1
 		//	[root@jsefler-7 ~]# docker run --rm docker-registry.usersys.redhat.com/brew/rhel7:latest rpm -q subscription-manager
 		//	subscription-manager-1.12.4-1.el7.x86_64
+		SSHCommandResult versionResult = client.runCommandAndWait("docker run --rm "+dockerImage+" rpm -q subscription-manager");
+		// START OF WORKAROUND
 		// Bug 1343139 - Docker containers don't start when using user namespace and selinux
 		//	[root@bkr-hv03-guest29 ~]# docker run --rm registry.access.redhat.com/rhel7:latest rpm -q subscription-manager
 		//	docker: Error response from daemon: Cannot start container cb6d22bc66ac3304e2b11482b7d9b64091fbdf536482ae69aa8dbb22d35d904e: [9] System error: exit status 1.
-		SSHCommandResult versionResult = RemoteFileTasks.runCommandAndAssert(client, "docker run --rm "+dockerImage+" rpm -q subscription-manager", 0);
+		// 2016/08/31 Update: 1343139 was moved to component docker-latest which does not immediately fix docker, so let's employ workaround https://bugzilla.redhat.com/show_bug.cgi?id=1343139#c37 as needed
+		// TODO An alternative workaround was suggested here: https://bugzilla.redhat.com/show_bug.cgi?id=1322909#c31
+		if (versionResult.getStderr().trim().startsWith("docker: Error response from daemon: Cannot start container")) {
+			log.warning("Despite the fixed status of bug 1343139, employing selinux workaround to avoid: "+bug1343139ErrorMsg);
+			// re-run docker run command in permissive mode
+			String selinuxMode = client.runCommandAndWait("getenforce").getStdout().trim();	// Enforcing
+			client.runCommandAndWait("setenforce Permissive");
+			versionResult = client.runCommandAndWait("docker run --rm "+dockerImage+" rpm -q subscription-manager");
+			client.runCommandAndWait("setenforce "+selinuxMode);
+		}
+		// END OF WORKAROUND
+		Assert.assertEquals(versionResult.getExitCode(), Integer.valueOf(0), "Exit code from docker run command.");
+		
 		String subscriptionManagerVersionInDockerImage = versionResult.getStdout().trim().replace("subscription-manager"+"-", "");
 		Assert.assertTrue(clienttasks.isVersion(subscriptionManagerVersionInDockerImage, ">=", "1.12.4-1"), "Expecting the version of subscription-manager baked inside image '"+dockerImage+"' to be >= 1.12.4-1 (first docker compatible version of subscription-manager)");
 	}
@@ -892,7 +906,6 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 			boolean invokeWorkaroundWhileBugIsOpen = true;
 			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 			if (invokeWorkaroundWhileBugIsOpen && selinuxModeBeforeClass==null) {
-				String bug1343139ErrorMsg = "docker: Error response from daemon: Cannot start container ab37bcb60f893a49ebd6b62f02de4a2ca9b2b753f6fc0240d0b367badb7bdb39: [9] System error: exit status 1.";
 				log.warning("Turning off selinux while bug '"+bugId+"' is open to avoid: "+bug1343139ErrorMsg);
 
 				selinuxModeBeforeClass = client.runCommandAndWait("getenforce").getStdout().trim();	// Enforcing
@@ -911,6 +924,8 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 
 	}
 	protected String selinuxModeBeforeClass=null;	// Enforcing or Permissive
+	protected String bug1343139ErrorMsg = "docker: Error response from daemon: Cannot start container <ID>: [9] System error: exit status 1.";
+
 	// END OF WORKAROUND
 	
 	

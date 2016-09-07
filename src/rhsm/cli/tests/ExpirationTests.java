@@ -57,8 +57,10 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 		}
 		
 		// wait for pool to expire
-		sleep(endingMinutesFromNow*60*1000 + 0*1000); // plus a 10 sec buffer
-		
+		sleep(endingMinutesFromNow*60*1000 + 0*1000); // plus a 10 sec buffer; changed to 0 sec - the buffer creates too large of an opportunity for rhsmcertd to run and wipe out the expired cert
+		String rhsmcertdLogMarker = System.currentTimeMillis()+" Testing VerifyEntitlementsAfterSubscriptionExpires_Test...";
+		RemoteFileTasks.markFile(client, clienttasks.rhsmcertdLogFile, rhsmcertdLogMarker);
+///*debugTesting*/sleep(certFrequency*60*1000);	// to delay the assert long enough for rhsmcertd to trigger and delete the expired cert; used to force the code path through the "if (expiredProductSubscription==null)" code block that follows
 		// verify that the subscription pool has expired and is therefore not listed in all available; coverage for Bug 655835 - Pools are no longer removed after their expiration date https://github.com/RedHatQE/rhsm-qe/issues/132
 		SubscriptionPool expiredPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", expiringPoolId, clienttasks.getCurrentlyAllAvailableSubscriptionPools());
 		Assert.assertNull(expiredPool,"Expired Test Pool ID '"+expiringPoolId+"' is no longer available for subscribing.");
@@ -77,6 +79,27 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 		List <ProductSubscription> currentlyConsumedProductSubscriptions = ProductSubscription.parse(clienttasks.list(null,null,true, null, null, null, null, null, null, null, null, null, null).getStdout());
 		for (ProductSubscription expiringProductSubscription : expiringProductSubscriptions) {
 			ProductSubscription expiredProductSubscription = ProductSubscription.findFirstInstanceWithMatchingFieldFromList("serialNumber", expiringProductSubscription.serialNumber, currentlyConsumedProductSubscriptions);
+			// catch a corner case...
+			if (expiredProductSubscription==null) {	// then we were probably too slow and a trigger of rhsmcertd likely deleted the expired cert.
+				// Using this if block of code to confirm that assumption and skip the rest of this test
+				String rhsmcertdLogTail = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmcertdLogFile, rhsmcertdLogMarker,"(Cert Check)");
+				// rhsmcertd:
+				//	Fri Aug 26 15:42:19 2016 [INFO] (Cert Check) Certificates updated.
+				//---------------------------------------------------------------------------------------------------------
+				// rhsm.log:
+				//	2016-08-26 15:42:17,819 [DEBUG] rhsmcertd-worker:5398:MainThread @connection.py:573 - Making request: GET /candlepin/consumers/c56bfdb6-ff4c-41b6-84c2-4e0179df3a37/certificates/serials
+				//	2016-08-26 15:42:18,016 [DEBUG] rhsmcertd-worker:5398:MainThread @connection.py:602 - Response: status=200, requestUuid=bfd74f37-ef19-4516-8a5f-89d44dc9dc56
+				//	2016-08-26 15:42:18,018 [INFO] rhsmcertd-worker:5398:MainThread @entcertlib.py:131 - certs updated:
+				//	Total updates: 1
+				//	Found (local) serial# [1826226756700020146L]
+				//	Expected (UEP) serial# []
+				//	Added (new)
+				//	  <NONE>
+				//	Deleted (rogue):
+				//	  [sn:1826226756700020146 (Awesome OS Server Bundled) @ /etc/pki/entitlement/1826226756700020146.pem]
+				Assert.assertTrue(rhsmcertdLogTail.trim().endsWith("Certificates updated."), "It appears that the rhsmcertd coincidently triggered too quickly on its frequency of '"+certFrequency+"'min after the entitlement expired causing it to be deleted by the rhsmcertd.");
+				throw new SkipException("Skipping the rest of this test since rhsmcertd triggered too closely after the expiration of the entitlement cert for us to do all of our test assertions before rhsmcertd ran.  Hopefully the next test run will complete.");
+			}
 			Assert.assertNotNull(expiredProductSubscription, "Immediately after the consumed subscription '"+expiringProductSubscription.productName+"' serial '"+expiringProductSubscription.serialNumber+"' expires, it should still be found the list of consumed product subscriptions (assuming that rhsmcertd on certFrequency='"+certFrequency+"'min has not yet triggered before this assert).");
 			Assert.assertTrue(!expiredProductSubscription.isActive, "Immediately after the consumed subscription '"+expiringProductSubscription.productName+"' serial '"+expiringProductSubscription.serialNumber+"' expires, the list of consumed product subscriptions should show it as inActive.");
 		}
@@ -90,7 +113,6 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 		// verify that the expired entitlement cert file is still gone after another trigger a rhsmcertd.certFrequency
 		SubscriptionManagerCLITestScript.sleep(certFrequency*60*1000);
 		Assert.assertTrue(!RemoteFileTasks.testExists(client,expiringCertFile.getPath()),"After another trigger of the cert frequency, the expired entitlement cert file remains cleaned from the system.");
-		
 	}
 	
 	

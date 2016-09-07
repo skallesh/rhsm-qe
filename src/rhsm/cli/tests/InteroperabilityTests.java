@@ -87,10 +87,19 @@ public class InteroperabilityTests extends SubscriptionManagerCLITestScript {
 		// import an expired certificate 
 		File expiredCertFile = new File(System.getProperty("automation.dir", null)+"/certs/Expiredcert.pem");
 		RemoteFileTasks.putFile(client.getConnection(), expiredCertFile.getPath(), "/tmp/Expiredcert.pem", "0644");
-		clienttasks.importCertificate("/tmp/Expiredcert.pem");
+		if (clienttasks.isPackageVersion("subscription-manager", "<", "1.17.10-1")) {	//	subscription-manager commit b93e59482563b9e3e972a928233bef7ebf885ea1	// Bug 1251516: Disable import when registered
+			clienttasks.importCertificate("/tmp/Expiredcert.pem");
+		} else {
+			// after fix for bug 1251516, I can no longer use importCertificate while registered; instead we'll simply copy the expired cert to /etc/pki/entitlement ...
+			client.runCommandAndWait("cp /tmp/Expiredcert.pem "+clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsm", "entitlementCertDir"));
+			// ... to avoid this usability error:
+			//	201608261038:58.987 - FINE: ssh root@jsefler-rhel7.usersys.redhat.com subscription-manager import --certificate=/tmp/Expiredcert.pem
+			//	201608261038:59.747 - FINE: Stdout: 
+			//	201608261038:59.747 - FINE: Stderr: Error: You may not import certificates into a system that is registered to a subscription management service.
+		}
 		EntitlementCert expiredEntitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(new File("/tmp/Expiredcert.pem"));
 		
-		// assert the registration message (without any current subscriptions)
+		// assert the interoperable registration message (without any current subscriptions)
 		SSHCommandResult result = client.runCommandAndWait("yum repolist --disableplugin=rhnplugin --enableplugin=subscription-manager");
 		String expectedMsgRHSM = "This system is registered to Red Hat Subscription Management, but is not receiving updates. You can use subscription-manager to assign subscriptions.";
 		if (clienttasks.isPackageVersion("subscription-manager", "<", "1.12.2-1")) Assert.assertTrue(result.getStdout().contains(expectedMsgRHSM), "When registered to RHSM (and all subscriptions have expired), the subscription-manager yum plugin stdout should inform that:\n"+expectedMsgRHSM+"\n");	// Bug 901612 - Subscription-manager-s yum plugin prints warning to stdout instead of stderr.	// Bug 901612 was reverted by Bug 1017354 
@@ -102,10 +111,19 @@ public class InteroperabilityTests extends SubscriptionManagerCLITestScript {
 		expectedMsgRHSM += "\n"+"You no longer have access to the repositories that provide these products.  It is important that you apply an active subscription in order to resume access to security and other critical updates. If you don't have other active subscriptions, you can renew the expired subscription.";
 		Assert.assertTrue(result.getStdout().contains(expectedMsgRHSM), "When registered to RHSM (and all subscriptions have expired), the subscription-manager yum plugin stdout should inform that:\n"+expectedMsgRHSM+"\n");	// Bug 901612 - Subscription-manager-s yum plugin prints warning to stdout instead of stderr.	// Bug 901612 was reverted by Bug 1017354 
 
-		// assert the registration message (with current subscriptions)
+		// assert the interoperable registration message (with current subscriptions)
 		//clienttasks.subscribeToSubscriptionPool(clienttasks.getCurrentlyAvailableSubscriptionPools().get(0));	// will fail with java.lang.AssertionError: The list of consumed products is entitled 'Consumed Subscriptions'. expected:<true> but was:<false>
 		clienttasks.subscribe(null, null, clienttasks.getCurrentlyAvailableSubscriptionPools().get(0).poolId, null, null, null, null, null, null, null, null, null);
-		clienttasks.importCertificate("/tmp/Expiredcert.pem");
+		if (clienttasks.isPackageVersion("subscription-manager", "<", "1.17.10-1")) {	//	subscription-manager commit b93e59482563b9e3e972a928233bef7ebf885ea1	// Bug 1251516: Disable import when registered
+			clienttasks.importCertificate("/tmp/Expiredcert.pem");
+		} else {
+			// after fix for bug 1251516, I can no longer use importCertificate while registered; instead we'll simply copy the expired cert to /etc/pki/entitlement ...
+			client.runCommandAndWait("cp /tmp/Expiredcert.pem "+clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsm", "entitlementCertDir"));
+			// ... to avoid this usability error:
+			//	201608261038:58.987 - FINE: ssh root@jsefler-rhel7.usersys.redhat.com subscription-manager import --certificate=/tmp/Expiredcert.pem
+			//	201608261038:59.747 - FINE: Stdout: 
+			//	201608261038:59.747 - FINE: Stderr: Error: You may not import certificates into a system that is registered to a subscription management service.
+		}
 		result = client.runCommandAndWait("yum repolist --disableplugin=rhnplugin --enableplugin=subscription-manager");
 		expectedMsgRHSM = "This system is receiving updates from Red Hat Subscription Management.";
 		//NOT TRUE ANYMORE Assert.assertTrue(result.getStdout().contains(expectedMsgRHSM), "When registered to RHSM (and some subscriptions have expired), the subscription-manager yum plugin stdout should inform that:\n"+expectedMsgRHSM+"\n");	// Bug 901612 - Subscription-manager-s yum plugin prints warning to stdout instead of stderr.	// Bug 901612 was reverted by Bug 1017354 

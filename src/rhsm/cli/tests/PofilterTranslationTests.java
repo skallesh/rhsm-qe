@@ -118,6 +118,11 @@ import com.redhat.qe.tools.SSHCommandRunner;
  *      https://engineering.redhat.com/rt/Ticket/Display.html?id=
  *      https://bugzilla.redhat.com/show_bug.cgi?id=1303768
  *      
+ *      Subscription Manger 1.17.X Translation Request
+ *      https://translate.zanata.org/zanata/iteration/view/subscription-manager/1.17.X
+ *      https://engineering.redhat.com/rt/Ticket/Display.html?id=
+ *      https://bugzilla.redhat.com/show_bug.cgi?id=1340135
+ *      
  *      Candlepin IT Service Adapters
  *      https://translate.engineering.redhat.com/project/view/candlepin-it-adapters
  *      
@@ -274,7 +279,7 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 			ignorableMsgIds.add("%%prog %s [OPTIONS] MANIFEST_FILE");
 			ignorableMsgIds.add("To remove a channel, use 'rhn-channel --remove --channel=<conflicting_channel>'.");
 			ignorableMsgIds.add("consumer_uuid=%s is not a valid consumer_uuid. Not attempting to sync %s cache with server.");
-			ignorableMsgIds.addAll(Arrays.asList(new String[]{"progress_label","org_selection_label","no_subs_label","system_name_label","org_selection_scrolledwindow","owner_treeview","progress_label","activation_key_entry","environment_treeview","env_select_vbox_label","default_button","choose_server_label","consumer_entry","organization_entry","registration_dialog_action_area","server_label","server_entry","proxy_button","close_button","facts_view","register_button","register_dialog_main_vbox","registration_dialog_action_area\n","register_details_label","register_progressbar","system_instructions_label","sla_selection_combobox","release_selection_combobox","manage_repositories_dialog","remove_all_overrides_button"}));	// these are various GTK widget ids, not gnome menu items
+			ignorableMsgIds.addAll(Arrays.asList(new String[]{"progress_label","org_selection_label","no_subs_label","system_name_label","org_selection_scrolledwindow","owner_treeview","progress_label","activation_key_entry","environment_treeview","env_select_vbox_label","default_button","choose_server_label","consumer_entry","organization_entry","registration_dialog_action_area","server_label","server_entry","proxy_button","close_button","facts_view","register_button","register_dialog_main_vbox","registration_dialog_action_area\n","register_details_label","register_progressbar","system_instructions_label","sla_selection_combobox","release_selection_combobox","manage_repositories_dialog","remove_all_overrides_button","register_widget_main_vbox","system_name_grid"}));	// these are various GTK widget ids, not gnome menu items
 		}
 		
 		// *******************************************************************************************
@@ -1058,6 +1063,17 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 				
 				// Bug 1265371 - pofilter endwhitespace tests fail for many language translations in subscription-manager-1.15
 				if (pofilterTest.equals("endwhitespace")) bugIds.add("1265371");
+				
+				// Bug 1372816 - Several pofilter tests are failing after receiving translated strings for subscription-manager-1.17
+				if (pofilterTest.equals("endwhitespace") && translationFile.getPath().contains("/ja/")) bugIds.add("1372816");
+				if (pofilterTest.equals("endwhitespace") && translationFile.getPath().contains("/es_ES/")) bugIds.add("1372816");
+				if (pofilterTest.equals("unchanged") && translationFile.getPath().contains("/ru/")) bugIds.add("1372816");
+				if (pofilterTest.equals("endwhitespace") && translationFile.getPath().contains("/zh_CN/")) bugIds.add("1372816");
+				if (pofilterTest.equals("startwhitespace") && translationFile.getPath().contains("/zh_CN/")) bugIds.add("1372816");
+				if (pofilterTest.equals("options") && translationFile.getPath().contains("/pt_BR/")) bugIds.add("1372816");
+				if (pofilterTest.equals("endwhitespace") && translationFile.getPath().contains("/pt_BR/")) bugIds.add("1372816");
+				if (pofilterTest.equals("startwhitespace") && translationFile.getPath().contains("/pt_BR/")) bugIds.add("1372816");
+				if (pofilterTest.equals("endwhitespace") && translationFile.getPath().contains("/fr/")) bugIds.add("1372816");
 				
 				BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 				ll.add(Arrays.asList(new Object[] {blockedByBzBug, pofilterTest, translationFile}));

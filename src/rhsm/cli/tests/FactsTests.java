@@ -1289,6 +1289,10 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 			throw new SkipException("Collection of proc_cpuinfo facts was not available in this version of subscription-manager '"+clienttasks.installedPackageVersionMap.get("subscription-manager")+"'.");
 		}
 		
+		// log info about virt-what
+		client.runCommandAndWait("rpm -q virt-what");
+		client.runCommandAndWait("virt-what");
+		
 		// this is the list of base facts in English
 		Map<String,String> procCpuInfoFacts = clienttasks.getFacts("proc_cpuinfo.common");
 		
@@ -1307,7 +1311,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 			}
 			
 // HAVING SECOND THOUGTS ON THE VALIDITY OF THIS ASSERTION BLOCK
-if (false) {
+if (false) { // DO NOT RUN, BUT NOT READY TO DELETE CODE
 			// assert that virt.uuid is set on a pSeries ppc64 System
 			if (procCpuInfoFacts.get("proc_cpuinfo.common.platform").toLowerCase().contains("pSeries".toLowerCase())) {
 				String virtUuid = clienttasks.getFactValue("virt.uuid");
@@ -1338,26 +1342,42 @@ if (false) {
 			
 			// assert that virt.uuid is populated when /proc/device-tree/vm,uuid is known	// Bug 1300805 - ppc64 kvm guests do not collect a virt.uuid fact.
 			String procDeviceTreeVmUuidFile = "/proc/device-tree/vm,uuid";
+			Boolean virtIsGuest = Boolean.valueOf(clienttasks.getFactValue("virt.is_guest"));
+			String virtUuid = clienttasks.getFactValue("virt.uuid");
 			if (RemoteFileTasks.testExists(client, procDeviceTreeVmUuidFile)) {
 				String expectedVirtUuid = client.runCommandAndWait("cat "+procDeviceTreeVmUuidFile).getStdout().trim();
-				String virtUuid = clienttasks.getFactValue("virt.uuid");
 				Assert.assertNotNull(virtUuid, "The virt.uuid fact is set on a '"+clienttasks.arch+"' platform when "+procDeviceTreeVmUuidFile+" is defined.");
 				Assert.assertEquals(virtUuid, expectedVirtUuid, "The virt.uuid fact on a '"+clienttasks.arch+"' '"+procCpuInfoFacts.get("proc_cpuinfo.common.model")+"' '"+procCpuInfoFacts.get("proc_cpuinfo.common.platform")+"' platform should match the contents of "+procDeviceTreeVmUuidFile);
 								
 				// assert virt.is_guest is True
+//				// TEMPORARY WORKAROUND FOR BUG
+//				// Bug 1072524 has been VERIFIED
+//				String bugId = "1072524"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1072524 - Add support for detecting ppc64 LPAR as virt guests
+//				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+//				if (invokeWorkaroundWhileBugIsOpen) {
+//					log.warning("Skipping the assertion for fact virt.is_guest:True on a '"+clienttasks.arch+"' '"+procCpuInfoFacts.get("proc_cpuinfo.common.model")+"' '"+procCpuInfoFacts.get("proc_cpuinfo.common.platform")+"' platform.");
+//				} else
+//				// END OF WORKAROUND
 				// TEMPORARY WORKAROUND FOR BUG
-				String bugId = "1072524"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1072524 - Add support for detecting ppc64 LPAR as virt guests
+				String bugId = "1372108"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1372108 - facts related to the identification of a virtual/physical system on ppc64/ppc64le are conflicting
 				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
-				if (invokeWorkaroundWhileBugIsOpen) {
-					log.warning("Skipping the assertion of fact virt.is_guest:True on a '"+clienttasks.arch+"' '"+procCpuInfoFacts.get("proc_cpuinfo.common.model")+"' '"+procCpuInfoFacts.get("proc_cpuinfo.common.platform")+"' platform.");
+				if (virtIsGuest==false && invokeWorkaroundWhileBugIsOpen) {
+					log.warning("Skipping the assertion for fact virt.is_guest:True on a '"+clienttasks.arch+"' '"+procCpuInfoFacts.get("proc_cpuinfo.common.model")+"' '"+procCpuInfoFacts.get("proc_cpuinfo.common.platform")+"' platform.");
 				} else
 				// END OF WORKAROUND
-				Assert.assertTrue(Boolean.valueOf(clienttasks.getFactValue("virt.is_guest")), "The virt.is_guest fact value is true on a '"+clienttasks.arch+"' '"+procCpuInfoFacts.get("proc_cpuinfo.common.platform")+"' platform.");
+				Assert.assertTrue(virtIsGuest, "The virt.is_guest fact value is true on a '"+clienttasks.arch+"' '"+procCpuInfoFacts.get("proc_cpuinfo.common.model")+"' '"+procCpuInfoFacts.get("proc_cpuinfo.common.platform")+"' platform because file '"+procDeviceTreeVmUuidFile+"' exists.");
 			} else {
+				// TEMPORARY WORKAROUND FOR BUG
+				String bugId = "1372108"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1372108 - facts related to the identification of a virtual/physical system on ppc64/ppc64le are conflicting
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				if (virtIsGuest==true && invokeWorkaroundWhileBugIsOpen) {
+					log.warning("Skipping the assertion for fact virt.is_guest:False on a '"+clienttasks.arch+"' '"+procCpuInfoFacts.get("proc_cpuinfo.common.model")+"' '"+procCpuInfoFacts.get("proc_cpuinfo.common.platform")+"' platform.");
+				} else
+				// END OF WORKAROUND
 				// assert virt.is_guest is False
-				Assert.assertEquals(Boolean.valueOf(clienttasks.getFactValue("virt.is_guest")), Boolean.FALSE, "The virt.is_guest fact value is false on a '"+clienttasks.arch+"' '"+procCpuInfoFacts.get("proc_cpuinfo.common.model")+"' '"+procCpuInfoFacts.get("proc_cpuinfo.common.platform")+"' platform.");
+				Assert.assertEquals(virtIsGuest, Boolean.FALSE, "The virt.is_guest fact value is false on a '"+clienttasks.arch+"' '"+procCpuInfoFacts.get("proc_cpuinfo.common.model")+"' '"+procCpuInfoFacts.get("proc_cpuinfo.common.platform")+"' platform because file '"+procDeviceTreeVmUuidFile+"' does not exist.");
 				// assert virt.uuid is null
-				Assert.assertNull(clienttasks.getFactValue("virt.uuid"), "The virt.uuid fact is null on a '"+clienttasks.arch+"' '"+procCpuInfoFacts.get("proc_cpuinfo.common.model")+"' '"+procCpuInfoFacts.get("proc_cpuinfo.common.platform")+"' platform.");
+				Assert.assertNull(virtUuid, "The virt.uuid fact is null on a '"+clienttasks.arch+"' '"+procCpuInfoFacts.get("proc_cpuinfo.common.model")+"' '"+procCpuInfoFacts.get("proc_cpuinfo.common.platform")+"' platform.");
 			}
 		}
 		

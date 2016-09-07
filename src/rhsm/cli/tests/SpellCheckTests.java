@@ -82,7 +82,10 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 			msgId = msgId.replace("%prog", "%program");
 			msgId = msgId.replace("Username", "User Name");
 			msgId = msgId.replace("username", "user name");
+			msgId = msgId.replace("Virt-who", "Virtualization-who");
 			msgId = msgId.replace("Virt Only", "Virtualization Only");
+			msgId = msgId.replace("Virt Limit", "Virtualization Limit");
+			msgId = msgId.replace("Virtualization", "Virtual");
 			msgId = msgId.replace("cert's", "certificate's");
 			msgId = msgId.replace("(Examples: en-us, de-de)", "(Examples: English, German)");
 			msgId = msgId.replace("sos report", "save our ship report");
@@ -109,7 +112,6 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 			msgId = msgId.replace("redhat", "red hat");
 			msgId = msgId.replace("\\tManifest", "Manifest");
 			msgId = msgId.replace("jbappplatform", "java boss application platform");
-			msgId = msgId.replace("Virtualization", "Virtual");
 			msgId = msgId.replace("_vbox", "_vertical_box");
 			msgId = msgId.replace("env_select", "environment_select");
 			msgId = msgId.replace("login", "log-in");
@@ -124,6 +126,7 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 			msgId = msgId.replace("privacy_statement.html", "privacy_statement.HTML");
 			msgId = msgId.replace("rhn", "red hat network");
 			msgId = msgId.replace("RHN", "Red Hat Network");
+			msgId = msgId.replace("RHEL", "Red Hat Enterprise Linux");
 			msgId = msgId.replace("url", "uniform resource location");	// locator is not recognized by hunspell-1.2.8-16.el6
 			msgId = msgId.replace("URL", "Uniform Resource Location");	// Locator is not recognized by hunspell-1.2.8-16.el6
 			msgId = msgId.replace("DER size", "binary size");
@@ -329,6 +332,18 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 				if (invokeWorkaroundWhileBugIsOpen) {
 					log.warning("Ignoring known misspelling of '"+"Awesome Developer Editition"+"' while bug '"+bugId+"' is open.");
 					msgId = msgId.replace("Awesome Developer Editition", "Awesome Developer Edition");
+				}
+			}
+			// END OF WORKAROUND
+			
+			// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=1372779
+			if (msgId.contains("Proxy connnection")) {
+				boolean invokeWorkaroundWhileBugIsOpen = true;
+				String bugId="1372779";	// Bug 1372779 - another typo in "Proxy connnection failed, please check your settings." 
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				if (invokeWorkaroundWhileBugIsOpen) {
+					log.warning("Ignoring known misspelling of '"+"Proxy connnection"+"' while bug '"+bugId+"' is open.");
+					msgId = msgId.replace("Proxy connnection", "Proxy connection");
 				}
 			}
 			// END OF WORKAROUND
@@ -1131,6 +1146,7 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 		modifiedManPage = modifiedManPage.replaceAll("systemid([^e])", "system-id$1");
 		modifiedManPage = modifiedManPage.replaceAll("rhsm\\.conf([^i])", "rhsm.configuration$1");
 		modifiedManPage = modifiedManPage.replaceAll("RHSM\\.CONF([^i])", "RHSM.CONFIGURATION$1");
+		modifiedManPage = modifiedManPage.replaceAll("subscription_manager\\.managercli", "subscription_manager.manager_command_line_interface");
 		modifiedManPage = modifiedManPage.replaceAll("myserver.example.com", "my.server.example.com");
 		modifiedManPage = modifiedManPage.replaceAll("cloudforms.example.com", "cloud.forms.example.com");
 		modifiedManPage = modifiedManPage.replaceAll("newsubscription.example.com", "new.subscription.example.com");
@@ -1162,6 +1178,8 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 		modifiedManPage = modifiedManPage.replaceAll("REPOS OPTIONS", "REPOSITORIES OPTIONS");
 		modifiedManPage = modifiedManPage.replaceAll("REPO-OVERRIDE", "REPOSITORY-OVERRIDE");
 		modifiedManPage = modifiedManPage.replaceAll("CONFIG OPTIONS", "CONFIGURATION OPTIONS");
+		modifiedManPage = modifiedManPage.replaceAll("SUBMODULE", "SUB_MODULE");
+		modifiedManPage = modifiedManPage.replaceAll("submodule", "sub-module");
 		modifiedManPage = modifiedManPage.replaceAll("config([^u])", "configuration$1");
 		modifiedManPage = modifiedManPage.replaceAll("orgs", "organizations");
 		modifiedManPage = modifiedManPage.replaceAll("ORGS", "ORGANIZATIONS");
@@ -1169,6 +1187,8 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 		modifiedManPage = modifiedManPage.replaceAll("ProductName:", "Product Name:");
 		modifiedManPage = modifiedManPage.replaceAll("YYYY-MM-DD", "YEAR-MONTH-DAY");
 		modifiedManPage = modifiedManPage.replaceAll("rhn", "red-hat-network");
+		modifiedManPage = modifiedManPage.replaceAll("rhsmcertd", "rhsm certificate daemon");
+		modifiedManPage = modifiedManPage.replaceAll("rhsmd", "rhsm daemon");
 		modifiedManPage = modifiedManPage.replaceAll("rhsm", "red-hat-subscription-management");
 		modifiedManPage = modifiedManPage.replaceAll("rhel", "red-hat-enterprise-Linux");	// lowercase linux fails hunspell
 		modifiedManPage = modifiedManPage.replaceAll("RHN", "Red Hat Network");
