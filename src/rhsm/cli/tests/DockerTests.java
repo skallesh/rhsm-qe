@@ -408,17 +408,16 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,true,null,null,(String)null,null,null, null, true, false, null, null, null);
 		
 		// get a list of the entitled yum repos on the host
-//		List<YumRepo> yumReposOnHost = clienttasks.getCurrentlySubscribedYumRepos();
-//		Assert.assertTrue(!yumReposOnHost.isEmpty(),"When the host has registered with autosubscribe, we expect to have been granted access to at least one yum repos in '"+clienttasks.redhatRepoFile+"'.");
 		List<String> enabledYumReposOnHost = clienttasks.getYumRepolist("enabled");
 		List<EntitlementCert> entitlementCertsOnHost = clienttasks.getCurrentEntitlementCerts();
 		Assert.assertTrue(!entitlementCertsOnHost.isEmpty(),"When the host has registered with autosubscribe, we expect to have been granted at least one entitlement.");
 		
 		// determine what products are installed on the running docker image
-		SSHCommandResult lsResultOnRunningDockerImage = client.runCommandAndWait("docker run --rm "+dockerImage+" find /etc/pki/product* -name *.pem");	// assumes the productCertDir config within the image is /etc/pki/product
 		//	[root@bkr-hv03-guest07 ~]# docker run --rm registry.access.redhat.com/rhel7:latest find /etc/pki/product* -name *.pem
 		//	/etc/pki/product/69.pem
 		//	/etc/pki/product-default/69.pem
+		//SSHCommandResult lsResultOnRunningDockerImage = client.runCommandAndWait("docker run --rm "+dockerImage+" find /etc/pki/product* -name *.pem");	// assumes the productCertDir config within the image is /etc/pki/product
+		SSHCommandResult lsResultOnRunningDockerImage = client.runCommandAndWait("docker run --rm "+dockerImage+" find /etc/pki/product* -regex .+\\.pem");	// assumes the productCertDir config within the image is /etc/pki/product	//  "find /etc/pki/product* -regex .+\.pem"  IS MORE RELIABLE THAN "find /etc/pki/product* -name *.pem" 
 		List<ProductCert> productCertsOnRunningDockerImage = new ArrayList<ProductCert>();
 		for (String productCertFileOnRunningDockerImage : lsResultOnRunningDockerImage.getStdout().trim().split("\n")) {
 			SSHCommandResult rctCatCertResultOnRunningDockerImage = RemoteFileTasks.runCommandAndAssert(client, "docker run --rm "+dockerImage+" rct cat-cert "+productCertFileOnRunningDockerImage, 0);
