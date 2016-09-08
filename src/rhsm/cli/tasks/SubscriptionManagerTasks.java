@@ -8854,6 +8854,7 @@ if (false) {
 			}
 			// END OF WORKAROUND
 			
+			
 			// TEMPORARY WORKAROUND FOR BUG
 			//	2016-01-27 16:24:22.520  FINE: ssh root@ibm-x3550m3-09.lab.eng.brq.redhat.com subscription-manager unsubscribe --all
 			//	2016-01-27 16:24:50.438  FINE: Stdout: 1 subscription removed at the server.
@@ -8900,6 +8901,7 @@ if (false) {
 				}
 			}
 			// END OF WORKAROUND
+			
 			
 			// TEMPORARY WORKAROUND FOR BUG
 			//	2016-08-01 20:00:32.143  FINE: ssh root@ibm-z10-77.rhts.eng.bos.redhat.com subscription-manager list --available
@@ -8951,6 +8953,7 @@ if (false) {
 			}
 			// END OF WORKAROUND
 			
+			
 			// TEMPORARY WORKAROUND FOR BUG
 			//	2016-08-12 00:33:35.448  FINE: ssh root@wolverine.idmqe.lab.eng.bos.redhat.com subscription-manager subscribe --pool=8a99f9815582f734015585f99da5513f --pool=8a99f9815582f734015585f99c47511c --pool=8a99f9815582f734015585f99add50f4 --pool=8a99f9815582f734015585f99a0950b9 --pool=8a99f9815582f734015585f99e9d519d --pool=8a99f9815582f734015585f9a7c952b9 --pool=8a99f9815582f734015585f9a654524a --pool=8a99f9815582f734015585f9989d5047 --pool=8a99f9815582f734015585f9a0c4521d --pool=8a99f9815582f734015585f99f4051c9 --pool=8a99f9815582f734015585f9995e5080 --pool=8a99f9815582f734015585f99fc851ee --pool=8a99f9815582f734015585f99b72510a
 			//	2016-08-12 00:33:57.891  FINE: Stdout: 
@@ -8982,6 +8985,78 @@ if (false) {
 			issue = "Runtime Error org.hibernate.exception.LockAcquisitionException: could not execute statement";
 			if (getTracebackCommandResult.getStdout().contains(issue) || result.getStderr().contains(issue)) {
 				String bugId = "1366772"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1366772 - Runtime Error org.hibernate.exception.LockAcquisitionException: could not execute statement at sun.reflect.NativeConstructorAccessorImpl.newInstance0:-2
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				if (invokeWorkaroundWhileBugIsOpen) {
+					throw new SkipException("Encountered a '"+issue+"' and could not complete this test while bug '"+bugId+"' is open.");
+				}
+			}
+			// END OF WORKAROUND
+			
+			
+			// TEMPORARY WORKAROUND FOR BUG
+			//	2016-09-08 06:15:07.029  FINE: ssh root@hp-moonshot-03-c07.lab.eng.rdu.redhat.com subscription-manager subscribe --pool=8a99f9815582f734015585f9989d5047
+			//	2016-09-08 06:16:08.858  FINE: Stdout: 
+			//	2016-09-08 06:16:08.858  FINE: Stderr: Runtime Error could not obtain pessimistic lock at com.mysql.jdbc.SQLError.createSQLException:1,078
+			//
+			//	2016-09-08 06:16:08.859  FINE: ExitCode: 70
+			//	2016-09-08 06:16:08.859  FINE: ssh root@hp-moonshot-03-c07.lab.eng.rdu.redhat.com LINE_NUMBER=$(grep --line-number 'Making request:' /var/log/rhsm/rhsm.log | tail --lines=1 | cut --delimiter=':' --field=1); if [ -n "$LINE_NUMBER" ]; then tail -n +$LINE_NUMBER /var/log/rhsm/rhsm.log; fi;
+			//	2016-09-08 06:16:08.957  WARNING: Last request from /var/log/rhsm/rhsm.log:
+			//	2016-09-08 06:15:20,797 [DEBUG] subscription-manager:30381:MainThread @connection.py:573 - Making request: POST /subscription/consumers/25f1a0fb-59cf-48aa-a089-897a01282502/entitlements?pool=8a99f9815582f734015585f9989d5047
+			//	2016-09-08 06:16:12,079 [DEBUG] subscription-manager:30381:MainThread @connection.py:602 - Response: status=500
+			//	2016-09-08 06:16:12,080 [ERROR] subscription-manager:30381:MainThread @managercli.py:1570 - Runtime Error could not obtain pessimistic lock at com.mysql.jdbc.SQLError.createSQLException:1,078
+			//	Traceback (most recent call last):
+			//	  File "/usr/lib/python2.7/site-packages/subscription_manager/managercli.py", line 1560, in _do_command
+			//	    ents = self.cp.bindByEntitlementPool(self.identity.uuid, pool, self.options.quantity)
+			//	  File "/usr/lib64/python2.7/site-packages/rhsm/connection.py", line 1169, in bindByEntitlementPool
+			//	    return self.conn.request_post(method)
+			//	  File "/usr/lib64/python2.7/site-packages/rhsm/connection.py", line 697, in request_post
+			//	    return self._request("POST", method, params)
+			//	  File "/usr/lib64/python2.7/site-packages/rhsm/connection.py", line 611, in _request
+			//	    self.validateResponse(result, request_type, handler)
+			//	  File "/usr/lib64/python2.7/site-packages/rhsm/connection.py", line 661, in validateResponse
+			//	    raise RestlibException(response['status'], error_msg, response.get('headers'))
+			//	RestlibException: Runtime Error could not obtain pessimistic lock at com.mysql.jdbc.SQLError.createSQLException:1,078
+			issue = "Runtime Error could not obtain pessimistic lock";
+			if (getTracebackCommandResult.getStdout().contains(issue) || result.getStderr().contains(issue)) {
+				String bugId = "1374448"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1374448 - Runtime Error could not obtain pessimistic lock at com.mysql.jdbc.SQLError.createSQLException:1,078
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				if (invokeWorkaroundWhileBugIsOpen) {
+					throw new SkipException("Encountered a '"+issue+"' and could not complete this test while bug '"+bugId+"' is open.");
+				}
+			}
+			// END OF WORKAROUND
+			
+			
+			// TEMPORARY WORKAROUND FOR BUG
+			//	2016-09-08 06:14:00.215  FINE: ssh root@ibm-z10-13.rhts.eng.bos.redhat.com subscription-manager subscribe --pool=8a99f9815582f734015585f99973509a
+			//	2016-09-08 06:16:53.512  FINE: Stdout: 
+			//	2016-09-08 06:16:53.512  FINE: Stderr: ''
+			//
+			//	2016-09-08 06:16:53.512  FINE: ExitCode: 70
+			//	2016-09-08 06:16:53.512  FINE: ssh root@ibm-z10-13.rhts.eng.bos.redhat.com LINE_NUMBER=$(grep --line-number 'Making request:' /var/log/rhsm/rhsm.log | tail --lines=1 | cut --delimiter=':' --field=1); if [ -n "$LINE_NUMBER" ]; then tail -n +$LINE_NUMBER /var/log/rhsm/rhsm.log; fi;
+			//	2016-09-08 06:16:54.358  WARNING: Last request from /var/log/rhsm/rhsm.log:
+			//	2016-09-08 06:14:16,544 [DEBUG] subscription-manager:3495:MainThread @connection.py:573 - Making request: POST /subscription/consumers/ec27ba92-b7e5-4f97-8872-d9a3de796bcb/entitlements?pool=8a99f9815582f734015585f99973509a
+			//	2016-09-08 06:16:51,800 [ERROR] subscription-manager:3495:MainThread @managercli.py:174 - Unable to attach: ''
+			//	2016-09-08 06:16:51,800 [ERROR] subscription-manager:3495:MainThread @managercli.py:175 - ''
+			//	Traceback (most recent call last):
+			//	  File "/usr/lib/python2.7/site-packages/subscription_manager/managercli.py", line 1560, in _do_command
+			//	    ents = self.cp.bindByEntitlementPool(self.identity.uuid, pool, self.options.quantity)
+			//	  File "/usr/lib64/python2.7/site-packages/rhsm/connection.py", line 1169, in bindByEntitlementPool
+			//	    return self.conn.request_post(method)
+			//	  File "/usr/lib64/python2.7/site-packages/rhsm/connection.py", line 697, in request_post
+			//	    return self._request("POST", method, params)
+			//	  File "/usr/lib64/python2.7/site-packages/rhsm/connection.py", line 591, in _request
+			//	    response = conn.getresponse()
+			//	  File "/usr/lib64/python2.7/httplib.py", line 1089, in getresponse
+			//	    response.begin()
+			//	  File "/usr/lib64/python2.7/httplib.py", line 444, in begin
+			//	    version, status, reason = self._read_status()
+			//	  File "/usr/lib64/python2.7/httplib.py", line 408, in _read_status
+			//	    raise BadStatusLine(line)
+			//	BadStatusLine: ''		
+			issue = "BadStatusLine: ''";
+			if (getTracebackCommandResult.getStdout().contains(issue) || result.getStderr().contains(issue)) {
+				String bugId = "1374460"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1374460 - sometimes stage candlepin does not return any error message; appears as a BadStatusLine: ''
 				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 				if (invokeWorkaroundWhileBugIsOpen) {
 					throw new SkipException("Encountered a '"+issue+"' and could not complete this test while bug '"+bugId+"' is open.");
