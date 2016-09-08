@@ -25,3 +25,7 @@
 
 ;; (deftest proxy_noauth_connect-test
 ;;   (tests/proxy_noauth_connect nil))
+
+(deftest no_litter_in_location_when_using_proxy-test
+  (tests/no_litter_in_location_when_using_proxy nil)
+  )
