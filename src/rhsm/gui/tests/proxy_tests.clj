@@ -277,6 +277,40 @@
      (tasks/ui click :close-proxy)
      (disable_proxy nil))))
 
+(defn ^{:groups ["proxy"
+                 "tier1"
+                 "blockedByBug-1323276"]
+        :description"Given a system is subscribed.
+When I click on 'Configure Proxy'
+ and I click on 'I would like to connect via an HTTP Proxy'
+ and I click on 'Use Authentication with HTTP Proxy'
+Then I should see nothing in a field 'Proxy Location'."}
+  no_litter_in_location_when_using_proxy
+  [_]
+
+  )
+
+(defn ^{Test {:groups ["proxy"
+                 "tier1"
+                 "blockedByBug-1323276"]
+        :description "Given a system is subscribed without proxy.
+When I click on 'Configure Proxy'
+ and I click on 'I would like to connect via an HTTP Proxy'
+ and I click on 'Use Authentication with HTTP Proxy'
+Then I should see nothing in a field 'Proxy Location'."}}
+  no_litter_in_location_when_using_proxy
+  [_]
+  (tasks/restart-app :force-kill? true)
+  (tasks/disableproxy)
+  (register)
+  (tasks/ui click :configure-proxy)
+  (tasks/ui waittillwindowexist :proxy-config-dialog 60)
+  (verify (->> :proxy-location (tasks/ui gettextvalue) clojure.string/blank?))
+  (tasks/ui check :proxy-checkbox)
+  (verify (->> :proxy-location (tasks/ui gettextvalue) clojure.string/blank?))
+  (tasks/ui check :authentication-checkbox)
+  (verify (->> :proxy-location (tasks/ui gettextvalue) clojure.string/blank?)))
+
 (defn ^{Test {:groups ["proxy"
                        "tier2"
                        "blockedByBug-920551"]}}
