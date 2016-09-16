@@ -281,6 +281,7 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
        :repo-remove-override "remove_all_overrides_button"
        :base-url "Base URL" ; the value was "SKU Text" previously
        :repo-name "Name" ; the value was "Subscription Text" previously
+       :repo-table-repository-id "Repository ID"
        :gpg-check-text "gpgcheck_readonly"
        :gpg-check-combobox "gpgcheck_combobox"
        :gpg-check-edit "gpgcheck_edit_button"
