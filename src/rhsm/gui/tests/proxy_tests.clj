@@ -299,6 +299,27 @@ Then I should see nothing in a field 'Proxy Location'."}}
   (verify (->> :proxy-location (tasks/ui gettextvalue) clojure.string/blank?)))
 
 (defn ^{Test {:groups ["proxy"
+                       "tier1"
+                       "blockedByBug-1371632"]
+              :description "Given a system is unregistered
+    and I run subscription-manager-gui
+    and I click on 'System' -> 'Configure proxy'
+When I click on 'I would like to connect via an HTTP Proxy'
+ and I click on 'Use Authentication with HTTP Proxy'
+Then I should see a button 'Test connection' being disabled."}}
+  test_connection_button_is_blocked_before_all_fields_are_set
+  [_]
+  (tasks/restart-app :force-kill? true)
+  (tasks/disableproxy)
+  (try+ (tasks/unregister)
+        (catch [:type :not-registered] _))
+  (tasks/ui click :configure-proxy)
+  (tasks/ui waittillwindowexist :proxy-config-dialog 60)
+  (tasks/ui check :proxy-checkbox)
+  (tasks/ui check :authentication-checkbox)
+  (verify (not (tasks/ui hasstate :test-connection "enabled"))))
+
+(defn ^{Test {:groups ["proxy"
                        "tier2"
                        "blockedByBug-920551"]}}
   test_invalid_proxy_restart
