@@ -132,7 +132,7 @@ Then I should not see any 'Traceback' written in the terminal
                                         (recur (get-text-from-terminal) (+ 1 number-of-iteration))
                                         traceback-appeared?))))]
         (verify (not traceback-appeared?))
-        (verify (not (bool (tasks/ui guiexist :main-window)))))
+        (verify (not (-> (tasks/ui guiexist :main-window) bool))))
       (finally
         (tasks/kill-app)
         (tasks/ui click terminal-name "mnuCloseAllTerminals")))))
