@@ -18,6 +18,7 @@
             [rhsm.gui.tasks.tasks :as tasks]
             [rhsm.gui.tests.base :as base]
             [rhsm.gui.tasks.candlepin-tasks :as ctasks]
+            [clojure.core.match :as match]
              rhsm.gui.tasks.ui)
   (:import [org.testng.annotations
             BeforeClass
@@ -183,6 +184,43 @@
     (verify (= no_repos_message (tasks/ui gettextvalue :repo-message)))
     (finally
      (tasks/ui click :close-repo-dialog))))
+
+(defn ^{Test {:groups ["repo"
+                       "tier1"
+                       "blockedByBug-1370623"]
+              :description "Given a system is subscribed
+ and I have attached some subsciptions
+When I click 'System' -> 'Repositories'
+ and I click on a table's label 'Repository ID'
+Then I see values of repositories ids to be redrawn
+ and the values are sorted some way"}}
+  check_repo_table_sortable
+  [_]
+  (try
+    (if (tasks/ui showing? :register-system)
+      (tasks/register-with-creds))
+    (tasks/subscribe_all)
+    (assert-and-open-repo-dialog)
+    (letfn [(compare-strings [list-of-strings] (->> list-of-strings
+                                                    (partition 2 1)
+                                                    (map #(apply compare %))))
+            (get-sorting [repositories-ids] (let [desc-sorting? (every? #(<= 0 %) repositories-ids)
+                                                  asc-sorting? (every? #(>= 0 %) repositories-ids)]
+                                              (match/match [desc-sorting? asc-sorting?]
+                                                           [true false] :desc-sorting
+                                                           [false true] :asc-sorting
+                                                           [true true]  :one-value-list
+                                                           :else :no-sorting )))
+            (click-on-repositories-id-label [] (tasks/ui click :repo-table-repository-id)) ]
+      (let [sorting-after-click-01 (do (click-on-repositories-id-label)
+                                       (get-sorting (compare-strings (tasks/get-table-elements :repo-table 2))))
+            sorting-after-click-02 (do (click-on-repositories-id-label)
+                                       (get-sorting (compare-strings (tasks/get-table-elements :repo-table 2))))]
+        ;; I click twice and I get two different sort orders
+        (verify (= (set [:desc-sorting :asc-sorting]) (set [sorting-after-click-01 sorting-after-click-02])))))
+    (finally
+      (tasks/ui click :close-repo-dialog)
+      (tasks/unsubscribe_all))))
 
 (defn ^{Test {:groups ["repo"
                        "tier1"
