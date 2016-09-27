@@ -38,3 +38,6 @@
 (deftest check_contracts_and_virt_type-test
   (let [subscriptions #spy/d (tests/get_multi_contract_subscriptions nil)]
     (tests/check_contracts_and_virt_type nil (-> subscriptions first first))))
+
+(deftest all_subscriptions_are_sortable-test
+  (tests/all_subscriptions_are_sortable nil))

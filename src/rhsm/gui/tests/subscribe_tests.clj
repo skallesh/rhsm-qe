@@ -137,6 +137,14 @@
     (verify (not (blank? output)))))
 
 (defn ^{Test {:groups ["subscribe"
+                       "tier1"
+                       "blockedByBug-1378927"]
+              :description ""}}
+  all_subscriptions_are_sortable
+  [_]
+  )
+
+(defn ^{Test {:groups ["subscribe"
                        "tier3"
                        "blockedByBug-703920"
                        "blockedByBug-869028"]
