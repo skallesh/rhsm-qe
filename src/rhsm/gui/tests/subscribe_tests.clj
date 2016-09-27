@@ -142,6 +142,7 @@
               :description ""}}
   all_subscriptions_are_sortable
   [_]
+  (allsearch)
   )
 
 (defn ^{Test {:groups ["subscribe"
