@@ -101,7 +101,7 @@
               :description "Given 'subscription-manager-gui' is not running
   and I have launched 'gnome-terminal'
 When I launch 'subscription-manager-gui' in the terminal
-  and I wait a little
+  and I wait 5 seconds
   and I press <Ctrl-C> in the terminal
 Then I should not see any 'Traceback' written in the terminal
   and I should not see 'subscription-manager-gui' running."}}
@@ -115,7 +115,7 @@ Then I should not see any 'Traceback' written in the terminal
                            last) ]
     (tasks/ui grabfocus terminal-name "uknTerminal")
     (tasks/ui generatekeyevent "subscription-manager-gui<enter>")
-    (tasks/ui waittillwindowexist :main-window 10)
+    (tasks/ui waittillwindowexist :main-window 5)
     (tasks/ui grabfocus terminal-name "uknTerminal")
     (tasks/ui generatekeyevent "<ctrl>c")
     (try
@@ -129,7 +129,7 @@ Then I should not see any 'Traceback' written in the terminal
                                       (Thread/sleep 100)
                                       (if (and (< number-of-iteration 5)
                                                (not traceback-appeared?))
-                                        (recur (get-text-from-terminal) (+ 1 number-of-iteration))
+                                        (recur (get-text-from-terminal) (inc number-of-iteration))
                                         traceback-appeared?))))]
         (verify (not traceback-appeared?))
         (verify (not (-> (tasks/ui guiexist :main-window) bool))))
