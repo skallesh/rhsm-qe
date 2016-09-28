@@ -7746,6 +7746,23 @@ if (false) {
 			}
 		}
 		
+		// TEMPORARY WORKAROUND FOR BUG
+		//	201609281555:15.362 - FINE: ssh root@jsefler-rhel7.usersys.redhat.com rhnreg_ks --serverUrl=https://rhsm-sat5.usersys.redhat.com/XMLRPC --username=rhsm-client --password=REDACTED --profilename=rhsm-automation.jsefler-rhel7.usersys.redhat.com --force --norhnsd --nohardware --nopackages --novirtinfo
+		//	201609281555:16.284 - FINE: Stdout:  
+		//	201609281555:16.285 - FINE: Stderr: 
+		//	An error has occurred:
+		//	<type 'exceptions.TypeError'>
+		//	See /var/log/up2date for more information
+		//	201609281555:16.285 - FINE: ExitCode: 1 
+		if (stderr.contains("<type 'exceptions.TypeError'>")) {
+			String bugId = "1380159"; // Bug 1380159 - <type 'exceptions.TypeError'>: 'str' object does not support item assignment
+			boolean invokeWorkaroundWhileBugIsOpen = true;
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			if (invokeWorkaroundWhileBugIsOpen) {
+				throw new SkipException("The remainder of this test is blocked by bug "+bugId+".  There is no workaround.");
+			}
+		}
+		// END OF WORKAROUND
 		
 		Assert.assertEquals(exitCode, new Integer(0),"Exitcode from attempt to register to RHN Classic.");
 		Assert.assertEquals(stderr.trim(), "","Stderr from attempt to register to RHN Classic.");
