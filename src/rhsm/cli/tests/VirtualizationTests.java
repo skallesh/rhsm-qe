@@ -135,7 +135,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 		// virt.uuid
 		// dev note: calculation for uuid is done in /usr/share/rhsm/subscription_manager/hwprobe.py def _getVirtUUID(self):
 		String virtUuid = factsMap.get("virt.uuid");	// = clienttasks.getFactValue("virt.uuid");
-		if (Boolean.parseBoolean(virtIsGuest)) {
+		if (Boolean.parseBoolean(virtIsGuest)) {	// system is virtual...
 			String expectedUuid = "Unknown";	// if (virtHostType.contains("ibm_systemz") || virtHostType.contains("xen-dom0") || virtHostType.contains("powervm")) expectedUuid = "Unknown";	// HARD CODED in src/subscription_manager/hwprobe.py:        no_uuid_platforms = ['powervm_lx86', 'xen-dom0', 'ibm_systemz']
 			if (RemoteFileTasks.testExists(client, "/system/hypervisor/uuid")) expectedUuid = client.runCommandAndWait("cat /system/hypervisor/uuid").getStdout().trim();
 			if (RemoteFileTasks.testExists(client, "/proc/device-tree/vm,uuid")) expectedUuid = client.runCommandAndWait("cat /proc/device-tree/vm,uuid").getStdout().trim();	// ppc64
@@ -154,8 +154,18 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 				}
 			}
 			// END OF WORKAROUND
+			// TEMPORARY WORKAROUND FOR BUG
+			if (clienttasks.redhatReleaseX.equals("7") && virtUuid==null && clienttasks.arch.startsWith("ppc")) {
+				String bugId = "1372108"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1372108 - facts related to the identification of a virtual/physical system on ppc64le are conflicting
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				if (invokeWorkaroundWhileBugIsOpen) {
+					throw new SkipException("Skipping the virt.uuid fact assertion on a '"+clienttasks.arch+"' while virt-what bug '"+bugId+"' is open.");
+				}
+			}
+			// END OF WORKAROUND
 			Assert.assertTrue(virtUuid.equalsIgnoreCase(expectedUuid), "subscription-manager facts list reports virt.uuid value '"+virtUuid+"' which (ignoring case) is equals to hardware value '"+expectedUuid+"'.  (Candlepin ignores case when comparing virt.uuid.  It also ignores the endianness)"); 
-		} else {
+			
+		} else {	// system is physical...
 			
 			// TEMPORARY WORKAROUND FOR BUG
 			if (clienttasks.redhatReleaseX.equals("6") && virtUuid!=null && clienttasks.arch.startsWith("ppc")) {
