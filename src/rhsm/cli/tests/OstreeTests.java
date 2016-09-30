@@ -391,7 +391,7 @@ public class OstreeTests extends SubscriptionManagerCLITestScript {
 		clienttasks.updateConfFileParameter(ostreeContentPluginFile.getPath(), "enabled", "0");
 		
 		// register the host
-		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null,null, null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,false,null,null,(String)null,null,null, null, true, false, null, null, null);
 		
 		// attach each available pool in search of ones that provide content of type="ostree"
 		List <SubscriptionPool> currentlyAvailableSubscriptionPools = clienttasks.getCurrentlyAvailableSubscriptionPools();
@@ -415,6 +415,9 @@ public class OstreeTests extends SubscriptionManagerCLITestScript {
 		
 		// remove all entitlements
 		clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null, null);
+		
+		// re-register the host to reduce the chance of a RateLimitExceededException
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,false,null,null,(String)null,null,null, null, true, false, null, null, null);
 		
 		// re-enable /etc/rhsm/pluginconf.d/ostree_content.OstreeContentPlugin.conf
 		clienttasks.updateConfFileParameter(ostreeContentPluginFile.getPath(), "enabled", "1");
