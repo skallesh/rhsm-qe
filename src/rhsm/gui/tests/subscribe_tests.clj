@@ -138,11 +138,12 @@
 
 (defn ^{Test {:groups ["subscribe"
                        "tier1"
-                       "blockedByBug-1378927"]
+                       "blockedByBug-1370623"]
               :description ""}}
   all_subscriptions_are_sortable
   [_]
   (allsearch)
+  (tasks/ui selecttab :all-available-subscriptions)
   )
 
 (defn ^{Test {:groups ["subscribe"

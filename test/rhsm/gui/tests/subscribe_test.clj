@@ -17,27 +17,31 @@
                       (tests/register nil)
                       (f)))
 
-(deftest multi-contract-test
-  (tests/get_multi_contract_subscriptions nil :debug true))
+;; (deftest multi-contract-test
+;;   (tests/get_multi_contract_subscriptions nil :debug true))
 
-(deftest check_contract_selection_dates-test
-  (let [subscriptions (tests/get_multi_contract_subscriptions nil :debug true)]
-    (tests/check_contract_selection_dates nil #spy/d (-> subscriptions first first))))
+;; (deftest check_contract_selection_dates-test
+;;   (let [subscriptions (tests/get_multi_contract_subscriptions nil :debug true)]
+;;     (tests/check_contract_selection_dates nil #spy/d (-> subscriptions first first))))
 
-(deftest check_multiplier_logic-test
-  (let [subscriptions #spy/d (tests/get_subscriptions nil)]
-    (tests/check_multiplier_logic nil (-> subscriptions first))))
+;; (deftest check_multiplier_logic-test
+;;   (let [subscriptions #spy/d (tests/get_subscriptions nil)]
+;;     (tests/check_multiplier_logic nil (-> subscriptions first))))
 
-(deftest unsubscribe_each-test
-  (let [subscriptions (tests/get_subscriptions nil)]
-    (for [subscription subscriptions]
-      (tests/subscribe_each nil subscription))
-    (for [subscription subscriptions]
-      (tests/unsubscribe_each nil subscription))))
+;; (deftest unsubscribe_each-test
+;;   (let [subscriptions (tests/get_subscriptions nil)]
+;;     (for [subscription subscriptions]
+;;       (tests/subscribe_each nil subscription))
+;;     (for [subscription subscriptions]
+;;       (tests/unsubscribe_each nil subscription))))
 
-(deftest check_contracts_and_virt_type-test
-  (let [subscriptions #spy/d (tests/get_multi_contract_subscriptions nil)]
-    (tests/check_contracts_and_virt_type nil (-> subscriptions first first))))
+;; (deftest check_contracts_and_virt_type-test
+;;   (let [subscriptions #spy/d (tests/get_multi_contract_subscriptions nil)]
+;;     (tests/check_contracts_and_virt_type nil (-> subscriptions first first))))
 
 (deftest all_subscriptions_are_sortable-test
-  (tests/all_subscriptions_are_sortable nil))
+  (tests/allsearch)
+  #spy/d (tasks/ui click :subscription-table-header)
+  ;;#spy/d (tasks/ui getallitem :main-window "All Subscriptions View")
+  ;;(tests/all_subscriptions_are_sortable nil)
+  )
