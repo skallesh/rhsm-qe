@@ -692,6 +692,59 @@ if (false) {
 	}
 	
 	
+	
+	/**
+	 * Configure a rhel-latest-extras.repo to http://download.devel.redhat.com/rel-eng/latest-EXTRAS-7-RHEL-7/compose/Server/x86_64/os/ and yum update the updatePackages
+	 * @param installOptions
+	 * @param updatePackages - specific list of packages, or an empty list implies update all packages
+	 * @throws IOException
+	 * @throws JSONException
+	 */
+	public void installLatestExtrasUpdates(String installOptions, List<String> updatePackages) throws IOException, JSONException {
+		
+		// FIRST: prepare a repo for the updatePackages and then yum update
+		
+		// make sure installOptions begins with --disablerepo=* to make sure the updates ONLY come from the rhel-latest-extras repo we are about to define
+		if (!installOptions.contains("--disablerepo=*")) installOptions = "--disablerepo=* "+installOptions;
+		
+		// avoid ERROR: can not find RHNS CA file: /usr/share/rhn/RHN-ORG-TRUSTED-SSL-CERT
+		installOptions += " --disableplugin=rhnplugin";
+		
+		// locally create a yum.repos.d extras repos file
+	    File file = new File("tmp/rhel-latest-extras.repo"); // this will be in the automation.dir directory on hudson (workspace/automatjon/sm)
+	    // http://download.devel.redhat.com/rel-eng/latest-EXTRAS-7-RHEL-7/compose/Server/x86_64/os/
+	    String baseurl = "http://download.devel.redhat.com/rel-eng/latest-EXTRAS-7-RHEL-7/compose/"+variant+"/$basearch/os/";
+	    
+	    // test the baseurl; log a warning if "Not Found" and abort the Latest Extras Update
+	    if (sshCommandRunner.runCommandAndWait("curl --stderr /dev/null --insecure --request GET "+baseurl).getStdout().contains("404 Not Found")) {
+			log.warning("Skipping the install of Latest Extras updates since the baseurl is Not Found.");
+	    	Assert.fail("The Latest Extras baseurl '"+baseurl+"' was Not Found.  Instruct the automator to verify the assembly of this baseurl.");
+	    }
+		
+		// write out the rows of the table...
+    	Writer output = new BufferedWriter(new FileWriter(file));
+	    
+    	// write the rhel-latest-extras repo
+		output.write("[rhel-latest-extras-"+variant+"]\n");
+		output.write("name     = Latest Extras updates for RHEL"+redhatReleaseX+" "+variant+"\n");
+		output.write("enabled  = 0\n");
+		output.write("gpgcheck = 0\n");	// needed since the latest extras packages may not be signed until on REL_PREP
+		//output.write("exclude  = redhat-release*\n");	// avoids unwanted updates of rhel-release server variant to workstation
+		output.write("baseurl  = "+baseurl+"\n");
+		output.write("\n");
+	    output.close();
+	    installOptions += " --enablerepo=rhel-latest-extras-"+variant;
+
+		RemoteFileTasks.putFile(sshCommandRunner.getConnection(), file.getPath(), "/etc/yum.repos.d/", "0644");
+		
+		// assemble the packages to be updated (note: if the list is empty, then all packages will be updated)
+		String updatePackagesAsString = "";
+		for (String updatePackage : updatePackages) updatePackagesAsString += updatePackage+" "; updatePackagesAsString=updatePackagesAsString.trim();
+		
+		// run yum update
+		Assert.assertEquals(sshCommandRunner.runCommandAndWait("yum -y update "+updatePackagesAsString+" "+installOptions).getExitCode(),Integer.valueOf(0), "Yum updated from latest extras repo: "+baseurl);
+	}
+	
 	/**
 	 * assumes there are already enabled repos that will provide any of the rhsm packages that are not already installed
 	 * @param installOptions
@@ -7746,6 +7799,23 @@ if (false) {
 			}
 		}
 		
+		// TEMPORARY WORKAROUND FOR BUG
+		//	201609281555:15.362 - FINE: ssh root@jsefler-rhel7.usersys.redhat.com rhnreg_ks --serverUrl=https://rhsm-sat5.usersys.redhat.com/XMLRPC --username=rhsm-client --password=REDACTED --profilename=rhsm-automation.jsefler-rhel7.usersys.redhat.com --force --norhnsd --nohardware --nopackages --novirtinfo
+		//	201609281555:16.284 - FINE: Stdout:  
+		//	201609281555:16.285 - FINE: Stderr: 
+		//	An error has occurred:
+		//	<type 'exceptions.TypeError'>
+		//	See /var/log/up2date for more information
+		//	201609281555:16.285 - FINE: ExitCode: 1 
+		if (stderr.contains("<type 'exceptions.TypeError'>")) {
+			String bugId = "1380159"; // Bug 1380159 - <type 'exceptions.TypeError'>: 'str' object does not support item assignment
+			boolean invokeWorkaroundWhileBugIsOpen = true;
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			if (invokeWorkaroundWhileBugIsOpen) {
+				throw new SkipException("The remainder of this test is blocked by bug "+bugId+".  There is no workaround.");
+			}
+		}
+		// END OF WORKAROUND
 		
 		Assert.assertEquals(exitCode, new Integer(0),"Exitcode from attempt to register to RHN Classic.");
 		Assert.assertEquals(stderr.trim(), "","Stderr from attempt to register to RHN Classic.");

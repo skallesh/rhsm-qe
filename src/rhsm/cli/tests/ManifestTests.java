@@ -40,6 +40,37 @@ import com.redhat.qe.tools.SSHCommandResult;
  *     attach subscriptions with a low quantity
  *     click "Download manifest" to /tmp/manifest.zip
  *   copy the manifest.zip to the sm_manifestsUrl so it will be included in these tests
+ *
+ *
+ *
+ * If getting a manifest from the qa environments instead of stage, you may also need
+ * the correct CA cert from it-pnt.  Here are instructions from an email of how to get that...
+ * 
+ * [root@localhost ~]# openssl s_client -connect access.qa.redhat.com:443 -showcerts
+ * 
+ * (You'll see a lot of output and then it will wait for you to type
+ *  something to send to the server.  Just hit ctrl-C to quit).
+ *  
+ *  That command will show you the entire certificate chain when attempting to connect
+ *  to access.qa.redhat.com. For this machine, I see
+
+2 s:/O=Red Hat/OU=prod/CN=Intermediate Certificate Authority
+   i:/C=US/ST=North Carolina/L=Raleigh/O=Red Hat, Inc./OU=Red Hat
+IT/CN=Red Hat IT Root CA/emailAddress=infosec@redhat.com
+
+-----BEGIN CERTIFICATE-----
+MIID6DCCAtCgAwIBAgIBFDANBgkqhkiG9w0BAQsFADCBpTELMAkGA1UEBhMCVVMx
+FzAVBgNVBAgMDk5vcnRoIENhcm9saW5hMRAwDgYDVQQHDAdSYWxlaWdoMRYwFAYD
+ABC123ABC123ABC123ABC123ABC123ABC123ABC123ABC123ABC123ABC123ABC1
+3GVzoNtkznqv5ySEj4M9WsdBiG6bm4aBYIOE0XKE6QYtlsjTMB9UTXxmlUvDE0wC
+z9YYKfC1vLxL2wAgMhOCdKZM+Qlu1stb0B/EF3oxc/iZrhDvJLjijbMpphw=
+-----END CERTIFICATE-----
+
+ * at the root of the chain.  Take that output and save it to "qa.pem".
+ * You'll need to put that pem file into the right place though.
+ * For manifest imports, I believe it's /etc/candlepin/certs/upstream
+ * Regards, Alex
+ * 
  */
 @Test(groups={"ManifestTests","Tier2Tests"})
 public class ManifestTests extends SubscriptionManagerCLITestScript {
