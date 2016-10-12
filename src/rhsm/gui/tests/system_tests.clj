@@ -96,6 +96,48 @@
   (tasks/kill-app))
 
 (defn ^{Test {:groups ["system"
+                       "tier2"
+                       "blockedByBug-1330515"]
+              :description "Given 'subscription-manager-gui' is not running
+  and I have launched 'gnome-terminal'
+When I launch 'subscription-manager-gui' in the terminal
+  and I wait 5 seconds
+  and I press <Ctrl-C> in the terminal
+Then I should not see any 'Traceback' written in the terminal
+  and I should not see 'subscription-manager-gui' running."}}
+  no_traceback_on_console_after_ctrl_c_pressed
+  [_]
+  (when (-> (tasks/ui guiexist :main-window) bool)
+    (tasks/kill-app))
+  (tasks/ui launchapp "gnome-terminal")
+  (let [terminal-name (->> (tasks/ui getwindowlist)
+                           (filter (fn [item] (.contains item "frmTerminal")))
+                           last) ]
+    (tasks/ui grabfocus terminal-name "uknTerminal")
+    (tasks/ui generatekeyevent "subscription-manager-gui<enter>")
+    (tasks/ui waittillwindowexist :main-window 5)
+    (tasks/ui grabfocus terminal-name "uknTerminal")
+    (tasks/ui generatekeyevent "<ctrl>c")
+    (try
+      (let [traceback-appeared? (letfn [(get-text-from-terminal []
+                                          (-> (tasks/ui gettextvalue terminal-name "uknTerminal")
+                                              clojure.string/trim))]
+                                  (loop [text (get-text-from-terminal)
+                                         number-of-iteration 1]
+                                    (let [traceback-appeared?
+                                          (.contains text "Traceback (most recent call last):")]
+                                      (Thread/sleep 100)
+                                      (if (and (< number-of-iteration 5)
+                                               (not traceback-appeared?))
+                                        (recur (get-text-from-terminal) (inc number-of-iteration))
+                                        traceback-appeared?))))]
+        (verify (not traceback-appeared?))
+        (verify (not (-> (tasks/ui guiexist :main-window) bool))))
+      (finally
+        (tasks/kill-app)
+        (tasks/ui click terminal-name "mnuCloseAllTerminals")))))
+
+(defn ^{Test {:groups ["system"
                        "tier1"
                        "blockedByBug-706384"]}}
   run_second_instance
