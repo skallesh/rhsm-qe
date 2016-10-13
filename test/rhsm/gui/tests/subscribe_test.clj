@@ -41,7 +41,7 @@
     (tests/check_contracts_and_virt_type nil (-> subscriptions first first))))
 
 (deftest all_subscriptions_are_sortable-test
-  (let [{:keys [major minor patch]} #spy/d (tools/subman-version)]
+  (let [{:keys [major minor patch]} (tools/subman-version)]
     (if (or (and (= (Integer. major) 1) (= (Integer. minor) 17) (> (Integer. patch) 16))
             (and (= (Integer. major) 1) (> (Integer. minor) 18))
             (and (= (Integer. major) 1) (= (Integer. minor) 15))
