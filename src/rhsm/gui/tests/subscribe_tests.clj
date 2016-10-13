@@ -18,14 +18,14 @@
             [rhsm.gui.tests.base :as base]
             [rhsm.gui.tasks.candlepin-tasks :as ctasks]
             [clojure.core.match :as match]
-             rhsm.gui.tasks.ui)
+            rhsm.gui.tasks.ui)
   (:import [org.testng.annotations
             BeforeClass
             BeforeGroups
             AfterGroups
             Test
             DataProvider]
-            org.testng.SkipException))
+           org.testng.SkipException))
 
 (def productlist (atom {}))
 (def servicelist (atom {}))
@@ -49,9 +49,9 @@
 
 (defn allsearch
   ([filter]
-     (tasks/search :match-system? false
-                   :do-not-overlap? false
-                   :contain-text filter))
+   (tasks/search :match-system? false
+                 :do-not-overlap? false
+                 :contain-text filter))
   ([] (allsearch nil)))
 
 (defn ^{BeforeClass {:groups ["setup"]}}
@@ -68,8 +68,8 @@
       (throw e))))
 
 (defn ^{Test {:groups ["subscribe"
-                       "acceptance"
-                       "tier1"]
+                       "tier1" "acceptance"
+                       "tier2"]
               :dataProvider "subscriptions"
               :priority (int 100)}}
   subscribe_each
@@ -86,11 +86,11 @@
    (catch [:type :item-not-available] _)
    (catch [:type :error-getting-subscription] _)
    (catch [:type :wrong-consumer-type]
-       {:keys [log-warning]} (log-warning))))
+          {:keys [log-warning]} (log-warning))))
 
 (defn ^{Test {:groups ["subscribe"
-                       "acceptance"
-                       "tier1"]
+                       "tier1" "acceptance"
+                       "tier2"]
               :dataProvider "subscribed"
               :dependsOnMethods ["subscribe_each"]}}
   unsubscribe_each
@@ -104,7 +104,7 @@
         (catch [:type :not-subscribed] _)))
 
 (defn ^{Test {:groups ["subscribe"
-                       "tier1"
+                       "tier2"
                        "blockedByBug-918617"]
               :dependsOnMethods ["unsubscribe_each"]}}
   subscribe_check_syslog
@@ -123,7 +123,7 @@
   (sleep 5000))
 
 (defn ^{Test {:groups ["subscribe"
-                       "tier1"
+                       "tier2"
                        "blockedByBug-918617"]
               :dependsOnMethods ["subscribe_check_syslog"]}}
   unsubscribe_check_syslog
@@ -138,7 +138,7 @@
     (verify (not (blank? output)))))
 
 (defn ^{Test {:groups ["subscribe"
-                       "tier1"
+                       "tier2"
                        "blockedByBug-1370623"]
               :description "Given a system is subscribed
  and I have clicked on the tab 'All Available Subscriptions'
@@ -155,10 +155,10 @@ Then I see names of subscriptions to be redrawn
           (get-sorting [ids] (let [desc-sorting? (every? #(<= 0 %) ids)
                                    asc-sorting? (every? #(>= 0 %) ids)]
                                (match/match [desc-sorting? asc-sorting?]
-                                            [true false] :desc-sorting
-                                            [false true] :asc-sorting
-                                            [true true]  :one-value-list
-                                            :else :no-sorting )))
+                                 [true false] :desc-sorting
+                                 [false true] :asc-sorting
+                                 [true true]  :one-value-list
+                                 :else :no-sorting)))
           (click-on-table-header [] (tasks/ui click :all-available-subscriptions-subscription-header))]
     (let [sorting-after-click-01 (do (click-on-table-header)
                                      (get-sorting (compare-strings (tasks/get-table-elements :all-subscriptions-view 0))))
@@ -190,7 +190,7 @@ Then I see names of subscriptions to be redrawn
         (catch [:type :item-not-available] _)
         (catch [:type :error-getting-subscription] _)
         (catch [:type :wrong-consumer-type]
-            {:keys [log-warning]} (log-warning))))
+               {:keys [log-warning]} (log-warning))))
 
   ;; https://bugzilla.redhat.com/show_bug.cgi?id=723248#c3
 (defn ^{Test {:groups ["subscribe"
@@ -208,77 +208,77 @@ Then I see names of subscriptions to be redrawn
             (str "Cannot generate keyevents in RHEL7 !!
                   Skipping Test 'check_quantity_scroller'."))))
   (try+
-    (tasks/open-contract-selection subscription)
-    (loop [row (- (tasks/ui getrowcount :contract-selection-table) 1)]
-      (if (>= row 0)
-        (let [contract (tasks/ui getcellvalue :contract-selection-table row 0)
-              pool (ctasks/get-pool-id (@config :username)
-                                       (@config :password)
-                                       (@config :owner-key)
-                                       subscription
-                                       contract)
-              multiplier (ctasks/get-instance-multiplier (@config :username)
-                                                         (@config :password)
-                                                         pool
-                                                         :string? false)
-              usedmax (tasks/ui getcellvalue :contract-selection-table row 2)
-              default (first (split (tasks/ui getcellvalue :contract-selection-table row 5) #"\s"))
-              used (first (split usedmax #" / "))
-              unused (last (split usedmax #" / "))
-              max (if (= "Unlimited" unused) (rand-int 50) unused)
-              available (- (Integer. max) (Integer. used))
-              enter-quantity (fn [num]
-                               (tasks/ui generatekeyevent
-                                         (str (repeat-cmd 5 "<right> ")
-                                              "<space>"
-                                              (when num (str " "
-                                                             (- num (mod num multiplier))
-                                                             " <enter>")))))
-              get-quantity (fn []
-                             (first
-                              (split (tasks/ui getcellvalue :contract-selection-table row 5) #"\s")))
-              get-quantity-int (fn [] (Integer. (get-quantity)))]
+   (tasks/open-contract-selection subscription)
+   (loop [row (- (tasks/ui getrowcount :contract-selection-table) 1)]
+     (if (>= row 0)
+       (let [contract (tasks/ui getcellvalue :contract-selection-table row 0)
+             pool (ctasks/get-pool-id (@config :username)
+                                      (@config :password)
+                                      (@config :owner-key)
+                                      subscription
+                                      contract)
+             multiplier (ctasks/get-instance-multiplier (@config :username)
+                                                        (@config :password)
+                                                        pool
+                                                        :string? false)
+             usedmax (tasks/ui getcellvalue :contract-selection-table row 2)
+             default (first (split (tasks/ui getcellvalue :contract-selection-table row 5) #"\s"))
+             used (first (split usedmax #" / "))
+             unused (last (split usedmax #" / "))
+             max (if (= "Unlimited" unused) (rand-int 50) unused)
+             available (- (Integer. max) (Integer. used))
+             enter-quantity (fn [num]
+                              (tasks/ui generatekeyevent
+                                        (str (repeat-cmd 5 "<right> ")
+                                             "<space>"
+                                             (when num (str " "
+                                                            (- num (mod num multiplier))
+                                                            " <enter>")))))
+             get-quantity (fn []
+                            (first
+                             (split (tasks/ui getcellvalue :contract-selection-table row 5) #"\s")))
+             get-quantity-int (fn [] (Integer. (get-quantity)))]
           ;verify that the default quantity is sane for BZ: 855257
-          (verify (<= (Integer. default) (- (Integer. max) (Integer. used))))
-          (if (ctasks/multi-entitlement? (@config :username) (@config :password) pool)
-            (do
+         (verify (<= (Integer. default) (- (Integer. max) (Integer. used))))
+         (if (ctasks/multi-entitlement? (@config :username) (@config :password) pool)
+           (do
               ;verify that the quantity can be changed
-              (tasks/ui selectrowindex :contract-selection-table row)
-              (enter-quantity available)
-              (let [quantity (- available (mod available multiplier))]
-                (verify (= quantity
-                           (get-quantity-int))))
+             (tasks/ui selectrowindex :contract-selection-table row)
+             (enter-quantity available)
+             (let [quantity (- available (mod available multiplier))]
+               (verify (= quantity
+                          (get-quantity-int))))
               ;verify that the quantity cannot exceed the max
-              (enter-quantity (+ 1 available))
-              (verify (>= available
-                          (get-quantity-int)))
+             (enter-quantity (+ 1 available))
+             (verify (>= available
+                         (get-quantity-int)))
               ;verify that the quantity cannot exceed the min
-              (enter-quantity -1)
-              (verify (<= 0 (get-quantity-int)))
+             (enter-quantity -1)
+             (verify (<= 0 (get-quantity-int)))
               ;verify max and min values for scroller
-              (enter-quantity nil)
-              (tasks/ui generatekeyevent (str
-                                          (repeat-cmd (+ 2 (Integer. max)) "<up> ")
-                                          "<enter>"))
-              (verify (>= (Integer. max) (get-quantity-int)))
-              (enter-quantity nil)
-              (tasks/ui generatekeyevent (str
-                                          (repeat-cmd (+ 2 (Integer. max)) "<down> ")
-                                          "<enter>"))
-              (verify (<= 0 (get-quantity-int))))
-            (do
+             (enter-quantity nil)
+             (tasks/ui generatekeyevent (str
+                                         (repeat-cmd (+ 2 (Integer. max)) "<up> ")
+                                         "<enter>"))
+             (verify (>= (Integer. max) (get-quantity-int)))
+             (enter-quantity nil)
+             (tasks/ui generatekeyevent (str
+                                         (repeat-cmd (+ 2 (Integer. max)) "<down> ")
+                                         "<enter>"))
+             (verify (<= 0 (get-quantity-int))))
+           (do
               ;verify that the quantity cannot be changed
-              (tasks/ui selectrowindex :contract-selection-table row)
-              (enter-quantity (Integer. max))
-              (verify (= default (get-quantity)))))
-          (recur (dec row)))))
-    (catch [:type :subscription-not-available] _)
-    (catch [:type :error-getting-subscription] _)
-    (catch [:type :wrong-consumer-type]
-        {:keys [log-warning]} (log-warning))
-    (catch [:type :contract-selection-not-available] _)
-    (finally (if (tasks/ui showing? :contract-selection-table)
-               (tasks/ui click :cancel-contract-selection)))))
+             (tasks/ui selectrowindex :contract-selection-table row)
+             (enter-quantity (Integer. max))
+             (verify (= default (get-quantity)))))
+         (recur (dec row)))))
+   (catch [:type :subscription-not-available] _)
+   (catch [:type :error-getting-subscription] _)
+   (catch [:type :wrong-consumer-type]
+          {:keys [log-warning]} (log-warning))
+   (catch [:type :contract-selection-not-available] _)
+   (finally (if (tasks/ui showing? :contract-selection-table)
+              (tasks/ui click :cancel-contract-selection)))))
 
 ;; https://bugzilla.redhat.com/show_bug.cgi?id=723248#c3
 (defn ^{Test {:groups ["subscribe"
@@ -310,15 +310,15 @@ Then I see names of subscriptions to be redrawn
          requested (- available (mod available multiplier))]
      (tasks/subscribe subscription contract requested)
      (tasks/ui selecttab :my-subscriptions)
-      (let [row (tasks/ui gettablerowindex :my-subscriptions-view subscription)
-            count (Integer. (tasks/ui getcellvalue :my-subscriptions-view row 3))]
-        (verify (= count requested))))
-    (tasks/unsubscribe subscription)
-    (catch [:type :item-not-available] _)
-    (catch [:type :wrong-consumer-type]
-        {:keys [log-warning]} (log-warning))
-    (catch [:type :contract-selection-not-available] _)
-    (catch [:type :error-getting-subscription] _)))
+     (let [row (tasks/ui gettablerowindex :my-subscriptions-view subscription)
+           count (Integer. (tasks/ui getcellvalue :my-subscriptions-view row 3))]
+       (verify (= count requested))))
+   (tasks/unsubscribe subscription)
+   (catch [:type :item-not-available] _)
+   (catch [:type :wrong-consumer-type]
+          {:keys [log-warning]} (log-warning))
+   (catch [:type :contract-selection-not-available] _)
+   (catch [:type :error-getting-subscription] _)))
 
 (defn ^{Test {:groups ["subscribe"
                        "tier3"
@@ -335,10 +335,10 @@ Then I see names of subscriptions to be redrawn
                   Skipping Test 'check_quantity_subscribe_traceback'."))))
   (let [ldtpd-log "/var/log/ldtpd/ldtpd.log"
         output (get-logging @clientcmd
-                                  ldtpd-log
-                                  "multi-subscribe-tracebacks"
-                                  nil
-                                  (check_quantity_subscribe nil subscription contract))]
+                            ldtpd-log
+                            "multi-subscribe-tracebacks"
+                            nil
+                            (check_quantity_subscribe nil subscription contract))]
     (verify (not (substring? "Traceback" output)))))
 
   ;; TODO: this is not in rhel6.3 branch, finish when that is released
@@ -346,14 +346,13 @@ Then I see names of subscriptions to be redrawn
 
 (comment
   ;; TODO:
-(defn ^{Test {:groups ["subscribe" "blockedByBug-740831"]}}
-  check_subscribe_greyout [_]
-  ))
+  (defn ^{Test {:groups ["subscribe" "blockedByBug-740831"]}}
+    check_subscribe_greyout [_]))
 
 ;;https://tcms.engineering.redhat.com/case/77359/?from_plan=2110
 (defn ^{Test {:groups ["subscribe"
-                       "acceptance"
-                       "tier1"
+                       "tier1" "acceptance"
+                       "tier2"
                        "blockedByBug-874624"
                        "blockedByBug-753057"]
               :dataProvider "subscriptions"}}
@@ -388,22 +387,22 @@ Then I see names of subscriptions to be redrawn
           ;; old verification
           (comment
             (verify (= (tasks/ui getcellvalue :contract-selection-table
-                                 (tasks/ui gettablerowindex :contract-selection-table contract)1)
+                                 (tasks/ui gettablerowindex :contract-selection-table contract) 1)
                        (get (get @contractlist subscription) contract))))
 
           (verify (not-nil? (some #{(tasks/ui getcellvalue :contract-selection-table
                                               (tasks/ui gettablerowindex
-                                                        :contract-selection-table contract)1)}
+                                                        :contract-selection-table contract) 1)}
                                   (flatten (map #(get % contract)
                                                 (vec (get @contractlist subscription)))))))))))
    (catch [:type :contract-selection-not-available] _)
-    (catch [:type :error-getting-subscription] _)
-    (finally (if (tasks/ui showing? :contract-selection-table)
-               (tasks/ui click :cancel-contract-selection)))))
+   (catch [:type :error-getting-subscription] _)
+   (finally (if (tasks/ui showing? :contract-selection-table)
+              (tasks/ui click :cancel-contract-selection)))))
 
 (defn ^{Test {:groups ["subscribe"
-                       "acceptance"
-                       "tier1"
+                       "tier1" "acceptance"
+                       "tier2"
                        "blockedByBug-877579"]
               :dataProvider "unlimited-pools"}}
   check_unlimited_quantities
@@ -424,7 +423,7 @@ Then I see names of subscriptions to be redrawn
               (tasks/ui click :cancel-contract-selection)))))
 
 (defn ^{Test {:group ["subscribe"
-                      "tier2"
+                      "tier3"
                       "blockedByBug-951633"]
               :priority (int 300)}}
   product_with_comma_separated_arch
@@ -437,11 +436,11 @@ Then I see names of subscriptions to be redrawn
            sub-arch (tasks/ui gettextvalue :arch)
            machine-arch (trim-newline (:stdout (run-command "uname -m")))]
        (if (and (substring? "," (tasks/ui gettextvalue :arch))
-                (or (substring? sub-arch machine-arch) substring? machine-arch sub-arch()))
-         (verify ( = "Subscribed" (tasks/ui getcellvalue :installed-view index 2))))))))
+                (or (substring? sub-arch machine-arch) substring? machine-arch sub-arch ()))
+         (verify (= "Subscribed" (tasks/ui getcellvalue :installed-view index 2))))))))
 
 (defn ^{Test {:group ["subscribe"
-                      "tier2"
+                      "tier3"
                       "blockedByBug-950672"
                       "blockedByBug-988411"]
               :dependsOnMethods ["product_with_comma_separated_arch"]}}
@@ -456,7 +455,7 @@ Then I see names of subscriptions to be redrawn
        (verify (not (blank? (tasks/ui gettextvalue :providing-subscriptions))))))))
 
 (defn ^{Test {:group ["subscribe"
-                      "tier2"
+                      "tier3"
                       "blockedByBug-909467"
                       "blockedByBug-988411"]
               :dependsOnMethods ["check_subscription_in_subscribed_products"]}}
@@ -469,12 +468,12 @@ Then I see names of subscriptions to be redrawn
      (fn [subscription]
        (tasks/skip-dropdown :installed-view subscription)
        (let
-           [sub-name (tasks/ui gettextvalue :providing-subscriptions)
-            sub-arch (tasks/ui gettextvalue :arch)
-            check-arch (or (substring? sub-arch machine-arch)
-                           (substring? machine-arch sub-arch))
-            arch-all (= "ALL" (tasks/ui gettextvalue :arch))
-            status (not (= "Not Subscribed" (tasks/ui gettextvalue :certificate-status)))]
+        [sub-name (tasks/ui gettextvalue :providing-subscriptions)
+         sub-arch (tasks/ui gettextvalue :arch)
+         check-arch (or (substring? sub-arch machine-arch)
+                        (substring? machine-arch sub-arch))
+         arch-all (= "ALL" (tasks/ui gettextvalue :arch))
+         status (not (= "Not Subscribed" (tasks/ui gettextvalue :certificate-status)))]
          (if (and (not (or check-arch arch-all)) status)
            (do
              (tasks/ui selecttab :my-subscriptions)
@@ -533,32 +532,32 @@ Then I see names of subscriptions to be redrawn
              (tasks/ui click :cancel-contract-selection))))))))
 
 (defn ^{Test {:groups ["subscribe"
-                       "acceptance"
-                       "tier1"
+                       "tier1" "acceptance"
+                       "tier2"
                        "blockedByBug-874624"]
               :dataProvider "subscriptions"}}
   check_contract_number
   "Checks if every subsciption has contract numbers displayed"
   [_ subscription]
   (try+
-    (allsearch)
-    (let [sub-contract-map (ctasks/build-contract-map :all? true)
-          contracts (sort (get sub-contract-map subscription))]
-      (tasks/skip-dropdown :all-subscriptions-view subscription)
-      (tasks/ui click :attach)
-      (tasks/checkforerror)
-      (tasks/ui waittillwindowexist :contract-selection-dialog 5)
-      (if (bool (tasks/ui guiexist :contract-selection-dialog))
-        (verify (= contracts
-                   (sort (tasks/get-table-elements :contract-selection-table 0))))
-        (do
-          (tasks/unsubscribe subscription)
-          (tasks/ui selecttab :all-available-subscriptions)
-          (verify (= 1 (count contracts))))))
-    (catch [:type :error-getting-subscription] _)
-    (finally
-      (if (bool (tasks/ui guiexist :contract-selection-dialog))
-        (tasks/ui click :cancel-contract-selection)))))
+   (allsearch)
+   (let [sub-contract-map (ctasks/build-contract-map :all? true)
+         contracts (sort (get sub-contract-map subscription))]
+     (tasks/skip-dropdown :all-subscriptions-view subscription)
+     (tasks/ui click :attach)
+     (tasks/checkforerror)
+     (tasks/ui waittillwindowexist :contract-selection-dialog 5)
+     (if (bool (tasks/ui guiexist :contract-selection-dialog))
+       (verify (= contracts
+                  (sort (tasks/get-table-elements :contract-selection-table 0))))
+       (do
+         (tasks/unsubscribe subscription)
+         (tasks/ui selecttab :all-available-subscriptions)
+         (verify (= 1 (count contracts))))))
+   (catch [:type :error-getting-subscription] _)
+   (finally
+     (if (bool (tasks/ui guiexist :contract-selection-dialog))
+       (tasks/ui click :cancel-contract-selection)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; DATA PROVIDERS
@@ -603,7 +602,7 @@ Then I see names of subscriptions to be redrawn
              (catch [:type :item-not-available] _)
              (catch [:type :contract-selection-not-available] _)
              (catch [:type :wrong-consumer-type]
-                 {:keys [log-warning]} (log-warning))))
+                    {:keys [log-warning]} (log-warning))))
           (if-not debug
             (to-array-2d @subs)
             @subs)))

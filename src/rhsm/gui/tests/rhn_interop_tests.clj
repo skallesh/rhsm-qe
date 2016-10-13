@@ -8,7 +8,7 @@
   (:require [clojure.tools.logging :as log]
             [rhsm.gui.tasks.tasks :as tasks]
             [rhsm.gui.tests.base :as base]
-             rhsm.gui.tasks.ui)
+            rhsm.gui.tasks.ui)
   (:import [org.testng.annotations
             BeforeClass
             AfterClass
@@ -42,7 +42,7 @@
   (run-command (str "rm -f " systemid)))
 
 (defn ^{Test {:groups ["interop"
-                       "tier1"]}}
+                       "tier2"]}}
   check_warning
   "Tests that a warning message is shown when registered to classic and launching the app."
   [_]
@@ -53,9 +53,9 @@
   (kill-app))
 
 (defn ^{Test {:groups ["interop"
-                       "tier1"
+                       "tier2"
                        "blockedByBug-667991"]
-              :dependsOnMethods ["check_warning"] }}
+              :dependsOnMethods ["check_warning"]}}
   check_warning_ok
   "Tests that the RHN Classic warning can be cleared and that the main winow is still open."
   [_]
@@ -67,7 +67,7 @@
   (kill-app))
 
 (defn ^{Test {:groups ["interop"
-                       "tier1"
+                       "tier2"
                        "blockedByBug-667991"]
               :dependsOnMethods ["check_warning"]}}
   check_warning_cancel
@@ -80,7 +80,7 @@
   (kill-app))
 
 (defn ^{Test {:groups ["interop"
-                       "tier1"
+                       "tier2"
                        "blockedByBug-667991"]
               :dependsOnMethods ["check_warning" "check_warning_ok" "check_warning_cancel"]}}
   check_no_warning

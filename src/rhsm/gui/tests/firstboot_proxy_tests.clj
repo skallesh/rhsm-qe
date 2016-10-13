@@ -20,8 +20,8 @@
             BeforeClass
             BeforeGroups
             Test]
-            org.testng.SkipException
-            [com.redhat.qe.auto.bugzilla BzChecker]))
+           org.testng.SkipException
+           [com.redhat.qe.auto.bugzilla BzChecker]))
 
 (def firstboot-auth-log "/var/log/squid/access.log")
 (def firstboot-noauth-log "/var/log/tinyproxy.log")
@@ -88,7 +88,7 @@
     ;; new rhsm and classic have to be totally clean for this to run
     (run-command "subscription-manager clean")
     (let [sysidpath "/etc/sysconfig/rhn/systemid"]
-      (run-command (str "[ -f " sysidpath " ] && rm " sysidpath )))
+      (run-command (str "[ -f " sysidpath " ] && rm " sysidpath)))
     (catch Exception e
       (reset! (skip-groups :firstboot) true)
       (throw e))))
@@ -102,8 +102,8 @@
   (zero-proxy-values))
 
 (defn ^{Test {:groups ["firstboot_proxy"
-                       "tier1"
-                       "acceptance"
+                       "tier2"
+                       "tier1" "acceptance"
                        "blockedByBug-1199211"]
               :priority (int 100)}}
   firstboot_enable_proxy_auth_connect
@@ -119,24 +119,24 @@
         (tasks/ui waittillguiexist :firstboot-proxy-dialog)
         (verify (bool (tasks/ui guiexist :firstboot-proxy-dialog)))))
     (let [hostname (@config :basicauth-proxy-hostname)
-         port     (@config :basicauth-proxy-port)
-         username (@config :basicauth-proxy-username)
-         password (@config :basicauth-proxy-password)]
+          port     (@config :basicauth-proxy-port)
+          username (@config :basicauth-proxy-username)
+          password (@config :basicauth-proxy-password)]
       (tasks/enableproxy hostname :port port :user username :pass password :firstboot? true)
-    (tasks/firstboot-register (@config :username) (@config :password))
-    (tasks/ui click :firstboot-forward)
-    (sleep 2000)
-    (verify (not (bool (tasks/ui guiexist :firstboot-window))))
-    (verify (not (tasks/ui showing? :register-system)))
-    (tasks/verify-conf-proxies hostname port username password))
+      (tasks/firstboot-register (@config :username) (@config :password))
+      (tasks/ui click :firstboot-forward)
+      (sleep 2000)
+      (verify (not (bool (tasks/ui guiexist :firstboot-window))))
+      (verify (not (tasks/ui showing? :register-system)))
+      (tasks/verify-conf-proxies hostname port username password))
     (finally
       (reset_firstboot)
       (tasks/disableproxy true)
       (kill_firstboot))))
 
 (defn ^{Test {:groups ["firstboot_proxy"
-                       "tier1"
-                       "acceptance"
+                       "tier2"
+                       "tier1" "acceptance"
                        "blockedByBug-1199211"]
               :priority (int 101)}}
   firstboot_enable_proxy_noauth_connect
@@ -166,7 +166,7 @@
       (kill_firstboot))))
 
 (defn ^{Test {:groups ["firstboot_proxy"
-                       "tier1"
+                       "tier2"
                        "blockedByBug-1199211"]
               :dependsOnMethods ["firstboot_enable_proxy_auth_connect"
                                  "firstboot_enable_proxy_noauth_connect"]}}
@@ -179,7 +179,7 @@
   (tasks/verify-conf-proxies "" "" "" ""))
 
 (defn ^{Test {:groups ["firstboot_proxy"
-                       "tier1"
+                       "tier2"
                        "blockedByBug-1199211"]
               :dependsOnMethods ["firstboot_enable_proxy_auth_connect"]}}
   firstboot_proxy_auth_connect_logging
@@ -217,7 +217,7 @@
       (kill_firstboot))))
 
 (defn ^{Test {:groups ["firstboot_proxy"
-                       "tier1"
+                       "tier2"
                        "blockedByBug-1199211"]
               :dependsOnMethods ["firstboot_enable_proxy_noauth_connect"]}}
   firstboot_proxy_noauth_connect_logging
@@ -255,18 +255,18 @@
   (try
     (if (bool (tasks/ui hasstate :test-connection "SENSITIVE"))
       (do
-       (tasks/ui click :test-connection)
-       (sleep 2000)
-       (let [message (tasks/ui gettextvalue :connection-status)]
-         (verify (= expected-message message))))
+        (tasks/ui click :test-connection)
+        (sleep 2000)
+        (let [message (tasks/ui gettextvalue :connection-status)]
+          (verify (= expected-message message))))
       (do
         (verify (not (some #(= "sensitive" %)
                            (tasks/ui getallstates :test-connection))))
         (verify (= "" (tasks/ui gettextvalue :connection-status)))))
-      (finally (tasks/ui click :close-proxy))))
+    (finally (tasks/ui click :close-proxy))))
 
 (defn ^{Test {:groups ["firstboot_proxy"
-                       "tier1"
+                       "tier2"
                        "blockedByBug-1199211"]
               :dependsOnMethods ["firstboot_enable_proxy_auth_connect"]}}
   firstboot_test_auth_proxy
@@ -282,19 +282,19 @@
         (tasks/ui waittillguiexist :firstboot-proxy-dialog)
         (verify (bool (tasks/ui guiexist :firstboot-proxy-dialog)))))
     (let [hostname (@config :basicauth-proxy-hostname)
-         port     (@config :basicauth-proxy-port)
-         username (@config :basicauth-proxy-username)
-         password (@config :basicauth-proxy-password)]
+          port     (@config :basicauth-proxy-port)
+          username (@config :basicauth-proxy-username)
+          password (@config :basicauth-proxy-password)]
       (tasks/enableproxy hostname :port port :user username :pass password
                          :firstboot? true :close? false))
-  (test_proxy "Proxy connection succeeded")
-  (finally
-    (reset_firstboot)
-    (tasks/disableproxy true)
-    (kill_firstboot))))
+    (test_proxy "Proxy connection succeeded")
+    (finally
+      (reset_firstboot)
+      (tasks/disableproxy true)
+      (kill_firstboot))))
 
 (defn ^{Test {:groups ["firstboot_proxy"
-                       "tier1"
+                       "tier2"
                        "blockedByBug-1199211"]
               :dependsOnMethods ["firstboot_enable_proxy_noauth_connect"]}}
   firstboot_test_noauth_proxy
@@ -310,16 +310,16 @@
         (tasks/ui waittillguiexist :firstboot-proxy-dialog)
         (verify (bool (tasks/ui guiexist :firstboot-proxy-dialog)))))
     (let [hostname (@config :noauth-proxy-hostname)
-         port     (@config :noauth-proxy-port)]
+          port     (@config :noauth-proxy-port)]
       (tasks/enableproxy hostname :port port :firstboot? true :close? false))
-  (test_proxy "Proxy connection succeeded")
-  (finally
-    (reset_firstboot)
-    (tasks/disableproxy true)
-    (kill_firstboot))))
+    (test_proxy "Proxy connection succeeded")
+    (finally
+      (reset_firstboot)
+      (tasks/disableproxy true)
+      (kill_firstboot))))
 
 (defn ^{Test {:groups ["firstboot_proxy"
-                       "tier1"
+                       "tier2"
                        "blockedByBug-1199211"]
               :dependsOnMethods ["firstboot_disable_proxy"]}}
   firstboot_test_disabled_proxy
@@ -341,7 +341,7 @@
       (kill_firstboot))))
 
 (defn ^{Test {:groups ["firstboot_proxy"
-                       "tier1"
+                       "tier2"
                        "blockedByBug-1199211"]
               :dependsOnMethods ["firstboot_disable_proxy"]}}
   firstboot_test_proxy_with_blank_proxy
@@ -361,7 +361,7 @@
     (finally (firstboot_disable_proxy nil))))
 
 (defn ^{Test {:groups ["firstboot_proxy"
-                       "tier1"
+                       "tier2"
                        "blockedByBug-1199211"]
               :dependsOnMethods ["firstboot_disable_proxy"]}}
   firstboot_test_proxy_with_blank_credentials
@@ -381,7 +381,7 @@
     (finally (firstboot_disable_proxy nil))))
 
 (defn ^{Test {:groups ["firstboot_proxy"
-                       "tier2"
+                       "tier3"
                        "blockedByBug-1199211"]}}
   firstboot_test_bad_proxy
   "Tests the 'test connection' button when using a non-existant proxy."
@@ -400,7 +400,7 @@
    (finally (firstboot_disable_proxy nil))))
 
 (defn ^{Test {:groups ["firstboot_proxy"
-                       "tier2"
+                       "tier3"
                        "blockedByBug-1199211"]}}
   firstboot_bad_proxy
   "Tests error message when using a non-existant proxy."
@@ -419,16 +419,16 @@
       (tasks/enableproxy hostname :port port :firstboot? true)
       (tasks/verify-conf-proxies hostname port "" ""))
     (let [thrown-error (try+ (do
-                                (tasks/firstboot-register (@config :username) (@config :password))
-                                (tasks/ui click :firstboot-forward)
-                                (sleep 2000))
+                               (tasks/firstboot-register (@config :username) (@config :password))
+                               (tasks/ui click :firstboot-forward)
+                               (sleep 2000))
                              (catch Object e (:type e)))]
       (verify (= thrown-error :network-error)))
     (finally
-     (firstboot_disable_proxy nil))))
+      (firstboot_disable_proxy nil))))
 
 (defn ^{Test {:groups ["firstboot_proxy"
-                       "tier2"
+                       "tier3"
                        "blockedByBug-1199211"]}}
   firstboot_test_proxy_formatting
   "Tests the auto-formatting feature of the proxy location field."
@@ -444,8 +444,8 @@
        (verify (bool (tasks/ui guiexist :firstboot-proxy-dialog)))))
    (tasks/enableproxy "http://some.host.name:1337" :firstboot? true)
    (if-not (= "RHRL7" (get-release))
-	(tasks/ui click :configure-proxy)
-   	(tasks/ui click :firstboot-window "proxy_button"))
+     (tasks/ui click :configure-proxy)
+     (tasks/ui click :firstboot-window "proxy_button"))
    (tasks/ui waittillwindowexist :proxy-config-dialog 60)
    (let [location (tasks/ui gettextvalue :proxy-location)]
      (verify (not (substring? "http://" location)))

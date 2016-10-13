@@ -45,7 +45,7 @@
           list-status (into [] (map grab-value (filter not-nil? (map status raw-cli-data))))
           list-products (into [] (map grab-value (filter not-nil? (map products raw-cli-data))))
           cli-data (zipmap list-products list-status)]
-    (reset! productstatus cli-data))
+      (reset! productstatus cli-data))
     (catch Exception e
       (reset! (skip-groups :product_status) true)
       (throw e))))
@@ -73,7 +73,7 @@
     (verify (= gui-status "Not Subscribed"))))
 
 (defn ^{Test {:groups ["product_status"
-                       "tier1"
+                       "tier2"
                        "blockedByBug-923873"]}}
   check_status_when_unregistered
   "To verify that status in MyInstalledProducts icon color and product status
@@ -114,8 +114,8 @@
   (tasks/unregister))
 
 (defn ^{Test {:groups ["system"
-                       "acceptance"
-                       "tier1"
+                       "tier1" "acceptance"
+                       "tier2"
                        "blockedByBug-1051383"]}}
   check_status_column
   "Asserts that the status column of GUI has only 'Subscribed', 'Partially Subscribed'
@@ -142,7 +142,7 @@
 
 (defn ^{DataProvider {:name "subscribed"}}
   subscribed_products [_ & {:keys [debug]
-                               :or {debug false}}]
+                            :or {debug false}}]
   (log/info (str "======= Starting DataProvider: " ns-log "/subscribed_products()"))
   (if-not (assert-skip :facts)
     (do

@@ -10,7 +10,7 @@
                                blank?)]
         [slingshot.slingshot :only [throw+
                                     try+]]
-         rhsm.gui.tasks.tools
+        rhsm.gui.tasks.tools
         gnome.ldtp)
   (:require [clojure.tools.logging :as log]
             [rhsm.gui.tasks.tasks :as tasks]
@@ -67,7 +67,7 @@
     (if (= "RHEL7" (get-release)) (base/startup nil))
     (tasks/kill-app)
     (reset! product-cert-dir (tasks/conf-file-value "productCertDir"))
-    (reset! complytests (ComplianceTests. ))
+    (reset! complytests (ComplianceTests.))
     (.moveOriginalProductCertDefaultDirFilesBeforeClass @complytests)
     (.setupProductCertDirsBeforeClass @complytests)
     (let [safe-upper (fn [s] (if s (.toUpperCase s) nil))]
@@ -94,7 +94,7 @@
   (tasks/restart-app))
 
 (defn ^{Test {:groups ["autosubscribe"
-                       "tier2"
+                       "tier3"
                        "configureProductCertDirForNoProductsSubscribable"
                        "blockedByBug-743704"]}}
   no_products_subscribable
@@ -113,23 +113,23 @@
                (trim (:stdout
                       (run-command (str "ls " nodir " | wc -l"))))))
     (if (= 0 beforesubs)
-        (verify (tasks/compliance?))
-        (do
-          (tasks/unregister)
-          (let [msg (try+
-                     (tasks/register user
-                                     pass
-                                     :skip-autosubscribe false
-                                     :owner ownername)
-                     (catch [:type :no-sla-available] {:keys [msg]} msg))]
-            (verify (substring? "No service level will cover all installed products" msg)))
-          (tasks/ui waittillwindownotexist :register-dialog 600)
-          (sleep 1000)
-          (verify (= (tasks/warn-count) beforesubs))
-          (verify (not (tasks/compliance?)))))))
+      (verify (tasks/compliance?))
+      (do
+        (tasks/unregister)
+        (let [msg (try+
+                   (tasks/register user
+                                   pass
+                                   :skip-autosubscribe false
+                                   :owner ownername)
+                   (catch [:type :no-sla-available] {:keys [msg]} msg))]
+          (verify (substring? "No service level will cover all installed products" msg)))
+        (tasks/ui waittillwindownotexist :register-dialog 600)
+        (sleep 1000)
+        (verify (= (tasks/warn-count) beforesubs))
+        (verify (not (tasks/compliance?)))))))
 
 (defn ^{Test {:groups ["autosubscribe"
-                       "tier2"
+                       "tier3"
                        "configureProductCertDirForNoProductsInstalled"]}}
   no_products_installed
   "Tests autosubscribe when no products are installed."
@@ -142,8 +142,8 @@
   (verify (tasks/compliance?)))
 
 (defn ^{Test {:groups ["autosubscribe"
-                       "tier1"
-                       "acceptance"
+                       "tier2"
+                       "tier1" "acceptance"
                        "configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevel"
                        "blockedByBug-857147"]
               :priority (int 100)}}
@@ -202,7 +202,7 @@
       (run-command "subscription-manager facts --update"))))
 
 (defn ^{Test {:groups ["autosubscribe"
-                       "tier1"
+                       "tier2"
                        "configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevel"
                        "blockedByBug-921245"]
               :dependsOnMethods ["simple_autosubscribe"]}}
@@ -234,7 +234,7 @@
         (tasks/ui click :close-system-prefs)))))
 
 (defn ^{Test {:groups ["autosubscribe"
-                       "tier1"
+                       "tier2"
                        "configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevel"]
               :dependsOnMethods ["simple_autosubscribe"]}}
   assert_msg_after_auto_attach
@@ -289,18 +289,18 @@
     ;;(println (str "boxarch: "  boxarch))
     ;;(println (str "prodarch: " prodarch))
     (condp = status
-        "Subscribed" (do (verify (not-nil? expected)))
-        "Not Subscribed" (if (or (not-nil? (some #{boxarch} prodarch))
-                                 (not-nil? (some #{"ALL"} prodarch)))
-                           (verify (nil? expected))
-                           (verify true))
-        "Partially Subscribed" (do (verify (not-nil? expected)))
-        (do
-          (log/error (format "Status \"%s\" unknown!" status))
-          (verify false)))))
+      "Subscribed" (do (verify (not-nil? expected)))
+      "Not Subscribed" (if (or (not-nil? (some #{boxarch} prodarch))
+                               (not-nil? (some #{"ALL"} prodarch)))
+                         (verify (nil? expected))
+                         (verify true))
+      "Partially Subscribed" (do (verify (not-nil? expected)))
+      (do
+        (log/error (format "Status \"%s\" unknown!" status))
+        (verify false)))))
 
 (defn ^{Test {:groups ["autosubscribe"
-                       "tier2"
+                       "tier3"
                        "blockedByBug-1009600"
                        "blockedByBug-1011703"]}}
   check_subscription_type_auto_attach
@@ -319,7 +319,7 @@
     (tasks/ui click :auto-attach)
     (sleep 8000)
     (tasks/ui waittillwindowexist :register-dialog 80)
-    (tasks/ui click :register-dialog (clojure.string/capitalize(first @sla-list)))
+    (tasks/ui click :register-dialog (clojure.string/capitalize (first @sla-list)))
     (tasks/ui click :register)
     (verify (tasks/ui showing? :register-dialog "Confirm Subscriptions"))
     (let [values (into [] (tasks/get-table-elements :auto-attach-subscriptions-table 1))
@@ -329,12 +329,12 @@
           error-list (filter phy-virt? values)]
       (verify (= 0 (count error-list))))
     (finally
-      (if (bool(tasks/ui guiexist :register-dialog))
+      (if (bool (tasks/ui guiexist :register-dialog))
         (tasks/ui click :register-close))
       (tasks/unregister))))
 
 (defn ^{Test {:groups ["autosubscribe"
-                       "tier2"
+                       "tier3"
                        "blockedByBug-812903"
                        "blockedByBug-1005329"]}}
   autosubscribe_select_product_sla
@@ -353,7 +353,7 @@
     (tasks/ui click :auto-attach)
     (sleep 10000)
     (tasks/ui waittillwindowexist :register-dialog 80)
-    (tasks/ui click :register-dialog (clojure.string/capitalize(first @sla-list)))
+    (tasks/ui click :register-dialog (clojure.string/capitalize (first @sla-list)))
     (tasks/ui click :register)
     (if (tasks/ui showing? :register-dialog "Confirm Subscriptions")
       (do
@@ -365,45 +365,43 @@
       (if (bool (tasks/ui guiexist :register-dialog)) (tasks/ui click :register-close))
       (tasks/unregister))))
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; DATA PROVIDERS
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn ^{DataProvider {:name "my-installed-software"}}
-   get_installed_software [_ & {:keys [debug]
-                                :or {debug false}}]
-   (log/info (str "======= Starting DataProvider: "
-                  ns-log "get_installed_software()"))
-   (if-not (assert-skip :autosubscribe)
-     (do
-       (.configureProductCertDirForSomeProductsSubscribable @complytests)
-       (tasks/restart-app)
-       (tasks/register-with-creds)
-       (let [prods (into [] (map vector (tasks/get-table-elements
-                                         :installed-view
-                                         0)))
-             user (@config :username)
-             pass (@config :password)
-             key  (@config :owner-key)
-             ownername (if (= "" key)
-                         nil
-                         (ctasks/get-owner-display-name user pass key))]
-         (setup-product-map)
+  get_installed_software [_ & {:keys [debug]
+                               :or {debug false}}]
+  (log/info (str "======= Starting DataProvider: "
+                 ns-log "get_installed_software()"))
+  (if-not (assert-skip :autosubscribe)
+    (do
+      (.configureProductCertDirForSomeProductsSubscribable @complytests)
+      (tasks/restart-app)
+      (tasks/register-with-creds)
+      (let [prods (into [] (map vector (tasks/get-table-elements
+                                        :installed-view
+                                        0)))
+            user (@config :username)
+            pass (@config :password)
+            key  (@config :owner-key)
+            ownername (if (= "" key)
+                        nil
+                        (ctasks/get-owner-display-name user pass key))]
+        (setup-product-map)
 
-         (comment
-           (tasks/unregister)
-           (tasks/register user
-                           pass
-                           :skip-autosubscribe false
-                           :owner ownername))
-         (if-not debug
-           (to-array-2d prods)
-           prods)))
-     (to-array-2d [])))
+        (comment
+          (tasks/unregister)
+          (tasks/register user
+                          pass
+                          :skip-autosubscribe false
+                          :owner ownername))
+        (if-not debug
+          (to-array-2d prods)
+          prods)))
+    (to-array-2d [])))
 
 (gen-class-testng)
-
 
 ;; TODO: write a separte test for https://bugzilla.redhat.com/show_bug.cgi?id=743704
 ;;   and restore the override.facts
