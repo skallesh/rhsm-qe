@@ -5,6 +5,7 @@
         gnome.ldtp
         rhsm.gui.tasks.tools)
   (:require  [clojure.test :refer :all]
+             [clojure.core.match :refer [match]]
              [rhsm.gui.tests.subscribe_tests :as tests]
              [rhsm.gui.tasks.tasks :as tasks]
              [rhsm.gui.tasks.tools :as tools]
@@ -42,9 +43,9 @@
 
 (deftest all_subscriptions_are_sortable-test
   (let [{:keys [major minor patch]} (tools/subman-version)]
-    (if (or (and (= (Integer. major) 1) (= (Integer. minor) 17) (> (Integer. patch) 16))
-            (and (= (Integer. major) 1) (> (Integer. minor) 18))
-            (and (= (Integer. major) 1) (= (Integer. minor) 15))
-            (> (Integer. major) 1))
-      (tests/all_subscriptions_are_sortable nil)
-      (is (thrown? AssertionError (tests/all_subscriptions_are_sortable nil))))))
+    (match (vec (for [v [major minor patch]] (Integer. v)))
+           [1 15 _] (tests/all_subscriptions_are_sortable nil)
+           [1 17 (_ :guard #(> % 16))] (tests/all_subscriptions_are_sortable nil)
+           [1 18 _] (tests/all_subscriptions_are_sortable nil)
+           [(_ :guard #(> % 1)) _ _] (tests/all_subscriptions_are_sortable nil)
+           :else  (is (thrown? AssertionError (tests/all_subscriptions_are_sortable nil))))))
