@@ -18,7 +18,7 @@
             [clojure.tools.logging :as log]
             [rhsm.gui.tests.base :as base]
             [rhsm.gui.tasks.candlepin-tasks :as ctasks]
-             rhsm.gui.tasks.ui)
+            rhsm.gui.tasks.ui)
   (:import [org.testng.annotations
             BeforeClass
             AfterClass
@@ -92,8 +92,8 @@
     (let [stackable-pems (filter string? (tasks/get-stackable-pem-files))
           change-prod-dir (tasks/set-conf-file-value "productCertDir" stacking-dir)
           ret-val (fn [pem-file] (:exitcode
-                                 (run-command
-                                  (str "cp  " @prod-dir-atom "/" pem-file "  " stacking-dir))))
+                                  (run-command
+                                   (str "cp  " @prod-dir-atom "/" pem-file "  " stacking-dir))))
           copy-pem (map ret-val stackable-pems)]
       (log/info (str (count (filter #(= 0 %) copy-pem))
                      " products are stackable. Stacking setup complete")))
@@ -102,7 +102,7 @@
       (throw e))))
 
 (defn ^{AfterClass {:groups ["cleanup"]
-                     :alwaysRun true}}
+                    :alwaysRun true}}
   cleanup [_]
   (if (not (empty? @prod-dir-atom))
     (do
@@ -128,7 +128,7 @@
                              :when (some #(= "sockets" %) x)] s)
           rand-sub (random-subscription socket-subs)
           get-quantity (fn [i] (tasks/ui getcellvalue :all-subscriptions-view
-                                        (tasks/skip-dropdown :all-subscriptions-view i) 3))
+                                         (tasks/skip-dropdown :all-subscriptions-view i) 3))
           quantity (get-quantity rand-sub)]
       (tasks/skip-dropdown :all-subscriptions-view rand-sub)
       (tasks/ui generatekeyevent (str
@@ -200,10 +200,10 @@
 (defn create_temp_prod_dir
   "creates a temp dir and moves the apropriate pem file"
   [prod-dir new-prod-dir pem-file]
-   (if (not (bash-bool (:exitcode (run-command (str "test -d " new-prod-dir)))))
-      (run-command (str "mkdir " new-prod-dir)))
-    (run-command (str "cp " prod-dir pem-file "  " new-prod-dir))
-    (tasks/set-conf-file-value "productCertDir" new-prod-dir))
+  (if (not (bash-bool (:exitcode (run-command (str "test -d " new-prod-dir)))))
+    (run-command (str "mkdir " new-prod-dir)))
+  (run-command (str "cp " prod-dir pem-file "  " new-prod-dir))
+  (tasks/set-conf-file-value "productCertDir" new-prod-dir))
 
 (defn ^{Test {:groups ["stacking"
                        "tier3"
@@ -231,8 +231,8 @@
                                 :all-subscriptions-view 0 :skip-dropdown? true))
         sub-type-map (ctasks/build-subscription-attr-type-map)
         socket-subs (for [s subscriptions
-                            :let [x (get sub-type-map s)]
-                            :when (some #(= "sockets" %) x)] s)
+                          :let [x (get sub-type-map s)]
+                          :when (some #(= "sockets" %) x)] s)
         rand-sub (random-subscription socket-subs)
         rand-prod (tasks/skip-dropdown :all-subscriptions-view rand-sub)
         rand-prod-list (tasks/get-table-elements :all-available-bundled-products 0)
@@ -242,28 +242,28 @@
               (str "ERROR !! no .pem was returned"))))
     (create_temp_prod_dir existing-prod-dir new-prod-dir pem-file)
     (try
-     (tasks/restart-app)
-     (tasks/ui selecttab :all-available-subscriptions)
-     (tasks/ui enterstring :date-entry (str new-year "-" month "-" day))
-     (tasks/search :match-installed? true)
-     (tasks/skip-dropdown :all-subscriptions-view rand-sub)
-     (tasks/ui generatekeyevent (str
-                                 (repeat-cmd 3 "<right> ")
-                                 "<space> " "1 " "<enter>"))
-     (tasks/subscribe rand-sub)
-     (tasks/ui selecttab :my-installed-products)
-     (tasks/do-to-all-rows-in :installed-view 2
-                              (fn [status]
-                                (verify (= "Future Subscription" status))))
-     (verify (not (substring? "does not match" (tasks/ui gettextvalue :overall-status))))
-     (finally
-       (tasks/write-facts "{\"cpu.cpu_socket(s)\": \"2\"}")
-       (tasks/set-conf-file-value "productCertDir" existing-prod-dir)
-       (safe-delete new-prod-dir)
-       (tasks/unsubscribe_all)
-       (tasks/restart-app)))))
+      (tasks/restart-app)
+      (tasks/ui selecttab :all-available-subscriptions)
+      (tasks/ui enterstring :date-entry (str new-year "-" month "-" day))
+      (tasks/search :match-installed? true)
+      (tasks/skip-dropdown :all-subscriptions-view rand-sub)
+      (tasks/ui generatekeyevent (str
+                                  (repeat-cmd 3 "<right> ")
+                                  "<space> " "1 " "<enter>"))
+      (tasks/subscribe rand-sub)
+      (tasks/ui selecttab :my-installed-products)
+      (tasks/do-to-all-rows-in :installed-view 2
+                               (fn [status]
+                                 (verify (= "Future Subscription" status))))
+      (verify (not (substring? "does not match" (tasks/ui gettextvalue :overall-status))))
+      (finally
+        (tasks/write-facts "{\"cpu.cpu_socket(s)\": \"2\"}")
+        (tasks/set-conf-file-value "productCertDir" existing-prod-dir)
+        (safe-delete new-prod-dir)
+        (tasks/unsubscribe_all)
+        (tasks/restart-app)))))
 
-(defn ^{Test {:groups ["acceptance"
+(defn ^{Test {:groups ["tier1" "acceptance"
                        "blockedByBug-827173"
                        "stacking-sockets"]}}
   assert_auto_attach
@@ -321,12 +321,12 @@
           sub-type-map (ctasks/build-subscription-attr-type-map)
           ;; get subscriptions dependant on RAM
           only-ram (fn [i] (and (not
-                                (or (some #(= "cores" %) i)
-                                    (some #(= "sockets" %) i)))
-                               (some #(= "ram" %) i)))
+                                 (or (some #(= "cores" %) i)
+                                     (some #(= "sockets" %) i)))
+                                (some #(= "ram" %) i)))
           ram-subs (for [s subscriptions
-                            :let [x (get sub-type-map s)]
-                            :when (only-ram x)] s)
+                         :let [x (get sub-type-map s)]
+                         :when (only-ram x)] s)
           rand-sub (random-subscription ram-subs)
           subs-attrs-map (ctasks/build-subscriptions-name-val-map)
           ram-func (fn [i] (Integer. (get (get subs-attrs-map i) "ram")))
@@ -336,11 +336,11 @@
           subs-stacking-id (into [] (distinct (remove nil? (map filter-func subscriptions))))
           subs-applicable (clojure.set/intersection (into #{} ram-subs) (into #{} subs-stacking-id))
           quantity-func (fn [i] (Integer.
-                                (re-find #"\d"
-                                       (tasks/ui getcellvalue :all-subscriptions-view
-                                                 (tasks/skip-dropdown :all-subscriptions-view i) 3))))
+                                 (re-find #"\d"
+                                          (tasks/ui getcellvalue :all-subscriptions-view
+                                                    (tasks/skip-dropdown :all-subscriptions-view i) 3))))
           ;; map of subscriptions having same stacking_id and the RAM that they provide
-          subs-applicable-ram (into {} (map (fn [i]  {i (ram-func i) }) subs-applicable))
+          subs-applicable-ram (into {} (map (fn [i]  {i (ram-func i)}) subs-applicable))
           ;; calculating the RAM covered by random subscription and uncovered RAM
           ram-covered (- system-ram (get subs-applicable-ram rand-sub))
           calc-func (fn [i] (int (round-up (float (/ ram-covered i)))))
@@ -358,75 +358,74 @@
                        (map = (into [] (map quantity-func subs-applicable)) quantity-after)))))
 
     (finally
-     (tasks/write-facts "{\"memory.memtotal\": \"1020252\"}")
-     (tasks/unsubscribe_all))))
+      (tasks/write-facts "{\"memory.memtotal\": \"1020252\"}")
+      (tasks/unsubscribe_all))))
 
 (defn set-stacking-environment
   "This function is used to set stackig environment based on RAMs COREs or SOCKETs"
   [stacking-parameter when?]
   (cond
    ;; works as a before class
-   (= when? "before")
-   (do
-     (case stacking-parameter
-       ("ram")     (tasks/write-facts "{\"memory.memtotal\": \"10202520\"}")
-       ("cores")   (let [output (:stdout
-                                 (run-command
-                                  "subscription-manager facts --list | grep \"virt.is_guest\""))
-                         virt? (or (substring? "True" output)
-                                   (substring? "true" output))]
-                     (tasks/write-facts "{\"cpu.core(s)_per_socket\": \"20\"}")
-                     (if virt? (tasks/write-facts "{\"virt.is_guest\": \"False\"}"
-                                                  :overwrite? false)))
-       ("sockets") (tasks/write-facts "{\"cpu.cpu_socket(s)\": \"20\"}")
-       (throw (Exception. "Invalid stacking-parameter passed to function"))))
+    (= when? "before")
+    (do
+      (case stacking-parameter
+        ("ram")     (tasks/write-facts "{\"memory.memtotal\": \"10202520\"}")
+        ("cores")   (let [output (:stdout
+                                  (run-command
+                                   "subscription-manager facts --list | grep \"virt.is_guest\""))
+                          virt? (or (substring? "True" output)
+                                    (substring? "true" output))]
+                      (tasks/write-facts "{\"cpu.core(s)_per_socket\": \"20\"}")
+                      (if virt? (tasks/write-facts "{\"virt.is_guest\": \"False\"}"
+                                                   :overwrite? false)))
+        ("sockets") (tasks/write-facts "{\"cpu.cpu_socket(s)\": \"20\"}")
+        (throw (Exception. "Invalid stacking-parameter passed to function"))))
    ;; works as after class
-   (= when? "after")
-   (do
-     (case stacking-parameter
-       ("ram")     (tasks/write-facts "{\"memory.memtotal\": \"1020252\"}")
-       ("cores")   (let [output (:stdout
-                                 (run-command
-                                  "cat /etc/rhsm/facts/override.facts | grep virt.is_guest"))]
-                     (tasks/write-facts "{\"cpu.core(s)_per_socket\": \"1\"}")
-                     (if-not (empty? output) (tasks/write-facts "{\"virt.is_guest\": \"True\"}"
-                                                              :overwrite? false)))
-       ("sockets") (tasks/write-facts "{\"cpu.cpu_socket(s)\": \"2\"}")
-       (throw (Exception. "Invalid stacking-parameter passed to function"))))
-   :else (throw (Exception. "Invalid when? argument passed to function"))))
-
+    (= when? "after")
+    (do
+      (case stacking-parameter
+        ("ram")     (tasks/write-facts "{\"memory.memtotal\": \"1020252\"}")
+        ("cores")   (let [output (:stdout
+                                  (run-command
+                                   "cat /etc/rhsm/facts/override.facts | grep virt.is_guest"))]
+                      (tasks/write-facts "{\"cpu.core(s)_per_socket\": \"1\"}")
+                      (if-not (empty? output) (tasks/write-facts "{\"virt.is_guest\": \"True\"}"
+                                                                 :overwrite? false)))
+        ("sockets") (tasks/write-facts "{\"cpu.cpu_socket(s)\": \"2\"}")
+        (throw (Exception. "Invalid stacking-parameter passed to function"))))
+    :else (throw (Exception. "Invalid when? argument passed to function"))))
 
 (defn filter-func
   "This is a helper function to provide filter function based on stacking parameter"
   [stacking-parameter]
   (case stacking-parameter
     ("ram")    (fn [i] (and
-                       (not (or (some #(= "cores" %) i)
-                                (some #(= "sockets" %) i)))
-                       (some #(= "ram" %) i)))
-    ("cores")   (fn [i] (and
-                        (not (or (some #(= "sockets" %) i)
-                                 (some #(= "ram" %) i)))
-                        (some #(= "cores" %) i)))
-    ("sockets") (fn [i] (and
                         (not (or (some #(= "cores" %) i)
-                                 (some #(= "ram" %) i)))
-                        (some #(= "sockets" %) i)))))
+                                 (some #(= "sockets" %) i)))
+                        (some #(= "ram" %) i)))
+    ("cores")   (fn [i] (and
+                         (not (or (some #(= "sockets" %) i)
+                                  (some #(= "ram" %) i)))
+                         (some #(= "cores" %) i)))
+    ("sockets") (fn [i] (and
+                         (not (or (some #(= "cores" %) i)
+                                  (some #(= "ram" %) i)))
+                         (some #(= "sockets" %) i)))))
 
 (defn get-cli-facts
   "This function returns CLI fats for stacking parameters"
   [stacking-parameter]
   (let [get-value (fn [str] (Integer.
-                            (trim (last (split
-                                         (trim-newline(:stdout
-                                                        (run-command str))) #":")))))
-        ram-value (int (/(get-value
-                         (str "subscription-manager facts --list | grep \"memory.memtotal\""))
-                         1000000))
+                             (trim (last (split
+                                          (trim-newline (:stdout
+                                                         (run-command str))) #":")))))
+        ram-value (int (/ (get-value
+                           (str "subscription-manager facts --list | grep \"memory.memtotal\""))
+                          1000000))
         sockets-value (get-value
-                         (str "subscription-manager facts --list | grep \"cpu.cpu_socket\""))
+                       (str "subscription-manager facts --list | grep \"cpu.cpu_socket\""))
         cores-value (* (get-value
-                         (str "subscription-manager facts --list | grep \"^cpu.core(s)_per_socket\""))
+                        (str "subscription-manager facts --list | grep \"^cpu.core(s)_per_socket\""))
                        sockets-value)]
     (case stacking-parameter
       ("ram")     ram-value
@@ -456,54 +455,54 @@
           parameter-covered (- system-parameter stacking-value)
           quantity-after (int (round-up (float (/ parameter-covered stacking-value))))
           get-quantity (fn [i] (tasks/ui getcellvalue :all-subscriptions-view
-                                        (tasks/skip-dropdown :all-subscriptions-view i) 3))
+                                         (tasks/skip-dropdown :all-subscriptions-view i) 3))
           quantity (Integer. (re-find #"\d+" (get-quantity rand-sub)))
           provides-product (first (into [] (tasks/get-table-elements
                                             :all-available-bundled-products 0)))]
-        (tasks/skip-dropdown :all-subscriptions-view rand-sub)
-        (tasks/ui generatekeyevent (str
-                                    (repeat-cmd 3 "<right> ")
-                                    "<space> " "1 " "<enter>"))
-        (tasks/subscribe rand-sub)
-        (tasks/ui click :search)
-        (sleep 4000)
-        (verify (> quantity (Integer. (re-find #"\d+" (get-quantity rand-sub)))))
+      (tasks/skip-dropdown :all-subscriptions-view rand-sub)
+      (tasks/ui generatekeyevent (str
+                                  (repeat-cmd 3 "<right> ")
+                                  "<space> " "1 " "<enter>"))
+      (tasks/subscribe rand-sub)
+      (tasks/ui click :search)
+      (sleep 4000)
+      (verify (> quantity (Integer. (re-find #"\d+" (get-quantity rand-sub)))))
         ;; verifiying if the product is partially subscribed
-        (verify (= "Partially Subscribed"
-                   (tasks/ui getcellvalue :installed-view
-                             (tasks/skip-dropdown :installed-view provides-product) 2)))
+      (verify (= "Partially Subscribed"
+                 (tasks/ui getcellvalue :installed-view
+                           (tasks/skip-dropdown :installed-view provides-product) 2)))
         ;; The below conditional statemnet checks if the required amount to cover the
         ;; product is available. It skips if required > available.
-        (if (< (Integer.
-                (re-find #"\d+"
-                         (tasks/ui getcellvalue :all-subscriptions-view
-                                   (tasks/skip-dropdown :all-subscriptions-view rand-sub) 2)))
-               quantity-after)
-          (throw (SkipException.
-                  (str "Quantiy Available is insufficient to cove the product completely
+      (if (< (Integer.
+              (re-find #"\d+"
+                       (tasks/ui getcellvalue :all-subscriptions-view
+                                 (tasks/skip-dropdown :all-subscriptions-view rand-sub) 2)))
+             quantity-after)
+        (throw (SkipException.
+                (str "Quantiy Available is insufficient to cove the product completely
                         Possible Work Around:
                             1) Reduce the 'stacking parameter' value
                             2) Generate new test data"))))
-        (tasks/ui generatekeyevent (str
-                                    (repeat-cmd 3 "<right> ")
-                                    "<space> " quantity-after  " <enter>"))
-        (tasks/subscribe rand-sub)
+      (tasks/ui generatekeyevent (str
+                                  (repeat-cmd 3 "<right> ")
+                                  "<space> " quantity-after  " <enter>"))
+      (tasks/subscribe rand-sub)
         ;; verifying if product is fully subscribed
-        (verify (= "Subscribed"
-                   (tasks/ui getcellvalue :installed-view
-                             (tasks/skip-dropdown :installed-view provides-product) 2))))
+      (verify (= "Subscribed"
+                 (tasks/ui getcellvalue :installed-view
+                           (tasks/skip-dropdown :installed-view provides-product) 2))))
     (finally
-     (set-stacking-environment stacking-parameter "after")
-     (tasks/unsubscribe_all))))
+      (set-stacking-environment stacking-parameter "after")
+      (tasks/unsubscribe_all))))
 
 (data-driven assert_product_state {Test {:groups ["stacking"
                                                   "tier3"]}}
-  [^{Test {:groups ["blockedByBug-845600"]}}
-   (if-not (assert-skip :stacking)
-     (do
-       ["ram"]
-       ["cores"]
-       ["sockets"])
-     (to-array-2d []))])
+             [^{Test {:groups ["blockedByBug-845600"]}}
+              (if-not (assert-skip :stacking)
+                (do
+                  ["ram"]
+                  ["cores"]
+                  ["sockets"])
+                (to-array-2d []))])
 
 (gen-class-testng)
