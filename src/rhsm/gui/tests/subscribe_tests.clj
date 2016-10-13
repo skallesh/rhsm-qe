@@ -17,6 +17,7 @@
             [rhsm.gui.tasks.tasks :as tasks]
             [rhsm.gui.tests.base :as base]
             [rhsm.gui.tasks.candlepin-tasks :as ctasks]
+            [clojure.core.match :as match]
              rhsm.gui.tasks.ui)
   (:import [org.testng.annotations
             BeforeClass
@@ -135,6 +136,36 @@
                             nil
                             (tasks/unsubscribe subscription))]
     (verify (not (blank? output)))))
+
+(defn ^{Test {:groups ["subscribe"
+                       "tier1"
+                       "blockedByBug-1370623"]
+              :description "Given a system is subscribed
+ and I have clicked on the tab 'All Available Subscriptions'
+When I click on a table header 'Subscription'
+Then I see names of subscriptions to be redrawn
+ and the names are sorted some way"}}
+  all_subscriptions_are_sortable
+  [_]
+  (allsearch)
+  (tasks/ui selecttab :all-available-subscriptions)
+  (letfn [(compare-strings [list-of-strings] (->> list-of-strings
+                                                  (partition 2 1)
+                                                  (map #(apply compare %))))
+          (get-sorting [ids] (let [desc-sorting? (every? #(<= 0 %) ids)
+                                   asc-sorting? (every? #(>= 0 %) ids)]
+                               (match/match [desc-sorting? asc-sorting?]
+                                            [true false] :desc-sorting
+                                            [false true] :asc-sorting
+                                            [true true]  :one-value-list
+                                            :else :no-sorting )))
+          (click-on-table-header [] (tasks/ui click :all-available-subscriptions-subscription-header))]
+    (let [sorting-after-click-01 (do (click-on-table-header)
+                                     (get-sorting (compare-strings (tasks/get-table-elements :all-subscriptions-view 0))))
+          sorting-after-click-02 (do (click-on-table-header)
+                                     (get-sorting (compare-strings (tasks/get-table-elements :all-subscriptions-view 0))))]
+      ;; I click twice and I get two different sort orders
+      (verify (= (set [:desc-sorting :asc-sorting]) (set [sorting-after-click-01 sorting-after-click-02]))))))
 
 (defn ^{Test {:groups ["subscribe"
                        "tier3"
