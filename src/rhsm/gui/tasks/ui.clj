@@ -141,6 +141,8 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
                      :bundled-products "Bundeled Products Table"
                      :subscription-table-header "tchSubscription"
                      :all-available-subscriptions-subscription-header "tchSubscription1"
+                     :all-available-subscriptions-available-header "tchAvailable"
+                     :all-available-subscriptions-type-header "tchType"
                      :all-available-bundled-products "All Available Bundled Product Table"}))
     {:main-tabgroup (TabGroup. (windows :main-window) "ptl0")}
     (define-elements (windows :register-dialog)
