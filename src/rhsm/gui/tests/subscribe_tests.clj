@@ -140,32 +140,41 @@
 (defn ^{Test {:groups ["subscribe"
                        "tier2"
                        "blockedByBug-1370623"]
+              :dataProvider "sorting-headers-at-my-subscriptions-view"
+              :description "Given a system is subscribed
+ and at least two subscriptions are attached
+ and I have clicked on the tab 'My Subscriptions'
+When I click on a table header 'Subscription'
+Then I see names of subscriptions to be redrawn
+ and the names are sorted some way"}}
+  my_subscriptions_table_is_sortable
+  [_ header-name column-index]
+  (allsearch)
+  (tasks/subscribe_all)
+  (tasks/ui selecttab :my-subscriptions)
+  (verify (>= (tasks/ui getrowcount :my-subscriptions-view) 2))
+  (verify (tasks/table-cell-header-sorts-its-column-data?
+           :my-subscriptions-view
+           (keyword header-name)
+           column-index)))
+
+(defn ^{Test {:groups ["subscribe"
+                       "tier2"
+                       "blockedByBug-1370623"]
+              :dataProvider "sorting-headers-at-all-subscriptions-view"
               :description "Given a system is subscribed
  and I have clicked on the tab 'All Available Subscriptions'
 When I click on a table header 'Subscription'
 Then I see names of subscriptions to be redrawn
  and the names are sorted some way"}}
-  all_subscriptions_are_sortable
-  [_]
+  all_subscriptions_table_is_sortable
+  [_ header-name column-index]
   (allsearch)
   (tasks/ui selecttab :all-available-subscriptions)
-  (letfn [(compare-strings [list-of-strings] (->> list-of-strings
-                                                  (partition 2 1)
-                                                  (map #(apply compare %))))
-          (get-sorting [ids] (let [desc-sorting? (every? #(<= 0 %) ids)
-                                   asc-sorting? (every? #(>= 0 %) ids)]
-                               (match/match [desc-sorting? asc-sorting?]
-                                 [true false] :desc-sorting
-                                 [false true] :asc-sorting
-                                 [true true]  :one-value-list
-                                 :else :no-sorting)))
-          (click-on-table-header [] (tasks/ui click :all-available-subscriptions-subscription-header))]
-    (let [sorting-after-click-01 (do (click-on-table-header)
-                                     (get-sorting (compare-strings (tasks/get-table-elements :all-subscriptions-view 0))))
-          sorting-after-click-02 (do (click-on-table-header)
-                                     (get-sorting (compare-strings (tasks/get-table-elements :all-subscriptions-view 0))))]
-      ;; I click twice and I get two different sort orders
-      (verify (= (set [:desc-sorting :asc-sorting]) (set [sorting-after-click-01 sorting-after-click-02]))))))
+  (verify (tasks/table-cell-header-sorts-its-column-data?
+           :all-subscriptions-view
+           (keyword header-name)
+           column-index)))
 
 (defn ^{Test {:groups ["subscribe"
                        "tier3"
@@ -716,6 +725,24 @@ Then I see names of subscriptions to be redrawn
           (to-array-2d pools)
           pools)))
     (to-array-2d [])))
+
+(defn ^{DataProvider {:name "sorting-headers-at-my-subscriptions-view" }}
+  sorting_headers_at_my_subsriptions_view [_ & {:keys [debug]
+                                                 :or {debug false}}]
+  (log/info (str "======= Starting DataProvider: " ns-log "sorting_headers_at_my_subsriptions_view"))
+  "array of [<header-name> <it's column index - starting from zero>]"
+  (to-array-2d [["my-subscriptions-subscription-header" 0]
+                ["my-subscriptions-enddate-header" 2]
+                ["my-subscriptions-quantity-header" 3]]))
+
+(defn ^{DataProvider {:name "sorting-headers-at-all-subscriptions-view" }}
+  sorting_headers_at_all_subsriptions_view [_ & {:keys [debug]
+                                                 :or {debug false}}]
+  (log/info (str "======= Starting DataProvider: " ns-log "sorting_headers_at_all_subsriptions_view"))
+  "array of [<header-name> <it's column index - starting from zero>]"
+  (to-array-2d [["all-available-subscriptions-subscription-header" 0]
+                ["all-available-subscriptions-type-header" 1]
+                ["all-available-subscriptions-available-header" 2]]))
 
   ;; TODO: https://bugzilla.redhat.com/show_bug.cgi?id=683550
   ;; TODO: https://bugzilla.redhat.com/show_bug.cgi?id=691784

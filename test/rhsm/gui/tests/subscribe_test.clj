@@ -41,11 +41,59 @@
   (let [subscriptions #spy/d (tests/get_multi_contract_subscriptions nil)]
     (tests/check_contracts_and_virt_type nil (-> subscriptions first first))))
 
-(deftest all_subscriptions_are_sortable-test
+(deftest all_subscriptions_table_is_sortable-test
   (let [{:keys [major minor patch]} (tools/subman-version)]
-    (match (vec (for [v [major minor patch]] (Integer. v)))
-           [1 15 _] (tests/all_subscriptions_are_sortable nil)
-           [1 17 (_ :guard #(> % 16))] (tests/all_subscriptions_are_sortable nil)
-           [1 18 _] (tests/all_subscriptions_are_sortable nil)
-           [(_ :guard #(> % 1)) _ _] (tests/all_subscriptions_are_sortable nil)
-           :else  (is (thrown? AssertionError (tests/all_subscriptions_are_sortable nil))))))
+    (if (match (vec (for [v [major minor patch]] (Integer. v)))
+               [1 15 _] true
+               [1 17 (_ :guard #(> % 16))] true
+               [1 18 _] true
+               [(_ :guard #(> % 1)) _ _] true
+               :else  false)
+      (tests/all_subscriptions_table_is_sortable  nil :all-available-subscriptions-subscription-header 0)
+      (is (thrown? AssertionError (tests/all_subscriptions_table_is_sortable
+                                   nil
+                                   :all-available-subscriptions-subscription-header
+                                   0))))))
+
+
+(deftest my_subscriptions_table_is_sortable-01-test
+  (let [{:keys [major minor patch]} (tools/subman-version)]
+    (if (match (vec (for [v [major minor patch]] (Integer. v)))
+               [1 15 _] true
+               [1 17 (_ :guard #(> % 16))] true
+               [1 18 _] true
+               [(_ :guard #(> % 1)) _ _] true
+               :else  false)
+      (tests/my_subscriptions_table_is_sortable  nil :my-subscriptions-subscription-header 0)
+      (is (thrown? AssertionError (tests/my_subscriptions_table_is_sortable
+                                   nil
+                                   :my-subscriptions-subscription-header
+                                   0))))))
+
+(deftest my_subscriptions_table_is_sortable-02-test
+  (let [{:keys [major minor patch]} (tools/subman-version)]
+    (if (match (vec (for [v [major minor patch]] (Integer. v)))
+                      [1 15 _] true
+                      [1 17 (_ :guard #(> % 16))] true
+                      [1 18 _] true
+                      [(_ :guard #(> % 1)) _ _] true
+                      :else  false)
+      (tests/my_subscriptions_table_is_sortable  nil :my-subscriptions-enddate-header 2)
+      (is (thrown? AssertionError (tests/my_subscriptions_table_is_sortable
+                                   nil
+                                   :my-subscriptions-enddate-header
+                                   2))))))
+
+(deftest my_subscriptions_table_is_sortable-03-test
+  (let [{:keys [major minor patch]} (tools/subman-version)]
+    (if (match (vec (for [v [major minor patch]] (Integer. v)))
+                      [1 15 _] true
+                      [1 17 (_ :guard #(> % 16))] true
+                      [1 18 _] true
+                      [(_ :guard #(> % 1)) _ _] true
+                      :else  false)
+      (tests/my_subscriptions_table_is_sortable  nil :my-subscriptions-quantity-header 3)
+      (is (thrown? AssertionError (tests/my_subscriptions_table_is_sortable
+                                   nil
+                                   :my-subscriptions-quantity-header
+                                   3))))))
