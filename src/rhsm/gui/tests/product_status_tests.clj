@@ -176,7 +176,7 @@
     (to-array-2d [])))
 
 (defn ^{DataProvider {:name "sorting-headers-at-my-installed-products-view" }}
-  sorting_headers_at_all_subsriptions_view [_ & {:keys [debug]
+  sorting_headers_at_my_installed_products_view [_ & {:keys [debug]
                                                  :or {debug false}}]
   (log/info (str "======= Starting DataProvider: " ns-log "sorting_headers_at_my_installed_products_view"))
   "array of [<header-name> <it's column index - starting from zero>]"
