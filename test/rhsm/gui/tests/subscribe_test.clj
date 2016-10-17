@@ -54,3 +54,46 @@
                                    nil
                                    :all-available-subscriptions-subscription-header
                                    0))))))
+
+
+(deftest my_subscriptions_table_is_sortable-01-test
+  (let [{:keys [major minor patch]} (tools/subman-version)]
+    (if (match (vec (for [v [major minor patch]] (Integer. v)))
+               [1 15 _] true
+               [1 17 (_ :guard #(> % 16))] true
+               [1 18 _] true
+               [(_ :guard #(> % 1)) _ _] true
+               :else  false)
+      (tests/my_subscriptions_table_is_sortable  nil :my-subscriptions-subscription-header 0)
+      (is (thrown? AssertionError (tests/my_subscriptions_table_is_sortable
+                                   nil
+                                   :my-subscriptions-subscription-header
+                                   0))))))
+
+(deftest my_subscriptions_table_is_sortable-02-test
+  (let [{:keys [major minor patch]} (tools/subman-version)]
+    (if (match (vec (for [v [major minor patch]] (Integer. v)))
+                      [1 15 _] true
+                      [1 17 (_ :guard #(> % 16))] true
+                      [1 18 _] true
+                      [(_ :guard #(> % 1)) _ _] true
+                      :else  false)
+      (tests/my_subscriptions_table_is_sortable  nil :my-subscriptions-enddate-header 2)
+      (is (thrown? AssertionError (tests/my_subscriptions_table_is_sortable
+                                   nil
+                                   :my-subscriptions-enddate-header
+                                   2))))))
+
+(deftest my_subscriptions_table_is_sortable-03-test
+  (let [{:keys [major minor patch]} (tools/subman-version)]
+    (if (match (vec (for [v [major minor patch]] (Integer. v)))
+                      [1 15 _] true
+                      [1 17 (_ :guard #(> % 16))] true
+                      [1 18 _] true
+                      [(_ :guard #(> % 1)) _ _] true
+                      :else  false)
+      (tests/my_subscriptions_table_is_sortable  nil :my-subscriptions-quantity-header 3)
+      (is (thrown? AssertionError (tests/my_subscriptions_table_is_sortable
+                                   nil
+                                   :my-subscriptions-quantity-header
+                                   3))))))
