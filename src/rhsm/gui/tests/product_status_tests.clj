@@ -175,4 +175,15 @@
           subs)))
     (to-array-2d [])))
 
+(defn ^{DataProvider {:name "sorting-headers-at-my-installed-products-view" }}
+  sorting_headers_at_all_subsriptions_view [_ & {:keys [debug]
+                                                 :or {debug false}}]
+  (log/info (str "======= Starting DataProvider: " ns-log "sorting_headers_at_my_installed_products_view"))
+  "array of [<header-name> <it's column index - starting from zero>]"
+  (to-array-2d [["my-installed-products-product-header" 0]
+                ["my-installed-products-version-header" 1]
+                ["my-installed-products-status-header" 2]
+                ["my-installed-products-startdate-header" 3]
+                ["my-installed-products-enddate-header" 4]]))
+
 (gen-class-testng)
