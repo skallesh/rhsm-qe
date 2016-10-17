@@ -140,9 +140,17 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
                      :contract-number "Contract Number Text"
                      :bundled-products "Bundeled Products Table"
                      :subscription-table-header "tchSubscription"
+                     ;; 'My Installed Products' table
+                     :my-installed-products-product-header "tchProduct"
+                     :my-installed-products-version-header "tchVersion"
+                     :my-installed-products-status-header "tchStatus"
+                     :my-installed-products-startdate-header "tchStartDate"
+                     :my-installed-products-enddate-header "tchEndDate"
+                     ;; 'My Subscriptions' table
                      :my-subscriptions-subscription-header "tchSubscription"
                      :my-subscriptions-enddate-header "tchEndDate1"
                      :my-subscriptions-quantity-header "tchQuantity"
+                     ;; 'All Available Subscriptions' table
                      :all-available-subscriptions-subscription-header "tchSubscription1"
                      :all-available-subscriptions-available-header "tchAvailable"
                      :all-available-subscriptions-type-header "tchType"
