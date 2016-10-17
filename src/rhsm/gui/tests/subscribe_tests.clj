@@ -140,6 +140,27 @@
 (defn ^{Test {:groups ["subscribe"
                        "tier2"
                        "blockedByBug-1370623"]
+              :dataProvider "sorting-headers-at-my-subscriptions-view"
+              :description "Given a system is subscribed
+ and at least two subscriptions are attached
+ and I have clicked on the tab 'My Subscriptions'
+When I click on a table header 'Subscription'
+Then I see names of subscriptions to be redrawn
+ and the names are sorted some way"}}
+  my_subscriptions_table_is_sortable
+  [_ header-name column-index]
+  (allsearch)
+  (tasks/subscribe_all)
+  (tasks/ui selecttab :my-subscriptions)
+  (verify (>= (tasks/ui getrowcount :my-subscriptions-view) 2))
+  (verify (tasks/table-cell-header-sorts-its-column-data?
+           :my-subscriptions-view
+           (keyword header-name)
+           column-index)))
+
+(defn ^{Test {:groups ["subscribe"
+                       "tier2"
+                       "blockedByBug-1370623"]
               :dataProvider "sorting-headers-at-all-subscriptions-view"
               :description "Given a system is subscribed
  and I have clicked on the tab 'All Available Subscriptions'
@@ -704,6 +725,15 @@ Then I see names of subscriptions to be redrawn
           (to-array-2d pools)
           pools)))
     (to-array-2d [])))
+
+(defn ^{DataProvider {:name "sorting-headers-at-my-subscriptions-view" }}
+  sorting_headers_at_my_subsriptions_view [_ & {:keys [debug]
+                                                 :or {debug false}}]
+  (log/info (str "======= Starting DataProvider: " ns-log "sorting_headers_at_my_subsriptions_view"))
+  "array of [<header-name> <it's column index - starting from zero>]"
+  (to-array-2d [["my-subscriptions-subscription-header" 0]
+                ["my-subscriptions-enddate-header" 2]
+                ["my-subscriptions-quantity-header" 3]]))
 
 (defn ^{DataProvider {:name "sorting-headers-at-all-subscriptions-view" }}
   sorting_headers_at_all_subsriptions_view [_ & {:keys [debug]
