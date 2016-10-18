@@ -51,9 +51,7 @@ import org.testng.SkipException;
 
 import rhsm.base.CandlepinType;
 import rhsm.base.ConsumerType;
-import rhsm.base.SubscriptionManagerBaseTestScript;
 import rhsm.base.SubscriptionManagerCLITestScript;
-import rhsm.data.EntitlementCert;
 import rhsm.data.RevokedCert;
 
 import com.redhat.qe.Assert;
@@ -110,7 +108,8 @@ public class CandlepinTasks {
 		MultiThreadedHttpConnectionManager connectionManager = new MultiThreadedHttpConnectionManager();
       	client = new HttpClient(connectionManager);
       	client.getParams().setAuthenticationPreemptive(true);
-		//client = new HttpClient();
+      	client.getParams().setConnectionManagerTimeout(1/*min*/*60*1000/*ms/min*/);	// set a Connection Manager Timeout - the time to wait for a connection from the connection manager/pool
+      	client.getParams().setSoTimeout(15/*min*/*60*1000/*ms/min*/);	// set a Socket Timeout - the time waiting for data - after the connection was established; maximum time of inactivity between two data packets
 		try {
 			SSLCertificateTruster.trustAllCertsForApacheHttp();
 		}catch(Exception e) {
