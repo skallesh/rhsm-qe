@@ -61,80 +61,98 @@
         cli-value (get @productstatus product)]
     (verify (= gui-value cli-value))))
 
-(defn ^{Test {:groups ["product_status"
-                       "tier3"]
-              :dependsOnMethods ["check_product_status_subscribed"]
-              :dataProvider "installed-products"}}
-  check_product_status_unsubscribed
-  "Checks product status is correct after unsubscribing."
-  [_ product]
-  (let [gui-status (tasks/ui getcellvalue :installed-view
-                             (tasks/skip-dropdown :installed-view product) 2)]
-    (verify (= gui-status "Not Subscribed"))))
+;; (defn ^{Test {:groups ["product_status"
+;;                        "tier3"]
+;;               :dependsOnMethods ["check_product_status_subscribed"]
+;;               :dataProvider "installed-products"}}
+;;   check_product_status_unsubscribed
+;;   "Checks product status is correct after unsubscribing."
+;;   [_ product]
+;;   (let [gui-status (tasks/ui getcellvalue :installed-view
+;;                              (tasks/skip-dropdown :installed-view product) 2)]
+;;     (verify (= gui-status "Not Subscribed"))))
 
-(defn ^{Test {:groups ["product_status"
-                       "tier2"
-                       "blockedByBug-923873"]}}
-  check_status_when_unregistered
-  "To verify that status in MyInstalledProducts icon color and product status
-   are appropriately displayed when client is unregistered"
-  [_]
-  (tasks/restart-app :unregister? true)
-  (run-command "subscription-manager clean")
-  (verify (= unreg-status (tasks/ui gettextvalue :overall-status)))
-  (tasks/do-to-all-rows-in
-   :installed-view 2
-   (fn [status]
-     (verify (= status "Unknown")))))
+;; (defn ^{Test {:groups ["product_status"
+;;                        "tier2"
+;;                        "blockedByBug-923873"]}}
+;;   check_status_when_unregistered
+;;   "To verify that status in MyInstalledProducts icon color and product status
+;;    are appropriately displayed when client is unregistered"
+;;   [_]
+;;   (tasks/restart-app :unregister? true)
+;;   (run-command "subscription-manager clean")
+;;   (verify (= unreg-status (tasks/ui gettextvalue :overall-status)))
+;;   (tasks/do-to-all-rows-in
+;;    :installed-view 2
+;;    (fn [status]
+;;      (verify (= status "Unknown")))))
 
-(defn ^{Test {:groups ["product_status"
-                       "tier3"
-                       "assert_subscription_field"]
-              :dataProvider "installed-products"}}
-  assert_subscription_field
-  "Tests whether the subscripton field in installed view is populated when the entitlement
-   is subscribed"
-  [_ product]
-  (if (not (= "Not Subscribed"
-              (tasks/ui getcellvalue :installed-view
-                        (tasks/skip-dropdown :installed-view product) 2)))
-    (let [map (ctasks/build-product-map :all? true)
-          gui-value (set (clojure.string/split-lines
-                          (tasks/ui gettextvalue :providing-subscriptions)))
-          cli-value (set (get map product))]
-      (verify (< 0 (count (clojure.set/intersection gui-value cli-value)))))))
+;; (defn ^{Test {:groups ["product_status"
+;;                        "tier3"
+;;                        "assert_subscription_field"]
+;;               :dataProvider "installed-products"}}
+;;   assert_subscription_field
+;;   "Tests whether the subscripton field in installed view is populated when the entitlement
+;;    is subscribed"
+;;   [_ product]
+;;   (if (not (= "Not Subscribed"
+;;               (tasks/ui getcellvalue :installed-view
+;;                         (tasks/skip-dropdown :installed-view product) 2)))
+;;     (let [map (ctasks/build-product-map :all? true)
+;;           gui-value (set (clojure.string/split-lines
+;;                           (tasks/ui gettextvalue :providing-subscriptions)))
+;;           cli-value (set (get map product))]
+;;       (verify (< 0 (count (clojure.set/intersection gui-value cli-value)))))))
 
-(defn ^{AfterGroups {:groups ["product_status"
-                              "tier3"]
-                     :value ["assert_subscription_field"]
-                     :alwaysRun true}}
-  after_assert_subscription_field
-  [_]
-  (tasks/unsubscribe_all)
-  (tasks/unregister))
+;; (defn ^{AfterGroups {:groups ["product_status"
+;;                               "tier3"]
+;;                      :value ["assert_subscription_field"]
+;;                      :alwaysRun true}}
+;;   after_assert_subscription_field
+;;   [_]
+;;   (tasks/unsubscribe_all)
+;;   (tasks/unregister))
+
+;; (defn ^{Test {:groups ["system"
+;;                        "tier1" "acceptance"
+;;                        "tier2"
+;;                        "blockedByBug-1051383"]}}
+;;   check_status_column
+;;   "Asserts that the status column of GUI has only 'Subscribed', 'Partially Subscribed'
+;;    and 'Not Subscribed'"
+;;   [_]
+;;   (try
+;;     (if (not (bool (tasks/ui guiexist :main-window)))
+;;       (tasks/start-app))
+;;     (let [output (get-logging @clientcmd
+;;                               ldtpd-log
+;;                               "check_online_documentation"
+;;                               nil
+;;                               (do
+;;                                 (tasks/ui click :online-documentation)
+;;                                 (sleep 5000)))]
+;;       (verify (bool (tasks/ui appundertest "Firefox")))
+;;       (verify (not (substring? "Traceback" output))))
+;;     (finally
+;;       (run-command "killall -9 firefox"))))
 
 (defn ^{Test {:groups ["system"
-                       "tier1" "acceptance"
-                       "tier2"
-                       "blockedByBug-1051383"]}}
-  check_status_column
-  "Asserts that the status column of GUI has only 'Subscribed', 'Partially Subscribed'
-   and 'Not Subscribed'"
-  [_]
-  (try
-    (if (not (bool (tasks/ui guiexist :main-window)))
-      (tasks/start-app))
-    (let [output (get-logging @clientcmd
-                              ldtpd-log
-                              "check_online_documentation"
-                              nil
-                              (do
-                                (tasks/ui click :online-documentation)
-                                (sleep 5000)))]
-      (verify (bool (tasks/ui appundertest "Firefox")))
-      (verify (not (substring? "Traceback" output))))
-    (finally
-      (run-command "killall -9 firefox"))))
+                       "tier2"]
+              :dataProvider "sorting-headers-at-my-installed-products-view"
+              :description "Given a system is subscribed
+ and I have clicked on the tab 'My Installed Products'
+When I click on a table header 'Product'
+Then I see names of products to be redrawn
+ and the names are sorted some way"}}
+  my_installed_products_table_is_sortable
+  [_ header-name column-index]
+  (tasks/ui selecttab :my-installed-products)
+  (if (< (tasks/ui getrowcount :installed-view) 2)
+    (throw (SkipException. (str "There are less than 2 products installed in the system."))))
+  (verify (tasks/table-cell-header-sorts-its-column-data?
+           :installed-view
+           (keyword header-name)
+           column-index)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; DATA PROVIDERS
@@ -180,10 +198,11 @@
                                                  :or {debug false}}]
   (log/info (str "======= Starting DataProvider: " ns-log "sorting_headers_at_my_installed_products_view"))
   "array of [<header-name> <it's column index - starting from zero>]"
-  (to-array-2d [["my-installed-products-product-header" 0]
-                ["my-installed-products-version-header" 1]
-                ["my-installed-products-status-header" 2]
+  (to-array-2d [;;["my-installed-products-product-header" 0]
+                ;;["my-installed-products-version-header" 1]
+                ;;["my-installed-products-status-header" 2]
                 ["my-installed-products-startdate-header" 3]
-                ["my-installed-products-enddate-header" 4]]))
+                ;;["my-installed-products-enddate-header" 4]
+                ]))
 
 (gen-class-testng)
