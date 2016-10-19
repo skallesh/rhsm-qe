@@ -24,7 +24,9 @@
             Test
             DataProvider
             AfterClass]
-           org.testng.SkipException))
+            org.testng.SkipException
+           [com.github.redhatqe.polarize.metadata TestDefinition]
+           [com.github.redhatqe.polarize.metadata DefTypes$Project]))
 
 (def servicelist (atom {}))
 (def productlist (atom {}))
@@ -88,10 +90,11 @@
     (finally (if (bool (tasks/ui guiexist :date-selection-dialog))
                (tasks/ui closewindow :date-selection-dialog)))))
 
-(defn ^{Test {:groups ["search_status"
-                       "tier2"
-                       "tier1" "acceptance"
-                       "blockedByBug-818282"]}}
+(defn ^{Test           {:groups ["search_status"
+                                 "tier1"
+                                 "acceptance"
+                                 "blockedByBug-818282"]}
+        TestDefinition {:projectID [`DefTypes$Project/PLATTP]}}
   check_ordered_contract_options
   "Checks if contracts in contract selection dialog are ordered based on host type"
   [_]

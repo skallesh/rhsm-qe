@@ -13,7 +13,9 @@
             BeforeClass
             AfterClass
             BeforeGroups
-            Test]))
+            Test])
+  (:import [com.github.redhatqe.polarize.metadata TestDefinition]
+           [com.github.redhatqe.polarize.metadata ProjectType DefTypes$Project]))
 
 (def systemid "/etc/sysconfig/rhn/systemid")
 
@@ -52,10 +54,11 @@
   (verify (tasks/ui exists? :warning-dialog "*"))
   (kill-app))
 
-(defn ^{Test {:groups ["interop"
-                       "tier2"
-                       "blockedByBug-667991"]
-              :dependsOnMethods ["check_warning"]}}
+(defn ^{Test           {:groups           ["interop"
+                                           "tier1"
+                                           "blockedByBug-667991"]
+                        :dependsOnMethods ["check_warning"]}
+        TestDefinition {:projectID [`DefTypes$Project/PLATTP]}}
   check_warning_ok
   "Tests that the RHN Classic warning can be cleared and that the main winow is still open."
   [_]
@@ -79,10 +82,11 @@
   (verify (bool (tasks/ui waittillwindownotexist :main-window 30)))
   (kill-app))
 
-(defn ^{Test {:groups ["interop"
-                       "tier2"
-                       "blockedByBug-667991"]
-              :dependsOnMethods ["check_warning" "check_warning_ok" "check_warning_cancel"]}}
+(defn ^{Test           {:groups           ["interop"
+                                           "tier1"
+                                           "blockedByBug-667991"]
+                        :dependsOnMethods ["check_warning" "check_warning_ok" "check_warning_cancel"]}
+        TestDefinition {:projectID [`DefTypes$Project/PLATTP]}}
   check_no_warning
   "Asserts that no warning is shown when the app is started without the presence of a systemid file."
   [_]

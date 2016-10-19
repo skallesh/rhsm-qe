@@ -22,6 +22,8 @@ import rhsm.cli.tasks.CandlepinTasks;
 import rhsm.data.EntitlementCert;
 import rhsm.data.SubscriptionPool;
 
+import com.github.redhatqe.polarize.metadata.TestDefinition;
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
 
 /**
  * @author jsefler
@@ -34,7 +36,7 @@ public class ManagementAddOnTests extends SubscriptionManagerCLITestScript {
 	
 	// Test methods ***********************************************************************
 	
-
+    @TestDefinition(projectID={Project.PLATTP})
 	@Test(	description="verify that the entitlement cert granted by subscribing to a management add-on product does not contain a content namespace.",
 			groups={},
 			dependsOnGroups={},
@@ -49,7 +51,8 @@ public class ManagementAddOnTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(entitlementCert.contentNamespaces.isEmpty(),"There are no content namespaces in the entitlement cert granted after subscribing to management add-on subscription pool: "+managementAddOnPool);
 	}
 
-	
+
+	@TestDefinition(projectID={Project.PLATTP})
 	@Test(	description="verify that the entitlement cert granted by subscribing to a management add-on product does not contain a product namespace.",
 			groups={},
 			dependsOnGroups={},

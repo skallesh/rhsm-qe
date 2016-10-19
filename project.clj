@@ -34,7 +34,7 @@
                  [test-clj.testng "1.1.0-SNAPSHOT"]
                  [levand/immuconf "0.1.0"]
                  [mount "0.1.10"]
-                 [cheshire "5.5.0"]]
+                 [com.github.redhatqe.polarize/polarize "0.5.0"]]
 
   ;lein1
   :dev-dependencies [[fn.trace "1.3.2.0-SNAPSHOT"]
@@ -50,7 +50,9 @@
                                 :snapshots {:update :always}}}
   :javac-options {:debug "on"}
   ;:javac-options ["-target" "1.7" "-source" "1.7"]
-  ;:jvm-opts ["-Xdebug" "-Xrunjdwp:transport=dt_socket,address=13172,server=y,suspend=n"]
+  ;; uncomment this to remote debug.  This is useful to debug annotation processing or xunit importing which can't be
+  ;; handled through the regular clojure debugger
+  ;:jvm-opts ["-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5007"]
 
   :repl-options {:timeout 120000})
 

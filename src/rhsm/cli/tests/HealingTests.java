@@ -28,6 +28,9 @@ import rhsm.data.SubscriptionPool;
 import com.redhat.qe.tools.SSHCommandResult;
 import com.redhat.qe.tools.SSHCommandRunner;
 
+import com.github.redhatqe.polarize.metadata.TestDefinition;
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+
 /**
  * @author jsefler
  *
@@ -37,7 +40,7 @@ import com.redhat.qe.tools.SSHCommandRunner;
 public class HealingTests extends SubscriptionManagerCLITestScript {
 	
 	// Test methods ***********************************************************************
-
+    @TestDefinition(projectID=Project.PLATTP)
 	@Test(	description="a new system consumer's autoheal attribute defaults to true (on)",
 			groups={},
 			priority=100,
@@ -51,7 +54,8 @@ public class HealingTests extends SubscriptionManagerCLITestScript {
 		JSONObject jsonConsumer = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword, sm_serverUrl, "/consumers/"+consumerId));
 		Assert.assertTrue(jsonConsumer.getBoolean("autoheal"), "A new system consumer's autoheal attribute value defaults to true.");
 	}
-	
+
+	@TestDefinition(projectID={Project.PLATTP})
 	@Test(	description="using the candlepin api, a consumer's autoheal attribute can be toggled off/on",
 			groups={},
 			priority=200, dependsOnMethods={"VerifyAutohealAttributeDefaultsToTrueForNewSystemConsumer_Test"},
@@ -68,7 +72,7 @@ public class HealingTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(jsonConsumer.getBoolean("autoheal"), "A consumer's autoheal attribute value can be toggled on (expected value=true).");
 	}
 	
-	
+	@TestDefinition(projectID={Project.PLATTP})
 	@Test(	description="using autoheal module, a consumer's autoheal attribute can be toggled off/on",
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-976867"},
 			enabled=true)
@@ -103,7 +107,7 @@ public class HealingTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(result.getStdout().trim(), "Auto-attach preference: enabled", "Stdout from the auto-attach --show.");
 	}
 	
-	
+	@TestDefinition(projectID={Project.PLATTP})
 	@Test(	description="run auto-attach module without being registered",
 			groups={"blockedByBug-976867"},
 			enabled=true)
