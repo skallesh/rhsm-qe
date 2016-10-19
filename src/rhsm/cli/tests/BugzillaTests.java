@@ -2602,7 +2602,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@Test(description = "verify tracebacks occur running yum repolist after subscribing to a pool", groups = {
+	@Test(description = "verify fix for Bug 874147 - python-ethtool api changed causing facts to list ipv4 address as \"unknown\"", groups = {
 			"VerifyipV4Facts", "blockedByBug-874147" }, enabled = true)
 	public void VerifyipV4Facts() throws JSONException, Exception {
 		Boolean pattern = false;
@@ -2623,7 +2623,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@Test(description = "verify tracebacks occur running yum repolist after subscribing to a pool", groups = {
+	@Test(description = "verify fix for Bug 886604 - etc/yum.repos.d/ does not exist, turning manage_repos off.", groups = {
 			"VerifyRepoFileExistance", "blockedByBug-886604", "blockedByBug-919700" }, enabled = true)
 	public void VerifyRepoFileExistance() throws JSONException, Exception {
 		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
@@ -2648,7 +2648,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@Test(description = "verify tracebacks occur running yum repolist after subscribing to a pool", groups = {
+	@Test(description = "verify fix for Bug 755677 - failing to add a virt unlimited pool to an activation key", groups = {
 			"AddingVirtualPoolToActivationKey", "blockedByBug-755677" }, enabled = true)
 	public void AddingVirtualPoolToActivationKey() throws JSONException, Exception {
 		Integer addQuantity = 1;

@@ -16,7 +16,7 @@
             [rhsm.gui.tasks.tasks :as tasks]
             [rhsm.gui.tasks.candlepin-tasks :as ctasks]
             [rhsm.gui.tests.base :as base]
-             rhsm.gui.tasks.ui)
+            rhsm.gui.tasks.ui)
   (:import [org.testng.annotations
             BeforeClass
             BeforeGroups
@@ -49,7 +49,7 @@
          cert (first (shuffle (split certs #"\n")))]
      (-> (cji/file cert-dir cert) .getPath)))
   ([]
-    (get-valid-import-cert importable-certs-path)))
+   (get-valid-import-cert importable-certs-path)))
 
 (defn create-import-certs
   "Creates importable .pem files in cert-dir given valid entitlements in entitle-dir
@@ -61,9 +61,9 @@
   (safe-delete cert-dir)
   (make-dir cert-dir)
   (-> (format "semanage fcontext -a -s system_u -t cert_t \"%s(/.*)?\""  (clojure.string/replace cert-dir #"/*$" ""))
-     run-command)
+      run-command)
   (-> (format "restorecon -v -R \"%s\"" cert-dir)
-     run-command)
+      run-command)
   (let [entitlements (split (:stdout (run-command (format "ls -A %s | grep -v key " entitle-dir))) #"\.pem\n")]
     (doseq [ent entitlements]
       (let [e (str entitle-dir "/" ent)
@@ -78,9 +78,9 @@
   (safe-delete imp-ent-cert-dir)
   (make-dir imp-ent-cert-dir)
   (-> (format "semanage fcontext -a -s system_u -t cert_t \"%s(/.*)?\""  (clojure.string/replace imp-ent-cert-dir #"/*$" ""))
-     run-command)
+      run-command)
   (-> (format "restorecon -v -R \"%s\"" imp-ent-cert-dir)
-     run-command)
+      run-command)
   (let [[user pw org] (for [x [:username :password :owner-key]] (x @config))
         orig-ent-cert-dir (tasks/conf-file-value "entitlementCertDir")]
     (run-command (format "subscription-manager register --user=%s --password=%s --org=%s" user pw org))
@@ -135,7 +135,7 @@
       false)))
 
 (defn ^{Test {:groups ["import"
-                       "tier1"
+                       "tier2"
                        "blockedByBug-712980"
                        ;checking this one in the function
                        ;"blockedByBug-860344"
@@ -189,7 +189,7 @@
              :entname entname})))
 
 (defn ^{Test {:groups ["import"
-                       "tier1"]
+                       "tier2"]
               :dependsOnMethods ["import_valid_cert"]}}
   import_unregister
   "Asserts that imported certs are sucessfully removed after unregister."
@@ -215,7 +215,7 @@
   (reset! importedcert nil))
 
 (defn ^{Test {:groups ["import"
-                       "tier1"
+                       "tier2"
                        "blockedByBug-691784"
                        "blockedByBug-723363"
                        "blockedByBug-1142400"]
@@ -254,21 +254,21 @@
 
 (defn get-random-file
   ([path filter]
-     (let [path (if-not (trailing-slash? path)
-                  (add-trailing-slash path)
-                  path)
-           certsindir (split-lines
-                       (:stdout
-                        (run-command (str "ls " path filter))))
-           tmpcertname (rand-nth certsindir)
-           certname (str tmpcertpath "a" tmpcertname)]
-       (run-command (str "/bin/cp -f " path tmpcertname " " certname))
-       certname))
+   (let [path (if-not (trailing-slash? path)
+                (add-trailing-slash path)
+                path)
+         certsindir (split-lines
+                     (:stdout
+                      (run-command (str "ls " path filter))))
+         tmpcertname (rand-nth certsindir)
+         certname (str tmpcertpath "a" tmpcertname)]
+     (run-command (str "/bin/cp -f " path tmpcertname " " certname))
+     certname))
   ([path]
-     (get-random-file path "")))
+   (get-random-file path "")))
 
 (defn ^{Test {:groups ["import"
-                       "tier1"
+                       "tier2"
                        "blockedByBug-702075"]}}
   import_random
   "Asserts that a random file cannot be imported."
@@ -279,7 +279,7 @@
     (import-bad-cert certname :invalid-cert)))
 
 (defn ^{Test {:groups ["import"
-                       "tier2"
+                       "tier3"
                        "blockedByBug-702075"]}}
   import_entitlement
   "Asserts that an entitlement cannot be imported."
@@ -288,7 +288,7 @@
     (import-bad-cert certname :invalid-cert)))
 
 (defn ^{Test {:groups ["import"
-                       "tier2"
+                       "tier3"
                        "blockedByBug-702075"]}}
   import_key
   "Asserts that a product key cannot be imported."
@@ -297,7 +297,7 @@
     (import-bad-cert certname :invalid-cert)))
 
 (defn ^{Test {:groups ["import"
-                       "tier2"
+                       "tier3"
                        "blockedByBug-702075"]}}
 
   import_product
@@ -307,7 +307,7 @@
     (import-bad-cert certname :invalid-cert)))
 
 (defn ^{Test {:groups ["import"
-                       "tier1"
+                       "tier2"
                        "blockedByBug-691788"]
               :dependsOnMethods ["import_random"]}}
   import_and_reopen
@@ -318,7 +318,7 @@
   (verify (bool (tasks/ui guiexist :main-window))))
 
 (defn ^{Test {:groups ["import"
-                       "tier1"
+                       "tier2"
                        "blockedByBug-702075"
                        "blockedByBug-748912"
                        "blockedByBug-877452"]}}
@@ -342,7 +342,6 @@
   (let [rows (tasks/ui getrowcount table)
         rand-row (rand-int (inc rows))]
     (tasks/ui selectrowindex table rand-row)))
-
 
 (defn cert-map-seq
   "Converts the contents of an entitlement cert into an intermediate map form
@@ -391,7 +390,6 @@
         filtered (filter #(not (nil-keys? %)) ms)]
     {fname (reduce reduce-parse-cert {} filtered)}))
 
-
 (defn map-all-certs
   "Generates a lazy sequence of all the certs in a pretty map form
 
@@ -399,10 +397,9 @@
   - cert-dir: path to the certificates"
   [cert-dir]
   (into {} (let [files (-> (format "ls -A %s/*.pem" cert-dir) run-command :stdout (split #"\n"))
-                  entitle-paths (filter #(not (.contains % "key")) files)]
-              (for [f entitle-paths]
-                (parse-cert f)))))
-
+                 entitle-paths (filter #(not (.contains % "key")) files)]
+             (for [f entitle-paths]
+               (parse-cert f)))))
 
 (defn cert->poolid
   "Creates a 2 element vector of cert filename and poolid
@@ -413,7 +410,6 @@
   (first (for [[ecert data] certmap]
            [ecert (get-in data [:Certificate :pool-id])])))
 
-
 (defn poolid->cert
   "Given a poolid and a sequence of certificate maps, find the entitlement file that corresponds
   to the poolid"
@@ -423,7 +419,7 @@
     (first matched)))
 
 (defn ^{Test {:groups ["import"
-                       "tier1"
+                       "tier2"
                        "blockedByBug-1240553"]
               :description "Tests if imported cert shows up in both CLI consumed list and the My Subscriptions tab
 
@@ -440,7 +436,7 @@
   (try+ (tasks/register-with-creds :re-register? false)
         (catch [:type :already-registered] _))
   (let [[subscription _] (first (shuffle (for [[prod id] (ctasks/get-pool-ids)]
-                                                   [prod id])))
+                                           [prod id])))
         _ (do
             (tasks/search)
             (tasks/subscribe subscription))
@@ -461,9 +457,8 @@
     (verify (some #{subscription}
                   (tasks/get-table-elements :my-subscriptions-view 0)))))
 
-
 (defn ^{Test {:groups ["import"
-                       "tier1"
+                       "tier2"
                        "blockedByBug-1141128"]
               :dependsOnMethods ["import_validate_cert_shows_in_consumed"]
               :description "Verifies that a product that was attached via an import can be removed"}}
@@ -473,6 +468,5 @@
   (tasks/do-to-all-rows-in :my-subscriptions-view 0 tasks/unsubscribe)
   ;; Verify that there are no more subscriptions
   (verify (= 0 (count (tasks/get-table-elements :my-subscriptions-view 0)))))
-
 
 (gen-class-testng)

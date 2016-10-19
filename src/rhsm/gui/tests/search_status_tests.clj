@@ -16,7 +16,7 @@
             [clojure.tools.logging :as log]
             [rhsm.gui.tests.base :as base]
             [rhsm.gui.tasks.candlepin-tasks :as ctasks]
-             rhsm.gui.tasks.ui)
+            rhsm.gui.tasks.ui)
   (:import [org.testng.annotations
             BeforeClass
             BeforeGroups
@@ -24,7 +24,7 @@
             Test
             DataProvider
             AfterClass]
-            org.testng.SkipException))
+           org.testng.SkipException))
 
 (def servicelist (atom {}))
 (def productlist (atom {}))
@@ -34,9 +34,9 @@
 
 (defn allsearch
   ([filter]
-     (tasks/search :match-system? false
-                   :do-not-overlap? false
-                   :contain-text filter))
+   (tasks/search :match-system? false
+                 :do-not-overlap? false
+                 :contain-text filter))
   ([] (allsearch nil)))
 
 (defn build-subscription-map
@@ -65,7 +65,7 @@
   (tasks/restart-app :unregister? true))
 
 (defn ^{Test {:groups ["search_status"
-                       "tier2"
+                       "tier3"
                        "blockedByBug-707041"
                        "blockedByBug-1248821"]}}
   date_picker_traceback
@@ -77,20 +77,20 @@
           (catch [:type :already-registered] _))
     (tasks/ui selecttab :all-available-subscriptions)
     (let [output (get-logging @clientcmd
-                                    "/var/log/ldtpd/ldtpd.log"
-                                    "date_picker_traceback"
-                                    "Traceback"
-                                    (tasks/ui click :calendar)
-                                    (verify
-                                     (bool (tasks/ui waittillwindowexist :date-selection-dialog 10)))
-                                    (tasks/ui click :today))]
+                              "/var/log/ldtpd/ldtpd.log"
+                              "date_picker_traceback"
+                              "Traceback"
+                              (tasks/ui click :calendar)
+                              (verify
+                               (bool (tasks/ui waittillwindowexist :date-selection-dialog 10)))
+                              (tasks/ui click :today))]
       (verify (clojure.string/blank? output)))
     (finally (if (bool (tasks/ui guiexist :date-selection-dialog))
                (tasks/ui closewindow :date-selection-dialog)))))
 
 (defn ^{Test {:groups ["search_status"
-                       "tier1"
-                       "acceptance"
+                       "tier2"
+                       "tier1" "acceptance"
                        "blockedByBug-818282"]}}
   check_ordered_contract_options
   "Checks if contracts in contract selection dialog are ordered based on host type"
@@ -99,14 +99,14 @@
   (tasks/ui selecttab :all-available-subscriptions)
   (tasks/search)
   (let
-      [sub-map (zipmap (range 0 (tasks/ui getrowcount :all-subscriptions-view))
-                       (tasks/get-table-elements :all-subscriptions-view 0 :skip-dropdowns? false))
-       both? (fn [pair] (=  "Both" (try
-                                    (tasks/ui getcellvalue :all-subscriptions-view (key pair) 1)
-                                    (catch Exception e))))
-       row-sub-map (into {} (filter both? sub-map))
-       cli-out (:stdout (run-command "subscription-manager facts --list | grep virt.is_guest"))
-       virt? (= "true" (.toLowerCase (trim (last (split (trim-newline cli-out) #":")))))]
+   [sub-map (zipmap (range 0 (tasks/ui getrowcount :all-subscriptions-view))
+                    (tasks/get-table-elements :all-subscriptions-view 0 :skip-dropdowns? false))
+    both? (fn [pair] (=  "Both" (try
+                                  (tasks/ui getcellvalue :all-subscriptions-view (key pair) 1)
+                                  (catch Exception e))))
+    row-sub-map (into {} (filter both? sub-map))
+    cli-out (:stdout (run-command "subscription-manager facts --list | grep virt.is_guest"))
+    virt? (= "true" (.toLowerCase (trim (last (split (trim-newline cli-out) #":")))))]
     (if-not (empty? row-sub-map)
       (do
         (doseq [map-entry row-sub-map]
@@ -117,10 +117,10 @@
             (let [type-list (tasks/get-table-elements :contract-selection-table 1)]
               (if virt?
                 (verify (not (sorted? type-list)))
-                  (verify (sorted? type-list))))
+                (verify (sorted? type-list))))
             (finally
-             (if (bool (tasks/ui guiexist :contract-selection-dialog))
-               (tasks/ui click :cancel-contract-selection)))))))))
+              (if (bool (tasks/ui guiexist :contract-selection-dialog))
+                (tasks/ui click :cancel-contract-selection)))))))))
 
 (defn ^{Test {:groups ["search_status"
                        "tier3"
@@ -143,8 +143,8 @@
   (tasks/unregister))
 
 (defn ^{Test {:groups ["search_status"
-                       "acceptance"
-                       "tier1"]}}
+                       "tier1" "acceptance"
+                       "tier2"]}}
   check_physical_only_pools
   "Identifies physical only pools from JSON and checks
    whether it throws appropriate error message"
@@ -159,14 +159,14 @@
           virt (trim (re-find #" .*" cli-cmd))
           prod-attr-map (ctasks/build-subscription-attr-type-map :all? true)
           phy-only? (fn [v] (if (not (nil? (re-find #"physical_only" v)))
-                             true false))
+                              true false))
           filter-product (fn [m] (if (not (empty? (filter phy-only? (val m)))) (key m)))
           subscriptions (into [] (filter string? (map filter-product prod-attr-map)))
           subscribe (fn [sub] (try
-                          (tasks/subscribe sub)
-                          (catch Exception e
-                            (let [result (substring? "Error getting subscription:" (.getMessage e))]
-                              result))))]
+                                (tasks/subscribe sub)
+                                (catch Exception e
+                                  (let [result (substring? "Error getting subscription:" (.getMessage e))]
+                                    result))))]
       (reset! virt? virt)
       (if (= @virt? "False")
         (do
@@ -182,7 +182,7 @@
       (tasks/unsubscribe_all))))
 
 (defn ^{Test {:groups ["search_status"
-                       "tier2"
+                       "tier3"
                        "blockedByBug-801434"
                        "blockedByBug-707041"]}}
   check_date_chooser_traceback
@@ -202,7 +202,7 @@
     (finally (tasks/restart-app))))
 
 (defn ^{Test {:groups ["search_status"
-                       "tier2"
+                       "tier3"
                        "blockedByBug-704408"
                        "blockedByBug-801434"]
               :dependsOnMethods ["check_date_chooser_traceback"]}}
@@ -224,7 +224,7 @@
     (finally (tasks/restart-app))))
 
 (defn ^{Test {:groups ["search_status"
-                       "tier2"
+                       "tier3"
                        "blockedByBug-688454"
                        "blockedByBug-704408"]}}
   check_blank_date_search
@@ -261,7 +261,7 @@
       (try
         (if (nil? (@productlist product))
           (throw (SkipException.
-            (str "Product: '" product "' does not valid subscription"))))
+                  (str "Product: '" product "' does not valid subscription"))))
         (allsearch product)
         (let [expected (@productlist product)
               seen (into [] (tasks/get-table-elements
@@ -275,13 +275,13 @@
             (verify (not-nil? (some #{s} matches))))
           (doseq [e expected]
             (verify (not-nil? (some #{e} seen)))))
-    (finally
-      (if (bool (tasks/ui guiexist :filter-dialog))
-        (tasks/ui click :close-filters))
-      (tasks/search))))))
+        (finally
+          (if (bool (tasks/ui guiexist :filter-dialog))
+            (tasks/ui click :close-filters))
+          (tasks/search))))))
 
 (defn ^{Test {:groups ["search_status"
-                       "tier2"
+                       "tier3"
                        "blockedByBug-817901"]}}
   check_no_search_results_message
   "Tests the message when the search returns no results."
@@ -296,7 +296,7 @@
     (verify (not (= 0 (tasks/ui getrowcount :all-subscriptions-view))))))
 
 (defn ^{Test {:groups ["search_status"
-                       "tier2"
+                       "tier3"
                        "blockedByBug-817901"]}}
   check_please_search_message
   "Tests for the initial message before you search."
@@ -326,7 +326,7 @@
     (verify (= guiservice service))))
 
 (defn ^{Test {:group ["search_status"
-                      "tier2"
+                      "tier3"
                       "blockedByBug-865193"]
               :dataProvider "all-subscriptions"
               :priority (int 99)}}
@@ -334,8 +334,8 @@
   "Checks if provide products is populated in all available subscriptions view"
   [_ subscription]
   (tasks/skip-dropdown :all-subscriptions-view subscription)
-  (verify ( = (sort (get @subs-contractlist subscription))
-              (sort (tasks/get-table-elements :all-available-bundled-products 0)))))
+  (verify (= (sort (get @subs-contractlist subscription))
+             (sort (tasks/get-table-elements :all-available-bundled-products 0)))))
 
 (defn ^{Test {:group ["search_status"
                       "tier3"]

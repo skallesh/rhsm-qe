@@ -246,6 +246,8 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 		// assert that the host system is rhel7+
 		if (Integer.valueOf(clienttasks.redhatReleaseX)<7) throw new SkipException("Installation of docker.rpm is only applicable on RHEL7+");
 		if (!clienttasks.arch.equals("x86_64")) throw new SkipException("Installation of docker.rpm is only applicable on arch x86_64");
+		if (clienttasks.variant.equals("Workstation")) log.warning("Installation of docker on Workstation is blocked by dependedncy on oci-register-machine >= 1:0-1.8.  TODO: need a blocked by bug number.  The Orion project will expand the installablility of docker to include Workstation.");	// TODO need a blocked by bug number.
+		if (!clienttasks.variant.equals("Server") && !clienttasks.variant.equals("Workstation")) throw new SkipException("Installation of docker.rpm is only applicable on variant Server and Workstation.  This variant is '"+clienttasks.variant+"'.");
 		
 		// make sure any existing docker processes are stopped
 		client.runCommandAndWait("systemctl stop docker.service");
@@ -277,8 +279,11 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 		if (!sm_serverType.equals(CandlepinType.standalone)) {
 			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, true, null, null, null, null);
 			if (clienttasks.isRhelProductCertSubscribed()) {
+				// valid repos:
+				//	rhel-7-server-extras-rpms/x86_64
+				//	rhel-7-workstation-extras-rpms/x86_64
 				//avoid "No packages marked for update" by ignoring results of yumUpdatePackageFromRepo(...)
-				clienttasks.yumDoPackageFromRepo_("update","docker", "rhel-7-server-extras-rpms", "--nogpgcheck");
+				clienttasks.yumDoPackageFromRepo_("update","docker", "rhel-7-"+clienttasks.variant.toLowerCase()+"-extras-rpms", "--nogpgcheck");
 			}
 		}
 		

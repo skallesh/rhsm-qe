@@ -18,8 +18,8 @@
             BeforeClass
             BeforeGroups
             Test]
-            org.testng.SkipException
-            [com.redhat.qe.auto.bugzilla BzChecker]))
+           org.testng.SkipException
+           [com.redhat.qe.auto.bugzilla BzChecker]))
 
 (def window-name "Choose Service")
 
@@ -76,22 +76,22 @@
   that firstboot related tests are skipped for newer versions of RHEL. They are obsolete in such case."
   (let [[_ major minor] (re-find #"(\d)\.(\d)" version)]
     (match [major minor]
-           ["7" (a :guard #(>= (Integer. %) 2))] (throw (SkipException. "Firsboot only applies to RHEL < 7.2"))
-           ["8" _]   (throw (SkipException. "Firsboot only applies to RHEL < 7.2"))
-           ["5" "7"] (throw (SkipException. "Skipping firstboot tests on RHEL 5.7 as the tool is not updated"))
-           :else [major minor])))
+      ["7" (a :guard #(>= (Integer. %) 2))] (throw (SkipException. "Firsboot only applies to RHEL < 7.2"))
+      ["8" _]   (throw (SkipException. "Firsboot only applies to RHEL < 7.2"))
+      ["5" "7"] (throw (SkipException. "Skipping firstboot tests on RHEL 5.7 as the tool is not updated"))
+      :else [major minor])))
 
 (defn ^{BeforeClass {:groups ["setup"]}}
   firstboot_init [_]
   (try
-    (let [[rhel-version-major rhel-version-minor] (skip-by-rhel-release (get-release :true)) ]
+    (let [[rhel-version-major rhel-version-minor] (skip-by-rhel-release (get-release :true))]
       (skip-if-bz-open "922806")
       (skip-if-bz-open "1016643" (= rhel-version-major "7"))
       (when (= rhel-version-major "7") (base/startup nil)))
     ;; new rhsm and classic have to be totally clean for this to run
     (run-command "subscription-manager clean")
     (let [sysidpath "/etc/sysconfig/rhn/systemid"]
-      (run-command (str "[ -f " sysidpath " ] && rm " sysidpath )))
+      (run-command (str "[ -f " sysidpath " ] && rm " sysidpath)))
     (catch Exception e
       (reset! (skip-groups :firstboot) true)
       (throw e))))
@@ -105,8 +105,8 @@
   (zero-proxy-values))
 
 (defn ^{Test {:groups ["firstboot"
-                       "tier1"
-                       "acceptance"
+                       "tier2"
+                       "tier1" "acceptance"
                        "blockedByBug-1020542"
                        "blockedByBug-1020672"
                        "blockedByBug-1031176"
@@ -136,7 +136,7 @@
                   Skipping firstboot_rhel7_register test.")))))
 
 (defn ^{Test {:groups ["firstboot"
-                       "tier1"]
+                       "tier2"]
               :dependsOnMethods ["firstboot_rhel7_register"]}}
   firstboot_rhel7_proxy_auth
   "firstboot register with proxy auth test for RHEL7"
@@ -168,7 +168,7 @@
                   Skipping firstboot_rhel7_proxy_auth test.")))))
 
 (defn ^{Test {:groups ["firstboot"
-                       "tier1"]
+                       "tier2"]
               :dependsOnMethods ["firstboot_rhel7_proxy_auth"]}}
   firstboot_rhel7_proxy_noauth
   "firstboot register with proxy noauth test for RHEL7"
@@ -198,7 +198,7 @@
                   Skipping firstboot_rhel7_proxy_noauth test.")))))
 
 (defn ^{Test {:groups ["firstboot"
-                       "tier2"
+                       "tier3"
                        "blockedByBug-973269"
                        "blockedByBug-988411"
                        "blockedByBug-1199211"]
@@ -208,7 +208,7 @@
   [_]
   (if (= "RHEL7" (get-release))
     (throw (SkipException.
-              (str "Skipping firstboot tests on RHEL7 as it's no longer supported !!!!"))))
+            (str "Skipping firstboot tests on RHEL7 as it's no longer supported !!!!"))))
   (try
     (reset_firstboot)
     (tasks/ui click :register-rhsm)
@@ -227,7 +227,7 @@
       (kill_firstboot))))
 
 (defn ^{Test {:groups ["firstboot"
-                       "tier2"
+                       "tier3"
                        "blockedByBug-973269"
                        "blockedByBug-988411"]
               :dependsOnMethods ["firstboot_enable_proxy_auth"]}}
@@ -236,7 +236,7 @@
   [_]
   (if (= "RHEL7" (get-release))
     (throw (SkipException.
-              (str "Skipping firstboot tests on RHEL7 as it's no longer supported !!!!"))))
+            (str "Skipping firstboot tests on RHEL7 as it's no longer supported !!!!"))))
   (if (= "RHEL5" (get-release))
     (throw (SkipException.
             (str "Skipping 'firstboot_enable_proxy_noauth' test on RHEL5 "
@@ -257,14 +257,14 @@
       (kill_firstboot))))
 
 (defn ^{Test {:groups ["firstboot"
-                       "tier2"]
+                       "tier3"]
               :dependsOnMethods ["firstboot_enable_proxy_noauth"]}}
   firstboot_disable_proxy
   "Checks whether the proxy and authentication is disabled in rhsm-conf file"
   [_]
   (if (= "RHEL7" (get-release))
     (throw (SkipException.
-              (str "Skipping firstboot tests on RHEL7 as it's no longer supported !!!!"))))
+            (str "Skipping firstboot tests on RHEL7 as it's no longer supported !!!!"))))
   (reset_firstboot)
   (tasks/ui click :register-rhsm)
   (tasks/disableproxy true)
@@ -289,7 +289,7 @@
                   (try+
                    (tasks/firstboot-register username password)
                    (catch [:type expected-error-type]
-                       {:keys [type]}
+                          {:keys [type]}
                      type)))]
     (let [thrown-error (apply test-fn [user pass recovery])
           expected-error recovery]
@@ -298,7 +298,7 @@
       (verify (tasks/fbshowing? :firstboot-user)))))
 
 (defn ^{Test {:groups ["firstboot"
-                       "tier2"
+                       "tier3"
                        "blockedByBug-642660"
                        "blockedByBug-863572"]}}
   firstboot_check_back_button_state
@@ -308,7 +308,7 @@
   [_]
   (if (= "RHEL7" (get-release))
     (throw (SkipException.
-              (str "Skipping firstboot tests on RHEL7 as it's no longer supported !!!!"))))
+            (str "Skipping firstboot tests on RHEL7 as it's no longer supported !!!!"))))
   (reset_firstboot)
   (tasks/ui click :register-rhsm)
   (tasks/ui click :firstboot-forward)
@@ -320,7 +320,7 @@
     (tasks/firstboot-register (@config :username) (@config :password) :back-button? true)))
 
 (defn ^{Test {:groups ["firstboot"
-                       "tier2"
+                       "tier3"
                        "blockedByBug-872727"
                        "blockedByBug-973317"]
               :dependsOnMethods ["firstboot_check_back_button_state"]}}
@@ -329,7 +329,7 @@
   [_]
   (if (= "RHEL7" (get-release))
     (throw (SkipException.
-              (str "Skipping firstboot tests on RHEL7 as it's no longer supported !!!!"))))
+            (str "Skipping firstboot tests on RHEL7 as it's no longer supported !!!!"))))
   (reset_firstboot)
   (tasks/ui click :register-rhsm)
   (tasks/ui click :firstboot-forward)
@@ -343,7 +343,7 @@
 
 ;; https://tcms.engineering.redhat.com/case/72669/?from_plan=2806
 (defn ^{Test {:groups ["firstboot"
-                       "tier1"
+                       "tier2"
                        "blockedByBug-642660"
                        "blockedByBug-1142495"]}}
   firstboot_skip_register
@@ -351,7 +351,7 @@
   [_]
   (if (= "RHEL7" (get-release))
     (throw (SkipException.
-              (str "Skipping firstboot tests on RHEL7 as it's no longer supported !!!!"))))
+            (str "Skipping firstboot tests on RHEL7 as it's no longer supported !!!!"))))
   (kill_firstboot)
   (run-command "subscription-manager unregister")
   (run-command "subscritption-manager clean")
@@ -367,14 +367,14 @@
 
 ;; https://tcms.engineering.redhat.com/case/72670/?from_plan=2806
 (defn ^{Test {:groups ["firstboot"
-                       "tier1"]
+                       "tier2"]
               :dependsOnMethods ["firstboot_skip_register"]}}
   firstboot_check_register_sm_unregistered
   "Checks whether firstboot navigates to register screen when subscription manager is unregistered"
   [_]
   (if (= "RHEL7" (get-release))
     (throw (SkipException.
-              (str "Skipping firstboot tests on RHEL7 as it's no longer supported !!!!"))))
+            (str "Skipping firstboot tests on RHEL7 as it's no longer supported !!!!"))))
   (run-command "subscription-manager unregister")
   (kill_firstboot)
   (run-command "subscription-manager clean")
@@ -400,7 +400,7 @@
                           "Subscription Management Registration"))))
 
 (defn ^{Test {:groups ["firstboot"
-                       "tier1"
+                       "tier2"
                        "blockedByBug-973317"]}}
   firstboot_back_button_after_register
   "Verifies that on clicking backbutton after registering from Create User
@@ -408,7 +408,7 @@
   [_]
   (if (= "RHEL7" (get-release))
     (throw (SkipException.
-              (str "Skipping firstboot tests on RHEL7 as it's no longer supported !!!!"))))
+            (str "Skipping firstboot tests on RHEL7 as it's no longer supported !!!!"))))
   (reset_firstboot)
   (tasks/ui click :register-rhsm)
   (tasks/ui click :firstboot-forward)
@@ -419,15 +419,15 @@
   (verify (not (tasks/fbshowing? :firstboot-window window-name))))
 
 (data-driven firstboot_register_invalid_user {Test {:groups ["firstboot"
-                                                             "tier1"]}}
-  [^{Test {:groups ["blockedByBug-703491"]}}
-   (if-not (assert-skip :firstboot)
-     (do
-       ["sdf" "sdf" :invalid-credentials]
-       ["" "" :no-username]
-       ["" "password" :no-username]
-       ["sdf" "" :no-password])
-     (to-array-2d []))])
+                                                             "tier2"]}}
+             [^{Test {:groups ["blockedByBug-703491"]}}
+              (if-not (assert-skip :firstboot)
+                (do
+                  ["sdf" "sdf" :invalid-credentials]
+                  ["" "" :no-username]
+                  ["" "password" :no-username]
+                  ["sdf" "" :no-password])
+                (to-array-2d []))])
 
 ;; TODO: https://bugzilla.redhat.com/show_bug.cgi?id=700601
 

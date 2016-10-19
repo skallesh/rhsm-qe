@@ -46,8 +46,8 @@
     (tasks/restart-app :force-kill? true)))
 
 (defn ^{Test {:groups ["registration"
-                       "tier1"
-                       "acceptance"
+                       "tier2"
+                       "tier1" "acceptance"
                        "blockedByBug-995242"
                        "blockedByBug-1251004"]
               :dataProvider "userowners"}}
@@ -59,7 +59,7 @@
      (tasks/register user pass :owner owner)
      (tasks/register user pass))
    (catch [:type :already-registered]
-       {:keys [unregister-first]} (unregister-first)))
+          {:keys [unregister-first]} (unregister-first)))
   (verify (not (tasks/ui showing? :register-system)))
   (if owner
     (try
@@ -79,7 +79,7 @@
                  (tasks/ui click :close-facts))))))
 
 (defn ^{Test {:groups ["registration"
-                       "tier1"
+                       "tier2"
                        "blockedByBug-1255805"
                        "blockedByBug-1283749"
                        "blockedByBug-718045"
@@ -98,8 +98,8 @@
   (let [test-fn (fn [args]
                   (try+ (apply tasks/register args)
                         (catch
-                            [:type expected-error]
-                            {:keys [type]}
+                         [:type expected-error]
+                         {:keys [type]}
                           type)))]
     (let [thrown-error (test-fn register-args)]
       (verify (and (= thrown-error expected-error) (action exists? :register-system)))
@@ -108,34 +108,34 @@
       (tasks/close-error-dialog))))
 
 (defn ^{Test {:groups ["registration"
-                       "tier1"
-                       "acceptance"]}}
+                       "tier2"
+                       "tier1" "acceptance"]}}
   unregister
   "Simple unregister."
   [_]
   (try+ (tasks/register (@config :username) (@config :password))
         (catch
-            [:type :already-registered]
-            {:keys [unregister-first]} (unregister-first)))
+         [:type :already-registered]
+         {:keys [unregister-first]} (unregister-first)))
   (tasks/unregister)
   (verify (action exists? :register-system)))
 
 (defn ^{Test {:groups ["registration"
-                       "tier2"
+                       "tier3"
                        "blockedByBug-918303"]
               :priority (int 10)}}
   register_check_syslog
   "Asserts that register events are logged in the syslog."
   [_]
   (let [output (get-logging @clientcmd
-                                  sys-log
-                                  "register_check_syslog"
-                                  nil
-                                  (tasks/register-with-creds))]
-      (verify (not (blank? output)))))
+                            sys-log
+                            "register_check_syslog"
+                            nil
+                            (tasks/register-with-creds))]
+    (verify (not (blank? output)))))
 
 (defn ^{Test {:groups ["registration"
-                       "tier2"
+                       "tier3"
                        "blockedByBug-918303"]
               :dependsOnMethods ["register_check_syslog"]}}
   unregister_check_syslog
@@ -143,17 +143,17 @@
   [_]
   ;(tasks/register-with-creds)
   (let [output (get-logging @clientcmd
-                                  sys-log
-                                  "unregister_check_syslog"
-                                  nil
-                                  (tasks/unregister))]
-      (verify (not (blank? output)))))
+                            sys-log
+                            "unregister_check_syslog"
+                            nil
+                            (tasks/unregister))]
+    (verify (not (blank? output)))))
 
 (defn ^{Test {:groups ["registration"
-                       "tier1"
+                       "tier2"
                        "blockedByBug-822706"]
               ;:dependsOnMethods ["simple_register"]
-              }}
+}}
   check_auto_to_register_button
   "Checks that the register button converts to the auto-subscribe button after register."
   [_]
@@ -165,7 +165,7 @@
                (not (tasks/ui showing? :register-system)))))
 
 (defn ^{Test {:groups ["registration"
-                       "tier2"
+                       "tier3"
                        "blockedByBug-878609"]}}
   verify_password_tip
   "Checks to see if the passeword tip no longer contains red.ht"
@@ -182,7 +182,7 @@
       (tasks/ui click :register-close))))
 
 (defn ^{Test {:groups ["registration"
-                       "tier2"
+                       "tier3"
                        "blockedByBug-920091"
                        "blockedByBug-1039753"
                        "blockedByBug-1037712"
@@ -213,7 +213,7 @@
     (verify (not (substring? "Traceback" @cmdout)))))
 
 (defn ^{Test {:groups ["registration"
-                       "tier1"
+                       "tier2"
                        "blockedByBug-891621"
                        "activation-register"]}}
   check_activation_key_register_dialog
@@ -231,12 +231,12 @@
     (tasks/ui click :register)
     (tasks/ui waittillguiexist :register-dialog)
     (verify (= "Please enter your Red Hat account information:"
-      (tasks/ui gettextvalue :register-dialog "registration_header_label")))
+               (tasks/ui gettextvalue :register-dialog "registration_header_label")))
     (finally
       (do
-       (log/info "Finally Closing Dialog...")
-       (if (bool (tasks/ui guiexist :register-dialog))
-         (tasks/ui click :register-close))))))
+        (log/info "Finally Closing Dialog...")
+        (if (bool (tasks/ui guiexist :register-dialog))
+          (tasks/ui click :register-close))))))
 
 (defn ^{AfterGroups {:groups ["registration"]
                      :value ["activation-register"]
@@ -248,7 +248,7 @@
   (tasks/restart-app :force-kill? true))
 
 (defn ^{Test {:groups ["registration"
-                       "tier1"
+                       "tier2"
                        "blockedByBug-1268102"]}}
   register_multi_click
   "Asserts that you can't click the register button multiple times
@@ -268,7 +268,7 @@
   (tasks/ui click :register-close))
 
 (defn ^{Test {:groups ["registration"
-                       "tier2"
+                       "tier3"
                        "blockedByBug-1268094"]}}
   unregister_traceback
   "Asserts that a traceback does not occur during unregister
@@ -289,7 +289,7 @@
                                           (tasks/unregister)))))))
 
 (defn ^{Test {:groups ["registration"
-                       "acceptance"
+                       "tier1" "acceptance"
                        "blockedByBug-1330054"]}}
   check_default_subscription_url
   [_]
@@ -336,7 +336,7 @@
     (to-array-2d [])))
 
 (defn ^{DataProvider {:name "bad-credentials and corresponding errors"}}
-  get_bad_credentials_and_corresponding_errors [ _ ]
+  get_bad_credentials_and_corresponding_errors [_]
   (if-not (assert-skip :register)
     (to-array-2d [[["sdf" "sdf"] :invalid-credentials]
                   [["test user" "password"] :invalid-credentials]
