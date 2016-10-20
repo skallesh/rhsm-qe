@@ -304,8 +304,8 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript {
 	 */
 	protected String createTestPool(int startingMinutesFromNow, int endingMinutesFromNow)
 			throws JSONException, Exception {
-		String name = "AutoHealTestProduct";
-		String productId = "AutoHealForExpiredProduct";
+		String name = "Guest_limit_TestProduct";
+		String productId = "Guest_limit_Product";
 		Map<String, String> attributes = new HashMap<String, String>();
 		attributes.clear();
 		attributes.put("version", "1.0");
