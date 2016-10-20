@@ -483,6 +483,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		//Assert.assertEquals(result.getStdout().trim(), String.format("Error: %s is not a valid repo id. Use --list option to see valid repos.",invalidRepo), "Stdout from an attempt to enable an invalid-repo-id.");	// changed by bug 878634
 		String expectedStdout = String.format("Error: %s is not a valid repo ID. Use --list option to see valid repos.",invalidRepo);
 		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.6-1")) expectedStdout = String.format("Error: %s is not a valid repository ID. Use --list option to see valid repositories.",invalidRepo);	// bug 1122530 commit add5a9b746f9f2af147a7e4622b897a46b5ef132
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.17.10-1")) expectedStdout = String.format("Error: '%s' does not match a valid repository ID. Use \"subscription-manager repos --list\" to see valid repositories.",invalidRepo);	// bug 1351009 subscription-manager RHEL7.3 commit eaa748187bee110a19184864b1775705b653f629
 		Assert.assertEquals(result.getStdout().trim(), expectedStdout, "Stdout from an attempt to enable an invalid-repo-id.");
 		Assert.assertEquals(result.getStderr().trim(), "", "Stderr from an attempt to enable an invalid-repo-id.");
 	}
@@ -501,6 +502,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		//Assert.assertEquals(result.getStdout().trim(), String.format("Error: %s is not a valid repo id. Use --list option to see valid repos.",invalidRepo), "Stdout from an attempt to disable an invalid-repo-id.");	// changed by bug 878634
 		String expectedStdout = String.format("Error: %s is not a valid repo ID. Use --list option to see valid repos.",invalidRepo);
 		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.6-1")) expectedStdout = String.format("Error: %s is not a valid repository ID. Use --list option to see valid repositories.",invalidRepo);	// bug 1122530 commit add5a9b746f9f2af147a7e4622b897a46b5ef132
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.17.10-1")) expectedStdout = String.format("Error: '%s' does not match a valid repository ID. Use \"subscription-manager repos --list\" to see valid repositories.",invalidRepo);	// bug 1351009 subscription-manager RHEL7.3 commit eaa748187bee110a19184864b1775705b653f629
 		Assert.assertEquals(result.getStdout().trim(), expectedStdout, "Stdout from an attempt to disable an invalid-repo-id.");
 		Assert.assertEquals(result.getStderr().trim(), "", "Stderr from an attempt to disable an invalid-repo-id.");
 	}
@@ -527,6 +529,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(result.getStderr().trim(), "", "Stderr from an attempt to disable an invalid-repo-id.");
 		String expectedStdoutMsgFormat = "Error: %s is not a valid repo ID. Use --list option to see valid repos.";
 		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.6-1")) expectedStdoutMsgFormat = "Error: %s is not a valid repository ID. Use --list option to see valid repositories.";	// bug 1122530 commit add5a9b746f9f2af147a7e4622b897a46b5ef132
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.17.10-1")) expectedStdoutMsgFormat = "Error: '%s' does not match a valid repository ID. Use \"subscription-manager repos --list\" to see valid repositories.";	// bug 1351009 subscription-manager RHEL7.3 commit eaa748187bee110a19184864b1775705b653f629
 		for (String invalidRepo : invalidRepos) {
 			String expectedStdoutMsg = String.format(expectedStdoutMsgFormat,invalidRepo);
 			Assert.assertTrue(result.getStdout().contains(expectedStdoutMsg), "Stdout from an attempt to enable/disable multiple invalid repos contains expected message: "+expectedStdoutMsg);		
@@ -1198,6 +1201,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	@BeforeClass(groups={"setup"})
 	public void setupBeforeClass() throws JSONException, Exception {
 		currentProductCerts = clienttasks.getCurrentProductCerts();
+		if (clienttasks.getCurrentConsumerId()==null) clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, false, null, null, (String)null, null, null, null, true, false, null, null, null);
 		modifierSubscriptionData = getModifierSubscriptionDataAsListOfLists(null);
 	}
 	

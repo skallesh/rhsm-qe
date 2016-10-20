@@ -16,6 +16,7 @@
         gnome.ldtp)
   (:require [clojure.tools.logging :as log]
             [clojure.data.json :as json]
+            [clojure.core.match :as match]
             [rhsm.gui.tasks.candlepin-tasks :as ctasks]
             rhsm.gui.tasks.ui) ;;need to load ui even if we don't refer to it because of the extend-protocol in there.
   (:import [com.redhat.qe.tools RemoteFileTasks]
@@ -1052,3 +1053,31 @@
                      rem (dissoc m :subscription-name)]
                  (assoc coll sub-name rem)))]
     (reduce rdcr {} (parse-list output))))
+
+(defn table-cell-header-sorts-its-column-data?
+  [table-name header-name column-index]
+  "The function compares data in one column when click is perfomed on a header twice.
+Everytime a click is perfomed on the header the data should be sorted in other way.
+
+Column index starts from 0"
+  (letfn [(compare-strings  [list-of-strings] (->> list-of-strings
+                                                   (partition 2 1)
+                                                   (map #(apply compare %))))
+          (get-sorting [ids] (let [desc-sorting? (every? #(<= 0 %) ids)
+                                   asc-sorting? (every? #(>= 0 %) ids)]
+                               (match/match [desc-sorting? asc-sorting?]
+                                            [true false] :desc-sorting
+                                            [false true] :asc-sorting
+                                            [true true]  :one-value-list
+                                            :else :no-sorting)))
+          (click-on-table-header [] (ui click header-name))]
+    (let [sorting-after-click-01 (do (click-on-table-header)
+                                     (-> (get-table-elements table-name column-index)
+                                         compare-strings
+                                         get-sorting))
+          sorting-after-click-02 (do (click-on-table-header)
+                                     (-> (get-table-elements table-name column-index)
+                                         compare-strings
+                                         get-sorting))]
+      ;; If I click twice I should see two different sort orders in the same column
+      (= (set [:desc-sorting :asc-sorting]) (set [sorting-after-click-01 sorting-after-click-02])))))

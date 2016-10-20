@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.xmlrpc.XmlRpcException;
+import org.json.JSONException;
 import org.testng.SkipException;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterGroups;
@@ -20,19 +21,19 @@ import org.testng.annotations.BeforeGroups;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
-import rhsm.base.CandlepinType;
-import rhsm.base.SubscriptionManagerCLITestScript;
-import rhsm.data.ContentNamespace;
-import rhsm.data.EntitlementCert;
-import rhsm.data.ProductCert;
-import rhsm.data.YumRepo;
-
 import com.redhat.qe.Assert;
 import com.redhat.qe.auto.bugzilla.BlockedByBzBug;
 import com.redhat.qe.auto.bugzilla.BzChecker;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
+
+import rhsm.base.CandlepinType;
+import rhsm.base.SubscriptionManagerCLITestScript;
+import rhsm.data.ContentNamespace;
+import rhsm.data.EntitlementCert;
+import rhsm.data.ProductCert;
+import rhsm.data.YumRepo;
 
 /**
  * @author jsefler
@@ -241,10 +242,17 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 			groups={"AcceptanceTests"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void InstallDockerPackageOnHost_Test() {
+	public void InstallDockerPackageOnHost_Test() throws IOException, JSONException {
 		// assert that the host system is rhel7+
 		if (Integer.valueOf(clienttasks.redhatReleaseX)<7) throw new SkipException("Installation of docker.rpm is only applicable on RHEL7+");
 		if (!clienttasks.arch.equals("x86_64")) throw new SkipException("Installation of docker.rpm is only applicable on arch x86_64");
+		if (clienttasks.variant.equals("Workstation")) log.warning("Installation of docker on Workstation is blocked by dependedncy on oci-register-machine >= 1:0-1.8.  TODO: need a blocked by bug number.  The Orion project will expand the installablility of docker to include Workstation.");	// TODO need a blocked by bug number.
+		if (!clienttasks.variant.equals("Server") && !clienttasks.variant.equals("Workstation")) throw new SkipException("Installation of docker.rpm is only applicable on variant Server and Workstation.  This variant is '"+clienttasks.variant+"'.");
+		
+		// make sure any existing docker processes are stopped
+		client.runCommandAndWait("systemctl stop docker.service");
+		client.runCommandAndWait("killall docker docker-current docker-latest rhel-push-plugin");
+		client.runCommandAndWait("rm -rf /var/lib/docker/*");
 		
 		// make sure ALL docker* packages are removed so we can start from a clean slate (because a reinstall of subscription-manager during setupClient will remove only docker due to dependency) 
 		clienttasks.yumDoPackageFromRepo_("remove", "docker*", null, null);
@@ -267,14 +275,20 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 		//dockerRpmInstallUrls.add(runLocalCommand("./scripts/get-brew-rpm docker --rpmname=docker-common            --release=el7 --regress --arch="+clienttasks.arch).getStdout());
 		clienttasks.installSubscriptionManagerRPMs(dockerRpmInstallUrls, null, sm_yumInstallOptions);
 		
-		// best way of updating docker (from a RHEL subscription) when possible
+		// best way of updating docker (from a RHEL subscription) when possible - will give us the latest released version of docker
 		if (!sm_serverType.equals(CandlepinType.standalone)) {
 			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, true, null, null, null, null);
 			if (clienttasks.isRhelProductCertSubscribed()) {
+				// valid repos:
+				//	rhel-7-server-extras-rpms/x86_64
+				//	rhel-7-workstation-extras-rpms/x86_64
 				//avoid "No packages marked for update" by ignoring results of yumUpdatePackageFromRepo(...)
-				clienttasks.yumDoPackageFromRepo_("update","docker", "rhel-7-server-extras-rpms", "--nogpgcheck");
+				clienttasks.yumDoPackageFromRepo_("update","docker", "rhel-7-"+clienttasks.variant.toLowerCase()+"-extras-rpms", "--nogpgcheck");
 			}
 		}
+		
+		// an even better best way to update docker is from http://download.devel.redhat.com/rel-eng/latest-EXTRAS-7-RHEL-7/compose/Server/x86_64/os/
+		clienttasks.installLatestExtrasUpdates(sm_yumInstallOptions, Arrays.asList(new String[]{"docker"}));
 		
 		// assert the docker version is >= 1.0.0-2
 		Assert.assertTrue(clienttasks.isPackageVersion("docker", ">=", "1.0.0-2"), "Expecting docker version to be >= 1.0.0-2 (first RHSM compatible version of docker).");
@@ -360,8 +374,23 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 		//	[root@bkr-hv03-guest29 ~]# docker run --rm registry.access.redhat.com/rhel7:latest rpm -q subscription-manager
 		//	docker: Error response from daemon: Cannot start container cb6d22bc66ac3304e2b11482b7d9b64091fbdf536482ae69aa8dbb22d35d904e: [9] System error: exit status 1.
 		// 2016/08/31 Update: 1343139 was moved to component docker-latest which does not immediately fix docker, so let's employ workaround https://bugzilla.redhat.com/show_bug.cgi?id=1343139#c37 as needed
+		// TODO An alternative workaround was suggested here: https://bugzilla.redhat.com/show_bug.cgi?id=1322909#c31
 		if (versionResult.getStderr().trim().startsWith("docker: Error response from daemon: Cannot start container")) {
 			log.warning("Despite the fixed status of bug 1343139, employing selinux workaround to avoid: "+bug1343139ErrorMsg);
+			// re-run docker run command in permissive mode
+			String selinuxMode = client.runCommandAndWait("getenforce").getStdout().trim();	// Enforcing
+			client.runCommandAndWait("setenforce Permissive");
+			versionResult = client.runCommandAndWait("docker run --rm "+dockerImage+" rpm -q subscription-manager");
+			client.runCommandAndWait("setenforce "+selinuxMode);
+		}
+		// END OF WORKAROUND
+		// START OF WORKAROUND
+		// Bug 1370935 - docker-selinux broken in 7.3
+		//	[root@ibm-x3650m4-01-vm-10 ~]# docker run --rm registry.access.redhat.com/rhel7:latest rpm -q subscription-manager
+		//	permission denied
+		//	docker: Error response from daemon: Container command could not be invoked..
+		if (versionResult.getStderr().trim().startsWith("permission denied") && clienttasks.isPackageVersion("docker", "<", "1.10.3-52")) {
+			log.warning("Despite the fixed status of bug 1370935, employing selinux workaround since our installed version of docker is older than docker-1.10.3-52 which contains the fix for Bug 1370935");
 			// re-run docker run command in permissive mode
 			String selinuxMode = client.runCommandAndWait("getenforce").getStdout().trim();	// Enforcing
 			client.runCommandAndWait("setenforce Permissive");
@@ -393,7 +422,10 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 		//	[root@jsefler-7 ~]# docker run --rm docker-registry.usersys.redhat.com/brew/rhel7:latest yum repolist
 		//	Loaded plugins: product-id, subscription-manager
 		//	repolist: 0
-		SSHCommandResult yumRepolistResultOnRunningDockerImage = RemoteFileTasks.runCommandAndAssert(client, "docker run --rm "+dockerImage+" yum repolist", 0, "repolist: 0", null);
+		SSHCommandResult yumRepolistResultOnRunningDockerImage = client.runCommandAndWait("docker run --rm "+dockerImage+" yum repolist");
+		Assert.assertEquals(yumRepolistResultOnRunningDockerImage.getExitCode(), Integer.valueOf(0), "Exit code from docker run yum repolist command.");
+		String expectedStdoutMsg = "repolist: 0";
+		Assert.assertTrue(yumRepolistResultOnRunningDockerImage.getStdout().trim().endsWith(expectedStdoutMsg), "Stdout from docker run yum repolist command ends with '"+expectedStdoutMsg+"'");
 	}
 	
 	@Test(	description="verify a running container has yum repolist access to appropriate content from the host's entitlement",
@@ -407,17 +439,16 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,true,null,null,(String)null,null,null, null, true, false, null, null, null);
 		
 		// get a list of the entitled yum repos on the host
-//		List<YumRepo> yumReposOnHost = clienttasks.getCurrentlySubscribedYumRepos();
-//		Assert.assertTrue(!yumReposOnHost.isEmpty(),"When the host has registered with autosubscribe, we expect to have been granted access to at least one yum repos in '"+clienttasks.redhatRepoFile+"'.");
 		List<String> enabledYumReposOnHost = clienttasks.getYumRepolist("enabled");
 		List<EntitlementCert> entitlementCertsOnHost = clienttasks.getCurrentEntitlementCerts();
 		Assert.assertTrue(!entitlementCertsOnHost.isEmpty(),"When the host has registered with autosubscribe, we expect to have been granted at least one entitlement.");
 		
 		// determine what products are installed on the running docker image
-		SSHCommandResult lsResultOnRunningDockerImage = client.runCommandAndWait("docker run --rm "+dockerImage+" find /etc/pki/product* -name *.pem");	// assumes the productCertDir config within the image is /etc/pki/product
 		//	[root@bkr-hv03-guest07 ~]# docker run --rm registry.access.redhat.com/rhel7:latest find /etc/pki/product* -name *.pem
 		//	/etc/pki/product/69.pem
 		//	/etc/pki/product-default/69.pem
+		//SSHCommandResult lsResultOnRunningDockerImage = client.runCommandAndWait("docker run --rm "+dockerImage+" find /etc/pki/product* -name *.pem");	// assumes the productCertDir config within the image is /etc/pki/product
+		SSHCommandResult lsResultOnRunningDockerImage = client.runCommandAndWait("docker run --rm "+dockerImage+" find /etc/pki/product* -regex .+\\.pem");	// assumes the productCertDir config within the image is /etc/pki/product	//  "find /etc/pki/product* -regex .+\.pem"  IS MORE RELIABLE THAN "find /etc/pki/product* -name *.pem" 
 		List<ProductCert> productCertsOnRunningDockerImage = new ArrayList<ProductCert>();
 		for (String productCertFileOnRunningDockerImage : lsResultOnRunningDockerImage.getStdout().trim().split("\n")) {
 			SSHCommandResult rctCatCertResultOnRunningDockerImage = RemoteFileTasks.runCommandAndAssert(client, "docker run --rm "+dockerImage+" rct cat-cert "+productCertFileOnRunningDockerImage, 0);
@@ -932,7 +963,6 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 	protected final String rhsmHostDir = "/etc/rhsm-host";
 	protected final String entitlementHostDir = "/etc/pki/entitlement-host";
 	protected final File containerContentPluginFile = new File("/etc/rhsm/pluginconf.d/container_content.ContainerContentPlugin.conf");
-	
 	
 	
 	// Data Providers ***********************************************************************

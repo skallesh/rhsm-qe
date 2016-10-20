@@ -25,16 +25,15 @@ import rhsm.data.SubscriptionPool;
 
 /**
  * @author skallesh
-<<<<<<< HEAD
  *
  *
-=======
- * 
- * References:
- *   Bug 995161 - [RFE] Subscription Manager should report a machine as "yellow" if it has more guests then the subscriptions allow.
- *   Design Doc: http://www.candlepinproject.org/docs/candlepin/virt_guest_limit_design.html
->>>>>>> 23af20e0a629c17fbfa1adae782188a0384dce0b
+ *
+ *         References: Bug 995161 - [RFE] Subscription Manager should report a
+ *         machine as "yellow" if it has more guests then the subscriptions
+ *         allow. Design Doc: http://www.candlepinproject.org/docs/candlepin/
+ *         virt_guest_limit_design.html
  */
+
 @Test(groups = { "GuestLimitingTests", "Tier2Tests" })
 public class GuestLimitingTests extends SubscriptionManagerCLITestScript {
 	protected String ownerKey = "";

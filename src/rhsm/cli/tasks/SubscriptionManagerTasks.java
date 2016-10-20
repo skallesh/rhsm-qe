@@ -692,6 +692,61 @@ if (false) {
 	}
 	
 	
+	
+	/**
+	 * Configure a rhel-latest-extras.repo to http://download.devel.redhat.com/rel-eng/latest-EXTRAS-7-RHEL-7/compose/Server/x86_64/os/ and yum update the updatePackages
+	 * @param installOptions
+	 * @param updatePackages - specific list of packages, or an empty list implies update all packages
+	 * @throws IOException
+	 * @throws JSONException
+	 */
+	public void installLatestExtrasUpdates(String installOptions, List<String> updatePackages) throws IOException, JSONException {
+		
+		// FIRST: prepare a repo for the updatePackages and then yum update
+		
+		// make sure installOptions begins with --disablerepo=* to make sure the updates ONLY come from the rhel-latest-extras repo we are about to define
+		if (!installOptions.contains("--disablerepo=*")) installOptions = "--disablerepo=* "+installOptions;
+		
+		// avoid ERROR: can not find RHNS CA file: /usr/share/rhn/RHN-ORG-TRUSTED-SSL-CERT
+		installOptions += " --disableplugin=rhnplugin";
+		
+		// locally create a yum.repos.d extras repos file
+	    File file = new File("tmp/latest-EXTRAS-7-RHEL-7.repo"); // this will be in the automation.dir directory on hudson (workspace/automatjon/sm)
+	    // http://download.devel.redhat.com/rel-eng/latest-EXTRAS-7-RHEL-7/compose/Server/x86_64/os/
+	    String baseurl = "http://download.devel.redhat.com/rel-eng/latest-EXTRAS-7-RHEL-7/compose/"+variant+"/$basearch/os/";
+	    baseurl = "http://download.devel.redhat.com/rel-eng/latest-EXTRAS-7-RHEL-7/compose/"+variant+"/x86_64/os/";	// 302 Found // The document has moved <a href="http://download-node-02.eng.bos.redhat.com/rel-eng/latest-EXTRAS-7-RHEL-7/compose/Workstation/x86_64/os/">here</a>
+	    baseurl = "http://download-node-02.eng.bos.redhat.com/rel-eng/latest-EXTRAS-7-RHEL-7/compose/"+variant+"/x86_64/os/";
+	    
+	    // test the baseurl; log a warning if "Not Found" and abort the Latest Extras Update
+	    if (sshCommandRunner.runCommandAndWait("curl --stderr /dev/null --insecure --request GET "+baseurl).getStdout().contains("404 Not Found")) {
+			log.warning("Cannot install updates from latest-EXTRAS-7-RHEL-7 since the baseurl '"+baseurl+"' is Not Found.");
+	    	Assert.fail("The Latest Extras baseurl '"+baseurl+"' was Not Found.  Instruct the automator to verify the assembly of this baseurl.");
+	    }
+		
+		// write out the rows of the table...
+    	Writer output = new BufferedWriter(new FileWriter(file));
+	    
+    	// write the rhel-latest-extras repo
+		output.write("[latest-EXTRAS-7-RHEL-7-"+variant+"]\n");
+		output.write("name     = Latest Extras updates for RHEL"+redhatReleaseX+" "+variant+"\n");
+		output.write("enabled  = 0\n");
+		output.write("gpgcheck = 0\n");	// needed since the latest extras packages may not be signed until on REL_PREP
+		//output.write("exclude  = redhat-release*\n");	// avoids unwanted updates of rhel-release server variant to workstation
+		output.write("baseurl  = "+baseurl+"\n");
+		output.write("\n");
+	    output.close();
+	    installOptions += " --enablerepo=latest-EXTRAS-7-RHEL-7-"+variant;
+
+		RemoteFileTasks.putFile(sshCommandRunner.getConnection(), file.getPath(), "/etc/yum.repos.d/", "0644");
+		
+		// assemble the packages to be updated (note: if the list is empty, then all packages will be updated)
+		String updatePackagesAsString = "";
+		for (String updatePackage : updatePackages) updatePackagesAsString += updatePackage+" "; updatePackagesAsString=updatePackagesAsString.trim();
+		
+		// run yum update
+		Assert.assertEquals(sshCommandRunner.runCommandAndWait("yum -y update "+updatePackagesAsString+" "+installOptions).getExitCode(),Integer.valueOf(0), "Yum updated from latest extras repo: "+baseurl);
+	}
+	
 	/**
 	 * assumes there are already enabled repos that will provide any of the rhsm packages that are not already installed
 	 * @param installOptions
@@ -7746,6 +7801,23 @@ if (false) {
 			}
 		}
 		
+		// TEMPORARY WORKAROUND FOR BUG
+		//	201609281555:15.362 - FINE: ssh root@jsefler-rhel7.usersys.redhat.com rhnreg_ks --serverUrl=https://rhsm-sat5.usersys.redhat.com/XMLRPC --username=rhsm-client --password=REDACTED --profilename=rhsm-automation.jsefler-rhel7.usersys.redhat.com --force --norhnsd --nohardware --nopackages --novirtinfo
+		//	201609281555:16.284 - FINE: Stdout:  
+		//	201609281555:16.285 - FINE: Stderr: 
+		//	An error has occurred:
+		//	<type 'exceptions.TypeError'>
+		//	See /var/log/up2date for more information
+		//	201609281555:16.285 - FINE: ExitCode: 1 
+		if (stderr.contains("<type 'exceptions.TypeError'>")) {
+			String bugId = "1380159"; // Bug 1380159 - <type 'exceptions.TypeError'>: 'str' object does not support item assignment
+			boolean invokeWorkaroundWhileBugIsOpen = true;
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			if (invokeWorkaroundWhileBugIsOpen) {
+				throw new SkipException("The remainder of this test is blocked by bug "+bugId+".  There is no workaround.");
+			}
+		}
+		// END OF WORKAROUND
 		
 		Assert.assertEquals(exitCode, new Integer(0),"Exitcode from attempt to register to RHN Classic.");
 		Assert.assertEquals(stderr.trim(), "","Stderr from attempt to register to RHN Classic.");
@@ -8166,7 +8238,7 @@ if (false) {
 			String bugId = "1207306"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1207306 - dbus.exceptions.DBusException: org.freedesktop.DBus.Error.NoReply: Message did not receive a reply (timeout by message bus)
 			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 			if (invokeWorkaroundWhileBugIsOpen) {
-				throw new SkipException("Encounterd a '"+issue+"' and could not complete this test while bug '"+bugId+"' is open.");
+				throw new SkipException("Encountered a '"+issue+"' and could not complete this test while bug '"+bugId+"' is open.");
 			}
 		}
 		// END OF WORKAROUND
@@ -8197,7 +8269,7 @@ if (false) {
 			String bugId = "1198369"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1198369 - UnboundLocalError: local variable 'state' referenced before assignment
 			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 			if (invokeWorkaroundWhileBugIsOpen) {
-				throw new SkipException("Encounterd a '"+issue+"' and could not complete this test while bug '"+bugId+"' is open.");
+				throw new SkipException("Encountered a '"+issue+"' and could not complete this test while bug '"+bugId+"' is open.");
 			}
 		}
 		// END OF WORKAROUND
@@ -8550,7 +8622,7 @@ if (false) {
 				// duplicate of Bug 1113741 - RHEL 7 (and 6?): subscription-manager fails with "JSON parsing error: No JSON object could be decoded" error
 				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 				if (invokeWorkaroundWhileBugIsOpen) {
-					throw new SkipException("Encounterd a '"+issue+"' from the server and could not complete this test while bug '"+bugId+"' is open.");
+					throw new SkipException("Encountered a '"+issue+"' from the server and could not complete this test while bug '"+bugId+"' is open.");
 				}
 			}
 			// END OF WORKAROUND
@@ -8587,7 +8659,7 @@ if (false) {
 				String bugId = "1165239"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1165239 - subscription-manager encounters frequent SSLTimeoutErrors from stage IT-Candlepin
 				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 				if (invokeWorkaroundWhileBugIsOpen) {
-					throw new SkipException("Encounterd a '"+issue+"' from the server and could not complete this test while bug '"+bugId+"' is open.");
+					throw new SkipException("Encountered a '"+issue+"' from the server and could not complete this test while bug '"+bugId+"' is open.");
 				}
 			}
 			// END OF WORKAROUND
@@ -8639,7 +8711,7 @@ if (false) {
 				String bugId = "1358508"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1358508 - Error updating system data on the server
 				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 				if (invokeWorkaroundWhileBugIsOpen) {
-					throw new SkipException("Encounterd a '"+issue+"' from the server and could not complete this test while bug '"+bugId+"' is open.");
+					throw new SkipException("Encountered a '"+issue+"' from the server and could not complete this test while bug '"+bugId+"' is open.");
 				}
 			}
 			// END OF WORKAROUND
@@ -8654,35 +8726,35 @@ if (false) {
 				String bugId = "1084782"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1084782 - Runtime Error Lock wait timeout exceeded; try restarting transaction at com.mysql.jdbc.SQLError.createSQLException:1,078
 				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 				if (invokeWorkaroundWhileBugIsOpen) {
-					throw new SkipException("Encounterd a '"+issue+"' from the server and could not complete this test while bug '"+bugId+"' is open.");
+					throw new SkipException("Encountered a '"+issue+"' from the server and could not complete this test while bug '"+bugId+"' is open.");
 				}
 			}
 			if (getTracebackCommandResult.getStdout().contains(issue)) {
 				String bugId = "1165295"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1165295 - subscription-manager encounters frequent "Runtime Error Lock wait timeout exceeded" from stage IT-Candlepin
 				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 				if (invokeWorkaroundWhileBugIsOpen) {
-					throw new SkipException("Encounterd a '"+issue+"' from the server and could not complete this test while bug '"+bugId+"' is open.");
+					throw new SkipException("Encountered a '"+issue+"' from the server and could not complete this test while bug '"+bugId+"' is open.");
 				}
 			}
 			if (getTracebackCommandResult.getStdout().contains(issue)) {
 				String bugId = "1161736"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1161736 - subscription-manager doesn't behave in a consistent way
 				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 				if (invokeWorkaroundWhileBugIsOpen) {
-					throw new SkipException("Encounterd a '"+issue+"' from the server and could not complete this test while bug '"+bugId+"' is open.");
+					throw new SkipException("Encountered a '"+issue+"' from the server and could not complete this test while bug '"+bugId+"' is open.");
 				}
 			}
 			if (getTracebackCommandResult.getStdout().contains(issue) || result.getStdout().contains(issue) || result.getStderr().contains(issue)) {
 				String bugId = "1231308"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1231308 - subscription-manager encounters frequent "Runtime Error Lock wait timeout exceeded"/"Unable to verify server's identity" from stage IT-Candlepin
 				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 				if (invokeWorkaroundWhileBugIsOpen) {
-					throw new SkipException("Encounterd a '"+issue+"' from the server and could not complete this test while bug '"+bugId+"' is open.");
+					throw new SkipException("Encountered a '"+issue+"' from the server and could not complete this test while bug '"+bugId+"' is open.");
 				}
 			}
 			if (getTracebackCommandResult.getStdout().contains(issue) || result.getStdout().contains(issue) || result.getStderr().contains(issue)) {
 				String bugId = "1357117"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1357117 - subscription-manager encounters frequent "Runtime Error Lock wait timeout exceeded" from stage IT-Candlepin
 				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 				if (invokeWorkaroundWhileBugIsOpen) {
-					throw new SkipException("Encounterd a '"+issue+"' from the server and could not complete this test while bug '"+bugId+"' is open.");
+					throw new SkipException("Encountered a '"+issue+"' from the server and could not complete this test while bug '"+bugId+"' is open.");
 				}
 			}
 			// END OF WORKAROUND
@@ -8714,7 +8786,7 @@ if (false) {
 				String bugId = "1207721"; boolean invokeWorkaroundWhileBugIsOpen = true;	//	Bug 1207721 - Runtime Error could not execute statement at org.postgresql.core.v3.QueryExecutorImpl.receiveErrorResponse:2,102
 				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 				if (invokeWorkaroundWhileBugIsOpen) {
-					throw new SkipException("Encounterd a '"+issue+"' from the server and could not complete this test while bug '"+bugId+"' is open.");
+					throw new SkipException("Encountered a '"+issue+"' from the server and could not complete this test while bug '"+bugId+"' is open.");
 				}
 			}
 			// END OF WORKAROUND
@@ -8760,7 +8832,7 @@ if (false) {
 				String bugId = "1207306"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1207306 - dbus.exceptions.DBusException: org.freedesktop.DBus.Error.NoReply: Message did not receive a reply (timeout by message bus)
 				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 				if (invokeWorkaroundWhileBugIsOpen) {
-					throw new SkipException("Encounterd a '"+issue+"' and could not complete this test while bug '"+bugId+"' is open.");
+					throw new SkipException("Encountered a '"+issue+"' and could not complete this test while bug '"+bugId+"' is open.");
 				}
 			}
 			// END OF WORKAROUND
@@ -8787,7 +8859,7 @@ if (false) {
 				String bugId = "1220830"; boolean invokeWorkaroundWhileBugIsOpen = true;	//	Bug 1220830 - subscription-manager encounters occasional Deadlock from stage IT-Candlepin
 				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 				if (invokeWorkaroundWhileBugIsOpen) {
-					throw new SkipException("Encounterd a '"+issue+"' from the server and could not complete this test while bug '"+bugId+"' is open.");
+					throw new SkipException("Encountered a '"+issue+"' from the server and could not complete this test while bug '"+bugId+"' is open.");
 				}
 			}
 			// END OF WORKAROUND
@@ -8842,17 +8914,18 @@ if (false) {
 				String bugId = "1231308"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1231308 - subscription-manager encounters frequent "Runtime Error Lock wait timeout exceeded"/"Unable to verify server's identity" from stage IT-Candlepin
 				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 				if (invokeWorkaroundWhileBugIsOpen) {
-					throw new SkipException("Encounterd a '"+issue+"' and could not complete this test while bug '"+bugId+"' is open.");
+					throw new SkipException("Encountered a '"+issue+"' and could not complete this test while bug '"+bugId+"' is open.");
 				}
 			}
 			if (getTracebackCommandResult.getStdout().contains(issue) || result.getStderr().contains(issue)) {
 				String bugId = "1302364"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1302364 - Unable to verify server's identity: (104, 'Connection reset by peer')
 				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 				if (invokeWorkaroundWhileBugIsOpen) {
-					throw new SkipException("Encounterd a '"+issue+"' and could not complete this test while bug '"+bugId+"' is open.");
+					throw new SkipException("Encountered a '"+issue+"' and could not complete this test while bug '"+bugId+"' is open.");
 				}
 			}
 			// END OF WORKAROUND
+			
 			
 			// TEMPORARY WORKAROUND FOR BUG
 			//	2016-01-27 16:24:22.520  FINE: ssh root@ibm-x3550m3-09.lab.eng.brq.redhat.com subscription-manager unsubscribe --all
@@ -8896,10 +8969,11 @@ if (false) {
 				String bugId = "1302798"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1302798 - gaierror: [Errno -3] Temporary failure in name resolution
 				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 				if (invokeWorkaroundWhileBugIsOpen) {
-					throw new SkipException("Encounterd a '"+issue+"' and could not complete this test while bug '"+bugId+"' is open.");
+					throw new SkipException("Encountered a '"+issue+"' and could not complete this test while bug '"+bugId+"' is open.");
 				}
 			}
 			// END OF WORKAROUND
+			
 			
 			// TEMPORARY WORKAROUND FOR BUG
 			//	2016-08-01 20:00:32.143  FINE: ssh root@ibm-z10-77.rhts.eng.bos.redhat.com subscription-manager list --available
@@ -8946,10 +9020,11 @@ if (false) {
 				String bugId = "1362535"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1362535 - Unable to serialize objects to JSON.
 				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 				if (invokeWorkaroundWhileBugIsOpen) {
-					throw new SkipException("Encounterd a '"+issue+"' and could not complete this test while bug '"+bugId+"' is open.");
+					throw new SkipException("Encountered a '"+issue+"' and could not complete this test while bug '"+bugId+"' is open.");
 				}
 			}
 			// END OF WORKAROUND
+			
 			
 			// TEMPORARY WORKAROUND FOR BUG
 			//	2016-08-12 00:33:35.448  FINE: ssh root@wolverine.idmqe.lab.eng.bos.redhat.com subscription-manager subscribe --pool=8a99f9815582f734015585f99da5513f --pool=8a99f9815582f734015585f99c47511c --pool=8a99f9815582f734015585f99add50f4 --pool=8a99f9815582f734015585f99a0950b9 --pool=8a99f9815582f734015585f99e9d519d --pool=8a99f9815582f734015585f9a7c952b9 --pool=8a99f9815582f734015585f9a654524a --pool=8a99f9815582f734015585f9989d5047 --pool=8a99f9815582f734015585f9a0c4521d --pool=8a99f9815582f734015585f99f4051c9 --pool=8a99f9815582f734015585f9995e5080 --pool=8a99f9815582f734015585f99fc851ee --pool=8a99f9815582f734015585f99b72510a
@@ -8984,7 +9059,79 @@ if (false) {
 				String bugId = "1366772"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1366772 - Runtime Error org.hibernate.exception.LockAcquisitionException: could not execute statement at sun.reflect.NativeConstructorAccessorImpl.newInstance0:-2
 				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 				if (invokeWorkaroundWhileBugIsOpen) {
-					throw new SkipException("Encounterd a '"+issue+"' and could not complete this test while bug '"+bugId+"' is open.");
+					throw new SkipException("Encountered a '"+issue+"' and could not complete this test while bug '"+bugId+"' is open.");
+				}
+			}
+			// END OF WORKAROUND
+			
+			
+			// TEMPORARY WORKAROUND FOR BUG
+			//	2016-09-08 06:15:07.029  FINE: ssh root@hp-moonshot-03-c07.lab.eng.rdu.redhat.com subscription-manager subscribe --pool=8a99f9815582f734015585f9989d5047
+			//	2016-09-08 06:16:08.858  FINE: Stdout: 
+			//	2016-09-08 06:16:08.858  FINE: Stderr: Runtime Error could not obtain pessimistic lock at com.mysql.jdbc.SQLError.createSQLException:1,078
+			//
+			//	2016-09-08 06:16:08.859  FINE: ExitCode: 70
+			//	2016-09-08 06:16:08.859  FINE: ssh root@hp-moonshot-03-c07.lab.eng.rdu.redhat.com LINE_NUMBER=$(grep --line-number 'Making request:' /var/log/rhsm/rhsm.log | tail --lines=1 | cut --delimiter=':' --field=1); if [ -n "$LINE_NUMBER" ]; then tail -n +$LINE_NUMBER /var/log/rhsm/rhsm.log; fi;
+			//	2016-09-08 06:16:08.957  WARNING: Last request from /var/log/rhsm/rhsm.log:
+			//	2016-09-08 06:15:20,797 [DEBUG] subscription-manager:30381:MainThread @connection.py:573 - Making request: POST /subscription/consumers/25f1a0fb-59cf-48aa-a089-897a01282502/entitlements?pool=8a99f9815582f734015585f9989d5047
+			//	2016-09-08 06:16:12,079 [DEBUG] subscription-manager:30381:MainThread @connection.py:602 - Response: status=500
+			//	2016-09-08 06:16:12,080 [ERROR] subscription-manager:30381:MainThread @managercli.py:1570 - Runtime Error could not obtain pessimistic lock at com.mysql.jdbc.SQLError.createSQLException:1,078
+			//	Traceback (most recent call last):
+			//	  File "/usr/lib/python2.7/site-packages/subscription_manager/managercli.py", line 1560, in _do_command
+			//	    ents = self.cp.bindByEntitlementPool(self.identity.uuid, pool, self.options.quantity)
+			//	  File "/usr/lib64/python2.7/site-packages/rhsm/connection.py", line 1169, in bindByEntitlementPool
+			//	    return self.conn.request_post(method)
+			//	  File "/usr/lib64/python2.7/site-packages/rhsm/connection.py", line 697, in request_post
+			//	    return self._request("POST", method, params)
+			//	  File "/usr/lib64/python2.7/site-packages/rhsm/connection.py", line 611, in _request
+			//	    self.validateResponse(result, request_type, handler)
+			//	  File "/usr/lib64/python2.7/site-packages/rhsm/connection.py", line 661, in validateResponse
+			//	    raise RestlibException(response['status'], error_msg, response.get('headers'))
+			//	RestlibException: Runtime Error could not obtain pessimistic lock at com.mysql.jdbc.SQLError.createSQLException:1,078
+			issue = "Runtime Error could not obtain pessimistic lock";
+			if (getTracebackCommandResult.getStdout().contains(issue) || result.getStderr().contains(issue)) {
+				String bugId = "1374448"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1374448 - Runtime Error could not obtain pessimistic lock at com.mysql.jdbc.SQLError.createSQLException:1,078
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				if (invokeWorkaroundWhileBugIsOpen) {
+					throw new SkipException("Encountered a '"+issue+"' and could not complete this test while bug '"+bugId+"' is open.");
+				}
+			}
+			// END OF WORKAROUND
+			
+			
+			// TEMPORARY WORKAROUND FOR BUG
+			//	2016-09-08 06:14:00.215  FINE: ssh root@ibm-z10-13.rhts.eng.bos.redhat.com subscription-manager subscribe --pool=8a99f9815582f734015585f99973509a
+			//	2016-09-08 06:16:53.512  FINE: Stdout: 
+			//	2016-09-08 06:16:53.512  FINE: Stderr: ''
+			//
+			//	2016-09-08 06:16:53.512  FINE: ExitCode: 70
+			//	2016-09-08 06:16:53.512  FINE: ssh root@ibm-z10-13.rhts.eng.bos.redhat.com LINE_NUMBER=$(grep --line-number 'Making request:' /var/log/rhsm/rhsm.log | tail --lines=1 | cut --delimiter=':' --field=1); if [ -n "$LINE_NUMBER" ]; then tail -n +$LINE_NUMBER /var/log/rhsm/rhsm.log; fi;
+			//	2016-09-08 06:16:54.358  WARNING: Last request from /var/log/rhsm/rhsm.log:
+			//	2016-09-08 06:14:16,544 [DEBUG] subscription-manager:3495:MainThread @connection.py:573 - Making request: POST /subscription/consumers/ec27ba92-b7e5-4f97-8872-d9a3de796bcb/entitlements?pool=8a99f9815582f734015585f99973509a
+			//	2016-09-08 06:16:51,800 [ERROR] subscription-manager:3495:MainThread @managercli.py:174 - Unable to attach: ''
+			//	2016-09-08 06:16:51,800 [ERROR] subscription-manager:3495:MainThread @managercli.py:175 - ''
+			//	Traceback (most recent call last):
+			//	  File "/usr/lib/python2.7/site-packages/subscription_manager/managercli.py", line 1560, in _do_command
+			//	    ents = self.cp.bindByEntitlementPool(self.identity.uuid, pool, self.options.quantity)
+			//	  File "/usr/lib64/python2.7/site-packages/rhsm/connection.py", line 1169, in bindByEntitlementPool
+			//	    return self.conn.request_post(method)
+			//	  File "/usr/lib64/python2.7/site-packages/rhsm/connection.py", line 697, in request_post
+			//	    return self._request("POST", method, params)
+			//	  File "/usr/lib64/python2.7/site-packages/rhsm/connection.py", line 591, in _request
+			//	    response = conn.getresponse()
+			//	  File "/usr/lib64/python2.7/httplib.py", line 1089, in getresponse
+			//	    response.begin()
+			//	  File "/usr/lib64/python2.7/httplib.py", line 444, in begin
+			//	    version, status, reason = self._read_status()
+			//	  File "/usr/lib64/python2.7/httplib.py", line 408, in _read_status
+			//	    raise BadStatusLine(line)
+			//	BadStatusLine: ''		
+			issue = "BadStatusLine: ''";
+			if (getTracebackCommandResult.getStdout().contains(issue) || result.getStderr().contains(issue)) {
+				String bugId = "1374460"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1374460 - sometimes stage candlepin does not return any error message; appears as a BadStatusLine: ''
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				if (invokeWorkaroundWhileBugIsOpen) {
+					throw new SkipException("Encountered a '"+issue+"' and could not complete this test while bug '"+bugId+"' is open.");
 				}
 			}
 			// END OF WORKAROUND

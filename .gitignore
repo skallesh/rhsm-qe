@@ -2,6 +2,7 @@
 .classpath
 .lein-deps-sum
 .lein-repl-history
+.lein-failures
 .nrepl-port
 .pydevproject
 pom.xml

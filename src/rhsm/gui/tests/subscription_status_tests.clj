@@ -45,7 +45,7 @@
       (throw e))))
 
 (defn ^{AfterClass {:groups ["cleanup"]
-                     :alwaysRun true}}
+                    :alwaysRun true}}
   after_check_status_message
   [_]
   (tasks/unsubscribe_all)
@@ -54,19 +54,19 @@
   ;; commented becasue changing dat and time could lead to automation
   ;; failure. The risk out weighs the test
   (comment (let
-               [time-cmd (if (= "RHEL7" (get-release))
-                           (str "systemctl stop ntpd.service;"
-                                " ntpdate clock.redhat.com;"
-                                " systemctl start ntpd.service")
-                           (str "service ntpd stop;"
-                                " ntpdate clock.redhat.com;"
-                                " service ntpd start"))]
+            [time-cmd (if (= "RHEL7" (get-release))
+                        (str "systemctl stop ntpd.service;"
+                             " ntpdate clock.redhat.com;"
+                             " systemctl start ntpd.service")
+                        (str "service ntpd stop;"
+                             " ntpdate clock.redhat.com;"
+                             " service ntpd start"))]
              (:stdout (run-command time-cmd))
              (:stdout (run-command time-cmd :runner @candlepin-runner)))))
 
 (defn ^{Test {:groups ["subscription_status"
-                       "tier1"
-                       "acceptance"
+                       "tier2"
+                       "tier1" "acceptance"
                        "blockedByBug-1012501"
                        "blockedByBug-1040119"]
               :priority (int 100)}}
@@ -79,15 +79,15 @@
     (tasks/unsubscribe_all)
     (sleep 3000)
     (let
-      [installed-products (atom nil)]
+     [installed-products (atom nil)]
       (reset! installed-products (tasks/ui getrowcount :installed-view))
       (reset! status-before-subscribe
               (Integer. (re-find #"\d*" (tasks/ui gettextvalue :overall-status))))
       (verify (= @installed-products @status-before-subscribe)))))
 
 (defn ^{Test {:groups ["subscription_status"
-                       "tier1"
-                       "acceptance"
+                       "tier2"
+                       "tier1" "acceptance"
                        "blockedByBug-1012501"
                        "blockedByBug-1040119"
                        "blockedByBug-1199671"]
@@ -121,7 +121,7 @@
     (verify (= after-subscribe (- before-subscribe subscribed-products)))))
 
 (defn ^{Test {:groups ["subscription_status"
-                       "tier1"
+                       "tier2"
                        "blockedByBug-1012501"
                        "blockedByBug-1040119"
                        "blockedByBug-1199671"]
@@ -143,7 +143,7 @@
            num-of-subscriptions (if (bool (tasks/ui guiexist :all-subscriptions-view))
                                   (Integer. (tasks/ui getrowcount :all-subscriptions-view))
                                   0)]
-      (when (> (min n num-of-subscriptions) 0)
+      (when (> (min n (max num-of-subscriptions 0)) 0)
         (tasks/subscribe (tasks/ui getcellvalue :all-subscriptions-view
                                    (rand-int num-of-subscriptions) 0))
         (when (bool (tasks/ui guiexist :all-subscriptions-view))
@@ -151,14 +151,14 @@
     (let [subscribed-products-date (count
                                     (filter #(= "Subscribed" %)
                                             (tasks/get-table-elements :installed-view 2)))
-          after-date-products (if-let [num (re-find #"^\d+" (tasks/ui gettextvalue :overall-status)) ]
+          after-date-products (if-let [num (re-find #"^\d+" (tasks/ui gettextvalue :overall-status))]
                                 (Integer. num)
                                 0)
           before-subscribe @status-before-subscribe]
       (verify (= after-date-products (- before-subscribe subscribed-products-date))))))
 
 (defn ^{Test {:groups ["subscription_status"
-                       "tier1"
+                       "tier2"
                        "blockedByBug-1012501"
                        "blockedByBug-1040119"
                        "blockedByBug-1199671"]
@@ -190,7 +190,7 @@
       (let [subscribed-products-date (count
                                       (filter #(= "Subscribed" %)
                                               (tasks/get-table-elements :installed-view 2)))
-            after-date-products (if-let [num (re-find #"^\d+" (tasks/ui gettextvalue :overall-status)) ]
+            after-date-products (if-let [num (re-find #"^\d+" (tasks/ui gettextvalue :overall-status))]
                                   (Integer. num)
                                   0)
             before-subscribe @status-before-subscribe]
@@ -199,7 +199,7 @@
 ;; Commenting out this test as changing dates on the server can have drastic effects
 (comment
   (defn ^{Test {:groups ["subscription_status"
-                         "tier1"
+                         "tier2"
                          "blockedByBug-1012501"
                          "blockedByBug-1040119"]
                 :dependsOnMethods ["check_status_message_future_subscriptions"]}}
@@ -213,8 +213,8 @@
       (do
         (try
           (let
-              [subscribed-products-future (atom {})
-               after-future-subscribe (atom {})]
+           [subscribed-products-future (atom {})
+            after-future-subscribe (atom {})]
             (run-command "date -s \"+1 year\"")
             (run-command "date -s \"+1 year\"" :runner @candlepin-runner)
             (tasks/restart-app)
@@ -230,9 +230,9 @@
             (run-command "date -s \"-1 year\"" :runner @candlepin-runner)
             (run-command "date -s \"-1 year\"")))))))
 
- (defn ^{Test {:groups ["subscription_status"
-                        "tier3"
-                        "check_subscription_type_my_subs"]
+(defn ^{Test {:groups ["subscription_status"
+                       "tier3"
+                       "check_subscription_type_my_subs"]
               :dataProvider "my-subscriptions"}}
   check_subscription_type_my_subscriptions
   "Checks for subscription type in my subscriptions"
@@ -251,7 +251,7 @@
   (tasks/unregister))
 
 (defn ^{Test {:groups ["subscription_status"
-                       "tier1"
+                       "tier2"
                        "blockedByBug-924766"]
               :dataProvider "subscribed"}}
   check_subscribed_virt_type

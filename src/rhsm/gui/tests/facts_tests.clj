@@ -53,9 +53,9 @@
         (if (nil? (@productlist name))
           (reset! productlist
                   (assoc @productlist
-                    name
-                    {:version version
-                     :arch arch})))))
+                         name
+                         {:version version
+                          :arch arch})))))
     @productlist))
 
 (defn ^{BeforeClass {:groups ["setup"]}}
@@ -70,7 +70,7 @@
       (throw e))))
 
 (defn ^{Test {:groups ["facts"
-                       "tier1"]
+                       "tier2"]
               :dataProvider "guifacts"}}
   match_each_fact
   "Tests that each fact in the GUI is showing the expected or known value."
@@ -79,7 +79,7 @@
   (verify (= (@cli-facts fact) value)))
 
 (defn ^{Test {:groups ["facts"
-                       "tier2"
+                       "tier3"
                        "blockedByBug-950146"]}}
   facts_parity
   "Tests that the gui shows the same number of facts as the CLI."
@@ -107,7 +107,7 @@
         guiarch (try
                   (tasks/ui selectrowindex :installed-view index)
                   (tasks/ui gettextvalue :arch)
-                     (catch Exception e nil))]
+                  (catch Exception e nil))]
     (when-not (= 0 guiversion) (verify (= version guiversion)))
     (if (nil? arch)
       (verify (or (= "" guiarch) (nil? guiarch)))
@@ -117,7 +117,7 @@
 ;; (doseq [[p i] (ftest/get_installed_products nil :debug true)] (ftest/check_version_arch nil p i))
 
 (defn ^{Test {:groups ["facts"
-                       "tier2"
+                       "tier3"
                        "blockedByBug-905136"
                        "blockedByBug-869306"]}}
   check_org_id
@@ -131,13 +131,13 @@
           cli-val (trim (last (split cli-raw #":")))
           gui-raw (tasks/ui gettextvalue :facts-org)
           ;gui-val (re-find #"\w+" (last (split gui-raw #" ")))
-          ]
+]
       ;(verify (= gui-val cli-val))
       (verify (substring? cli-val gui-raw)))
     (finally (tasks/ui click :close-facts))))
 
 (defn ^{Test {:groups ["facts"
-                       "tier2"
+                       "tier3"
                        "blockedByBug-909294"
                        "blockedByBug-839772"
                        "blockedByBug-1245557"
@@ -168,7 +168,7 @@
                (tasks/ui click :close-system-prefs)))))
 
 (defn ^{Test {:groups ["facts"
-                       "tier2"
+                       "tier3"
                        "blockedByBug-909294"
                        "blockedByBug-908954"
                        "blockedByBug-839772"
@@ -203,8 +203,8 @@
                (tasks/ui click :close-system-prefs)))))
 
 (defn ^{Test {:groups ["facts"
-                       "tier1"
-                       "acceptance"]}}
+                       "tier2"
+                       "tier1" "acceptance"]}}
   check_releases
   "Tests that all available releases are shown in the GUI"
   [_]
@@ -217,21 +217,21 @@
                         certlist)]
     ;; it is handy information before we verify that some cert exists.
     (->> certdir
-       (format "ls -al \"%s\"")
-       (run-command))
+         (format "ls -al \"%s\"")
+         (run-command))
     (verify (some true? certexist?)))
   (check_available_releases nil))
 
 (defn ^{Test {:groups ["facts"
-                       "tier1"
+                       "tier2"
                        "blockedByBug-829900"]}}
   verify_about_information
   "Asserts that all the information in the about dialog is correct."
   [_]
   (let [[_ major minor] (re-find #"(\d)\.(\d)" (-> :true get-release :version))]
     (match [major minor]
-           ["7" (a :guard #(>= (Integer. %) 3))] (throw (SkipException. "Button 'Close' has been removed in RHEL7.3+"))
-           :else nil))
+      ["7" (a :guard #(>= (Integer. %) 3))] (throw (SkipException. "Button 'Close' has been removed in RHEL7.3+"))
+      :else nil))
   (try
     (tasks/restart-app)
     (tasks/ui click :about)
@@ -241,8 +241,8 @@
           gui-rhsm (get-gui-version :rhsm-version)
           gui-rhsm-service (get-gui-version :rhsm-service-version)
           rpm-qi (fn [p s] (trim (:stdout
-                                 (run-command
-                                  (str "rpm -qi " p " | grep " s " | awk '{print $3}'")))))
+                                  (run-command
+                                   (str "rpm -qi " p " | grep " s " | awk '{print $3}'")))))
           get-cli-version (fn [p] (str (rpm-qi p "Version") "-" (rpm-qi p "Release")))
           cli-pyrhsm (trim (get-cli-version "python-rhsm"))
           cli-rhsm (trim (get-cli-version "subscription-manager-gui"))
@@ -254,16 +254,16 @@
                (tasks/ui click :close-about-dialog)))))
 
 (defn ^{Test {:groups ["facts"
-                       "tier1"
+                       "tier2"
                        "blockedByBug-829900"]}}
   verify_about_information_without_close_button
   "Asserts that all the information in the about dialog is correct."
   [_]
   (let [[_ major minor] (re-find #"(\d)\.(\d)" (-> :true get-release :version))]
     (match [major minor]
-           ["7" (a :guard #(< (Integer. %) 3))] (throw (SkipException. "Button 'Close' has been removed in RHEL7.3+"))
-           ["6" _] (throw (SkipException. "This test is just for RHEL7.3+"))
-           :else nil))
+      ["7" (a :guard #(< (Integer. %) 3))] (throw (SkipException. "Button 'Close' has been removed in RHEL7.3+"))
+      ["6" _] (throw (SkipException. "This test is just for RHEL7.3+"))
+      :else nil))
   (try
     (tasks/restart-app)
     (tasks/ui click :about)
@@ -273,8 +273,8 @@
           gui-rhsm (get-gui-version :rhsm-version)
           gui-rhsm-service (get-gui-version :rhsm-service-version)
           rpm-qi (fn [p s] (trim (:stdout
-                                 (run-command
-                                  (str "rpm -qi " p " | grep " s " | awk '{print $3}'")))))
+                                  (run-command
+                                   (str "rpm -qi " p " | grep " s " | awk '{print $3}'")))))
           get-cli-version (fn [p] (str (rpm-qi p "Version") "-" (rpm-qi p "Release")))
           cli-pyrhsm (trim (get-cli-version "python-rhsm"))
           cli-rhsm (trim (get-cli-version "subscription-manager-gui"))
@@ -286,7 +286,7 @@
                (tasks/ui closewindow :about-dialog)))))
 
 (defn ^{Test {:groups ["facts"
-                       "tier1"
+                       "tier2"
                        "blockedByBug-977855"
                        "blockedByBug-1157383"]}}
   check_persistant_autoheal
@@ -326,10 +326,9 @@
       (if (bool (tasks/ui guiexist :system-preferences-dialog))
         (tasks/ui click :close-system-prefs)))))
 
-
 (defn ^{Test {:groups ["facts"
-                       "tier2"
-                       "acceptance"]}}
+                       "tier3"
+                       "tier1" "acceptance"]}}
   verify_update_facts
   "Verifies if update facts grabs updated facts value"
   [_]

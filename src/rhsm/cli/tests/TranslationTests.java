@@ -647,6 +647,9 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 			if (translationFile.getPath().contains("/ko/")) bugIds.add("906567");
 			if (translationFile.getPath().contains("/it/")) bugIds.add("906567");
 			
+			// Bug 1372837 - [zh_CN] msgids containing "Red Hat" should NOT translate this substring
+			if (translationFile.getPath().contains("/zh_CN/")) bugIds.add("1372837");
+			
 			// Bug 906552 - [es_ES][gu][kn][or][pa][pt_BR][ta_IN][te][zh_CN] msgids containing "subscription-manager" should NOT translate this substring
 			if (translationFile.getPath().contains("/es_ES/")) bugIds.add("906552");
 			if (translationFile.getPath().contains("/gu/")) bugIds.add("906552");
@@ -657,6 +660,10 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 			if (translationFile.getPath().contains("/ta_IN/")) bugIds.add("906552");
 			if (translationFile.getPath().contains("/te/")) bugIds.add("906552");
 			if (translationFile.getPath().contains("/zh_CN/")) bugIds.add("906552");
+			
+			// Bug 1372839 - [pt_BR][it] msgids containing "subscription-manager" should NOT translate this substring
+			if (translationFile.getPath().contains("/pt_BR/")) bugIds.add("1372839");
+			if (translationFile.getPath().contains("/it/")) bugIds.add("1372839");
 			
 			// Bug 1061393 - [pa] msgids containing "subscription-manager" should NOT translate this substring
 			if (translationFile.getPath().contains("/pa/")) bugIds.add("1061393");		

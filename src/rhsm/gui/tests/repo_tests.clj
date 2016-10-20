@@ -18,7 +18,8 @@
             [rhsm.gui.tasks.tasks :as tasks]
             [rhsm.gui.tests.base :as base]
             [rhsm.gui.tasks.candlepin-tasks :as ctasks]
-             rhsm.gui.tasks.ui)
+            [clojure.core.match :as match]
+            rhsm.gui.tasks.ui)
   (:import [org.testng.annotations
             BeforeClass
             BeforeGroups
@@ -39,13 +40,13 @@
   (try+
    (comment (when (= "RHEL7" (get-release))
               (base/startup nil)))
-    (tasks/restart-app)
-    (tasks/unregister)
-    (catch [:type :not-registered] _)
-    (catch Exception e
-      (log/warn "caught " e)
-      (reset! (skip-groups :repo) true)
-      (throw e))))
+   (tasks/restart-app)
+   (tasks/unregister)
+   (catch [:type :not-registered] _)
+   (catch Exception e
+     (log/warn "caught " e)
+     (reset! (skip-groups :repo) true)
+     (throw e))))
 
 (defn assert-and-open-repo-dialog
   "Asserts if repo-dialog is open if not it opens it"
@@ -94,10 +95,10 @@
     (if (true? uncheck)
       (tasks/ui uncheckrow :repo-table row-num col-num)
       (tasks/ui checkrow :repo-table row-num col-num))
-       (catch Exception e
-         (if (substring? "Failed to grab focus" (.getMessage e))
-           (sleep 5000)
-           (throw e)))))
+    (catch Exception e
+      (if (substring? "Failed to grab focus" (.getMessage e))
+        (sleep 5000)
+        (throw e)))))
 
 (defn get-repo-information
   "Returns repository information, including whether a repo has been modified or not
@@ -142,8 +143,8 @@
     (rand-nth unmodified)))
 
 (defn ^{Test {:groups ["repo"
-                       "tier1"
-                       "acceptance"]}}
+                       "tier2"
+                       "tier1" "acceptance"]}}
   check_repo_visible
   "This test checks whether repository option exists
    when system is unregistered"
@@ -155,8 +156,8 @@
     (verify (not (tasks/visible? :repositories)))))
 
 (defn ^{Test {:groups ["repo"
-                       "tier1"
-                       "acceptance"]}}
+                       "tier2"
+                       "tier1" "acceptance"]}}
   check_repo_system_menu
   "This tests for repository option in the system menu"
   [_]
@@ -170,8 +171,8 @@
       (tasks/ui click :close-repo-dialog))))
 
 (defn ^{Test {:groups ["repo"
-                       "tier1"
-                       "acceptance"]}}
+                       "tier2"
+                       "tier1" "acceptance"]}}
   check_repo_message_unsubscribed
   "This tests for default static message in repository dialog when unsubscribed"
   [_]
@@ -182,10 +183,47 @@
     (verify (bool (tasks/ui guiexist :repositories-dialog)))
     (verify (= no_repos_message (tasks/ui gettextvalue :repo-message)))
     (finally
-     (tasks/ui click :close-repo-dialog))))
+      (tasks/ui click :close-repo-dialog))))
 
 (defn ^{Test {:groups ["repo"
-                       "tier1"
+                       "tier2"
+                       "blockedByBug-1370623"]
+              :description "Given a system is subscribed
+ and I have attached some subsciptions
+When I click 'System' -> 'Repositories'
+ and I click on a table's label 'Repository ID'
+Then I see values of repositories ids to be redrawn
+ and the values are sorted some way"}}
+  check_repo_table_sortable
+  [_]
+  (try
+    (if (tasks/ui showing? :register-system)
+      (tasks/register-with-creds))
+    (tasks/subscribe_all)
+    (assert-and-open-repo-dialog)
+    (letfn [(compare-strings [list-of-strings] (->> list-of-strings
+                                                    (partition 2 1)
+                                                    (map #(apply compare %))))
+            (get-sorting [repositories-ids] (let [desc-sorting? (every? #(<= 0 %) repositories-ids)
+                                                  asc-sorting? (every? #(>= 0 %) repositories-ids)]
+                                              (match/match [desc-sorting? asc-sorting?]
+                                                [true false] :desc-sorting
+                                                [false true] :asc-sorting
+                                                [true true]  :one-value-list
+                                                :else :no-sorting)))
+            (click-on-repositories-id-label [] (tasks/ui click :repo-table-repository-id))]
+      (let [sorting-after-click-01 (do (click-on-repositories-id-label)
+                                       (get-sorting (compare-strings (tasks/get-table-elements :repo-table 2))))
+            sorting-after-click-02 (do (click-on-repositories-id-label)
+                                       (get-sorting (compare-strings (tasks/get-table-elements :repo-table 2))))]
+        ;; I click twice and I get two different sort orders
+        (verify (= (set [:desc-sorting :asc-sorting]) (set [sorting-after-click-01 sorting-after-click-02])))))
+    (finally
+      (tasks/ui click :close-repo-dialog)
+      (tasks/unsubscribe_all))))
+
+(defn ^{Test {:groups ["repo"
+                       "tier2"
                        "blockedByBug-1095938"]}}
   check_repo_table_populated
   "This tests if repo-table is populated when subscribed"
@@ -198,11 +236,11 @@
     (verify (bool (tasks/ui guiexist :repositories-dialog)))
     (verify (< 0 (tasks/ui getrowcount :repo-table)))
     (finally
-     (tasks/ui click :close-repo-dialog)
-     (tasks/unsubscribe_all))))
+      (tasks/ui click :close-repo-dialog)
+      (tasks/unsubscribe_all))))
 
 (defn ^{Test {:groups ["repo"
-                       "tier2"
+                       "tier3"
                        "blockedByBug-1095938"]
               :enabled false}}
   check_repo_remove_override_button
@@ -220,7 +258,7 @@
         (let [rand-repo (select-random-repo)
               random-row-num (if (nil? rand-repo)
                                (throw (SkipException.
-                                        (str "Repo without overrides not found")))
+                                       (str "Repo without overrides not found")))
                                (:index rand-repo))]
           (log/info "Using repository " (:repo-id rand-repo) "index = " (:index rand-repo))
           (tasks/ui selectrowindex :repo-table random-row-num)
@@ -267,7 +305,7 @@
       (exception-handler row-num 0)
       (exception-handler row-num 1)
       (if-not (and (tasks/has-state? :repo-remove-override "enabled")
-               (tasks/has-state? :repo-remove-override "sensitive"))
+                   (tasks/has-state? :repo-remove-override "sensitive"))
         (do
           (exception-handler row-num 0 :uncheck true)
           (exception-handler row-num 1 :uncheck true))))
@@ -323,64 +361,62 @@
 ;; persistance had multi-point failure. Since we have stopped testing on GUI, decided
 ;; not to explore more and substitured this iterative test with a simple test
 
-(defn ^{BeforeGroups {:groups ["repo"
-                               "tier3"]
-                      :value ["assert_override_persistance"]}}
-  before_verify_override_persistance
-  "Modofies all repos by clicking edit gpg-check"
-  [_]
-  (log/info (str "======= Starting BeforeGroup: " ns-log
-                 " before_verify_override_persistance"))
-  (tasks/restart-app :reregister? true)
-  (tasks/subscribe_all)
-  (assert-and-open-repo-dialog)
-  (tasks/do-to-all-rows-in :repo-table 2
-                           (fn [repo]
-                             (sleep 2000)
-                             (tasks/ui selectrow :repo-table repo)
-                             (let [row-num (tasks/ui gettablerowindex :repo-table repo)]
-                               (tasks/ui checkrow :repo-table row-num 1)
+  (defn ^{BeforeGroups {:groups ["repo"
+                                 "tier3"]
+                        :value ["assert_override_persistance"]}}
+    before_verify_override_persistance
+    "Modofies all repos by clicking edit gpg-check"
+    [_]
+    (log/info (str "======= Starting BeforeGroup: " ns-log
+                   " before_verify_override_persistance"))
+    (tasks/restart-app :reregister? true)
+    (tasks/subscribe_all)
+    (assert-and-open-repo-dialog)
+    (tasks/do-to-all-rows-in :repo-table 2
+                             (fn [repo]
                                (sleep 2000)
-                               (tasks/ui checkrow :repo-table row-num 0)
-                               (sleep 2000))))
-  (tasks/ui click :close-repo-dialog)
-  (tasks/unsubscribe_all))
+                               (tasks/ui selectrow :repo-table repo)
+                               (let [row-num (tasks/ui gettablerowindex :repo-table repo)]
+                                 (tasks/ui checkrow :repo-table row-num 1)
+                                 (sleep 2000)
+                                 (tasks/ui checkrow :repo-table row-num 0)
+                                 (sleep 2000))))
+    (tasks/ui click :close-repo-dialog)
+    (tasks/unsubscribe_all))
+
+  (defn ^{Test {:groups ["repo"
+                         "tier3"
+                         "blockedByBug-1095938"
+                         "assert_override_persistance"]
+                :dataProvider "repolist"}}
+    verify_override_persistance
+    "Checks the persistance of repo override after subscriptions are removed"
+    [_ repo]
+    (assert-and-open-repo-dialog)
+    (tasks/ui selectrow :repo-table repo)
+    (sleep 2000)
+    (verify (and (tasks/has-state? :repo-remove-override "sensitive")
+                 (tasks/has-state? :repo-remove-override "enabled"))))
+
+  (defn ^{AfterGroups {:groups ["repo"
+                                "tier3"]
+                       :value ["assert_override_persistance"]
+                       :alwaysRun true}}
+    after_verify_override_persistance
+    [_]
+    (log/info (str "======= Starting AfterGroup: " ns-log
+                   " after_verify_override_persistance"))
+    (assert-and-open-repo-dialog)
+    (tasks/do-to-all-rows-in :repo-table 2
+                             (fn [repo]
+                               (sleep 1000)
+                               (tasks/ui selectrow :repo-table repo)
+                               (assert-and-remove-all-override)))
+    (tasks/ui click :close-repo-dialog)
+    (tasks/unsubscribe_all)));; Comment ends here
 
 (defn ^{Test {:groups ["repo"
-                       "tier3"
-                       "blockedByBug-1095938"
-                       "assert_override_persistance"]
-              :dataProvider "repolist"}}
-  verify_override_persistance
-  "Checks the persistance of repo override after subscriptions are removed"
-  [_ repo]
-  (assert-and-open-repo-dialog)
-  (tasks/ui selectrow :repo-table repo)
-  (sleep 2000)
-  (verify (and (tasks/has-state? :repo-remove-override "sensitive")
-               (tasks/has-state? :repo-remove-override "enabled"))))
-
-(defn ^{AfterGroups {:groups ["repo"
-                              "tier3"]
-                     :value ["assert_override_persistance"]
-                     :alwaysRun true}}
-  after_verify_override_persistance
-  [_]
-  (log/info (str "======= Starting AfterGroup: " ns-log
-                 " after_verify_override_persistance"))
-  (assert-and-open-repo-dialog)
-  (tasks/do-to-all-rows-in :repo-table 2
-                           (fn [repo]
-                             (sleep 1000)
-                             (tasks/ui selectrow :repo-table repo)
-                             (assert-and-remove-all-override)))
-  (tasks/ui click :close-repo-dialog)
-  (tasks/unsubscribe_all))
-
-);; Comment ends here
-
-(defn ^{Test {:groups ["repo"
-                       "tier1"
+                       "tier2"
                        "blockedByBug-1095938"]
               :enabled false}}
   verify_override_persistance
@@ -455,16 +491,13 @@
 
 ;; Automates manual test case
 (defn ^{Test {:groups ["repo"
-                       "acceptance"]
+                       "tier1" "acceptance"]
               :description "Verfies that the in the Repository Details that the Name and Base Url
                             fields are correct by comparing to the redhat.repo file, running
                             subscription-manager repos --list, and by reading the product.pem data"}}
   verify_repo_name_and_url
   [_]
-  (tasks/restart-app :reregister? true)
-)
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  (tasks/restart-app :reregister? true));;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; DATA PROVIDERS
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

@@ -16,7 +16,7 @@
             [clojure.tools.logging :as log]
             [rhsm.gui.tests.base :as base]
             [rhsm.gui.tasks.candlepin-tasks :as ctasks]
-             rhsm.gui.tasks.ui)
+            rhsm.gui.tasks.ui)
   (:import [org.testng.annotations
             BeforeClass
             BeforeGroups
@@ -24,7 +24,7 @@
             Test
             DataProvider
             AfterClass]
-            org.testng.SkipException))
+           org.testng.SkipException))
 
 (def ldtpd-log "/var/log/ldtpd/ldtpd.log")
 (def rhsm-log "/var/log/rhsm/rhsm.log")
@@ -52,7 +52,7 @@
   (tasks/restart-app :unregister? true))
 
 (defn ^{Test {:groups ["system"
-                       "tier2"
+                       "tier3"
                        "blockedByBug-1248664"]}}
   check_no_gtk_warnings_at_app_start
   "Asserts that there are not any GTK warning on a console appeared when starting app."
@@ -63,11 +63,11 @@
                               "check_no_gtk_warnings_at_app_start"
                               "Gtk-WARNING"
                               (tasks/start-app))]
-     (verify (not (substring? "Gtk-WARNING" output))))
-   (finally (tasks/kill-app))))
+      (verify (not (substring? "Gtk-WARNING" output))))
+    (finally (tasks/kill-app))))
 
 (defn ^{Test {:groups ["system"
-                       "tier2"
+                       "tier3"
                        "blockedByBug-656896"]}}
   check_libglade_warnings
   "Asserts that the libglade-WARNINGs are corrected."
@@ -78,25 +78,67 @@
                               "check_libglade_warnings"
                               "libglade-WARNING"
                               (tasks/start-app))]
-     (verify (not (substring? "libglade-WARNING" output))))
-   (finally (tasks/kill-app))))
+      (verify (not (substring? "libglade-WARNING" output))))
+    (finally (tasks/kill-app))))
 
 (defn ^{Test {:groups ["system"
-                       "tier2"
+                       "tier3"
                        "blockedByBug-909823"]}}
   check_gtype_warnings
   "Asserts that the gtype WARNINGs are corrected."
   [_]
   (let [output (get-logging @clientcmd
-                                  ldtpd-log
-                                  "check_gtype_warnings"
-                                  "gtype"
-                                  (tasks/start-app))]
+                            ldtpd-log
+                            "check_gtype_warnings"
+                            "gtype"
+                            (tasks/start-app))]
     (verify (not (substring? "gtype" output))))
   (tasks/kill-app))
 
 (defn ^{Test {:groups ["system"
-                       "tier1"
+                       "tier3"
+                       "blockedByBug-1330515"]
+              :description "Given 'subscription-manager-gui' is not running
+  and I have launched 'gnome-terminal'
+When I launch 'subscription-manager-gui' in the terminal
+  and I wait 5 seconds
+  and I press <Ctrl-C> in the terminal
+Then I should not see any 'Traceback' written in the terminal
+  and I should not see 'subscription-manager-gui' running."}}
+  no_traceback_on_console_after_ctrl_c_pressed
+  [_]
+  (when (-> (tasks/ui guiexist :main-window) bool)
+    (tasks/kill-app))
+  (tasks/ui launchapp "gnome-terminal")
+  (let [terminal-name (->> (tasks/ui getwindowlist)
+                           (filter (fn [item] (.contains item "frmTerminal")))
+                           last)]
+    (tasks/ui grabfocus terminal-name "uknTerminal")
+    (tasks/ui generatekeyevent "subscription-manager-gui<enter>")
+    (tasks/ui waittillwindowexist :main-window 5)
+    (tasks/ui grabfocus terminal-name "uknTerminal")
+    (tasks/ui generatekeyevent "<ctrl>c")
+    (try
+      (let [traceback-appeared? (letfn [(get-text-from-terminal []
+                                          (-> (tasks/ui gettextvalue terminal-name "uknTerminal")
+                                              clojure.string/trim))]
+                                  (loop [text (get-text-from-terminal)
+                                         number-of-iteration 1]
+                                    (let [traceback-appeared?
+                                          (.contains text "Traceback (most recent call last):")]
+                                      (Thread/sleep 100)
+                                      (if (and (< number-of-iteration 5)
+                                               (not traceback-appeared?))
+                                        (recur (get-text-from-terminal) (inc number-of-iteration))
+                                        traceback-appeared?))))]
+        (verify (not traceback-appeared?))
+        (verify (not (-> (tasks/ui guiexist :main-window) bool))))
+      (finally
+        (tasks/kill-app)
+        (tasks/ui click terminal-name "mnuCloseAllTerminals")))))
+
+(defn ^{Test {:groups ["system"
+                       "tier2"
                        "blockedByBug-706384"]}}
   run_second_instance
   "Asserts that a second instance of rhsm-gui cannot be run."
@@ -113,7 +155,7 @@
     (verify (not (substring? "Traceback" output)))))
 
 (defn ^{Test {:groups ["system"
-                       "tier1"
+                       "tier2"
                        "blockedByBug-747014"
                        "blockedByBug-1120611"
                        "blockedByBug-1142427"]}}
@@ -127,7 +169,7 @@
     (tasks/ui waittillwindowexist :help-dialog 10)
     (verify (bool (tasks/ui guiexist :help-dialog)))
     (finally
-     (tasks/ui closewindow :help-dialog))))
+      (tasks/ui closewindow :help-dialog))))
 
 (defn check_escape_window
   "Asserts that windows correctly render after exiting them with a shortcut."
@@ -152,7 +194,7 @@
                                   ; where the objectlist was getting cached
                                   ; creating a traceback dumps the cache and this works for a quick fix
             fuckcache (fn [] (try+ (tasks/ui getchild "blah")
-                                  (catch Exception e "")))]
+                                   (catch Exception e "")))]
         (comment
           (if (= "RHEL5" (get-release))
             (do
@@ -175,7 +217,7 @@
 
 (data-driven
  check_escape_window {Test {:groups ["system"
-                                     "tier2"
+                                     "tier3"
                                      "blockedByBug-862099"
                                      "blockedByBug-1170761"]}}
  [(if-not (assert-skip :system)
@@ -188,9 +230,8 @@
       [:about-dialog "<CTRL>a"])
     (to-array-2d []))])
 
-
 (defn ^{Test {:groups ["system"
-                       "tier2"
+                       "tier3"
                        "blockedByBug-785203"]}}
   check_close_button
   "Checks that the close menu item works."
@@ -204,7 +245,7 @@
     (finally (tasks/restart-app))))
 
 (defn ^{Test {:groups ["system"
-                       "tier2"
+                       "tier3"
                        "blockedByBug-833578"]}}
   check_online_documentation
   "Asserts that the online documentation opens."
@@ -227,7 +268,7 @@
       (run-command "killall -9 firefox"))))
 
 (defn ^{Test {:groups ["system"
-                       "tier2"
+                       "tier3"
                        "blockedByBug-1254460"]}}
   check_closing_of_about_window
   "Asserts that we can close About window by clicking on =x= icon."
@@ -258,30 +299,29 @@
   (tasks/ui closewindow :license-dialog)
   (verify (not (bool (tasks/ui guiexist :license-dialog))))
 
-  (tasks/ui click :close-about-dialog)
-  )
+  (tasks/ui click :close-about-dialog))
 
 (defn ^{Test {:groups ["system"
-                       "tier1"
+                       "tier2"
                        "blockedByBug-947485"]}}
   open_with_bad_hostname
   "Verifies that the gui can open with a bad hostname in /etc/rhsm/rhsm.conf."
   [_]
   (let [hostname (tasks/conf-file-value "hostname")]
     (try
-     (run-command "subscription-manager clean")
-     (tasks/restart-app)
-     (tasks/register-with-creds)
-     (tasks/kill-app)
-     (tasks/set-conf-file-value "hostname" "blahblahdoesnotexist.redhat.com")
-     (tasks/start-app)
-     (tasks/ui waittillwindowexist :main-window 20)
-     (verify (bool (tasks/ui guiexist :main-window)))
-     (finally
-       (tasks/set-conf-file-value "hostname" hostname)))))
+      (run-command "subscription-manager clean")
+      (tasks/restart-app)
+      (tasks/register-with-creds)
+      (tasks/kill-app)
+      (tasks/set-conf-file-value "hostname" "blahblahdoesnotexist.redhat.com")
+      (tasks/start-app)
+      (tasks/ui waittillwindowexist :main-window 20)
+      (verify (bool (tasks/ui guiexist :main-window)))
+      (finally
+        (tasks/set-conf-file-value "hostname" hostname)))))
 
 (defn ^{Test {:groups ["system"
-                       "tier2"
+                       "tier3"
                        "blockedByBug-920091"
                        "blockedByBug-1037712"
                        "blockedByBug-1170324"]}}
@@ -291,31 +331,31 @@
   (tasks/restart-app)
   (tasks/register-with-creds)
   (let [output (get-logging @clientcmd
-                                  rhsm-log
-                                  "check_traceback"
-                                  nil
-                                  (run-command "subscription-manager unregister"))]
+                            rhsm-log
+                            "check_traceback"
+                            nil
+                            (run-command "subscription-manager unregister"))]
     (verify (not (substring? "Traceback" output))))
   (tasks/kill-app))
 
 (defn ^{Test {:groups ["system"
-                       "tier2"
+                       "tier3"
                        "blockedByBug-960465"]}}
-    launch_gui_with_invalid_cert
-    "Test to verify GUI can be launched with invalid certs"
-    [_]
-    (tasks/kill-app)
-    (run-command "subscription-manager unregister")
-    (try
-      (safe-delete tmpCAcertpath)
-      (run-command (str "mkdir " tmpCAcertpath))
-      (tasks/set-conf-file-value "ca_cert_dir" tmpCAcertpath)
-      (verify (= 1 (tasks/start-app)))
-      (finally
-        (tasks/set-conf-file-value "ca_cert_dir" CAcertpath))))
+  launch_gui_with_invalid_cert
+  "Test to verify GUI can be launched with invalid certs"
+  [_]
+  (tasks/kill-app)
+  (run-command "subscription-manager unregister")
+  (try
+    (safe-delete tmpCAcertpath)
+    (run-command (str "mkdir " tmpCAcertpath))
+    (tasks/set-conf-file-value "ca_cert_dir" tmpCAcertpath)
+    (verify (= 1 (tasks/start-app)))
+    (finally
+      (tasks/set-conf-file-value "ca_cert_dir" CAcertpath))))
 
 (defn ^{Test {:groups ["system"
-                       "tier2"
+                       "tier3"
                        "blockedByBug-1086377"
                        "blockedByBug-916666"]
               :priority (int 30)}}
@@ -344,40 +384,40 @@
          ;; has 12hrs time format.
          ;; The last step adds a zero to hours if the time is earlier than
          ;; 10:00 which makes sting comparison easier.
-         interval (trim-newline (:stdout
-                                 (run-command
-                                  "cat /etc/rhsm/rhsm.conf | grep 'certCheckInterval'")))
-         time-to-be-added (/ (read-string (re-find #"\d+" (str interval)))60)
-         hours-log (first (clojure.string/split log-timestamp #":"))
+          interval (trim-newline (:stdout
+                                  (run-command
+                                   "cat /etc/rhsm/rhsm.conf | grep 'certCheckInterval'")))
+          time-to-be-added (/ (read-string (re-find #"\d+" (str interval))) 60)
+          hours-log (first (clojure.string/split log-timestamp #":"))
          ;; read-string throws exception on strings '08' and '09'
-         processed-hours-log (if (or (= interval "08") (= interval "09"))
-                               (re-find #"[^0]" hours-log) hours-log)
-         new-time (+ time-to-be-added (Integer. (re-find  #"\d+" processed-hours-log)))
-         hours (if (> new-time 12) (- new-time 12) new-time)
-         gui-time (trim (re-find #"\d+:\d+:.*"
-                                 (tasks/ui gettextvalue :next-system-check)))
-         time-of-day (trim (re-find #" \w+" gui-time))
-         edit-time (if (and (= "AM" time-of-day)
-                            (> hours 12)) (- hours 12) hours)
-         compare-time (str (if ( < edit-time 10) (str "0" edit-time) edit-time)
-                           (re-find #":\d+:\d+" log-timestamp))
-         processed-gui-time (re-find #"\d+:\d+:\d+" gui-time)]
-      (verify ( = compare-time processed-gui-time)))
+          processed-hours-log (if (or (= interval "08") (= interval "09"))
+                                (re-find #"[^0]" hours-log) hours-log)
+          new-time (+ time-to-be-added (Integer. (re-find  #"\d+" processed-hours-log)))
+          hours (if (> new-time 12) (- new-time 12) new-time)
+          gui-time (trim (re-find #"\d+:\d+:.*"
+                                  (tasks/ui gettextvalue :next-system-check)))
+          time-of-day (trim (re-find #" \w+" gui-time))
+          edit-time (if (and (= "AM" time-of-day)
+                             (> hours 12)) (- hours 12) hours)
+          compare-time (str (if (< edit-time 10) (str "0" edit-time) edit-time)
+                            (re-find #":\d+:\d+" log-timestamp))
+          processed-gui-time (re-find #"\d+:\d+:\d+" gui-time)]
+      (verify (= compare-time processed-gui-time)))
     (finally
       (if (bool (tasks/ui guiexist :about-dialog)) (tasks/ui click :close-about-dialog))
       ;; Worstcase scenario if service rhsmcertd is stopped we have to
       ;; turn it on as  rhsmcertd_stop_check_timestamp test depends on it
       (if (= (get-release) "RHEL7")
-          (if-not (substring? "Active: active (running)"
-                              (:stdout (run-command "systemctl status rhsmcertd.service")))
-               (run-command "systemctl start rhsmcertd.service"))
-          (if-not (substring? "running"
-                              (:stdout (run-command "service rhsmcertd status")))
-              (run-command "service rhsmcertd start")))
-              (sleep 150000))))
+        (if-not (substring? "Active: active (running)"
+                            (:stdout (run-command "systemctl status rhsmcertd.service")))
+          (run-command "systemctl start rhsmcertd.service"))
+        (if-not (substring? "running"
+                            (:stdout (run-command "service rhsmcertd status")))
+          (run-command "service rhsmcertd start")))
+      (sleep 150000))))
 
 (defn ^{Test {:groups ["system"
-                       "tier2"
+                       "tier3"
                        "blockedByBug-1086377"
                        "blockedByBug-916666"]
               :dependsOnMethods ["rhsmcertd_restart_check_timestamp"]}}
@@ -400,10 +440,10 @@
         (run-command "service rhsmcertd start"))
      ;; No sleep as we can continue without waiting for the service to
      ;; start as it does not affect the normal functioning of sub-man
-     )))
+)))
 
 (defn ^{Test {:groups ["system"
-                       "tier2"
+                       "tier3"
                        "blockedByBug-984083"]}}
   check_for_break_charecters_in_popups
   "Test to ceck if there are any break characters in pop-ups"
@@ -415,15 +455,15 @@
     (tasks/ui waittillwindowexist :question-dialog 30)
     (verify (not (substring? "</b>" (tasks/ui gettextvalue :question-dialog "*Are you sure*"))))
     (finally
-     (if (tasks/ui guiexist :question-dialog)
-       (do
-         (tasks/ui click :yes)
-         (tasks/checkforerror)))
-     (if-not (tasks/ui showing? :register-system) (tasks/unregister))
-     (tasks/restart-app))))
+      (if (tasks/ui guiexist :question-dialog)
+        (do
+          (tasks/ui click :yes)
+          (tasks/checkforerror)))
+      (if-not (tasks/ui showing? :register-system) (tasks/unregister))
+      (tasks/restart-app))))
 
 (defn ^{Test {:groups ["system"
-                       "tier2"
+                       "tier3"
                        "blockedByBug-977850"]}}
   check_preferences_menu_state
   "Asserts that the preferences menu behaves properly when unregistered"
@@ -441,7 +481,7 @@
   (verify (some #(= "visible" %) (tasks/ui getallstates :preferences))))
 
 (defn ^{Test {:groups ["system"
-                       "tier2"
+                       "tier3"
                        "blockedByBug-977850"]}}
   check_system_preference_dialog
   "Verifies behavior of system preference dialog and its content"
@@ -471,7 +511,7 @@
                  (tasks/ui click :close-system-prefs))))))
 
 (defn ^{Test {:group ["system"
-                      "tier2"
+                      "tier3"
                       "blockedByBug-723992"
                       "blockedByBug-1040119"]}}
   check_gui_refresh
@@ -493,34 +533,34 @@
       (sleep 2000)
       (verify (not (= status (tasks/ui gettextvalue :overall-status)))))
     (finally
-     (tasks/unsubscribe_all)
-     (tasks/unregister))))
+      (tasks/unsubscribe_all)
+      (tasks/unregister))))
 
 (defn ^{Test {:groups ["system"
-                       "tier1"
-                       "acceptance"]}}
-    launch_gui_from_gnome
-    "Launches gui from gnome"
-    [_]
-    (try
-      (if (bool (tasks/ui guiexist :main-window))
-        (tasks/kill-app))
-      (sleep 3000)
-      (let [release (get-release)]
-        (case release
-          "RHEL5" (do
-                    (tasks/ui click "Top Panel" "Red Hat Subscription Manager")
-                    (sleep 5000)
-                    (verify (tasks/ui guiexist :main-window)))
-          "RHEL6" (do
-                    (tasks/ui click "frmTopExpandedEdgePanel" "Red Hat Subscription Manager")
-                    (tasks/ui activatewindow :main-window)
-                    (verify (tasks/ui guiexist :main-window)))
-          "RHEL7" (throw (SkipException.
-                          (str "Skipping Test: ldtp on RHEL7 not starting")))
-          (throw (Exception. "Error: Release not identified"))))
-      (finally
-        (if (not (bool (tasks/ui guiexist :main-window)))
-          (tasks/start-app)))))
+                       "tier2"
+                       "tier1" "acceptance"]}}
+  launch_gui_from_gnome
+  "Launches gui from gnome"
+  [_]
+  (try
+    (if (bool (tasks/ui guiexist :main-window))
+      (tasks/kill-app))
+    (sleep 3000)
+    (let [release (get-release)]
+      (case release
+        "RHEL5" (do
+                  (tasks/ui click "Top Panel" "Red Hat Subscription Manager")
+                  (sleep 5000)
+                  (verify (tasks/ui guiexist :main-window)))
+        "RHEL6" (do
+                  (tasks/ui click "frmTopExpandedEdgePanel" "Red Hat Subscription Manager")
+                  (tasks/ui activatewindow :main-window)
+                  (verify (tasks/ui guiexist :main-window)))
+        "RHEL7" (throw (SkipException.
+                        (str "Skipping Test: ldtp on RHEL7 not starting")))
+        (throw (Exception. "Error: Release not identified"))))
+    (finally
+      (if (not (bool (tasks/ui guiexist :main-window)))
+        (tasks/start-app)))))
 
 (gen-class-testng)

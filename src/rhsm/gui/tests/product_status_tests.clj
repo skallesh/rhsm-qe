@@ -45,7 +45,7 @@
           list-status (into [] (map grab-value (filter not-nil? (map status raw-cli-data))))
           list-products (into [] (map grab-value (filter not-nil? (map products raw-cli-data))))
           cli-data (zipmap list-products list-status)]
-    (reset! productstatus cli-data))
+      (reset! productstatus cli-data))
     (catch Exception e
       (reset! (skip-groups :product_status) true)
       (throw e))))
@@ -73,7 +73,7 @@
     (verify (= gui-status "Not Subscribed"))))
 
 (defn ^{Test {:groups ["product_status"
-                       "tier1"
+                       "tier2"
                        "blockedByBug-923873"]}}
   check_status_when_unregistered
   "To verify that status in MyInstalledProducts icon color and product status
@@ -114,8 +114,8 @@
   (tasks/unregister))
 
 (defn ^{Test {:groups ["system"
-                       "acceptance"
-                       "tier1"
+                       "tier1" "acceptance"
+                       "tier2"
                        "blockedByBug-1051383"]}}
   check_status_column
   "Asserts that the status column of GUI has only 'Subscribed', 'Partially Subscribed'
@@ -136,13 +136,31 @@
     (finally
       (run-command "killall -9 firefox"))))
 
+(defn ^{Test {:groups ["system"
+                       "tier2"]
+              :dataProvider "sorting-headers-at-my-installed-products-view"
+              :description "Given a system is subscribed
+ and I have clicked on the tab 'My Installed Products'
+When I click on a table header 'Product'
+Then I see names of products to be redrawn
+ and the names are sorted some way"}}
+  my_installed_products_table_is_sortable
+  [_ header-name column-index]
+  (tasks/ui selecttab :my-installed-products)
+  (if (< (tasks/ui getrowcount :installed-view) 2)
+    (throw (SkipException. (str "There are less than 2 products installed in the system."))))
+  (verify (tasks/table-cell-header-sorts-its-column-data?
+           :installed-view
+           (keyword header-name)
+           column-index)))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; DATA PROVIDERS
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn ^{DataProvider {:name "subscribed"}}
   subscribed_products [_ & {:keys [debug]
-                               :or {debug false}}]
+                            :or {debug false}}]
   (log/info (str "======= Starting DataProvider: " ns-log "/subscribed_products()"))
   (if-not (assert-skip :facts)
     (do
@@ -174,5 +192,17 @@
           (to-array-2d subs)
           subs)))
     (to-array-2d [])))
+
+(defn ^{DataProvider {:name "sorting-headers-at-my-installed-products-view" }}
+  sorting_headers_at_my_installed_products_view [_ & {:keys [debug]
+                                                 :or {debug false}}]
+  (log/info (str "======= Starting DataProvider: " ns-log "sorting_headers_at_my_installed_products_view"))
+  "array of [<header-name> <it's column index - starting from zero>]"
+  (to-array-2d [;;["my-installed-products-product-header" 0]
+                ;;["my-installed-products-version-header" 1]
+                ;;["my-installed-products-status-header" 2]
+                ["my-installed-products-startdate-header" 3]
+                ;;["my-installed-products-enddate-header" 4]
+                ]))
 
 (gen-class-testng)

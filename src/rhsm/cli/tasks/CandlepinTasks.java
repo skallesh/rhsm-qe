@@ -51,9 +51,7 @@ import org.testng.SkipException;
 
 import rhsm.base.CandlepinType;
 import rhsm.base.ConsumerType;
-import rhsm.base.SubscriptionManagerBaseTestScript;
 import rhsm.base.SubscriptionManagerCLITestScript;
-import rhsm.data.EntitlementCert;
 import rhsm.data.RevokedCert;
 
 import com.redhat.qe.Assert;
@@ -110,7 +108,8 @@ public class CandlepinTasks {
 		MultiThreadedHttpConnectionManager connectionManager = new MultiThreadedHttpConnectionManager();
       	client = new HttpClient(connectionManager);
       	client.getParams().setAuthenticationPreemptive(true);
-		//client = new HttpClient();
+      	client.getParams().setConnectionManagerTimeout(1/*min*/*60*1000/*ms/min*/);	// set a Connection Manager Timeout - the time to wait for a connection from the connection manager/pool
+      	client.getParams().setSoTimeout(15/*min*/*60*1000/*ms/min*/);	// set a Socket Timeout - the time waiting for data - after the connection was established; maximum time of inactivity between two data packets
 		try {
 			SSLCertificateTruster.trustAllCertsForApacheHttp();
 		}catch(Exception e) {
@@ -305,7 +304,7 @@ public class CandlepinTasks {
 			//path changes caused by commit cddba55bda2cc1b89821a80e6ff23694296f2079 Fix scripts dir for server build.    before candlepin-0.9.22-1
 			//RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "export TESTDATA=1 && export FORCECERT=1 && export GENDB=1 && export HOSTNAME="+hostname+" && export IMPORTDIR="+serverImportDir+" && cd "+serverInstallDir+"/server && bundle exec bin/deploy", Integer.valueOf(0), "Initialized!", null);	// prepended "bundle exec" to avoid: You have already activated rjb 1.4.8, but your Gemfile requires rjb 1.4.0. Prepending `bundle exec` to your command may solve this.
 			//started throwing... Stderr: tput: No value for $TERM and no -T specified
-			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "export TERM=xterm && export TESTDATA=1 && export FORCECERT=1 && export GENDB=1 && export HOSTNAME="+hostname+" && export IMPORTDIR="+serverImportDir+" && cd "+serverInstallDir+"/server && bundle exec bin/deploy", Integer.valueOf(0), "Initialized!", null);	// prepended "bundle exec" to avoid: You have already activated rjb 1.4.8, but your Gemfile requires rjb 1.4.0. Prepending `bundle exec` to your command may solve this.
+			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "export TERM=xterm && export TESTDATA=1 && export FORCECERT=1 && export GENDB=1 && export HOSTEDTEST=\"hostedtest\" && export HOSTNAME="+hostname+" && export IMPORTDIR="+serverImportDir+" && cd "+serverInstallDir+"/server && bundle exec bin/deploy", Integer.valueOf(0), "Initialized!", null);	// prepended "bundle exec" to avoid: You have already activated rjb 1.4.8, but your Gemfile requires rjb 1.4.0. Prepending `bundle exec` to your command may solve this.
 		}
 
 		/* attempt to use live logging
@@ -705,7 +704,7 @@ schema generation failed
 					log.warning("Re-attempting one more time to get a valid JSON response from the server...");
 					response = getHTTPResponseAsString(client, get, authenticator, password);
 					if (!response.startsWith("[") && !response.startsWith("{") && response.contains("502 Proxy Error")) {	// we still get a 502 Proxy Error
-						throw new SkipException("Encounterd a 502 response from the server and could not complete this test while bug '"+bugId+"' is open.");
+						throw new SkipException("Encountered a 502 response from the server and could not complete this test while bug '"+bugId+"' is open.");
 					} else {
 						log.fine("Workaround succeeded.");
 					}
@@ -742,7 +741,7 @@ schema generation failed
 //						log.warning("Re-attempting one more time to get a valid JSON response from the server...");
 //						jsonString = getHTTPResponseAsString(client, get, authenticator, password);
 //						if (jsonString.startsWith("{\"errors\":") && jsonString.contains(invalidServerResponseMessage)) {	// we still get a 502 Proxy Error
-//							throw new SkipException("Encounterd another '"+invalidServerResponseMessage+"' and could not complete this test while bug '"+bugId+"' is open.");
+//							throw new SkipException("Encountered another '"+invalidServerResponseMessage+"' and could not complete this test while bug '"+bugId+"' is open.");
 //						} else {
 //							log.fine("Workaround succeeded.");
 //						}
@@ -767,7 +766,7 @@ schema generation failed
 					log.warning("Re-attempting one more time to get a valid response from the server...");
 					response = getHTTPResponseAsString(client, get, authenticator, password);
 					if (response.startsWith("{\"errors\":") && response.contains(invalidServerResponseMessage)) {	// we still get a 502 Proxy Error
-						throw new SkipException("Encounterd another '"+invalidServerResponseMessage+"' and could not complete this test while bug '"+bugId+"' is open.");
+						throw new SkipException("Encountered another '"+invalidServerResponseMessage+"' and could not complete this test while bug '"+bugId+"' is open.");
 					} else {
 						log.fine("Workaround succeeded.");
 					}

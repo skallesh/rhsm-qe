@@ -51,7 +51,6 @@
                (run-command "gsettings set org.gnome.settings-daemon.plugins.a11y-settings active false")
                (run-command "gsettings set org.gnome.desktop.interface toolkit-accessibility true")))))
 
-
 (defn ^{BeforeSuite {:groups ["setup"]}}
   startup [_]
   (try
