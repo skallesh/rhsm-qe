@@ -10,7 +10,6 @@ import java.util.Map;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.testng.SkipException;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterGroups;
 import org.testng.annotations.BeforeClass;
@@ -242,9 +241,6 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript {
 		}
 		if (providedProductIds.isEmpty()) {
 			poolId = createTestPool(-60 * 24, 60 * 24);
-
-			throw new SkipException("Could not find a subscription pool with guest_limit '" + guestLimit
-					+ "' that provides a product for this test.");
 		}
 		return poolId;
 	}
