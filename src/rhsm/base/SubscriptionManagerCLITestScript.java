@@ -238,7 +238,9 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		if (clienttasks.isPackageVersion("subscription-manager",">=","0")!=null) {
 			groupId += " "+clienttasks.installedPackageVersionMap.get("subscription-manager");
 		}
-		/*
+		/* exclude for now since the Polarion Group ID should really be a multi-entry field
+		 * RHEL Projects: Use of Group ID and Component for Test Runs
+		 * https://projects.engineering.redhat.com/browse/POLARION-1201
 		if (clienttasks.isPackageVersion("python-rhsm",">=","0")!=null) {
 			groupId += " "+clienttasks.installedPackageVersionMap.get("python-rhsm");
 		}
