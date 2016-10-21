@@ -208,7 +208,7 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Verify that subscription-manager-container-plugin provides needed registry_hostnames and CA certs",
-			groups={"AcceptanceTests","blockedByBug-1184940","blockedByBug-1186386"},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1184940","blockedByBug-1186386"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyExpectedRegistryHostnamesAreConfigured_Test() {
@@ -239,7 +239,7 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 	// RHEL7 Only ==============================================================================================
 	
 	@Test(	description="install the latest docker package on the host",
-			groups={"AcceptanceTests"},
+			groups={"AcceptanceTests","Tier1Tests"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void InstallDockerPackageOnHost_Test() throws IOException, JSONException {
@@ -332,7 +332,7 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	@Test(	description="verify the specified docker image downloads and will run subscription-manager >= 1.12.4-1",
-			groups={"AcceptanceTests","blockedByBug-1186386"},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1186386"},
 			dependsOnMethods={"InstallDockerPackageOnHost_Test"},
 			dataProvider="getDockerImageData",
 			enabled=true)
@@ -405,7 +405,7 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	@Test(	description="verify a running container has no yum repolist when the host has no entitlement",
-			groups={"AcceptanceTests"},
+			groups={"AcceptanceTests","Tier1Tests"},
 			dependsOnMethods={"PullDockerImage_Test"},
 			dataProvider="getDockerImageData",
 			enabled=true)
@@ -429,7 +429,7 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	@Test(	description="verify a running container has yum repolist access to appropriate content from the host's entitlement",
-			groups={"AcceptanceTests"},
+			groups={"AcceptanceTests","Tier1Tests"},
 			dependsOnMethods={"VerifyYumRepolistIsEmptyOnRunningDockerImageWhenHostIsUnregistered_Test"},
 			dataProvider="getDockerImageData",
 			enabled=true)
@@ -608,7 +608,7 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="verify a running container has access to all the entitlement certs from the host",
-			groups={"AcceptanceTests","blockedByBug-1353433"},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1353433"},
 			dependsOnMethods={"VerifyYumRepolistOnRunningDockerImageConsumedFromHostEntitlements_Test"},
 			dataProvider="getDockerImageData",
 			enabled=true)
@@ -700,7 +700,7 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Verify that entitlements providing containerimage content are copied to relevant directories when attached via auto-subscribe (as governed by the subscription-manager-plugin-container package)",
-			groups={"AcceptanceTests"},
+			groups={"AcceptanceTests","Tier1Tests"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyContainerConfigurationsAreSetAfterAutoSubscribingAndUnsubscribing_Test() {
@@ -742,7 +742,7 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 		}
 	}
 	@Test(	description="Verify that entitlements providing containerimage content are copied to relevant directories when attached via auto-heal (as governed by the subscription-manager-plugin-container package)",
-			groups={"AcceptanceTests","blockedByBug-1165692","blockedByBug-1344500","blockedByBug-1343139"},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1165692","blockedByBug-1344500","blockedByBug-1343139"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyContainerConfigurationsAreSetAfterAutoHealingAndUnsubscribing_Test() {

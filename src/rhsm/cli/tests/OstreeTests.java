@@ -128,7 +128,7 @@ public class OstreeTests extends SubscriptionManagerCLITestScript {
 	// Test methods ***********************************************************************
 	
 	@Test(	description="Verify that the ostree config and origin files are set after attaching an atomic subscription; attempt an atomic upgrade; unsubscribe and verify ostree config files are unset",
-			groups={"subscribeAndUnsubscribeTests","AcceptanceTests"},
+			groups={"subscribeAndUnsubscribeTests","AcceptanceTests","Tier1Tests"},
 			dataProvider="getOstreeSubscriptionPools",
 			priority=10,
 			enabled=true)
@@ -427,7 +427,7 @@ public class OstreeTests extends SubscriptionManagerCLITestScript {
 	
 	
 //	@Test(	description="Verify that the ostree config and origin files are and that when in container mode, attempts to run subscription-manager are blocked",
-//			groups={"subscribeAndUnsubscribeTests","AcceptanceTests"},
+//			groups={"subscribeAndUnsubscribeTests","AcceptanceTests","Tier1Tests"},
 //			dataProvider="getOstreeProductSubscriptions",
 //			priority=20,
 //			enabled=true)

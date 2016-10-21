@@ -47,7 +47,7 @@ public class UnregisterTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(description="unregister should not make unauthorized requests",
-			groups={"AcceptanceTests","UnregisterShouldNotThrowUnauthorizedRequests_Test","blockedByBug-997935","blockedByBug-1158578","blockedByBug-1207403"},
+			groups={"AcceptanceTests","Tier1Tests","UnregisterShouldNotThrowUnauthorizedRequests_Test","blockedByBug-997935","blockedByBug-1158578","blockedByBug-1207403"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void UnregisterShouldNotThrowUnauthorizedRequests_Test() {

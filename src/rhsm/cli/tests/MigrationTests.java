@@ -1064,7 +1064,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	@Test(	description="Execute migration tool rhn-migrate-classic-to-rhsm with a valid activation-key (and a good org)",
-			groups={"AcceptanceTests","blockedByBug-1154375"},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1154375"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=130765)
 	public void RhnMigrateClassicToRhsmWithActivationKey_Test() throws Exception {

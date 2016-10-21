@@ -1003,7 +1003,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="assert the addition of new facts collected to capture multiple IPs per network interface device - net.interface.<device>.ipv<4|6>_<addressinfo>_list",
-			groups={"blockedByBug-874735", "AcceptanceTests"}, dependsOnGroups={},
+			groups={"blockedByBug-874735","AcceptanceTests","Tier1Tests"}, dependsOnGroups={},
 			enabled=true)
 	// Polarion RHEL7-55562 RHSM-TC : facts collection of interfaces with multiple addresses
 	//@ImplementsNitrateTest(caseId=)
@@ -1279,7 +1279,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="Verify proc_cpuinfo facts are now collected on subscription-manager-1.16.8-2+.  On ppc64 systems, also verify that a virt.uuid is collected on a pSeries platform.",
-			groups={"AcceptanceTests","blockedByBug-1300805","blockedByBug-1300816"},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1300805","blockedByBug-1300816"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyProcCpuInfoCollection_Test() {

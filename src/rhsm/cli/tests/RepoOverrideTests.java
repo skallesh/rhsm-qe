@@ -68,7 +68,7 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	@Test(	description="attempt to override a baseurl using subscription-manager repos-override",
-			groups={"blockedByBug-1030604", "AcceptanceTests"},
+			groups={"blockedByBug-1030604", "AcceptanceTests","Tier1Tests"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
 	public void AttemptToOverrideBaseurl_Test() {
@@ -107,7 +107,7 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	@Test(	description="attempt to override a bASeUrL (note the case) using subscription-manager repos-override",
-			groups={"blockedByBug-1030604","blockedByBug-1034375","AcceptanceTests"},
+			groups={"blockedByBug-1030604","blockedByBug-1034375","AcceptanceTests","Tier1Tests"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
 	public void AttemptToOverrideBaseurlInMixedCases_Test() {
