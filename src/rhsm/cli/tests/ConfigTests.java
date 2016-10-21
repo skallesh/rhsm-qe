@@ -533,6 +533,7 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 	@Test(	description="verify the [server]server_timeout can be configured and function properly when the server does not respond within the timeout seconds",
 			groups={"blockedByBug-1346417","VerifyConfigServerTimeouts_Test"},
 			enabled=true)
+	// TODO: Verifies: https://polarion.engineering.redhat.com/polarion/#/project/RHEL6/workitem?id=RHEL6-28580
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyConfigServerTimeouts_Test() throws IOException {
 		// this bug is specifically designed to test Bug 1346417 - [RFE] Allow users to set socket timeout.
