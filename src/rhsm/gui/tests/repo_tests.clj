@@ -144,16 +144,16 @@
 
 (defn ^{Test {:groups ["repo"
                        "tier2"
-                       "tier1" "acceptance"]}}
-  check_repo_visible
-  "This test checks whether repository option exists
-   when system is unregistered"
+                       "tier1" "acceptance"]
+              :description "Given a system is not registered
+    and I run 'subscription-manager-gui'
+  When I click on the 'System' menu
+  Then I see 'Repositories' menu disabled."}}
+  check_repo_disabled
   [_]
   (tasks/restart-app :unregister? true)
   (tasks/ui click :main-window "System")
-  (if (= "RHEL7" (get-release))
-    (verify (not (tasks/has-state? :repositories "enabled")))
-    (verify (not (tasks/visible? :repositories)))))
+  (verify (not (tasks/has-state? :repositories "enabled"))))
 
 (defn ^{Test {:groups ["repo"
                        "tier2"
