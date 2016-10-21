@@ -43,7 +43,7 @@
                    :no-sla-available #"No service level will cover all installed products"
                    :error-getting-subscription #"Pool is restricted to physical systems"
                    :no-system-name #"You must enter a system name"
-                   })
+                   :unable-to-connect-server #"Network error, unable to connect to server."})
 
 (defn matching-error
   "Returns a keyword of known error, if the message matches any of them."

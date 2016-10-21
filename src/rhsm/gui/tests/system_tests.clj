@@ -138,6 +138,32 @@ Then I should not see any 'Traceback' written in the terminal
         (tasks/ui click terminal-name "mnuCloseAllTerminals")))))
 
 (defn ^{Test {:groups ["system"
+                       "tier3"
+                       "blockedByBug-1315591"]
+              :description "Given a system is registered
+  and at least one subscription is attached
+  and I have run 'subscription-manager-gui'
+When the network goes down
+  and I try to remove some subscription in 'My Subscriptions' tab
+Then I should see a dialog 'Network is down'
+  and no traceback appears in '/var/log/rhsm/rhsm.log'"}}
+  error_dialog_and_no_traceback_when_network_is_down
+  [_]
+  (tasks/restart-app)
+  (tasks/register-with-creds)
+  (tasks/subscribe-random 2)
+  (try+
+   (base/close-connection-to-candlepin)
+   (tasks/ui selecttab :my-subscriptions)
+   (let [subscription (tasks/ui getcellvalue :my-subscriptions-view 0 0)]
+     (verify (-> (try+ (tasks/unsubscribe subscription)
+                       (catch Object e (:type e)))
+                 (= :unable-to-connect-server))))
+   (finally
+     (tasks/close-error-dialog)
+     (base/open-connection-to-candlepin))))
+
+(defn ^{Test {:groups ["system"
                        "tier2"
                        "blockedByBug-706384"]}}
   run_second_instance
