@@ -51,6 +51,33 @@
                (run-command "gsettings set org.gnome.settings-daemon.plugins.a11y-settings active false")
                (run-command "gsettings set org.gnome.desktop.interface toolkit-accessibility true")))))
 
+(defn open-connection-to-candlepin
+  "The function runs 'iptables' to open connection to a server."
+  ;; iptables -D OUTPUT -d subscription.rhsm.stage.redhat.com -j REJECT
+  ;; iptables: No chain/target/match by that name.
+  []
+  ;; remove all this task related REJECT rules from OUTPUT chain
+  (let [iptables-cmd (format "iptables -D OUTPUT -d %s -j REJECT" (conf-file-value "hostname"))]
+    (loop [result-of-del-cmd (-> iptables-cmd run-command :stderr)
+           iteration 1]
+      (if-not (or (.contains result-of-del-cmd "No chain/target/match by that name.") (>= iteration 10))
+        (recur (-> iptables-cmd run-command :stderr) (inc iteration))))))
+
+(defn close-connection-to-candlepin
+  "The function runs 'iptables' to close the connection to a candlepin server."
+  []
+  ;; iptables -A OUTPUT -d subscription.rhsm.stage.redhat.com -j REJECT
+  ;; openssl s_client -debug -connect subscription.rhsm.stage.redhat.com:443
+  ;; Connection refused
+  (let [iptables-cmd (format "iptables -A OUTPUT -d %s -j REJECT" (conf-file-value "hostname"))
+        ;; connection-test (format "openssl s_client -debug -host %s -port %s"
+        ;;                         (conf-file-value "hostname")
+        ;;                         (conf-file-value "port"))
+        ]
+    (run-command iptables-cmd)
+    ;(verify (-> connection-test run-command :stderr (.contains "Connection refused")))
+    ))
+
 (defn ^{BeforeSuite {:groups ["setup"]}}
   startup [_]
   (try
@@ -64,6 +91,8 @@
     (update-ldtpd (:ldtpd-source-url @config/config))
     (println "----------------------------------- before restart vnc ---------------------------------------")
     (restart-vnc)
+    (println "----------------------------------- before open connection to candlepin ---------------------------------------")
+    (open-connection-to-candlepin)
     (println "----------------------------------- before connect ---------------------------------------")
     (connect)
     (println "----------------------------------- before mount/start ---------------------------------------")
