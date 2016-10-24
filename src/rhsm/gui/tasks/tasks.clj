@@ -481,7 +481,8 @@
                (bool (ui guiexist :firstboot-window "Subscription Management Registration"))))
   (when server (ui settextvalue :firstboot-server-entry server))
   (if server-default? (ui click :firstboot-server-default))
-  (ui (setchecked (or activation-key activation?)) :firstboot-activation-checkbox)
+  ;; no activation key anymore
+  ;;(ui (setchecked (or activation-key activation?)) :firstboot-activation-checkbox)
   (ui click :firstboot-forward)
   (if-not (or activation-key activation?)
     (do
