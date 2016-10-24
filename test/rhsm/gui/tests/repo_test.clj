@@ -7,7 +7,7 @@
              [rhsm.gui.tasks.tools :as tools]
              [rhsm.gui.tasks.test-config :as c]
              [rhsm.gui.tasks.ui :as ui]
-             [clojure.core.match :as m]
+             [clojure.core.match :refer [match]]
              [rhsm.gui.tests.base :as base])
   (:import org.testng.SkipException))
 
@@ -44,3 +44,6 @@
             (> (Integer. major) 1))
       (tests/check_repo_table_sortable nil)
       (is (thrown? AssertionError (tests/check_repo_table_sortable nil))))))
+
+(deftest check_repo_visible-test
+  (tests/check_repo_disabled nil))
