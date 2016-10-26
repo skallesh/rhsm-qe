@@ -1098,3 +1098,11 @@ The function uses an utility 'import' from package 'imagemagick'"
                        (format "%s-screenshot-%s@%s.png" jenkins-run-id name suffix))]
       (run-command (format "DISPLAY=:2 import -window root %s" image-name))
       image-name)))
+
+
+(defmacro verify-or-take-screenshot
+  [expr]
+  `(try+ (verify ~expr)
+         (catch Object e#
+           (take-screenshot "not-verified")
+           (throw+))))
