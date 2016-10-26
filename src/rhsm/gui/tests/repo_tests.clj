@@ -343,9 +343,9 @@ Then I see values of repositories ids to be redrawn
   (sleep 3000)
   (let [row-num (tasks/ui gettablerowindex :repo-table repo)]
     (toggle-checkbox-state row-num))
-  (verify (tasks/has-state? :repo-remove-override "enabled"))
+  (tasks/verify-or-take-screenshot (tasks/has-state? :repo-remove-override "enabled"))
   (assert-and-remove-all-override)
-  (verify (not (tasks/has-state? :repo-remove-override "enabled"))))
+  (tasks/verify-or-take-screenshot (not (tasks/has-state? :repo-remove-override "enabled"))))
 
 (defn ^{AfterGroups {:groups ["repo"
                               "tier3"]
