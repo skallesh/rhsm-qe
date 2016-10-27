@@ -338,14 +338,15 @@ Then I see values of repositories ids to be redrawn
   (when (-> (get-release :true) :version (= "7.3"))
     (throw (SkipException.
             (str "Skip due to a problem with toggle checkbox in RHEL7.3"))))
-  (assert-and-open-repo-dialog)
-  (tasks/ui selectrow :repo-table repo)
-  (sleep 3000)
-  (let [row-num (tasks/ui gettablerowindex :repo-table repo)]
-    (toggle-checkbox-state row-num))
-  (tasks/verify-or-take-screenshot (tasks/has-state? :repo-remove-override "enabled"))
-  (assert-and-remove-all-override)
-  (tasks/verify-or-take-screenshot (not (tasks/has-state? :repo-remove-override "enabled"))))
+  (tasks/screenshot-on-exception
+   (assert-and-open-repo-dialog)
+   (tasks/ui selectrow :repo-table repo)
+   (sleep 3000)
+   (let [row-num (tasks/ui gettablerowindex :repo-table repo)]
+     (toggle-checkbox-state row-num))
+   (verify (tasks/has-state? :repo-remove-override "enabled"))
+   (assert-and-remove-all-override)
+   (verify (not (tasks/has-state? :repo-remove-override "enabled")))))
 
 (defn ^{AfterGroups {:groups ["repo"
                               "tier3"]
