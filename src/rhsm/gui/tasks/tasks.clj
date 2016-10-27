@@ -1107,8 +1107,8 @@ The function uses an utility 'import' from package 'imagemagick'"
            (throw+))))
 
 (defmacro screenshot-on-exception
-  [body]
+  [& body]
   `(try+ ~@body
          (catch Object e#
-           (take-screenshot "screenshot-on-exception")
+           (take-screenshot "on-exception")
            (throw+))))
