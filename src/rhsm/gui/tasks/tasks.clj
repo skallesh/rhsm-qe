@@ -1099,10 +1099,16 @@ The function uses an utility 'import' from package 'imagemagick'"
       (run-command (format "DISPLAY=:2 import -window root %s" image-name))
       image-name)))
 
-
 (defmacro verify-or-take-screenshot
   [expr]
   `(try+ (verify ~expr)
          (catch Object e#
            (take-screenshot "not-verified")
+           (throw+))))
+
+(defmacro screenshot-on-exception
+  [body]
+  `(try+ ~@body
+         (catch Object e#
+           (take-screenshot "screenshot-on-exception")
            (throw+))))
