@@ -577,14 +577,24 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 		SSHCommandResult result;
 		List<String> realTimeList;
 		String expectedStderr = "Unable to verify server's identity: timed out";
-		
+		if (clienttasks.redhatReleaseX.equals("6")) expectedStderr = "Unable to verify server's identity:";
+
 		// test the default server_time value of 180 seconds
-		//	[root@jsefler-rhel7 ca]# time subscription-manager version 
+		
+		//	[root@jsefler-rhel7 ~]# time subscription-manager version 
 		//	Unable to verify server's identity: timed out
 		//
 		//	real	3m0.568s
 		//	user	0m0.226s
 		//	sys		0m0.036s
+		
+		//	[root@jsefler-rhel6 ~]# time subscription-manager version
+		//	Unable to verify server's identity: 
+		//
+		//	real	3m0.555s
+		//	user	0m0.287s
+		//	sys		0m0.045s
+
 		String serverDefaultTimeout = "180";	// seconds (assumed hard-coded default)
 		command = "time "+clienttasks.versionCommand(null, null, null);
 		sshCommandTimeout = new Long(200); // seconds	// default server_timeout is 180 seconds
