@@ -1096,7 +1096,7 @@ The function uses an utility 'import' from package 'imagemagick'"
     (let [image-name (if (clojure.string/blank? jenkins-run-id)
                        (format "screenshot-%s@%s.png" name suffix)
                        (format "%s-screenshot-%s@%s.png" jenkins-run-id name suffix))]
-      (run-command (format "DISPLAY=:2 import -window root %s" image-name))
+      (run-command (format "DISPLAY=:2 import -window root '%s'" image-name))
       image-name)))
 
 (defmacro verify-or-take-screenshot
