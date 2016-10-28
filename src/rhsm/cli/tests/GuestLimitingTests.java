@@ -42,7 +42,7 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript {
 	public static final String factValueForSystemNonCompliance = "invalid";
 	public static final String factValueForSystemPartialCompliance = "partial";
 	protected String randomAvailableProductId = null;
-	protected List<String> providedProduct = null;
+	protected List<String> providedProduct = new ArrayList<String>();
 
 	/**
 	 * @author skallesh
@@ -338,10 +338,16 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript {
 		// int i = randomGenerator.nextInt(pools.size());
 
 		for (SubscriptionPool availablepools : pools) {
+			System.out.println(CandlepinTasks.getPoolProvidedProductIds(sm_serverAdminUsername, sm_serverAdminPassword,
+					sm_serverUrl, availablepools.poolId));
 			if ((CandlepinTasks.getPoolProvidedProductIds(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,
 					availablepools.poolId).contains("37060"))) {
+				System.out.println("inside loop ...............");
+
 				providedProduct.add("37060");
+				System.out.println("inside loop ...............");
 				randomAvailableProductId = availablepools.productId;
+				System.out.println("inside loop ...............");
 
 			}
 
