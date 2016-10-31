@@ -24,9 +24,10 @@
             Test
             DataProvider
             AfterClass]
-            org.testng.SkipException
+           org.testng.SkipException
            [com.github.redhatqe.polarize.metadata TestDefinition]
-           [com.github.redhatqe.polarize.metadata DefTypes$Project]))
+           [com.github.redhatqe.polarize.metadata DefTypes$Project]
+           [com.github.redhatqe.polarize.metadata DefTypes$Importance]))
 
 (def servicelist (atom {}))
 (def productlist (atom {}))
@@ -94,7 +95,8 @@
                                  "tier1"
                                  "acceptance"
                                  "blockedByBug-818282"]}
-        TestDefinition {:projectID [`DefTypes$Project/PLATTP]}}
+        TestDefinition {:projectID [`DefTypes$Project/RHEL6]
+                        :testCaseID ["RHEL6-20132"]}}
   check_ordered_contract_options
   "Checks if contracts in contract selection dialog are ordered based on host type"
   [_]
@@ -128,7 +130,10 @@
 (defn ^{Test {:groups ["search_status"
                        "tier3"
                        "check_subscription_type_all_available"]
-              :dataProvider "all-subscriptions"}}
+              :dataProvider "all-subscriptions"}
+        TestDefinition {:projectID [`DefTypes$Project/RHEL6]
+                        :testCaseID ["RHEL6-20132"]
+                        :importance `DefTypes$Importance/MEDIUM}}
   check_subscription_type_all_subscriptions
   "Checks for subscription type in all available subscriptions"
   [_ product]
@@ -145,9 +150,11 @@
   (tasks/unsubscribe_all)
   (tasks/unregister))
 
-(defn ^{Test {:groups ["search_status"
-                       "tier1" "acceptance"
-                       "tier2"]}}
+(defn ^{Test           {:groups ["search_status"
+                                 "tier1" "acceptance"
+                                 "tier2"]}
+        TestDefinition {:projectID [`DefTypes$Project/RHEL6]
+                        :testCaseID ["RHEL6-20133"]}}
   check_physical_only_pools
   "Identifies physical only pools from JSON and checks
    whether it throws appropriate error message"

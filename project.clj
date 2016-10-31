@@ -34,7 +34,7 @@
                  [test-clj.testng "1.1.0-SNAPSHOT"]
                  [levand/immuconf "0.1.0"]
                  [mount "0.1.10"]
-                 [com.github.redhatqe.polarize/polarize "0.5.0"]]
+                 [com.github.redhatqe.polarize/polarize "0.5.1"]]
 
   ;lein1
   :dev-dependencies [[fn.trace "1.3.2.0-SNAPSHOT"]
@@ -48,8 +48,7 @@
   :test-matcher #"rhsm\..*-test$"
   :repositories {"clojars.org" {:url "http://clojars.org/repo"
                                 :snapshots {:update :always}}}
-  :javac-options {:debug "on"}
-  ;:javac-options ["-target" "1.7" "-source" "1.7"]
+  :javac-options ["-target" "1.8" "-source" "1.8" "-parameters"]
   ;; uncomment this to remote debug.  This is useful to debug annotation processing or xunit importing which can't be
   ;; handled through the regular clojure debugger
   ;:jvm-opts ["-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5007"]
