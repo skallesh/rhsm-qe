@@ -1320,7 +1320,11 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		configureProductCertDirForAllProductsSubscribableInTheFutureCompleted=true;
 	}
 	
-	protected boolean configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevelCompleted=false;		
+	protected boolean configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevelCompleted=false;
+    public boolean getConfigureProductCertDirForAllProductsSubscribableByOneCommonServiceLevelCompleted() {
+        return configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevelCompleted;
+    }
+
 	@BeforeGroups(groups={"setup"},value="configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevel")
 	public void configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevel() {
 		clienttasks.unregister(null, null, null);

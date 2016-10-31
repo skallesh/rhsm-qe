@@ -555,7 +555,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(description="Attempt to unsubscribe from a pool id when not registered",
-			groups={"blockedByBug-1198178", "AcceptanceTests"},
+			groups={"blockedByBug-1198178", "AcceptanceTests","Tier1Tests"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void UnsubscribeFromPoolIdWhenNotRegistered_Test() {
@@ -601,7 +601,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(description="Attempt to unsubscribe from a valid pool id",
-			groups={"blockedByBug-1198178","AcceptanceTests"},
+			groups={"blockedByBug-1198178","AcceptanceTests","Tier1Tests"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void UnsubscribeFromPool_Test() {
@@ -670,7 +670,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(description="Attempt to unsubscribe from an unknown pool id",
-			groups={"blockedByBug-1198178","blockedByBug-1298586", "AcceptanceTests"},
+			groups={"blockedByBug-1198178","blockedByBug-1298586", "AcceptanceTests","Tier1Tests"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void UnsubscribeFromAnUnknownPoolId_Test() {

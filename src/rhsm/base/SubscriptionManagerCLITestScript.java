@@ -192,16 +192,11 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		for (SubscriptionManagerTasks smt : new SubscriptionManagerTasks[]{client2tasks, client1tasks}) {
 			if (smt != null) setupClient(smt, serverCaCertFile, generatedProductCertFiles);
 		}
-
-////DELETEME - moved into setupClient(...)
-//		// determine the server URL that will be used for candlepin API calls
-//		if (sm_serverUrl.isEmpty()) {
-//			sm_serverUrl = getServerUrl(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile,"hostname"), clienttasks.getConfFileParameter(clienttasks.rhsmConfFile,"port"), clienttasks.getConfFileParameter(clienttasks.rhsmConfFile,"prefix"));
-//		}
 		
 		// initialize various servertasks instance variables for future reference
 		servertasks.initialize(clienttasks.candlepinAdminUsername, clienttasks.candlepinAdminPassword, clienttasks.candlepinUrl);
 		
+		// create an artifact to log all the package versions being tested
 	    File file = new File("test-output/version.txt"); // this will be in the automation.dir directory on hudson (workspace/automatjon/sm)
     	Writer output = new BufferedWriter(new FileWriter(file));
     	String infoMsg = "Installed versions...";
@@ -236,6 +231,31 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 
 		}
 		output.close();
+		
+		
+		// create an artifact containing package versions that can be uploaded to Polarion Group ID 
+		String groupId = "";
+		if (clienttasks.isPackageVersion("subscription-manager",">=","0")!=null) {
+			groupId += " "+clienttasks.installedPackageVersionMap.get("subscription-manager");
+		}
+		/* exclude for now since the Polarion Group ID should really be a multi-entry field
+		 * RHEL Projects: Use of Group ID and Component for Test Runs
+		 * https://projects.engineering.redhat.com/browse/POLARION-1201
+		if (clienttasks.isPackageVersion("python-rhsm",">=","0")!=null) {
+			groupId += " "+clienttasks.installedPackageVersionMap.get("python-rhsm");
+		}
+		if (clienttasks.isPackageVersion("subscription-manager-migration-data",">=","0")!=null) {
+			groupId += " "+clienttasks.installedPackageVersionMap.get("subscription-manager-migration-data");
+		}
+		*/
+		groupId = groupId.replaceAll("\\.el"+clienttasks.redhatReleaseX, "");	// strip off .el5
+		groupId = groupId.replaceAll("\\."+clienttasks.arch+"|\\.noarch", "");	// strip off .arch
+		groupId = groupId.trim();
+		/*File*/ file = new File("test-output/group-id.txt"); // this will be in the automation.dir directory on hudson (workspace/automatjon/sm)
+    	/*Writer*/ output = new BufferedWriter(new FileWriter(file));
+		log.info(infoMsg); output.write(groupId);
+		output.close();
+		
 		
 		isSetupBeforeSuiteComplete = true;
 	}

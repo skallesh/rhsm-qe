@@ -83,8 +83,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	SSHCommandRunner sshCommandRunner = null;
 
 	@Test(description = "Verify that the EUS RHEL product certs on the CDN for each release correctly reflect the release version.  For example, this affects users that want use subcription-manager release --set=6.3 to keep yum updates fixed to an older release.", groups = {
-			"VerifyEUSRHELProductCertVersionFromEachCDNReleaseVersion_Test", "AcceptanceTests",
-			"Tier1Tests" }, dataProvider = "VerifyEUSRHELProductCertVersionFromEachCDNReleaseVersion_TestData", enabled = true)
+			"VerifyEUSRHELProductCertVersionFromEachCDNReleaseVersion_Test", "AcceptanceTests","Tier1Tests" },
+			dataProvider = "VerifyEUSRHELProductCertVersionFromEachCDNReleaseVersion_TestData", enabled = true)
 	public void VerifyEUSRHELProductCertVersionFromEachCDNReleaseVersion_Test(Object blockedByBug, String release,
 			String rhelRepoUrl, File eusEntitlementCertFile) throws JSONException, Exception {
 		if (!sm_serverType.equals(CandlepinType.hosted))
@@ -1540,8 +1540,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 */
 	// To be tested against stage
-	@Test(description = "verify if 500 errors in stage on subscribe/unsubscribe", groups = { "AcceptanceTests",
-			"Tier1Tests", "blockedByBug-878994" }, enabled = true)
+	@Test(description = "verify if 500 errors in stage on subscribe/unsubscribe",
+			groups = { "AcceptanceTests","Tier1Tests", "blockedByBug-878994" },
+			enabled = true)
 	public void Verify500ErrorOnStage() throws JSONException, Exception {
 		if (!sm_serverType.equals(CandlepinType.hosted))
 			throw new SkipException("To be run against Stage only");
@@ -4523,45 +4524,23 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException *
 	 */
 
-	@Test(description = "Verify the file permissions on /var/lib/rhsm/cache and facts files", groups = {
-			"blockedByBug-1297485", "blockedByBug-1297493" }, enabled = true)
+	@Test(description = "Verify the file permissions on /var/lib/rhsm/cache and facts files",
+	      groups = {"blockedByBug-1297485", "blockedByBug-1297493", "blockedByBug-1340525", "blockedByBug-1389449" },
+	      enabled = true)
 	public void VerifyCacheAndFactsfilePermissions_Test() throws JSONException, Exception {
-		if (clienttasks.isPackageVersion("subscription-manager", "<", "1.17.7-1")) { // subscription-manager
-			// commit
-			// 9dec31c377b57b4c98f845c018a5372d6f650d88
-			// 1297493,
-			// 1297485:
-			// Restrict
-			// visibility
-			// of
-			// subscription-manager
-			// caches.
+		if (clienttasks.isPackageVersion("subscription-manager", "<", "1.17.7-1")) {
+			// subscription-manager commit 9dec31c377b57b4c98f845c018a5372d6f650d88
+			// 1297493, 1297485: Restrict visibility of subscription-manager caches.
 			throw new SkipException(
 					"This test applies a newer version of subscription manager that includes fixes for bugs 1297493 and 1297485.");
 		}
 		String command = clienttasks.rhsmCacheDir;
 		SSHCommandResult result = client.runCommandAndWait("stat -c '%a' " + command); // gets
-		// the
-		// File
-		// /var/lib/rhsm/cache
-		// access
-		// rights
-		// in
-		// octal
-		Assert.assertEquals(result.getStdout().trim(), "750", "Expected permission on /var/lib/rhsm/cache is 750"); // post
-		// commit
-		// 9dec31c377b57b4c98f845c018a5372d6f650d88
+		// the File /var/lib/rhsm/cache access rights in octal
+		Assert.assertEquals(result.getStdout().trim(), "750", "Expected permission on /var/lib/rhsm/cache is 750"); // post commit 9dec31c377b57b4c98f845c018a5372d6f650d88
 		SSHCommandResult result1 = client.runCommandAndWait("stat -c '%a' /var/lib/rhsm/facts"); // gets
-		// the
-		// File
-		// /var/lib/rhsm/facts
-		// access
-		// rights
-		// in
-		// octal
-		Assert.assertEquals(result1.getStdout().trim(), "750", "Expected permission on /var/lib/rhsm/facts is 750"); // post
-		// commit
-		// 9dec31c377b57b4c98f845c018a5372d6f650d88
+		// the File /var/lib/rhsm/facts access rights in octal
+		Assert.assertEquals(result1.getStdout().trim(), "750", "Expected permission on /var/lib/rhsm/facts is 750"); // post commit 9dec31c377b57b4c98f845c018a5372d6f650d88
 	}
 
 	/*
@@ -5150,7 +5129,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	}
 
 	@BeforeGroups(groups = "setup", value = { "VerifyEUSRHELProductCertVersionFromEachCDNReleaseVersion_Test",
-			"InstalledProductMultipliesAfterSubscription", "AcceptanceTests" }, enabled = true)
+			"InstalledProductMultipliesAfterSubscription" }, enabled = true)
 	@AfterClass(groups = "setup")
 	public void restoreProductDefaultCerts() {
 		client.runCommandAndWait("ls -1 " + clienttasks.productCertDefaultDir + "/*.bak");

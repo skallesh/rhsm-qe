@@ -868,7 +868,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager: subcription manager list --available with exact --matches on Subscription Name, Provided Product Name, Contract Number, SKU, Service Level, Provided Product ID.  Note: exact match means no wildcards and is case insensitive.",
-			groups={"blockedByBug-1146125","AcceptanceTests"},
+			groups={"blockedByBug-1146125","AcceptanceTests","Tier1Tests"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
 	public void ListAvailableWithExactMatches_Test() throws JSONException, Exception {
@@ -1014,7 +1014,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 
 	}
 	@Test(	description="subscription-manager: subcription manager list --available with wildcard --matches on Subscription Name, Provided Product Name, Contract Number, SKU, Service Level, Provided Product ID.  Note: wildcard match means * matches zero or more char and ? matches one char and is case insensitive.",
-			groups={"blockedByBug-1146125","blockedByBug-1301696","AcceptanceTests"},
+			groups={"blockedByBug-1146125","blockedByBug-1301696","AcceptanceTests","Tier1Tests"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
 	public void ListAvailableWithWildcardMatches_Test() throws JSONException, Exception {
@@ -2163,7 +2163,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager: list installed should include product certs in /etc/pki/product-default",  // see description in https://github.com/candlepin/subscription-manager/pull/1009
-			groups={"AcceptanceTests","ListInstalledWithProductDefault_Test","blockedByBug-1123029"/*1080012*/},	// subscription-manager 1123029 - [RFE] Use default product certificates when they are present COMPLEMENT TO REL-ENG RFE 1080012 - [RFE] Include default product certificate in redhat-release
+			groups={"AcceptanceTests","Tier1Tests","ListInstalledWithProductDefault_Test","blockedByBug-1123029"/*1080012*/},	// subscription-manager 1123029 - [RFE] Use default product certificates when they are present COMPLEMENT TO REL-ENG RFE 1080012 - [RFE] Include default product certificate in redhat-release
 			priority=150,
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)

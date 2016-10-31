@@ -43,7 +43,7 @@
                    :no-sla-available #"No service level will cover all installed products"
                    :error-getting-subscription #"Pool is restricted to physical systems"
                    :no-system-name #"You must enter a system name"
-                   })
+                   :unable-to-connect-server #"Network error, unable to connect to server."})
 
 (defn matching-error
   "Returns a keyword of known error, if the message matches any of them."
@@ -481,7 +481,8 @@
                (bool (ui guiexist :firstboot-window "Subscription Management Registration"))))
   (when server (ui settextvalue :firstboot-server-entry server))
   (if server-default? (ui click :firstboot-server-default))
-  (ui (setchecked (or activation-key activation?)) :firstboot-activation-checkbox)
+  ;; no activation key anymore
+  ;;(ui (setchecked (or activation-key activation?)) :firstboot-activation-checkbox)
   (ui click :firstboot-forward)
   (if-not (or activation-key activation?)
     (do
@@ -1081,3 +1082,34 @@ Column index starts from 0"
                                          get-sorting))]
       ;; If I click twice I should see two different sort orders in the same column
       (= (set [:desc-sorting :asc-sorting]) (set [sorting-after-click-01 sorting-after-click-02])))))
+
+(defn take-screenshot
+  [name]
+  "The function saves screenshot of a desktop root.
+It appends timestamp at the end of a name.
+If the function finds 'BUILD_TAG' it uses it as prefix for image name.
+
+'BUILD_TAG' is set by Jenkins and depends on an actual build.
+
+The function uses an utility 'import' from package 'imagemagick'"
+  (let [suffix (-> (java.time.Instant/now) (.toString))
+        jenkins-run-id (System/getenv "BUILD_TAG")]
+    (let [image-name (if (clojure.string/blank? jenkins-run-id)
+                       (format "screenshot-%s@%s.png" name suffix)
+                       (format "%s-screenshot-%s@%s.png" jenkins-run-id name suffix))]
+      (run-command (format "DISPLAY=:2 import -window root '%s'" image-name))
+      image-name)))
+
+(defmacro verify-or-take-screenshot
+  [expr]
+  `(try+ (verify ~expr)
+         (catch Object e#
+           (take-screenshot "not-verified")
+           (throw+))))
+
+(defmacro screenshot-on-exception
+  [& body]
+  `(try+ ~@body
+         (catch Object e#
+           (take-screenshot "on-exception")
+           (throw+))))

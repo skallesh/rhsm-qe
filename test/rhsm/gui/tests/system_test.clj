@@ -21,3 +21,13 @@
       (tests/no_traceback_on_console_after_ctrl_c_pressed nil)
       (is (thrown? java.lang.AssertionError
                    (tests/no_traceback_on_console_after_ctrl_c_pressed nil))))))
+
+(deftest no_traceback_when_network_is_down-test
+  (let [{:keys [major minor patch]} (tools/subman-version)]
+    (if (match (vec (for [v [major minor patch]] (Integer. v)))
+               [1 17 (_ :guard #(> % 6))] true
+               [1 18 _] true
+               [2 _ _] true
+               :else false)
+      (tests/error_dialog_and_no_traceback_when_network_is_down nil)
+      (is (thrown? java.lang.AssertionError (tests/error_dialog_and_no_traceback_when_network_is_down nil))))))

@@ -533,6 +533,7 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 	@Test(	description="verify the [server]server_timeout can be configured and function properly when the server does not respond within the timeout seconds",
 			groups={"blockedByBug-1346417","VerifyConfigServerTimeouts_Test"},
 			enabled=true)
+	// TODO: Verifies: https://polarion.engineering.redhat.com/polarion/#/project/RHEL6/workitem?id=RHEL6-28580
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyConfigServerTimeouts_Test() throws IOException {
 		// this bug is specifically designed to test Bug 1346417 - [RFE] Allow users to set socket timeout.
@@ -576,14 +577,24 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 		SSHCommandResult result;
 		List<String> realTimeList;
 		String expectedStderr = "Unable to verify server's identity: timed out";
-		
+		if (clienttasks.redhatReleaseX.equals("6")) expectedStderr = "Unable to verify server's identity:";
+
 		// test the default server_time value of 180 seconds
-		//	[root@jsefler-rhel7 ca]# time subscription-manager version 
+		
+		//	[root@jsefler-rhel7 ~]# time subscription-manager version 
 		//	Unable to verify server's identity: timed out
 		//
 		//	real	3m0.568s
 		//	user	0m0.226s
 		//	sys		0m0.036s
+		
+		//	[root@jsefler-rhel6 ~]# time subscription-manager version
+		//	Unable to verify server's identity: 
+		//
+		//	real	3m0.555s
+		//	user	0m0.287s
+		//	sys		0m0.045s
+
 		String serverDefaultTimeout = "180";	// seconds (assumed hard-coded default)
 		command = "time "+clienttasks.versionCommand(null, null, null);
 		sshCommandTimeout = new Long(200); // seconds	// default server_timeout is 180 seconds
