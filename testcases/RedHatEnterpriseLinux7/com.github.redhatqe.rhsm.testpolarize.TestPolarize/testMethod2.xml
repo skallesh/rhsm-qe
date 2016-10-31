@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<testcase id="">
+    <title>com.github.redhatqe.rhsm.testpolarize.TestPolarize.testMethod2</title>
+    <description>Since this is not an @Test annotated method, must provide description</description>
+    <test-steps>
+        <test-step>
+            <test-step-column id="step"/>
+        </test-step>
+    </test-steps>
+    <custom-fields>
+        <custom-field id="caseautomation" content="automated"/>
+        <custom-field id="caseimportance" content="high"/>
+        <custom-field id="caselevel" content="component"/>
+        <custom-field id="caseposneg" content="positive"/>
+        <custom-field id="setup" content="This is how you setup the test"/>
+        <custom-field id="testtype" content="functional"/>
+        <custom-field id="subtype1" content="-"/>
+        <custom-field id="subtype2" content="-"/>
+    </custom-fields>
+</testcase>
