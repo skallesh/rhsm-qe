@@ -1,0 +1,68 @@
+{
+  "rhsm.cli.tests.UnregisterTests.RegisterSubscribeAndUnregisterTest" : {
+    "PLATTP" : {
+      "id" : "PLATTP-10138",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.gui.tests.search_status_tests.check_subscription_type_all_subscriptions" : {
+    "RHEL6" : {
+      "id" : "RHEL6-20132",
+      "parameters" : [ "arg0" ]
+    }
+  },
+  "rhsm.cli.tests.HealingTests.VerifyAutohealWithoutBeingRegistered_Test" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-51499",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.cli.tests.ManagementAddOnTests.VerifyManagementAddOnEntitlementsContainNoContentNamespace" : {
+    "PLATTP" : {
+      "id" : "PLATTP-10074",
+      "parameters" : [ "bugzilla", "managementAddOnPool" ]
+    }
+  },
+  "rhsm.cli.tests.HealingTests.VerifyAutohealAttributeDefaultsToTrueForNewSystemConsumer_Test" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-51500",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.gui.tests.search_status_tests.check_ordered_contract_options" : {
+    "RHEL6" : {
+      "id" : "RHEL6-20132",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.cli.tests.BashCompletionTests.BashCompletion_Test" : {
+    "PLATTP" : {
+      "id" : "PLATTP-10076",
+      "parameters" : [ "bugzilla", "bashCommand", "expectedCompletions" ]
+    }
+  },
+  "rhsm.cli.tests.HealingTests.VerifyAutohealAttributeCanBeToggledOffForConsumerUsingCandlepinAPI_Test" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-51501",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.cli.tests.ManagementAddOnTests.VerifyManagementAddOnEntitlementsContainNoProductNamespace" : {
+    "PLATTP" : {
+      "id" : "PLATTP-10075",
+      "parameters" : [ "bugzilla", "managementAddOnPool" ]
+    }
+  },
+  "rhsm.gui.tests.search_status_tests.check_physical_only_pools" : {
+    "RHEL6" : {
+      "id" : "RHEL6-20133",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.cli.tests.HealingTests.VerifyAutohealAttributeCanBeToggledOffForConsumerUsingCLI_Test" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-51103",
+      "parameters" : [ ]
+    }
+  }
+}

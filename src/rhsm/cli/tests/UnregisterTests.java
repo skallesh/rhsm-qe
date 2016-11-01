@@ -28,7 +28,7 @@ public class UnregisterTests extends SubscriptionManagerCLITestScript {
 	
 	
 	// Test Methods ***********************************************************************
-	@TestDefinition(projectID={Project.PLATTP})
+	//@TestDefinition(projectID={Project.PLATTP})
 	@Test(description="unregister the consumer",
 			groups={"blockedByBug-589626"},
 			enabled=true)

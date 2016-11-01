@@ -46,8 +46,8 @@ public class BashCompletionTests extends SubscriptionManagerCLITestScript{
 	
 	
 	// Test Methods ***********************************************************************
-	@TestDefinition(projectID={Project.RHEL6, Project.PLATTP},
-	                testCaseID={"", ""},
+	@TestDefinition(projectID={Project.RHEL6},
+	                testCaseID={""},
 	                tags="tier1 tier2")
 	@Test(	description="when subscription-manager is run with no args, it should default to the help report",
 			groups={"AcceptanceTests","Tier1Tests"},
