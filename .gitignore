@@ -15,7 +15,6 @@ lib
 tmp/*
 *.pyc
 .nrepl-history
-mapping*.json
 
 ## editor files
 *~
