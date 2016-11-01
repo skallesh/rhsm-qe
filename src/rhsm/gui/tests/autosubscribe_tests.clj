@@ -150,6 +150,9 @@
   simple_autosubscribe
   "Tests simple autosubscribe when all products can be covered by one service level."
   [_]
+  (when-not (.getConfigureProductCertDirForAllProductsSubscribableByOneCommonServiceLevelCompleted @complytests)
+    (throw (SkipException.
+            "productCertDir for all products subscribable by one common service level is not completed!")))
   (run-command "subscription-manager unregister")
   (tasks/write-facts "{\"virt.is_guest\": \"false\"}" :filename "simple_autosubscribe.facts")
   (try
