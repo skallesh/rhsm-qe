@@ -34,7 +34,7 @@
                  [test-clj.testng "1.1.0-SNAPSHOT"]
                  [levand/immuconf "0.1.0"]
                  [mount "0.1.10"]
-                 [com.github.redhatqe.polarize/polarize "0.5.1"]]
+                 [com.github.redhatqe.polarize/polarize "0.5.2"]]
 
   ;lein1
   :dev-dependencies [[fn.trace "1.3.2.0-SNAPSHOT"]
