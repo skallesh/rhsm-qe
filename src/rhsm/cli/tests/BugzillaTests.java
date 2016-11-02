@@ -1316,7 +1316,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@Test(description = "Consumer unsubscribed when Subscription revoked", groups = { "CRLTest" }, enabled = true)
+	@Test(description = "Consumer unsubscribed when Subscription revoked", groups = { "CRLTest",
+			"blockedByBug-1389559" }, enabled = true)
 	@ImplementsNitrateTest(caseId = 55355)
 	public void CRLTest() {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
@@ -2751,7 +2752,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@ImplementsNitrateTest(caseId = 50235)
 	@Test(description = "verify rhsm log for Update With No Installed Products", groups = {
-			"UpdateWithNoInstalledProducts", "blockedByBug-746241" }, enabled = true)
+			"UpdateWithNoInstalledProducts", "blockedByBug-746241", "blockedByBug-1389559" }, enabled = true)
 	public void UpdateWithNoInstalledProducts() throws JSONException, Exception {
 		client.runCommandAndWait("rm -f " + clienttasks.rhsmLogFile);
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
@@ -4305,7 +4306,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 */
 	@Test(description = "Verify that rhsm.log reports all products provided by an attached subsubscription.", groups = {
-			"blockedByBug-668032", "VerifyRhsmLogsProvidedProducts" }, enabled = true)
+			"blockedByBug-668032", "VerifyRhsmLogsProvidedProducts", "blockedByBug-1389559" }, enabled = true)
 	public void VerifyRhsmLogsProvidedProducts_Test() {
 		client.runCommandAndWait("rm -f " + clienttasks.rhsmLogFile);
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
