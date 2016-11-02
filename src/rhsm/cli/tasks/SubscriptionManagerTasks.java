@@ -711,14 +711,16 @@ if (false) {
 		installOptions += " --disableplugin=rhnplugin";
 		
 		// locally create a yum.repos.d extras repos file
-	    File file = new File("tmp/latest-EXTRAS-7-RHEL-7.repo"); // this will be in the automation.dir directory on hudson (workspace/automatjon/sm)
+		String repo = "latest-EXTRAS-7-RHEL-7-"+variant;
+	    File file = new File("tmp/"+repo+".repo"); // this will be in the automation.dir directory on hudson (workspace/automatjon/sm)
 	    // http://download.devel.redhat.com/rel-eng/latest-EXTRAS-7-RHEL-7/compose/Server/x86_64/os/
 	    String baseurl = "http://download.devel.redhat.com/rel-eng/latest-EXTRAS-7-RHEL-7/compose/"+variant+"/$basearch/os/";
 	    baseurl = "http://download.devel.redhat.com/rel-eng/latest-EXTRAS-7-RHEL-7/compose/"+variant+"/x86_64/os/";	// 302 Found // The document has moved <a href="http://download-node-02.eng.bos.redhat.com/rel-eng/latest-EXTRAS-7-RHEL-7/compose/Workstation/x86_64/os/">here</a>
 	    baseurl = "http://download-node-02.eng.bos.redhat.com/rel-eng/latest-EXTRAS-7-RHEL-7/compose/"+variant+"/x86_64/os/";
 	    
-	    // test the baseurl; log a warning if "Not Found" and abort the Latest Extras Update
-	    if (sshCommandRunner.runCommandAndWait("curl --stderr /dev/null --insecure --request GET "+baseurl).getStdout().contains("404 Not Found")) {
+	    // check the baseurl for problems
+	    SSHCommandResult baseurlTestResult = sshCommandRunner.runCommandAndWait("curl --stderr /dev/null --insecure --request GET "+baseurl);
+	    if (baseurlTestResult.getStdout().contains("404 Not Found") || baseurlTestResult.getStdout().contains("The document has moved")) {
 			log.warning("Cannot install updates from latest-EXTRAS-7-RHEL-7 since the baseurl '"+baseurl+"' is Not Found.");
 	    	Assert.fail("The Latest Extras baseurl '"+baseurl+"' was Not Found.  Instruct the automator to verify the assembly of this baseurl.");
 	    }
@@ -727,7 +729,7 @@ if (false) {
     	Writer output = new BufferedWriter(new FileWriter(file));
 	    
     	// write the rhel-latest-extras repo
-		output.write("[latest-EXTRAS-7-RHEL-7-"+variant+"]\n");
+		output.write("["+repo+"]\n");
 		output.write("name     = Latest Extras updates for RHEL"+redhatReleaseX+" "+variant+"\n");
 		output.write("enabled  = 0\n");
 		output.write("gpgcheck = 0\n");	// needed since the latest extras packages may not be signed until on REL_PREP
@@ -735,7 +737,7 @@ if (false) {
 		output.write("baseurl  = "+baseurl+"\n");
 		output.write("\n");
 	    output.close();
-	    installOptions += " --enablerepo=latest-EXTRAS-7-RHEL-7-"+variant;
+	    installOptions += " --enablerepo="+repo;
 
 		RemoteFileTasks.putFile(sshCommandRunner.getConnection(), file.getPath(), "/etc/yum.repos.d/", "0644");
 		
@@ -745,6 +747,99 @@ if (false) {
 		
 		// run yum update
 		Assert.assertEquals(sshCommandRunner.runCommandAndWait("yum -y update "+updatePackagesAsString+" "+installOptions).getExitCode(),Integer.valueOf(0), "Yum updated from latest extras repo: "+baseurl);
+	}
+	
+	
+	public void installReleasedRhnClassicPackages(String installOptions, List<String> installPackages) throws IOException, JSONException {
+		
+		// FIRST: prepare a repo for the packages and then yum install
+		
+		// make sure installOptions begins with --disablerepo=* to make sure the installs ONLY come from the released-rhn57-tools repo we are about to define
+		if (!installOptions.contains("--disablerepo=*")) installOptions = "--disablerepo=* "+installOptions;
+		
+		// avoid ERROR: can not find RHNS CA file: /usr/share/rhn/RHN-ORG-TRUSTED-SSL-CERT
+		installOptions += " --disableplugin=rhnplugin";
+		
+		
+		
+		// locally create a yum.repos.d released-rhn57-tools repo file
+		String repo = "released-rhn57-tools";
+	    File file = new File("tmp/"+repo+".repo"); // this will be in the automation.dir directory on hudson (workspace/automatjon/sm)
+	    // http://download.devel.redhat.com/released/RHN-Tools-5.7-RHEL-6/i386/tree/RHNTools/
+	    String basearch = arch;
+	    if (arch.equals("i686")) basearch = "x86_64"; // all the rhn tools are noarch packages, so it really should not matter what basearch we use so long as the path exists.  I see arches ppc64 s390x x86_64 for RHN-Tools-5.7-RHEL-7.  I see arches i386 ppc64 s390x x86_64 for RHN-Tools-5.7-RHEL-6.
+	    if (arch.equals("s390")) basearch = "s390x";
+	    if (arch.equals("ppc")) basearch = "ppc64";
+	    String baseurl = "http://download.devel.redhat.com/released/RHN-Tools-5.7-RHEL-"+redhatReleaseX+"/"+basearch+"/tree/RHNTools/";	// <p>The document has moved <a href="http://download-node-02.eng.bos.redhat.com/released/RHN-Tools-5.7-RHEL-6/i686/tree/RHNTools/">here</a>.</p>
+	    baseurl = "http://download-node-02.eng.bos.redhat.com/released/RHN-Tools-5.7-RHEL-"+redhatReleaseX+"/"+basearch+"/tree/RHNTools/";
+	    
+	    // check the baseurl for problems
+	    SSHCommandResult baseurlTestResult = sshCommandRunner.runCommandAndWait("curl --stderr /dev/null --insecure --request GET "+baseurl);
+	    if (baseurlTestResult.getStdout().contains("404 Not Found") || baseurlTestResult.getStdout().contains("The document has moved")) {
+			log.warning("Cannot installReleasedRhnClassicPackages from baseurl '"+baseurl+"'.");
+	    	Assert.fail("The Released RHN Tools baseurl '"+baseurl+"' had problems.  Instruct the automator to verify the assembly of this baseurl.");
+	    }
+		
+		// write out the rows of the table...
+    	Writer output = new BufferedWriter(new FileWriter(file));
+	    
+    	// write the released-rhn57-tools repo
+		output.write("["+repo+"]\n");
+		output.write("name     = Released RHN 5.7 Tools for RHEL"+redhatReleaseX+"\n");
+		output.write("enabled  = 0\n");
+		output.write("gpgcheck = 0\n");	// needed since the latest extras packages may not be signed until on REL_PREP
+		output.write("baseurl  = "+baseurl+"\n");
+		output.write("\n");
+	    output.close();
+	    installOptions += " --enablerepo="+repo;
+
+		RemoteFileTasks.putFile(sshCommandRunner.getConnection(), file.getPath(), "/etc/yum.repos.d/", "0644");
+		
+		
+		
+		// locally create a yum.repos.d latest-rhelX-variant repo file
+		repo = "latest-rhel"+redhatReleaseX+"-"+variant;
+	    file = new File("tmp/"+repo+".repo"); // this will be in the automation.dir directory on hudson (workspace/automatjon/sm)
+	    // http://download.devel.redhat.com/rel-eng/latest-RHEL-6/compose/Server/x86_64/os/
+	    basearch = arch;
+	    if (arch.equals("i686")) basearch = "i386"; // all the i686 arch packages are found in the i386 base arch path
+	    if (arch.equals("s390")) basearch = "s390x"; // all the ppc arch packages are found in the ppc64 base arch path
+	    if (arch.equals("ppc")) basearch = "ppc64"; // all the ppc arch packages are found in the ppc64 base arch path
+	    baseurl = "http://download.devel.redhat.com/rel-eng/latest-RHEL-"+redhatReleaseX+"/compose/"+variant+"/"+basearch+"/os/";	// <p>The document has moved <a href="http://download-node-02.eng.bos.redhat.com/rel-eng/latest-RHEL-6/compose/Client/i686/os/">here</a>.</p>
+	    baseurl = "http://download-node-02.eng.bos.redhat.com/rel-eng/latest-RHEL-"+redhatReleaseX+"/compose/"+variant+"/"+basearch+"/os/";
+	    
+	    // check the baseurl for problems
+	    baseurlTestResult = sshCommandRunner.runCommandAndWait("curl --stderr /dev/null --insecure --request GET "+baseurl);
+	    if (baseurlTestResult.getStdout().contains("404 Not Found") || baseurlTestResult.getStdout().contains("The document has moved")) {
+			log.warning("Cannot installReleasedRhnClassicPackages from baseurl '"+baseurl+"'.");
+	    	Assert.fail("The Released RHN Tools baseurl '"+baseurl+"' had problems.  Instruct the automator to verify the assembly of this baseurl.");
+	    }
+		
+		// write out the rows of the table...
+    	output = new BufferedWriter(new FileWriter(file));
+	    
+    	// write the latest-rhel6 repo
+		output.write("["+repo+"]\n");
+		output.write("name     = Latest RHEL"+redhatReleaseX+" "+variant+"\n");
+		output.write("enabled  = 0\n");
+		output.write("gpgcheck = 0\n");	// needed since the latest extras packages may not be signed until on REL_PREP
+		output.write("baseurl  = "+baseurl+"\n");
+		output.write("\n");
+	    output.close();
+	    installOptions += " --enablerepo="+repo;
+
+		RemoteFileTasks.putFile(sshCommandRunner.getConnection(), file.getPath(), "/etc/yum.repos.d/", "0644");
+		
+		
+		
+		
+		
+		// assemble the packages to be updated (note: if the list is empty, then all packages will be updated)
+		String installPackagesAsString = "";
+		for (String installPackage : installPackages) installPackagesAsString += installPackage+" "; installPackagesAsString=installPackagesAsString.trim();
+		
+		// run yum install
+		Assert.assertEquals(sshCommandRunner.runCommandAndWait("yum -y install "+installPackagesAsString+" "+installOptions).getExitCode(),Integer.valueOf(0), "Yum successfully installed RHN Classic packages");
 	}
 	
 	/**
