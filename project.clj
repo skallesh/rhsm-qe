@@ -34,7 +34,7 @@
                  [test-clj.testng "1.1.0-SNAPSHOT"]
                  [levand/immuconf "0.1.0"]
                  [mount "0.1.10"]
-                 [com.github.redhatqe.polarize/polarize "0.5.2"]]
+                 [com.github.redhatqe.polarize/polarize "0.5.4-SNAPSHOT"]]
 
   ;lein1
   :dev-dependencies [[fn.trace "1.3.2.0-SNAPSHOT"]
@@ -60,7 +60,21 @@
                               :checksum      :fail
                               ;; How often should this repository be checked for
                               ;; snapshot updates? (:daily, :always, or :never)
-                              :update        :always}]]
+                              :update        :always}]
+                 ["sonatype-snaps" {:url     "https://oss.sonatype.org/content/repositories/snapshots"
+                              ;; If a repository contains releases only setting
+                              ;; :snapshots to false will speed up dependencies.
+                              :snapshots     true
+                              ;; Disable signing releases deployed to this repo.
+                              ;; (Not recommended.)
+                              :sign-releases false
+                              ;; You can also set the policies for how to handle
+                              ;; :checksum failures to :fail, :warn, or :ignore.
+                              :checksum      :warn
+                              ;; How often should this repository be checked for
+                              ;; snapshot updates? (:daily, :always, or :never)
+                              :update        :always}]
+                 ]
   :javac-options ["-target" "1.8" "-source" "1.8" "-parameters"]
   ;; uncomment this to remote debug.  This is useful to debug annotation processing or xunit importing which can't be
   ;; handled through the regular clojure debugger
