@@ -2751,7 +2751,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@ImplementsNitrateTest(caseId = 50235)
 	@Test(description = "verify rhsm log for Update With No Installed Products", groups = {
-			"UpdateWithNoInstalledProducts", "blockedByBug-746241", "Tier1Tests" }, enabled = true)
+			"UpdateWithNoInstalledProducts", "blockedByBug-746241" }, enabled = true)
 	public void UpdateWithNoInstalledProducts() throws JSONException, Exception {
 		client.runCommandAndWait("rm -f " + clienttasks.rhsmLogFile);
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
