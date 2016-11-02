@@ -1093,14 +1093,14 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			options.add("--no-proxy");	// added by Bug 915847 - rhn-migrate-classic-to-rhsm fails when used with a proxy with an internal SAM
 			options.add("--org=ORG");					// added by Bug 877331 - missing --org --environment arguments for migration script
 			options.add("--environment=ENVIRONMENT");	// added by Bug 877331 - missing --org --environment arguments for migration script
-			if (clienttasks.isPackageVersion("subscription-manager",">=","1.10.3-1")) {
+			if (clienttasks.isPackageVersion("subscription-manager-migration",">=","1.10.3-1")) {
 				// added by Bug 912375 - RFE - "rhn-migrate-classic-to-rhsm" migration script to accept the expected parameter either via standard input or the equivalent of an "answer" file"
 				options.add("--redhat-user=REDHATUSER");
 				options.add("--redhat-password=REDHATPASSWORD");
 				options.add("--subscription-service-user=SUBSERVICEUSER");
 				options.add("--subscription-service-password=SUBSERVICEPASSWORD");
 			}
-			if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.1")) {
+			if (clienttasks.isPackageVersion("subscription-manager-migration",">=","1.13.1")) {
 				options.remove("--redhat-user=REDHATUSER");
 				options.remove("--redhat-password=REDHATPASSWORD");
 				options.remove("--subscription-service-user=SUBSERVICEUSER");
@@ -1115,19 +1115,22 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 				options.add("--destination-url=DESTINATION_URL");
 				options.add("-s SERVICE_LEVEL, --service-level=SERVICE_LEVEL");
 			}
-			if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8")) { // commit e53f0369b621902b75f2dbe047d97dc9ba3cc1c0  revert for bug 1157761
+			if (clienttasks.isPackageVersion("subscription-manager-migration",">=","1.13.8")) { // commit e53f0369b621902b75f2dbe047d97dc9ba3cc1c0  revert for bug 1157761
 				options.remove("-s SERVICE_LEVEL, --service-level=SERVICE_LEVEL");
 				options.add("-s SERVICE_LEVEL, --servicelevel=SERVICE_LEVEL");
 			}
-			if (clienttasks.isPackageVersion("subscription-manager",">=","1.14.1-1")) { // commit 00461f3751f9db182227c9973c41b305e378638a  RFE Bug 1154375: Allow use of activation keys during migration.
+			if (clienttasks.isPackageVersion("subscription-manager-migration",">=","1.14.1-1")) { // commit 00461f3751f9db182227c9973c41b305e378638a  RFE Bug 1154375: Allow use of activation keys during migration.
 				options.add("--activation-key=ACTIVATION_KEYS");
 			}
-			if (clienttasks.isPackageVersion("subscription-manager",">=","1.14.3-1")) { // commit 5df7aaaa69a22b9e3f771971f1aa4e58657c8377	RFE Bug 1180273 - [RFE] rhn-migrate-classic-to-rhsm should allow the user to migrate a system without requiring credentials on RHN Classic
+			if (clienttasks.isPackageVersion("subscription-manager-migration",">=","1.14.3-1")) { // commit 5df7aaaa69a22b9e3f771971f1aa4e58657c8377	RFE Bug 1180273 - [RFE] rhn-migrate-classic-to-rhsm should allow the user to migrate a system without requiring credentials on RHN Classic
 				options.add("--registration-state=keep,purge");
 			}
-			if (clienttasks.isPackageVersion("subscription-manager",">=","1.14.6-1")) { // commit 6eded942a7d184ef7ed92bbd94225120ee2f2f20	RFE Bug 1180273 - [RFE] rhn-migrate-classic-to-rhsm should allow the user to migrate a system without requiring credentials on RHN Classic
+			if (clienttasks.isPackageVersion("subscription-manager-migration",">=","1.14.6-1")) { // commit 6eded942a7d184ef7ed92bbd94225120ee2f2f20	RFE Bug 1180273 - [RFE] rhn-migrate-classic-to-rhsm should allow the user to migrate a system without requiring credentials on RHN Classic
 				options.remove("--registration-state=keep,purge");
 				options.add("--keep");
+			}
+			if (clienttasks.isPackageVersion("subscription-manager-migration", ">=", "1.18.2-1")) {	// commit 871264dbb0cc091d3eaefabfdfd2e51d6bbc0a3c	RFE Bug 1185914 - [RFE] rhn-migrate-classic-to-rhsm should give the option to remove RHN Classic related packages / daemon
+				options.add("--remove-rhn-packages");
 			}
 			options.add("-h, --help");
 			for (String commandHelp : new String[]{command+" -h", command+" --help"}) {
