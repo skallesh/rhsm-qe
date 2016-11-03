@@ -101,6 +101,7 @@ public class SubscriptionManagerTasks {
 	public String msg_NetworkErrorCheckConnection	= null;
 	public String msg_RemoteErrorCheckConnection	= null;
 	public String msg_ProxyConnectionFailed			= null;
+	public String msg_ProxyConnectionFailed407		= null;
 	public String msg_ClockSkewDetection			= null;
 	public String msg_ContainerMode					= null;
 	public String msg_InteroperabilityWarning		= null;
@@ -1068,6 +1069,7 @@ if (false) {
 		msg_ContainerMode				= "subscription-manager is disabled when running inside a container. Please refer to your host system for subscription management.";
 		msg_RemoteErrorCheckConnection	= "Remote server error. Please check the connection details, or see /var/log/rhsm/rhsm.log for more information.";
 		msg_ProxyConnectionFailed		= "Proxy connection failed, please check your settings.";
+		msg_ProxyConnectionFailed407	= "Proxy connection failed: 407";
 
 		// TEMPORARY WORKAROUND FOR BUG 1335537 - typo in "Proxy connnection failed, please check your settings."
 		String bugId = "1335537"; boolean invokeWorkaroundWhileBugIsOpen = true;
