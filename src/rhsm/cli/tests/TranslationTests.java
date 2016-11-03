@@ -224,7 +224,8 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	
 	@Test(	description="verify that only the expected rhsm.mo tranlation files are installed for each of the supported locales",
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1057532",
-					"blockedByBug-1340135",	// Zanata 1.17.X NOT 100%		// see Skip on Known Issue
+					"blockedByBug-1391681",	// Zanata translations for subscription-manager 1.18 are not 100%
+					"blockedByBug-1340135",	// Zanata translations for subscription-manager 1.17 are not 100%
 					"blockedByBug-1303768",	// Zanata 1.16.X NOT 100%		// see Skip on Known Issue
 					"blockedByBug-1195824",	// Zanata 1.14.X NOT 100%		// see Skip on Known Issue
 					"blockedByBug-1166333",	// Zanata 1.13.X NOT 100%		// see Skip on Known Issue

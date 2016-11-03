@@ -9,6 +9,9 @@ import java.util.regex.Pattern;
 import com.redhat.qe.tools.abstraction.AbstractCommandLineData;
 
 /**
+ * A Translation object is a key value pair where the key is the msgid and the value is the adjacent msgstr
+ * found in a translation file like /usr/share/locale/de_DE/LC_MESSAGES/rhsm.mo that can be decompiled using
+ * msgunfmt --no_wrap rhsm.mo_file
  * @author jsefler
  *
  */
