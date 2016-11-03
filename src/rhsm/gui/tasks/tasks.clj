@@ -1108,8 +1108,15 @@ The function uses an utility 'import' from package 'imagemagick'"
            (throw+))))
 
 (defmacro screenshot-on-exception
-  [& body]
-  `(try+ ~@body
-         (catch Object e#
-           (take-screenshot "on-exception")
-           (throw+))))
+  [suffix & body]
+  "suffix - :default-name
+          - \"some text\"
+   ... suffix will be prepended to a name of screenshot"
+  `(let [suffix# (match/match ~suffix
+                              :default-name      "on-exception"
+                              (_ :guard blank?)  "on-exception" 
+                              :else              ~suffix)]
+     (try+ ~@body
+           (catch Object e#
+             (take-screenshot suffix#)
+             (throw+)))))
