@@ -7,9 +7,12 @@
              [rhsm.gui.tests.base :as base]
              [rhsm.runtestng]
              [slingshot.slingshot :as sl]
+             [clojure.tools.logging :as log]
              [clojure.string :as s]
-             [mount.core :as mount]))
-
+             [clojure.core.match :as match]
+             [mount.core :as mount]
+             [clojure.java.io :as io])
+  (:import [com.redhat.qe.tools RemoteFileTasks]))
 
 (use-fixtures :once (fn [f]
                       (base/startup nil)
@@ -25,8 +28,12 @@
 (deftest verify-or-take-screenshot-test
   (tasks/verify-or-take-screenshot false))
 
-(deftest screenshot-on-exception-test
-  (tasks/screenshot-on-exception
-   :default-name
-   (println "some message")
-   (throw+ "error in common way")))
+(deftest screenshot-on-exception-01-test
+  (is (thrown? Exception (tasks/screenshot-on-exception
+                          :default-name
+                          (sl/throw+ "error in common way")))))
+
+(deftest screenshot-on-exception-02-test
+  (is (thrown? Exception (tasks/screenshot-on-exception
+                          "suffix-of-screenshot"
+                          (sl/throw+ "error in common way")))))
