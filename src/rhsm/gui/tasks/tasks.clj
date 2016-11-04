@@ -18,7 +18,8 @@
             [clojure.data.json :as json]
             [clojure.core.match :as match]
             [rhsm.gui.tasks.candlepin-tasks :as ctasks]
-            rhsm.gui.tasks.ui) ;;need to load ui even if we don't refer to it because of the extend-protocol in there.
+            rhsm.gui.tasks.ui ;;need to load ui even if we don't refer to it because of the extend-protocol in there.
+            [clojure.java.io :as io]) 
   (:import [com.redhat.qe.tools RemoteFileTasks]
            [rhsm.cli.tasks CandlepinTasks]
            [rhsm.base SubscriptionManagerBaseTestScript]))
@@ -1104,19 +1105,25 @@ The function uses an utility 'import' from package 'imagemagick'"
   [expr]
   `(try+ (verify ~expr)
          (catch Object e#
-           (take-screenshot "not-verified")
+           (let [name#  (take-screenshot "not-verified")
+                 out-dir# (io/file (System/getProperty "automation.dir") "test-output")]
+             (RemoteFileTasks/getFile (.getConnection @clientcmd) (.toString out-dir#) name#)
+             (log/info (format "A screenshot has been copied as '%s'." (.toString (io/file out-dir# name#)))))
            (throw+))))
 
 (defmacro screenshot-on-exception
   [suffix & body]
   "suffix - :default-name
-          - \"some text\"
+          - 'some text'
    ... suffix will be prepended to a name of screenshot"
   `(let [suffix# (match/match ~suffix
-                              :default-name      "on-exception"
-                              (_ :guard blank?)  "on-exception" 
-                              :else              ~suffix)]
+                              :default-name             "on-exception"
+                              (no-care# :guard blank?)  "on-exception" 
+                              :else                     ~suffix)]
      (try+ ~@body
            (catch Object e#
-             (take-screenshot suffix#)
+             (let [name# (take-screenshot suffix#)
+                   out-dir# (io/file (System/getProperty "automation.dir") "test-output")]
+               (RemoteFileTasks/getFile (.getConnection @clientcmd) (.toString out-dir#) name#)
+               (log/info (format "A screenshot has been copied as '%s'." (.toString (io/file out-dir# name#)))))
              (throw+)))))
