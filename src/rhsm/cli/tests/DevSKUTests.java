@@ -68,7 +68,7 @@ import rhsm.data.SubscriptionPool;
  *   http://etherpad.corp.redhat.com/8D1JQhUxc0
  *       
  */
-@Test(groups={"DevSKUTests","Tier3Tests","AcceptanceTests"})
+@Test(groups={"DevSKUTests","Tier3Tests","AcceptanceTests","Tier1Tests"})
 public class DevSKUTests extends SubscriptionManagerCLITestScript {
 	
 	// Test methods ***********************************************************************

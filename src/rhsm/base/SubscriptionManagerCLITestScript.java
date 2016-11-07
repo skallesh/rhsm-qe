@@ -192,16 +192,11 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		for (SubscriptionManagerTasks smt : new SubscriptionManagerTasks[]{client2tasks, client1tasks}) {
 			if (smt != null) setupClient(smt, serverCaCertFile, generatedProductCertFiles);
 		}
-
-////DELETEME - moved into setupClient(...)
-//		// determine the server URL that will be used for candlepin API calls
-//		if (sm_serverUrl.isEmpty()) {
-//			sm_serverUrl = getServerUrl(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile,"hostname"), clienttasks.getConfFileParameter(clienttasks.rhsmConfFile,"port"), clienttasks.getConfFileParameter(clienttasks.rhsmConfFile,"prefix"));
-//		}
 		
 		// initialize various servertasks instance variables for future reference
 		servertasks.initialize(clienttasks.candlepinAdminUsername, clienttasks.candlepinAdminPassword, clienttasks.candlepinUrl);
 		
+		// create an artifact to log all the package versions being tested
 	    File file = new File("test-output/version.txt"); // this will be in the automation.dir directory on hudson (workspace/automatjon/sm)
     	Writer output = new BufferedWriter(new FileWriter(file));
     	String infoMsg = "Installed versions...";
@@ -236,6 +231,31 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 
 		}
 		output.close();
+		
+		
+		// create an artifact containing package versions that can be uploaded to Polarion Group ID 
+		String groupId = "";
+		if (clienttasks.isPackageVersion("subscription-manager",">=","0")!=null) {
+			groupId += " "+clienttasks.installedPackageVersionMap.get("subscription-manager");
+		}
+		/* exclude for now since the Polarion Group ID should really be a multi-entry field
+		 * RHEL Projects: Use of Group ID and Component for Test Runs
+		 * https://projects.engineering.redhat.com/browse/POLARION-1201
+		if (clienttasks.isPackageVersion("python-rhsm",">=","0")!=null) {
+			groupId += " "+clienttasks.installedPackageVersionMap.get("python-rhsm");
+		}
+		if (clienttasks.isPackageVersion("subscription-manager-migration-data",">=","0")!=null) {
+			groupId += " "+clienttasks.installedPackageVersionMap.get("subscription-manager-migration-data");
+		}
+		*/
+		groupId = groupId.replaceAll("\\.el"+clienttasks.redhatReleaseX, "");	// strip off .el5
+		groupId = groupId.replaceAll("\\."+clienttasks.arch+"|\\.noarch", "");	// strip off .arch
+		groupId = groupId.trim();
+		/*File*/ file = new File("test-output/group-id.txt"); // this will be in the automation.dir directory on hudson (workspace/automatjon/sm)
+    	/*Writer*/ output = new BufferedWriter(new FileWriter(file));
+		log.info(infoMsg); output.write(groupId);
+		output.close();
+		
 		
 		isSetupBeforeSuiteComplete = true;
 	}
@@ -3684,13 +3704,18 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	
 		// negative tests
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.17.5-1")) {	// post commit ea10b99095ad58df57ed107e13bf19498e003ae8	// Bug 1320507 - Wrong prefix prompts when register using serverurl without prefix
-			if (isCurrentlyConfiguredServerTypeHosted()) {
-				// 08-11-2015, I don't like this behavior because IT is blacklisting any prefix that does not match /subscription causing a inaccessible server to masquarade as a CA certificate error"
-				serverurl= "https://"+server_hostname+(server_port.isEmpty()?"":":"+server_port)+"/PREFIX";		ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"1119688","842885"}),								serverurl,	null,	null,	null,		new Integer(78),	null,						"Error: CA certificate for subscription service has not been installed."}));
-				serverurl= "/";																					ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"1119688","830767"}),								serverurl,	null,	null,	null,		new Integer(78),	null,						"Error: CA certificate for subscription service has not been installed."}));
+			if (clienttasks.isPackageVersion("subscription-manager",">=","1.18.2-1")) {	// post commit ad982c13e79917e082f336255ecc42615e1e7707	// Bug 1176219 - subscription-manager repos --list with bad proxy options is silently using cache
+				serverurl= "https://"+server_hostname+(server_port.isEmpty()?"":":"+server_port)+"/PREFIX";		ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"1119688","842885","1176219"}),							serverurl,	null,	null,	null,		new Integer(69),	null,						"Unable to reach the server at "+server_hostname+(server_port.isEmpty()?":"+defaultPort:":"+server_port)+"/PREFIX"}));
+				serverurl= "/";																					ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"1119688","1320507","830767","1176219"}),				serverurl,	null,	null,	null,		new Integer(69),	null,						"Unable to reach the server at "+server_hostname+":"+server_port+"/?"}));	// the ending ? means that we'll accept this expected stderr message with and without the trailing slash /
 			} else {
-				serverurl= "https://"+server_hostname+(server_port.isEmpty()?"":":"+server_port)+"/PREFIX";		ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"1119688","842885"}),								serverurl,	null,	null,	null,		new Integer(69),	null,						"Unable to reach the server at "+server_hostname+(server_port.isEmpty()?":"+defaultPort:":"+server_port)+"/PREFIX"}));
-				serverurl= "/";																					ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"1119688","1320507","830767"}),						serverurl,	null,	null,	null,		new Integer(69),	null,						"Unable to reach the server at "+server_hostname+":"+server_port+"/"}));
+				if (isCurrentlyConfiguredServerTypeHosted()) {
+					// 08-11-2015, I don't like this behavior because IT is blacklisting any prefix that does not match /subscription causing a inaccessible server to masquerade as a CA certificate error"
+					serverurl= "https://"+server_hostname+(server_port.isEmpty()?"":":"+server_port)+"/PREFIX";		ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"1119688","842885"}),								serverurl,	null,	null,	null,		new Integer(78),	null,						"Error: CA certificate for subscription service has not been installed."}));
+					serverurl= "/";																					ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"1119688","830767"}),								serverurl,	null,	null,	null,		new Integer(78),	null,						"Error: CA certificate for subscription service has not been installed."}));
+				} else {
+					serverurl= "https://"+server_hostname+(server_port.isEmpty()?"":":"+server_port)+"/PREFIX";		ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"1119688","842885"}),								serverurl,	null,	null,	null,		new Integer(69),	null,						"Unable to reach the server at "+server_hostname+(server_port.isEmpty()?":"+defaultPort:":"+server_port)+"/PREFIX"}));
+					serverurl= "/";																					ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"1119688","1320507","830767"}),						serverurl,	null,	null,	null,		new Integer(69),	null,						"Unable to reach the server at "+server_hostname+":"+server_port+"/"}));
+				}
 			}
 			serverurl= "hostname";																			ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"1119688","1320507"}),									serverurl,	null,	null,	null,		new Integer(69),	null,						"Unable to reach the server at hostname:"+server_port+server_prefix}));
 			serverurl= "hostname:900";																		ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"1119688","1320507"}),									serverurl,	null,	null,	null,		new Integer(69),	null,						"Unable to reach the server at hostname:900"+server_prefix}));

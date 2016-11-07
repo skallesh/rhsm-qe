@@ -409,6 +409,10 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		// make sure that rhnplugin is enabled /etc/yum/pluginconf.d/rhnplugin.conf
 		// NOT NECESSARY! enablement of rhnplugin.conf is done by rhnreg_ks
 		
+		// randomly remove a benign rhn classic package (just to add a little unnecessary fun)
+		if (randomGenerator.nextBoolean() && clienttasks.isPackageInstalled("osad")) clienttasks.yumRemovePackage("osad");
+		if (randomGenerator.nextBoolean() && clienttasks.isPackageInstalled("openscap")) clienttasks.yumRemovePackage("openscap");
+		
 		// register to RHN Classic
 		String rhnSystemId = clienttasks.registerToRhnClassic(rhnreg_ksUsername, rhnreg_ksPassword, rhnHostname);
 		Assert.assertTrue(clienttasks.isRhnSystemIdRegistered(rhnreg_ksUsername, rhnreg_ksPassword, rhnHostname, rhnSystemId),"Confirmed that rhn systemId '"+rhnSystemId+"' is currently registered.");
@@ -557,6 +561,22 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		}
 		Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(0), "ExitCode from call to '"+rhnMigrateTool+" "+options+"' when all of the channels are mapped.");
 		
+		// assert product certificates are copied
+		expectedMsg = String.format("Product certificates copied successfully to %s !",	clienttasks.productCertDir);
+		expectedMsg = String.format("Product certificates copied successfully to %s",	clienttasks.productCertDir);
+		expectedMsg = String.format("Product certificates installed successfully to %s.",	clienttasks.productCertDir);	// Bug 852107 - String Update: rhn-migrate-classic-to-rhsm output
+		Assert.assertTrue(sshCommandResult.getStdout().contains(expectedMsg), "Stdout from call to '"+rhnMigrateTool+" "+options+"' contains message: "+expectedMsg);
+		
+		// assert that the expected product certs mapped from the consumed RHN Classic channels are now installed
+//OLD	List<ProductCert> migratedProductCerts = clienttasks.getCurrentProductCerts();
+//OLD	Assert.assertEquals(clienttasks.getCurrentlyInstalledProducts().size(), expectedMigrationProductCertFilenames.size(), "The number of productCerts installed after running "+rhnMigrateTool+" with "+options+".  (If this fails, one of these migration certs may have clobbered the other "+expectedMigrationProductCertFilenames+")");
+		List<ProductCert> migratedProductCerts = clienttasks.getProductCerts(clienttasks.productCertDir);
+		Assert.assertEquals(migratedProductCerts.size(), expectedMigrationProductCertFilenames.size(), "The number of productCerts in '"+clienttasks.productCertDir+"' after running "+rhnMigrateTool+" with options '"+options+"'.  (If this fails, one of these migration certs may have clobbered the other "+expectedMigrationProductCertFilenames+")");
+		for (String expectedMigrationProductCertFilename : expectedMigrationProductCertFilenames) {
+			ProductCert expectedMigrationProductCert = clienttasks.getProductCertFromProductCertFile(new File(baseProductsDir+"/"+expectedMigrationProductCertFilename));
+			Assert.assertTrue(migratedProductCerts.contains(expectedMigrationProductCert),"The newly migrated product certs in '"+clienttasks.productCertDir+"' includes the expected migration productCert: "+expectedMigrationProductCert);
+		}
+		
 		// assert the expected migration.* facts are set
 		//	[root@ibm-x3620m3-01 ~]# subscription-manager facts --list | grep migration
 		Map<String,String> factMap = clienttasks.getFacts();
@@ -635,6 +655,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		
 		Assert.assertTrue(systemTimeInSeconds-tol < migratTimeInSeconds && migratTimeInSeconds < systemTimeInSeconds+tol, "The migration date fact '"+factMap.get(migrationDateFact)+"' was set within the last '"+tol+"' seconds (local system time).  Actual diff='"+String.valueOf(systemTimeInSeconds-migratTimeInSeconds)+"' seconds.");
 		
+		
 		// assert we are no longer registered to RHN Classic
 		// Two possible results can occur when the rhn-migrate-classic-to-rhsm script attempts to unregister from RHN Classic.  We need to tolerate both cases... 
 		String successfulUnregisterMsg = "System successfully unregistered from RHN Classic.";
@@ -662,23 +683,66 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 				log.warning("The RHN Classic server believes that this system is still registered.  SystemId '"+rhnSystemId+"' should be manually deleted on the Customer Portal.");
 			}
 		}
+		
+		// assert that the legacy services have been stopped (introduced by RFE Bug 1185914
+		//	Product certificates installed successfully to /etc/pki/product.
+		//
+		//	Preparing to unregister system from legacy server...
+		//	System successfully unregistered from legacy server.
+		//	Stopping and disabling legacy services...
+		//	osad: unrecognized service
+		//	osad: unrecognized service
+		// TODO Implement this block for RHEL7
+		// TEMPORARY WORKAROUND FOR BUG
+		String bugId = "1390341"; // Bug 1390341 - rhn-migrate-classic-to-rhsm is failing to stop and disable services
+		boolean invokeWorkaroundWhileBugIsOpen = true;
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
+			log.warning("Skipping assertion of stopped and disabled services while bug '"+bugId+"' is open.");;
+		} else
+		// END OF WORKAROUND
+		if (clienttasks.isPackageVersion("subscription-manager-migration", ">=", "1.18.2-1")) {
+			String stoppingServicesMsg = "Stopping and disabling legacy services...";
+			Assert.assertTrue(sshCommandResult.getStdout().contains(stoppingServicesMsg), "Stdout from call to '"+rhnMigrateTool+" "+options+"' contains message: "+stoppingServicesMsg);
 
-		// assert products are copied
-		expectedMsg = String.format("Product certificates copied successfully to %s !",	clienttasks.productCertDir);
-		expectedMsg = String.format("Product certificates copied successfully to %s",	clienttasks.productCertDir);
-		expectedMsg = String.format("Product certificates installed successfully to %s.",	clienttasks.productCertDir);	// Bug 852107 - String Update: rhn-migrate-classic-to-rhsm output
-		Assert.assertTrue(sshCommandResult.getStdout().contains(expectedMsg), "Stdout from call to '"+rhnMigrateTool+" "+options+"' contains message: "+expectedMsg);
-		
-		// assert that the expected product certs mapped from the consumed RHN Classic channels are now installed
-//OLD	List<ProductCert> migratedProductCerts = clienttasks.getCurrentProductCerts();
-//OLD	Assert.assertEquals(clienttasks.getCurrentlyInstalledProducts().size(), expectedMigrationProductCertFilenames.size(), "The number of productCerts installed after running "+rhnMigrateTool+" with "+options+".  (If this fails, one of these migration certs may have clobbered the other "+expectedMigrationProductCertFilenames+")");
-		List<ProductCert> migratedProductCerts = clienttasks.getProductCerts(clienttasks.productCertDir);
-		Assert.assertEquals(migratedProductCerts.size(), expectedMigrationProductCertFilenames.size(), "The number of productCerts in '"+clienttasks.productCertDir+"' after running "+rhnMigrateTool+" with options '"+options+"'.  (If this fails, one of these migration certs may have clobbered the other "+expectedMigrationProductCertFilenames+")");
-		for (String expectedMigrationProductCertFilename : expectedMigrationProductCertFilenames) {
-			ProductCert expectedMigrationProductCert = clienttasks.getProductCertFromProductCertFile(new File(baseProductsDir+"/"+expectedMigrationProductCertFilename));
-			Assert.assertTrue(migratedProductCerts.contains(expectedMigrationProductCert),"The newly migrated product certs in '"+clienttasks.productCertDir+"' includes the expected migration productCert: "+expectedMigrationProductCert);
+			// assert these LEGACY_DAEMONS = ["osad", "rhnsd"] are stopped and disabled
+			// taken from https://bugzilla.redhat.com/show_bug.cgi?id=1185914#c0
+			if (clienttasks.isPackageInstalled("osad")) {
+				//	[root@jsefler-rhel6 ~]# service osad status
+				//	osad is stopped
+				SSHCommandResult sshServiceCommandResult = client.runCommandAndWait("service osad status");
+				Assert.assertEquals(sshServiceCommandResult.getExitCode(),Integer.valueOf(3), "Expected exitCode for service osad status");
+				Assert.assertEquals(sshServiceCommandResult.getStdout().trim(),"osad is stopped", "Expected stdout for service osad status");
+				//	[root@jsefler-rhel6 ~]# chkconfig --list osad
+				//	osad           	0:off	1:off	2:off	3:off	4:off	5:off	6:off
+				SSHCommandResult sshChkconfigCommandResult = client.runCommandAndWait("chkconfig --list osad");
+				Assert.assertEquals(sshChkconfigCommandResult.getExitCode(),Integer.valueOf(0), "Expected exitCode for chkconfig --list osad");
+				Assert.assertEquals(sshChkconfigCommandResult.getStdout().trim(),"osad           	0:off	1:off	2:off	3:off	4:off	5:off	6:off", "Expected stdout for chkconfig --list osad");
+			}
+			if (clienttasks.isPackageInstalled("rhnsd")) {
+				//	[root@jsefler-rhel6 ~]# service rhnsd status
+				//	[root@jsefler-rhel6 ~]# 
+				SSHCommandResult sshServiceCommandResult = client.runCommandAndWait("service rhnsd status");
+				Assert.assertEquals(sshServiceCommandResult.getExitCode(),Integer.valueOf(6), "Expected exitCode for service rhnsd status - because /etc/init.d/rhnsd is programmed to exit 6 when there is no systemid file");
+				Assert.assertEquals(sshServiceCommandResult.getStdout().trim(),"", "Expected stdout for service rhnsd status");
+				//	[root@jsefler-rhel6 ~]# chkconfig --list rhnsd
+				//	rhnsd           	0:off	1:off	2:off	3:off	4:off	5:off	6:off
+				SSHCommandResult sshChkconfigCommandResult = client.runCommandAndWait("chkconfig --list rhnsd");
+				Assert.assertEquals(sshChkconfigCommandResult.getExitCode(),Integer.valueOf(0), "Expected exitCode for chkconfig --list rhnsd");
+				Assert.assertEquals(sshChkconfigCommandResult.getStdout().trim(),"rhnsd           	0:off	1:off	2:off	3:off	4:off	5:off	6:off", "Expected stdout for chkconfig --list rhnsd");
+			}
+			
+			// assert that no FAILED nor Usage errors occurred
+			Assert.assertTrue(!sshCommandResult.getStdout().contains("FAILED"), "Should not encounter a FAILED message when Stopping and disabling legacy services");	// Bug 1390341 - rhn-migrate-classic-to-rhsm is failing to stop and disable services
+			Assert.assertTrue(!sshCommandResult.getStdout().contains("Usage"), "Should not encounter a Usage error when Stopping and disabling legacy services");	// Bug 1390341 - rhn-migrate-classic-to-rhsm is failing to stop and disable services
 		}
-		
+		String removingPackagesMsg = "Removing legacy packages...";
+		if (options.contains("--remove-rhn-packages")) {
+			Assert.assertTrue(sshCommandResult.getStdout().contains(removingPackagesMsg), "Stdout from call to '"+rhnMigrateTool+" "+options+"' contains message: "+removingPackagesMsg);
+		} else {
+			Assert.assertTrue(!sshCommandResult.getStdout().contains(removingPackagesMsg), "Stdout from call to '"+rhnMigrateTool+" "+options+"' does not contain message: "+removingPackagesMsg);	
+		}
+			
 		// assert that when --serverurl is specified, its hostname:port/prefix are preserved into rhsm.conf
 		if (options.contains("--serverurl") || options.contains("--destination-url")) {
 			// comparing to original configuration values because these are the ones I am using in the dataProvider
@@ -1064,7 +1128,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	@Test(	description="Execute migration tool rhn-migrate-classic-to-rhsm with a valid activation-key (and a good org)",
-			groups={"AcceptanceTests","blockedByBug-1154375"},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1154375"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=130765)
 	public void RhnMigrateClassicToRhsmWithActivationKey_Test() throws Exception {
@@ -1887,8 +1951,8 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	public void RhnMigrateClassicToRhsmWithKeepClassic_Test() {
 		if (clienttasks.isPackageVersion("subscription-manager-migration", "<", "1.14.3")) throw new SkipException("This version of subscription-manager does not support 1180273 - [RFE] rhn-migrate-classic-to-rhsm should allow the user to migrate a system without requiring credentials on RHN Classic");	// commit 5df7aaaa69a22b9e3f771971f1aa4e58657c8377
 		
-		String keepOption = "--registration-state=keep";
-		if (clienttasks.isPackageVersion("subscription-manager-migration", ">=", "1.14.6")) keepOption = "--keep";	// commit 6eded942a7d184ef7ed92bbd94225120ee2f2f20
+		String options = "--registration-state=keep";
+		if (clienttasks.isPackageVersion("subscription-manager-migration", ">=", "1.14.6")) options = "--keep";	// commit 6eded942a7d184ef7ed92bbd94225120ee2f2f20
 		
 		if (sm_rhnHostname.equals("")) throw new SkipException("This test requires access to RHN Classic or Satellite 5.");
 		clienttasks.unregister(null, null, null);
@@ -1933,7 +1997,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		
 		
 		// attempt to run rhn-migrate-classic-to-rhsm
-		SSHCommandResult sshCommandResult = executeRhnMigrateClassicToRhsm(keepOption+" "+"--destination-url="+originalServerHostname+":"+originalServerPort+originalServerPrefix, null, null, sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null);
+		SSHCommandResult sshCommandResult = executeRhnMigrateClassicToRhsm(options+" "+"--destination-url="+originalServerHostname+":"+originalServerPort+originalServerPrefix, null, null, sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null);
 		//	[root@jsefler-os6 ~]# rhn-migrate-classic-to-rhsm --registration-state=keep --destination-url=subscription.rhn.stage.redhat.com:443/subscription
 		//	Destination username: stage_auto_testuser
 		//	Destination password: 
@@ -1972,7 +2036,8 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		//	0
 		
 		// verify the migration was successful
-		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "ExitCode from call to '"+rhnMigrateTool+"' after attempting to use the option to keep the classic registration");
+		// WARNING: asserting this exit code is misleading because it is the exit code from the rhn-migrate-classic-to-rhsm.tcl script which is a wrapper to rhn-migrate-classic-to-rhsm which could exit with a different code
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "ExitCode from call to '"+rhnMigrateTool+"' after attempting to migrate with options '"+options+"'.");
 		
 		// verify that we are newly registered to RHSM
 		Assert.assertNotNull(clienttasks.getCurrentConsumerCert(),"Confirmed that the system is newly registered with Subscription Manager after migrating from RHN Classic using '"+rhnMigrateTool+"'.");
@@ -1986,7 +2051,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		
 		// Now attempt the same migration while supplying the destination credentials on the command line instead of being prompted...
 		clienttasks.unregister(null, null, null);
-		sshCommandResult = executeRhnMigrateClassicToRhsm(keepOption+" "+"--destination-url="+originalServerHostname+":"+originalServerPort+originalServerPrefix+" "+"--destination-user="+sm_clientUsername+" "+"--destination-password="+sm_clientPassword+" "+(sm_clientOrg!=null?"--org="+sm_clientOrg:""), null, null, null, null, null, null, null);
+		sshCommandResult = executeRhnMigrateClassicToRhsm(options+" "+"--destination-url="+originalServerHostname+":"+originalServerPort+originalServerPrefix+" "+"--destination-user="+sm_clientUsername+" "+"--destination-password="+sm_clientPassword+" "+(sm_clientOrg!=null?"--org="+sm_clientOrg:""), null, null, null, null, null, null, null);
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "ExitCode from call to '"+rhnMigrateTool+"' after attempting to use the option to keep the classic registration");
 		Assert.assertNotNull(clienttasks.getCurrentConsumerCert(),"Confirmed that the system is newly registered with Subscription Manager after migrating from RHN Classic using '"+rhnMigrateTool+"'.");
 		Assert.assertTrue(clienttasks.isRhnSystemIdRegistered(sm_rhnUsername, sm_rhnPassword, sm_rhnHostname, rhnSystemId), "Confirmed that rhn systemId '"+rhnSystemId+"' is STILL registered on the RHN Classic server (because we passed an option to keep the classic registration).");
@@ -2001,8 +2066,8 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	public void RhnMigrateClassicToRhsmWithKeepClassicAndLegacyCredentials_Test() {
 		if (clienttasks.isPackageVersion("subscription-manager-migration", "<", "1.14.3")) throw new SkipException("This version of subscription-manager does not support 1180273 - [RFE] rhn-migrate-classic-to-rhsm should allow the user to migrate a system without requiring credentials on RHN Classic");	// commit 5df7aaaa69a22b9e3f771971f1aa4e58657c8377
 		
-		String keepOption = "--registration-state=keep";
-		if (clienttasks.isPackageVersion("subscription-manager-migration", ">=", "1.14.6")) keepOption = "--keep";	// commit 6eded942a7d184ef7ed92bbd94225120ee2f2f20
+		String options = "--registration-state=keep";
+		if (clienttasks.isPackageVersion("subscription-manager-migration", ">=", "1.14.6")) options = "--keep";	// commit 6eded942a7d184ef7ed92bbd94225120ee2f2f20
 		
 		if (sm_rhnHostname.equals("")) throw new SkipException("This test requires access to RHN Classic or Satellite 5.");
 		clienttasks.unregister(null, null, null);
@@ -2048,14 +2113,15 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		
 		// attempt to run rhn-migrate-classic-to-rhsm
 //TODO not sure how valid this test is, but it does throw an error.  Maybe I should explicitly call subscription-manager config on the server hostname port prefix
-		SSHCommandResult sshCommandResult = executeRhnMigrateClassicToRhsm(keepOption+" "+/*"--destination-url="+originalServerHostname+":"+originalServerPort+originalServerPrefix+" "+*/"--legacy-user="+sm_rhnUsername+" "+"--legacy-password="+sm_rhnPassword, null, null, sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null);
+		SSHCommandResult sshCommandResult = executeRhnMigrateClassicToRhsm(options+" "+/*"--destination-url="+originalServerHostname+":"+originalServerPort+originalServerPrefix+" "+*/"--legacy-user="+sm_rhnUsername+" "+"--legacy-password="+sm_rhnPassword, null, null, sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null);
 		//	[root@jsefler-os6 ~]# rhn-migrate-classic-to-rhsm --registration-state=keep --legacy-user=qa@redhat.com --legacy-password=REDACTED
 		//	Unable to connect to certificate server: Invalid credentials..  See /var/log/rhsm/rhsm.log for more details.
 		//	[root@jsefler-os6 ~]# echo $?
 		//	1
 		
 		// verify the migration was successful
-		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "ExitCode from call to '"+rhnMigrateTool+"' after attempting to use the option to keep the classic registration");
+		// WARNING: asserting this exit code is misleading because it is the exit code from the rhn-migrate-classic-to-rhsm.tcl script which is a wrapper to rhn-migrate-classic-to-rhsm which could exit with a different code
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "ExitCode from call to '"+rhnMigrateTool+"' after attempting to migrate with options '"+options+"'.");
 
 		// verify that we are newly registered to RHSM
 		Assert.assertNotNull(clienttasks.getCurrentConsumerCert(),"Confirmed that the system is newly registered with Subscription Manager after migrating from RHN Classic using '"+rhnMigrateTool+"'.");
@@ -2070,7 +2136,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		// Now attempt the same migration while supplying the destination credentials on the command line instead of being prompted...
 		clienttasks.unregister(null, null, null);
 //TODO not sure how valid this test is.  Maybe I should explicitly call subscription-manager config on the server hostname port prefix
-		sshCommandResult = executeRhnMigrateClassicToRhsm(keepOption+" "+/*"--destination-url="+originalServerHostname+":"+originalServerPort+originalServerPrefix+" "+*/"--legacy-user="+sm_rhnUsername+" "+"--legacy-password="+sm_rhnPassword+" "+"--destination-user="+sm_clientUsername+" "+"--destination-password="+sm_clientPassword+" "+(sm_clientOrg!=null?"--org="+sm_clientOrg:""), /*sm_rhnUsername*/null, /*sm_rhnPassword*/null, null, null, null, null, null);
+		sshCommandResult = executeRhnMigrateClassicToRhsm(options+" "+/*"--destination-url="+originalServerHostname+":"+originalServerPort+originalServerPrefix+" "+*/"--legacy-user="+sm_rhnUsername+" "+"--legacy-password="+sm_rhnPassword+" "+"--destination-user="+sm_clientUsername+" "+"--destination-password="+sm_clientPassword+" "+(sm_clientOrg!=null?"--org="+sm_clientOrg:""), /*sm_rhnUsername*/null, /*sm_rhnPassword*/null, null, null, null, null, null);
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "ExitCode from call to '"+rhnMigrateTool+"' after attempting to use the option to keep the classic registration");
 		Assert.assertNotNull(clienttasks.getCurrentConsumerCert(),"Confirmed that the system is newly registered with Subscription Manager after migrating from RHN Classic using '"+rhnMigrateTool+"'.");
 		Assert.assertTrue(clienttasks.isRhnSystemIdRegistered(sm_rhnUsername, sm_rhnPassword, sm_rhnHostname, rhnSystemId), "Confirmed that rhn systemId '"+rhnSystemId+"' is STILL registered on the RHN Classic server (because we passed an option to keep the classic registration).");
@@ -2078,8 +2144,137 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
-	
-	
+	@Test(	description="Attempt to execute migration tool rhn-migrate-classic-to-rhsm with --remove-rhn-packages which should disable some classic services and remove several classic packages. As a result, subsequent attempts to migrate will be halted with a friendly message.",
+			groups={"blockedByBug-1185914","RhnMigrateClassicToRhsmWithRemoveRhnPackages_Test"},
+			dependsOnMethods={},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void RhnMigrateClassicToRhsmWithRemoveRhnPackages_Test() {
+		if (clienttasks.isPackageVersion("subscription-manager-migration", "<", "1.18.2-1")) throw new SkipException("This version of subscription-manager does not support Bug 1185914 - [RFE] rhn-migrate-classic-to-rhsm should give the option to remove RHN Classic related packages / daemons");	// commit 871264dbb0cc091d3eaefabfdfd2e51d6bbc0a3c
+		
+		String options = "--remove-rhn-packages";
+		
+		if (sm_rhnHostname.equals("")) throw new SkipException("This test requires access to RHN Classic or Satellite 5.");
+		clienttasks.unregister(null, null, null);
+		
+		// register to rhn classic
+		String rhnSystemId = clienttasks.registerToRhnClassic(sm_rhnUsername, sm_rhnPassword, sm_rhnHostname);
+		Assert.assertEquals(clienttasks.identity(null, null, null, null, null, null, null).getStdout().trim(),"server type: RHN Classic","Subscription Manager recognizes that we are registered classically.");
+		
+		// randomly remove a benign rhn classic package (just to add a little unnecessary fun)
+		if (randomGenerator.nextBoolean() && clienttasks.isPackageInstalled("osad")) clienttasks.yumRemovePackage("osad");
+		if (randomGenerator.nextBoolean() && clienttasks.isPackageInstalled("openscap")) clienttasks.yumRemovePackage("openscap");
+		
+		// subscribe to more RHN Classic channels (just to add a little unnecessary fun)
+		List<String> filteredRhnAvailableChildChannels = new ArrayList<String>(rhnAvailableChildChannels);
+		// Avoid adding beta child channels since they map to a different product cert and can cause the following...
+		//	+-----------------------------------------------------+
+		//	Unable to continue migration!
+		//	+-----------------------------------------------------+
+		//	You are subscribed to channels that have conflicting product certificates.
+		//	The following channels map to product ID 69:
+		//	rhel-x86_64-server-7
+		//	rhel-x86_64-server-optional-7-beta
+		//	Reduce the number of channels per product ID to 1 and run migration again.
+		//	To remove a channel, use 'rhn-channel --remove --channel=<conflicting_channel>'.
+///*debugTesting*/		addRhnClassicChannels(sm_rhnUsername, sm_rhnPassword, Arrays.asList("rhel-x86_64-server-optional-7-beta"));	// only add 1 child channel to avoid "You are subscribed to channels that have conflicting product certificates."
+		for (String rhnAvailableChildChannel : rhnAvailableChildChannels) {
+			if (rhnAvailableChildChannel.contains("-beta")) {
+				filteredRhnAvailableChildChannels.remove(rhnAvailableChildChannel);
+			}
+		}
+		// Avoid adding unmapped child channels since they can cause the following...
+		//	+-----------------------------------------------------+
+		//	No product certificates are mapped to these legacy channels:
+		//	+-----------------------------------------------------+
+		//	rhel-x86_64-server-v2vwin-7-beta-debuginfo
+		//	
+		//	Use --force to ignore these channels and continue the migration.
+///*debugTesting*/		addRhnClassicChannels(sm_rhnUsername, sm_rhnPassword, Arrays.asList("rhel-x86_64-server-v2vwin-7-beta-debuginfo"));
+		for (String rhnAvailableChildChannel : rhnAvailableChildChannels) {
+			if (!channelsToProductCertFilenamesMap.containsKey(rhnAvailableChildChannel)) {
+				filteredRhnAvailableChildChannels.remove(rhnAvailableChildChannel);
+			}
+		}
+		addRhnClassicChannels(sm_rhnUsername, sm_rhnPassword, getRandomSubsetOfList(filteredRhnAvailableChildChannels, /*5*/1));	// only add 1 child channel to reduce the chance of "You are subscribed to channels that have conflicting product certificates."
+		
+		// attempt to run rhn-migrate-classic-to-rhsm
+		SSHCommandResult sshCommandResult = executeRhnMigrateClassicToRhsm(options+" "+"--destination-url="+originalServerHostname+":"+originalServerPort+originalServerPrefix, sm_rhnUsername, sm_rhnPassword, sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null);
+		//	[root@jsefler-rhel6 ~]# rhn-migrate-classic-to-rhsm --remove-rhn-packages --legacy-user=rhsm-client --legacy-password=REDACTED --destination-user=testuser1 --destination-password=REDACTED --org=admin
+		//
+		//	Retrieving existing legacy subscription information...
+		//
+		//	+-----------------------------------------------------+
+		//	System is currently subscribed to these legacy channels:
+		//	+-----------------------------------------------------+
+		//	rhel-x86_64-server-6
+		//	rhn-tools-rhel-x86_64-server-6-debuginfo
+		//
+		//	+-----------------------------------------------------+
+		//	Installing product certificates for these legacy channels:
+		//	+-----------------------------------------------------+
+		//	rhel-x86_64-server-6
+		//	rhn-tools-rhel-x86_64-server-6-debuginfo
+		//
+		//	Product certificates installed successfully to /etc/pki/product.
+		//
+		//	Preparing to unregister system from legacy server...
+		//	System successfully unregistered from legacy server.
+		//	Stopping and disabling legacy services...                  <===== NOTE: Bug 1390341 - rhn-migrate-classic-to-rhsm is failing to stop and disable services
+		//	Shutting down osad:                                        [FAILED]
+		//	Usage: /etc/init.d/osad {start|stop|restart|reload|status|condrestart}
+		//	Removing legacy packages...
+		//	warning: /etc/sysconfig/rhn/up2date saved as /etc/sysconfig/rhn/up2date.rpmsave
+		//
+		//	Attempting to register system to destination server...
+		//	Registering to: jsefler-candlepin.usersys.redhat.com:8443/candlepin
+		//	The system has been registered with ID: 376bf523-c75d-4603-b4ed-abea41e02f79 
+		//
+		//	Installed Product Current Status:
+		//	Product Name: Red Hat Enterprise Linux Server
+		//	Status:       Not Subscribed
+		//
+		//	Unable to find available subscriptions for all your installed products.
+		//	System 'jsefler-rhel6.usersys.redhat.com' successfully registered.
+		//
+		//	[root@jsefler-rhel6 ~]# echo $?
+		//	0
+		
+		// verify the migration was successful
+		// WARNING: asserting this exit code is misleading because it is the exit code from the rhn-migrate-classic-to-rhsm.tcl script which is a wrapper to rhn-migrate-classic-to-rhsm which could exit with a different code
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "ExitCode from call to '"+rhnMigrateTool+"' after attempting to migrate with options '"+options+"'.");
+		
+		// verify that we are newly registered to RHSM
+		Assert.assertNotNull(clienttasks.getCurrentConsumerCert(),"Confirmed that the system is newly registered with Subscription Manager after migrating from RHN Classic using '"+rhnMigrateTool+"'.");
+		
+		// verify that we are not classically registered to RHN
+		Assert.assertTrue(!clienttasks.isRhnSystemIdRegistered(sm_rhnUsername, sm_rhnPassword, sm_rhnHostname, rhnSystemId), "Confirmed that rhn systemId '"+rhnSystemId+"' is NOT registered on the RHN Classic server (because we passed an option to remove the classic registration packages).");
+		
+		// verify that the following legacy rhn classic packages have been removed
+		String removingPackagesMsg = "Removing legacy packages...";
+		Assert.assertTrue(sshCommandResult.getStdout().contains(removingPackagesMsg), "Stdout from call to '"+rhnMigrateTool+" "+options+"' contains message: "+removingPackagesMsg);
+		for (String legacyPackage : legacyRHNClassicPackages) {
+			Assert.assertTrue(!clienttasks.isPackageInstalled(legacyPackage),"RHN Legacy package '"+legacyPackage+"' is not installed after running rhn-migrate-classic-to-rhsm with option '"+options+"'");
+		}
+		
+		// attempt another migration and assert the following 
+		//	[root@jsefler-rhel6 ~]# rhn-migrate-classic-to-rhsm
+		//	Could not find up2date_client.config module! Perhaps this script was already executed with --remove-rhn-packages?
+		String expectedMsg = "Could not find up2date_client.config module! Perhaps this script was already executed with --remove-rhn-packages?";
+		sshCommandResult = executeRhnMigrateClassicToRhsm(options+" "+"--destination-url="+originalServerHostname+":"+originalServerPort+originalServerPrefix, sm_rhnUsername, sm_rhnPassword, sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null);
+		//Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(70), "ExitCode from call to '"+rhnMigrateTool+"' after attempting to use the option to keep the classic registration");
+		//Assert.assertEquals(sshCommandResult.getStderr().trim(), expectedMsg, "The expected stderr result from a call to '"+rhnMigrateTool+"' after already having called this tool with options '"+options+"'.");
+		//Assert.assertEquals(sshCommandResult.getStdout().trim(), "", "The expected stdout result from a call to '"+rhnMigrateTool+"' after already having called this tool with options '"+options+"'.");
+		Assert.assertTrue((sshCommandResult.getStderr()+sshCommandResult.getStdout()).trim().endsWith(expectedMsg), "The result from a call to '"+rhnMigrateTool+"' after already having called this tool with options '"+options+"' ends with: "+expectedMsg);
+	}
+	// Make sure the RHN Classic Packages are installed
+	List<String> legacyRHNClassicPackages = Arrays.asList(new String[]{"osad","rhn-check","rhn-client-tools","rhncfg","rhncfg-actions","rhncfg-client","rhncfg-management","rhn-setup","rhnpush","rhnsd","spacewalk-abrt","spacewalk-oscap","yum-rhn-plugin"});	// taken from https://github.com/candlepin/subscription-manager/pull/1484/files
+	@BeforeGroups(groups="setup",value={"RhnMigrateClassicToRhsmWithRemoveRhnPackages_Test"})
+	@AfterGroups(groups="setup",value={"RhnMigrateClassicToRhsmWithRemoveRhnPackages_Test"})
+	public void installRhnClassicPackages() throws IOException, JSONException {
+		if (clienttasks==null) return;
+		clienttasks.installReleasedRhnClassicPackages(sm_yumInstallOptions, legacyRHNClassicPackages);
+	}
 	
 	
 	// Candidates for an automated Test:
@@ -2957,7 +3152,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		if (sm_rhnPassword.equals("")) {log.warning("RHN Password was not provided."); return ll;}
 		
 		int rhnChildChannelSubSize = 40;	// 50;	// used to break down rhnAvailableChildChannels into smaller sub-lists to avoid bugs 818786 881952
-		
+///*debugTesting*/ rhnChildChannelSubSize = 0;		
 		List<String> rhnAvailableNonBetaChildChannels = new ArrayList<String>();
 		for (String rhnChannel: rhnAvailableChildChannels) if (!rhnChannel.contains("-beta")) rhnAvailableNonBetaChildChannels.add(rhnChannel);
 

@@ -144,16 +144,16 @@
 
 (defn ^{Test {:groups ["repo"
                        "tier2"
-                       "tier1" "acceptance"]}}
-  check_repo_visible
-  "This test checks whether repository option exists
-   when system is unregistered"
+                       "tier1" "acceptance"]
+              :description "Given a system is not registered
+    and I run 'subscription-manager-gui'
+  When I click on the 'System' menu
+  Then I see 'Repositories' menu disabled."}}
+  check_repo_disabled
   [_]
   (tasks/restart-app :unregister? true)
   (tasks/ui click :main-window "System")
-  (if (= "RHEL7" (get-release))
-    (verify (not (tasks/has-state? :repositories "enabled")))
-    (verify (not (tasks/visible? :repositories)))))
+  (verify (not (tasks/has-state? :repositories "enabled"))))
 
 (defn ^{Test {:groups ["repo"
                        "tier2"
@@ -338,14 +338,15 @@ Then I see values of repositories ids to be redrawn
   (when (-> (get-release :true) :version (= "7.3"))
     (throw (SkipException.
             (str "Skip due to a problem with toggle checkbox in RHEL7.3"))))
-  (assert-and-open-repo-dialog)
-  (tasks/ui selectrow :repo-table repo)
-  (sleep 3000)
-  (let [row-num (tasks/ui gettablerowindex :repo-table repo)]
-    (toggle-checkbox-state row-num))
-  (verify (tasks/has-state? :repo-remove-override "enabled"))
-  (assert-and-remove-all-override)
-  (verify (not (tasks/has-state? :repo-remove-override "enabled"))))
+  (tasks/screenshot-on-exception
+   (assert-and-open-repo-dialog)
+   (tasks/ui selectrow :repo-table repo)
+   (sleep 3000)
+   (let [row-num (tasks/ui gettablerowindex :repo-table repo)]
+     (toggle-checkbox-state row-num))
+   (verify (tasks/has-state? :repo-remove-override "enabled"))
+   (assert-and-remove-all-override)
+   (verify (not (tasks/has-state? :repo-remove-override "enabled")))))
 
 (defn ^{AfterGroups {:groups ["repo"
                               "tier3"]

@@ -47,7 +47,7 @@ import com.redhat.qe.tools.SSHCommandResult;
  * Etherpad for 24 Hour Temporary Pools for Unmapped Guests
  *   http://etherpad.corp.redhat.com/MZhnahVIDk  --for review
  */
-@Test(groups={"TemporaryPoolTests","Tier3Tests","AcceptanceTests"})
+@Test(groups={"TemporaryPoolTests","Tier3Tests","AcceptanceTests","Tier1Tests"})
 public class TemporaryPoolTests extends SubscriptionManagerCLITestScript {
 	
 	// Test methods ***********************************************************************

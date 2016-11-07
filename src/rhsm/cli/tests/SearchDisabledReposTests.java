@@ -30,7 +30,7 @@ import rhsm.data.Repo;
  * 		Bug 1268376 - [RFE] Provide API call to enable/disable yum repositories  (RHEL6.8)
  * 		http://etherpad.corp.redhat.com/yum-search-disabled-repos-plugin-Testcases
  */
-@Test(groups={"SearchDisabledReposTests","Tier1Tests","AcceptanceTests"})
+@Test(groups={"SearchDisabledReposTests","AcceptanceTests","Tier1Tests"})
 public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 
 	
