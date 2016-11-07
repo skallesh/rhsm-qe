@@ -1,6 +1,5 @@
 (ns rhsm.errors.classification
-  (:use [slingshot.slingshot :only [try+
-                                    throw+]])
+  (:use [slingshot.slingshot :only (try+ throw+)])
   (:require [clojure.tools.logging :as log]))
 
 (defprotocol IFailureClassifier
@@ -12,7 +11,18 @@
       -  :testware-problem
       -  :verification-failure
       -  :skip-exception
+      -  :network-error
       -  :unknown-exception
       -  :unknown"))
 
-(gen-class)
+;; (defmacro normalize-exception-types
+;;   "This macro catches an exception
+;;   and tries to find out 'failure-level' of the exception.
+;;   After that it raises the proper exception when 'failure-level'
+;;   requires so."
+;;   [& body]
+;;   '(sl/try+
+;;     ~@body
+;;     (catch Object )
+;;     )
+;;   )
