@@ -3,11 +3,11 @@
                                     throw+]])
   (:require [clojure.tools.logging :as log]))
 
-(defprotocol AnUrgenceClassifier
+(defprotocol IFailureClassifier
   "Methods related to classifying of exceptions mainly.
   It is important to distinguish errors and exceptions
   from TestNG report results perspective."
-  (urgency_level [a]
+  (failure-level [a]
     "returns:
       -  :testware-problem
       -  :verification-failure
