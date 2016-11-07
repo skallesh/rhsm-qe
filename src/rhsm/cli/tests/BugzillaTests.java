@@ -83,8 +83,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	SSHCommandRunner sshCommandRunner = null;
 
 	@Test(description = "Verify that the EUS RHEL product certs on the CDN for each release correctly reflect the release version.  For example, this affects users that want use subcription-manager release --set=6.3 to keep yum updates fixed to an older release.", groups = {
-			"VerifyEUSRHELProductCertVersionFromEachCDNReleaseVersion_Test", "AcceptanceTests","Tier1Tests" },
-			dataProvider = "VerifyEUSRHELProductCertVersionFromEachCDNReleaseVersion_TestData", enabled = true)
+			"VerifyEUSRHELProductCertVersionFromEachCDNReleaseVersion_Test", "AcceptanceTests",
+			"Tier1Tests" }, dataProvider = "VerifyEUSRHELProductCertVersionFromEachCDNReleaseVersion_TestData", enabled = true)
 	public void VerifyEUSRHELProductCertVersionFromEachCDNReleaseVersion_Test(Object blockedByBug, String release,
 			String rhelRepoUrl, File eusEntitlementCertFile) throws JSONException, Exception {
 		if (!sm_serverType.equals(CandlepinType.hosted))
@@ -166,31 +166,25 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			eusProductId = "217";
 		else if ((clienttasks.arch.equals("s390x")) && (clienttasks.variant.equals("Server")))
 			eusProductId = "73";
-/* do not throw SkipExceptions from a dataProvider, it will fail all the rows of the test
-		else if ((clienttasks.arch.equals("ppc64le")) && (clienttasks.variant.equals("Server"))) {
-			eusProductId = "292";
-			throw new SkipException("blocked by bug 1369516"); // for now
-																// skipping test
-																// on this arch
-																// due to
-																// unavailable
-																// subscriptions
-																// due to wrong
-																// productid
-																// mapping
-			// for now skipping the
-
-		} 
-		else if (clienttasks.variant.equals("Client"))
-			throw new SkipException("Test is not supported for this variant");
-		else if (clienttasks.variant.equals("Workstation"))
-			throw new SkipException("Test is not supported for this variant");
-*/
-		if (eusProductId==null) {
-			log.warning("This test does not yet cover variant '"+clienttasks.variant+"' on arch '"+clienttasks.arch+"'.");
-			 return ll; // return no rows and no test will be run
+		/*
+		 * do not throw SkipExceptions from a dataProvider, it will fail all the
+		 * rows of the test else if ((clienttasks.arch.equals("ppc64le")) &&
+		 * (clienttasks.variant.equals("Server"))) { eusProductId = "292"; throw
+		 * new SkipException("blocked by bug 1369516"); // for now // skipping
+		 * test // on this arch // due to // unavailable // subscriptions // due
+		 * to wrong // productid // mapping // for now skipping the
+		 *
+		 * } else if (clienttasks.variant.equals("Client")) throw new
+		 * SkipException("Test is not supported for this variant"); else if
+		 * (clienttasks.variant.equals("Workstation")) throw new SkipException(
+		 * "Test is not supported for this variant");
+		 */
+		if (eusProductId == null) {
+			log.warning("This test does not yet cover variant '" + clienttasks.variant + "' on arch '"
+					+ clienttasks.arch + "'.");
+			return ll; // return no rows and no test will be run
 		}
-		
+
 		// unregister
 		clienttasks.unregister(null, null, null);
 		// register
@@ -200,10 +194,11 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		// the system
 		ProductCert rhelProductCert = clienttasks.getCurrentRhelProductCert();
 
-/* do not throw SkipException from a dataProvider, it will fail all the rows of the test
-		if (rhelProductCert == null)
-			throw new SkipException("Failed to find an installed RHEL product cert.");
-*/
+		/*
+		 * do not throw SkipException from a dataProvider, it will fail all the
+		 * rows of the test if (rhelProductCert == null) throw new
+		 * SkipException("Failed to find an installed RHEL product cert.");
+		 */
 		// find a subscription that provides Extended Update products
 
 		/*
@@ -230,18 +225,19 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				break;
 			}
 		}
-		if (pool==null) {
-			log.warning("Could not find an available EUS subscription that covers EUS product '"+eusProductId+"'.");
+		if (pool == null) {
+			log.warning("Could not find an available EUS subscription that covers EUS product '" + eusProductId + "'.");
 			return ll; // return no rows and no test will be run
 		}
-		
+
 		// find the entitlement that provides access to RHEL and EUS
 		EntitlementCert eusEntitlementCerts = clienttasks.getEntitlementCertCorrespondingToSubscribedPool(pool);
-		if (eusEntitlementCerts == null)
-		{
-/* do not throw SkipException from a dataProvider, it will fail all the rows of the test
-			throw new SkipException("Could not find an entitlement to a EUS subscription.");
-*/ return ll; // instead, return no rows and no test will be run
+		if (eusEntitlementCerts == null) {
+			/*
+			 * do not throw SkipException from a dataProvider, it will fail all
+			 * the rows of the test throw new SkipException(
+			 * "Could not find an entitlement to a EUS subscription.");
+			 */ return ll; // instead, return no rows and no test will be run
 		}
 
 		// if eus repo is not enabled , enable it
@@ -289,7 +285,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		}
 
 		// add each available release as a row to the dataProvider
-//TODO bug 1369516 should be added to the BlockedByBzBug for all rows against ppc64le
+		// TODO bug 1369516 should be added to the BlockedByBzBug for all rows
+		// against ppc64le
 		for (
 
 		String release : clienttasks.getCurrentlyAvailableReleases(null, null, null))
@@ -318,14 +315,16 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 */
 	@Test(description = "verify Status Cache not used when listing repos with a bad proxy ", groups = {
-			"ListingReposWithBadProxy", "blockedByBug-1298327", "blockedByBug-1345962" }, enabled = true)
+			"ListingReposWithBadProxy", "blockedByBug-1298327", "blockedByBug-1345962",
+			"blockedByBug-1389794" }, enabled = false)
 	public void ListingReposWithBadProxy() throws Exception {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null,
 				null, (String) null, null, null, null, true, null, null, null, null);
+		SSHCommandResult result = clienttasks.repos(true, null, null, (String) null, null, null, null, null);
 		String logMessage = "Unable to reach server, using cached status";
 		String rhsmLogMarker = System.currentTimeMillis() + " Testing **********************************************";
 		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, rhsmLogMarker);
-		SSHCommandResult result = clienttasks.repos(true, null, null, (String) null, null,
+		clienttasks.repos(true, null, null, (String) null, null,
 				sm_basicauthproxyHostname + ":" + sm_basicauthproxyPort, sm_basicauthproxyUsername, "badproxy");
 		String tailFromRhsmlogFile = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile,
 				rhsmLogMarker, "cached");
@@ -830,7 +829,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 						quantity = availableSubscriptionPool.suggested / 2;
 
 						clienttasks.subscribe(null, null, availableSubscriptionPool.poolId, null, null,
-								Integer.toString(quantity), null, null, null, null, null, null);
+								Integer.toString(quantity + 1), null, null, null, null, null, null);
 						providedProductId = availableSubscriptionPool.provides;
 					}
 
@@ -1317,7 +1316,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@Test(description = "Consumer unsubscribed when Subscription revoked", groups = { "CRLTest" }, enabled = true)
+	@Test(description = "Consumer unsubscribed when Subscription revoked", groups = { "CRLTest",
+			"blockedByBug-1389559" }, enabled = true)
 	@ImplementsNitrateTest(caseId = 55355)
 	public void CRLTest() {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
@@ -1337,6 +1337,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		// 0/2 * * * ?
 		RevokedCert revokedCert = RevokedCert.findFirstInstanceWithMatchingFieldFromList("serialNumber", serialNumber,
 				servertasks.getCurrentlyRevokedCerts());
+		System.out.println(revokedCert + "revokedCert");
 		Assert.assertNotNull(revokedCert,
 				"Found expected Revoked Cert on the server's Certificate Revocation List (CRL) after unsubscribing from serial '"
 						+ serialNumber + "'.");
@@ -1540,9 +1541,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 */
 	// To be tested against stage
-	@Test(description = "verify if 500 errors in stage on subscribe/unsubscribe",
-			groups = { "AcceptanceTests","Tier1Tests", "blockedByBug-878994" },
-			enabled = true)
+	@Test(description = "verify if 500 errors in stage on subscribe/unsubscribe", groups = { "AcceptanceTests",
+			"Tier1Tests", "blockedByBug-878994" }, enabled = true)
 	public void Verify500ErrorOnStage() throws JSONException, Exception {
 		if (!sm_serverType.equals(CandlepinType.hosted))
 			throw new SkipException("To be run against Stage only");
@@ -2337,10 +2337,10 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 */
 	@Test(description = "verify if system.entitlements_valid goes from valid to partial after oversubscribing", // TODO
-	// fix
-	// this
-	// description
-	groups = { "VerifyRHELWorkstationSubscription", "blockedByBug-739790" }, enabled = true)
+			// fix
+			// this
+			// description
+			groups = { "VerifyRHELWorkstationSubscription", "blockedByBug-739790" }, enabled = true)
 	public void VerifyRHELWorkstationSubscription() throws JSONException, Exception {
 		InstalledProduct workstation = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", "71",
 				clienttasks.getCurrentlyInstalledProducts());
@@ -2375,10 +2375,10 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 */
 	@Test(description = "verify OwnerInfo is displayed only for pools that are active right now, for all the stats", // TODO,
-	// correct
-	// this
-	// description
-	groups = { "certificateStacking", "blockedByBug-726409", "blockedByBug-1183175" }, enabled = true)
+			// correct
+			// this
+			// description
+			groups = { "certificateStacking", "blockedByBug-726409", "blockedByBug-1183175" }, enabled = true)
 	public void certificateStacking() throws JSONException, Exception {
 		Map<String, String> attributes = new HashMap<String, String>();
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
@@ -2752,7 +2752,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@ImplementsNitrateTest(caseId = 50235)
 	@Test(description = "verify rhsm log for Update With No Installed Products", groups = {
-			"UpdateWithNoInstalledProducts", "blockedByBug-746241" }, enabled = true)
+			"UpdateWithNoInstalledProducts", "blockedByBug-746241", "blockedByBug-1389559" }, enabled = true)
 	public void UpdateWithNoInstalledProducts() throws JSONException, Exception {
 		client.runCommandAndWait("rm -f " + clienttasks.rhsmLogFile);
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
@@ -3696,7 +3696,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				providedProductId.get(providedProductId.size() - 1), clienttasks.getCurrentlyInstalledProducts());
 		Assert.assertEquals(BeforeAttaching.status, "Partially Subscribed",
 				"Verified that installed product is partially subscribed");
-		clienttasks.subscribe(null, null, poolId, null, null, Integer.toString(quantity + 2), null, null, null, null,
+		clienttasks.subscribe(null, null, poolId, null, null, Integer.toString(quantity + 1), null, null, null, null,
 				null, null);
 		InstalledProduct AfterAttaching = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productName",
 				providedProductId.get(providedProductId.size() - 1), clienttasks.getCurrentlyInstalledProducts());
@@ -4165,9 +4165,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 */
 	@Test(description = "Auto-heal with SLA", // TODO Add some more description;
-	// has same description as
-	// VerifyAutohealWithSLA()
-	groups = { "AutoHealFailForSLA" }, enabled = true)
+			// has same description as
+			// VerifyAutohealWithSLA()
+			groups = { "AutoHealFailForSLA" }, enabled = true)
 	public void VerifyAutohealFailForSLA() throws JSONException, Exception {
 
 		List<ProductCert> productCerts = clienttasks.getCurrentProductCerts();
@@ -4306,7 +4306,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 */
 	@Test(description = "Verify that rhsm.log reports all products provided by an attached subsubscription.", groups = {
-			"blockedByBug-668032"/* ,"blockedByBug-1016300" */ }, enabled = true)
+			"blockedByBug-668032", "VerifyRhsmLogsProvidedProducts", "blockedByBug-1389559" }, enabled = true)
 	public void VerifyRhsmLogsProvidedProducts_Test() {
 		client.runCommandAndWait("rm -f " + clienttasks.rhsmLogFile);
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
@@ -4324,27 +4324,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				BigInteger serialNumber = clienttasks.getSerialNumberFromEntitlementCertFile(serialFile);
 				String rhsmLogTail = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, logMarker,
 						serialNumber.toString());
-						// 2014-02-14 11:41:34,891 [INFO] subscription-manager
-						// @certlib.py:245 - certs updated:
-						// Total updates: 1
-						// Found (local) serial# []
-						// Expected (UEP) serial# [5098711034167311680]
-						// Added (new)
-						// [sn:5098711034167311680 (Clustering Bits,) @
-						// /etc/pki/entitlement/5098711034167311680.pem]
-						// [sn:5098711034167311680 (Awesome OS Server Bits,) @
-						// /etc/pki/entitlement/5098711034167311680.pem]
-						// [sn:5098711034167311680 (Load Balancing Bits,) @
-						// /etc/pki/entitlement/5098711034167311680.pem]
-						// [sn:5098711034167311680 (Large File Support Bits,) @
-						// /etc/pki/entitlement/5098711034167311680.pem]
-						// [sn:5098711034167311680 (Shared Storage Bits,) @
-						// /etc/pki/entitlement/5098711034167311680.pem]
-						// [sn:5098711034167311680 (Management Bits,) @
-						// /etc/pki/entitlement/5098711034167311680.pem]
-						// Deleted (rogue):
-						// <NONE>
-
 				// assert that the rhsm.log reports a message for all of the
 				// products provided for by this entitlement
 				for (String providedProduct : pool.provides) {
@@ -4354,6 +4333,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 					// should exclude "MKT" products.
 					String expectedLogMessage = String.format("[sn:%s (%s,) @ %s]", serialNumber.toString(),
 							providedProduct, serialFile.getPath());
+					System.out.println(rhsmLogTail + "rhsm tail");
 					Assert.assertTrue(rhsmLogTail.contains(expectedLogMessage),
 							"Log file '" + clienttasks.rhsmcertdLogFile + "' reports expected message '"
 									+ expectedLogMessage + "'.");
@@ -4524,23 +4504,29 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException *
 	 */
 
-	@Test(description = "Verify the file permissions on /var/lib/rhsm/cache and facts files",
-	      groups = {"blockedByBug-1297485", "blockedByBug-1297493", "blockedByBug-1340525", "blockedByBug-1389449" },
-	      enabled = true)
+	@Test(description = "Verify the file permissions on /var/lib/rhsm/cache and facts files", groups = {
+			"blockedByBug-1297485", "blockedByBug-1297493", "blockedByBug-1340525",
+			"blockedByBug-1389449" }, enabled = true)
 	public void VerifyCacheAndFactsfilePermissions_Test() throws JSONException, Exception {
 		if (clienttasks.isPackageVersion("subscription-manager", "<", "1.17.7-1")) {
-			// subscription-manager commit 9dec31c377b57b4c98f845c018a5372d6f650d88
-			// 1297493, 1297485: Restrict visibility of subscription-manager caches.
+			// subscription-manager commit
+			// 9dec31c377b57b4c98f845c018a5372d6f650d88
+			// 1297493, 1297485: Restrict visibility of subscription-manager
+			// caches.
 			throw new SkipException(
 					"This test applies a newer version of subscription manager that includes fixes for bugs 1297493 and 1297485.");
 		}
 		String command = clienttasks.rhsmCacheDir;
 		SSHCommandResult result = client.runCommandAndWait("stat -c '%a' " + command); // gets
 		// the File /var/lib/rhsm/cache access rights in octal
-		Assert.assertEquals(result.getStdout().trim(), "750", "Expected permission on /var/lib/rhsm/cache is 750"); // post commit 9dec31c377b57b4c98f845c018a5372d6f650d88
+		Assert.assertEquals(result.getStdout().trim(), "750", "Expected permission on /var/lib/rhsm/cache is 750"); // post
+																													// commit
+																													// 9dec31c377b57b4c98f845c018a5372d6f650d88
 		SSHCommandResult result1 = client.runCommandAndWait("stat -c '%a' /var/lib/rhsm/facts"); // gets
 		// the File /var/lib/rhsm/facts access rights in octal
-		Assert.assertEquals(result1.getStdout().trim(), "750", "Expected permission on /var/lib/rhsm/facts is 750"); // post commit 9dec31c377b57b4c98f845c018a5372d6f650d88
+		Assert.assertEquals(result1.getStdout().trim(), "750", "Expected permission on /var/lib/rhsm/facts is 750"); // post
+																														// commit
+																														// 9dec31c377b57b4c98f845c018a5372d6f650d88
 	}
 
 	/*
@@ -5016,8 +5002,12 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 
 	@AfterClass(groups = { "setup" })
 	protected void DeleteTestPool() throws Exception {
-		if (CandlepinType.hosted.equals(sm_serverType)) return;	// make sure we don't run this against stage/prod environment 
-		if (sm_clientOrg==null) return;	// must have an owner when calling candlepin APIs to delete resources 
+		if (CandlepinType.hosted.equals(sm_serverType))
+			return; // make sure we don't run this against stage/prod
+					// environment
+		if (sm_clientOrg == null)
+			return; // must have an owner when calling candlepin APIs to delete
+					// resources
 		String productId = "AutoHealForExpiredProduct";
 		CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword,
 				sm_serverUrl, sm_clientOrg, productId);

@@ -1061,6 +1061,10 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 				ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1196396","1217835"}),	"rhn-migrate-classic-to-rhsm --activation-key=foo --environment=bar",			new Integer(64),	"","The --activation-key and --environment options cannot be used together."}));		// commit e6ee0dac25ac3cf6adc0d52779e6c806e7f62799	commit 270f2a3e5f7d55b69a6f98c160d38362961b3059
 				ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1217835"}),				"rhn-migrate-classic-to-rhsm --servicelevel=foo --no-auto",						new Integer(64),	"","The --servicelevel and --no-auto options cannot be used together."}));	// commit 270f2a3e5f7d55b69a6f98c160d38362961b3059 Bug 1217835 - exit code from rhn-migrate-classic-to-rhsm activation-key without an org should be EX_USAGE
 			}
+			if (clienttasks.isPackageVersion("subscription-manager-migration", ">=", "1.18.2")) {
+				ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1390258"}),				"rhn-migrate-classic-to-rhsm --remove-rhn-packages --keep",						new Integer(64),	"","The --remove-rhn-packages and --keep options cannot be used together."}));		//  
+			}
+			
 			
 			// negative tests that require the system to be registered before attempting the test...
 			ll.add(Arrays.asList(new Object[]{null,													clienttasks.command+" register --username "+sm_clientUsername+" --password "+sm_clientPassword+(sm_clientOrg==null?"":" --org "+sm_clientOrg),	new Integer(0),	null,	""}));
