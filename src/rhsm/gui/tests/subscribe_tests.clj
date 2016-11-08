@@ -568,6 +568,17 @@ Then I see names of subscriptions to be redrawn
      (if (bool (tasks/ui guiexist :contract-selection-dialog))
        (tasks/ui click :cancel-contract-selection)))))
 
+(defn ^{Test {:groups ["subscribe"
+                       "tier3"
+                       "blockedByBug-1321831"]
+              :description "Given a system is registered
+When the consumer is deleted in registration server
+  and subscription-manager-gui is launched
+  and I click on 'Auto-attach' button
+Then I see a warning window
+  and button 'Back' and 'Next' in 'Auto-attach' window should be disabled"}}
+  )
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; DATA PROVIDERS
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
