@@ -839,16 +839,7 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 		//	Trying other mirror.
 		//	https://cdn.redhat.com/content/dist/rhel/workstation/7/7Workstation/x86_64/openstack-tools/10/os/repodata/repomd.xml: [Errno 14] HTTPS Error 404 - Not Found
 		//	Trying other mirror.
-		
-		//	[root@hp-dl585g5-01 ~]# cat /tmp/stderr 
-		//	https://cdn.redhat.com/content/dist/rhel/computenode/6/6ComputeNode/x86_64/sat-tools/6.2/os/repodata/repomd.xml: [Errno 14] PYCURL ERROR 22 - "The requested URL returned error: 404 Not Found"
-		//	Trying other mirror.
-		//	To address this issue please refer to the below knowledge base article 
-		//
-		//	https://access.redhat.com/articles/1320623
-		//
-		//	If above article doesn't help to resolve this issue please open a ticket with Red Hat Support.
-		
+				
 		//	201607121645:50.724 - FINE: Stderr: 
 		//	https://cdn.redhat.com/content/dist/rhel/arm/7/7Server/aarch64/sat-tools/6.2/os/repodata/repomd.xml: [Errno 14] HTTPS Error 404 - Not Found
 		//	Trying other mirror.
@@ -858,7 +849,20 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 		//
 		//	If above article doesn't help to resolve this issue please open a ticket with Red Hat Support.
 		
-		String stderrNotFoundRegex = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsm", "baseurl")+".* HTTPS Error 404 - Not Found\nTrying other mirror.";
+		//	201611081711:35.777 - FINE: Stderr: 
+		//	https://cdn.redhat.com/content/dist/rhel/server/6/6Server/x86_64/sat-tools/6.3/os/repodata/repomd.xml: [Errno 14] PYCURL ERROR 22 - "The requested URL returned error: 404 Not Found"
+		//	Trying other mirror.
+		//	To address this issue please refer to the below knowledge base article 
+		//
+		//	https://access.redhat.com/articles/1320623
+		//
+		//	If above article doesn't help to resolve this issue please open a ticket with Red Hat Support.
+		//
+		//	https://cdn.redhat.com/content/dist/rhel/server/6/6Server/x86_64/insights-client/1/os/repodata/repomd.xml: [Errno 14] PYCURL ERROR 22 - "The requested URL returned error: 404 Not Found"
+		//	Trying other mirror.
+
+		//String stderrNotFoundRegex = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsm", "baseurl")+".* HTTPS Error 404 - Not Found\nTrying other mirror.";
+		String stderrNotFoundRegex = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsm", "baseurl")+".* (HTTPS Error 404 - Not Found|\"The requested URL returned error: 404 Not Found\")\nTrying other mirror.";
 		String stderrNotFoundInfo = "To address this issue please refer to the below knowledge base article \n\nhttps://access.redhat.com/articles/1320623\n\nIf above article doesn't help to resolve this issue please open a ticket with Red Hat Support.";
 		if (stderrFiltered.contains(stderrNotFoundInfo)) log.warning("Ignoring stderr for all \"404 - Not Found\" errors since their discovery is not the purpose of this test.");
 		stderrFiltered = stderrFiltered.replace(stderrNotFoundInfo, "");
@@ -873,32 +877,6 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 			log.warning("Skipping stderr assertion while bugId '"+bugId+"' is open.");
 		} else
 		// END OF WORKAROUND
-// DELETEME
-//		// TEMPORARY WORKAROUND
-//		//	[root@hp-dl585g5-01 ~]# cat /tmp/stderr 
-//		//	https://cdn.redhat.com/content/dist/rhel/computenode/6/6ComputeNode/x86_64/sat-tools/6.2/os/repodata/repomd.xml: [Errno 14] PYCURL ERROR 22 - "The requested URL returned error: 404 Not Found"
-//		//	Trying other mirror.
-//		//	To address this issue please refer to the below knowledge base article 
-//		//
-//		//	https://access.redhat.com/articles/1320623
-//		//
-//		//	If above article doesn't help to resolve this issue please open a ticket with Red Hat Support.
-//		if (clienttasks.redhatReleaseX.equals("6") && result.getStderr().contains("/sat-tools/6.2/os/repodata/repomd.xml: [Errno 14] PYCURL ERROR 22")) {
-//			log.warning("Skipping stderr.isEmpty() assertion on [Errno 14] PYCURL ERROR 22 for 404 Not Found /sat-tools/6.2/os/repodata/repomd.xml");
-//		} else
-//		//	201607121645:50.724 - FINE: Stderr: 
-//		//	https://cdn.redhat.com/content/dist/rhel/arm/7/7Server/aarch64/sat-tools/6.2/os/repodata/repomd.xml: [Errno 14] HTTPS Error 404 - Not Found
-//		//	Trying other mirror.
-//		//	To address this issue please refer to the below knowledge base article 
-//		//
-//		//	https://access.redhat.com/articles/1320623
-//		//
-//		//	If above article doesn't help to resolve this issue please open a ticket with Red Hat Support.
-//		if (clienttasks.redhatReleaseX.equals("7") && result.getStderr().contains("/sat-tools/6.2/os/repodata/repomd.xml: [Errno 14] HTTPS Error 404")) {
-//			log.warning("Skipping stderr.isEmpty() assertion on [Errno 14] HTTPS Error 404 Not Found /sat-tools/6.2/os/repodata/repomd.xml");
-//		} else
-//		// END OF WORKAROUND
-//		Assert.assertEquals(result.getStderr().trim(),"", "Stderr from attempt to successfully install '"+rhelOptionalPackage+"' that requires '"+rhelBasePackage+"'.");
 		Assert.assertEquals(stderrFiltered,"", "Ignoring all \"404 - Not Found\" errors, stderr from attempt to successfully install '"+rhelOptionalPackage+"' that requires '"+rhelBasePackage+"'.");
 		
 		// assert stdout results
@@ -1080,16 +1058,7 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 		//	Trying other mirror.
 		//	https://cdn.redhat.com/content/dist/rhel/workstation/7/7Workstation/x86_64/openstack-tools/10/os/repodata/repomd.xml: [Errno 14] HTTPS Error 404 - Not Found
 		//	Trying other mirror.
-		
-		//	[root@hp-dl585g5-01 ~]# cat /tmp/stderr 
-		//	https://cdn.redhat.com/content/dist/rhel/computenode/6/6ComputeNode/x86_64/sat-tools/6.2/os/repodata/repomd.xml: [Errno 14] PYCURL ERROR 22 - "The requested URL returned error: 404 Not Found"
-		//	Trying other mirror.
-		//	To address this issue please refer to the below knowledge base article 
-		//
-		//	https://access.redhat.com/articles/1320623
-		//
-		//	If above article doesn't help to resolve this issue please open a ticket with Red Hat Support.
-		
+				
 		//	201607121645:50.724 - FINE: Stderr: 
 		//	https://cdn.redhat.com/content/dist/rhel/arm/7/7Server/aarch64/sat-tools/6.2/os/repodata/repomd.xml: [Errno 14] HTTPS Error 404 - Not Found
 		//	Trying other mirror.
@@ -1099,39 +1068,25 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 		//
 		//	If above article doesn't help to resolve this issue please open a ticket with Red Hat Support.
 		
-		String stderrNotFoundRegex = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsm", "baseurl")+".* HTTPS Error 404 - Not Found\nTrying other mirror.";
+		//	201611081658:33.447 - FINE: Stderr: 
+		//	https://cdn.redhat.com/content/dist/rhel/server/6/6Server/x86_64/sat-tools/6.3/os/repodata/repomd.xml: [Errno 14] PYCURL ERROR 22 - "The requested URL returned error: 404 Not Found"
+		//	Trying other mirror.
+		//	To address this issue please refer to the below knowledge base article 
+		//	
+		//	https://access.redhat.com/articles/1320623
+		//	
+		//	If above article doesn't help to resolve this issue please open a ticket with Red Hat Support.
+		//	
+		//	https://cdn.redhat.com/content/dist/rhel/server/6/6Server/x86_64/insights-client/1/os/repodata/repomd.xml: [Errno 14] PYCURL ERROR 22 - "The requested URL returned error: 404 Not Found"
+		//	Trying other mirror.
+			
+		//String stderrNotFoundRegex = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsm", "baseurl")+".* HTTPS Error 404 - Not Found\nTrying other mirror.";
+		String stderrNotFoundRegex = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsm", "baseurl")+".* (HTTPS Error 404 - Not Found|\"The requested URL returned error: 404 Not Found\")\nTrying other mirror.";
 		String stderrNotFoundInfo = "To address this issue please refer to the below knowledge base article \n\nhttps://access.redhat.com/articles/1320623\n\nIf above article doesn't help to resolve this issue please open a ticket with Red Hat Support.";
 		if (stderrFiltered.contains(stderrNotFoundInfo)) log.warning("Ignoring stderr for all \"404 - Not Found\" errors since their discovery is not the purpose of this test.");
 		stderrFiltered = stderrFiltered.replace(stderrNotFoundInfo, "");
 		stderrFiltered = stderrFiltered.replaceAll(stderrNotFoundRegex, "");
 		stderrFiltered = stderrFiltered.trim();
-
-// DELETEME
-//		// TEMPORARY WORKAROUND
-//		//	[root@hp-dl585g5-01 ~]# cat /tmp/stderr 
-//		//	https://cdn.redhat.com/content/dist/rhel/computenode/6/6ComputeNode/x86_64/sat-tools/6.2/os/repodata/repomd.xml: [Errno 14] PYCURL ERROR 22 - "The requested URL returned error: 404 Not Found"
-//		//	Trying other mirror.
-//		//	To address this issue please refer to the below knowledge base article 
-//		//
-//		//	https://access.redhat.com/articles/1320623
-//		//
-//		//	If above article doesn't help to resolve this issue please open a ticket with Red Hat Support.
-//		if (clienttasks.redhatReleaseX.equals("6") && result.getStderr().contains("/sat-tools/6.2/os/repodata/repomd.xml: [Errno 14] PYCURL ERROR 22")) {
-//			log.warning("Skipping stderr.isEmpty() assertion on [Errno 14] PYCURL ERROR 22 for 404 Not Found /sat-tools/6.2/os/repodata/repomd.xml");
-//		} else
-//		//	201607121646:36.645 - FINE: Stderr: 
-//		//	https://cdn.redhat.com/content/dist/rhel/arm/7/7Server/aarch64/sat-tools/6.2/os/repodata/repomd.xml: [Errno 14] HTTPS Error 404 - Not Found
-//		//	Trying other mirror.
-//		//	To address this issue please refer to the below knowledge base article 
-//		//
-//		//	https://access.redhat.com/articles/1320623
-//		//
-//		//	If above article doesn't help to resolve this issue please open a ticket with Red Hat Support.
-//		if (clienttasks.redhatReleaseX.equals("7") && result.getStderr().contains("/sat-tools/6.2/os/repodata/repomd.xml: [Errno 14] HTTPS Error 404")) {
-//			log.warning("Skipping stderr.isEmpty() assertion on [Errno 14] HTTPS Error 404 Not Found /sat-tools/6.2/os/repodata/repomd.xml");
-//		} else
-//		// END OF WORKAROUND
-//		Assert.assertEquals(result.getStderr().trim(),"", "Stderr from attempt to successfully install '"+rhelOptionalPackage+"' that requires '"+rhelBasePackage+"'.");
 		Assert.assertEquals(stderrFiltered,"", "Ignoring all \"404 - Not Found\" errors, stderr from attempt to successfully install '"+rhelOptionalPackage+"' that requires '"+rhelBasePackage+"'.");
 
 		// assert stdout results
