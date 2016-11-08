@@ -17,5 +17,8 @@
            [_ :network-error] :network-error
            :else :unknown))
 
+  java.lang.AssertionError
+  (failure-level [e] :verification-failure)
+  
   Object
   (failure-level [o] :unknown))
