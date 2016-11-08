@@ -24,3 +24,12 @@
                 (catch Object e
                   e))]
     (is (= :network-error (sut/failure-level e)))))
+
+(deftest exception-re-risen-test
+  (sut/normalize-exception-types
+   (throw+  {:type :network-error
+             :msg "Unable to reach the server at jsefler-candlepin6.usersys.redhat.com:8443/candlepin"
+             :log-warning :some-object-reference
+             :cancel :some-object-reference})
+   )
+  )
