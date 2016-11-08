@@ -15,6 +15,7 @@
             [rhsm.gui.tasks.ui :as ui]
             [rhsm.gui.tests.base :as base]
             [clojure.tools.logging :as log]
+            [rhsm.errors.classification :as erc]
             [rhsm.gui.tasks.candlepin-tasks :as ctasks])
   (:import [org.testng.annotations
             Test
@@ -54,29 +55,30 @@
   simple_register
   "Simple register with known username, password and owner."
   [_ user pass owner]
-  (try+
+  (erc/normalize-exception-types
+   (try+
+    (if owner
+      (tasks/register user pass :owner owner)
+      (tasks/register user pass))
+    (catch [:type :already-registered]
+        {:keys [unregister-first]} (unregister-first)))
+   (verify (not (tasks/ui showing? :register-system)))
    (if owner
-     (tasks/register user pass :owner owner)
-     (tasks/register user pass))
-   (catch [:type :already-registered]
-          {:keys [unregister-first]} (unregister-first)))
-  (verify (not (tasks/ui showing? :register-system)))
-  (if owner
-    (try
-      (do
-        (tasks/ui click :view-system-facts)
-        (tasks/ui waittillwindowexist :facts-dialog 10)
-        (let [facts-org (split (tasks/ui gettextvalue :facts-org) #" \(")
-              read-owner (first facts-org)
-              ownerid (trim
-                       (:stdout
-                        (run-command
-                         "subscription-manager identity | grep 'org ID' | cut -d: -f 2")))
-              read-ownerid (clojure.string/replace (last facts-org) #"\)$" "")]
-          (verify (= owner read-owner))
-          (verify (= ownerid read-ownerid))))
-      (finally (if (bool (tasks/ui guiexist :facts-dialog))
-                 (tasks/ui click :close-facts))))))
+     (try
+       (do
+         (tasks/ui click :view-system-facts)
+         (tasks/ui waittillwindowexist :facts-dialog 10)
+         (let [facts-org (split (tasks/ui gettextvalue :facts-org) #" \(")
+               read-owner (first facts-org)
+               ownerid (trim
+                        (:stdout
+                         (run-command
+                          "subscription-manager identity | grep 'org ID' | cut -d: -f 2")))
+               read-ownerid (clojure.string/replace (last facts-org) #"\)$" "")]
+           (verify (= owner read-owner))
+           (verify (= ownerid read-ownerid))))
+       (finally (if (bool (tasks/ui guiexist :facts-dialog))
+                  (tasks/ui click :close-facts)))))))
 
 (defn ^{Test {:groups ["registration"
                        "tier2"
@@ -113,12 +115,13 @@
   unregister
   "Simple unregister."
   [_]
-  (try+ (tasks/register (@config :username) (@config :password))
-        (catch
-         [:type :already-registered]
-         {:keys [unregister-first]} (unregister-first)))
-  (tasks/unregister)
-  (verify (action exists? :register-system)))
+  (erc/normalize-exception-types
+   (try+ (tasks/register (@config :username) (@config :password))
+         (catch
+             [:type :already-registered]
+             {:keys [unregister-first]} (unregister-first)))
+   (tasks/unregister)
+   (verify (action exists? :register-system))))
 
 (defn ^{Test {:groups ["registration"
                        "tier3"
