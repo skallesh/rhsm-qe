@@ -2746,6 +2746,18 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				bugIds.add("1349538");
 			}
 			
+			if (rhnAvailableChildChannel.equals("rhel-x86_64-server-6-rh-gluster-3-nfs") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-6-rh-gluster-3-nfs-debuginfo")) {
+				// Bug 1393557 - rhel-x86_64-server-6-rh-gluster-3-nfs channel maps are absent from channel-cert-mapping.txt
+				bugIds.add("1393557");
+			}
+			
+			if (rhnAvailableChildChannel.equals("rhel-x86_64-server-6-ost-beta") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-6-ost-beta-debuginfo")) {
+				// Bug 1393563 - rhel-x86_64-server-6-ost-beta channel maps are absent from channel-cert-mapping.txt
+				bugIds.add("1393563");
+			}
+			
 			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 			ll.add(Arrays.asList(new Object[]{blockedByBzBug,	rhnAvailableChildChannel}));
 		}
