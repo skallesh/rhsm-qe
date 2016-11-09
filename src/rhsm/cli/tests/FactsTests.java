@@ -544,6 +544,22 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 			}
 		}
 	}
+	/**
+	 * @author redakkan
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	@Test (description = "Verify the FQDN in facts list ", groups= "blockedByBug-1367128", enabled = true)
+	public void VerifyFullyQualifiedDomainNameInFacts_Test()throws JSONException,Exception{
+		if (clienttasks.isPackageVersion("subscription-manager","<","1.18.3-1")){
+			//subscription-manager commit
+			//9012212d4340d992f7567855bc88ad2a4db257be 1367128, 1367126: Add network.fqdn fact
+			throw new SkipException(
+					"This test applies a newer version of subscription manager that includes fixes for bug 1367128.");
+		}
+		String Hostname =client.runCommandAndWait("hostname -f").getStdout().trim();
+		Assert.assertEquals(clienttasks.getFactValue("network.fqdn"),Hostname,"Fact network.fqdn matches with system value of hostname -f ");
+		}
 	@AfterGroups(groups={"setup"},value="BypassRulesDueToTypeAndCapabilities_Test")
 	public void deleteFactsFileWithOverridingValuesAfterBypassRulesDueToTypeAndCapabilities_Test() {
 		clienttasks.deleteFactsFileWithOverridingValues();
