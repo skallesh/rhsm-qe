@@ -544,12 +544,16 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 			}
 		}
 	}
+	@AfterGroups(groups={"setup"},value="BypassRulesDueToTypeAndCapabilities_Test")
+	public void deleteFactsFileWithOverridingValuesAfterBypassRulesDueToTypeAndCapabilities_Test() {
+		clienttasks.deleteFactsFileWithOverridingValues();
+	}
 	/**
 	 * @author redakkan
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@Test (description = "Verify the FQDN in facts list ", groups= "blockedByBug-1367128", enabled = true)
+	@Test (description = "Verify the FQDN in facts list ", groups= {"Tier1Tests","blockedByBug-1367128"}, enabled = true)
 	public void VerifyFullyQualifiedDomainNameInFacts_Test()throws JSONException,Exception{
 		if (clienttasks.isPackageVersion("subscription-manager","<","1.18.3-1")){
 			//subscription-manager commit
@@ -559,13 +563,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		}
 		String Hostname =client.runCommandAndWait("hostname -f").getStdout().trim();
 		Assert.assertEquals(clienttasks.getFactValue("network.fqdn"),Hostname,"Fact network.fqdn matches with system value of hostname -f ");
-		}
-	@AfterGroups(groups={"setup"},value="BypassRulesDueToTypeAndCapabilities_Test")
-	public void deleteFactsFileWithOverridingValuesAfterBypassRulesDueToTypeAndCapabilities_Test() {
-		clienttasks.deleteFactsFileWithOverridingValues();
 	}
-	
-	
 	@Test(	description="subscription-manager: assert presence of the new fact cpu.topology_source use to tell us what algorithm subscription-manager employed",
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-978466"}, dependsOnGroups={},
 			enabled=true)
