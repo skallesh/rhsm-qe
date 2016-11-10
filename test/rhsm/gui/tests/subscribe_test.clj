@@ -97,3 +97,6 @@
                                    nil
                                    :my-subscriptions-quantity-header
                                    3))))))
+
+(deftest changes_when_consumer_is_purged-test
+  (tests/changes_when_consumer_is_purged nil))
