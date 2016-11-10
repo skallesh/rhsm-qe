@@ -84,8 +84,8 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	@ImplementsNitrateTest(caseId=41678)
 	public void EnsureHardwareMatchingSubscriptionsAreListedAsAvailable_Test(String productId, JSONArray bundledProductDataAsJSONArray) throws JSONException, Exception {
-//if (!productId.equals("awesomeos-virt-unlmtd-phys")) throw new SkipException("debugTesting productId="+productId);
-//if (!productId.equals("RH0103708")) throw new SkipException("debugTesting productId="+productId);
+///*debugTesting*/if (!productId.equals("awesomeos-virt-unlmtd-phys")) throw new SkipException("debugTesting productId="+productId);
+///*debugTesting*/if (!productId.equals("RH0103708")) throw new SkipException("debugTesting productId="+productId);
 		// implicitly registered in dataProvider; no need to register with force; saves time
 		//clienttasks.register(clientusername, clientpassword, null, null, null, null, true, null, null, null);
 		SubscriptionPool pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", productId, clienttasks.getCurrentlyAvailableSubscriptionPools());

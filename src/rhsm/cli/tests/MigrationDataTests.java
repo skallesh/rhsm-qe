@@ -430,7 +430,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(verifiedVersionOfAllMigrationProductCertFiles,"All of the migration productCerts in directory '"+baseProductsDir+"' support this version of RHEL '"+clienttasks.redhatReleaseXY+"'.");
 	}
 	@Test(	description="Verify that the migration product certs support this system's RHEL release version",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-782208","blockedByBug-1006060","blockedByBug-1025338","blockedByBug-1080072","blockedByBug-1110863","blockedByBug-1148110","blockedByBug-1197864","blockedByBug-1300766","blockedByBug-1241221","blockedByBug-1328579"},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-782208","blockedByBug-1006060","blockedByBug-1025338","blockedByBug-1080072","blockedByBug-1110863","blockedByBug-1148110","blockedByBug-1197864","blockedByBug-1300766","blockedByBug-1241221","blockedByBug-1328579","blockedByBug-1393573"},
 			dependsOnMethods={"VerifyChannelCertMapping_Test"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=130940)
@@ -1069,7 +1069,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Verify that the expected RHN base channels supporting this system's RHEL release version are mapped to product certs whose version matches this system's RHEL release",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1110863","blockedByBug-1148110","blockedByBug-1197864","blockedByBug-1300766","blockedByBug-1222712","blockedByBug-1228387","blockedByBug-1241221","blockedByBug-1328579","blockedByBug-1328609","blockedByBug-1366747"},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1110863","blockedByBug-1148110","blockedByBug-1197864","blockedByBug-1300766","blockedByBug-1222712","blockedByBug-1228387","blockedByBug-1241221","blockedByBug-1328579","blockedByBug-1328609","blockedByBug-1366747","blockedByBug-1393573"},
 			dependsOnMethods={"VerifyChannelCertMapping_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -1172,7 +1172,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	@Test(	description="Verify that the expected RHN RHEL channels supporting this system's RHEL release X.Y version are mapped to product certs whose version matches this system's RHEL release X.Y (also asserts beta channels to Beta product certs)",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1080072","blockedByBug-1110863","blockedByBug-1148110","blockedByBug-1197864","blockedByBug-1300766","blockedByBug-1222712","blockedByBug-1241221","blockedByBug-1328579"},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1080072","blockedByBug-1110863","blockedByBug-1148110","blockedByBug-1197864","blockedByBug-1300766","blockedByBug-1222712","blockedByBug-1241221","blockedByBug-1328579","blockedByBug-1393573"},
 			dataProvider="RhnRhelChannelsFromChannelMappingData",
 			dependsOnMethods={"VerifyChannelCertMapping_Test"},
 			enabled=true)
@@ -2744,6 +2744,18 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				rhnAvailableChildChannel.equals("rhel-x86_64-server-7-rh-gluster-3-client-debuginfo")) {
 				// Bug 1349538 - rhel-x86_64-server-7-rh-gluster-3-client channel maps are absent from channel-cert-mapping.txt
 				bugIds.add("1349538");
+			}
+			
+			if (rhnAvailableChildChannel.equals("rhel-x86_64-server-6-rh-gluster-3-nfs") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-6-rh-gluster-3-nfs-debuginfo")) {
+				// Bug 1393557 - rhel-x86_64-server-6-rh-gluster-3-nfs channel maps are absent from channel-cert-mapping.txt
+				bugIds.add("1393557");
+			}
+			
+			if (rhnAvailableChildChannel.equals("rhel-x86_64-server-6-ost-beta") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-6-ost-beta-debuginfo")) {
+				// Bug 1393563 - rhel-x86_64-server-6-ost-beta channel maps are absent from channel-cert-mapping.txt
+				bugIds.add("1393563");
 			}
 			
 			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
