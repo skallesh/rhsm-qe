@@ -2149,6 +2149,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			dependsOnMethods={},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
+	// TODO WARNING: This test will inadvertently remove package subscription-manager-firstboot and not restore it.
 	public void RhnMigrateClassicToRhsmWithRemoveRhnPackages_Test() {
 		if (clienttasks.isPackageVersion("subscription-manager-migration", "<", "1.18.2-1")) throw new SkipException("This version of subscription-manager does not support Bug 1185914 - [RFE] rhn-migrate-classic-to-rhsm should give the option to remove RHN Classic related packages / daemons");	// commit 871264dbb0cc091d3eaefabfdfd2e51d6bbc0a3c
 		
@@ -2268,7 +2269,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue((sshCommandResult.getStderr()+sshCommandResult.getStdout()).trim().endsWith(expectedMsg), "The result from a call to '"+rhnMigrateTool+"' after already having called this tool with options '"+options+"' ends with: "+expectedMsg);
 	}
 	// Make sure the RHN Classic Packages are installed
-	List<String> legacyRHNClassicPackages = Arrays.asList(new String[]{"osad","rhn-check","rhn-client-tools","rhncfg","rhncfg-actions","rhncfg-client","rhncfg-management","rhn-setup","rhnpush","rhnsd","spacewalk-abrt","spacewalk-oscap","yum-rhn-plugin"});	// taken from https://github.com/candlepin/subscription-manager/pull/1484/files
+	List<String> legacyRHNClassicPackages = Arrays.asList(new String[]{"osad","rhn-check","rhn-client-tools","rhncfg","rhncfg-actions","rhncfg-client","rhncfg-management","rhn-setup","rhnpush","rhnsd","spacewalk-abrt","spacewalk-oscap","yum-rhn-plugin","rhn-setup-gnome"/*requires rhn-setup and rhn-client-tool and must be installed for subscription-manager-firstboot requires rhn-setup-gnome*/});	// taken from https://github.com/candlepin/subscription-manager/pull/1484/files
 	@BeforeGroups(groups="setup",value={"RhnMigrateClassicToRhsmWithRemoveRhnPackages_Test"})
 	@AfterGroups(groups="setup",value={"RhnMigrateClassicToRhsmWithRemoveRhnPackages_Test"})
 	public void installRhnClassicPackages() throws IOException, JSONException {
