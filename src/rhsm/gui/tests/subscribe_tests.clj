@@ -18,6 +18,7 @@
             [rhsm.gui.tests.base :as base]
             [rhsm.gui.tasks.candlepin-tasks :as ctasks]
             [clojure.core.match :as match]
+            [rhsm.gui.tasks.rest :as rest]
             rhsm.gui.tasks.ui)
   (:import [org.testng.annotations
             BeforeClass
@@ -57,7 +58,7 @@
 (defn ^{BeforeClass {:groups ["setup"]}}
   register [_]
   (try
-    (if (= "RHEL7" (get-release)) (base/startup nil))
+    ;;(if (= "RHEL7" (get-release)) (base/startup nil))
     (tasks/unsubscribe_all)
     (tasks/register-with-creds)
     (reset! servicelist (ctasks/build-service-map :all? true))
@@ -576,8 +577,24 @@ When the consumer is deleted in registration server
   and subscription-manager-gui is launched
   and I click on 'Auto-attach' button
 Then I see a warning window
-  and button 'Back' and 'Next' in 'Auto-attach' window should be disabled"}}
-  )
+  and button 'Back' and 'Next' in 'Subscription Attachment' window should be disabled"}}
+  changes_when_consumer_is_purged
+  [_]
+  (register nil)
+  (let [consumer-id (ctasks/get-consumer-id)]
+    (ctasks/delete-consumer consumer-id)
+    (verify (= :does-not-exist (try+
+                                (ctasks/get-consumer consumer-id)
+                                (catch [:status 410] {:keys [request-time headers body]}
+                                  :does-not-exist)))))
+  (tasks/restart-app :force-kill? true)
+  (tasks/ui click :auto-attach)
+  (tasks/ui waittillwindowexist :error-dialog 10)
+  (verify (.contains (tasks/get-msg :error-msg) "Consumer has been deleted.")) 
+  (tasks/ui click :ok-error)
+  (verify (not (tasks/ui hasstate :attach-back "enabled")))
+  (verify (not (tasks/ui hasstate :attach-next "enabled")))
+  (tasks/ui click :attach-close))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; DATA PROVIDERS
