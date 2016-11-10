@@ -6,7 +6,7 @@
   :aot [#"^rhsm.gui.tests" rhsm.runtestng] ;regex to find tests that testng will run
   :keep-non-project-classes true
   :dependencies [[clj-http "2.0.0"]
-                 [com.google.code.guice/guice "1.0"] ;; required for new testng
+                 [com.google.code.guice/guice "1.0"]        ;; required for new testng
                  [com.redhat.qe/assertions "1.0.2"]
                  [com.redhat.qe/bugzilla-testng "1.0.4"]
                  [com.redhat.qe/bz-checker "1.0.3-SNAPSHOT"]
@@ -33,7 +33,8 @@
                  ;[test_clj.testng "1.0.1-SNAPSHOT"]
                  [test-clj.testng "1.1.0-SNAPSHOT"]
                  [levand/immuconf "0.1.0"]
-                 [mount "0.1.10"]]
+                 [mount "0.1.10"]
+                 [com.github.redhatqe.polarize/polarize "0.5.4-SNAPSHOT"]]
 
   ;lein1
   :dev-dependencies [[fn.trace "1.3.2.0-SNAPSHOT"]
@@ -45,11 +46,39 @@
             [quickie "0.4.1"]]
   ; regexp of namespaces that contains of tests of our tests. It is used by quickie.
   :test-matcher #"rhsm\..*-test$"
-  :repositories {"clojars.org" {:url "http://clojars.org/repo"
-                                :snapshots {:update :always}}}
-  :javac-options {:debug "on"}
-  ;:javac-options ["-target" "1.7" "-source" "1.7"]
-  ;:jvm-opts ["-Xdebug" "-Xrunjdwp:transport=dt_socket,address=13172,server=y,suspend=n"]
+  :repositories [["clojars.org" {:url       "http://clojars.org/repo"
+                                 :snapshots {:update :always}}]
+                 ["sonatype" {:url           "http://oss.sonatype.org/content/repositories/releases"
+                              ;; If a repository contains releases only setting
+                              ;; :snapshots to false will speed up dependencies.
+                              :snapshots     false
+                              ;; Disable signing releases deployed to this repo.
+                              ;; (Not recommended.)
+                              :sign-releases true
+                              ;; You can also set the policies for how to handle
+                              ;; :checksum failures to :fail, :warn, or :ignore.
+                              :checksum      :fail
+                              ;; How often should this repository be checked for
+                              ;; snapshot updates? (:daily, :always, or :never)
+                              :update        :always}]
+                 ["sonatype-snaps" {:url     "https://oss.sonatype.org/content/repositories/snapshots"
+                              ;; If a repository contains releases only setting
+                              ;; :snapshots to false will speed up dependencies.
+                              :snapshots     true
+                              ;; Disable signing releases deployed to this repo.
+                              ;; (Not recommended.)
+                              :sign-releases false
+                              ;; You can also set the policies for how to handle
+                              ;; :checksum failures to :fail, :warn, or :ignore.
+                              :checksum      :warn
+                              ;; How often should this repository be checked for
+                              ;; snapshot updates? (:daily, :always, or :never)
+                              :update        :always}]
+                 ]
+  :javac-options ["-target" "1.8" "-source" "1.8" "-parameters"]
+  ;; uncomment this to remote debug.  This is useful to debug annotation processing or xunit importing which can't be
+  ;; handled through the regular clojure debugger
+  ;:jvm-opts ["-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5007"]
 
   :repl-options {:timeout 120000})
 
