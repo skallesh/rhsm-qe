@@ -167,8 +167,8 @@
     (assert-and-open-repo-dialog)
     (verify (bool (tasks/ui guiexist :repositories-dialog)))
     (finally
-      (sleep 2000)
-      (tasks/ui click :close-repo-dialog))))
+      (when (-> (tasks/ui guiexist :repositories-dialog) bool)
+        (tasks/ui click :close-repo-dialog)))))
 
 (defn ^{Test {:groups ["repo"
                        "tier2"
@@ -180,10 +180,11 @@
     (if (tasks/ui showing? :register-system)
       (tasks/register-with-creds))
     (assert-and-open-repo-dialog)
-    (verify (bool (tasks/ui guiexist :repositories-dialog)))
+    (verify (-> (tasks/ui guiexist :repositories-dialog) bool))
     (verify (= no_repos_message (tasks/ui gettextvalue :repo-message)))
     (finally
-      (tasks/ui click :close-repo-dialog))))
+      (when (-> (tasks/ui guiexist :repositories-dialog) bool)
+        (tasks/ui click :close-repo-dialog)))))
 
 (defn ^{Test {:groups ["repo"
                        "tier2"
