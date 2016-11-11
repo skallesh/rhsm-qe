@@ -5453,8 +5453,8 @@ if (false) {
 			// TEMPORARY WORKAROUND
 			boolean invokeWorkaroundWhileBugIsOpen = true;
 			String bugId="1287610"; 	// Bug 1287610 - yum message in output when FIPS is enabled
-			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
-			if (invokeWorkaroundWhileBugIsOpen && redhatReleaseX.equals("7") && isFipsEnabled) {
+			try {if (redhatReleaseX.equals("7")&&isFipsEnabled&&invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			if (invokeWorkaroundWhileBugIsOpen) {
 				log.warning("Skipping the stderr assertion from subscribe on rhel '"+redhatReleaseXY+"' while FIPS bug '"+bugId+"' is open");
 			} else
 			// END OF WORKAROUND
@@ -6063,8 +6063,8 @@ if (false) {
 		// TEMPORARY WORKAROUND
 		boolean invokeWorkaroundWhileBugIsOpen = true;
 		String bugId="1287610"; 	// Bug 1287610 - yum message in output when FIPS is enabled
-		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
-		if (invokeWorkaroundWhileBugIsOpen && redhatReleaseX.equals("7") && isFipsEnabled) {
+		try {if (redhatReleaseX.equals("7")&&isFipsEnabled&&invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
 			log.warning("Skipping the stderr assertion from unsubscribe on rhel '"+redhatReleaseXY+"' while FIPS bug '"+bugId+"' is open");
 		} else
 		// END OF WORKAROUND
@@ -6140,8 +6140,8 @@ if (false) {
 			// TEMPORARY WORKAROUND
 			invokeWorkaroundWhileBugIsOpen = true;
 			bugId="1287610"; 	// Bug 1287610 - yum message in output when FIPS is enabled
-			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
-			if (invokeWorkaroundWhileBugIsOpen && redhatReleaseX.equals("7") && isFipsEnabled) {
+			try {if (redhatReleaseX.equals("7")&&isFipsEnabled&&invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			if (invokeWorkaroundWhileBugIsOpen) {
 				log.warning("Skipping the stderr assertion from unsubscribe on rhel '"+redhatReleaseXY+"' while FIPS bug '"+bugId+"' is open");
 			} else
 			// END OF WORKAROUND
@@ -6186,8 +6186,8 @@ if (false) {
 		// TEMPORARY WORKAROUND
 		invokeWorkaroundWhileBugIsOpen = true;
 		bugId="1287610"; 	// Bug 1287610 - yum message in output when FIPS is enabled
-		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
-		if (invokeWorkaroundWhileBugIsOpen && redhatReleaseX.equals("7") && isFipsEnabled) {
+		try {if (redhatReleaseX.equals("7")&&isFipsEnabled&&invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
 			log.warning("Skipping the stderr assertion from unsubscribe on rhel '"+redhatReleaseXY+"' while FIPS bug '"+bugId+"' is open");
 		} else
 		// END OF WORKAROUND
