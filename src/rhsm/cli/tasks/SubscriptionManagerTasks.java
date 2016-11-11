@@ -8311,6 +8311,37 @@ if (false) {
 	public void logRuntimeErrors(SSHCommandResult result) {
 		String issue;
 		
+		
+		// TEMPORARY WORKAROUND FOR BUG
+		//	201611111427:53.146 - FINE: ssh root@jsefler-rhel6server.usersys.redhat.com subscription-manager register --username=testuser1 --password=password --org=admin
+		//	201611111427:53.954 - FINE: Stdout: Registering to: jsefler-candlepin.usersys.redhat.com:8443/candlepin
+		//	201611111427:53.954 - FINE: Stderr: 'module' object has no attribute 'PROXY_AUTHENTICATION_REQUIRED'
+		//	201611111427:53.954 - FINE: ExitCode: 70
+		issue = "'module' object has no attribute 'PROXY_AUTHENTICATION_REQUIRED'";
+		if (result.getStderr().contains(issue)) {
+			String bugId = "1394351"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1394351 - 'module' object has no attribute 'PROXY_AUTHENTICATION_REQUIRED'
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			if (invokeWorkaroundWhileBugIsOpen) {
+				throw new SkipException("Encountered a '"+issue+"' and could not complete this test while bug '"+bugId+"' is open.");
+			}
+		}
+		// END OF WORKAROUND
+		
+		// TEMPORARY WORKAROUND FOR BUG	
+		//	201611111443:59.584 - FINE: ssh root@jsefler-rhel6server.usersys.redhat.com subscription-manager register --username=testuser1 --password=password --org=admin
+		//	201611111444:00.277 - FINE: Stdout: Registering to: jsefler-candlepin.usersys.redhat.com:8443/candlepin
+		//	201611111444:00.277 - FINE: Stderr: global name 'socket' is not defined
+		//	201611111444:00.277 - FINE: ExitCode: 70
+		issue = "global name 'socket' is not defined";
+		if (result.getStderr().contains(issue)) {
+			String bugId = "1390688"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1390688 - global name 'socket' is not defined
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			if (invokeWorkaroundWhileBugIsOpen) {
+				throw new SkipException("Encountered a '"+issue+"' and could not complete this test while bug '"+bugId+"' is open.");
+			}
+		}
+		// END OF WORKAROUND
+		
 		// TEMPORARY WORKAROUND FOR BUG
 		//	201503290125:44.627 - FINE: ssh root@jsefler-os6server.usersys.redhat.com subscription-manager unsubscribe --all
 		//	201503290125:46.273 - FINE: Stdout: 
