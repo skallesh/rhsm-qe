@@ -47,3 +47,6 @@
 
 (deftest check_repo_visible-test
   (tests/check_repo_disabled nil))
+
+(deftest check_repo_message_unsubscribed-test
+  (tests/check_repo_message_unsubscribed nil))
