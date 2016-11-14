@@ -36,12 +36,13 @@
 
 (defn ^{BeforeClass {:groups ["setup"]}}
   setup [_]
-  (try+
-   (tasks/unregister)
-   (catch [:type :not-registered] _)
-   (catch Exception e
-     (reset! (skip-groups :register) true)
-     (throw e)))
+  (tasks/screenshot-on-exception
+   (try+
+    (tasks/unregister)
+    (catch [:type :not-registered] _)
+    (catch Exception e
+      (reset! (skip-groups :register) true)
+      (throw e))))
   (when (or (bool (tasks/ui guiexist :register-dialog))
             (bool (tasks/ui guiexist :error-dialog)))
     (tasks/restart-app :force-kill? true)))
