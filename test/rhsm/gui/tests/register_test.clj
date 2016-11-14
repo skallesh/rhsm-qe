@@ -53,3 +53,8 @@
 
 (deftest check_traceback_unregister-test
   (tests/check_traceback_unregister nil))
+
+(deftest simple_register-test
+  (let [userowners #spy/d (tests/get_userowners nil)]
+    (for [[user password owner] userowners]
+      (tests/simple_register nil user password owner))))
