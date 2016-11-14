@@ -19,6 +19,7 @@
             [rhsm.gui.tests.base :as base]
             [rhsm.gui.tasks.candlepin-tasks :as ctasks]
             [clojure.core.match :as match]
+            [rhsm.errors.classification :as erc]
             rhsm.gui.tasks.ui)
   (:import [org.testng.annotations
             BeforeClass
@@ -177,11 +178,12 @@
   "This tests for default static message in repository dialog when unsubscribed"
   [_]
   (try
-    (if (tasks/ui showing? :register-system)
-      (tasks/register-with-creds))
-    (assert-and-open-repo-dialog)
-    (verify (-> (tasks/ui guiexist :repositories-dialog) bool))
-    (verify (= no_repos_message (tasks/ui gettextvalue :repo-message)))
+    (erc/normalize-exception-types
+     (if (tasks/ui showing? :register-system)
+       (tasks/register-with-creds))
+     (assert-and-open-repo-dialog)
+     (verify (-> (tasks/ui guiexist :repositories-dialog) bool))
+     (verify (= no_repos_message (tasks/ui gettextvalue :repo-message))))
     (finally
       (when (-> (tasks/ui guiexist :repositories-dialog) bool)
         (tasks/ui click :close-repo-dialog)))))
