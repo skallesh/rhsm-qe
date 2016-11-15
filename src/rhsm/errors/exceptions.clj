@@ -22,3 +22,5 @@
   
   Object
   (failure-level [o] :unknown))
+
+(gen-class)
