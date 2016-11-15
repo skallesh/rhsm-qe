@@ -33,4 +33,3 @@
                                             (format "Trapped exception: %s" e#)))
                  :re-throw         (throw+ e#))))))
 
-(gen-class)
