@@ -561,8 +561,10 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 			throw new SkipException(
 					"This test applies a newer version of subscription manager that includes fixes for bug 1367128.");
 		}
-		String Hostname =client.runCommandAndWait("hostname -f").getStdout().trim();
-		Assert.assertEquals(clienttasks.getFactValue("network.fqdn"),Hostname,"Fact network.fqdn matches with system value of hostname -f ");
+		String command = "hostname --fqdn";
+		String fact = "network.fqdn";
+		String fqdn = client.runCommandAndWait(command).getStdout().trim();
+		Assert.assertEquals(clienttasks.getFactValue(fact),fqdn,"System fact '"+fact+"' matches the system value from command '"+command+"'.");
 	}
 	@Test(	description="subscription-manager: assert presence of the new fact cpu.topology_source use to tell us what algorithm subscription-manager employed",
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-978466"}, dependsOnGroups={},
