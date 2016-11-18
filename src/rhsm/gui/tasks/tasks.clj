@@ -116,9 +116,9 @@
        (log/info (str "ldtp pid for " path ": " ldtp-pid )))
      (when window
        (do
-         (ui waittillwindowexist window 30)
+         (ui waittillwindowexist window 60)
          (try (assert (bool (ui guiexist window))
-                      "subsciption-manager-gui did not launch!")
+                      "subsrciption-manager-gui did not launch!")
               (catch AssertionError e
                 (reset! rhsm-gui-pid nil)
                 (throw e)))
