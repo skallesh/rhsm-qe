@@ -155,7 +155,8 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 			}
 			// END OF WORKAROUND
 			// TEMPORARY WORKAROUND FOR BUG
-			if (clienttasks.redhatReleaseX.equals("7") && virtUuid==null && clienttasks.arch.startsWith("ppc")) {
+			if (/*clienttasks.redhatReleaseX.equals("7") && */virtUuid==null && clienttasks.arch.startsWith("ppc")) {
+				// APPLIES TO BOTH RHEL6 and RHEL7)
 				String bugId = "1372108"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1372108 - facts related to the identification of a virtual/physical system on ppc64le are conflicting
 				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 				if (invokeWorkaroundWhileBugIsOpen) {
@@ -186,7 +187,8 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 			}
 			// END OF WORKAROUND
 			// TEMPORARY WORKAROUND FOR BUG
-			if (clienttasks.redhatReleaseX.equals("7") && virtUuid!=null && clienttasks.arch.startsWith("ppc")) {
+			if (/*clienttasks.redhatReleaseX.equals("7") && */virtUuid!=null && clienttasks.arch.startsWith("ppc")) {
+				// APPLIES TO BOTH RHEL6 and RHEL7
 				String bugId = "1372108"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1372108 - facts related to the identification of a virtual/physical system on ppc64le are conflicting
 				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 				if (invokeWorkaroundWhileBugIsOpen) {

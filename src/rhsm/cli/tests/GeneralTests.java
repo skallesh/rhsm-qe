@@ -82,7 +82,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="assert the exit code from service rhsmcertd status when running and stopped",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-913118","blockedByBug-912707","blockedByBug-914113","blockedByBug-1241247"})
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-913118","blockedByBug-912707","blockedByBug-914113","blockedByBug-1241247","blockedByBug-1395794"})
 	protected void verifyRhsmcertdDoesNotThrowDeprecationWarnings_Test() throws JSONException, Exception {
 		clienttasks.unregister(null, null, null);
 		String marker = System.currentTimeMillis()+" Testing verifyRhsmcertdDoesNotThrowDeprecationWarnings_Test...";
@@ -121,7 +121,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="assert rhsmd is logged to both /var/log/rhsm/rhsm.log and /var/log/messages",
-			groups={"blockedbyBug-976868"},
+			groups={"blockedbyBug-976868","blockedByBug-1395794"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void VerifyRhsmdForceSignalsToRhsmlogAndSyslog_Test() {

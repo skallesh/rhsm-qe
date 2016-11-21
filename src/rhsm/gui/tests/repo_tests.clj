@@ -19,6 +19,7 @@
             [rhsm.gui.tests.base :as base]
             [rhsm.gui.tasks.candlepin-tasks :as ctasks]
             [clojure.core.match :as match]
+            [rhsm.errors.classification :as erc]
             rhsm.gui.tasks.ui)
   (:import [org.testng.annotations
             BeforeClass
@@ -167,8 +168,8 @@
     (assert-and-open-repo-dialog)
     (verify (bool (tasks/ui guiexist :repositories-dialog)))
     (finally
-      (sleep 2000)
-      (tasks/ui click :close-repo-dialog))))
+      (when (-> (tasks/ui guiexist :repositories-dialog) bool)
+        (tasks/ui click :close-repo-dialog)))))
 
 (defn ^{Test {:groups ["repo"
                        "tier2"
@@ -177,13 +178,15 @@
   "This tests for default static message in repository dialog when unsubscribed"
   [_]
   (try
-    (if (tasks/ui showing? :register-system)
-      (tasks/register-with-creds))
-    (assert-and-open-repo-dialog)
-    (verify (bool (tasks/ui guiexist :repositories-dialog)))
-    (verify (= no_repos_message (tasks/ui gettextvalue :repo-message)))
+    (erc/normalize-exception-types
+     (if (tasks/ui showing? :register-system)
+       (tasks/register-with-creds))
+     (assert-and-open-repo-dialog)
+     (verify (-> (tasks/ui guiexist :repositories-dialog) bool))
+     (verify (= no_repos_message (tasks/ui gettextvalue :repo-message))))
     (finally
-      (tasks/ui click :close-repo-dialog))))
+      (when (-> (tasks/ui guiexist :repositories-dialog) bool)
+        (tasks/ui click :close-repo-dialog)))))
 
 (defn ^{Test {:groups ["repo"
                        "tier2"
@@ -219,7 +222,8 @@ Then I see values of repositories ids to be redrawn
         ;; I click twice and I get two different sort orders
         (verify (= (set [:desc-sorting :asc-sorting]) (set [sorting-after-click-01 sorting-after-click-02])))))
     (finally
-      (tasks/ui click :close-repo-dialog)
+      (when (-> (tasks/ui guiexist :repositories-dialog) bool)
+        (tasks/ui click :close-repo-dialog))
       (tasks/unsubscribe_all))))
 
 (defn ^{Test {:groups ["repo"
@@ -236,7 +240,8 @@ Then I see values of repositories ids to be redrawn
     (verify (bool (tasks/ui guiexist :repositories-dialog)))
     (verify (< 0 (tasks/ui getrowcount :repo-table)))
     (finally
-      (tasks/ui click :close-repo-dialog)
+      (when (-> (tasks/ui guiexist :repositories-dialog) bool)
+        (tasks/ui click :close-repo-dialog))
       (tasks/unsubscribe_all))))
 
 (defn ^{Test {:groups ["repo"
@@ -287,7 +292,8 @@ Then I see values of repositories ids to be redrawn
           (sleep 2000)
           (verify (not (tasks/has-state? :repo-remove-override "enabled"))))))
     (finally
-      (tasks/ui click :close-repo-dialog)
+      (when (-> (tasks/ui guiexist :repositories-dialog) bool)
+        (tasks/ui click :close-repo-dialog))
       (tasks/unsubscribe_all))))
 
 (defn toggle-checkbox-state
@@ -464,7 +470,8 @@ Then I see values of repositories ids to be redrawn
                  (tasks/has-state? :repo-remove-override "enabled")))
     (assert-and-remove-all-override)
     (finally
-      (tasks/ui click :close-repo-dialog)
+      (when (-> (tasks/ui guiexist :repositories-dialog) bool)
+        (tasks/ui click :close-repo-dialog))
       (tasks/unsubscribe_all))))
 
 (defn ^{Test {:groups ["repo"

@@ -128,7 +128,7 @@
       (sleep 2000)
       (when (tasks/visible? :firstboot-organization-selection)
         (tasks/ui click :firstboot-forward))
-      (when (-> :error-dialog (tasks/ui waittillwindowexist 1) bool)
+      (when (-> (tasks/ui waittillwindowexist :error-dialog 1) bool)
         (tasks/ui click :ok-error)
         (tasks/ui click :firstboot-forward))
       ;;(verify (not (bool (tasks/ui guiexist :firstboot-window))))

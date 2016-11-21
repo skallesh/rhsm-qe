@@ -69,6 +69,10 @@
                          :username "sm.client1.username"
                          :username1 "sm.client2.username"
 
+                         ;; candlepin server admin informations
+                         :admin-username "sm.server.admin.username"
+                         :admin-password "sm.server.admin.password"
+
                          ; rhsm.conf values
                          :rhsm-base-url (DefaultMapKey. "sm.rhsm.baseUrl" "https://cdn.redhat.com")
                          :rhsm-consumer-cert-dir (DefaultMapKey. "sm.rhsm.consumerCertDir" "/etc/pki/consumer")
