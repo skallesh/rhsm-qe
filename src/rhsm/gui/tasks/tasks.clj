@@ -118,7 +118,7 @@
        (do
          (ui waittillwindowexist window 60)
          (try (assert (bool (ui guiexist window))
-                      "subsrciption-manager-gui did not launch!")
+                      "subscription-manager-gui did not launch!")
               (catch AssertionError e
                 (reset! rhsm-gui-pid nil)
                 (throw e)))

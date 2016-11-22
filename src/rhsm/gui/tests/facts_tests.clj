@@ -175,24 +175,26 @@
                        "blockedByBug-1245557"
                        "blockedByBug-1333906"]}}
   check_available_releases
-  "Checks that all avaiable releases are shown in the GUI properly."
+  "Checks that all available releases are shown in the GUI properly."
   [_]
   (try
-    (tasks/register-with-creds)
-    (tasks/subscribe_all)
-    (let [result (run-command "subscription-manager release --list")
-          stdout (:stdout result)
-          cli-releases  (if (clojure.string/blank? stdout)
+    (tasks/screenshot-on-exception
+     (tasks/register-with-creds)
+     (tasks/subscribe_all)
+     (let [result (run-command "subscription-manager release --list")
+           stdout (:stdout result)
+           cli-releases (if (clojure.string/blank? stdout)
                           []
                           (drop 3 (split-lines stdout)))
-          expected-releases (into [] (sort (conj cli-releases "Not Set")))]
-      (tasks/ui click :preferences)
-      (tasks/ui waittillwindowexist :system-preferences-dialog 10)
-      (sleep 3000)
-      (tasks/ui showlist :release-dropdown)
-      (let [gui-releases (into [] (sort (tasks/ui listsubmenus :release-dropdown)))]
-        (verify (bash-bool (compare expected-releases gui-releases)))
-        (verify (not (nil? (some #{"Not Set"} gui-releases))))))
+           expected-releases (into [] (sort (conj cli-releases "Not Set")))]
+       (tasks/ui click :preferences)
+       (tasks/ui waittillwindowexist :system-preferences-dialog 10)
+       (sleep 3000)
+       (tasks/ui showlist :release-dropdown)
+       (sleep 3000)
+       (let [gui-releases (into [] (sort (tasks/ui listsubmenus :release-dropdown)))]
+         (verify (bash-bool (compare expected-releases gui-releases)))
+         (verify (not (nil? (some #{"Not Set"} gui-releases)))))))
     (catch Exception e
       (if (substring? "Unable to find object name in application map"
                       (.getMessage e))
@@ -215,7 +217,7 @@
         certexist? (map #(= 0 (:exitcode
                                (run-command (str "test -f " %))))
                         certlist)]
-    ;; it is handy information before we verify that some cert exists.
+    ;; it is handy information that some cert exists before we verify that.
     (->> certdir
          (format "ls -al \"%s\"")
          (run-command))
