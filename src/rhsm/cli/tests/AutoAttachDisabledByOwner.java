@@ -1,9 +1,12 @@
 package rhsm.cli.tests;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.testng.annotations.AfterGroups;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import com.redhat.qe.Assert;
@@ -20,17 +23,14 @@ import rhsm.cli.tasks.CandlepinTasks;
  */
 @Test(groups = { "AutoAttachDisabledByOwner", "Tier3Tests" })
 public class AutoAttachDisabledByOwner extends SubscriptionManagerCLITestScript {
+	List<String> ownerKey = new ArrayList<String>();
+	String owner = null;
 
 	@Test(description = "Disable Auto attach by Owner", groups = { "DisableOwner",
 			"blockedByBug-1382355" }, enabled = true)
 	public void DisableAutoAttachByOwner() throws Exception {
 		JSONObject jsonData = new JSONObject();
-		String resourcePath = null;
-		String requestBody = null;
-		List<String> ownerKey = CandlepinTasks.getOrgsKeyValueForUser(sm_clientUsername, sm_clientPassword,
-				sm_serverUrl, "key");
-		String owner = ownerKey.get(randomGenerator.nextInt(ownerKey.size()));
-		resourcePath = "/owners/" + owner;
+		String resourcePath = "/owners/" + owner;
 		jsonData.put("autobindDisabled", "true");
 		CandlepinTasks.putResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,
 				resourcePath, jsonData);
@@ -70,7 +70,7 @@ public class AutoAttachDisabledByOwner extends SubscriptionManagerCLITestScript 
 		clienttasks.run_rhsmcertd_worker(true);
 		rhsmLogTail = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, logMarker,
 				"Auto-heal disabled on server, skipping");
-		Assert.assertTrue(rhsmLogTail.contains(logMessage), "indicationg auto-heal is disabled");
+		Assert.assertTrue(rhsmLogTail.contains(logMessage), "indicating auto-heal is disabled");
 
 		/*
 		 * verify if subscription-manager auto-attach works on a owner with
@@ -131,4 +131,18 @@ public class AutoAttachDisabledByOwner extends SubscriptionManagerCLITestScript 
 
 	}
 
+	@AfterGroups(groups = "setup", enabled = true)
+	public void setautobindDisabledToFalse() throws Exception {
+		JSONObject jsonData = new JSONObject();
+		String resourcePath = "/owners/" + owner;
+		jsonData.put("autobindDisabled", "false");
+		CandlepinTasks.putResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,
+				resourcePath, jsonData);
+	}
+
+	@BeforeClass(groups = { "setup" })
+	public void getOwner() throws JSONException, Exception {
+		ownerKey = CandlepinTasks.getOrgsKeyValueForUser(sm_clientUsername, sm_clientPassword, sm_serverUrl, "key");
+		owner = ownerKey.get(randomGenerator.nextInt(ownerKey.size()));
+	}
 }
