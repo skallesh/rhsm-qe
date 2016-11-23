@@ -341,7 +341,15 @@
     (tasks/write-facts "{\"cpu.cpu_socket(s)\": \"20\"}")
     (tasks/ui click :view-system-facts)
     (sleep 3000)
+
+    ;; click and wait till this button has a state 'armed'
     (tasks/ui click :update-facts)
+    (loop [current-states (->> :update-facts (tasks/ui getallstates) set)
+           counter 10]
+      (when-not (or (not (clojure.set/subset? #{"armed"} current-states)) (<= counter 0))
+        (sleep 100)
+        (recur (->> :update-facts (tasks/ui getallstates) set) (dec counter))))
+
     (let [old-val (reset! socket-val
                           (get @gui-facts "cpu.cpu_socket(s)"))
           groups (tasks/get-table-elements :facts-view 0)
