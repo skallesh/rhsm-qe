@@ -18,7 +18,7 @@ import rhsm.cli.tasks.CandlepinTasks;
  * @throws Exception
  * @throws JSONException
  */
-@Test(groups = { "SKULevelContentOverrideTests", "Tier3Tests" })
+@Test(groups = { "AutoAttachDisabledByOwner", "Tier3Tests" })
 public class AutoAttachDisabledByOwner extends SubscriptionManagerCLITestScript {
 
 	@Test(description = "Disable Auto attach by Owner", groups = { "DisableOwner",
