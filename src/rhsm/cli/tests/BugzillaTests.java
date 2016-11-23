@@ -3464,7 +3464,13 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				0);
 		String consumed = clienttasks
 				.list_(null, null, true, null, null, null, null, null, null, null, null, null, null).getStderr();
-		String expected = "System certificates corrupted. Please reregister.";
+		String expected = "Error loading certificate";
+		// update the test
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.18.4-1")) {
+			// post commit b0e877cfb099184f9bab1b681a41df9bdd2fb790 side affect
+			// from m2crypto changes
+			expected = "System certificates corrupted. Please reregister.";
+		}
 		Assert.assertTrue(consumed.trim().equals(expected));
 
 	}
