@@ -189,9 +189,15 @@
            expected-releases (into [] (sort (conj cli-releases "Not Set")))]
        (tasks/ui click :preferences)
        (tasks/ui waittillwindowexist :system-preferences-dialog 10)
-       (sleep 3000)
+
+       ;; wait till :release-dropdown is not enabled
+       (loop [current-states (-> (tasks/ui getallstates :release-dropdown) set)
+              counter 50]
+         (when-not (or (clojure.set/subset? #{"enabled"} current-states) (<= counter 0))
+           (sleep 100)
+           (recur (-> (tasks/ui getallstates :release-dropdown) set) (dec counter))))
+
        (tasks/ui showlist :release-dropdown)
-       (sleep 3000)
        (let [gui-releases (into [] (sort (tasks/ui listsubmenus :release-dropdown)))]
          (verify (bash-bool (compare expected-releases gui-releases)))
          (verify (not (nil? (some #{"Not Set"} gui-releases)))))))
