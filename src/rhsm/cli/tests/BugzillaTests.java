@@ -193,25 +193,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		// get current product cert and verify that rhelproduct is installed on
 		// the system
 		ProductCert rhelProductCert = clienttasks.getCurrentRhelProductCert();
-
-		/*
-		 * do not throw SkipException from a dataProvider, it will fail all the
-		 * rows of the test if (rhelProductCert == null) throw new
-		 * SkipException("Failed to find an installed RHEL product cert.");
-		 */
-		// find a subscription that provides Extended Update products
-
-		/*
-		 * List<String> providedProducts = new ArrayList<String>();
-		 * providedProducts.add(rhelProductCert.productName); SubscriptionPool
-		 * eusSubscriptionPool =
-		 * SubscriptionPool.findFirstInstanceWithMatchingFieldFromList(
-		 * "subscriptionName", rhelProductCert.productId,
-		 * SubscriptionPool.parse(clienttasks .list(null, true, null, null,
-		 * null, null, null, null, "*Extended*", null, null, null, null)
-		 * .getStdout()));
-		 */
-
 		SubscriptionPool pool = null;
 		for (SubscriptionPool eusSubscriptionPool : SubscriptionPool.parse(
 				clienttasks.list(null, true, null, null, null, null, null, null, "*Extended*", null, null, null, null)
@@ -800,7 +781,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.autoheal(null, null, true, null, null, null);
 		int sockets = 8;
 		int core = 4;
-		int ram = 16;
+		int ram = 10;
 
 		Map<String, String> factsMap = new HashMap<String, String>();
 		factsMap.put("cpu.cpu_socket(s)", String.valueOf(sockets));
@@ -829,7 +810,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 						quantity = availableSubscriptionPool.suggested / 2;
 
 						clienttasks.subscribe(null, null, availableSubscriptionPool.poolId, null, null,
-								Integer.toString(quantity + 1), null, null, null, null, null, null);
+								Integer.toString(quantity), null, null, null, null, null, null);
 						providedProductId = availableSubscriptionPool.provides;
 					}
 
@@ -2755,10 +2736,10 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			"UpdateWithNoInstalledProducts", "blockedByBug-746241", "blockedByBug-1389559" }, enabled = true)
 	public void UpdateWithNoInstalledProducts() throws JSONException, Exception {
 		client.runCommandAndWait("rm -f " + clienttasks.rhsmLogFile);
+		configureTmpProductCertDirWithOutInstalledProductCerts();
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
 				null, (String) null, null, null, null, true, false, null, null, null);
 
-		moveProductCertFiles("*.pem");
 		String LogMarker = System.currentTimeMillis()
 				+ " Testing ***************************************************************";
 		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, LogMarker);
@@ -3483,7 +3464,14 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				0);
 		String consumed = clienttasks
 				.list_(null, null, true, null, null, null, null, null, null, null, null, null, null).getStderr();
-		Assert.assertEquals(consumed.trim(), "Error loading certificate");
+		String expected = "Error loading certificate";
+		// update the test
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.18.4-1")) {
+			// post commit b0e877cfb099184f9bab1b681a41df9bdd2fb790 side affect
+			// from m2crypto changes
+			expected = "System certificates corrupted. Please reregister.";
+		}
+		Assert.assertTrue(consumed.trim().equals(expected));
 
 	}
 
@@ -3665,8 +3653,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				null, (String) null, null, null, null, true, null, null, null, null);
 		clienttasks.autoheal(null, null, true, null, null, null);
 		int sockets = 8;
-		int core = 4;
-		int ram = 16;
+		int core = 2;
+		int ram = 10;
 
 		Map<String, String> factsMap = new HashMap<String, String>();
 		factsMap.put("cpu.cpu_socket(s)", String.valueOf(sockets));
@@ -3676,6 +3664,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
 		clienttasks.facts(null, true, null, null, null);
 		int quantity = 0;
+
 		List<String> providedProductId = null;
 		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
 			if (pool.subscriptionType.equals("Stackable")) {
@@ -3696,8 +3685,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				providedProductId.get(providedProductId.size() - 1), clienttasks.getCurrentlyInstalledProducts());
 		Assert.assertEquals(BeforeAttaching.status, "Partially Subscribed",
 				"Verified that installed product is partially subscribed");
-		clienttasks.subscribe(null, null, poolId, null, null, Integer.toString(quantity + 1), null, null, null, null,
-				null, null);
+		clienttasks.subscribe(null, null, poolId, null, null, Integer.toString(quantity), null, null, null, null, null,
+				null);
 		InstalledProduct AfterAttaching = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productName",
 				providedProductId.get(providedProductId.size() - 1), clienttasks.getCurrentlyInstalledProducts());
 		Assert.assertEquals(AfterAttaching.status, "Subscribed", "Verified that installed product"
@@ -4794,8 +4783,19 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir", tmpProductCertDir);
 	}
 
+	protected void configureTmpProductCertDirWithOutInstalledProductCerts() {
+		if (rhsmProductCertDir == null) {
+			rhsmProductCertDir = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsm", "productCertDir");
+			Assert.assertNotNull(rhsmProductCertDir);
+		}
+		RemoteFileTasks.runCommandAndAssert(client, "mkdir -p " + tmpProductCertDir, Integer.valueOf(0));
+		RemoteFileTasks.runCommandAndAssert(client, "rm -f " + tmpProductCertDir + "/*.pem", Integer.valueOf(0));
+		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir", tmpProductCertDir);
+	}
+
 	@BeforeGroups(groups = "setup", value = { "VerifyStatusCheck" })
-	@AfterGroups(groups = "setup", value = { "VerifyStatusCheck", "certificateStacking" })
+	@AfterGroups(groups = "setup", value = { "VerifyStatusCheck", "certificateStacking",
+			"UpdateWithNoInstalledProducts" })
 	@AfterClass(groups = "setup") // called after class for insurance
 	public void restoreRhsmProductCertDir() {
 		if (clienttasks == null)
