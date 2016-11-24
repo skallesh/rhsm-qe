@@ -37,3 +37,9 @@
   (is (thrown? Exception (tasks/screenshot-on-exception
                           "suffix-of-screenshot"
                           (sl/throw+ "error in common way")))))
+
+(deftest try-more-test
+  (is (thrown? Exception (tasks/try-more 3 (sl/throw+ "some exception")))))
+
+(deftest try-more-01-test
+  (is (= "no exception" (tasks/try-more 3 "no exception"))))

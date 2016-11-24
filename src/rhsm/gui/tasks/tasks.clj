@@ -1127,3 +1127,12 @@ The function uses an utility 'import' from package 'imagemagick'"
                (RemoteFileTasks/getFile (.getConnection @clientcmd) (.toString out-dir#) name#)
                (log/info (format "A screenshot has been copied as '%s'." (.toString (io/file out-dir# name#)))))
              (throw+)))))
+
+(defmacro try-more
+  [num-of-retries & body]
+  "The macro evalues the body more times when an exception is risen."
+  (if (> (Math/abs num-of-retries) 0)
+    (do `(try+ ~@body
+               (catch Object e#
+                 (try-more ~(dec (Math/abs num-of-retries)) ~@body))))
+    (do `(do ~@body))))
