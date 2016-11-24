@@ -133,7 +133,7 @@
         (tasks/ui click :firstboot-forward))
       ;;(verify (not (bool (tasks/ui guiexist :firstboot-window))))
       ;;(verify (not (tasks/ui showing? :register-system)))
-      (tasks/verify-conf-proxies hostname port username password))
+      (tasks/try-more 3 (tasks/verify-conf-proxies hostname port username password)))
     (finally
       (reset_firstboot)
       (tasks/disableproxy true)
