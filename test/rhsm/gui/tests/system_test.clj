@@ -31,3 +31,6 @@
                :else false)
       (tests/error_dialog_and_no_traceback_when_network_is_down nil)
       (is (thrown? java.lang.AssertionError (tests/error_dialog_and_no_traceback_when_network_is_down nil))))))
+
+(deftest error_dialog_and_no_traceback_when_candlepin_is_down_and_proxy_is_used
+  (tests/error_dialog_and_no_traceback_when_candlepin_is_down_and_proxy_is_used nil))
