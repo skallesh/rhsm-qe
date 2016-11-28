@@ -19,3 +19,6 @@
 
 (deftest firstboot_enable_proxy_auth_connect-test
   (tests/firstboot_enable_proxy_auth_connect nil))
+
+(deftest firstboot_enable_proxy_noauth_connect-test
+  (tests/firstboot_enable_proxy_noauth_connect nil))
