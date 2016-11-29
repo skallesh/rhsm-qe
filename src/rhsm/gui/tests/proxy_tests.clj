@@ -320,6 +320,46 @@ Then I should see a button 'Test connection' being disabled."}}
   (verify (not (tasks/ui hasstate :test-connection "enabled"))))
 
 (defn ^{Test {:groups ["proxy"
+                       "tier2"
+                       "blockedByBug-1395684"]
+              :description "Given a system is unregistered
+    and I run subscription-manager-gui
+    and I click on 'Register' button
+    and I click on 'I would like to connect via an HTTP Proxy'
+When I click on 'Use Authentication with HTTP Proxy'
+ and I leave fields 'user' and 'password' blank
+ and I click on the button 'Save'
+ and I click on the button 'Next' in the 'System Registration' dialog
+Then I should see an error dialog 'Unable to reach the server'
+ and no traceback should appear in a log file."}}
+  error_dialog_when_registering_via_proxy
+  [_]
+  (tasks/restart-app :force-kill? true)
+  (tasks/disableproxy)
+  (try+ (tasks/unregister)
+        (catch [:type :not-registered] _))
+  (tasks/ui click :register-system)
+  (tasks/ui click :configure-proxy)
+  (tasks/ui waittillwindowexist :proxy-config-dialog 60)
+  (tasks/ui check :proxy-checkbox)
+  (tasks/ui uncheck :authentication-checkbox)
+  (tasks/ui settextvalue :proxy-location (str (@config :basicauth-proxy-hostname)
+                                              (when (@config :basicauth-proxy-port)
+                                                (str ":" (@config :basicauth-proxy-port)))))
+  (tasks/ui click :close-proxy)
+  (tasks/ui waittillguinotexist :proxy-config-dialog 60)
+  (verify (-> (get-logging @clientcmd
+                           rhsm-log
+                           "error_dialog_when_registering_via_proxy"
+                           nil
+                           (tasks/ui click :register))
+              (.contains "Traceback (most recent call last)")
+              not))
+  ;;(tasks/ui click :register)
+  (let [thrown-error (try+ (tasks/checkforerror) (catch Object e (:type e)))]
+    (verify (= thrown-error :network-error))))
+
+(defn ^{Test {:groups ["proxy"
                        "tier3"
                        "blockedByBug-920551"]}}
   test_invalid_proxy_restart
