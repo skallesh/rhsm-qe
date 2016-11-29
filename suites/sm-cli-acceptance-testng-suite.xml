@@ -883,6 +883,19 @@
 		</groups>
 	</test>
 	
+	<test name="CLI: AutoAttachDisabledByOwner Tests">
+		<classes>
+			<class name="rhsm.cli.tests.AutoAttachDisabledByOwnerTests" />
+		</classes>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="AcceptanceTests" />
+				<include name="cleanup" />
+			</run>
+		</groups>
+	</test>
+	
 	<test name="CLI: SELinux Tests">
 		<classes>
 			<class name="rhsm.cli.tests.SELinuxTests" />
