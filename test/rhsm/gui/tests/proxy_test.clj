@@ -30,3 +30,6 @@
         (tests/test_connection_button_is_blocked_before_all_fields_are_set nil)
         (is (thrown? java.lang.AssertionError
                      (tests/test_connection_button_is_blocked_before_all_fields_are_set nil))))))
+
+(deftest error_dialog_when_registering_via_proxy-test
+  (tests/error_dialog_when_registering_via_proxy nil))
