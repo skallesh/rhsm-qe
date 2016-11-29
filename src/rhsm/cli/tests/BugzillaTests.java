@@ -502,7 +502,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@Test(description = "verify status check and response from server after addition and deletion of product from /etc/pki/product/", groups = {
+	@Test(description = "verify status check and response from server after addition and deletion of product to/from /etc/pki/product/", groups = {
 			"VerifyStatusCheck", "blockedByBug-921870", "blockedByBug-1183175" }, enabled = true)
 	public void VerifyStatusCheck() throws Exception {
 		String result, expectedStatus;
@@ -511,6 +511,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				"32060", clienttasks.getCurrentProductCerts());
 		Assert.assertNotNull(installedProductCert32060, "Found installed product cert 32060 needed for this test.");
 		configureTmpProductCertDirWithInstalledProductCerts(Arrays.asList(new ProductCert[] {}));
+		moveDefaultProductCertFiles("*");
 		clienttasks.register_(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null,
 				null, (String) null, null, null, null, true, false, null, null, null);
 		Assert.assertTrue(clienttasks.getCurrentProductCertFiles().isEmpty(), "No product certs are installed.");
@@ -542,6 +543,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			Assert.assertTrue(result.contains(expectedStatus), "System status displays '" + expectedStatus
 					+ "' after finally running rhsmcertd worker with auto-healing.");
 		}
+		restoreProductCerts();
 	}
 
 	/**
@@ -780,7 +782,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				null, (String) null, null, null, null, true, null, null, null, null);
 		clienttasks.autoheal(null, null, true, null, null, null);
 		int sockets = 8;
-		int core = 4;
+		int core = 2;
 		int ram = 10;
 
 		Map<String, String> factsMap = new HashMap<String, String>();
@@ -807,7 +809,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 					clienttasks.subscribe(null, null, futurepoolMatchingActivePool.poolId, null, null, null, null, null,
 							null, null, null, null);
 					if (!(availableSubscriptionPool.suggested == 1)) {
-						quantity = availableSubscriptionPool.suggested / 2;
+						quantity = availableSubscriptionPool.suggested - 1;
 
 						clienttasks.subscribe(null, null, availableSubscriptionPool.poolId, null, null,
 								Integer.toString(quantity), null, null, null, null, null, null);
@@ -2355,10 +2357,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@Test(description = "verify OwnerInfo is displayed only for pools that are active right now, for all the stats", // TODO,
-			// correct
-			// this
-			// description
+	@Test(description = "verify changing to a different rhsm.productcertdir configuration throws OSError", // TODO,
 			groups = { "certificateStacking", "blockedByBug-726409", "blockedByBug-1183175" }, enabled = true)
 	public void certificateStacking() throws JSONException, Exception {
 		Map<String, String> attributes = new HashMap<String, String>();
@@ -2736,7 +2735,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			"UpdateWithNoInstalledProducts", "blockedByBug-746241", "blockedByBug-1389559" }, enabled = true)
 	public void UpdateWithNoInstalledProducts() throws JSONException, Exception {
 		client.runCommandAndWait("rm -f " + clienttasks.rhsmLogFile);
-		configureTmpProductCertDirWithOutInstalledProductCerts();
+		moveProductCertFiles("*");
+		moveDefaultProductCertFiles("*");
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
 				null, (String) null, null, null, null, true, false, null, null, null);
 
@@ -2745,10 +2745,10 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, LogMarker);
 		String InstalledProducts = clienttasks.listInstalledProducts().getStdout();
 		clienttasks.run_rhsmcertd_worker(null);
-		restoreProductCerts();
 		Assert.assertEquals(InstalledProducts.trim(), "No installed products to list");
 		String tailFromMarkedFile = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, LogMarker,
 				null);
+		restoreProductCerts();
 		Assert.assertFalse(
 				doesStringContainMatches(tailFromMarkedFile, "Error while updating certificates using daemon"),
 				"'Error' messages in rhsm.log"); // "Error while updating
@@ -3668,7 +3668,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		List<String> providedProductId = null;
 		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
 			if (pool.subscriptionType.equals("Stackable")) {
-				quantity = pool.suggested / 2;
+				quantity = pool.suggested - 1;
 				if (!(pool.suggested == 1)) {
 					clienttasks.subscribe(null, null, pool.poolId, null, null, Integer.toString(quantity), null, null,
 							null, null, null, null);
@@ -3685,8 +3685,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				providedProductId.get(providedProductId.size() - 1), clienttasks.getCurrentlyInstalledProducts());
 		Assert.assertEquals(BeforeAttaching.status, "Partially Subscribed",
 				"Verified that installed product is partially subscribed");
-		clienttasks.subscribe(null, null, poolId, null, null, Integer.toString(quantity), null, null, null, null, null,
-				null);
+		clienttasks.subscribe(null, null, poolId, null, null, null, null, null, null, null, null, null);
 		InstalledProduct AfterAttaching = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productName",
 				providedProductId.get(providedProductId.size() - 1), clienttasks.getCurrentlyInstalledProducts());
 		Assert.assertEquals(AfterAttaching.status, "Subscribed", "Verified that installed product"
@@ -4733,16 +4732,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 
 	@AfterGroups(groups = { "setup" }, value = { "VerifySubscriptionOf", "VerifySystemCompliantFact",
 			"ValidityAfterOversubscribing", "UpdateWithNoInstalledProducts", "VerifyStatusCheck",
-			"VerifyStartEndDateOfSubscription"/* ,"InstalledProductMultipliesAfterSubscription" */,
-			"AutoHealFailForSLA", "VerifyautosubscribeIgnoresSocketCount_Test",
+			"VerifyStartEndDateOfSubscription", "AutoHealFailForSLA", "VerifyautosubscribeIgnoresSocketCount_Test",
 			"VerifyEUSRHELProductCertVersionFromEachCDNReleaseVersion_Test" })
 	@AfterClass(groups = "setup")
 	public void restoreProductCerts() throws IOException {
 		client.runCommandAndWait("mv " + "/root/temp1/*" + " " + clienttasks.productCertDir);
 		client.runCommandAndWait("rm -rf " + "/root/temp1");
+		client.runCommandAndWait("mv " + "/root/temp2/*" + " " + clienttasks.productCertDefaultDir);
+		client.runCommandAndWait("rm -rf " + "/root/temp2");
 	}
 
-	@AfterGroups(groups = "setup", value = {}, enabled = true)
+	@AfterGroups(groups = "setup", value = { "VerifyStatusCheck", "UpdateWithNoInstalledProducts" }, enabled = true)
 	public void restoreProductCertDir() {
 		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir", tmpProductCertDir);
 	}
@@ -4833,7 +4833,19 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		if (!(RemoteFileTasks.testExists(client, installDir))) {
 			client.runCommandAndWait("mkdir " + installDir);
 		}
-		client.runCommandAndWait("mv " + clienttasks.productCertDir + "/" + filename + " " + "/root/temp1/");
+
+		client.runCommandAndWait("mv " + clienttasks.productCertDir + "/" + filename + " " + installDir);
+
+	}
+
+	protected void moveDefaultProductCertFiles(String filename) throws IOException {
+		String DefaultInstallDir = "/root/temp2/";
+		if (!(RemoteFileTasks.testExists(client, DefaultInstallDir))) {
+			client.runCommandAndWait("mkdir " + DefaultInstallDir);
+
+		}
+		client.runCommandAndWait("mv " + clienttasks.productCertDefaultDir + "/" + filename + " " + DefaultInstallDir);
+
 	}
 
 	protected String getEntitlementCertFilesWithPermissions() throws IOException {
