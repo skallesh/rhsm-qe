@@ -330,8 +330,8 @@ When I click on 'Use Authentication with HTTP Proxy'
  and I leave fields 'user' and 'password' blank
  and I click on the button 'Save'
  and I click on the button 'Next' in the 'System Registration' dialog
-Then I should see an error dialog 'Unable to reach the server'
- and no traceback should appear in a log file."}}
+Then I should see the message 'Proxy connection failed, please check your settings.'
+ and no traceback should appear in the log file."}}
   error_dialog_when_registering_via_proxy
   [_]
   (tasks/restart-app :force-kill? true)
@@ -355,9 +355,8 @@ Then I should see an error dialog 'Unable to reach the server'
                            (tasks/ui click :register))
               (.contains "Traceback (most recent call last)")
               not))
-  ;;(tasks/ui click :register)
   (let [thrown-error (try+ (tasks/checkforerror) (catch Object e (:type e)))]
-    (verify (= thrown-error :network-error))))
+    (verify (= thrown-error :proxy-connection-failed))))
 
 (defn ^{Test {:groups ["proxy"
                        "tier3"
