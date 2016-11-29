@@ -782,7 +782,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				null, (String) null, null, null, null, true, null, null, null, null);
 		clienttasks.autoheal(null, null, true, null, null, null);
 		int sockets = 8;
-		int core = 4;
+		int core = 2;
 		int ram = 10;
 
 		Map<String, String> factsMap = new HashMap<String, String>();
@@ -809,7 +809,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 					clienttasks.subscribe(null, null, futurepoolMatchingActivePool.poolId, null, null, null, null, null,
 							null, null, null, null);
 					if (!(availableSubscriptionPool.suggested == 1)) {
-						quantity = availableSubscriptionPool.suggested / 2;
+						quantity = availableSubscriptionPool.suggested - 1;
 
 						clienttasks.subscribe(null, null, availableSubscriptionPool.poolId, null, null,
 								Integer.toString(quantity), null, null, null, null, null, null);
@@ -3668,7 +3668,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		List<String> providedProductId = null;
 		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
 			if (pool.subscriptionType.equals("Stackable")) {
-				quantity = pool.suggested / 2;
+				quantity = pool.suggested - 1;
 				if (!(pool.suggested == 1)) {
 					clienttasks.subscribe(null, null, pool.poolId, null, null, Integer.toString(quantity), null, null,
 							null, null, null, null);
@@ -3685,8 +3685,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				providedProductId.get(providedProductId.size() - 1), clienttasks.getCurrentlyInstalledProducts());
 		Assert.assertEquals(BeforeAttaching.status, "Partially Subscribed",
 				"Verified that installed product is partially subscribed");
-		clienttasks.subscribe(null, null, poolId, null, null, Integer.toString(quantity), null, null, null, null, null,
-				null);
+		clienttasks.subscribe(null, null, poolId, null, null, null, null, null, null, null, null, null);
 		InstalledProduct AfterAttaching = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productName",
 				providedProductId.get(providedProductId.size() - 1), clienttasks.getCurrentlyInstalledProducts());
 		Assert.assertEquals(AfterAttaching.status, "Subscribed", "Verified that installed product"
