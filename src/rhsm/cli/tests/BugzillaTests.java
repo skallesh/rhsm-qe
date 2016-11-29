@@ -2355,10 +2355,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@Test(description = "verify OwnerInfo is displayed only for pools that are active right now, for all the stats", // TODO,
-			// correct
-			// this
-			// description
+	@Test(description = "verify changing to a different rhsm.productcertdir configuration throws OSError", // TODO,
 			groups = { "certificateStacking", "blockedByBug-726409", "blockedByBug-1183175" }, enabled = true)
 	public void certificateStacking() throws JSONException, Exception {
 		Map<String, String> attributes = new HashMap<String, String>();
@@ -2736,7 +2733,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			"UpdateWithNoInstalledProducts", "blockedByBug-746241", "blockedByBug-1389559" }, enabled = true)
 	public void UpdateWithNoInstalledProducts() throws JSONException, Exception {
 		client.runCommandAndWait("rm -f " + clienttasks.rhsmLogFile);
-		configureTmpProductCertDirWithOutInstalledProductCerts();
+		moveProductCertFiles("*");
+		moveDefaultProductCertFiles("*");
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
 				null, (String) null, null, null, null, true, false, null, null, null);
 
@@ -2745,10 +2743,10 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, LogMarker);
 		String InstalledProducts = clienttasks.listInstalledProducts().getStdout();
 		clienttasks.run_rhsmcertd_worker(null);
-		restoreProductCerts();
 		Assert.assertEquals(InstalledProducts.trim(), "No installed products to list");
 		String tailFromMarkedFile = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, LogMarker,
 				null);
+		restoreProductCerts();
 		Assert.assertFalse(
 				doesStringContainMatches(tailFromMarkedFile, "Error while updating certificates using daemon"),
 				"'Error' messages in rhsm.log"); // "Error while updating
@@ -4740,6 +4738,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	public void restoreProductCerts() throws IOException {
 		client.runCommandAndWait("mv " + "/root/temp1/*" + " " + clienttasks.productCertDir);
 		client.runCommandAndWait("rm -rf " + "/root/temp1");
+		client.runCommandAndWait("mv " + "/root/temp2/*" + " " + clienttasks.productCertDefaultDir);
+		client.runCommandAndWait("rm -rf " + "/root/temp2");
 	}
 
 	@AfterGroups(groups = "setup", value = {}, enabled = true)
@@ -4833,7 +4833,19 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		if (!(RemoteFileTasks.testExists(client, installDir))) {
 			client.runCommandAndWait("mkdir " + installDir);
 		}
-		client.runCommandAndWait("mv " + clienttasks.productCertDir + "/" + filename + " " + "/root/temp1/");
+
+		client.runCommandAndWait("mv " + clienttasks.productCertDir + "/" + filename + " " + installDir);
+
+	}
+
+	protected void moveDefaultProductCertFiles(String filename) throws IOException {
+		String DefaultInstallDir = "/root/temp2/";
+		if (!(RemoteFileTasks.testExists(client, DefaultInstallDir))) {
+			client.runCommandAndWait("mkdir " + DefaultInstallDir);
+
+		}
+		client.runCommandAndWait("mv " + clienttasks.productCertDefaultDir + "/" + filename + " " + DefaultInstallDir);
+
 	}
 
 	protected String getEntitlementCertFilesWithPermissions() throws IOException {
