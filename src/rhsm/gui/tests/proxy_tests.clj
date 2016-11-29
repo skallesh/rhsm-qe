@@ -327,7 +327,7 @@ Then I should see a button 'Test connection' being disabled."}}
     and I click on 'Register' button
     and I click on 'I would like to connect via an HTTP Proxy'
 When I click on 'Use Authentication with HTTP Proxy'
- and I leave fields 'user' and 'password' blank
+ and I leave fields 'username' and 'password' blank
  and I click on the button 'Save'
  and I click on the button 'Next' in the 'System Registration' dialog
 Then I should see the message 'Proxy connection failed, please check your settings.'
