@@ -21,7 +21,7 @@ import rhsm.cli.tasks.CandlepinTasks;
  * @throws Exception
  * @throws JSONException
  */
-@Test(groups = { "AutoAttachDisabledByOwner", "Tier3Tests" })
+@Test(groups = { "AutoAttachDisabledByOwnerTests", "Tier3Tests" })
 public class AutoAttachDisabledByOwnerTests extends SubscriptionManagerCLITestScript {
 	List<String> ownerKey = new ArrayList<String>();
 	String owner = null;
