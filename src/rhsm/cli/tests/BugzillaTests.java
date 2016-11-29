@@ -502,7 +502,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@Test(description = "verify status check and response from server after addition and deletion of product from /etc/pki/product/", groups = {
+	@Test(description = "verify status check and response from server after addition and deletion of product to/from /etc/pki/product/", groups = {
 			"VerifyStatusCheck", "blockedByBug-921870", "blockedByBug-1183175" }, enabled = true)
 	public void VerifyStatusCheck() throws Exception {
 		String result, expectedStatus;
@@ -511,6 +511,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				"32060", clienttasks.getCurrentProductCerts());
 		Assert.assertNotNull(installedProductCert32060, "Found installed product cert 32060 needed for this test.");
 		configureTmpProductCertDirWithInstalledProductCerts(Arrays.asList(new ProductCert[] {}));
+		moveDefaultProductCertFiles("*");
 		clienttasks.register_(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null,
 				null, (String) null, null, null, null, true, false, null, null, null);
 		Assert.assertTrue(clienttasks.getCurrentProductCertFiles().isEmpty(), "No product certs are installed.");
@@ -542,6 +543,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			Assert.assertTrue(result.contains(expectedStatus), "System status displays '" + expectedStatus
 					+ "' after finally running rhsmcertd worker with auto-healing.");
 		}
+		restoreProductCerts();
 	}
 
 	/**
@@ -4731,8 +4733,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 
 	@AfterGroups(groups = { "setup" }, value = { "VerifySubscriptionOf", "VerifySystemCompliantFact",
 			"ValidityAfterOversubscribing", "UpdateWithNoInstalledProducts", "VerifyStatusCheck",
-			"VerifyStartEndDateOfSubscription"/* ,"InstalledProductMultipliesAfterSubscription" */,
-			"AutoHealFailForSLA", "VerifyautosubscribeIgnoresSocketCount_Test",
+			"VerifyStartEndDateOfSubscription", "AutoHealFailForSLA", "VerifyautosubscribeIgnoresSocketCount_Test",
 			"VerifyEUSRHELProductCertVersionFromEachCDNReleaseVersion_Test" })
 	@AfterClass(groups = "setup")
 	public void restoreProductCerts() throws IOException {
@@ -4742,7 +4743,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		client.runCommandAndWait("rm -rf " + "/root/temp2");
 	}
 
-	@AfterGroups(groups = "setup", value = {}, enabled = true)
+	@AfterGroups(groups = "setup", value = { "VerifyStatusCheck", "UpdateWithNoInstalledProducts" }, enabled = true)
 	public void restoreProductCertDir() {
 		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir", tmpProductCertDir);
 	}
