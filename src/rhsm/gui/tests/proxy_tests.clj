@@ -348,15 +348,16 @@ Then I should see the message 'Proxy connection failed, please check your settin
                                                 (str ":" (@config :basicauth-proxy-port)))))
   (tasks/ui click :close-proxy)
   (tasks/ui waittillguinotexist :proxy-config-dialog 60)
-  (verify (-> (get-logging @clientcmd
-                           rhsm-log
-                           "error_dialog_when_registering_via_proxy"
-                           nil
-                           (tasks/ui click :register))
-              (.contains "Traceback (most recent call last)")
-              not))
-  (let [thrown-error (try+ (tasks/checkforerror) (catch Object e (:type e)))]
-    (verify (= thrown-error :proxy-connection-failed))))
+  (tasks/screenshot-on-exception
+   (verify (-> (get-logging @clientcmd
+                            rhsm-log
+                            "error_dialog_when_registering_via_proxy"
+                            nil
+                            (tasks/ui click :register))
+               (.contains "Traceback (most recent call last)")
+               not))
+   (let [thrown-error (try+ (tasks/checkforerror) (catch Object e (:type e)))]
+     (verify (= thrown-error :proxy-connection-failed)))))
 
 (defn ^{Test {:groups ["proxy"
                        "tier3"
