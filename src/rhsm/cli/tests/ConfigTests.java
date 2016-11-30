@@ -578,7 +578,11 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 		List<String> realTimeList;
 		String expectedStderr = "Unable to verify server's identity: timed out";
 		if (clienttasks.redhatReleaseX.equals("6")) expectedStderr = "Unable to verify server's identity:";
-
+/* NOT YET SURE IF WE WANT THIS
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.18.4-1")) { // post commit b0e877cfb099184f9bab1b681a41df9bdd2fb790 side affect from m2crypto changes
+			expectedStderr = "System certificates corrupted. Please reregister.";
+		}
+*/
 		// test the default server_time value of 180 seconds
 		
 		//	[root@jsefler-rhel7 ~]# time subscription-manager version 
