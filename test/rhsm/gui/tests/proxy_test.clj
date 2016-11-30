@@ -8,7 +8,7 @@
   (:use gnome.ldtp
         [com.redhat.qe.verify :only (verify)]))
 
-;; ;; initialization of our testware
+;; initialization of our testware
 (use-fixtures :once (fn [f]
                       (base/startup nil)
                       (tests/setup nil)
