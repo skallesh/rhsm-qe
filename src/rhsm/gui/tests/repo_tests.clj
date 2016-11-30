@@ -39,9 +39,7 @@
 (defn ^{BeforeClass {:groups ["setup"]}}
   setup [_]
   (try+
-   (comment (when (= "RHEL7" (get-release))
-              (base/startup nil)))
-   (tasks/restart-app)
+   (tasks/restart-app :force-kill? true)
    (tasks/unregister)
    (catch [:type :not-registered] _)
    (catch Exception e
