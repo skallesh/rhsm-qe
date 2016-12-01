@@ -19,6 +19,7 @@ import org.testng.SkipException;
 import org.testng.annotations.BeforeGroups;
 import org.testng.annotations.Test;
 
+import rhsm.base.CandlepinType;
 import rhsm.base.SubscriptionManagerCLITestScript;
 import rhsm.cli.tasks.CandlepinTasks;
 import rhsm.cli.tasks.SubscriptionManagerTasks;
@@ -37,7 +38,7 @@ import com.redhat.qe.tools.abstraction.AbstractCommandLineData;
  * @author jsefler
  *
  */
-@Test(groups={"CRLTests","Tier2Tests"})
+@Test(groups={"CRLTests","Tier3Tests"})
 public class CRLTests extends SubscriptionManagerCLITestScript{
 	String ownerKey = null;
 
@@ -214,6 +215,41 @@ public class CRLTests extends SubscriptionManagerCLITestScript{
 	protected List<String> alreadySubscribedProductIdsInChangeSubscriptionPoolStartEndDatesAndRefreshSubscriptionPools_Test = new ArrayList<String>();
 
 	
+	@Test(	description="verify that candlepin's crl file does not contain duplicate serials otherwise it may be growing out of control",
+			groups = {"blockedByBug-1399356"},
+			enabled=true)
+	public void VerifyCandlepinCrlForDuplicates_Test() {
+		if (sm_serverType.equals(CandlepinType.hosted)) throw new SkipException("This test requires that your candlepin server NOT be a hosted RHN Classic system.");
+		
+		// TODO
+		// make sure servertasks.candlepinCRLFile exists.
+		// if not we should wait two cycles of pinsetter.org.candlepin.pinsetter.tasks.ExpiredPoolsJob.schedule defined in /etc/candlepin/candlepin.conf and then check again
+		if (!RemoteFileTasks.testExists(server, servertasks.candlepinCRLFile)) {
+			Assert.fail("Expected CRL file '"+servertasks.candlepinCRLFile+"' to exist.  We probably have to wait for the next trigger of the ExpiredPoolsJob.schedule.");
+		}
+		
+		// get the currently revoked certs
+		List<RevokedCert> revokedCerts = servertasks.getCurrentlyRevokedCerts();
+		
+		// TODO
+		// if the list is empty, then maybe this candlepin server is brand new and no consumers have attached and removed a subscription yet
+		if (revokedCerts.isEmpty()) {
+			Assert.fail("Expected CRL file '"+servertasks.candlepinCRLFile+"' to have some revoked serials by now.  We may have to attach and remove an entitlement and then wait for the ExpiredPoolsJob.schedule to trigger.");
+		}
+		
+		// search and log all serials that appear in duplicate
+		boolean foundDuplicateRevokedCertsWithMatchingSerials = false;
+		for (RevokedCert revokedCert : revokedCerts) {
+			List<RevokedCert> allRevokedCertsWithMatchingSerial = RevokedCert.findAllInstancesWithMatchingFieldFromList("serialNumber", revokedCert.serialNumber, revokedCerts);
+			if (allRevokedCertsWithMatchingSerial.size()>1) {
+				log.warning("Found multiple revoked entitlement certificates on candlepin server '"+server.getConnection().getHostname()+"' file '"+servertasks.candlepinCRLFile+"' matching serial '"+String.format("%016X",revokedCert.serialNumber)+"' (BigInteger='"+revokedCert.serialNumber+"').");
+				foundDuplicateRevokedCertsWithMatchingSerials = true;
+			}
+		}
+		
+		// assert no duplicates were found
+		Assert.assertTrue(!foundDuplicateRevokedCertsWithMatchingSerials, "Did not find any revoked entitlement certificates on candlepin server '"+server.getConnection().getHostname()+"' file '"+servertasks.candlepinCRLFile+"'.  If failed, see warnings above for duplicate serials.");
+	}
 	
 	// Candidates for an automated Test:
 //	On 10/07/2011 03:34 PM, Michael Stead wrote:
