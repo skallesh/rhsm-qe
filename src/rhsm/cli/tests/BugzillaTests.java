@@ -770,7 +770,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
 				null, (String) null, null, null, null, true, null, null, null, null);
 		clienttasks.autoheal(null, null, true, null, null, null);
-		int sockets = 8;
+		int sockets = 9;
 		int core = 2;
 		int ram = 10;
 
@@ -800,11 +800,13 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		for (SubscriptionPool AvailableSubscriptionPools : AvailableSubscriptions) {
 			int quantity = AvailableSubscriptionPools.suggested;
 			for (SubscriptionPool FutureSubscriptionPools : futureSubscription) {
-				System.out.println(AvailableSubscriptionPools.productId + " ***************************"
-						+ AvailableSubscriptionPools.productId);
-				if (AvailableSubscriptionPools.productId.equals(FutureSubscriptionPools.productId)) {
+				System.out.println(AvailableSubscriptionPools.provides + " ***************************"
+						+ FutureSubscriptionPools.provides);
+				if ((AvailableSubscriptionPools.provides).equals(FutureSubscriptionPools.provides)) {
 					System.out.println(
-							AvailableSubscriptionPools.productId + " ...." + AvailableSubscriptionPools.productId);
+							AvailableSubscriptionPools.productId + "... ...." + AvailableSubscriptionPools.productId);
+					providedProductId = AvailableSubscriptionPools.provides;
+
 					InstalledProduct BeforeAttaching = InstalledProduct.findFirstInstanceWithMatchingFieldFromList(
 							"productName", providedProductId.get(providedProductId.size() - 1),
 							clienttasks.getCurrentlyInstalledProducts());
@@ -813,8 +815,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 					Assert.assertEquals(BeforeAttaching.status, "Partially Subscribed",
 							"Verified that installed product is partially subscribed");
 					clienttasks.subscribeToSubscriptionPool(FutureSubscriptionPools);
-
-					providedProductId = AvailableSubscriptionPools.provides;
 					break;
 				}
 
@@ -3653,7 +3653,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
 				null, (String) null, null, null, null, true, null, null, null, null);
 		clienttasks.autoheal(null, null, true, null, null, null);
-		int sockets = 8;
+		int sockets = 9;
 		int core = 2;
 		int ram = 10;
 
@@ -4788,7 +4788,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 
 	@BeforeGroups(groups = "setup", value = { "VerifyStatusCheck" })
 	@AfterGroups(groups = "setup", value = { "VerifyStatusCheck", "certificateStacking",
-			"UpdateWithNoInstalledProducts" })
+			"UpdateWithNoInstalledProducts", "VerifySystemCompliantFact", "AutoHealFailForSLA" })
 	@AfterClass(groups = "setup") // called after class for insurance
 	public void restoreRhsmProductCertDir() {
 		if (clienttasks == null)
@@ -4829,27 +4829,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 
 		client.runCommandAndWait("mv " + clienttasks.productCertDir + "/" + filename + " " + installDir);
 
-	}
-
-	String dir = "/etc/pki/product-default.bak";
-
-	@BeforeGroups(groups = "setup", value = { "VerifyStatusCheck", "certificateStacking",
-			"UpdateWithNoInstalledProducts", "VerifyEUSRHELProductCertVersionFromEachCDNReleaseVersion_Test",
-			"InstalledProductMultipliesAfterSubscription" })
-	protected void RenameDefaultProductCertFiles() throws IOException {
-
-		client.runCommandAndWait("rm -rf " + dir);
-		client.runCommandAndWait("mv " + clienttasks.productCertDefaultDir + " " + dir);
-
-	}
-
-	@AfterClass(groups = { "setup" })
-	@AfterGroups(groups = "setup", value = { "VerifyStatusCheck", "certificateStacking",
-			"UpdateWithNoInstalledProducts", "VerifyEUSRHELProductCertVersionFromEachCDNReleaseVersion_Test",
-			"InstalledProductMultipliesAfterSubscription" })
-	protected void restoreDefaultsProductCertFiles() {
-		client.runCommandAndWait("mv " + dir + " " + clienttasks.productCertDefaultDir);
-		client.runCommandAndWait("rm -rf " + dir);
 	}
 
 	protected String getEntitlementCertFilesWithPermissions() throws IOException {
@@ -5134,16 +5113,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		}
 	}
 
-	/*
-	 * @BeforeGroups(groups = "setup", value = {
-	 * "VerifyEUSRHELProductCertVersionFromEachCDNReleaseVersion_Test",
-	 * "InstalledProductMultipliesAfterSubscription" }, enabled = true)
-	 *
-	 * @AfterClass(groups = "setup") public void restoreProductDefaultCerts() {
-	 * client.runCommandAndWait("ls -1 " + clienttasks.productCertDefaultDir +
-	 * "/*.bak"); String lsBakFiles = client.getStdout().trim(); if
-	 * (!lsBakFiles.isEmpty()) { for (String lsFile :
-	 * Arrays.asList(lsBakFiles.split("\n"))) { client.runCommandAndWait("mv " +
-	 * lsFile + " " + lsFile.replaceFirst("\\.bak$", "")); } } }
-	 */
+	@BeforeGroups(groups = "setup", value = { "VerifyEUSRHELProductCertVersionFromEachCDNReleaseVersion_Test",
+			"InstalledProductMultipliesAfterSubscription" }, enabled = true)
+	@AfterClass(groups = "setup")
+	public void restoreProductDefaultCerts() {
+		client.runCommandAndWait("ls -1 " + clienttasks.productCertDefaultDir + "/*.bak");
+		String lsBakFiles = client.getStdout().trim();
+		if (!lsBakFiles.isEmpty()) {
+			for (String lsFile : Arrays.asList(lsBakFiles.split("\n"))) {
+				client.runCommandAndWait("mv " + lsFile + " " + lsFile.replaceFirst("\\.bak$", ""));
+			}
+		}
+	}
+
 }
