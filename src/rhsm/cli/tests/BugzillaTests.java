@@ -803,24 +803,23 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				System.out.println(AvailableSubscriptionPools.provides + " ***************************"
 						+ FutureSubscriptionPools.provides);
 				if ((AvailableSubscriptionPools.provides).equals(FutureSubscriptionPools.provides)) {
-					System.out.println(
-							AvailableSubscriptionPools.productId + "... ...." + AvailableSubscriptionPools.productId);
 					providedProductId = AvailableSubscriptionPools.provides;
-
-					InstalledProduct BeforeAttaching = InstalledProduct.findFirstInstanceWithMatchingFieldFromList(
-							"productName", providedProductId.get(providedProductId.size() - 1),
-							clienttasks.getCurrentlyInstalledProducts());
+					clienttasks.subscribeToSubscriptionPool(FutureSubscriptionPools);
+					InstalledProduct AfterAttachingFutureSubscription = InstalledProduct
+							.findFirstInstanceWithMatchingFieldFromList("productName",
+									providedProductId.get(providedProductId.size() - 1),
+									clienttasks.getCurrentlyInstalledProducts());
+					Assert.assertEquals(AfterAttachingFutureSubscription.status, "Future Subscription",
+							"Verified that installed product status is Future Subscription after attaching future subscription");
 					clienttasks.subscribe(null, null, AvailableSubscriptionPools.poolId, null, null,
 							Integer.toString(quantity - 1), null, null, null, null, null, null);
-					Assert.assertEquals(BeforeAttaching.status, "Partially Subscribed",
-							"Verified that installed product is partially subscribed");
-					clienttasks.subscribeToSubscriptionPool(FutureSubscriptionPools);
+
 					break;
 				}
 
 			}
 			InstalledProduct AfterAttaching = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productName",
-					providedProductId, clienttasks.getCurrentlyInstalledProducts());
+					providedProductId.get(providedProductId.size() - 1), clienttasks.getCurrentlyInstalledProducts());
 			Assert.assertEquals(AfterAttaching.status, "Partially Subscribed",
 					"Verified that installed product is partially subscribed even after attaching a future subscription");
 		}
