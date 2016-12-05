@@ -14,3 +14,6 @@
 
 (deftest open-connection-to-candlepin-test
   (base/open-connection-to-candlepin))
+
+(deftest firstboot-binary-check-test
+  (is (= 0 (-> (tools/run-command (format "which %s" (@c/config :firstboot-binary-path))) :exitcode))))
