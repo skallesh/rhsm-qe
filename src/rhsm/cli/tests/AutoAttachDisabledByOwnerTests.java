@@ -40,7 +40,7 @@ public class AutoAttachDisabledByOwnerTests extends SubscriptionManagerCLITestSc
 		 */
 		SSHCommandResult result = clienttasks.register(sm_clientUsername, sm_clientPassword, owner, null, null, null,
 				null, true, null, null, (String) null, null, null, null, true, null, null, null, null);
-		String expected = "Autobind is not enabled for owner '" + owner + "'.";
+		String expected = "Ignoring request to auto-attach. It is disabled for org '" + owner + "'.";
 		Assert.assertTrue(result.getStderr().trim().equals(expected),
 				"indicationg autobindDisabled is set true on owner");
 		SSHCommandResult consumedSubscriptions = clienttasks.list(null, null, true, null, null, null, null, null, null,
@@ -144,5 +144,17 @@ public class AutoAttachDisabledByOwnerTests extends SubscriptionManagerCLITestSc
 	public void getOwner() throws JSONException, Exception {
 		ownerKey = CandlepinTasks.getOrgsKeyValueForUser(sm_clientUsername, sm_clientPassword, sm_serverUrl, "key");
 		owner = ownerKey.get(randomGenerator.nextInt(ownerKey.size()));
+	}
+
+	@BeforeClass(groups = "setup")
+	public void restoreRhsmProductCertDir() {
+		String rhsmProductCertDir = clienttasks.productCertDir;
+		System.out.println(clienttasks.productCertDir + ".....is the rpoduct DIR");
+		if (clienttasks == null)
+			return;
+		if (!(rhsmProductCertDir == (clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsm",
+				"productCertDir"))))
+			log.info("Restoring the originally configured product cert directory...");
+		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir", rhsmProductCertDir);
 	}
 }
