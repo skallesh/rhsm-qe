@@ -12,7 +12,8 @@
             [rhsm.gui.tasks.tasks :as tasks]
             [rhsm.gui.tests.base :as base]
             [clojure.core.match :refer [match]]
-            rhsm.gui.tasks.ui)
+            rhsm.gui.tasks.ui
+            [clojure.java.io :as io])
   (:import [org.testng.annotations
             AfterClass
             BeforeClass
@@ -88,13 +89,15 @@
       (skip-if-bz-open "922806")
       (skip-if-bz-open "1016643" (= rhel-version-major "7"))
       (when (= rhel-version-major "7") (base/startup nil)))
+    (assert (= 1 (-> (run-command (format "which %s" (@config :firstboot-binary-path))) :exitcode))
+            "No firstboot binary found")
     ;; new rhsm and classic have to be totally clean for this to run
     (run-command "subscription-manager clean")
     (let [sysidpath "/etc/sysconfig/rhn/systemid"]
       (run-command (str "[ -f " sysidpath " ] && rm " sysidpath)))
     (catch Exception e
       (reset! (skip-groups :firstboot) true)
-      (throw e))))
+      (throw (SkipException. (str "some problem in setup for firstboot_tests. Was: " (.toString e)))))))
 
 (defn ^{AfterClass {:groups ["cleanup"]
                     :alwaysRun true}}

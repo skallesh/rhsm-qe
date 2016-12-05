@@ -15,7 +15,10 @@
   (:import   org.testng.SkipException))
 
 ;; ;; initialization of our testware
-(use-fixtures :once (fn [f] (base/startup nil)(f)))
+(use-fixtures :once (fn [f]
+                      (base/startup nil)
+                      (tests/firstboot_init nil)
+                      (f)))
 
 (deftest skip-by-rhel-release-test
   (testing "A method raises SkipException is some cases."
