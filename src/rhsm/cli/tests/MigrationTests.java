@@ -717,7 +717,8 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 				//	osad           	0:off	1:off	2:off	3:off	4:off	5:off	6:off
 				SSHCommandResult sshChkconfigCommandResult = client.runCommandAndWait("chkconfig --list osad");
 				Assert.assertEquals(sshChkconfigCommandResult.getExitCode(),Integer.valueOf(0), "Expected exitCode for chkconfig --list osad");
-				Assert.assertEquals(sshChkconfigCommandResult.getStdout().trim(),"osad           	0:off	1:off	2:off	3:off	4:off	5:off	6:off", "Expected stdout for chkconfig --list osad");
+				String sshChkconfigRegex = "osad\\s+0:off\\s+1:off\\s+2:off\\s+3:off\\s+4:off\\s+5:off\\s+6:off";
+				Assert.assertTrue(sshChkconfigCommandResult.getStdout().trim().matches(sshChkconfigRegex), "Expected stdout for chkconfig --list osad to match regex '"+sshChkconfigRegex+"'.");
 			}
 			if (clienttasks.isPackageInstalled("rhnsd")) {
 				//	[root@jsefler-rhel6 ~]# service rhnsd status
@@ -729,7 +730,8 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 				//	rhnsd           	0:off	1:off	2:off	3:off	4:off	5:off	6:off
 				SSHCommandResult sshChkconfigCommandResult = client.runCommandAndWait("chkconfig --list rhnsd");
 				Assert.assertEquals(sshChkconfigCommandResult.getExitCode(),Integer.valueOf(0), "Expected exitCode for chkconfig --list rhnsd");
-				Assert.assertEquals(sshChkconfigCommandResult.getStdout().trim(),"rhnsd           	0:off	1:off	2:off	3:off	4:off	5:off	6:off", "Expected stdout for chkconfig --list rhnsd");
+				String sshChkconfigRegex = "rhnsd\\s+0:off\\s+1:off\\s+2:off\\s+3:off\\s+4:off\\s+5:off\\s+6:off";
+				Assert.assertTrue(sshChkconfigCommandResult.getStdout().trim().matches(sshChkconfigRegex), "Expected stdout for chkconfig --list rhnsd to match regex '"+sshChkconfigRegex+"'.");
 			}
 			
 			// assert that no FAILED nor Usage errors occurred
