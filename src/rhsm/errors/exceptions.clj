@@ -19,7 +19,10 @@
 
   java.lang.AssertionError
   (failure-level [e] :verification-failure)
-  
+
+  java.lang.Exception
+  (failure-level [e] :unknown-exception)
+
   Object
   (failure-level [o] :unknown))
 
