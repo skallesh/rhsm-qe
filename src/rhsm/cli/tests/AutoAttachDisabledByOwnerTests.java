@@ -49,13 +49,13 @@ public class AutoAttachDisabledByOwnerTests extends SubscriptionManagerCLITestSc
 
 		/* verify if healing works on a owner with autobindDisabled=false */
 		clienttasks.autoheal(null, true, null, null, null, null);
-		String logMessage = "Autobind is not enabled for owner '" + owner + "'.";
+		String logMessage = "Ignoring request to auto-attach. It is disabled for org '" + owner + "'.";
 		String logMarker = System.currentTimeMillis()
 				+ " disable auto-attach by Owner test , healing section ****************************************";
 		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, logMarker);
 		clienttasks.run_rhsmcertd_worker(true);
 		String rhsmLogTail = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, logMarker,
-				"Autobind is not enabled for owner");
+				"Ignoring request to auto-attach.");
 		Assert.assertTrue(rhsmLogTail.contains(logMessage),
 				"indicationg auto-attach is disabled at owner level,so healing will not update the certificates ");
 		/*
@@ -78,7 +78,7 @@ public class AutoAttachDisabledByOwnerTests extends SubscriptionManagerCLITestSc
 		 */
 		result = clienttasks.subscribe_(true, null, (String) null, null, null, null, null, null, null, null, null,
 				null);
-		expected = "Autobind is not enabled for owner '" + owner + "'.";
+		expected = "Ignoring request to auto-attach. It is disabled for org '" + owner + "'.";
 		Assert.assertTrue(result.getStderr().trim().equals(expected), "indicating auto-attach is disabled for owner");
 		consumedSubscriptions = clienttasks.list(null, null, true, null, null, null, null, null, null, null, null, null,
 				null);
@@ -94,7 +94,7 @@ public class AutoAttachDisabledByOwnerTests extends SubscriptionManagerCLITestSc
 				resourcePath, jsonData);
 		result = clienttasks.register(sm_clientUsername, sm_clientPassword, owner, null, null, null, null, true, null,
 				null, (String) null, null, null, null, true, null, null, null, null);
-		expected = "Autobind is not enabled for owner '" + owner + "'.";
+		expected = "Ignoring request to auto-attach. It is disabled for org '" + owner + "'.";
 		Assert.assertFalse(result.getStderr().trim().equals(expected),
 				"indicationg autobindDisabled is set false on owner");
 		consumedSubscriptions = clienttasks.list(null, null, true, null, null, null, null, null, null, null, null, null,
@@ -107,7 +107,7 @@ public class AutoAttachDisabledByOwnerTests extends SubscriptionManagerCLITestSc
 		 */
 		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		result = clienttasks.subscribe(true, null, (String) null, null, null, null, null, null, null, null, null, null);
-		expected = "Autobind is not enabled for owner '" + owner + "'.";
+		expected = "Ignoring request to auto-attach. It is disabled for org '" + owner + "'.";
 		Assert.assertFalse(result.getStderr().trim().equals(expected), "indicating auto-attach is disabled for owner");
 		consumedSubscriptions = clienttasks.list(null, null, true, null, null, null, null, null, null, null, null, null,
 				null);
@@ -117,13 +117,13 @@ public class AutoAttachDisabledByOwnerTests extends SubscriptionManagerCLITestSc
 		 */
 		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		clienttasks.autoheal(null, true, null, null, null, null);
-		logMessage = "Autobind is not enabled for owner '" + owner + "'.";
+		logMessage = "Ignoring request to auto-attach. It is disabled for org '" + owner + "'.";
 		logMarker = System.currentTimeMillis()
 				+ " disable auto-attach by Owner test , healing section ****************************************";
 		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, logMarker);
 		clienttasks.run_rhsmcertd_worker(true);
 		rhsmLogTail = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, logMarker,
-				"Autobind is not enabled for owner");
+				"Ignoring request to auto-attach. It is disabled for org ");
 		Assert.assertFalse(rhsmLogTail.contains(logMessage),
 				"indicationg auto-attach is enabled at owner level,so healing will update the certs ");
 		// todo add test for activation key , after mstead confirms the exact

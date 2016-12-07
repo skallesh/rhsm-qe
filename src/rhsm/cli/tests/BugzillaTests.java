@@ -4736,12 +4736,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.restart_rhsmcertd(configuredCertFrequency, configuredHealFrequency, null);
 	}
 
-	@AfterGroups(groups = "setup", value = { "VerifyStatusCheck", "UpdateWithNoInstalledProducts" }, enabled = true)
-	@AfterClass(groups = "setup") // called after class for insurance
-	public void restoreProductCertDir() {
-		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir", tmpProductCertDir);
-	}
-
 	@BeforeGroups(groups = "setup", value = {}, enabled = true)
 	public void configureProductCertDir() {
 		if (rhsmProductCertDir == null) {
@@ -4803,6 +4797,12 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 
 	protected String rhsmProductCertDir = null;
 	protected final String tmpProductCertDir = "/tmp/sm-tmpProductCertDir-bugzillatests";
+
+	@BeforeClass(groups = "setup")
+	public void getRhsmProductCertDir() {
+		rhsmProductCertDir = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsm", "productCertDir");
+		Assert.assertNotNull(rhsmProductCertDir);
+	}
 
 	// Protected methods
 	// ***********************************************************************
@@ -5105,6 +5105,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	// THE INFLUENCE THAT /etc/pki/product-default/ CERTS HAVE ON THESE TESTS
 	// SINCE THESE TESTS PRE-DATE THE INTRODUCTION OF DEFAULT PRODUCT CERTS.
 	@BeforeClass(groups = "setup")
+	@BeforeGroups(groups = "setup", value = { "UpdateWithNoInstalledProducts" }, enabled = true)
 	public void backupProductDefaultCerts() {
 		log.info(
 				"This test class was developed before the addition of /etc/pki/product-default/ certs (Bug 1123029).  Therefore, let's back them up before running this test class.");
@@ -5118,6 +5119,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	@BeforeGroups(groups = "setup", value = { "VerifyEUSRHELProductCertVersionFromEachCDNReleaseVersion_Test",
 			"InstalledProductMultipliesAfterSubscription" }, enabled = true)
 	@AfterClass(groups = "setup")
+	@AfterGroups(groups = "setup", value = { "UpdateWithNoInstalledProducts" })
 	public void restoreProductDefaultCerts() {
 		client.runCommandAndWait("ls -1 " + clienttasks.productCertDefaultDir + "/*.bak");
 		String lsBakFiles = client.getStdout().trim();
