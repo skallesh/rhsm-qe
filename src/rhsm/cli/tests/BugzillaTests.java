@@ -819,6 +819,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			}
 
 		}
+		if (nosubscriptionsFound)
+			throw new SkipException("no subscriptions found");
 		InstalledProduct AfterAttaching = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productName",
 				providedProductId.get(providedProductId.size() - 1), clienttasks.getCurrentlyInstalledProducts());
 		Assert.assertEquals(AfterAttaching.status, "Partially Subscribed",
