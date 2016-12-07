@@ -800,7 +800,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		for (SubscriptionPool AvailableSubscriptionPools : AvailableSubscriptions) {
 			int quantity = AvailableSubscriptionPools.suggested;
 			for (SubscriptionPool FutureSubscriptionPools : futureSubscription) {
-				if ((AvailableSubscriptionPools.provides).equals(FutureSubscriptionPools.provides)) {
+				if ((AvailableSubscriptionPools.subscriptionName).equals(FutureSubscriptionPools.subscriptionName)) {
 					providedProductId = AvailableSubscriptionPools.provides;
 					clienttasks.subscribe(null, null, AvailableSubscriptionPools.poolId, null, null,
 							Integer.toString(quantity - 1), null, null, null, null, null, null);
