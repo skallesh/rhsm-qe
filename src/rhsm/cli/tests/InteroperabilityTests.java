@@ -102,6 +102,7 @@ public class InteroperabilityTests extends SubscriptionManagerCLITestScript {
 		// assert the interoperable registration message (without any current subscriptions)
 		SSHCommandResult result = client.runCommandAndWait("yum repolist --disableplugin=rhnplugin --enableplugin=subscription-manager");
 		String expectedMsgRHSM = "This system is registered to Red Hat Subscription Management, but is not receiving updates. You can use subscription-manager to assign subscriptions.";
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.18.4-1")) expectedMsgRHSM = "This system is registered with an entitlement server, but is not receiving updates. You can use subscription-manager to assign subscriptions.";	// subscription-manager commit 5e4b42e1c99472085a44118dd231e7ddd161937a	// https://github.com/candlepin/subscription-manager/pull/1512
 		if (clienttasks.isPackageVersion("subscription-manager", "<", "1.12.2-1")) Assert.assertTrue(result.getStdout().contains(expectedMsgRHSM), "When registered to RHSM (and all subscriptions have expired), the subscription-manager yum plugin stdout should inform that:\n"+expectedMsgRHSM+"\n");	// Bug 901612 - Subscription-manager-s yum plugin prints warning to stdout instead of stderr.	// Bug 901612 was reverted by Bug 1017354 
 		else if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.12.11-1")) Assert.assertTrue(result.getStdout().contains(expectedMsgRHSM), "When registered to RHSM (and all subscriptions have expired), the subscription-manager yum plugin stdout should inform that:\n"+expectedMsgRHSM+"\n");	// Bug 1058380 was reverted by Bug 1122772 
 		else Assert.assertTrue(!(result.getStdout()+result.getStderr()).contains(expectedMsgRHSM), "When registered to RHSM (and all subscriptions have expired), the subscription-manager yum plugin stdout should NO LONGER inform that:\n"+expectedMsgRHSM+"\nBugzilla https://bugzilla.redhat.com/show_bug.cgi?id=1058380 was used to remove this usability messaging implemented for https://bugzilla.redhat.com/show_bug.cgi?id=818383");
@@ -145,6 +146,7 @@ public class InteroperabilityTests extends SubscriptionManagerCLITestScript {
 		clienttasks.removeRhnSystemIdFile();
 		SSHCommandResult result = client.runCommandAndWait("yum repolist --enableplugin=rhnplugin --enableplugin=subscription-manager");
 		String expectedMsgRHSM = "This system is not registered to Red Hat Subscription Management. You can use subscription-manager to register.";
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.18.4-1")) expectedMsgRHSM = "This system is not registered with an entitlement server. You can use subscription-manager to register.";	// subscription-manager commit 5e4b42e1c99472085a44118dd231e7ddd161937a	// https://github.com/candlepin/subscription-manager/pull/1512
 		String expectedMsgRHN; // comes from /usr/share/yum-plugins/rhnplugin.py (package yum-rhn-plugin)
 		expectedMsgRHN = "This system is not registered with RHN Classic or RHN Satellite.\nYou can use rhn_register to register.\nRHN Satellite or RHN Classic support will be disabled.";	// yum-rhn-plugin-0.5.4.1-7.el5		// yum-rhn-plugin-0.9.1-48.el6
 		// [root@jsefler-7 ~]# rpm -q --changelog yum-rhn-plugin | more
@@ -170,6 +172,7 @@ public class InteroperabilityTests extends SubscriptionManagerCLITestScript {
 		clienttasks.registerToRhnClassic(sm_rhnUsername, sm_rhnPassword, sm_rhnHostname);
 		SSHCommandResult result = client.runCommandAndWait("yum repolist --enableplugin=rhnplugin --enableplugin=subscription-manager");
 		String expectedMsgRHSM = "This system is not registered to Red Hat Subscription Management. You can use subscription-manager to register.";
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.18.4-1")) expectedMsgRHSM = "This system is not registered to an entitlement server. You can use subscription-manager to register.";	// subscription-manager commit 5e4b42e1c99472085a44118dd231e7ddd161937a	// https://github.com/candlepin/subscription-manager/pull/1512
 		String expectedMsgRHN = null;	// comes from /usr/share/yum-plugins/rhnplugin.py (package yum-rhn-plugin)
 		if (Float.valueOf(clienttasks.redhatReleaseXY)>=6.4) expectedMsgRHN = "This system is receiving updates from RHN Classic or RHN Satellite.";
 		if (Float.valueOf(clienttasks.redhatReleaseXY)>=7.0) expectedMsgRHN = "This system is receiving updates from RHN Classic or Red Hat Satellite.";
@@ -194,6 +197,7 @@ public class InteroperabilityTests extends SubscriptionManagerCLITestScript {
 		clienttasks.removeRhnSystemIdFile();
 		SSHCommandResult result = client.runCommandAndWait("yum repolist --enableplugin=rhnplugin --enableplugin=subscription-manager");
 		String expectedMsgRHSM = "This system is registered to Red Hat Subscription Management, but is not receiving updates. You can use subscription-manager to assign subscriptions.";	
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.18.4-1")) expectedMsgRHSM = "This system is registered with an entitlement server, but is not receiving updates. You can use subscription-manager to assign subscriptions.";	// subscription-manager commit 5e4b42e1c99472085a44118dd231e7ddd161937a	// https://github.com/candlepin/subscription-manager/pull/1512
 		String expectedMsgRHN;	// comes from /usr/share/yum-plugins/rhnplugin.py (package yum-rhn-plugin)
 		expectedMsgRHN = "This system is not registered with RHN Classic or RHN Satellite.\nYou can use rhn_register to register.\nRHN Satellite or RHN Classic support will be disabled.";
 		// [root@jsefler-7 ~]# rpm -q --changelog yum-rhn-plugin | more
@@ -208,7 +212,7 @@ public class InteroperabilityTests extends SubscriptionManagerCLITestScript {
 		if (isRhnClientToolsInstalled) Assert.assertTrue((/*result.getStdout()+*/result.getStderr()).contains(expectedMsgRHN), "When registered to RHSM (but not subscribed) but not RHN, the rhnplugin yum plugin should inform that:\n"+expectedMsgRHN+"\n");
 	}
 	
-	@Test(	description="When registered to RHSM (and subscribed) but not RHN, the subscription-manager yum plugin should inform that: This system is registered to Red Hat Subscription Management, but is not receiving updates. You can use subscription-manager to assign subscriptions.",
+	@Test(	description="When registered to RHSM (and subscribed) but not RHN, the subscription-manager yum plugin should inform that: This system is receiving updates from Red Hat Subscription Management.",
 			groups={"YumPluginMessageCase_Tests","blockedByBug-818383","blockedByBug-832119","blockedByBug-830193","blockedByBug-830194","blockedByBug-906875"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
@@ -241,6 +245,7 @@ public class InteroperabilityTests extends SubscriptionManagerCLITestScript {
 		clienttasks.registerToRhnClassic(sm_rhnUsername, sm_rhnPassword, sm_rhnHostname);
 		SSHCommandResult result = client.runCommandAndWait("yum repolist --enableplugin=rhnplugin --enableplugin=subscription-manager");
 		String expectedMsgRHSM = "This system is registered to Red Hat Subscription Management, but is not receiving updates. You can use subscription-manager to assign subscriptions.";
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.18.4-1")) expectedMsgRHSM = "This system is registered with an entitlement server, but is not receiving updates. You can use subscription-manager to assign subscriptions.";	// subscription-manager commit 5e4b42e1c99472085a44118dd231e7ddd161937a	// https://github.com/candlepin/subscription-manager/pull/1512
 		String expectedMsgRHN = null;	// comes from /usr/share/yum-plugins/rhnplugin.py (package yum-rhn-plugin)
 		if (Float.valueOf(clienttasks.redhatReleaseXY)>=6.4) expectedMsgRHN = "This system is receiving updates from RHN Classic or RHN Satellite.";
 		if (Float.valueOf(clienttasks.redhatReleaseXY)>=7.0) expectedMsgRHN = "This system is receiving updates from RHN Classic or Red Hat Satellite.";
