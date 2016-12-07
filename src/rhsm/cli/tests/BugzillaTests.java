@@ -781,13 +781,13 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		factsMap.put("virt.is_guest", String.valueOf(Boolean.FALSE));
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
 		clienttasks.facts(null, true, null, null, null);
-
+		Boolean nosubscriptionsFound = true;
 		Calendar now = new GregorianCalendar();
 		DateFormat yyyy_MM_dd_DateFormat = new SimpleDateFormat("yyyy-MM-dd");
 		now.add(Calendar.YEAR, 1);
 		now.add(Calendar.DATE, 1);
 		String onDateToTest = yyyy_MM_dd_DateFormat.format(now.getTime());
-		List<String> providedProductId = null;
+		List<String> providedProductId = new ArrayList<String>();
 		List<SubscriptionPool> AvailableStackableSubscription = SubscriptionPool
 				.findAllInstancesWithMatchingFieldFromList("subscriptionType", "Stackable",
 						clienttasks.getAvailableSubscriptionsMatchingInstalledProducts());
@@ -800,29 +800,30 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		for (SubscriptionPool AvailableSubscriptionPools : AvailableSubscriptions) {
 			int quantity = AvailableSubscriptionPools.suggested;
 			for (SubscriptionPool FutureSubscriptionPools : futureSubscription) {
-				System.out.println(AvailableSubscriptionPools.provides + " ***************************"
-						+ FutureSubscriptionPools.provides);
 				if ((AvailableSubscriptionPools.provides).equals(FutureSubscriptionPools.provides)) {
 					providedProductId = AvailableSubscriptionPools.provides;
-					clienttasks.subscribeToSubscriptionPool(FutureSubscriptionPools);
+					clienttasks.subscribe(null, null, AvailableSubscriptionPools.poolId, null, null,
+							Integer.toString(quantity - 1), null, null, null, null, null, null);
+					nosubscriptionsFound = false;
 					InstalledProduct AfterAttachingFutureSubscription = InstalledProduct
 							.findFirstInstanceWithMatchingFieldFromList("productName",
 									providedProductId.get(providedProductId.size() - 1),
 									clienttasks.getCurrentlyInstalledProducts());
-					Assert.assertEquals(AfterAttachingFutureSubscription.status, "Future Subscription",
-							"Verified that installed product status is Future Subscription after attaching future subscription");
-					clienttasks.subscribe(null, null, AvailableSubscriptionPools.poolId, null, null,
-							Integer.toString(quantity - 1), null, null, null, null, null, null);
+					Assert.assertEquals(AfterAttachingFutureSubscription.status, "Partially Subscribed",
+							"Verified that installed product is partially subscribed before attaching a future subscription");
+					clienttasks.subscribeToSubscriptionPool(FutureSubscriptionPools);
 
 					break;
 				}
 
 			}
-			InstalledProduct AfterAttaching = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productName",
-					providedProductId.get(providedProductId.size() - 1), clienttasks.getCurrentlyInstalledProducts());
-			Assert.assertEquals(AfterAttaching.status, "Partially Subscribed",
-					"Verified that installed product is partially subscribed even after attaching a future subscription");
+
 		}
+		InstalledProduct AfterAttaching = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productName",
+				providedProductId.get(providedProductId.size() - 1), clienttasks.getCurrentlyInstalledProducts());
+		Assert.assertEquals(AfterAttaching.status, "Partially Subscribed",
+				"Verified that installed product is partially subscribed even after attaching a future subscription");
+
 	}
 
 	public List<SubscriptionPool> FindSubscriptionsWithSuggestedQuantityGreaterThanTwo(
