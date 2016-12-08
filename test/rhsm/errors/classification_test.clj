@@ -2,6 +2,7 @@
   (:use [slingshot.slingshot :only (try+ throw+)]
         [com.redhat.qe.verify :only (verify)])
   (:require [rhsm.errors.classification :as sut]
+            [rhsm.errors.exceptions :as exc]
             [clojure.test :refer [deftest is]])
   (:import org.testng.SkipException))
 

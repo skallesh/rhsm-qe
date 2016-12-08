@@ -16,6 +16,7 @@
             [rhsm.gui.tests.base :as base]
             [clojure.tools.logging :as log]
             [rhsm.errors.classification :as erc]
+            [rhsm.errors.exceptions :as exc]
             [rhsm.gui.tasks.candlepin-tasks :as ctasks])
   (:import [org.testng.annotations
             Test
