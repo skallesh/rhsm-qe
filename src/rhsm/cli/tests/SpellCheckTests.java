@@ -1200,8 +1200,8 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 		modifiedManPage = modifiedManPage.replaceAll("\\.pem", ".certificate");	// Base64-encoded X.509 certificate
 		modifiedManPage = modifiedManPage.replaceAll("PEM file", "Privacy-enhanced mail certificate file");	// Base64-encoded X.509 certificate
 		modifiedManPage = modifiedManPage.replaceAll("PEM certificate", "Privacy-enhanced mail certificate");	// Base64-encoded X.509 certificate
-		modifiedManPage = modifiedManPage.replaceAll("DER +size", "binary size");
-		modifiedManPage = modifiedManPage.replaceAll("DER +encoding", "binary encoding");
+		modifiedManPage = modifiedManPage.replaceAll("DER\\s+size", "binary size");
+		modifiedManPage = modifiedManPage.replaceAll("DER\\s+encoding", "binary encoding");
 		modifiedManPage = modifiedManPage.replaceAll("UUID", "universally unique identifier");
 		modifiedManPage = modifiedManPage.replaceAll("JSON", "JavaScript Object Notation");
 		modifiedManPage = modifiedManPage.replaceAll("CDN", "Content Delivery Network");
