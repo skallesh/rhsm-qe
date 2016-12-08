@@ -502,7 +502,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				"32060", clienttasks.getCurrentProductCerts());
 		Assert.assertNotNull(installedProductCert32060, "Found installed product cert 32060 needed for this test.");
 		configureTmpProductCertDirWithInstalledProductCerts(Arrays.asList(new ProductCert[] {}));
-		clienttasks.register_(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null,
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null,
 				null, (String) null, null, null, null, true, false, null, null, null);
 		Assert.assertTrue(clienttasks.getCurrentProductCertFiles().isEmpty(), "No product certs are installed.");
 		result = clienttasks.status(null, null, null, null).getStdout();
@@ -517,7 +517,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
 			if (CandlepinTasks.isPoolRestrictedToUnmappedVirtualSystems(sm_clientUsername, sm_clientPassword,
 					sm_serverUrl, pool.poolId)) {
+				clienttasks.subscribeToSubscriptionPool(pool);
 				Flag = true;
+				break;
 			}
 		}
 		clienttasks.autoheal(null, true, null, null, null, null); // enable
@@ -3621,6 +3623,10 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.17.6-1")) {
 			factsResultExpected = clienttasks.msg_ProxyConnectionFailed;
 		}
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.18.5-1")) {
+			factsResultExpected = "Unable to reach the server at " + sm_serverHostname + ":" + sm_serverPort
+					+ sm_serverPrefix;
+		}
 		Assert.assertEquals(factsResult.getStdout().trim() + factsResult.getStderr().trim(), factsResultExpected);
 	}
 
@@ -5105,7 +5111,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	// THE INFLUENCE THAT /etc/pki/product-default/ CERTS HAVE ON THESE TESTS
 	// SINCE THESE TESTS PRE-DATE THE INTRODUCTION OF DEFAULT PRODUCT CERTS.
 	@BeforeClass(groups = "setup")
-	@BeforeGroups(groups = "setup", value = { "UpdateWithNoInstalledProducts" }, enabled = true)
 	public void backupProductDefaultCerts() {
 		log.info(
 				"This test class was developed before the addition of /etc/pki/product-default/ certs (Bug 1123029).  Therefore, let's back them up before running this test class.");
