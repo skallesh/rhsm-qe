@@ -5111,7 +5111,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				"This test class was developed before the addition of /etc/pki/product-default/ certs (Bug 1123029).  Therefore, let's back them up before running this test class.");
 		for (File productCertFile : clienttasks.getCurrentProductCertFiles()) {
 			if (productCertFile.getPath().startsWith(clienttasks.productCertDefaultDir)) {
-				client.runCommandAndWait("mv " + productCertFile + " " + productCertFile + ".bak");
+				client.runCommandAndWait(
+						"mv " + clienttasks.productCertDefaultDir + " " + clienttasks.productCertDefaultDir + ".bak");
 			}
 		}
 	}
@@ -5124,6 +5125,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		client.runCommandAndWait("ls -1 " + clienttasks.productCertDefaultDir + "/*.bak");
 		String lsBakFiles = client.getStdout().trim();
 		if (!lsBakFiles.isEmpty()) {
+			log.info("restoring the default product cert files");
 			for (String lsFile : Arrays.asList(lsBakFiles.split("\n"))) {
 				client.runCommandAndWait("mv " + lsFile + " " + lsFile.replaceFirst("\\.bak$", ""));
 			}
