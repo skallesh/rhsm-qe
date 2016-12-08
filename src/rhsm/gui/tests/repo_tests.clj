@@ -20,6 +20,7 @@
             [rhsm.gui.tasks.candlepin-tasks :as ctasks]
             [clojure.core.match :as match]
             [rhsm.errors.classification :as erc]
+            [rhsm.errors.exceptions :as exc]
             rhsm.gui.tasks.ui)
   (:import [org.testng.annotations
             BeforeClass
