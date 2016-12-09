@@ -2841,16 +2841,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	public void EmptyReposListForFutureSubscription() throws JSONException, Exception {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
 				null, (String) null, null, null, null, true, false, null, null, null);
+		clienttasks.autoheal(null, null, true, null, null, null);
 		DateFormat yyyy_MM_dd_DateFormat = new SimpleDateFormat("yyyy-MM-dd");
 		Calendar nextYear = new GregorianCalendar();
 		nextYear.add(Calendar.YEAR, 1);
-		nextYear.add(Calendar.DATE, -7); // one week less than one year
+		nextYear.add(Calendar.DATE, 1); // one day after a year
 		String onDateToTest = yyyy_MM_dd_DateFormat.format(nextYear.getTime());
 		List<String> subscriptionPoolIds = new ArrayList<String>();
-		for (SubscriptionPool subscription : clienttasks.getAvailableFutureSubscriptionsOndate(onDateToTest)) {
-			if (!CandlepinTasks.isPoolAModifier(sm_clientUsername, sm_clientPassword, subscription.poolId,
+		for (SubscriptionPool FutureSubscription : clienttasks.getAvailableFutureSubscriptionsOndate(onDateToTest)) {
+			if (!CandlepinTasks.isPoolAModifier(sm_clientUsername, sm_clientPassword, FutureSubscription.poolId,
 					sm_serverUrl)) {
-				subscriptionPoolIds.add(subscription.poolId);
+				subscriptionPoolIds.add(FutureSubscription.poolId);
 			}
 		}
 		clienttasks.subscribe(null, null, subscriptionPoolIds, null, null, null, null, null, null, null, null, null);
