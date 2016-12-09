@@ -38,7 +38,7 @@ import rhsm.data.SubscriptionPool;
 public class SKULevelContentOverrideTests extends SubscriptionManagerCLITestScript {
 
 	@Test(description = "Verify content can be overriden at SKU level,content overriden at sku level can be enabled/disabled by using subscription-manager repos --enable/--disable commands and enabled repo is given prefrence over disabled repo", groups = {
-			"OverrideAtSKULevelTest" }, dataProvider = "getSubscriptions", enabled = true)
+			"OverrideAtSKULevelTest", "blockedByBug-1403160" }, dataProvider = "getSubscriptions", enabled = true)
 	public void OverrideAtSKULevelTest(Object Bugzilla, SubscriptionPool subscriptionpool)
 			throws JSONException, Exception {
 		String resourcePath = null;
