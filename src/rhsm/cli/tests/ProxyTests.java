@@ -1962,7 +1962,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 			ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug(new String[]{"1345962","1119688","755258"}),				sm_clientUsername,	sm_clientPassword,	"bad-org",		null,				null,						null,						sm_noauthproxyHostname,		sm_noauthproxyPort,			"",							"",							Integer.valueOf(70),	null,	oErrMsg,	noauthproxy,	sm_noauthproxyLog,		"Connect"}));
 			ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug(new String[]{"1345962","1119688","755258"}),				sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	noauthproxyUrl,		null,						null,						"bad-proxy",				sm_noauthproxyPort+"0",		"",							"",							Integer.valueOf(0),		null,	null,		noauthproxy,	sm_noauthproxyLog,		"Connect"}));
 			ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug(new String[]{"1345962","1119688","755258"}),				sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	noauthproxyUrl,		"ignored-username",			"ignored-password",			"bad-proxy",				sm_noauthproxyPort+"0",		"bad-username",				"bad-password",				Integer.valueOf(0),		null,	null,		noauthproxy,	sm_noauthproxyLog,		"Connect"}));
-			ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug(new String[]{"1345962","1119688","1176219"}),			sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	"bad-proxy",		null,						null,						sm_noauthproxyHostname,		sm_noauthproxyPort,			"",							"",							Integer.valueOf(69),	null,	"Unable to reach the server at "+hostname+":"+port+prefix,	noauthproxy,	sm_noauthproxyLog,		null}));
+			ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug(new String[]{"1345962","1119688","1176219","1403387"}),	sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	"bad-proxy",		null,						null,						sm_noauthproxyHostname,		sm_noauthproxyPort,			"",							"",							Integer.valueOf(69),	null,	pErrMsg/*DELETEME - THIS WAS A BUG 1403387 "Unable to reach the server at "+hostname+":"+port+prefix*/,	noauthproxy,	sm_noauthproxyLog,		null}));
 			
 		} else if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.9-1")) {	// post commit a695ef2d1da882c5f851fde90a24f957b70a63ad
 			// basic auth proxy test data...
@@ -2208,12 +2208,13 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 			blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 			l.set(0, blockedByBzBug);
 			
-			if (!sm_serverType.equals("katello") && (!nErrMsg.equals(l.get(9))||l.get(9)==null) && clienttasks.isPackageVersion("subscription-manager",">=","1.13.10-1")) {	// post commit 13fe8ffd8f876d27079b961fb6675424e65b9a10 bug 1119688
+//DELETEME	if (!sm_serverType.equals("katello") && (!nErrMsg.equals(l.get(9))||l.get(9)==null) && clienttasks.isPackageVersion("subscription-manager",">=","1.13.10-1")) {	// post commit 13fe8ffd8f876d27079b961fb6675424e65b9a10 bug 1119688
+			if (!sm_serverType.equals("katello") && ((!nErrMsg.equals(l.get(9))&&!pErrMsg.equals(l.get(9)))||l.get(9)==null) && clienttasks.isPackageVersion("subscription-manager",">=","1.13.10-1")) {	// post commit 13fe8ffd8f876d27079b961fb6675424e65b9a10 bug 1119688
 				l.set(7, Integer.valueOf(69));	// exitCode EX_UNAVAILABLE
 				l.set(8,"");
 				l.set(9,"Error: Server does not support environments.");
 			} else 
-		//	if (!sm_serverType.equals("katello") && !l.get(3).equals(sm_clientOrg)) {
+//DELETEME	if (!sm_serverType.equals("katello") && !l.get(3).equals(sm_clientOrg)) {
 			if (!sm_serverType.equals("katello") && (!l.get(1).equals(sm_clientUsername) || !l.get(2).equals(sm_clientPassword) || !l.get(3).equals(sm_clientOrg))) {
 				// subscription-manager environments --username=testuser1 --password=password --org=bad-org
 				// Stdout: This system does not support environments.
@@ -2244,12 +2245,13 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 			blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 			l.set(0, blockedByBzBug);
 			
-			if (!sm_serverType.equals("katello") && (!nErrMsg.equals(l.get(13))||l.get(13)==null) && clienttasks.isPackageVersion("subscription-manager",">=","1.13.10-1")) {	// post commit 13fe8ffd8f876d27079b961fb6675424e65b9a10 bug 1119688
+//DELETEME	if (!sm_serverType.equals("katello") && (!nErrMsg.equals(l.get(13))||l.get(13)==null) && clienttasks.isPackageVersion("subscription-manager",">=","1.13.10-1")) {	// post commit 13fe8ffd8f876d27079b961fb6675424e65b9a10 bug 1119688
+			if (!sm_serverType.equals("katello") && ((!nErrMsg.equals(l.get(13))&&!pErr407Msg.equals(l.get(13)))||l.get(13)==null) && clienttasks.isPackageVersion("subscription-manager",">=","1.13.10-1")) {	// post commit 13fe8ffd8f876d27079b961fb6675424e65b9a10 bug 1119688
 				l.set(11, Integer.valueOf(69));	// exitCode EX_UNAVAILABLE
 				l.set(12,"");
 				l.set(13,"Error: Server does not support environments.");
 			} else 
-		//	if (!sm_serverType.equals("katello") && !l.get(3).equals(sm_clientOrg)) {
+//DELETEME	if (!sm_serverType.equals("katello") && !l.get(3).equals(sm_clientOrg)) {
 			if (!sm_serverType.equals("katello") && (!l.get(1).equals(sm_clientUsername) || !l.get(2).equals(sm_clientPassword) || !l.get(3).equals(sm_clientOrg))) {
 				// subscription-manager environments --username=testuser1 --password=password --org=bad-org --proxy=auto-services.usersys.redhat.com:3128 --proxyuser=redhat --proxypassword=redhat
 				// Stdout: This system does not support environments.
