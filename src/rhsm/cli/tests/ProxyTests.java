@@ -1357,23 +1357,40 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		String command = clienttasks.command+" repos --list --proxy=www.redhat.com";
 		Long timeoutMS = Long.valueOf(8/*min*/*60*1000);	// do not wait any longer than this many milliseconds
 		SSHCommandResult result= client.runCommandAndWait(command, timeoutMS);
-		//	201503301409:07.031 - FINE: ssh root@jsefler-os6.usersys.redhat.com subscription-manager repos --list --proxy=www.redhat.com
-		//	201503301410:07.487 - FINE: Stdout: 
-		//	201503301410:07.487 - FINE: Stderr: Network error, unable to connect to server. Please see /var/log/rhsm/rhsm.log for more information.
-		//	201503301410:07.487 - FINE: ExitCode: 70
-		//            ^^ one minute timeout observed (but I have also seen this take 4m16.286s)
+		
+		
+		// expected results
+		Integer expectedExitCode = new Integer(255);
+		String expectedStdout = nErrMsg;
+		String expectedStderr = "";
+		
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+			 expectedExitCode = new Integer(70);	// EX_SOFTWARE 
+		}
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.9-1")) {	// post commit a695ef2d1da882c5f851fde90a24f957b70a63ad
+			//	201503301409:07.031 - FINE: ssh root@jsefler-os6.usersys.redhat.com subscription-manager repos --list --proxy=www.redhat.com
+			//	201503301410:07.487 - FINE: Stdout: 
+			//	201503301410:07.487 - FINE: Stderr: Network error, unable to connect to server. Please see /var/log/rhsm/rhsm.log for more information.
+			//	201503301410:07.487 - FINE: ExitCode: 70
+			//            ^^ one minute timeout observed (but I have also seen this take 4m16.286s)
+			expectedExitCode = new Integer(70);	// EX_SOFTWARE
+			expectedStdout = "";
+			expectedStderr = nErrMsg;
+		}
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.17.6-1")) {	// post commit 7ce6801fc1cc38edcdeb75dfb5f0d1f8a6398c68	1176219: Stop before cache is returned when using bad proxy options	// Bug 1301215 - The cmd "repos --list --proxy" with a fake proxy server url will not stop running.
+			//	201612121142:43.748 - FINE: ssh root@jsefler-rhel6.usersys.redhat.com subscription-manager repos --list --proxy=www.redhat.com
+			//	201612121142:54.320 - FINE: Stdout: 
+			//	201612121142:54.321 - FINE: Stderr: Proxy connection failed, please check your settings.
+			//	201612121142:54.321 - FINE: ExitCode: 69
+			expectedExitCode = new Integer(69);	// EX_UNAVAILABLE
+			expectedStdout = "";
+			expectedStderr = pErrMsg;
+		} 
 		
 		// assert results
-		Integer expectedExitCode = new Integer(255);
-		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) expectedExitCode = new Integer(70);	// EX_SOFTWARE // post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
-		Assert.assertEquals(result.getExitCode(), expectedExitCode, "ExitCode from command '"+command+"' with a timeout of '"+timeoutMS+"' MS.");
-		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.9-1")) {	// post commit a695ef2d1da882c5f851fde90a24f957b70a63ad
-			Assert.assertEquals(result.getStderr().trim(), nErrMsg, "Stderr from command '"+command+"' with a timeout of '"+timeoutMS+"' MS.");
-			Assert.assertEquals(result.getStdout().trim(), "", "Stdout from command '"+command+"' with a timeout of '"+timeoutMS+"' MS.");
-		} else {
-			Assert.assertEquals(result.getStdout().trim(), nErrMsg, "Stdout from command '"+command+"' with a timeout of '"+timeoutMS+"' MS.");
-			Assert.assertEquals(result.getStderr().trim(), "", "Stderr from command '"+command+"' with a timeout of '"+timeoutMS+"' MS.");
-		}
+		Assert.assertEquals(result.getExitCode(), expectedExitCode, "ExitCode from command '"+command+"' with a timeout of '"+timeoutMS+"' MS.");	
+		Assert.assertEquals(result.getStdout().trim(), expectedStdout, "Stdout from command '"+command+"' with a timeout of '"+timeoutMS+"' MS.");
+		Assert.assertEquals(result.getStderr().trim(), expectedStderr, "Stderr from command '"+command+"' with a timeout of '"+timeoutMS+"' MS.");
 	}
 	
 	
