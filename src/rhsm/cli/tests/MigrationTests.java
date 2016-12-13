@@ -2276,7 +2276,12 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	@AfterGroups(groups="setup",value={"RhnMigrateClassicToRhsmWithRemoveRhnPackages_Test"})
 	public void installRhnClassicPackages() throws IOException, JSONException {
 		if (clienttasks==null) return;
+		
+		// install the rhn classic packages
 		clienttasks.installReleasedRhnClassicPackages(sm_yumInstallOptions, legacyRHNClassicPackages);
+		
+		//  also need to restore the up2date configurations
+		updateSslCaCertConfigInRhnUp2dateFile();
 	}
 	
 	
@@ -2305,6 +2310,11 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			Assert.assertTrue(clienttasks.isPackageInstalled(pkg),"Required package '"+pkg+"' is installed for MigrationTests.");
 		}
 		
+		// make sure we have the RHN-ORG-TRUSTED-SSL-CERT for the rhn/satellite server
+		updateSslCaCertConfigInRhnUp2dateFile();
+	}
+	public void updateSslCaCertConfigInRhnUp2dateFile() {
+
 		// make sure we have the RHN-ORG-TRUSTED-SSL-CERT for the rhn/satellite server
 		/*
 		 * 	1. Set automation parameters:
