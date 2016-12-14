@@ -813,7 +813,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 									clienttasks.getCurrentlyInstalledProducts());
 					Assert.assertEquals(AfterAttachingFutureSubscription.status, "Partially Subscribed",
 							"Verified that installed product is partially subscribed before attaching a future subscription");
-					clienttasks.subscribeToSubscriptionPool(FutureSubscriptionPools);
+					clienttasks.subscribe(null, null, FutureSubscriptionPools.poolId, null, null, "1", null, null, null,
+							null, null, null);
 
 					break;
 				}
@@ -3552,9 +3553,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,
 				consumerId);
 		String expiringPoolId = createTestPool(-60 * 24, 1);
-		clienttasks.subscribe(null, null, expiringPoolId, null, null, null, null, null, null, null, null, null);
-
 		Calendar c1 = new GregorianCalendar();
+		clienttasks.subscribe(null, null, expiringPoolId, null, null, null, null, null, null, null, null, null);
 		Calendar c2 = new GregorianCalendar();
 		// wait for the pool to expire
 		// sleep(endingMinutesFromNow*60*1000);
@@ -3571,6 +3571,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				.findAllInstancesWithMatchingFieldFromList("isActive", Boolean.FALSE, consumedProductSubscriptions);
 		Assert.assertEquals(expiredProductSubscriptions.size(), 1,
 				"Found one expired entitlement (indicated by Active:False) among the list of consumed subscriptions.");
+
 		SSHCommandResult result = clienttasks.unsubscribe(true, (BigInteger) null, null, null, null, null);
 		String expected = String.format(
 				"%d subscriptions removed at the server.\n%d local certificates have been deleted.",
@@ -4113,26 +4114,13 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 
 		InstalledProduct productCertBeforeHealing = ProductCert.findFirstInstanceWithMatchingFieldFromList("status",
 				"Expired", clienttasks.getCurrentlyInstalledProducts());
+		Assert.assertEquals(productCertBeforeHealing.status, "Expired");
 
-		if (!(productCertBeforeHealing.status.equals("Expired"))) {
-			throw new SkipException("No expired products are available for testing");
-		} else {
-			clienttasks.run_rhsmcertd_worker(true);
-			InstalledProduct productCertAfterHealing = ProductCert.findFirstInstanceWithMatchingFieldFromList(
-					"productId", productCertBeforeHealing.productId, clienttasks.getCurrentlyInstalledProducts());
-			Assert.assertEquals(productCertAfterHealing.status, "Subscribed");
-			/*
-			 * for (InstalledProduct product :
-			 * clienttasks.getCurrentlyInstalledProducts()) {
-			 *
-			 * for (int i = 0; i < Expiredproductid.size(); i++) {
-			 *
-			 * if (product.productId.equals(Expiredproductid.get(i)))
-			 * Assert.assertEquals(product.status, "Subscribed");
-			 *
-			 * } }
-			 */
-		}
+		clienttasks.run_rhsmcertd_worker(true);
+		InstalledProduct productCertAfterHealing = ProductCert.findFirstInstanceWithMatchingFieldFromList("productId",
+				productCertBeforeHealing.productId, clienttasks.getCurrentlyInstalledProducts());
+		Assert.assertEquals(productCertAfterHealing.status, "Subscribed");
+
 	}
 
 	/**
@@ -5087,12 +5075,10 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				null, (String) null, null, null, null, true, false, null, null, null);
 		List<SubscriptionPool> pools = clienttasks.getAvailableSubscriptionsMatchingInstalledProducts();
 		// int i = randomGenerator.nextInt(pools.size());
-		for (SubscriptionPool availablepools : pools) {
-			randomAvailableProductId = availablepools.productId;
-			providedProduct = CandlepinTasks.getPoolProvidedProductIds(sm_serverAdminUsername, sm_serverAdminPassword,
-					sm_serverUrl, availablepools.poolId);
-			break;
-		}
+		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size()));
+		randomAvailableProductId = pool.productId;
+		providedProduct = CandlepinTasks.getPoolProvidedProductIds(sm_serverAdminUsername, sm_serverAdminPassword,
+				sm_serverUrl, pool.poolId);
 
 	}
 
