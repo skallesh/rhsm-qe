@@ -89,7 +89,7 @@
       (skip-if-bz-open "922806")
       (skip-if-bz-open "1016643" (= rhel-version-major "7"))
       (when (= rhel-version-major "7") (base/startup nil)))
-    (assert (= 1 (-> (run-command (format "which %s" (@config :firstboot-binary-path))) :exitcode))
+    (assert (= 0 (-> (run-command (format "which %s" (@config :firstboot-binary-path))) :exitcode))
             "No firstboot binary found")
     ;; new rhsm and classic have to be totally clean for this to run
     (run-command "subscription-manager clean")
