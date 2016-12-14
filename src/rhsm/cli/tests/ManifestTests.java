@@ -394,8 +394,26 @@ public class ManifestTests extends SubscriptionManagerCLITestScript {
 			Assert.assertTrue(entitlementCert.file.toString().endsWith(manifestSubscription.certificateFile),"Subscription Certificate File exists");
 			Assert.assertEquals(manifestSubscription.certificateVersion,entitlementCert.version, "Subscription Certificate Version value comes from entitlementCert.version");
 			List<String> actualProvidedProducts = manifestSubscription.providedProducts;
-			List<String> expectedProvidedProducts = new ArrayList<String>(); for (ProductNamespace productNamespace : entitlementCert.productNamespaces) expectedProvidedProducts.add(String.format("%s: %s", productNamespace.id, productNamespace.name));
-			Assert.assertTrue(actualProvidedProducts.containsAll(expectedProvidedProducts)&&expectedProvidedProducts.containsAll(actualProvidedProducts), "Manifest Subscription '"+manifestSubscription.name+"' Provided Products "+actualProvidedProducts+" contains all entitlementCert.productNamespaces=>\"id: name\": "+expectedProvidedProducts);
+			List<String> actualDerivedProducts = manifestSubscription.derivedProducts;
+			if (false) {
+				// This assertion was valid prior to the invention of data center skus that provide no products but do provide derived products to be added to a sub-pool
+				List<String> expectedProvidedProducts = new ArrayList<String>(); for (ProductNamespace productNamespace : entitlementCert.productNamespaces) expectedProvidedProducts.add(String.format("%s: %s", productNamespace.id, productNamespace.name));
+				Assert.assertTrue(actualProvidedProducts.containsAll(expectedProvidedProducts)&&expectedProvidedProducts.containsAll(actualProvidedProducts), "Manifest Subscription '"+manifestSubscription.name+"' Provided Products "+actualProvidedProducts+" contains all entitlementCert.productNamespaces=>\"id: name\": "+expectedProvidedProducts);
+			} else {
+				// Instead, let's assume the following assertion is correct... TODO confirm with dev
+				// Note: this assertion can only be tested against manifests with data center skus using subscription-manager-1.18.6-1 and higher
+				List<String> expectedProducts = new ArrayList<String>(); for (ProductNamespace productNamespace : entitlementCert.productNamespaces) expectedProducts.add(String.format("%s: %s", productNamespace.id, productNamespace.name));
+				if (clienttasks.isPackageVersion("subscription-manager",">=","1.18.6-1")) { // subscription-manager commit 23c149907852767e51e7ddea8edf506697827203  Bug 1388207 - [RFE] rct cat-manifest command should show derived products
+					List<String> actualProvidedAndDerivedProducts = new ArrayList<String>();
+					for (String product : actualProvidedProducts) if (!actualProvidedAndDerivedProducts.contains(product)) actualProvidedAndDerivedProducts.add(product);
+					for (String product : actualDerivedProducts) if (!actualProvidedAndDerivedProducts.contains(product)) actualProvidedAndDerivedProducts.add(product);
+					Assert.assertTrue(actualProvidedAndDerivedProducts.containsAll(expectedProducts)&&expectedProducts.containsAll(actualProvidedAndDerivedProducts), "The union of all Provided Products "+actualProvidedProducts+" and Derived Products "+actualDerivedProducts+" from manifest Subscription '"+manifestSubscription.name+"' contains all entitlementCert.productNamespaces=>\"id: name\": "+expectedProducts);
+				} else {
+					log.info("Cannot assert that the union of all provided and derived products from manifest Subscription '"+manifestSubscription.name+"' are represented in this entitlementCert.productNamespaces=>\"id: name\": "+expectedProducts+" because RFE Bug 1388207 is not present in this version of subscription-manager.");
+					log.info("We can only assert that the provided products from manifest Subscription '"+manifestSubscription.name+"' are a subset of this entitlementCert.productNamespaces=>\"id: name\": "+expectedProducts+" because RFE Bug 1388207 is not present in this version of subscription-manager to account for derived products.");
+					Assert.assertTrue(expectedProducts.containsAll(actualProvidedProducts), "The Provided Products "+actualProvidedProducts+" from manifest Subscription '"+manifestSubscription.name+"' are a subset of all entitlementCert.productNamespaces=>\"id: name\": "+expectedProducts);
+				}
+			}
 			List<String> actualContentSets = new ArrayList<String>(); if (manifestSubscription.contentSets!=null) actualContentSets.addAll(manifestSubscription.contentSets);
 			List<String> expectedContentSets = new ArrayList<String>();
 			for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) expectedContentSets.add(contentNamespace.downloadUrl);
@@ -420,6 +438,7 @@ public class ManifestTests extends SubscriptionManagerCLITestScript {
 		
 		for (File manifestFile : manifestFiles) {
 			Set<String> bugIds = new HashSet<String>();
+///*debugTesting */ if (!manifestFile.getName().equals("manifest_RH00001.zip")) continue;
 			
 			// Bug 913187 - rct cat-manifest throws Traceback: KeyError: 'webAppPrefix'
 			if (manifestFile.getName().equals("stageSamTest20Nov2011.zip")) bugIds.add("913187");
@@ -438,6 +457,9 @@ public class ManifestTests extends SubscriptionManagerCLITestScript {
 			
 			// Bug 1005430 - rct cat-manifest fails to display all the provided products from the embedded entitlement cert
 			if (manifestFile.getName().equals("manifest_SER0406.zip")) bugIds.add("1005430");
+			
+			// Bug 1388207 - [RFE] rct cat-manifest command should show derived products
+			//TODO UNCOMMENT WHEN RFE IS ON_QA if (manifestFile.getName().equals("manifest_RH00001.zip")) bugIds.add("1388207");
 			
 			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 			ll.add(Arrays.asList(new Object[] {blockedByBzBug, manifestFile}));				

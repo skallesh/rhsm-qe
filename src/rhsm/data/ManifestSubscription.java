@@ -35,6 +35,7 @@ public class ManifestSubscription extends AbstractCommandLineData {
 	public String certificateFile;
 	public String certificateVersion;
 	public List<String> providedProducts;
+	public List<String> derivedProducts;
 	public List<String> contentSets;
 
 
@@ -61,6 +62,7 @@ public class ManifestSubscription extends AbstractCommandLineData {
 		if (certificateFile != null)	string += String.format(" %s='%s'", "certificateFile",certificateFile);
 		if (certificateVersion != null)	string += String.format(" %s='%s'", "certificateVersion",certificateVersion);
 		if (providedProducts != null)	string += String.format(" %s='%s'", "providedProducts",providedProducts);
+		if (derivedProducts != null)	string += String.format(" %s='%s'", "derivedProducts",derivedProducts);
 		if (contentSets != null)		string += String.format(" %s='%s'", "contentSets",contentSets);
 		
 		return string.trim();
@@ -176,6 +178,33 @@ public class ManifestSubscription extends AbstractCommandLineData {
 		//		/content/beta/rhel/power/5/$releasever/$basearch/resilientstorage/os
 		//
 		
+		// After subscription-manager commit 23c149907852767e51e7ddea8edf506697827203 // Bug 1388207 - [RFE] rct cat-manifest command should show derived products
+		//	Subscription:
+		//		Name: Red Hat Enterprise Linux for Virtual Datacenters, Premium
+		//		Quantity: 5
+		//		Created: 2016-12-14T20:26:21.000+0000
+		//		Start Date: 2016-05-28T04:00:00.000+0000
+		//		End Date: 2017-05-28T03:59:59.000+0000
+		//		Service Level: Premium
+		//		Service Type: L1-L3
+		//		Architectures: 
+		//		SKU: RH00001
+		//		Contract: REDACTED
+		//		Order: REDACTED
+		//		Account: REDACTED
+		//		Virt Limit: unlimited
+		//		Requires Virt-who: True
+		//		Entitlement File: export/entitlements/8a99f98258d833e50158ff03b06a2dae.json
+		//		Certificate File: export/entitlement_certificates/6103919035188904273.pem
+		//		Certificate Version: 3.2
+		//		Provided Products:
+		//		Derived Products:
+		//			69: Red Hat Enterprise Linux Server
+		//			70: Red Hat Enterprise Linux Server - Extended Update Support
+		//		Content Sets:
+		//			/content/beta/rhel/as/4/4AS/$basearch/debug
+		//			/content/beta/rhel/as/4/4AS/$basearch/iso
+		//			/content/beta/rhel/as/4/4AS/$basearch/os
 		Map<String,String> regexes = new HashMap<String,String>();
 /*		
 		// abstraction field				regex pattern (with a capturing group) Note: the captured group will be trim()ed
@@ -225,8 +254,10 @@ public class ManifestSubscription extends AbstractCommandLineData {
 		regexes.put("certificateFile",		"^\\s+Certificate File: (.+)");
 		regexes.put("certificateVersion",	"^\\s+Certificate Version: (.+)");
 //		regexes.put("providedProducts",		"^\\s+Provided Products:(.*(\\n.*?)+)^\\s+Content Sets:");	// assumes "Content Sets:" is the next group	// DOES NOT WORK WHEN USING --no-content
-		regexes.put("providedProducts",		"^\\s+Provided Products:(.*(\\n.*?)*)(?:^\\s+Content Sets:|$)");	// assumes "Content Sets:" or $ is the next group
+//		regexes.put("providedProducts",		"^\\s+Provided Products:(.*(\\n.*?)*)(?:^\\s+Content Sets:|$)");	// assumes "Content Sets:" or $ is the next group		// DOES NOT WORK AFTER Bug 1388207 - [RFE] rct cat-manifest command should show derived products	// commit 23c149907852767e51e7ddea8edf506697827203	// pull request https://github.com/candlepin/subscription-manager/pull/1518
+		regexes.put("providedProducts",		"^\\s+Provided Products:(.*(\\n.*?)*)(?:^\\s+Derived Products:|^\\s+Content Sets:|$)");	// assumes "Derived Products:" or "Content Sets:" or $ is the next group	// RFE 1388207 commit 23c149907852767e51e7ddea8edf506697827203	// pull request https://github.com/candlepin/subscription-manager/pull/1518
 //		regexes.put("providedProducts",		"^\\s+Provided Products:(.*(\\n.*?)*)(?:[\\D]+?:|$)");	// assumes "non-digit Label:" or $ is the next group	// does not work because the final provided product name get's lumped with next "non-digit Label:"  could try to make \D not match new line char
+		regexes.put("derivedProducts",		"^\\s+Derived Products:(.*(\\n.*?)*)(?:^\\s+Content Sets:|$)");	// assumes "Content Sets:" or $ is the next group
 		regexes.put("contentSets",			"^\\s+Content Sets:(.*(\\n.*?)+)(?:[\\s\\w]+:|$)");	// assumes "Any Label:" or $ is the next group
 
 		
