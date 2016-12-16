@@ -578,11 +578,19 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 		List<String> realTimeList;
 		String expectedStderr = "Unable to verify server's identity: timed out";
 		if (clienttasks.redhatReleaseX.equals("6")) expectedStderr = "Unable to verify server's identity:";
-/* NOT YET SURE IF WE WANT THIS
 		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.18.4-1")) { // post commit b0e877cfb099184f9bab1b681a41df9bdd2fb790 side affect from m2crypto changes
-			expectedStderr = "System certificates corrupted. Please reregister.";
+			expectedStderr = "System certificates corrupted. Please reregister.";	
+			// Note: This new stderr is not the greatest message; however if you follow the instructions and try to reregister, you will eventually hit the original stderr....
+			//	[root@jsefler-rhel6 ~]# subscription-manager version 
+			//	System certificates corrupted. Please reregister.
+			//	[root@jsefler-rhel6 ~]# subscription-manager register --force
+			//	Registering to: auto-services.usersys.redhat.com:8883/candlepin
+			//	Username: testuser1
+			//	Password: 
+			//	Unable to verify server's identity: 
+			//	[root@jsefler-rhel6 ~]# 
 		}
-*/
+		
 		// test the default server_time value of 180 seconds
 		
 		//	[root@jsefler-rhel7 ~]# time subscription-manager version 
@@ -603,10 +611,12 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 		command = "time "+clienttasks.versionCommand(null, null, null);
 		sshCommandTimeout = new Long(200); // seconds	// default server_timeout is 180 seconds
 		result = client.runCommandAndWait(command, Long.valueOf(sshCommandTimeout *1000));
+		clienttasks.logRuntimeErrors(result);
 		realTimeList = getSubstringMatches(result.getStderr(), "real\\s+.*");	// extract the matches to: real	3m0.568s
 		if (realTimeList.size()!=1) Assert.fail("Failed to find the real time it took to run command '"+command+"'.  (The automated test gave up waiting for the server to reply after '"+sshCommandTimeout+"' seconds.  Is the server hung?)");
 		Assert.assertTrue(realTimeList.get(0).replaceFirst("real\\s+", "").startsWith("3m0."),"Testing server_timeout="+serverDefaultTimeout+" seconds");	// using startsWith() to tolerate fractional seconds
 		Assert.assertTrue(result.getStderr().startsWith(expectedStderr),"When a server_timeout occurs, subscription-manager should report '"+expectedStderr+"'.");
+
 
 		// test a server_time value of N seconds
 		for (String server_timeout : Arrays.asList("4","10")) {	// seconds
