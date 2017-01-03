@@ -16,6 +16,13 @@ Historical Bugzillas related to FIPS:
     Bug 1045329 - subscription-manager can't work in fips mode.
     Bug 1158836 - Can't log into the GUI desktop after enable the FIPS mode in RHEL7.1
 
+
+FIPS Support (from omoris; see http://wiki.test.redhat.com/BaseOs/Security/FIPS#Past):
+    RHEL < 6.2:             none
+    RHEL >= 6.2  && < 7.0:  x86_64 and ppc64 (i386 non-officially)
+    RHEL >= 7.0 && < 7.1.z: officially nothing
+    RHEL >= 7.1.z:          x86_64, ppc64le, s390x (ppc64 non-officially)
+
 -->
 
 
