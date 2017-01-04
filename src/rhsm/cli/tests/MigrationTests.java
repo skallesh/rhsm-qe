@@ -3386,13 +3386,17 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		// Note: To avoid redundant prompting for credentials, rhn-migrate-classic-to-rhsm will NOT prompt for rhsm Username/Password/Org when the rhsm server matches subscription\.rhn\.(.+\.)*redhat\.com
 		// This causes a testing problem when migrating from a satellite server to rhsm hosted - adding a valid --serverurl to the options is a good workaround
 		String rhsmServerUrlOption="";
-		if (!doesStringContainMatches(sm_rhnHostname, "rhn\\.(.+\\.)*redhat\\.com")) {	// if (sm_rhnHostname.startsWith("http") { 	// indicates that we are migrating from a non-hosted rhn server - as opposed to rhn.code.stage.redhat.com (stage) or rhn.redhat.com (production)
-			if (doesStringContainMatches(sm_serverHostname, "subscription\\.rhn\\.(.+\\.)*redhat\\.com")) {
+//		if (sm_rhnHostname.startsWith("http") { 	// indicates that we are migrating from a non-hosted rhn server - as opposed to rhn.code.stage.redhat.com (stage) or rhn.redhat.com (production)
+//		if (!doesStringContainMatches(sm_rhnHostname, "rhn\\.(.+\\.)*redhat\\.com")) {	// indicates that we are migrating from a non-hosted rhn server - as opposed to rhn.code.stage.redhat.com (stage) or rhn.redhat.com (production)
+		if (!doesStringContainMatches(sm_rhnHostname, "(rhn|rhsm)\\.(.+\\.)*redhat\\.com")) {	// indicates that we are migrating from a non-hosted rhn server - as opposed to rhn.code.stage.redhat.com (stage) or rhsm.stage.redhat.com (stage) or rhn.redhat.com (production) or rhsm.redhat.com (production after RFE 1126501)
+//			if (doesStringContainMatches(sm_serverHostname, "subscription\\.rhn\\.(.+\\.)*redhat\\.com")) {
+			if (doesStringContainMatches(sm_serverHostname, "subscription\\.(rhn|rhsm)\\.(.+\\.)*redhat\\.com")) {
 				// force a valid --serverurl
 				rhsmServerUrlOption = " --serverurl="+"https://"+originalServerHostname+":"+originalServerPort+originalServerPrefix;
 			}
 		} else {// we are migrating from rhn hosted...
-			if (doesStringContainMatches(sm_serverHostname, "subscription\\.rhn\\.(.+\\.)*redhat\\.com")) {
+//			if (doesStringContainMatches(sm_serverHostname, "subscription\\.rhn\\.(.+\\.)*redhat\\.com")) {
+			if (doesStringContainMatches(sm_serverHostname, "subscription\\.(rhn|rhsm)\\.(.+\\.)*redhat\\.com")) {
 				// and we are migrating to rhsm hosted...
 				// hence we will not be prompted for rhsm credentials,
 				// so don't pass them to the rhn-migrate-classic-to-rhsm.tcl script or else you won't get the expected rhn-migrate-classic-to-rhsm exit code because the tcl script will be prematurely exited without getting the actual exit code from rhn-migrate-classic-to-rhsm.
