@@ -19,5 +19,6 @@
                  :else                 :no-throw)
           (match :throw-as-skipped (throw+ (SkipException.
                                             (format "Trapped exception: %s" e#)))
-                 :re-throw         (throw+ e#))))))
+                 :re-throw         (throw+ e#)
+                 :no-throw         (log/info (format "no exception needed. Just for info: %s" e#)))))))
 
