@@ -44,7 +44,9 @@
   (run-command (str "rm -f " systemid)))
 
 (defn ^{Test {:groups ["interop"
-                       "tier2"]}}
+                       "tier2"]}
+        TestDefinition {:projectID [`DefTypes$Project/RHEL6]
+                        :testCaseID ["RHEL6-36503"]}}
   check_warning
   "Tests that a warning message is shown when registered to classic and launching the app."
   [_]
@@ -54,12 +56,12 @@
   (verify (tasks/ui exists? :warning-dialog "*"))
   (kill-app))
 
-(defn ^{Test {:groups           ["interop"
-                                 "tier1"
-                                 "blockedByBug-667991"]
-              :dependsOnMethods ["check_warning"]}
-        ;TestDefinition {:projectID [`DefTypes$Project/RHEL6]}
-        }
+(defn ^{Test           {:groups           ["interop"
+                                           "tier1"
+                                           "blockedByBug-667991"]
+                        :dependsOnMethods ["check_warning"]}
+        TestDefinition {:projectID [`DefTypes$Project/RHEL6]}
+                        :testCaseID ["RHEL6-37686"]}
   check_warning_ok
   "Tests that the RHN Classic warning can be cleared and that the main winow is still open."
   [_]
@@ -73,7 +75,9 @@
 (defn ^{Test {:groups ["interop"
                        "tier2"
                        "blockedByBug-667991"]
-              :dependsOnMethods ["check_warning"]}}
+              :dependsOnMethods ["check_warning"]}
+        TestDefinition {:projectID [`DefTypes$Project/RHEL6]
+                        :testCaseID ["RHEL6-37685"]}}
   check_warning_cancel
   "Tests the cancel button of the RHN Classic warning and that the main window closes."
   [_]
@@ -83,10 +87,12 @@
   (verify (bool (tasks/ui waittillwindownotexist :main-window 30)))
   (kill-app))
 
-(defn ^{Test {:groups           ["interop"
-                                 "tier1"
-                                 "blockedByBug-667991"]
-              :dependsOnMethods ["check_warning" "check_warning_ok" "check_warning_cancel"]}}
+(defn ^{Test           {:groups           ["interop"
+                                           "tier1"
+                                           "blockedByBug-667991"]
+                        :dependsOnMethods ["check_warning" "check_warning_ok" "check_warning_cancel"]}
+        TestDefinition {:projectID [`DefTypes$Project/RHEL6]
+                        :testCaseID ["RHEL6-37687"]}}
   check_no_warning
   "Asserts that no warning is shown when the app is started without the presence of a systemid file."
   [_]

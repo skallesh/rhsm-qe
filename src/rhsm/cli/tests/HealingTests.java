@@ -73,7 +73,7 @@ public class HealingTests extends SubscriptionManagerCLITestScript {
 		jsonConsumer = CandlepinTasks.setAutohealForConsumer(sm_clientUsername,sm_clientPassword, sm_serverUrl, consumerId,true);
 		Assert.assertTrue(jsonConsumer.getBoolean("autoheal"), "A consumer's autoheal attribute value can be toggled on (expected value=true).");
 	}
-	
+
 	@TestDefinition(projectID={Project.RHEL6, Project.RedHatEnterpriseLinux7},
 	                testCaseID={"RHEL6-20096", "RHEL7-51103"})
 	@Test(	description="using autoheal module, a consumer's autoheal attribute can be toggled off/on",
@@ -109,7 +109,7 @@ public class HealingTests extends SubscriptionManagerCLITestScript {
 		result = clienttasks.autoheal(true, null, null, null, null, null);
 		Assert.assertEquals(result.getStdout().trim(), "Auto-attach preference: enabled", "Stdout from the auto-attach --show.");
 	}
-	
+
 	@TestDefinition(projectID={Project.RHEL6, Project.RedHatEnterpriseLinux7},
 	                testCaseID={"RHEL6-21582", "RHEL7-51499"})
 	@Test(	description="run auto-attach module without being registered",

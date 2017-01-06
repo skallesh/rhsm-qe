@@ -24,10 +24,19 @@
             Test
             DataProvider
             AfterClass]
+           <<<<<<< Updated upstream
            org.testng.SkipException
            [com.github.redhatqe.polarize.metadata TestDefinition]
            [com.github.redhatqe.polarize.metadata DefTypes$Project]
-           [com.github.redhatqe.polarize.metadata DefTypes$Importance]))
+           [com.github.redhatqe.polarize.metadata DefTypes$Importance DefTypes DefTypes$PosNeg]))
+=======
+            org.testng.SkipException
+           [com.github.redhatqe.polarize.metadata TestDefinition]
+           [com.github.redhatqe.polarize.metadata DefTypes$Project]))
+
+(def PLATTP DefTypes$Project/PLATTP)
+(println "PLATTP " PLATTP)
+>>>>>>> Stashed changes
 
 (def servicelist (atom {}))
 (def productlist (atom {}))
@@ -70,7 +79,9 @@
 (defn ^{Test {:groups ["search_status"
                        "tier3"
                        "blockedByBug-707041"
-                       "blockedByBug-1248821"]}}
+                       "blockedByBug-1248821"]}
+        TestDefinition {:projectID [`DefTypes$Project/RHEL6]
+                        :testCaseID ["RHEL6-38769"]}}
   date_picker_traceback
   "Asserts that the date chooser does not throw a traceback."
   [_]
@@ -127,12 +138,12 @@
               (if (bool (tasks/ui guiexist :contract-selection-dialog))
                 (tasks/ui click :cancel-contract-selection)))))))))
 
-(defn ^{Test {:groups ["search_status"
-                       "tier3"
-                       "check_subscription_type_all_available"]
-              :dataProvider "all-subscriptions"}
+(defn ^{Test           {:groups ["search_status"
+                                 "tier3"
+                                 "check_subscription_type_all_available"]
+                        :dataProvider "all-subscriptions"}
         TestDefinition {:projectID [`DefTypes$Project/RHEL6]
-                        :testCaseID ["RHEL6-20132"]
+                        :testCaseID ["RHEL6-38767"]
                         :importance `DefTypes$Importance/MEDIUM}}
   check_subscription_type_all_subscriptions
   "Checks for subscription type in all available subscriptions"
@@ -191,10 +202,12 @@
           (run-command "subscription-manager facts --update")))
       (tasks/unsubscribe_all))))
 
-(defn ^{Test {:groups ["search_status"
-                       "tier3"
-                       "blockedByBug-801434"
-                       "blockedByBug-707041"]}}
+(defn ^{TestDefinition {:projectID [`DefTypes$Project/RHEL6]
+                        :testCaseID ["RHEL6-38766"]}
+        Test           {:groups ["search_status"
+                                 "tier3"
+                                 "blockedByBug-801434"
+                                 "blockedByBug-707041"]}}
   check_date_chooser_traceback
   "Checks if there is any traceback in the logs after clicking on calendar icon"
   [_]
@@ -211,11 +224,13 @@
       (verify (not (substring? "Traceback" output))))
     (finally (tasks/restart-app))))
 
-(defn ^{Test {:groups ["search_status"
-                       "tier3"
-                       "blockedByBug-704408"
-                       "blockedByBug-801434"]
-              :dependsOnMethods ["check_date_chooser_traceback"]}}
+(defn ^{TestDefinition {:projectID [`DefTypes$Project/RHEL6]
+                        :testCaseID ["RHEL6-38773"]}
+        Test           {:groups ["search_status"
+                                 "tier3"
+                                 "blockedByBug-704408"
+                                 "blockedByBug-801434"]
+                        :dependsOnMethods ["check_date_chooser_traceback"]}}
   check_blank_date_click
   "Tests the behavior when the date search field is blank and you click to another area."
   [_]
@@ -233,7 +248,9 @@
     ;; verify that today's date was filled in here...
     (finally (tasks/restart-app))))
 
-(defn ^{Test {:groups ["search_status"
+(defn ^{TestDefinition {:projectID [`DefTypes$Project/RHEL6]
+                        :testCaseID ["RHEL6-38765"]}
+        Test {:groups ["search_status"
                        "tier3"
                        "blockedByBug-688454"
                        "blockedByBug-704408"]}}
@@ -254,10 +271,12 @@
     (verify (= "" (tasks/ui gettextvalue :date-entry)))
     (finally (tasks/restart-app))))
 
-(defn ^{Test {:groups ["search_status"
-                       "tier3"
-                       "blockedByBug-858773"]
-              :dataProvider "installed-products"}}
+(defn ^{Test           {:groups       ["search_status"
+                                       "tier3"
+                                       "blockedByBug-858773"]
+                        :dataProvider "installed-products"}
+        TestDefinition {:projectID [`DefTypes$Project/RHEL6]
+                        :testCaseID ["RHEL6-38770"]}}
   filter_by_product
   "Tests that the product filter works when searching."
   [_ product]
@@ -290,9 +309,11 @@
             (tasks/ui click :close-filters))
           (tasks/search))))))
 
-(defn ^{Test {:groups ["search_status"
-                       "tier3"
-                       "blockedByBug-817901"]}}
+(defn ^{Test           {:groups ["search_status"
+                                 "tier3"
+                                 "blockedByBug-817901"]}
+        TestDefinition {:projectID [`DefTypes$Project/RHEL6]
+                        :testCaseID ["RHEL6-38772"]}}
   check_no_search_results_message
   "Tests the message when the search returns no results."
   [_]
@@ -305,9 +326,11 @@
     (verify (tasks/ui showing? :all-subscriptions-view))
     (verify (not (= 0 (tasks/ui getrowcount :all-subscriptions-view))))))
 
-(defn ^{Test {:groups ["search_status"
-                       "tier3"
-                       "blockedByBug-817901"]}}
+(defn ^{Test           {:groups ["search_status"
+                                 "tier3"
+                                 "blockedByBug-817901"]}
+        TestDefinition {:projectID [`DefTypes$Project/RHEL6]
+                        :testCaseID ["RHEL6-38771"]}}
   check_please_search_message
   "Tests for the initial message before you search."
   [_]
@@ -319,10 +342,12 @@
     (verify (tasks/ui showing? :all-subscriptions-view))
     (verify (not (= 0 (tasks/ui getrowcount :all-subscriptions-view))))))
 
-(defn ^{Test {:groups ["search_status"
-                       "tier3"
-                       "blockedByBug-911386"]
-              :dataProvider "all-subscriptions"}}
+(defn ^{Test           {:groups       ["search_status"
+                                       "tier3"
+                                       "blockedByBug-911386"]
+                        :dataProvider "all-subscriptions"}
+        TestDefinition {:projectID [`DefTypes$Project/RHEL6]
+                        :testCaseID ["RHEL6-37400"]}}
   check_service_levels
   "Asserts that the displayed service levels are correct in the subscriptons view."
   [_ subscription]
@@ -335,11 +360,12 @@
                        (str ", " (:support_type rawservice))))]
     (verify (= guiservice service))))
 
-(defn ^{Test {:group ["search_status"
-                      "tier3"
-                      "blockedByBug-865193"]
-              :dataProvider "all-subscriptions"
-              :priority (int 99)}}
+(defn ^{Test           {:group        ["search_status"
+                                       "tier3"
+                                       "blockedByBug-865193"]
+                        :dataProvider "all-subscriptions"
+                        :priority     (int 99)}
+        TestDefinition {:projectID [`DefTypes$Project/RHEL6]}}
   check_provides_products
   "Checks if provide products is populated in all available subscriptions view"
   [_ subscription]
@@ -347,9 +373,10 @@
   (verify (= (sort (get @subs-contractlist subscription))
              (sort (tasks/get-table-elements :all-available-bundled-products 0)))))
 
-(defn ^{Test {:group ["search_status"
-                      "tier3"]
-              :dataProvider "all-subscriptions"}}
+(defn ^{Test           {:group        ["search_status"
+                                       "tier3"]
+                        :dataProvider "all-subscriptions"}
+        TestDefinition {:projectID [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]}}
   check_subscription_selected_after_update
   "Checks if subscription remains selected after update is clicked
    case 1: If subscription is stackable, it no longer remains selected
@@ -364,9 +391,10 @@
       (verify (empty? (get-sub-name)))
       (verify (= (get-sub-name) subscription)))))
 
-(defn ^{Test {:group ["search_status"
-                      "tier 2"
-                      "blockedByBug-1248729"]}}
+(defn ^{Test           {:group ["search_status"
+                                "tier 2"
+                                "blockedByBug-1248729"]}
+        TestDefinition {:projectID [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]}}
   check_filter_focus
   "Checks if the filter dialog comes up in a focused state when opened."
   [_]

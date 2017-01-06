@@ -28,7 +28,7 @@ public class UnregisterTests extends SubscriptionManagerCLITestScript {
 	
 	
 	// Test Methods ***********************************************************************
-	//@TestDefinition(projectID={Project.PLATTP})
+	@TestDefinition(projectID={Project.RHEL6}, testCaseID={"RHEL6-20392"})
 	@Test(description="unregister the consumer",
 			groups={"blockedByBug-589626"},
 			enabled=true)
@@ -47,7 +47,7 @@ public class UnregisterTests extends SubscriptionManagerCLITestScript {
 		}
 	}
 	
-	
+	@TestDefinition(projectID={Project.RHEL6}, testCaseID={"RHEL6-20016"})
 	@Test(description="unregister should not make unauthorized requests",
 			groups={"AcceptanceTests","Tier1Tests","UnregisterShouldNotThrowUnauthorizedRequests_Test","blockedByBug-997935","blockedByBug-1158578","blockedByBug-1207403","blockedByBug-1389559","blockedByBug-1395794"},
 			enabled=true)

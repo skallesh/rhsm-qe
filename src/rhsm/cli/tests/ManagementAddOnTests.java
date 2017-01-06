@@ -35,8 +35,8 @@ public class ManagementAddOnTests extends SubscriptionManagerCLITestScript {
 
 	
 	// Test methods ***********************************************************************
-	
-    //@TestDefinition(projectID={Project.PLATTP})
+
+    @TestDefinition(projectID={Project.RHEL6}, testCaseID={"RHEL6-27127"})
 	@Test(	description="verify that the entitlement cert granted by subscribing to a management add-on product does not contain a content namespace.",
 			groups={},
 			dependsOnGroups={},
@@ -52,7 +52,7 @@ public class ManagementAddOnTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	//@TestDefinition(projectID={Project.PLATTP})
+	@TestDefinition(projectID={Project.RHEL6}, testCaseID={"RHEL6-27128"})
 	@Test(	description="verify that the entitlement cert granted by subscribing to a management add-on product does not contain a product namespace.",
 			groups={},
 			dependsOnGroups={},

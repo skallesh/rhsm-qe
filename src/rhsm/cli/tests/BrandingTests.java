@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.github.redhatqe.polarize.metadata.DefTypes;
+import com.github.redhatqe.polarize.metadata.TestDefinition;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.testng.SkipException;
@@ -26,6 +28,8 @@ import rhsm.data.SubscriptionPool;
 
 import com.redhat.qe.Assert;
 import com.redhat.qe.tools.RemoteFileTasks;
+
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
 
 /**
  * @author jsefler
@@ -50,7 +54,8 @@ import com.redhat.qe.tools.RemoteFileTasks;
  */
 @Test(groups = {"BrandingTests","Tier2Tests"})
 public class BrandingTests extends SubscriptionManagerCLITestScript {
-	
+
+	@TestDefinition( projectID={Project.RHEL6, Project.RedHatEnterpriseLinux7} )
 	@Test(	description="assert that brandbot service is running",
 			groups={"AcceptanceTests","Tier1Tests"},
 			enabled=false)	// TODO not sure how this works... the status of this service is inactive, yet it appears to be automatically started/stopped as needed NEEDINFO from notting
@@ -58,8 +63,10 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 		if (Integer.valueOf(clienttasks.redhatReleaseX)<7) throw new SkipException("Brandbot is an initscripts tool feature of Flexible Branding in RHEL7.");	// initscripts-9.49.17-1.el7
 		RemoteFileTasks.runCommandAndAssert(client, "systemctl is-active brandbot.service", Integer.valueOf(0), "^active$", null);
 	}
-	
-	
+
+
+	@TestDefinition( projectID={Project.RHEL6}
+			       , testCaseID={"RHEL6-19955"})
 	@Test(	description="incrementally attach all available subscriptions and verify tests for Flexible Branding",
 			groups={"AttachSubscriptionsForFlexibleBranding_Test","AcceptanceTests","Tier1Tests","blockedByBug-884290"},
 			priority=100,
@@ -101,7 +108,8 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 		if (!flexibleBrandedSubscriptionsFound) throw new SkipException("No branding subscriptions were found among the available subscriptions that will brand one of the currently installed OS products.");
 	}
 	
-	
+	@TestDefinition( projectID={Project.RHEL6}
+	               , testCaseID={"RHEL6-19956"})
 	@Test(	description="incrementally remove attached subscriptions and verify tests for Flexible Branding",
 			//depend on priority instead of dependsOnMethods={"AttachSubscriptionsForFlexibleBranding_Test"},
 			priority=101,
@@ -120,7 +128,9 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 		}
 	}
 	
-	
+
+	@TestDefinition( projectID={Project.RHEL6}
+	               , testCaseID={"RHEL6-19957"})
 	@Test(	description="autosubscribe and verify tests for Flexible Branding",
 			dependsOnGroups={},
 			priority=200,
@@ -146,7 +156,9 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 		}
 	}
 	
-	
+
+	@TestDefinition( projectID={Project.RHEL6}
+	               , testCaseID={"RHEL6-19958"})
 	@Test(	description="run an rhsmcertd event and verify tests for Flexible Branding",
 			//depend on priority instead of dependsOnMethods={"AutoSubscribeForFlexibleBranding_Test"},
 			priority=201,
@@ -172,7 +184,9 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 		}
 	}
 	
-	
+
+	@TestDefinition( projectID={Project.RHEL6}
+	               , testCaseID={"RHEL6-19959"})
 	@Test(	description="run an rhsmcertd healing event and verify tests for Flexible Branding",
 			//depend on priority instead of dependsOnMethods={"AutoSubscribeForFlexibleBranding_Test"},
 			priority=202,
@@ -201,7 +215,9 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 		}
 	}
 	
-	
+
+	@TestDefinition( projectID={Project.RHEL6}
+	               , testCaseID={"RHEL6-36539"})
 	@Test(	description="assert that brandbot only reads the first line of the branding file",
 			groups={"blockedByBug-1031490"},
 			enabled=true)
@@ -226,7 +242,8 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(actualPrettyName, "RHEL/Branded OS (line 1)", "The PRETTY_NAME contained within the os-release file '"+osReleaseFile+"' (Should not contain any new line characters).");
 	}
 	
-	
+
+	@TestDefinition( projectID={Project.RHEL6})
 	@Test(	description="assert that brandbot trims white space from the first line of the branding file",
 			groups={},
 			enabled=true)
@@ -243,7 +260,8 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(actualPrettyName, "RHEL-x.y Branded OS", "The PRETTY_NAME contained within the os-release file '"+osReleaseFile+"' (should NOT contain leading nor trailing white space).");
 	}
 	
-	
+
+	@TestDefinition( projectID={Project.RHEL6})
 	@Test(	description="assert that brandbot does nothing when the brand file is removed",	//  Brandbot SHOULD handle /var/lib/rhsm/branded_name not existing.
 			groups={},
 			enabled=true)
@@ -275,7 +293,9 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(getCurrentPrettyName(),actualPrettyName, "The PRETTY_NAME contained within the os-release file '"+osReleaseFile+"' (should remain unchanged when the brand file is removed).");
 	}
 	
-	
+
+	@TestDefinition( projectID={Project.RHEL6}
+	               , testCaseID={"RHEL6-36538"})
 	@Test(	description="assert that brandbot removes PRETTY_NAME when the first line of the branding file is empty",	//  Brandbot SHOULD handle /var/lib/rhsm/branded_name being empty.
 			groups={"blockedByBug-1031490"},
 			enabled=true)

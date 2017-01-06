@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.github.redhatqe.polarize.metadata.DefTypes;
 import org.apache.xmlrpc.XmlRpcException;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -35,6 +36,8 @@ import rhsm.data.ProductSubscription;
 import rhsm.data.SubscriptionPool;
 
 import com.redhat.qe.tools.SSHCommandResult;
+import com.github.redhatqe.polarize.metadata.TestDefinition;
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
 
 /**
  * @author jsefler
@@ -45,7 +48,8 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 	
 	
 	// Test methods ***********************************************************************
-
+	@TestDefinition( projectID={Project.RHEL6}
+	               , testCaseID={})
 	@Test(	description="create an activation key named with an international character, add a pool to it (without specifying a quantity), and then register with the activation key",
 			groups={},
 			dataProvider="getRegisterWithUnknownActivationKeyData",
