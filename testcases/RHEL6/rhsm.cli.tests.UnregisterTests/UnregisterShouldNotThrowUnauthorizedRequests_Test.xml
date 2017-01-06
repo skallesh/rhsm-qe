@@ -1,13 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<testcase id="">
-    <title>A not necessarily unique title</title>
-    <description>TestCase for a dummy test method</description>
+<testcase id="RHEL6-20016">
+    <title>rhsm.cli.tests.UnregisterTests.UnregisterShouldNotThrowUnauthorizedRequests_Test</title>
+    <description></description>
     <test-steps>
         <test-step>
-            <test-step-column id="step">
-                <parameter name="name" scope="local"/>
-                <parameter name="age" scope="local"/>
-            </test-step-column>
+            <test-step-column id="step"/>
         </test-step>
     </test-steps>
     <custom-fields>

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<testcase id="">
-    <title>rhsm.gui.tests.search_status_tests.check_ordered_contract_options</title>
+<testcase id="RHEL6-20392">
+    <title>rhsm.cli.tests.UnregisterTests.RegisterSubscribeAndUnregisterTest</title>
     <description></description>
     <test-steps>
         <test-step>
