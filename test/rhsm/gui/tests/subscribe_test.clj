@@ -41,6 +41,11 @@
   (let [subscriptions #spy/d (tests/get_multi_contract_subscriptions nil)]
     (tests/check_contracts_and_virt_type nil (-> subscriptions first first))))
 
+(deftest check_contracts_and_virt_type-test
+  (let [subscriptions #spy/d (tests/get_subscriptions nil)]
+    (for [subscription subscriptions]
+      (tests/check_contracts_and_virt_type nil subscription))))
+
 (deftest all_subscriptions_table_is_sortable-test
   (let [{:keys [major minor patch]} (tools/subman-version)]
     (if (match (vec (for [v [major minor patch]] (Integer. v)))

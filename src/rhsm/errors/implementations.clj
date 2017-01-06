@@ -1,10 +1,9 @@
-(ns rhsm.errors.exceptions
-  (:require [rhsm.errors.classification :as classification]
+(ns rhsm.errors.implementations
+  (:require [rhsm.errors.protocols :as protocols]
             [clojure.core.match :refer [match]])
-
   (:import org.testng.SkipException))
 
-(extend-protocol classification/IFailureClassifier
+(extend-protocol protocols/IFailureClassifier
   SkipException
   (failure-level [e] :skip-exception)
 
@@ -19,7 +18,10 @@
 
   java.lang.AssertionError
   (failure-level [e] :verification-failure)
-  
+
+  java.lang.Exception
+  (failure-level [e] :unknown-exception)
+
   Object
   (failure-level [o] :unknown))
 

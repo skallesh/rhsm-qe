@@ -44,6 +44,7 @@
                    :no-sla-available #"No service level will cover all installed products"
                    :error-getting-subscription #"Pool is restricted to physical systems"
                    :no-system-name #"You must enter a system name"
+                   :proxy-connection-failed #"Proxy connection failed, please check your settings."
                    :unable-to-connect-server #"Network error, unable to connect to server."})
 
 (defn matching-error
@@ -118,7 +119,7 @@
        (do
          (ui waittillwindowexist window 60)
          (try (assert (bool (ui guiexist window))
-                      "subsrciption-manager-gui did not launch!")
+                      "subscription-manager-gui did not launch!")
               (catch AssertionError e
                 (reset! rhsm-gui-pid nil)
                 (throw e)))
@@ -1127,3 +1128,12 @@ The function uses an utility 'import' from package 'imagemagick'"
                (RemoteFileTasks/getFile (.getConnection @clientcmd) (.toString out-dir#) name#)
                (log/info (format "A screenshot has been copied as '%s'." (.toString (io/file out-dir# name#)))))
              (throw+)))))
+
+(defmacro try-more
+  [num-of-retries & body]
+  "The macro evalues the body more times when an exception is risen."
+  (if (> (Math/abs num-of-retries) 0)
+    (do `(try+ ~@body
+               (catch Object e#
+                 (try-more ~(dec (Math/abs num-of-retries)) ~@body))))
+    (do `(do ~@body))))

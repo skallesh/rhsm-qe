@@ -439,7 +439,15 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 			File expectedEntitlementKeyFile = clienttasks.getEntitlementCertKeyFileCorrespondingToEntitlementCertFile(expectedEntitlementCertFile);
 
 			if (invalidCertificates.contains(importCertificate)) {
+				// predict the expected error message for this invalid importCertificate
 				String errorMsg = new File(importCertificate).getName()+" is not a valid certificate file. Please use a valid certificate.";
+				if (clienttasks.isPackageVersion("python-rhsm",">=","1.18.5-1")) { // python-rhsm commit 214103dcffce29e31858ffee414d79c1b8063970 Reduce usage of m2crypto
+					if (!RemoteFileTasks.testExists(client, importCertificate)) {
+						errorMsg = String.format("%s: file not found.", (new File(importCertificate)).getName());	
+					}
+				}
+				
+				// verify that stdout contains the expected error message
 				Assert.assertTrue(importResult.getStdout().contains(errorMsg),"The result from the import command contains expected message: "+errorMsg);		
 
 				// verify that the expectedEntitlementCertFile does not exist
@@ -557,6 +565,14 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 		// attempt an entitlement cert import from a file containing only a key (negative test)
 		SSHCommandResult importResult = clienttasks.importCertificate_(invalidCertificate.getPath());
 		
+		// predict the expected stdout message for this invalidCertificate
+		String expectedStdout = String.format("%s is not a valid certificate file. Please use a valid certificate.", invalidCertificate.getName());
+		if (clienttasks.isPackageVersion("python-rhsm",">=","1.18.5-1")) { // python-rhsm commit 214103dcffce29e31858ffee414d79c1b8063970 Reduce usage of m2crypto
+			if (!RemoteFileTasks.testExists(client, invalidCertificate.getPath())) {
+				expectedStdout = String.format("%s: file not found.", invalidCertificate.getName());	
+			}
+		}
+		
 		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=734533 - jsefler 08/30/2011
 		String bugId="734533"; boolean invokeWorkaroundWhileBugIsOpen = true;
 		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
@@ -567,7 +583,7 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 		try {if (clienttasks.installedPackageVersionMap.get(bugPkg).contains(bugVer) && !invokeWorkaroundWhileBugIsOpen) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+" which has NOT been fixed in this installed version of "+bugVer+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId); invokeWorkaroundWhileBugIsOpen=true;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 		if (invokeWorkaroundWhileBugIsOpen) {
 			Assert.assertEquals(importResult.getExitCode(), Integer.valueOf(0));
-			Assert.assertEquals(importResult.getStdout().trim(), invalidCertificate.getName()+" is not a valid certificate file. Please use a valid certificate.");
+			Assert.assertEquals(importResult.getStdout().trim(), expectedStdout);
 
 		} else {
 		// END OF WORKAROUND
@@ -576,7 +592,7 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(importResult.getExitCode(), Integer.valueOf(1), "The exit code from the import command indicates a failure.");
 		
 		// {0} is not a valid certificate file. Please use a valid certificate.
-		Assert.assertEquals(importResult.getStdout().trim(), invalidCertificate.getName()+" is not a valid certificate file. Please use a valid certificate.");
+		Assert.assertEquals(importResult.getStdout().trim(), expectedStdout);
 		}
 		
 		// verify that the expectedEntitlementCertFile does NOT exist

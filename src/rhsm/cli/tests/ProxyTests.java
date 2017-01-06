@@ -1007,10 +1007,12 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		String moduleTask = "repos";
 		if (!username.equals(sm_clientUsername) || !password.equals(sm_clientPassword)) throw new SkipException("These dataProvided parameters are either superfluous or not meaningful for this test.");
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, null, false, null, null, null);
+//FIXME THIS COULD LEAD TO Stdout: This system has no repositories available through subscriptions.
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
 		clienttasks.subscribe(null,null,pool.poolId,null,null,null, null, null, null, null, null, null);
-		
+//FIXME CHANGE TO GET A RANDOM SUB THAT MATCHES INSTALLED
+	
 		// pad the tail of basicauthproxyLog with a message
 		String proxyLogMarker = System.currentTimeMillis()+" Testing "+moduleTask+" ReposAttemptsUsingProxyServerViaRhsmConfig_Test from "+clienttasks.hostname+"...";
 		//RemoteFileTasks.runCommandAndAssert(proxyRunner,"echo '"+proxyLogMarker+"'  >> "+proxyLog, Integer.valueOf(0));
@@ -1355,23 +1357,40 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		String command = clienttasks.command+" repos --list --proxy=www.redhat.com";
 		Long timeoutMS = Long.valueOf(8/*min*/*60*1000);	// do not wait any longer than this many milliseconds
 		SSHCommandResult result= client.runCommandAndWait(command, timeoutMS);
-		//	201503301409:07.031 - FINE: ssh root@jsefler-os6.usersys.redhat.com subscription-manager repos --list --proxy=www.redhat.com
-		//	201503301410:07.487 - FINE: Stdout: 
-		//	201503301410:07.487 - FINE: Stderr: Network error, unable to connect to server. Please see /var/log/rhsm/rhsm.log for more information.
-		//	201503301410:07.487 - FINE: ExitCode: 70
-		//            ^^ one minute timeout observed (but I have also seen this take 4m16.286s)
+		
+		
+		// expected results
+		Integer expectedExitCode = new Integer(255);
+		String expectedStdout = nErrMsg;
+		String expectedStderr = "";
+		
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+			 expectedExitCode = new Integer(70);	// EX_SOFTWARE 
+		}
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.9-1")) {	// post commit a695ef2d1da882c5f851fde90a24f957b70a63ad
+			//	201503301409:07.031 - FINE: ssh root@jsefler-os6.usersys.redhat.com subscription-manager repos --list --proxy=www.redhat.com
+			//	201503301410:07.487 - FINE: Stdout: 
+			//	201503301410:07.487 - FINE: Stderr: Network error, unable to connect to server. Please see /var/log/rhsm/rhsm.log for more information.
+			//	201503301410:07.487 - FINE: ExitCode: 70
+			//            ^^ one minute timeout observed (but I have also seen this take 4m16.286s)
+			expectedExitCode = new Integer(70);	// EX_SOFTWARE
+			expectedStdout = "";
+			expectedStderr = nErrMsg;
+		}
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.17.6-1")) {	// post commit 7ce6801fc1cc38edcdeb75dfb5f0d1f8a6398c68	1176219: Stop before cache is returned when using bad proxy options	// Bug 1301215 - The cmd "repos --list --proxy" with a fake proxy server url will not stop running.
+			//	201612121142:43.748 - FINE: ssh root@jsefler-rhel6.usersys.redhat.com subscription-manager repos --list --proxy=www.redhat.com
+			//	201612121142:54.320 - FINE: Stdout: 
+			//	201612121142:54.321 - FINE: Stderr: Proxy connection failed, please check your settings.
+			//	201612121142:54.321 - FINE: ExitCode: 69
+			expectedExitCode = new Integer(69);	// EX_UNAVAILABLE
+			expectedStdout = "";
+			expectedStderr = pErrMsg;
+		} 
 		
 		// assert results
-		Integer expectedExitCode = new Integer(255);
-		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) expectedExitCode = new Integer(70);	// EX_SOFTWARE // post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
-		Assert.assertEquals(result.getExitCode(), expectedExitCode, "ExitCode from command '"+command+"' with a timeout of '"+timeoutMS+"' MS.");
-		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.9-1")) {	// post commit a695ef2d1da882c5f851fde90a24f957b70a63ad
-			Assert.assertEquals(result.getStderr().trim(), nErrMsg, "Stderr from command '"+command+"' with a timeout of '"+timeoutMS+"' MS.");
-			Assert.assertEquals(result.getStdout().trim(), "", "Stdout from command '"+command+"' with a timeout of '"+timeoutMS+"' MS.");
-		} else {
-			Assert.assertEquals(result.getStdout().trim(), nErrMsg, "Stdout from command '"+command+"' with a timeout of '"+timeoutMS+"' MS.");
-			Assert.assertEquals(result.getStderr().trim(), "", "Stderr from command '"+command+"' with a timeout of '"+timeoutMS+"' MS.");
-		}
+		Assert.assertEquals(result.getExitCode(), expectedExitCode, "ExitCode from command '"+command+"' with a timeout of '"+timeoutMS+"' MS.");	
+		Assert.assertEquals(result.getStdout().trim(), expectedStdout, "Stdout from command '"+command+"' with a timeout of '"+timeoutMS+"' MS.");
+		Assert.assertEquals(result.getStderr().trim(), expectedStderr, "Stderr from command '"+command+"' with a timeout of '"+timeoutMS+"' MS.");
 	}
 	
 	
@@ -1927,9 +1946,9 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		String uErrMsg = servertasks.invalidCredentialsMsg(); //"Invalid username or password";
 		String oErrMsg = /*"Organization/Owner bad-org does not exist."*/"Organization bad-org does not exist.";
 		if (sm_serverType.equals(CandlepinType.katello))	oErrMsg = "Couldn't find organization 'bad-org'";
-		String hostname = clienttasks.getConfParameter("hostname");
-		String prefix = clienttasks.getConfParameter("prefix");
-		String port = clienttasks.getConfParameter("port");
+//		String hostname = clienttasks.getConfParameter("hostname");
+//		String prefix = clienttasks.getConfParameter("prefix");
+//		String port = clienttasks.getConfParameter("port");
 		
 		
 		// Object blockedByBug, String username, String password, Sring org, String proxy, String proxyuser, String proxypassword, String proxy_hostnameConfig, String proxy_portConfig, String proxy_userConfig, String proxy_passwordConfig, Integer exitCode, String stdout, String stderr, SSHCommandRunner proxyRunner, String proxyLog, String proxyLogGrepPattern
@@ -1962,7 +1981,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 			ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug(new String[]{"1345962","1119688","755258"}),				sm_clientUsername,	sm_clientPassword,	"bad-org",		null,				null,						null,						sm_noauthproxyHostname,		sm_noauthproxyPort,			"",							"",							Integer.valueOf(70),	null,	oErrMsg,	noauthproxy,	sm_noauthproxyLog,		"Connect"}));
 			ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug(new String[]{"1345962","1119688","755258"}),				sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	noauthproxyUrl,		null,						null,						"bad-proxy",				sm_noauthproxyPort+"0",		"",							"",							Integer.valueOf(0),		null,	null,		noauthproxy,	sm_noauthproxyLog,		"Connect"}));
 			ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug(new String[]{"1345962","1119688","755258"}),				sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	noauthproxyUrl,		"ignored-username",			"ignored-password",			"bad-proxy",				sm_noauthproxyPort+"0",		"bad-username",				"bad-password",				Integer.valueOf(0),		null,	null,		noauthproxy,	sm_noauthproxyLog,		"Connect"}));
-			ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug(new String[]{"1345962","1119688","1176219"}),			sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	"bad-proxy",		null,						null,						sm_noauthproxyHostname,		sm_noauthproxyPort,			"",							"",							Integer.valueOf(69),	null,	"Unable to reach the server at "+hostname+":"+port+prefix,	noauthproxy,	sm_noauthproxyLog,		null}));
+			ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug(new String[]{"1345962","1119688","1176219","1403387"}),	sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	"bad-proxy",		null,						null,						sm_noauthproxyHostname,		sm_noauthproxyPort,			"",							"",							Integer.valueOf(69),	null,	pErrMsg/*DELETEME - THIS WAS A BUG 1403387 "Unable to reach the server at "+hostname+":"+port+prefix*/,	noauthproxy,	sm_noauthproxyLog,		null}));
 			
 		} else if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.9-1")) {	// post commit a695ef2d1da882c5f851fde90a24f957b70a63ad
 			// basic auth proxy test data...
@@ -2072,7 +2091,8 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 			// only include dataProvided rows where username, password, and org are valid
 			if (!(l.get(1).equals(sm_clientUsername) && l.get(2).equals(sm_clientPassword) && l.get(3)==sm_clientOrg)) continue;
 //			if (l.get(12)==nErrMsg) l.set(0,new BlockedByBzBug("838264"));
-			if (l.get(12)/*stdout*/==nErrMsg || l.get(13)/*stderr*/==nErrMsg) l.set(0,new BlockedByBzBug(new String[]{"838264","1345962"}));
+//DELETEME	if (l.get(12)/*stdout*/==nErrMsg || l.get(13)/*stderr*/==nErrMsg) l.set(0,new BlockedByBzBug(new String[]{"838264","1345962"}));
+			if (l.get(12)/*stdout*/==nErrMsg || l.get(13)/*stderr*/==nErrMsg || l.get(13)/*stderr*/==pErr407Msg) l.set(0,new BlockedByBzBug(new String[]{"838264","1345962"}));
 			
 			ll.add(l);
 		}
@@ -2208,12 +2228,13 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 			blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 			l.set(0, blockedByBzBug);
 			
-			if (!sm_serverType.equals("katello") && (!nErrMsg.equals(l.get(9))||l.get(9)==null) && clienttasks.isPackageVersion("subscription-manager",">=","1.13.10-1")) {	// post commit 13fe8ffd8f876d27079b961fb6675424e65b9a10 bug 1119688
+//DELETEME	if (!sm_serverType.equals("katello") && (!nErrMsg.equals(l.get(9))||l.get(9)==null) && clienttasks.isPackageVersion("subscription-manager",">=","1.13.10-1")) {	// post commit 13fe8ffd8f876d27079b961fb6675424e65b9a10 bug 1119688
+			if (!sm_serverType.equals("katello") && ((!nErrMsg.equals(l.get(9))&&!pErrMsg.equals(l.get(9)))||l.get(9)==null) && clienttasks.isPackageVersion("subscription-manager",">=","1.13.10-1")) {	// post commit 13fe8ffd8f876d27079b961fb6675424e65b9a10 bug 1119688
 				l.set(7, Integer.valueOf(69));	// exitCode EX_UNAVAILABLE
 				l.set(8,"");
 				l.set(9,"Error: Server does not support environments.");
 			} else 
-		//	if (!sm_serverType.equals("katello") && !l.get(3).equals(sm_clientOrg)) {
+//DELETEME	if (!sm_serverType.equals("katello") && !l.get(3).equals(sm_clientOrg)) {
 			if (!sm_serverType.equals("katello") && (!l.get(1).equals(sm_clientUsername) || !l.get(2).equals(sm_clientPassword) || !l.get(3).equals(sm_clientOrg))) {
 				// subscription-manager environments --username=testuser1 --password=password --org=bad-org
 				// Stdout: This system does not support environments.
@@ -2244,12 +2265,13 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 			blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 			l.set(0, blockedByBzBug);
 			
-			if (!sm_serverType.equals("katello") && (!nErrMsg.equals(l.get(13))||l.get(13)==null) && clienttasks.isPackageVersion("subscription-manager",">=","1.13.10-1")) {	// post commit 13fe8ffd8f876d27079b961fb6675424e65b9a10 bug 1119688
+//DELETEME	if (!sm_serverType.equals("katello") && (!nErrMsg.equals(l.get(13))||l.get(13)==null) && clienttasks.isPackageVersion("subscription-manager",">=","1.13.10-1")) {	// post commit 13fe8ffd8f876d27079b961fb6675424e65b9a10 bug 1119688
+			if (!sm_serverType.equals("katello") && ((!nErrMsg.equals(l.get(13))&&!pErr407Msg.equals(l.get(13)))||l.get(13)==null) && clienttasks.isPackageVersion("subscription-manager",">=","1.13.10-1")) {	// post commit 13fe8ffd8f876d27079b961fb6675424e65b9a10 bug 1119688
 				l.set(11, Integer.valueOf(69));	// exitCode EX_UNAVAILABLE
 				l.set(12,"");
 				l.set(13,"Error: Server does not support environments.");
 			} else 
-		//	if (!sm_serverType.equals("katello") && !l.get(3).equals(sm_clientOrg)) {
+//DELETEME	if (!sm_serverType.equals("katello") && !l.get(3).equals(sm_clientOrg)) {
 			if (!sm_serverType.equals("katello") && (!l.get(1).equals(sm_clientUsername) || !l.get(2).equals(sm_clientPassword) || !l.get(3).equals(sm_clientOrg))) {
 				// subscription-manager environments --username=testuser1 --password=password --org=bad-org --proxy=auto-services.usersys.redhat.com:3128 --proxyuser=redhat --proxypassword=redhat
 				// Stdout: This system does not support environments.
@@ -2588,7 +2610,8 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		for (List<Object> l : getValidRegisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists()) {
 //			if (l.get(12)!=null) {
-			if (l.get(12)/*stdout*/==nErrMsg || l.get(13)/*stderr*/==nErrMsg) {
+//DELETEME	if (l.get(12)/*stdout*/==nErrMsg || l.get(13)/*stderr*/==nErrMsg) {
+			if (l.get(12)/*stdout*/==nErrMsg || l.get(13)/*stderr*/==nErrMsg || l.get(13)/*stderr*/==pErr407Msg) {
 //				ll.add(Arrays.asList(new Object[]{	l.get(0),	l.get(1),	l.get(2),	l.get(3),	l.get(4),	l.get(5),	l.get(6),	l.get(7),	l.get(8),	l.get(9),	l.get(10),	l.get(11),	null,	"Error updating system data, see /var/log/rhsm/rhsm.log for more details.",	l.get(14),	l.get(15),	l.get(16)}));
 				ll.add(Arrays.asList(new Object[]{	l.get(0),	l.get(1),	l.get(2),	l.get(3),	l.get(4),	l.get(5),	l.get(6),	l.get(7),	l.get(8),	l.get(9),	l.get(10),	l.get(11),	null,	"Error updating system data on the server, see /var/log/rhsm/rhsm.log for more details.",	l.get(14),	l.get(15),	l.get(16)}));
 			} else {

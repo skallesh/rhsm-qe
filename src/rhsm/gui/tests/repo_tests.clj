@@ -19,7 +19,7 @@
             [rhsm.gui.tests.base :as base]
             [rhsm.gui.tasks.candlepin-tasks :as ctasks]
             [clojure.core.match :as match]
-            [rhsm.errors.classification :as erc]
+            [rhsm.errors.utils :refer [normalize-exception-types]]
             rhsm.gui.tasks.ui)
   (:import [org.testng.annotations
             BeforeClass
@@ -39,9 +39,7 @@
 (defn ^{BeforeClass {:groups ["setup"]}}
   setup [_]
   (try+
-   (comment (when (= "RHEL7" (get-release))
-              (base/startup nil)))
-   (tasks/restart-app)
+   (tasks/restart-app :force-kill? true)
    (tasks/unregister)
    (catch [:type :not-registered] _)
    (catch Exception e
@@ -178,7 +176,7 @@
   "This tests for default static message in repository dialog when unsubscribed"
   [_]
   (try
-    (erc/normalize-exception-types
+    (normalize-exception-types
      (if (tasks/ui showing? :register-system)
        (tasks/register-with-creds))
      (assert-and-open-repo-dialog)

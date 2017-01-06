@@ -227,8 +227,6 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript {
 		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
 			String GuestLimitAttribute = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername,
 					sm_clientPassword, sm_serverUrl, pool.poolId, "guest_limit");
-			System.out.println(GuestLimitAttribute);
-
 			if ((!(GuestLimitAttribute == null)) && (GuestLimitAttribute.equals(guestLimit))) {
 				poolId = pool.poolId;
 				providedProductIds = (CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername, sm_clientPassword,
@@ -315,7 +313,6 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript {
 		attributes.put("type", "MKT");
 		attributes.put("type", "SVC");
 		attributes.put("guest_limit", "4");
-
 		CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword,
 				sm_serverUrl, sm_clientOrg, productId);
 		String resourcePath = "/products/" + productId;
@@ -326,8 +323,8 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript {
 		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,
 				sm_clientOrg, name + " BITS", productId, 1, attributes, null);
 		return CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername,
-				sm_serverAdminPassword, sm_serverUrl, ownerKey, 3, startingMinutesFromNow, endingMinutesFromNow,
-				getRandInt(), getRandInt(), randomAvailableProductId, providedProduct, null).getString("id");
+				sm_serverAdminPassword, sm_serverUrl, ownerKey, 20, startingMinutesFromNow, endingMinutesFromNow,
+				getRandInt(), getRandInt(), productId, providedProduct, null).getString("id");
 	}
 
 	@BeforeClass(groups = { "setup" })
@@ -336,23 +333,22 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript {
 				null, (String) null, null, null, null, true, false, null, null, null);
 		List<SubscriptionPool> pools = clienttasks.getAvailableSubscriptionsMatchingInstalledProducts();
 		// int i = randomGenerator.nextInt(pools.size());
-
+		System.out.println("inside findRandomAvailableProductIdBeforeClass ");
 		for (SubscriptionPool availablepools : pools) {
-			System.out.println(CandlepinTasks.getPoolProvidedProductIds(sm_serverAdminUsername, sm_serverAdminPassword,
-					sm_serverUrl, availablepools.poolId));
 			if ((CandlepinTasks.getPoolProvidedProductIds(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,
 					availablepools.poolId).contains("37060"))) {
-				System.out.println("inside loop ...............");
-
 				providedProduct.add("37060");
-				System.out.println("inside loop ...............");
 				randomAvailableProductId = availablepools.productId;
-				System.out.println("inside loop ...............");
+				System.out.println("randomAvailableProductId is ........" + randomAvailableProductId);
 
 			}
+			System.out.println("randomAvailableProductId is ........" + randomAvailableProductId);
+			// providedProduct =
+			// CandlepinTasks.getPoolProvidedProductIds(sm_serverAdminUsername,
+			// sm_serverAdminPassword,
+			// sm_serverUrl, availablepools.poolId);
+			System.out.println("providedProduct is ........" + providedProduct.get(0));
 
-			providedProduct = CandlepinTasks.getPoolProvidedProductIds(sm_serverAdminUsername, sm_serverAdminPassword,
-					sm_serverUrl, availablepools.poolId);
 			break;
 		}
 

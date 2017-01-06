@@ -652,7 +652,7 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="check the rhn-migrate-classic-to-rhsm man page for misspelled words and typos",
-			groups={},
+			groups={/*blockedByBug-1390712*/},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void SpellCheckManPageForRhnMigrateClassicToRhsm_Test() throws IOException {
@@ -1028,13 +1028,15 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 		modifiedManPage = modifiedManPage.replaceAll("subscription-manager-gui\\(8\\) Subscription Managementsubscription-manager-gui\\(8\\)","subscription-manager-gui(8)   Subscription Management   subscription-manager-gui(8)");
 		modifiedManPage = modifiedManPage.replaceAll("rhn-migrate-classic-to-rhsm\\(System Manager's Manrhn-migrate-classic-to-rhsm\\(8\\)","rhn-migrate-classic-to-rhsm(8)   System Manager's Manual   rhn-migrate-classic-to-rhsm(8)");
 
-		// join acceptable hyphenated words that have been wrapped across two lines (e.g. third-
+		// join acceptable hyphenated words (e.g. third-party) that have been wrapped across two lines (e.g. third-
 		//      party) 
 		modifiedManPage = modifiedManPage.replaceAll("(auto)(?:‐|-)\\n\\s+(attach)", "$1-$2");
 		modifiedManPage = modifiedManPage.replaceAll("(rhn)(?:‐|-)\\n\\s+(migrate)", "$1-$2");
 		modifiedManPage = modifiedManPage.replaceAll("(subscription)(?:‐|-)\\n\\s+(manager)", "$1-$2");
 		modifiedManPage = modifiedManPage.replaceAll("(third)(?:‐|-)\\n\\s+(party)", "$1-$2");
 		modifiedManPage = modifiedManPage.replaceAll("(on)(?:‐|-)\\n\\s+(premise)", "$1-$2");
+		modifiedManPage = modifiedManPage.replaceAll("(destination)(?:‐|-)\\n\\s+(url)", "$1-$2");
+		modifiedManPage = modifiedManPage.replaceAll("(rhncfg)(?:‐|-)\\n\\s+(actions)", "$1-$2");	// package rhncfg-actions is provided by rhncfg
 		
 		// unhyphenate all words that the man tool wrapped at the end of a line (e.g. oper-
 	    //      ating)
@@ -1136,7 +1138,15 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 		modifiedManPage = modifiedManPage.replaceAll("RHSMCERTD", "Red Hat Subscription Management Certificate Daemon");
 		modifiedManPage = modifiedManPage.replaceAll("subscription-manager-gui", "subscription-manager-graphical-user-interface");
 		modifiedManPage = modifiedManPage.replaceAll("firstboot", "first-boot");
-		modifiedManPage = modifiedManPage.replaceAll("sosreport", "save-our-soul-report");
+		modifiedManPage = modifiedManPage.replaceAll("sosreport", "save-our-soul-report");	// sos - A set of tools to gather troubleshooting information from a system
+		modifiedManPage = modifiedManPage.replaceAll("spacewalk-abrt", "spacewalk-abort");	// spacewalk-abrt - rhn-check plug-in for collecting information about crashes handled by ABRT.
+		modifiedManPage = modifiedManPage.replaceAll("spacewalk-oscap", "spacewalk-open-scan-plugin");	// spacewalk-oscap is a plug-in for rhn-check. With this plugin, user is able to run OpenSCAP scan from Spacewalk or Red Hat Satellite server.
+		modifiedManPage = modifiedManPage.replaceAll("osad", "open-source-architecture-daemon");	// Open Source Architecture Daemon - This package effectively replaces the behavior of rhnsd/rhn_check that only poll the Spacewalk Server from time to time.
+		modifiedManPage = modifiedManPage.replaceAll("rhncfg-actions", "red-hat-network-configuration-actions");	// package provided by rhncfg
+		modifiedManPage = modifiedManPage.replaceAll("rhncfg-client", "red-hat-network-configuration-actions");	// package provided by rhncfg
+		modifiedManPage = modifiedManPage.replaceAll("rhncfg", "red-hat-network-configuration");	// Spacewalk Configuration Client Libraries
+		modifiedManPage = modifiedManPage.replaceAll("rhnsd", "red-hat-network-servers-daemon");	// Red Hat Network query daemon - The Red Hat Update Agent that automatically queries the Red Hat Network servers and determines which packages need to be updated on your machine, and runs any actions.
+		modifiedManPage = modifiedManPage.replaceAll("rhnpush", "red-hat-network-push");	// Package uploader for the Spacewalk or Red Hat Satellite Server
 		modifiedManPage = modifiedManPage.replaceAll("up2date", "up-to-date");
 		modifiedManPage = modifiedManPage.replaceAll("virt-who", "virtual-who");
 		modifiedManPage = modifiedManPage.replaceAll("rct( |\n)", "read-certificate$1");
@@ -1200,8 +1210,8 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 		modifiedManPage = modifiedManPage.replaceAll("\\.pem", ".certificate");	// Base64-encoded X.509 certificate
 		modifiedManPage = modifiedManPage.replaceAll("PEM file", "Privacy-enhanced mail certificate file");	// Base64-encoded X.509 certificate
 		modifiedManPage = modifiedManPage.replaceAll("PEM certificate", "Privacy-enhanced mail certificate");	// Base64-encoded X.509 certificate
-		modifiedManPage = modifiedManPage.replaceAll("DER +size", "binary size");
-		modifiedManPage = modifiedManPage.replaceAll("DER +encoding", "binary encoding");
+		modifiedManPage = modifiedManPage.replaceAll("DER\\s+size", "binary size");
+		modifiedManPage = modifiedManPage.replaceAll("DER\\s+encoding", "binary encoding");
 		modifiedManPage = modifiedManPage.replaceAll("UUID", "universally unique identifier");
 		modifiedManPage = modifiedManPage.replaceAll("JSON", "JavaScript Object Notation");
 		modifiedManPage = modifiedManPage.replaceAll("CDN", "Content Delivery Network");
