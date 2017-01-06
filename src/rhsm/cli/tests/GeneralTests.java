@@ -82,7 +82,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="assert the exit code from service rhsmcertd status when running and stopped",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-913118","blockedByBug-912707","blockedByBug-914113","blockedByBug-1241247"})
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-913118","blockedByBug-912707","blockedByBug-914113","blockedByBug-1241247","blockedByBug-1395794"})
 	protected void verifyRhsmcertdDoesNotThrowDeprecationWarnings_Test() throws JSONException, Exception {
 		clienttasks.unregister(null, null, null);
 		String marker = System.currentTimeMillis()+" Testing verifyRhsmcertdDoesNotThrowDeprecationWarnings_Test...";
@@ -121,7 +121,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="assert rhsmd is logged to both /var/log/rhsm/rhsm.log and /var/log/messages",
-			groups={"blockedbyBug-976868"},
+			groups={"blockedbyBug-976868","blockedByBug-1395794"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void VerifyRhsmdForceSignalsToRhsmlogAndSyslog_Test() {
@@ -419,7 +419,9 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 			}
 			
 			if		(clienttasks.isPackageVersion("subscription-manager",">=","1.10.5-1"))	expectedRequiresList.remove("manual: python-simplejson");		// Bug 1006748 - remove subscription-manager dependency on python-simplejson; subscription-manager commit ee34aef839d0cb367e558f1cd7559590d95cd636
-			if		(clienttasks.isPackageVersion("subscription-manager",">=","1.16.0-1"))	expectedRequiresList.add("manual: python-rhsm >= 1.16.0");		// RHEL6.8	// commit c52630da1d45aee68c122d39fe92607e9a38ff8e
+			if		(clienttasks.isPackageVersion("subscription-manager",">=","1.18.2-1"))	expectedRequiresList.add("manual: python-rhsm >= 1.18.1");		// RHEL6.9	// commit 82f1e7c89a8729ac2c4843922f14921a20f26beb
+			else if	(clienttasks.isPackageVersion("subscription-manager",">=","1.18.1-1"))	expectedRequiresList.add("manual: python-rhsm >= 1.18.0");		// RHEL6.9	// commit 0415e0d3ca2be57253bd79b4a9dc8b5863ca5110
+			else if	(clienttasks.isPackageVersion("subscription-manager",">=","1.16.0-1"))	expectedRequiresList.add("manual: python-rhsm >= 1.16.0");		// RHEL6.8	// commit c52630da1d45aee68c122d39fe92607e9a38ff8e
 			else if	(clienttasks.isPackageVersion("subscription-manager",">=","1.14.3-1"))	expectedRequiresList.add("manual: python-rhsm >= 1.14.2");		// RHEL6.7	// commit 26b7eb90519c5d7f696869344610d49c42dfd918
 			else if	(clienttasks.isPackageVersion("subscription-manager",">=","1.13.13-1"))	expectedRequiresList.add("manual: python-rhsm >= 1.13.10");		// RHEL6.7
 			else if	(clienttasks.isPackageVersion("subscription-manager",">=","1.12.3-1"))	expectedRequiresList.add("manual: python-rhsm >= 1.12.3");		// RHEL6.6
@@ -470,6 +472,10 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 			else if	(clienttasks.isPackageVersion("subscription-manager",">=","1.12.3-1"))	expectedRequiresList.add("manual: python-rhsm >= 1.12.3");		// RHEL7.1
 			else if	(clienttasks.isPackageVersion("subscription-manager",">=","1.10.14-6"))	expectedRequiresList.add("manual: python-rhsm >= 1.10.12-2");	// RHEL7.0	// Bug 1080531 - subscription-manager-1.10.14-6 should require python-rhsm >= 1.10.12-2
 			else if	(clienttasks.isPackageVersion("subscription-manager",">=","1.10.9-1"))	expectedRequiresList.add("manual: python-rhsm >= 1.10.9");		// RHEL7.0
+		}
+		
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.18.5-1")) {	// commit bb47b2a6b4f3e823240e5f882bd4dc4d57c3b36e	1395794: Include python-decorator as a required dependency
+			expectedRequiresList.add("manual: python-decorator");
 		}
 		
 		for (String expectedRequires : expectedRequiresList) if (!actualRequiresList.contains(expectedRequires)) log.warning("The actual requires list is missing expected requires '"+expectedRequires+"'.");
@@ -1015,13 +1021,13 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 			}
 			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1119688"}),			clienttasks.command+" subscribe",											new Integer(1),		"","This system is not yet registered. Try 'subscription-manager register --help' for more information."}));
 			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1119688","1162331"}),clienttasks.rhsmDebugSystemCommand(null,null,null,null,null,null,null,null),new Integer(1),		"","This system is not yet registered. Try 'subscription-manager register --help' for more information."}));
-
-			if (clienttasks.isPackageVersion("subscription-manager",">=","1.17.5-1")) {	// subscription-manager commit ea10b99095ad58df57ed107e13bf19498e003ae8
+			if (clienttasks.isPackageVersion("subscription-manager",">=","1.18.2-1")) {	// post commit ad982c13e79917e082f336255ecc42615e1e7707
+				ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1078091","1119688","1320507"}),	clienttasks.command+" register --serverurl=https://sat6_fqdn/ --insecure",	new Integer(69),	"","Unable to reach the server at sat6_fqdn:"+clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "port")}));
+			} else if (clienttasks.isPackageVersion("subscription-manager",">=","1.17.5-1")) {	// subscription-manager commit ea10b99095ad58df57ed107e13bf19498e003ae8
 				ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1078091","1119688","1320507"}),	clienttasks.command+" register --serverurl=https://sat6_fqdn/ --insecure",	new Integer(69),	"","Unable to reach the server at sat6_fqdn:"+clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "port")+"/"}));
 			} else {
 				ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1078091","1119688"}),			clienttasks.command+" register --serverurl=https://sat6_fqdn/ --insecure",	new Integer(69),	"","Unable to reach the server at sat6_fqdn:443/"}));
 			}
-			
 			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1119688"}),			clienttasks.command+" register --servicelevel=foo",							new Integer(64),	"","Error: Must use --auto-attach with --servicelevel."}));	// changed by bug 874804,876305		ll.add(Arrays.asList(new Object[]{clienttasks.command+" register --servicelevel=foo",				new Integer(255),	"Error: Must use --autosubscribe with --servicelevel.", ""}));
 			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"856236","1119688"}),	clienttasks.command+" register --activationkey=foo --org=foo --env=foo",	new Integer(64),	"","Error: Activation keys do not allow environments to be specified."}));
 			if (clienttasks.isPackageVersion("subscription-manager",">=","1.16.2-1")) {	// subscription-manager commit f14d2618ea94c18a0295ae3a5526a2ff252a3f99	and 6bd0448c85c10d8a58cae10372f0d4aa323d5c27
@@ -1079,9 +1085,15 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 			}
 			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1275179"}),			clienttasks.command+" subscribe --quantity=2 --auto",						new Integer(64),	"","Error: --quantity may not be used with an auto-attach"}));	// added by bug 1275179 commit 281c1e5818eefa89bc73ba438c75494e16afc698
 			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1275179"}),			clienttasks.command+" subscribe --quantity=2",								new Integer(64),	"","Error: --quantity may not be used with an auto-attach"}));	// added by bug 1275179 commit 281c1e5818eefa89bc73ba438c75494e16afc698
-			ll.add(Arrays.asList(new Object[]{null,													clienttasks.command+" repo-override --repo=bar --add=\"\":VALUE",			new Integer(1),		"","name: may not be null"}));
-			ll.add(Arrays.asList(new Object[]{null,													clienttasks.command+" repo-override --repo=foo --add=:VALUE",			new Integer(1),		"","name: may not be null"}));
-			ll.add(Arrays.asList(new Object[]{null,													clienttasks.command+" repo-override --repo=foobar --add :VALUE",			new Integer(1),		"","name: may not be null"}));
+			if (clienttasks.isPackageVersion("subscription-manager",">=","1.18.2-1")) {	// post commit 0d17fb22898be7932331bffdc8cb3526822a3bf8 Disallow empty name for --add
+				ll.add(Arrays.asList(new Object[]{null,													clienttasks.command+" repo-override --repo=bar --add=\"\":VALUE",			new Integer(2),		clienttasks.command+": error: --add arguments should be in the form of \"name:value\"",	"Usage: subscription-manager repo-override [OPTIONS]"}));
+				ll.add(Arrays.asList(new Object[]{null,													clienttasks.command+" repo-override --repo=foo --add=:VALUE",				new Integer(2),		clienttasks.command+": error: --add arguments should be in the form of \"name:value\"",	"Usage: subscription-manager repo-override [OPTIONS]"}));
+				ll.add(Arrays.asList(new Object[]{null,													clienttasks.command+" repo-override --repo=foobar --add :VALUE",			new Integer(2),		clienttasks.command+": error: --add arguments should be in the form of \"name:value\"",	"Usage: subscription-manager repo-override [OPTIONS]"}));
+			} else {
+				ll.add(Arrays.asList(new Object[]{null,													clienttasks.command+" repo-override --repo=bar --add=\"\":VALUE",			new Integer(1),		"","name: may not be null"}));
+				ll.add(Arrays.asList(new Object[]{null,													clienttasks.command+" repo-override --repo=foo --add=:VALUE",				new Integer(1),		"","name: may not be null"}));
+				ll.add(Arrays.asList(new Object[]{null,													clienttasks.command+" repo-override --repo=foobar --add :VALUE",			new Integer(1),		"","name: may not be null"}));
+			}
 			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1275179"}),			clienttasks.command+" attach --auto --quantity=2",							new Integer(64),	"","Error: --quantity may not be used with an auto-attach"}));	// added by bug 1275179 commit 281c1e5818eefa89bc73ba438c75494e16afc698
 			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1119688"}),			clienttasks.command+" subscribe --file=/missing/poolIds.txt",				new Integer(65),	"","Error: The file \"/missing/poolIds.txt\" does not exist or cannot be read."}));	// added by bug 1159974
 			if (clienttasks.isPackageVersion("subscription-manager",">=","1.15.9-12")) {

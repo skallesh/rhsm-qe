@@ -61,9 +61,10 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void SubscribeToSubscriptionPoolProductId_Test(String productId, JSONArray bundledProductDataAsJSONArray) throws Exception {
-///*debugTesting*/ if (!productId.equals("awesomeos-guestlimit-4-stackable")) throw new SkipException("debugTesting - Automator should comment out this line."); 		
+///*debugTesting*/ if (!productId.equals("awesomeos-ul-quantity-virt")) throw new SkipException("debugTesting - Automator should comment out this line."); 		
 ///*debugTesting*/ if (!productId.equals("awesomeos-onesocketib")) throw new SkipException("debugTesting - Automator should comment out this line."); 		
-///*debugTesting*/ if (!productId.equals("awesomeos-server-basic-dc")) throw new SkipException("debugTesting - Automator should comment out this line."); 		
+///*debugTesting*/ if (!productId.equals("awesomeos-virt-4")) throw new SkipException("debugTesting - Automator should comment out this line."); 		
+///*debugTesting*/ if (!productId.equals("awesomeos-virt-4")&&!productId.equals("awesomeos-ul-quantity-virt")&&!productId.equals("awesomeos-onesocketib")&&!productId.equals("awesomeos-instancebased")) throw new SkipException("debugTesting - Automator should comment out this line."); 		
 ///*debugTesting*/ if (!productId.equals("2cores-2ram-multiattr")) throw new SkipException("debugTesting - Automator should comment out this line."); 		
 ///*debugTesting*/ if (!productId.equals("RH0380468")) throw new SkipException("debugTesting - Automator should comment out this line."); 		
 ///*debugTesting*/ if (!productId.equals("RH00284")) throw new SkipException("debugTesting - Automator should comment out this line."); 		
@@ -108,8 +109,18 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			log.warning("While bug '"+bugId+"' is open, skip assertion that the actual list of SubscriptionPool provided product names "+pool.provides+" matches the expected list of bundledProductDataNames "+bundledProductNames+".");
 		} else
 		// END OF WORKAROUND
-		// assert that the pool's list of Provides matches the list of bundled product names after implementation of Bug 996993 - [RFE] Search for or list matching providedProducts; subscription-manager commit b8738a74c1109975e387fc51105c8ff58eaa8f01
 		/*if (clienttasks.isPackageVersion("subscription-manager",">=","1.10.3-1"))*/ if (pool.provides!=null) {
+			
+			// TEMPORARY WORKAROUND
+			invokeWorkaroundWhileBugIsOpen = true;
+			bugId="1394401"; // Bug 1394401 - The list of provided products for Temporary Subscriptions is empty
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			if (invokeWorkaroundWhileBugIsOpen && !bundledProductNames.isEmpty() && pool.provides.isEmpty() && pool.subscriptionType.contains("Temporary")) {
+				log.warning("While bug '"+bugId+"' is open, skip assertion that the actual list of SubscriptionPool provided product names "+pool.provides+" matches the expected list of bundledProductDataNames "+bundledProductNames+".");
+			} else
+			// END OF WORKAROUND
+			
+			// assert that the pool's list of Provides matches the list of bundled product names after implementation of Bug 996993 - [RFE] Search for or list matching providedProducts; subscription-manager commit b8738a74c1109975e387fc51105c8ff58eaa8f01
 			Assert.assertTrue(bundledProductNames.containsAll(pool.provides) && pool.provides.containsAll(bundledProductNames), "The actual list of SubscriptionPool provided product names "+pool.provides+" matches the expected list of bundledProductDataNames "+bundledProductNames+".  (If this fails due to provided Product Names changes by Release Engineering, refresh pools for account '"+sm_clientUsername+"' is needed.)");
 		}
 		
@@ -176,8 +187,19 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			log.warning("While bug '"+bugId+"' is open and we have subscrbed to a Temporary pool, skip assertion that the consumed productSubscription provides all of the expected bundled product names "+bundledProductNames+" after subscribing to pool: "+pool);
 		} else
 		// END OF WORKAROUND
-		// assert that the consumed product subscription provides all the expected bundled products.
-		Assert.assertTrue(consumedProductSubscription.provides.containsAll(bundledProductNames)&&bundledProductNames.containsAll(consumedProductSubscription.provides),"The consumed productSubscription provides all of the expected bundled product names "+bundledProductNames+" after subscribing to pool: "+pool);
+		{
+			// TEMPORARY WORKAROUND
+			invokeWorkaroundWhileBugIsOpen = true;
+			bugId="1394401"; // Bug 1394401 - The list of provided products for Temporary Subscriptions is empty
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			if (invokeWorkaroundWhileBugIsOpen && isPoolRestrictedToUnmappedVirtualSystems) {
+				log.warning("While bug '"+bugId+"' is open and we have subscrbed to a Temporary pool, skip assertion that the consumed productSubscription provides all of the expected bundled product names "+bundledProductNames+" after subscribing to pool: "+pool);
+			} else
+			// END OF WORKAROUND
+				
+			// assert that the consumed product subscription provides all the expected bundled products.
+			Assert.assertTrue(consumedProductSubscription.provides.containsAll(bundledProductNames)&&bundledProductNames.containsAll(consumedProductSubscription.provides),"The consumed productSubscription provides all of the expected bundled product names "+bundledProductNames+" after subscribing to pool: "+pool);
+		}
 		
 		// assert the dates of the consumed product subscription...
 		if (isPoolRestrictedToUnmappedVirtualSystems) {
@@ -206,6 +228,15 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			for (ProductNamespace pn : entitlementCert.productNamespaces) {
 				if (pn.id.equals(bundledProductId)) productNamespace = pn;
 			}
+			
+			// TEMPORARY WORKAROUND
+			invokeWorkaroundWhileBugIsOpen = true;
+			bugId="1394401"; // Bug 1394401 - The list of provided products for Temporary Subscriptions is empty
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			if (invokeWorkaroundWhileBugIsOpen && !bundledProductNames.isEmpty() && pool.provides.isEmpty() && pool.subscriptionType.contains("Temporary")) {
+				log.warning("While bug '"+bugId+"' is open, skip assertion of the consumed entitlement provided products amongst the list of install products.");
+			} else
+			// END OF WORKAROUND
 			
 			// assert the installed status of the corresponding product
 			if (entitlementCert.productNamespaces.isEmpty()) {
@@ -1511,6 +1542,17 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 					// get the product certs that are provided by these pools
 					List<String> virtualProductIds = CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, virtualPool.poolId);
 					List<String> physicalProductIds = CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, physicalPool.poolId);
+					// TEMPORARY WORKAROUND
+					if (virtualPool.subscriptionType.contains("(Temporary)") && virtualProductIds.isEmpty() && !physicalProductIds.isEmpty()) {
+						boolean invokeWorkaroundWhileBugIsOpen = true;
+						String bugId="1394401"; // Bug 1394401 - The list of provided products for Temporary Subscriptions is empty
+						try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+						if (invokeWorkaroundWhileBugIsOpen) {
+							log.warning("Virtual pool '"+virtualPool.poolId+"' and and Physical pool '"+physicalPool.poolId+"' are not good candidates for this test while bug '"+bugId+"' is open.  Looking for another pair.");
+							continue;
+						}
+					}
+					// END OF WORKAROUND		
 					Assert.assertTrue(virtualProductIds.containsAll(physicalProductIds)&&physicalProductIds.containsAll(virtualProductIds), "Provided product ids from virtual pool '"+virtualPool.poolId+"' and physical pool '"+physicalPool.poolId+"' sharing a common productId '"+virtualPool.productId+"' should be the same.");
 					
 					// configure a temporary product cert directory containing only these provided product certs

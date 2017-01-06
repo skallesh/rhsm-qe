@@ -561,8 +561,23 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 			throw new SkipException(
 					"This test applies a newer version of subscription manager that includes fixes for bug 1367128.");
 		}
-		String Hostname =client.runCommandAndWait("hostname -f").getStdout().trim();
-		Assert.assertEquals(clienttasks.getFactValue("network.fqdn"),Hostname,"Fact network.fqdn matches with system value of hostname -f ");
+		String command = "hostname --fqdn";
+		String fact = "network.fqdn";
+		String factValue = clienttasks.getFactValue(fact);
+		String fqdn = client.runCommandAndWait(command).getStdout().trim();
+		
+		// TEMPORARY WORKAROUND FOR BUG
+		if (!factValue.equals(fqdn) && (Arrays.asList(client.runCommandAndWait("hostname --all-fqdn").getStdout().trim().split(" ")).contains(factValue))) {
+			boolean invokeWorkaroundWhileBugIsOpen = true;
+			String bugId="1401394"; // Bug 1401394 - Mismatch in the 'fqdn' fact value on s390x machine
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			if (invokeWorkaroundWhileBugIsOpen) {
+				throw new SkipException("Skipping this test while bug '"+bugId+"' is open.");
+			}
+		}
+		// END OF WORKAROUND
+		
+		Assert.assertEquals(factValue,fqdn,"System fact '"+fact+"' matches the system value from command '"+command+"'.");
 	}
 	@Test(	description="subscription-manager: assert presence of the new fact cpu.topology_source use to tell us what algorithm subscription-manager employed",
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-978466"}, dependsOnGroups={},

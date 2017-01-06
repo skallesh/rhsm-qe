@@ -902,9 +902,27 @@ schema generation failed
 	
 	protected static String getHTTPResponseAsString(HttpClient client, HttpMethod method, String username, String password) throws Exception {
 		HttpMethod m = doHTTPRequest(client, method, username, password);
-		String response = m.getResponseBodyAsString();
-		log.finer("HTTP server returned content: " + response);
+		String response="";	// m.getResponseBodyAsString();
+		
+		try {
+			response = m.getResponseBodyAsString();
+		} catch (java.io.IOException e) {
+			// TEMPORARY WORKAROUND
+			if (e.getMessage().equals("chunked stream ended unexpectedly")) {
+				String bugId = "1402978"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1402978 - You can't operate on a closed ResultSet!!!
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				if (invokeWorkaroundWhileBugIsOpen) {
+					m.releaseConnection();
+					throw new SkipException("Encountered '"+e+"'; Skipping this test while known candlepin bug '"+bugId+"' is open.");
+				}
+			}
+			// END OF WORKAROUND
+			m.releaseConnection();
+			throw e;
+		}
+		
 		m.releaseConnection();
+		log.finer("HTTP server returned content: " + response);
 		
 		// When testing against a Stage or Production server where we are not granted enough authority to make HTTP Requests,
 		// our tests will fail.  This block of code is a short cut to simply skip those test. - jsefler 11/15/2010 

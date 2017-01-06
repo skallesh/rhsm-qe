@@ -96,6 +96,18 @@
   ([]
      (get-consumer-owner-key (get-consumer-id))))
 
+
+;;  curl -k -u admin:admin --request DELETE https://samserv.redhat.com:443/sam/api/consumers/bfdd0e1f-7a61-439a-84c3-c7ea80ced400
+(defn delete-consumer
+  "remove consumer on server side."
+  ([consumerid]
+   (:key (rest/delete
+          (str (server-url) "/consumers/" consumerid)
+          (@config :admin-username)
+          (@config :admin-password))))
+  ([]
+   (delete-consumer (get-consumer-id))))
+
 (defn list-available
   "Gets a list of all available pools for a given owner and consumer."
   ([owner consumerid & {:keys [all?]

@@ -53,13 +53,13 @@ public class TemporaryPoolTests extends SubscriptionManagerCLITestScript {
 	// Test methods ***********************************************************************
 
 	@Test(	description="given an available unmapped_guests_only pool, assert that it is available only to virtual systems whose host consumer has not yet mapped its virt.uuid as a guestId onto the host consumer.  Moreover, assert that once mapped, the pool is no longer available.",
-			groups={"VerifyAvailabilityOfUnmappedGuestsOnlySubpool_Test"},
+			groups={},
 			dataProvider="getAvailableUnmappedGuestsOnlySubscriptionPoolsData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyAvailabilityOfUnmappedGuestsOnlySubpool_Test(Object bugzilla, SubscriptionPool unmappedGuestsOnlyPool) throws JSONException, Exception {
 		
-		// system facts are overridden with factsMap to fake this system as a guest
+		// system facts were overridden in dataProvider with factsMap to fake this system as a guest
 		
 		// make sure we are freshly registered (to discard a consumer from a former data provided iteration that has mapped guests)
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);	
@@ -111,13 +111,13 @@ public class TemporaryPoolTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="given an available unmapped_guests_only pool, assert that attaching it does not throw any Tracebacks ",
-			groups={"blockedByBug-1198369","VerifyAvailabilityOfUnmappedGuestsOnlySubpool_Test"},
+			groups={"blockedByBug-1198369"},
 			dataProvider="getAvailableUnmappedGuestsOnlySubscriptionPoolsData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyNoTracebacksAreThrownWhenSubscribingToUnmappedGuestsOnlySubpool_Test(Object bugzilla, SubscriptionPool unmappedGuestsOnlyPool) throws JSONException, Exception {
 		
-		// system facts are overridden with factsMap to fake this system as a guest
+		// system facts were overridden in dataProvider with factsMap to fake this system as a guest
 		
 		// make sure we are freshly registered (to discard a consumer from a former data provided iteration that has mapped guests)
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);	
@@ -150,13 +150,13 @@ public class TemporaryPoolTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="given an available unmapped_guests_only pool, attach it and verify the status details of the consumed subscription, installed product, and system status.",	// TODO
-			groups={"VerifyAvailabilityOfUnmappedGuestsOnlySubpool_Test","blockedByBug-1362701"},
+			groups={"blockedByBug-1362701"},
 			dataProvider="getAvailableUnmappedGuestsOnlySubscriptionPoolsData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyStatusDetailsAfterAttachingUnmappedGuestsOnlySubpool_Test(Object bugzilla, SubscriptionPool unmappedGuestsOnlyPool) throws JSONException, Exception {
 		
-		// system facts are overridden with factsMap to fake this system as a guest
+		// system facts were overridden in dataProvider with factsMap to fake this system as a guest
 		
 		// make sure we are freshly registered (to discard a consumer from a former data provided iteration that has mapped guests)
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);	
@@ -243,13 +243,13 @@ public class TemporaryPoolTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="given an available unmapped_guests_only pool, attach it and attempt to auto-heal - repeated attempts to auto-heal should NOT add more and more entitlements",
-			groups={"blockedByBug-1198494","VerifyAvailabilityOfUnmappedGuestsOnlySubpool_Test"},
+			groups={"blockedByBug-1198494"},
 			dataProvider="getAvailableUnmappedGuestsOnlySubscriptionPoolsData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyAutoHealingIsStableAfterAttachingUnmappedGuestsOnlySubpool_Test(Object bugzilla, SubscriptionPool unmappedGuestsOnlyPool) throws JSONException, Exception {
 		
-		// system facts are overridden with factsMap to fake this system as a guest
+		// system facts were overridden in dataProvider with factsMap to fake this system as a guest
 		
 		// make sure we are freshly registered (to discard a consumer from a former data provided iteration that has mapped guests) and auto-subscribed
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, true, false, null, null, null);	
@@ -303,13 +303,13 @@ public class TemporaryPoolTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Once a guest is mapped, while consuming a temporary pool entitlement, the entitlement should be removed at the next checkin.  Verify this while autoheal is disabled.",
-			groups={"blockedByBug-1198494","VerifyAvailabilityOfUnmappedGuestsOnlySubpool_Test"},
+			groups={"blockedByBug-1198494"},
 			dataProvider="getAvailableUnmappedGuestsOnlySubscriptionPoolsData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyAutomaticRemovalOfAnAttachedUnmappedGuestsOnlySubpoolOnceGuestIsMapped_Test(Object bugzilla, SubscriptionPool unmappedGuestsOnlyPool) throws JSONException, Exception {
 		
-		// system facts are overridden with factsMap to fake this system as a guest
+		// system facts were overridden in dataProvider with factsMap to fake this system as a guest
 		
 		// make sure we are freshly registered (to discard a consumer from a former data provided iteration that has mapped guests)
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null);	
@@ -349,13 +349,13 @@ public class TemporaryPoolTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Once a guest is mapped, while consuming a temporary pool entitlement, the entitlement should be removed and the system auto-healed at the next checkin.  Verify it.",
-			groups={"blockedByBug-1198494","VerifyAvailabilityOfUnmappedGuestsOnlySubpool_Test"},
+			groups={"blockedByBug-1198494"},
 			dataProvider="getAvailableUnmappedGuestsOnlySubscriptionPoolsData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyAutoHealingOfAnAttachedUnmappedGuestsOnlySubpoolOnceGuestIsMapped_Test(Object bugzilla, SubscriptionPool unmappedGuestsOnlyPool) throws JSONException, Exception {
 		
-		// system facts are overridden with factsMap to fake this system as a guest
+		// system facts were overridden in dataProvider with factsMap to fake this system as a guest
 		
 		// make sure we are freshly registered (to discard a consumer from a former data provided iteration that has mapped guests)
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null);	
@@ -549,6 +549,7 @@ public class TemporaryPoolTests extends SubscriptionManagerCLITestScript {
 
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
 		
+		// note: getAvailableSubscriptionPoolsDataAsListOfLists(...) will ensure the system is newly registered
 		for (List<Object> list : getAvailableSubscriptionPoolsDataAsListOfLists(false)) {
 			SubscriptionPool pool = (SubscriptionPool)(list.get(0));
 			

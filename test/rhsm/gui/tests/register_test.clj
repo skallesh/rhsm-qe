@@ -39,17 +39,25 @@
 (deftest a-part-of-suite-08-test
   (tests/register_bad_credentials nil [(@c/config :username) (@c/config :password) :system-name-input ""] :no-system-name))
 
-(deftest simple-register-test
+(deftest simple-register-01-test
   (tests/simple_register nil "testuser1" "password" nil))
 
-(deftest simple-register-test
+(deftest simple-register-02-test
   (tests/simple_register nil "testuser2" "password" "Admin Owner"))
 
-(deftest simple-register-test
+(deftest simple-register-03-test
   (tests/simple_register nil "testuser1" "password" "Admin Owner"))
 
-(deftest simple-register-test
+(deftest simple-register-04-test
   (tests/simple_register nil "testuser1" "password" "Snow White"))
+
+(deftest simple-register-05-test
+  (tests/simple_register nil "stage_auto_testuser1   " "redhat" nil))
 
 (deftest check_traceback_unregister-test
   (tests/check_traceback_unregister nil))
+
+(deftest simple_register-test
+  (let [userowners #spy/d (tests/get_userowners nil)]
+    (for [[user password owner] userowners]
+      (tests/simple_register nil user password owner))))

@@ -53,3 +53,13 @@
                                     :accept :json
                                     :content-type :json}))
       :body))
+
+(defn head
+  "HEAD the url, and decodes JSON in the response body, returning a
+  clojure datastructure."
+  [url user pw & [req]]
+  (-> (httpclient/head url (merge rest-opts
+                                 req
+                                 {:basic-auth [user pw]
+                                  :accept :json}))
+      :body json/read-json))

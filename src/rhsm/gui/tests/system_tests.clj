@@ -2,7 +2,8 @@
   (:use [test-clj.testng :only (gen-class-testng
                                 data-driven)]
         [rhsm.gui.tasks.test-config :only (config
-                                           clientcmd)]
+                                           clientcmd
+                                           noauth-proxyrunner)]
         [com.redhat.qe.verify :only (verify)]
         [clojure.string :only (split
                                trim
@@ -162,6 +163,42 @@ Then I should see a dialog 'Network is down'
    (finally
      (tasks/close-error-dialog)
      (base/open-connection-to-candlepin))))
+
+(defn ^{Test {:groups ["system"
+                       "tier2"
+                       "blockedByBug-1327179 "]
+              :description "Given a system is registered
+  and at least one subscription is attached
+  and a proxy connection is configured to be used
+  and I have run 'subscription-manager-gui'
+When the candlepin server is not responding
+Then I should see a dialog 'Network is down'
+  and no traceback appears in '/var/log/rhsm/rhsm.log'"}}
+  error_dialog_and_no_traceback_when_candlepin_is_down_and_proxy_is_used
+  [_]
+  (tasks/restart-app)
+  (tasks/enableproxy (@config :basicauth-proxy-hostname)
+                     :port (@config :basicauth-proxy-port)
+                     :user (@config :basicauth-proxy-username)
+                     :pass (@config :basicauth-proxy-password))
+  (tasks/register-with-creds)
+  (tasks/subscribe-random 2)
+  (letfn [(close-connection-to-candlepin-on-the-proxy-server []
+            (base/close-connection-to-candlepin @noauth-proxyrunner))
+          (open-connection-to-candlepin-on-the-proxy-server []
+            (base/open-connection-to-candlepin @noauth-proxyrunner))]
+    (try+
+     (tasks/kill-app)
+     (close-connection-to-candlepin-on-the-proxy-server)
+     (tasks/start-app)
+     (tasks/ui selecttab :my-subscriptions)
+     (let [subscription (tasks/ui getcellvalue :my-subscriptions-view 0 0)]
+       (verify (-> (try+ (tasks/unsubscribe subscription)
+                         (catch Object e (:type e)))
+                   (= :unable-to-connect-server))))
+     (finally
+       (tasks/close-error-dialog)
+       (open-connection-to-candlepin-on-the-proxy-server)))))
 
 (defn ^{Test {:groups ["system"
                        "tier2"

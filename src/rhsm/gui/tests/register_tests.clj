@@ -15,7 +15,7 @@
             [rhsm.gui.tasks.ui :as ui]
             [rhsm.gui.tests.base :as base]
             [clojure.tools.logging :as log]
-            [rhsm.errors.classification :as erc]
+            [rhsm.errors.utils :refer [normalize-exception-types]]
             [rhsm.gui.tasks.candlepin-tasks :as ctasks])
   (:import [org.testng.annotations
             Test
@@ -36,12 +36,13 @@
 
 (defn ^{BeforeClass {:groups ["setup"]}}
   setup [_]
-  (try+
-   (tasks/unregister)
-   (catch [:type :not-registered] _)
-   (catch Exception e
-     (reset! (skip-groups :register) true)
-     (throw e)))
+  (tasks/screenshot-on-exception
+   (try+
+    (tasks/unregister)
+    (catch [:type :not-registered] _)
+    (catch Exception e
+      (reset! (skip-groups :register) true)
+      (throw e))))
   (when (or (bool (tasks/ui guiexist :register-dialog))
             (bool (tasks/ui guiexist :error-dialog)))
     (tasks/restart-app :force-kill? true)))
@@ -55,7 +56,7 @@
   simple_register
   "Simple register with known username, password and owner."
   [_ user pass owner]
-  (erc/normalize-exception-types
+  (normalize-exception-types
    (try+
     (if owner
       (tasks/register user pass :owner owner)
@@ -115,7 +116,7 @@
   unregister
   "Simple unregister."
   [_]
-  (erc/normalize-exception-types
+  (normalize-exception-types
    (try+ (tasks/register (@config :username) (@config :password))
          (catch
              [:type :already-registered]

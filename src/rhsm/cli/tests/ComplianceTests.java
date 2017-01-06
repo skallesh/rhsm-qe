@@ -248,7 +248,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	@Test(	description="rhsm-complianced: verify rhsm-complianced -d -s reports a compliant status when all installed products are subscribable by more than one common service level",
-			groups={"cli.tests","blockedByBug-991580"},
+			groups={"cli.tests","blockedByBug-991580","blockedByBug-1395794"},
 			priority=110,//dependsOnMethods={"VerifySystemCompliantFactWhenAllProductsSubscribableByMoreThanOneCommonServiceLevel_Test"},			
 			enabled=true)
 	//@ImplementsTCMS(id="")
@@ -298,7 +298,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	@Test(	description="rhsm-complianced: verify rhsm-complianced -d -s reports a compliant status when all installed products are subscribable by one common service level",
-			groups={"cli.tests","blockedByBug-864383","blockedByBug-865193","blockedByBug-991580"},
+			groups={"cli.tests","blockedByBug-864383","blockedByBug-865193","blockedByBug-991580","blockedByBug-1395794"},
 			priority=210,//dependsOnMethods={"VerifySystemCompliantFactWhenAllProductsSubscribableByOneCommonServiceLevel_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
@@ -360,7 +360,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	@Test(	description="rhsm-complianced: verify rhsm-complianced -d -s reports a non-compliant status when some installed products are subscribable",
-			groups={"cli.tests","blockedbyBug-723336","blockedbyBug-691480","blockedbyBug-846834","blockedByBug-991580"},
+			groups={"cli.tests","blockedbyBug-723336","blockedbyBug-691480","blockedbyBug-846834","blockedByBug-991580","blockedByBug-1395794"},
 			priority=310,//dependsOnMethods={"VerifySystemCompliantFactWhenSomeProductsAreSubscribable_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
@@ -445,7 +445,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	@Test(	description="rhsm-complianced: verify rhsm-complianced -d -s reports a compliant status when all installed products are subscribable (or an appropriate warning period status if an entitlement is within its warning period status)",
-			groups={"cli.tests","blockedbyBug-723336","blockedByBug-991580"},
+			groups={"cli.tests","blockedbyBug-723336","blockedByBug-991580","blockedByBug-1395794"},
 			priority=410,//dependsOnMethods={"VerifySystemCompliantFactWhenAllProductsAreSubscribable_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
@@ -512,7 +512,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	@Test(	description="rhsm-complianced: verify rhsm-complianced -d -s reports a non-compliant status when no installed products are subscribable",
-			groups={"cli.tests","blockedbyBug-723336","blockedbyBug-691480","blockedbyBug-846834","blockedByBug-991580"},
+			groups={"cli.tests","blockedbyBug-723336","blockedbyBug-691480","blockedbyBug-846834","blockedByBug-991580","blockedByBug-1395794"},
 			priority=510,//dependsOnMethods={"VerifySystemCompliantFactWhenNoProductsAreSubscribable_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
@@ -595,7 +595,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	@Test(	description="rhsm-complianced: verify rhsm-complianced -d -s reports a compliant status when no products are installed (and a warning period status when at least one entitlement cert is within its warning period)",
-			groups={"cli.tests","blockedbyBug-723336","blockedByBug-991580"},
+			groups={"cli.tests","blockedbyBug-723336","blockedByBug-991580","blockedByBug-1395794"},
 			priority=610,//dependsOnMethods={"VerifySystemCompliantFactWhenNoProductsAreInstalled_Test"},		
 			enabled=true)
 	//@ImplementsTCMS(id="")
@@ -723,7 +723,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	@Test(	description="rhsm-complianced: verify rhsm-complianced -d -s reports a compliant status when registered to RHN Classic",
-			groups={"RHNClassicTests","cli.tests"},
+			groups={"RHNClassicTests","cli.tests","blockedByBug-1395794"},
 			priority=720,//dependsOnMethods={"VerifySystemCompliantFactWhenRegisteredToRHNClassic_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
@@ -809,7 +809,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	@Test(	description="rhsm-complianced: verify rhsm-complianced -d -s reports a non-compliant status when all installed products are subscribable in the future",
-			groups={"cli.tests","blockedByBug-991580"},
+			groups={"cli.tests","blockedByBug-991580","blockedByBug-1395794"},
 			priority=810,//dependsOnMethods={"VerifySystemCompliantFactWhenAllProductsAreSubscribableInTheFuture_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")

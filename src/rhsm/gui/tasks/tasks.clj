@@ -18,7 +18,8 @@
             [clojure.data.json :as json]
             [clojure.core.match :as match]
             [rhsm.gui.tasks.candlepin-tasks :as ctasks]
-            rhsm.gui.tasks.ui) ;;need to load ui even if we don't refer to it because of the extend-protocol in there.
+            rhsm.gui.tasks.ui ;;need to load ui even if we don't refer to it because of the extend-protocol in there.
+            [clojure.java.io :as io]) 
   (:import [com.redhat.qe.tools RemoteFileTasks]
            [rhsm.cli.tasks CandlepinTasks]
            [rhsm.base SubscriptionManagerBaseTestScript]))
@@ -43,6 +44,7 @@
                    :no-sla-available #"No service level will cover all installed products"
                    :error-getting-subscription #"Pool is restricted to physical systems"
                    :no-system-name #"You must enter a system name"
+                   :proxy-connection-failed #"Proxy connection failed, please check your settings."
                    :unable-to-connect-server #"Network error, unable to connect to server."})
 
 (defn matching-error
@@ -115,9 +117,9 @@
        (log/info (str "ldtp pid for " path ": " ldtp-pid )))
      (when window
        (do
-         (ui waittillwindowexist window 30)
+         (ui waittillwindowexist window 60)
          (try (assert (bool (ui guiexist window))
-                      "subsciption-manager-gui did not launch!")
+                      "subscription-manager-gui did not launch!")
               (catch AssertionError e
                 (reset! rhsm-gui-pid nil)
                 (throw e)))
@@ -1104,12 +1106,34 @@ The function uses an utility 'import' from package 'imagemagick'"
   [expr]
   `(try+ (verify ~expr)
          (catch Object e#
-           (take-screenshot "not-verified")
+           (let [name#  (take-screenshot "not-verified")
+                 out-dir# (io/file (System/getProperty "automation.dir") "test-output")]
+             (RemoteFileTasks/getFile (.getConnection @clientcmd) (.toString out-dir#) name#)
+             (log/info (format "A screenshot has been copied as '%s'." (.toString (io/file out-dir# name#)))))
            (throw+))))
 
 (defmacro screenshot-on-exception
-  [& body]
-  `(try+ ~@body
-         (catch Object e#
-           (take-screenshot "on-exception")
-           (throw+))))
+  [suffix & body]
+  "suffix - :default-name
+          - 'some text'
+   ... suffix will be prepended to a name of screenshot"
+  `(let [suffix# (match/match ~suffix
+                              :default-name             "on-exception"
+                              (no-care# :guard blank?)  "on-exception" 
+                              :else                     ~suffix)]
+     (try+ ~@body
+           (catch Object e#
+             (let [name# (take-screenshot suffix#)
+                   out-dir# (io/file (System/getProperty "automation.dir") "test-output")]
+               (RemoteFileTasks/getFile (.getConnection @clientcmd) (.toString out-dir#) name#)
+               (log/info (format "A screenshot has been copied as '%s'." (.toString (io/file out-dir# name#)))))
+             (throw+)))))
+
+(defmacro try-more
+  [num-of-retries & body]
+  "The macro evalues the body more times when an exception is risen."
+  (if (> (Math/abs num-of-retries) 0)
+    (do `(try+ ~@body
+               (catch Object e#
+                 (try-more ~(dec (Math/abs num-of-retries)) ~@body))))
+    (do `(do ~@body))))

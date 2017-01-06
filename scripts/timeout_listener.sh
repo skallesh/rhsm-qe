@@ -46,7 +46,7 @@
 #
 #############################################
 
-PORT=8883
+PORT=8883; # assumes this port is available, you can check by calling netstat -an | grep <port_number>
 
 echo "Listening on $PORT forever.  Ctrl-C to cancel."
 nc --ssl --ssl-key ./timeout_listener.key --ssl-cert ./timeout_listener.pem --listen --keep-open $PORT

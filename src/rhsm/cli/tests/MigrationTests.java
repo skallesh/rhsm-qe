@@ -717,7 +717,8 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 				//	osad           	0:off	1:off	2:off	3:off	4:off	5:off	6:off
 				SSHCommandResult sshChkconfigCommandResult = client.runCommandAndWait("chkconfig --list osad");
 				Assert.assertEquals(sshChkconfigCommandResult.getExitCode(),Integer.valueOf(0), "Expected exitCode for chkconfig --list osad");
-				Assert.assertEquals(sshChkconfigCommandResult.getStdout().trim(),"osad           	0:off	1:off	2:off	3:off	4:off	5:off	6:off", "Expected stdout for chkconfig --list osad");
+				String sshChkconfigRegex = "osad\\s+0:off\\s+1:off\\s+2:off\\s+3:off\\s+4:off\\s+5:off\\s+6:off";
+				Assert.assertTrue(sshChkconfigCommandResult.getStdout().trim().matches(sshChkconfigRegex), "Expected stdout for chkconfig --list osad to match regex '"+sshChkconfigRegex+"'.");
 			}
 			if (clienttasks.isPackageInstalled("rhnsd")) {
 				//	[root@jsefler-rhel6 ~]# service rhnsd status
@@ -729,7 +730,8 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 				//	rhnsd           	0:off	1:off	2:off	3:off	4:off	5:off	6:off
 				SSHCommandResult sshChkconfigCommandResult = client.runCommandAndWait("chkconfig --list rhnsd");
 				Assert.assertEquals(sshChkconfigCommandResult.getExitCode(),Integer.valueOf(0), "Expected exitCode for chkconfig --list rhnsd");
-				Assert.assertEquals(sshChkconfigCommandResult.getStdout().trim(),"rhnsd           	0:off	1:off	2:off	3:off	4:off	5:off	6:off", "Expected stdout for chkconfig --list rhnsd");
+				String sshChkconfigRegex = "rhnsd\\s+0:off\\s+1:off\\s+2:off\\s+3:off\\s+4:off\\s+5:off\\s+6:off";
+				Assert.assertTrue(sshChkconfigCommandResult.getStdout().trim().matches(sshChkconfigRegex), "Expected stdout for chkconfig --list rhnsd to match regex '"+sshChkconfigRegex+"'.");
 			}
 			
 			// assert that no FAILED nor Usage errors occurred
@@ -2149,6 +2151,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			dependsOnMethods={},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
+	// TODO WARNING: This test will inadvertently remove package subscription-manager-firstboot and not restore it.
 	public void RhnMigrateClassicToRhsmWithRemoveRhnPackages_Test() {
 		if (clienttasks.isPackageVersion("subscription-manager-migration", "<", "1.18.2-1")) throw new SkipException("This version of subscription-manager does not support Bug 1185914 - [RFE] rhn-migrate-classic-to-rhsm should give the option to remove RHN Classic related packages / daemons");	// commit 871264dbb0cc091d3eaefabfdfd2e51d6bbc0a3c
 		
@@ -2268,12 +2271,17 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue((sshCommandResult.getStderr()+sshCommandResult.getStdout()).trim().endsWith(expectedMsg), "The result from a call to '"+rhnMigrateTool+"' after already having called this tool with options '"+options+"' ends with: "+expectedMsg);
 	}
 	// Make sure the RHN Classic Packages are installed
-	List<String> legacyRHNClassicPackages = Arrays.asList(new String[]{"osad","rhn-check","rhn-client-tools","rhncfg","rhncfg-actions","rhncfg-client","rhncfg-management","rhn-setup","rhnpush","rhnsd","spacewalk-abrt","spacewalk-oscap","yum-rhn-plugin"});	// taken from https://github.com/candlepin/subscription-manager/pull/1484/files
+	List<String> legacyRHNClassicPackages = Arrays.asList(new String[]{"osad","rhn-check","rhn-client-tools","rhncfg","rhncfg-actions","rhncfg-client","rhncfg-management","rhn-setup","rhnpush","rhnsd","spacewalk-abrt","spacewalk-oscap","yum-rhn-plugin","rhn-setup-gnome"/*requires rhn-setup and rhn-client-tool and must be installed for subscription-manager-firstboot requires rhn-setup-gnome*/});	// taken from https://github.com/candlepin/subscription-manager/pull/1484/files
 	@BeforeGroups(groups="setup",value={"RhnMigrateClassicToRhsmWithRemoveRhnPackages_Test"})
 	@AfterGroups(groups="setup",value={"RhnMigrateClassicToRhsmWithRemoveRhnPackages_Test"})
 	public void installRhnClassicPackages() throws IOException, JSONException {
 		if (clienttasks==null) return;
+		
+		// install the rhn classic packages
 		clienttasks.installReleasedRhnClassicPackages(sm_yumInstallOptions, legacyRHNClassicPackages);
+		
+		//  also need to restore the up2date configurations
+		updateSslCaCertConfigInRhnUp2dateFile();
 	}
 	
 	
@@ -2302,6 +2310,11 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			Assert.assertTrue(clienttasks.isPackageInstalled(pkg),"Required package '"+pkg+"' is installed for MigrationTests.");
 		}
 		
+		// make sure we have the RHN-ORG-TRUSTED-SSL-CERT for the rhn/satellite server
+		updateSslCaCertConfigInRhnUp2dateFile();
+	}
+	public void updateSslCaCertConfigInRhnUp2dateFile() {
+
 		// make sure we have the RHN-ORG-TRUSTED-SSL-CERT for the rhn/satellite server
 		/*
 		 * 	1. Set automation parameters:
@@ -3373,13 +3386,17 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		// Note: To avoid redundant prompting for credentials, rhn-migrate-classic-to-rhsm will NOT prompt for rhsm Username/Password/Org when the rhsm server matches subscription\.rhn\.(.+\.)*redhat\.com
 		// This causes a testing problem when migrating from a satellite server to rhsm hosted - adding a valid --serverurl to the options is a good workaround
 		String rhsmServerUrlOption="";
-		if (!doesStringContainMatches(sm_rhnHostname, "rhn\\.(.+\\.)*redhat\\.com")) {	// if (sm_rhnHostname.startsWith("http") { 	// indicates that we are migrating from a non-hosted rhn server - as opposed to rhn.code.stage.redhat.com (stage) or rhn.redhat.com (production)
-			if (doesStringContainMatches(sm_serverHostname, "subscription\\.rhn\\.(.+\\.)*redhat\\.com")) {
+//		if (sm_rhnHostname.startsWith("http") { 	// indicates that we are migrating from a non-hosted rhn server - as opposed to rhn.code.stage.redhat.com (stage) or rhn.redhat.com (production)
+//		if (!doesStringContainMatches(sm_rhnHostname, "rhn\\.(.+\\.)*redhat\\.com")) {	// indicates that we are migrating from a non-hosted rhn server - as opposed to rhn.code.stage.redhat.com (stage) or rhn.redhat.com (production)
+		if (!doesStringContainMatches(sm_rhnHostname, "(rhn|rhsm)\\.(.+\\.)*redhat\\.com")) {	// indicates that we are migrating from a non-hosted rhn server - as opposed to rhn.code.stage.redhat.com (stage) or rhsm.stage.redhat.com (stage) or rhn.redhat.com (production) or rhsm.redhat.com (production after RFE 1126501)
+//			if (doesStringContainMatches(sm_serverHostname, "subscription\\.rhn\\.(.+\\.)*redhat\\.com")) {
+			if (doesStringContainMatches(sm_serverHostname, "subscription\\.(rhn|rhsm)\\.(.+\\.)*redhat\\.com")) {
 				// force a valid --serverurl
 				rhsmServerUrlOption = " --serverurl="+"https://"+originalServerHostname+":"+originalServerPort+originalServerPrefix;
 			}
 		} else {// we are migrating from rhn hosted...
-			if (doesStringContainMatches(sm_serverHostname, "subscription\\.rhn\\.(.+\\.)*redhat\\.com")) {
+//			if (doesStringContainMatches(sm_serverHostname, "subscription\\.rhn\\.(.+\\.)*redhat\\.com")) {
+			if (doesStringContainMatches(sm_serverHostname, "subscription\\.(rhn|rhsm)\\.(.+\\.)*redhat\\.com")) {
 				// and we are migrating to rhsm hosted...
 				// hence we will not be prompted for rhsm credentials,
 				// so don't pass them to the rhn-migrate-classic-to-rhsm.tcl script or else you won't get the expected rhn-migrate-classic-to-rhsm exit code because the tcl script will be prematurely exited without getting the actual exit code from rhn-migrate-classic-to-rhsm.
