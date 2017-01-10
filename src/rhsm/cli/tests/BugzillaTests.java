@@ -2621,14 +2621,14 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null,
 				null, (String) null, null, null, null, true, null, null, null, null);
 		List<YumRepo> originalRepos = clienttasks.getCurrentlySubscribedYumRepos();
-		Assert.assertFalse(originalRepos.isEmpty());
+		Assert.assertFalse(originalRepos.isEmpty(), "list is not empty after setting manage_repos to 1");
 		listOfSectionNameValues = new ArrayList<String[]>();
 		listOfSectionNameValues.add(new String[] { "rhsm", "manage_repos", "0" });
 		clienttasks.config(null, null, true, listOfSectionNameValues);
 		clienttasks.getYumRepolist("all"); // needed to trigger
 		// subscription-manager yum plugin
 		originalRepos = clienttasks.getCurrentlySubscribedYumRepos();
-		Assert.assertTrue(originalRepos.isEmpty());
+		Assert.assertTrue(originalRepos.isEmpty(), "list is  empty after setting manage_repos to 0");
 
 	}
 
@@ -3658,7 +3658,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
 				null, (String) null, null, null, null, true, null, null, null, null);
 		clienttasks.autoheal(null, null, true, null, null, null);
-		int sockets = 6;
+		int sockets = 5;
 		int core = 2;
 		int ram = 10;
 
