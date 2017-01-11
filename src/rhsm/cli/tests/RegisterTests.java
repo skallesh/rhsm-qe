@@ -741,8 +741,9 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		String maxCharsStderr = "Name of the consumer should be shorter than 250 characters\\.";
 		if (!clienttasks.workaroundForBug876764(sm_serverType)) maxCharsStderr = "Name of the unit must be shorter than 250 characters\\.";
 		       maxCharsStderr = "Problem creating unit Consumer";	// Problem creating unit Consumer [id = 8a9087e3462af2aa01466361ec71037f, type = ConsumerType [id=1000, label=system], getName() = 256_characters_6789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456]	// valid after bug https://bugzilla.redhat.com/show_bug.cgi?id=1094492#c1
-		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion,">=","2.0.21-1"/*TODO change to "2.0.22-1" once it is tagged*/)) {	// candlepin commit 606b9d9d14d1547d9704e6151f873573f68c52b8 1371009:  Need clearer error message when register with system name exceeding max characters.
-			maxCharsStderr = "Name of the consumer should be shorter than 255 characters\\.";
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion,">=","2.0.21-1"/*TODO change to "2.0.22-1" once it is tagged*/)) {	// Bug 1371009 - Need clearer error message when register with system name exceeding max characters.
+			maxCharsStderr = "Name of the consumer should be shorter than 255 characters\\.";	// candlepin commit 606b9d9d14d1547d9704e6151f873573f68c52b8 1371009:  Need clearer error message when register with system name exceeding max characters.
+			maxCharsStderr = "Name of the consumer should be shorter than 256 characters\\.";	// candlepin commit 4e365796eeeea75ad1fc2d35ab4222e0604f1eca 1371009: clearer error message (fixed typo)
 		}
 		String name;
 		String successfulStdout = "The system has been registered with id: [a-f,0-9,\\-]{36}";	// msg changed by bug 878634
