@@ -34,6 +34,7 @@ import com.redhat.qe.jul.TestRecords;
 import rhsm.base.ConsumerType;
 import rhsm.base.SubscriptionManagerCLITestScript;
 import rhsm.cli.tasks.CandlepinTasks;
+import rhsm.cli.tasks.SubscriptionManagerTasks;
 import rhsm.data.ConsumerCert;
 import rhsm.data.EntitlementCert;
 import rhsm.data.InstalledProduct;
@@ -736,9 +737,13 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		
 		String invalidNameStderr = "System name must consist of only alphanumeric characters, periods, dashes and underscores.";	// bugzilla 672233
 		       invalidNameStderr = "System name cannot contain most special characters.";	// bugzilla 677405
+		String maxCharsStdout = null;
 		String maxCharsStderr = "Name of the consumer should be shorter than 250 characters\\.";
 		if (!clienttasks.workaroundForBug876764(sm_serverType)) maxCharsStderr = "Name of the unit must be shorter than 250 characters\\.";
 		       maxCharsStderr = "Problem creating unit Consumer";	// Problem creating unit Consumer [id = 8a9087e3462af2aa01466361ec71037f, type = ConsumerType [id=1000, label=system], getName() = 256_characters_6789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456]	// valid after bug https://bugzilla.redhat.com/show_bug.cgi?id=1094492#c1
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion,">=","2.0.21-1"/*TODO change to "2.0.22-1" once it is tagged*/)) {	// candlepin commit 606b9d9d14d1547d9704e6151f873573f68c52b8 1371009:  Need clearer error message when register with system name exceeding max characters.
+			maxCharsStderr = "Name of the consumer should be shorter than 255 characters\\.";
+		}
 		String name;
 		String successfulStdout = "The system has been registered with id: [a-f,0-9,\\-]{36}";	// msg changed by bug 878634
 		       successfulStdout = "The system has been registered with ID: [a-f,0-9,\\-]{36}";
@@ -808,7 +813,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		//								ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("672233"),	name,	Integer.valueOf(255),	null,				maxCharsStderr}));
 										ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("672233"),	name,	Integer.valueOf(0),		successfulStdout,	null}));
 		name = "256_characters_6789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456";
-										ll.add(Arrays.asList(new Object[] {new BlockedByBzBug(new String[]{"672233","1065369","1094492","1101552"}),	name,	Integer.valueOf(255),	null,	maxCharsStderr}));
+										ll.add(Arrays.asList(new Object[] {new BlockedByBzBug(new String[]{"672233","1065369","1094492","1101552"}),	name,	Integer.valueOf(255), maxCharsStdout, maxCharsStderr}));
 		
 		// for all rows, change the expected exitCode when testing post subscription-manager-1.13.8-1
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
