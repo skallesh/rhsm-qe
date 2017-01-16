@@ -1037,6 +1037,13 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 			Assert.assertTrue(!channelsToProductCertFilenamesMap.containsKey(classicRhnChannel), "Special case RHN Classic channel '"+classicRhnChannel+"' is NOT accounted for in subscription-manager-migration-data file '"+channelCertMappingFilename+"'.");
 			return;
 		}
+		if (classicRhnChannel.equals("rhel-x86_64-server-6-cf-me-3-beta") ||
+			classicRhnChannel.equals("rhel-x86_64-server-6-cf-me-3-beta-debuginfo")) {
+				// Bug 1127880 - rhel-x86_64-server-6-cf-me-3-beta channel maps are missing from channel-cert-mapping.txt
+				log.warning("(anthomas 11/04/2014) These channels are requested to remain disabled. If possible please skip these in future tests for the time being.  https://bugzilla.redhat.com/show_bug.cgi?id=1127880#c8");
+				Assert.assertTrue(!channelsToProductCertFilenamesMap.containsKey(classicRhnChannel), "Special case RHN Classic channel '"+classicRhnChannel+"' is NOT accounted for in subscription-manager-migration-data file '"+channelCertMappingFilename+"'.");
+				return;
+		}
 		/* commented out in favor of bug https://bugzilla.redhat.com/show_bug.cgi?id=1105656#c5
 		if (classicRhnChannel.startsWith("rhel-x86_64-server-productivity-5-beta")) {	// rhel-x86_64-server-productivity-5-beta rhel-x86_64-server-productivity-5-beta-debuginfo
 			if (!channelsToProductCertFilenamesMap.containsKey(classicRhnChannel)) {
