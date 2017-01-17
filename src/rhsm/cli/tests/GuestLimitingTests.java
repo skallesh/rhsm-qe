@@ -37,13 +37,13 @@ import rhsm.data.SubscriptionPool;
 @Test(groups = { "GuestLimitingTests", "Tier2Tests" })
 public class GuestLimitingTests extends SubscriptionManagerCLITestScript {
 	protected String ownerKey = "";
-	protected List<String> providedProductIds = new ArrayList<>();
+	protected List<String> providedProductIds = new ArrayList<String>();
 	protected String factname = "system.entitlements_valid";
 	public static final String factValueForSystemCompliance = "valid";
 	public static final String factValueForSystemNonCompliance = "invalid";
 	public static final String factValueForSystemPartialCompliance = "partial";
 	protected String randomAvailableProductId = null;
-	protected List<String> providedProduct = new ArrayList<>();
+	protected List<String> providedProduct = new ArrayList<String>();
 
 	/**
 	 * @author skallesh
@@ -57,7 +57,7 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript {
 				clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null,
 						null, null, (String) null, null, null, null, true, null, null, null, null));
 		if (clienttasks.getFactValue("virt.is_guest").equals("True")) {
-			Map<String, String> factsMap = new HashMap<>();
+			Map<String, String> factsMap = new HashMap<String, String>();
 			factsMap.put("virt.is_guest", "False");
 			factsMap.put(" virt.uuid", "");
 			clienttasks.createFactsFileWithOverridingValues(factsMap);
@@ -67,12 +67,12 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript {
 				consumerId);
 		// call Candlepin API to PUT some guestIds onto the host consumer
 		JSONObject jsonData = new JSONObject();
-		Map<String, String> attributes = new HashMap<>();
+		Map<String, String> attributes = new HashMap<String, String>();
 		attributes.clear();
 		attributes.put("virtWhoType", "libvirt");
 		attributes.put("active", "1");
 		int guestLimit = 4;
-		List<JSONObject> expectedGuestIds = new ArrayList<>();
+		List<JSONObject> expectedGuestIds = new ArrayList<JSONObject>();
 		for (int k = 0; k <= guestLimit - 1; k++) {
 			expectedGuestIds.add(createGuestIdRequestBody("test-guestId" + k, attributes));
 		}
@@ -105,7 +105,7 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript {
 				clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null,
 						null, null, (String) null, null, null, null, true, null, null, null, null));
 		if (clienttasks.getFactValue("virt.is_guest").equals("True")) {
-			Map<String, String> factsMap = new HashMap<>();
+			Map<String, String> factsMap = new HashMap<String, String>();
 			factsMap.put("virt.is_guest", "False");
 			factsMap.put(" virt.uuid", "");
 			clienttasks.createFactsFileWithOverridingValues(factsMap);
@@ -115,12 +115,12 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript {
 				consumerId);
 		// call Candlepin API to PUT some guestIds onto the host consumer
 		JSONObject jsonData = new JSONObject();
-		Map<String, String> attributes = new HashMap<>();
+		Map<String, String> attributes = new HashMap<String, String>();
 		attributes.clear();
 		attributes.put("virtWhoType", "libvirt");
 		attributes.put("active", "1");
 		int guestLimit = 5;
-		List<JSONObject> expectedGuestIds = new ArrayList<>();
+		List<JSONObject> expectedGuestIds = new ArrayList<JSONObject>();
 		for (int k = 0; k <= guestLimit; k++) {
 			expectedGuestIds.add(createGuestIdRequestBody("test-guestId" + k, attributes));
 		}
@@ -154,7 +154,7 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript {
 				clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null,
 						null, null, (String) null, null, null, null, true, null, null, null, null));
 		if (clienttasks.getFactValue("virt.is_guest").equals("True")) {
-			Map<String, String> factsMap = new HashMap<>();
+			Map<String, String> factsMap = new HashMap<String, String>();
 			factsMap.put("virt.is_guest", "False");
 			factsMap.put("virt.uuid", "");
 			clienttasks.createFactsFileWithOverridingValues(factsMap);
@@ -164,12 +164,12 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript {
 				consumerId);
 		// call Candlepin API to PUT some guestIds onto the host consumer
 		JSONObject jsonData = new JSONObject();
-		Map<String, String> attributes = new HashMap<>();
+		Map<String, String> attributes = new HashMap<String, String>();
 		attributes.clear();
 		attributes.put("virtWhoType", "libvirt");
 		attributes.put("active", "1");
 		int guestLimit = 5;
-		List<JSONObject> expectedGuestIds = new ArrayList<>();
+		List<JSONObject> expectedGuestIds = new ArrayList<JSONObject>();
 		for (int k = 0; k <= guestLimit; k++) {
 			expectedGuestIds.add(createGuestIdRequestBody("test-guestId" + k, attributes));
 		}
@@ -200,7 +200,7 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript {
 				clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null,
 						null, null, (String) null, null, null, null, true, null, null, null, null));
 		if (clienttasks.getFactValue("virt.is_guest").equals("True")) {
-			Map<String, String> factsMap = new HashMap<>();
+			Map<String, String> factsMap = new HashMap<String, String>();
 			factsMap.put("virt.is_guest", "False");
 			factsMap.put(" virt.uuid", "");
 			clienttasks.createFactsFileWithOverridingValues(factsMap);
@@ -210,12 +210,12 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript {
 				consumerId);
 		// call Candlepin API to PUT some guestIds onto the host consumer
 		JSONObject jsonData = new JSONObject();
-		Map<String, String> attributes = new HashMap<>();
+		Map<String, String> attributes = new HashMap<String, String>();
 		attributes.clear();
 		attributes.put("virtWhoType", "libvirt");
 		attributes.put("active", "1");
 		int guestLimit = 4;
-		List<JSONObject> expectedGuestIds = new ArrayList<>();
+		List<JSONObject> expectedGuestIds = new ArrayList<JSONObject>();
 		for (int k = 0; k <= guestLimit - 1; k++) {
 			if (k == 3) {
 				attributes.put("active", "0");
@@ -308,7 +308,7 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript {
 		if (guestId != null)
 			jsonGuestData.put("guestId", guestId);
 
-		Map<String, String> jsonAttribute = new HashMap<>();
+		Map<String, String> jsonAttribute = new HashMap<String, String>();
 		for (String attributeName : attributes.keySet()) {
 			if (attributeName.equals("virtWhoType")) {
 				jsonAttribute.put("virtWhoType", attributes.get(attributeName));
@@ -347,7 +347,7 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript {
 			throws JSONException, Exception {
 		String name = "Guest_limit_TestProduct";
 		String productId = "Guest_limit_Product";
-		Map<String, String> attributes = new HashMap<>();
+		Map<String, String> attributes = new HashMap<String, String>();
 		attributes.clear();
 		attributes.put("version", "1.0");
 		attributes.put("variant", "server");
