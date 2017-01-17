@@ -3704,18 +3704,13 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	
 		// negative tests
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.17.5-1")) {	// post commit ea10b99095ad58df57ed107e13bf19498e003ae8	// Bug 1320507 - Wrong prefix prompts when register using serverurl without prefix
-			if (clienttasks.isPackageVersion("subscription-manager",">=","1.18.2-1")) {	// post commit ad982c13e79917e082f336255ecc42615e1e7707	// Bug 1176219 - subscription-manager repos --list with bad proxy options is silently using cache
-				serverurl= "https://"+server_hostname+(server_port.isEmpty()?"":":"+server_port)+"/PREFIX";		ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"1119688","842885","1176219"}),							serverurl,	null,	null,	null,		new Integer(69),	null,						"Unable to reach the server at "+server_hostname+(server_port.isEmpty()?":"+defaultPort:":"+server_port)+"/PREFIX"}));
-				serverurl= "/";																					ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"1119688","1320507","830767","1176219"}),				serverurl,	null,	null,	null,		new Integer(69),	null,						"Unable to reach the server at "+server_hostname+":"+server_port+"/?"}));	// the ending ? means that we'll accept this expected stderr message with and without the trailing slash /
+			if (isCurrentlyConfiguredServerTypeHosted()) {
+				// 08-11-2015, I don't like this behavior because IT is blacklisting any prefix that does not match /subscription causing a inaccessible server to masquerade as a CA certificate error"
+				serverurl= "https://"+server_hostname+(server_port.isEmpty()?"":":"+server_port)+"/PREFIX";		ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"1119688","842885"}),								serverurl,	null,	null,	null,		new Integer(78),	null,						"Error: CA certificate for subscription service has not been installed."}));
+				serverurl= "/";																					ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"1119688","830767"}),								serverurl,	null,	null,	null,		new Integer(78),	null,						"Error: CA certificate for subscription service has not been installed."}));
 			} else {
-				if (isCurrentlyConfiguredServerTypeHosted()) {
-					// 08-11-2015, I don't like this behavior because IT is blacklisting any prefix that does not match /subscription causing a inaccessible server to masquerade as a CA certificate error"
-					serverurl= "https://"+server_hostname+(server_port.isEmpty()?"":":"+server_port)+"/PREFIX";		ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"1119688","842885"}),								serverurl,	null,	null,	null,		new Integer(78),	null,						"Error: CA certificate for subscription service has not been installed."}));
-					serverurl= "/";																					ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"1119688","830767"}),								serverurl,	null,	null,	null,		new Integer(78),	null,						"Error: CA certificate for subscription service has not been installed."}));
-				} else {
-					serverurl= "https://"+server_hostname+(server_port.isEmpty()?"":":"+server_port)+"/PREFIX";		ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"1119688","842885"}),								serverurl,	null,	null,	null,		new Integer(69),	null,						"Unable to reach the server at "+server_hostname+(server_port.isEmpty()?":"+defaultPort:":"+server_port)+"/PREFIX"}));
-					serverurl= "/";																					ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"1119688","1320507","830767"}),						serverurl,	null,	null,	null,		new Integer(69),	null,						"Unable to reach the server at "+server_hostname+":"+server_port+"/"}));
-				}
+				serverurl= "https://"+server_hostname+(server_port.isEmpty()?"":":"+server_port)+"/PREFIX";		ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"1119688","842885"}),								serverurl,	null,	null,	null,		new Integer(69),	null,						"Unable to reach the server at "+server_hostname+(server_port.isEmpty()?":"+defaultPort:":"+server_port)+"/PREFIX"}));
+				serverurl= "/";																					ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"1119688","1320507","830767","1176219"}),			serverurl,	null,	null,	null,		new Integer(69),	null,						"Unable to reach the server at "+server_hostname+":"+server_port+"/?"}));	// the ending ? means that we'll accept this expected stderr message with and without the trailing slash / and was added post commit ad982c13e79917e082f336255ecc42615e1e7707 Bug 1176219 - subscription-manager repos --list with bad proxy options is silently using cache
 			}
 			serverurl= "hostname";																			ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"1119688","1320507"}),									serverurl,	null,	null,	null,		new Integer(69),	null,						"Unable to reach the server at hostname:"+server_port+server_prefix}));
 			serverurl= "hostname:900";																		ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"1119688","1320507"}),									serverurl,	null,	null,	null,		new Integer(69),	null,						"Unable to reach the server at hostname:900"+server_prefix}));
@@ -3871,7 +3866,8 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 
 
 	protected boolean isHostnameHosted(String hostname) {
-		return hostname.matches("subscription\\.rhn\\.(.*\\.)*redhat\\.com");
+//		return hostname.matches("subscription\\.rhn\\.(.*\\.)*redhat\\.com");
+		return hostname.matches("subscription\\.(rhn|rhsm)\\.(.*\\.)*redhat\\.com");
 	}
 	
 	protected void setupRhnCACert() {
