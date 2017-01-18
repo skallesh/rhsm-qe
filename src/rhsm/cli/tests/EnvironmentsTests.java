@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.TestDefinition;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -40,8 +42,9 @@ import com.redhat.qe.tools.SSHCommandResult;
 public class EnvironmentsTests extends SubscriptionManagerCLITestScript {
 
 	// Test methods ***********************************************************************
-	
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36626", "RHEL7-51434"})
 	@Test(	description="subscription-manager: verify that an on-premises candlepin server does NOT support environments",
 			groups={},
 			enabled=true)
@@ -56,8 +59,10 @@ public class EnvironmentsTests extends SubscriptionManagerCLITestScript {
 
 		Assert.assertFalse(supportsEnvironments,"Candlepin server '"+sm_serverHostname+"' does not support environments.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+	               , testCaseID = {"RHEL6-36627", "RHEL7-51435"})
 	@Test(	description="subscription-manager: run the environments module while prompting for user credentials interactively",
 			groups={"blockedbyBug-878986"},
 			dataProvider = "getInteractiveCredentialsForNonSupportedEnvironmentsData",
@@ -138,6 +143,9 @@ public class EnvironmentsTests extends SubscriptionManagerCLITestScript {
 		server_prefix	= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "prefix");
 		clientOrg 		= clienttasks.getOrgs(sm_clientUsername,sm_clientPassword).get(0).orgKey;	// use the first org
 	}
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36624", "RHEL7-51433"})
 	@Test(	description="subscription-manager: environments with --serverurl",
 			dataProvider="getEnvironmentsWithServerurl_TestData",
 			groups={"EnvironmentsWithServerurl_Test"},
@@ -215,6 +223,9 @@ public class EnvironmentsTests extends SubscriptionManagerCLITestScript {
 		if (clienttasks==null) return;
 		rhsm_ca_cert_dir	= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsm", "ca_cert_dir");
 	}
+
+	@TestDefinition( projectID = {Project.RHEL6}
+			, testCaseID = {"RHEL6-36623"})
 	@Test(	description="subscription-manager: environments with --insecure",
 			groups={"EnvironmentsWithInsecure_Test","blockedByBug-844411","blockedByBug-993202"},
 			enabled=true)
@@ -263,7 +274,9 @@ public class EnvironmentsTests extends SubscriptionManagerCLITestScript {
 	public void afterEnvironmentsWithInsecure_Test() {
 		if (rhsm_ca_cert_dir!=null) clienttasks.config(null, null, true, new String[]{"rhsm","ca_cert_dir",rhsm_ca_cert_dir});
 	}
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-27130", "RHEL7-64493"})
 	@Test(	description="subscription-manager: run the environments module with valid user credentials and verify the expected environments are listed",
 			groups={"blockedByBug-1063491"},
 			dataProvider="getEnvironmentsForOrgsData",
@@ -291,7 +304,9 @@ public class EnvironmentsTests extends SubscriptionManagerCLITestScript {
 	 *
 	 *
 	 */
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36625", "RHEL7-64493"})
 	@BeforeGroups(value={"Libraryas_env"}, groups={"setup"})
 	@Test(description="Library as an Env",
 			groups={"blockedByBug-963579"},
@@ -327,7 +342,6 @@ public class EnvironmentsTests extends SubscriptionManagerCLITestScript {
 	protected String envname=null;
 	@BeforeGroups(value={"Register with All Environment"}, groups={"setup"})
 	@Test(description="Register with env other than Library",enabled=true)
-	
 	public void All_Env_Register(){
 		SSHCommandResult sshCommandResult;
 		// added by jsefler 

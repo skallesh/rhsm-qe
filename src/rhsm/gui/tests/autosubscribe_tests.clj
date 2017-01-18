@@ -27,7 +27,9 @@
             DataProvider]
            org.testng.SkipException
            [rhsm.cli.tests ComplianceTests]
-           [com.redhat.qe.auto.bugzilla BzChecker]))
+           [com.redhat.qe.auto.bugzilla BzChecker]
+           [com.github.redhatqe.polarize.metadata TestDefinition]
+           [com.github.redhatqe.polarize.metadata DefTypes$Project]))
 
 (def somedir (ComplianceTests/productCertDirForSomeProductsSubscribable))
 (def alldir (ComplianceTests/productCertDirForAllProductsSubscribable))
@@ -128,9 +130,11 @@
         (verify (= (tasks/warn-count) beforesubs))
         (verify (not (tasks/compliance?)))))))
 
-(defn ^{Test {:groups ["autosubscribe"
-                       "tier3"
-                       "configureProductCertDirForNoProductsInstalled"]}}
+(defn ^{Test           {:groups ["autosubscribe"
+                                 "tier3"
+                                 "configureProductCertDirForNoProductsInstalled"]}
+        TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-20808" "RHEL7-27030"]}}
   no_products_installed
   "Tests autosubscribe when no products are installed."
   [_]
@@ -141,12 +145,14 @@
   (verify (= 0 (tasks/warn-count)))
   (verify (tasks/compliance?)))
 
-(defn ^{Test {:groups ["autosubscribe"
-                       "tier2"
-                       "tier1" "acceptance"
-                       "configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevel"
-                       "blockedByBug-857147"]
-              :priority (int 100)}}
+(defn ^{Test           {:groups   ["autosubscribe"
+                                   "tier2"
+                                   "tier1" "acceptance"
+                                   "configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevel"
+                                   "blockedByBug-857147"]
+                        :priority (int 100)}
+        TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-20121", "RHEL7-27031"]}}
   simple_autosubscribe
   "Tests simple autosubscribe when all products can be covered by one service level."
   [_]
@@ -204,11 +210,13 @@
       (run-command "rm -f /etc/rhsm/facts/simple_autosubscribe.facts")
       (run-command "subscription-manager facts --update"))))
 
-(defn ^{Test {:groups ["autosubscribe"
-                       "tier2"
-                       "configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevel"
-                       "blockedByBug-921245"]
-              :dependsOnMethods ["simple_autosubscribe"]}}
+(defn ^{Test           {:groups           ["autosubscribe"
+                                           "tier2"
+                                           "configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevel"
+                                           "blockedByBug-921245"]
+                        :dependsOnMethods ["simple_autosubscribe"]}
+        TestDefinition {:projectID  [`DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL7-27033"]}}
   assert_service_level
   "Asserts that the service level was set system wide after simple autosubscribe."
   [_]
@@ -236,10 +244,12 @@
       (if (bool (tasks/ui guiexist :system-preferences-dialog))
         (tasks/ui click :close-system-prefs)))))
 
-(defn ^{Test {:groups ["autosubscribe"
-                       "tier2"
-                       "configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevel"]
-              :dependsOnMethods ["simple_autosubscribe"]}}
+(defn ^{Test           {:groups           ["autosubscribe"
+                                           "tier2"
+                                           "configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevel"]
+                        :dependsOnMethods ["simple_autosubscribe"]}
+        TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-21425" "RHEL7-27032"]}}
   assert_msg_after_auto_attach
   "Asserts the message displayed when auto-attach is clicked after simple autosubscribe."
   [_]
@@ -252,11 +262,13 @@
          (if (bool (tasks/ui guiexist "Information"))
            (tasks/ui click "Information" "OK")))))
 
-(defn ^{Test {:groups ["autosubscribe"
-                       "tier3"
-                       "blockedByBug-921245"
-                       "blockedByBug-977851"]
-              :dataProvider "my-installed-software"}}
+(defn ^{Test           {:groups       ["autosubscribe"
+                                       "tier3"
+                                       "blockedByBug-921245"
+                                       "blockedByBug-977851"]
+                        :dataProvider "my-installed-software"}
+        TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-20806" "RHEL7-27028"]}}
   assert_correct_status
   "Tests that the status for each product is correct after subscribing to everything."
   [_ product]
@@ -302,10 +314,12 @@
         (log/error (format "Status \"%s\" unknown!" status))
         (verify false)))))
 
-(defn ^{Test {:groups ["autosubscribe"
-                       "tier3"
-                       "blockedByBug-1009600"
-                       "blockedByBug-1011703"]}}
+(defn ^{Test           {:groups ["autosubscribe"
+                                 "tier3"
+                                 "blockedByBug-1009600"
+                                 "blockedByBug-1011703"]}
+        TestDefinition {:projectID  [`DefTypes$Project/RHEL6]
+                        :testCaseID ["RHEL6-20807"]}}
   check_subscription_type_auto_attach
   "Asserts if type column is present in register dialog"
   [_]
@@ -336,10 +350,12 @@
         (tasks/ui click :register-close))
       (tasks/unregister))))
 
-(defn ^{Test {:groups ["autosubscribe"
-                       "tier3"
-                       "blockedByBug-812903"
-                       "blockedByBug-1005329"]}}
+(defn ^{Test           {:groups ["autosubscribe"
+                                 "tier3"
+                                 "blockedByBug-812903"
+                                 "blockedByBug-1005329"]}
+        TestDefinition {:projectID  [`DefTypes$Project/RHEL6]
+                        :testCaseID ["RHEL6-20804"]}}
   autosubscribe_select_product_sla
   "Asserts if autosubscribe works with selecting product sla"
   [_]

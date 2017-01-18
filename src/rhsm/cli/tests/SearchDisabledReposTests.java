@@ -22,6 +22,9 @@ import rhsm.data.InstalledProduct;
 import rhsm.data.ProductCert;
 import rhsm.data.Repo;
 
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.TestDefinition;
+
 /**
  * @author jsefler
  * 
@@ -36,6 +39,8 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 	
 	// Test methods ***********************************************************************
 
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20088", "RHEL7-51100"})
 	@Test(	description="verify default configuration for /etc/yum/pluginconf.d/search-disabled-repos.conf; enabled=1 notify_only=1",
 			groups={"blockedByBug-1232232","blockedByBug-1268376"},
 			priority=10, enabled=true)
@@ -65,9 +70,11 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.yumPluginConfFileForSearchDisabledRepos, "main", "notify_only"),"1","notify_only value in "+clienttasks.yumPluginConfFileForSearchDisabledRepos);
 		Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.yumPluginConfFileForSearchDisabledRepos, "main", "ignored_repos"),"*debug-rpms *source-rpms *beta-rpms","ignored_repos value in "+clienttasks.yumPluginConfFileForSearchDisabledRepos);
 	}
-	
-	
-	
+
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20089", "RHEL7-55192"})
 	@Test(	description="Verify that we can register with auto-subscribe to cover the base RHEL product cert; assert enablement of base rhel and optional repo",
 			groups={},
 			priority=20, enabled=true)
@@ -336,8 +343,10 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 	protected String rhelBetaRepoId = null;
 	protected String rhelHtbRepoId = null;
 	protected String rhelEusRepoId = null;
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-22226", "RHEL7-55194"})
 	@Test(	description="verify that the search-disabled-repos plugin is not triggered when I attempt to install a package from a disabled repo (because search-disabled-repos plugin should only be triggered to resolve missing dependency packages)",
 			groups={},
 			dependsOnMethods={"VerifyRhelSubscriptionBaseAndOptionalReposAreAvailable_Test"},
@@ -382,7 +391,9 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 	protected String rhelBasePackage		= "ghostscript";		// assume this package is available from rhelBaseRepoId
 	protected String rhelOptionalPackage	= "ghostscript-devel";	// assume this package is available from rhelOptionalRepoId and depends on rhelBasePackage
 
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-22227", "RHEL7-55193"})
 	@Test(	description="verify yum usability message is presented when the default notify_only=1 is configured in /etc/yum/pluginconf.d/search-disabled-repos.conf",
 			groups={"blockedByBug-1232232","blockedByBug-1268376"},
 			dependsOnMethods={"VerifyRhelSubscriptionBaseAndOptionalReposAreAvailable_Test"},
@@ -449,9 +460,10 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 				"\n");
 		Assert.assertTrue(result.getStdout().contains(usabilityMessage),"Stdout from attempt to install '"+rhelOptionalPackage+"' contains the usability message:\n"+usabilityMessage);
 	}
-	
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-22228", "RHEL7-55195"})
 	@Test(	description="verify user is prompted to search disabled repos to complete an applicable yum install transaction when notify_only=0 is configured in /etc/yum/pluginconf.d/search-disabled-repos.conf and proceed with --assumeno responses",
 			groups={"blockedByBug-1232232","blockedByBug-1268376"},
 			dependsOnMethods={"VerifyRhelSubscriptionBaseAndOptionalReposAreAvailable_Test"},
@@ -537,9 +549,10 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 		Assert.assertTrue(rhelOptionalRepo.enabled, "RHEL optional repo id '"+rhelOptionalRepoId+"' is enabled.");
 
 	}
-	
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-22229", "RHEL7-55196"})
 	@Test(	description="verify user is prompted to search disabled repos to complete an applicable yum install transaction when notify_only=0 is configured in /etc/yum/pluginconf.d/search-disabled-repos.conf and proceed with --assumeyes responses",
 			groups={"blockedByBug-1232232","blockedByBug-1268376"},
 			dependsOnMethods={"VerifyRhelSubscriptionBaseAndOptionalReposAreAvailable_Test"},
@@ -704,8 +717,10 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 		Assert.assertTrue(SubscriptionManagerCLITestScript.doesStringContainMatches(listResult.getStdout(), regex),"After the search-disabled-repos yum plugin was exercised, the subscription-manager repo-override list reports override repo='"+rhelOptionalRepoId+"' name='"+name+"' value='"+value+"'.");
 		
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-22230", "RHEL7-55197"})
 	@Test(	description="verify user is prompted to search disabled repos to complete an applicable yum install transaction when notify_only=0 is configured in /etc/yum/pluginconf.d/search-disabled-repos.conf and proceed with yes response to search disabled repos and install followed by no response to keep repos enabled.",
 			groups={"blockedByBug-1232232","blockedByBug-1268376"},
 			dependsOnMethods={"VerifyRhelSubscriptionBaseAndOptionalReposAreAvailable_Test"},
@@ -953,7 +968,10 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 		Assert.assertTrue(SubscriptionManagerCLITestScript.doesStringContainMatches(listResult.getStdout(), regex),"After the search-disabled-repos yum plugin was exercised, the subscription-manager repo-override list reports override repo='"+rhelOptionalRepoId+"' name='"+name+"' value='"+value+"'.");
 
 	}
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-22231", "RHEL7-55198"})
 	@Test(	description="verify user is prompted to search disabled repos to complete an applicable yum install transaction when notify_only=0 is configured in /etc/yum/pluginconf.d/search-disabled-repos.conf and proceed with yes response to search disabled repos and no to the install prompt",
 			groups={"blockedByBug-1232232","blockedByBug-1268376"},
 			dependsOnMethods={"VerifyRhelSubscriptionBaseAndOptionalReposAreAvailable_Test"},

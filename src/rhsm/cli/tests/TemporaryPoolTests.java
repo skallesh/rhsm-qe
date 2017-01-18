@@ -35,6 +35,9 @@ import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.TestDefinition;
+
 /**
  * @author jsefler
  *
@@ -52,6 +55,8 @@ public class TemporaryPoolTests extends SubscriptionManagerCLITestScript {
 	
 	// Test methods ***********************************************************************
 
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20093", "RHEL7-51735"})
 	@Test(	description="given an available unmapped_guests_only pool, assert that it is available only to virtual systems whose host consumer has not yet mapped its virt.uuid as a guestId onto the host consumer.  Moreover, assert that once mapped, the pool is no longer available.",
 			groups={},
 			dataProvider="getAvailableUnmappedGuestsOnlySubscriptionPoolsData",
@@ -108,8 +113,10 @@ public class TemporaryPoolTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(result.getStderr().trim(), expectedStderr, "Stderr from an attempt to attach a temporary pool to a virtual guest that has already been mapped.");
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(1), "Exit code from an attempt to attach a temporary pool to a virtual guest that has already been mapped.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20094", "RHEL7-51736"})
 	@Test(	description="given an available unmapped_guests_only pool, assert that attaching it does not throw any Tracebacks ",
 			groups={"blockedByBug-1198369"},
 			dataProvider="getAvailableUnmappedGuestsOnlySubscriptionPoolsData",
@@ -147,8 +154,10 @@ public class TemporaryPoolTests extends SubscriptionManagerCLITestScript {
 		
 		Assert.assertTrue(!result.getStderr().contains("Traceback"), "stderr when subscribing to a temporary unmapped guests only pool should NOT throw a Traceback.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20095", "RHEL7-51737"})
 	@Test(	description="given an available unmapped_guests_only pool, attach it and verify the status details of the consumed subscription, installed product, and system status.",	// TODO
 			groups={"blockedByBug-1362701"},
 			dataProvider="getAvailableUnmappedGuestsOnlySubscriptionPoolsData",
@@ -240,8 +249,10 @@ public class TemporaryPoolTests extends SubscriptionManagerCLITestScript {
 			}
 		}
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20092", "RHEL7-59320"})
 	@Test(	description="given an available unmapped_guests_only pool, attach it and attempt to auto-heal - repeated attempts to auto-heal should NOT add more and more entitlements",
 			groups={"blockedByBug-1198494"},
 			dataProvider="getAvailableUnmappedGuestsOnlySubscriptionPoolsData",
@@ -300,8 +311,10 @@ public class TemporaryPoolTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(entitlementCertFileAfterSubscribed.containsAll(entitlementCertFileAfterAutoHeal2) && entitlementCertFileAfterAutoHeal2.containsAll(entitlementCertFileAfterSubscribed),
 				"The entitlement certs remained the same after a second attempt to auto-heal despite the attached temporary pool. (Assuming that the initial registration with autosubcribe provided as much coverage as possible for the installed products from subscriptions with plenty of available quantity, repeated attempts to auto-heal should not consume more entitlements.)");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-22237", "RHEL7-59322"})
 	@Test(	description="Once a guest is mapped, while consuming a temporary pool entitlement, the entitlement should be removed at the next checkin.  Verify this while autoheal is disabled.",
 			groups={"blockedByBug-1198494"},
 			dataProvider="getAvailableUnmappedGuestsOnlySubscriptionPoolsData",
@@ -346,8 +359,10 @@ public class TemporaryPoolTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(currentlyConsumedProductSubscriptions.isEmpty(),
 				"Now that the guest is mapped (and autoheal was off at the instant the guest was mapped), not only is the temporary entitlement removed, but no new entitlements are granted.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-22236", "RHEL7-59321"})
 	@Test(	description="Once a guest is mapped, while consuming a temporary pool entitlement, the entitlement should be removed and the system auto-healed at the next checkin.  Verify it.",
 			groups={"blockedByBug-1198494"},
 			dataProvider="getAvailableUnmappedGuestsOnlySubscriptionPoolsData",

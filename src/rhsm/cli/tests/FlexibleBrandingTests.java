@@ -10,6 +10,8 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.TestDefinition;
 import org.apache.xmlrpc.XmlRpcException;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -59,6 +61,8 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36693", "RHEL7-51539"})
 	@Test(	description="verify if brandname file is created",
 			groups={"VerifyBrandFileCreation"},
 			enabled=true)
@@ -84,6 +88,8 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36698", "RHEL7-51544"})
 	@Test(	description="verify if brandname file is deleted",
 			groups={"VerifyBrandFileDeletion"},
 			enabled=true)
@@ -112,6 +118,8 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36701", "RHEL7-51547"})
 	@Test(	description="verify if brandname file are replaced",
 			groups={"VerifyBrandFileContents"},
 			enabled=true)
@@ -147,6 +155,8 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36700", "RHEL7-51546"})
 	@Test(	description="verify if brandtype value is present in the entitlement cert",
 			groups={"VerifyBrand_TypeValue"},
 			enabled=true) 
@@ -178,6 +188,8 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36695", "RHEL7-51541"})
 	@Test(	description="verify if brandname file is created for imported cert",
 			groups={"CreationWithImport"},
 			enabled=true) 
@@ -212,6 +224,8 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36696", "RHEL7-51542"})
 	@Test(	description="verify if brandname file is created when rhsmcertd service runs",
 			groups={"CreationWithRHSMCERTD","blockedByBug-907638"},
 			enabled=true) 
@@ -238,6 +252,8 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36697", "RHEL7-51543"})
 	@Test(	description="verify if brandname file is created when two RHEL products are installed",
 			groups={"CreationWithTwoRhelproducts"},
 			enabled=true) 
@@ -264,6 +280,8 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36694", "RHEL7-51540"})
 	@Test(	description="verify if brandname file is created when registering with an activation key",
 			groups={"CreationWithTActivationKey"},
 			enabled=true) 
@@ -316,6 +334,8 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36699", "RHEL7-51545"})
 	@Test(	description="verify if brandname file is created without product cert",
 			groups={"verifyFile"},
 			enabled=true)
@@ -345,6 +365,8 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36692", "RHEL7-51538"})
 	@Test(	description="verify if Brand Name Creation During Repeated RHSMCERTD Updates",
 			groups={"verifyFileduringrhsmupdates","blockedByBug-907638"},
 			enabled=true)

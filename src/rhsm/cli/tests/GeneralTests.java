@@ -8,6 +8,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.TestDefinition;
 import org.apache.xmlrpc.XmlRpcException;
 import org.json.JSONException;
 import org.testng.SkipException;
@@ -37,8 +39,9 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	
 	
 	// Test Methods ***********************************************************************
-	
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20373", "RHEL7-32155"})
 	@Test(	description="subscription-manager-cli: attempt to access functionality without registering",
 			groups={"blockedByBug-749332","blockedByBug-1119688"},
 			dataProvider="UnregisteredCommandData")
@@ -55,8 +58,10 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 			RemoteFileTasks.runCommandAndAssert(client,command,1,"^Error: You need to register this system by running `register` command before using this option.",null);
 		}
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20380", "RHEL7-61488"})
 	@Test(	description="subscription-manager-cli: attempt to access functionality that does not exist",
 			groups={"blockedByBug-1098308"},
 			dataProvider="NegativeFunctionalityData")
@@ -67,8 +72,10 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		if (expectedStdout!=null)	Assert.assertEquals(result.getStdout().trim(), expectedStdout, "The expected stdout message.");
 		if (expectedStderr!=null)	Assert.assertEquals(result.getStderr().trim(), expectedStderr, "The expected stderr message.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20293", "RHEL7-32164"})
 	@Test(	description="assert the exit code from service rhsmcertd status when running and stopped",
 			groups={"blockedByBug-895263","blockedByBug-824680","blockedByBug-842464"})
 	public void VerifyExitCodeStatusForRhmscertd_Test() {
@@ -118,8 +125,10 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		Assert.assertTrue(result.getStdout().isEmpty(),"Stdout from command '"+command+"' is empty.");
 		Assert.assertTrue(result.getStderr().isEmpty(),"Stderr from command '"+command+"' is empty.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20391", "RHEL7-32157"})
 	@Test(	description="assert rhsmd is logged to both /var/log/rhsm/rhsm.log and /var/log/messages",
 			groups={"blockedbyBug-976868","blockedByBug-1395794"},
 			enabled=true)
@@ -164,8 +173,10 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 			}
 		}
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20374", "RHEL7-32169"})
 	@Test(	description="assert permissions on /etc/cron.daily/rhsmd",
 			groups={"blockedbyBug-1012566"},
 			enabled=true)
@@ -192,8 +203,10 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		File cronDailyFile = new File("/etc/cron.daily/rhsmd");
 		RemoteFileTasks.runCommandAndAssert(client, "ls -l "+cronDailyFile, Integer.valueOf(0), "-rwx------\\.? 1 root root .* "+cronDailyFile+"\\n", null);
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20384", "RHEL7-32171"})
 	@Test(	description="verify enablement of yum plugin for subscription-manager in /etc/yum/pluginconf.d/subscription-manager.conf ",
 			groups={"VerifyYumPluginForSubscriptionManagerEnablement_Test", "blockedByBug-1017354","blockedByBug-1087620"},
 			enabled=true)
@@ -261,8 +274,10 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForSubscriptionManager, "enabled", "1");
 		clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForProductId, "enabled", "1");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36512", "RHEL7-59018"})
 	@Test(	description="check the rpm requires list for changes to python-rhsm-certificates",
 			groups={"blockedByBug-1104332"},
 			enabled=true)
@@ -289,8 +304,10 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		for (String actualRequires : actualRequiresList) if (!expectedRequiresList.contains(actualRequires)) log.warning("The expected requires list does not include the actual requires '"+actualRequires+"'  Is this a new requirement?");
 		Assert.assertTrue(expectedRequiresList.containsAll(actualRequiresList) && actualRequiresList.containsAll(expectedRequiresList), "The actual requires list of packages for '"+pkg+"' matches the expected list "+expectedRequiresList);
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20301", "RHEL7-32161"})
 	@Test(	description="check the rpm requires list for changes to python-rhsm",
 			groups={"blockedByBug-1006748","blockedByBug-800732","blockedByBug-1096676"},
 			enabled=true)
@@ -339,8 +356,10 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		for (String actualRequires : actualRequiresList) if (!expectedRequiresList.contains(actualRequires)) log.warning("The expected requires list does not include the actual requires '"+actualRequires+"'  Is this a new requirement?");
 		Assert.assertTrue(expectedRequiresList.containsAll(actualRequiresList) && actualRequiresList.containsAll(expectedRequiresList), "The actual requires list of packages for '"+pkg+"' matches the expected list "+expectedRequiresList);
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20299", "RHEL7-32159"})
 	@Test(	description="check the rpm requires list for changes to subscription-manager",
 			groups={"blockedbyBug-801280","blockedByBug-1006748","blockedByBug-800744","blockedByBug-1080531","blockedByBug-850331"},
 			enabled=true)
@@ -482,8 +501,10 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		for (String actualRequires : actualRequiresList) if (!expectedRequiresList.contains(actualRequires)) log.warning("The expected requires list does not include the actual requires '"+actualRequires+"'  Is this a new requirement?");
 		Assert.assertTrue(expectedRequiresList.containsAll(actualRequiresList) && actualRequiresList.containsAll(expectedRequiresList), "The actual requires list of packages for '"+pkg+"' matches the expected list "+expectedRequiresList);
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20376", "RHEL7-32168"})
 	@Test(	description="check the rpm requires list for changes to subscription-manager-gui",
 			groups={"blockedbyBug-1004908"},
 			enabled=true)
@@ -577,8 +598,10 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		for (String actualRequires : actualRequiresList) if (!expectedRequiresList.contains(actualRequires)) log.warning("The expected requires list does not include the actual requires '"+actualRequires+"'  Is this a new requirement?");
 		Assert.assertTrue(expectedRequiresList.containsAll(actualRequiresList) && actualRequiresList.containsAll(expectedRequiresList), "The actual requires list of packages for '"+pkg+"' matches the expected list "+expectedRequiresList);
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6}
+			, testCaseID = {"RHEL6-20393"})
 	@Test(	description="check the rpm requires list for changes to subscription-manager-firstboot",
 			groups={"blockedbyBug-1004908"},
 			enabled=true)
@@ -624,8 +647,10 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		for (String actualRequires : actualRequiresList) if (!expectedRequiresList.contains(actualRequires)) log.warning("The expected requires list does not include the actual requires '"+actualRequires+"'  Is this a new requirement?");
 		Assert.assertTrue(expectedRequiresList.containsAll(actualRequiresList) && actualRequiresList.containsAll(expectedRequiresList), "The actual requires list of packages for '"+pkg+"' matches the expected list "+expectedRequiresList);
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20399", "RHEL7-51274"})
 	@Test(	description="check the rpm requires list for changes to subscription-manager-initial-setup-addon",
 			groups={"blockedbyBug-1246146","blockedbyBug-1246391"},
 			enabled=true)
@@ -659,8 +684,10 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		for (String actualRequires : actualRequiresList) if (!expectedRequiresList.contains(actualRequires)) log.warning("The expected requires list does not include the actual requires '"+actualRequires+"'  Is this a new requirement?");
 		Assert.assertTrue(expectedRequiresList.containsAll(actualRequiresList) && actualRequiresList.containsAll(expectedRequiresList), "The actual requires list of packages for '"+pkg+"' matches the expected list "+expectedRequiresList);
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20390", "RHEL7-32182"})
 	@Test(	description="check the rpm requires list for changes to subscription-manager-migration",
 			groups={"blockedByBug-1049037"},
 			enabled=true)
@@ -703,8 +730,10 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		for (String actualRequires : actualRequiresList) if (!expectedRequiresList.contains(actualRequires)) log.warning("The expected requires list does not include the actual requires '"+actualRequires+"'  Is this a new requirement?");
 		Assert.assertTrue(expectedRequiresList.containsAll(actualRequiresList) && actualRequiresList.containsAll(expectedRequiresList), "The actual requires list of packages for '"+pkg+"' matches the expected list "+expectedRequiresList);
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20394", "RHEL7-32174"})
 	@Test(	description="check the rpm requires list for changes to subscription-manager-migration-data",
 			groups={},
 			enabled=true)
@@ -740,8 +769,10 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		for (String actualRequires : actualRequiresList) if (!expectedRequiresList.contains(actualRequires)) log.warning("The expected requires list does not include the actual requires '"+actualRequires+"'  Is this a new requirement?");
 		Assert.assertTrue(expectedRequiresList.containsAll(actualRequiresList) && actualRequiresList.containsAll(expectedRequiresList), "The actual requires list of packages for '"+pkg+"' matches the expected list "+expectedRequiresList);
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20400", "RHEL7-32167"})
 	@Test(	description="check the rpm requires list for changes to subscription-manager-plugin-ostree",
 			groups={"blockedByBug-1165771"},
 			enabled=true)
@@ -776,8 +807,10 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		for (String actualRequires : actualRequiresList) if (!expectedRequiresList.contains(actualRequires)) log.warning("The expected requires list does not include the actual requires '"+actualRequires+"'  Is this a new requirement?");
 		Assert.assertTrue(expectedRequiresList.containsAll(actualRequiresList) && actualRequiresList.containsAll(expectedRequiresList), "The actual requires list of packages for '"+pkg+"' matches the expected list "+expectedRequiresList);
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20294", "RHEL7-32179"})
 	@Test(	description="check the rpm requires list for changes to subscription-manager-plugin-container",
 			groups={"blockedByBug-1165771"},
 			enabled=true)
@@ -811,8 +844,10 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		for (String actualRequires : actualRequiresList) if (!expectedRequiresList.contains(actualRequires)) log.warning("The expected requires list does not include the actual requires '"+actualRequires+"'  Is this a new requirement?");
 		Assert.assertTrue(expectedRequiresList.containsAll(actualRequiresList) && actualRequiresList.containsAll(expectedRequiresList), "The actual requires list of packages for '"+pkg+"' matches the expected list "+expectedRequiresList);
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20296", "RHEL7-32158"})
 	@Test(	description="When the client is 1 hour or more (normalized for time zone and daylight savings time) ahead of candlepin's clock, verify that a WARNING is logged to rhsm.log",
 			groups={"VerifyPositiveClockSkewDetection_Test","blockedByBug-772936","blockedByBug-1090350"},
 			enabled=true)
@@ -848,8 +883,10 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		}
 	}
 	protected Integer positiveClockSkewMinutes = null;
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20367", "RHEL7-32177"})
 	@Test(	description="When the client is 1 hour or more (normalized for time zone and daylight savings time) behind candlepin's clock, verify that a WARNING is logged to rhsm.log",
 			groups={"VerifyNegativeClockSkewDetection_Test","blockedByBug-772936","blockedByBug-1090350"},
 			enabled=true)
@@ -887,8 +924,11 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		}
 	}
 	protected Integer negativeClockSkewMinutes = null;
-	
-	
+
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20383", "RHEL7-51273"})
 	@Test(	description="check the rpm query list for subscription-manager-migration and verify it does NOT list sat5to6",
 			groups={"blockedByBug-1145833"},
 			enabled=true)
@@ -903,8 +943,10 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		//sat5to6 = pkg;	// debugTesting
 		Assert.assertTrue(!sshCommandResult.getStdout().contains(sat5to6), "The rpm query list for package '"+pkg+"' excludes the '"+sat5to6+"' tool.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20292", "RHEL7-51272"})
 	@Test(	description="python-rhsm should not set socket.setdefaulttimeout(60)",
 			groups={"blockedByBug-1195446"},
 			enabled=true)

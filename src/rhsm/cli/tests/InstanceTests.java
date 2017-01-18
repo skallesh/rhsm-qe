@@ -28,6 +28,9 @@ import com.redhat.qe.auto.bugzilla.BzChecker;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.tools.SSHCommandResult;
 
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.TestDefinition;
+
 /**
  * @author jsefler
  *
@@ -39,6 +42,8 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 	
 	// Test methods ***********************************************************************
 
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-19986", "RHEL7-51020"})
 	@Test(	description="test compliance using variations on sockets and system type when subscribing to an instance-based subscription",
 			groups={"AcceptanceTests","Tier1Tests","QuantityNeededToAchieveSocketCompliance_Test","blockedByBug-979492"},
 			dataProvider="getAvailableInstanceBasedSubscriptionPoolsData",

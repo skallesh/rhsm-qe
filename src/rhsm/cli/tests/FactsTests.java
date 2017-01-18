@@ -7,6 +7,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.TestDefinition;
 import org.apache.xmlrpc.XmlRpcException;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -66,6 +68,8 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	/**
 	 * @author skallesh
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36614", "RHEL7-51424"})
 	@Test(    description="subscription-manager: facts --update (when registered)",
 			            groups={"MyTestFacts","blockedByBug-707525"},
 			            enabled=true)
@@ -75,8 +79,10 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		 SSHCommandResult result = clienttasks.facts(null, true,null, null, null);
 	     Assert.assertEquals(result.getStdout().trim(),"Successfully updated the system facts.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36613", "RHEL7-51423"})
 	@Test(	description="subscription-manager: facts --update (when not registered)",
 			groups={"blockedByBug-654429"},
 			enabled=true)
@@ -96,8 +102,10 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 			}
 		}
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36612", "RHEL7-51422"})
 	@Test(	description="subscription-manager: facts --list (when not registered)",
 			groups={"blockedByBug-654429","blockedByBug-661329","blockedByBug-666544"},
 			enabled=true)
@@ -130,6 +138,9 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(result.getStdout().trim(),clienttasks.msg_NeedListOrUpdateOption,
 				"stdout from facts without --list or --update");
 	}
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36611", "RHEL7-51421"})
 	@Test(	description="subscription-manager: facts (without --list or --update) should default to --list",
 			groups={"blockedByBug-811594"},
 			enabled=true)
@@ -158,8 +169,10 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(defaultResult.getStdout(), listResult.getStdout(),
 				"stdout from facts without options should match stdout from the facts --list");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20020", "RHEL7-51037"})
 	@Test(	description="subscription-manager: facts and rules: consumer facts list",
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1017299"}, dependsOnGroups={},
 			dataProvider="getClientsData",
@@ -174,8 +187,10 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		// list the system facts
 		smt.facts(true, false, null, null, null);
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36610", "RHEL7-59318"})
 	@Test(	description="subscription-manager: facts and rules: fact check RHEL distribution",
 			groups={"blockedByBug-666540"}, dependsOnGroups={},
 			enabled=true)
@@ -226,7 +241,9 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		//log.info("Verifying that the pools available to the Server consumer do not contain Workstation in the ProductName...");
 
 	}
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36606", "RHEL7-51418"})
 	@Test(	description="subscription-manager: facts and rules: check sockets",
 			groups={}, dependsOnGroups={},
 			dataProvider="getClientsData",
@@ -309,7 +326,9 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		}
 		Assert.assertTrue(foundPoolWithSocketAttributes,"At least one Subscription Pool was found for which we could attempt this test.");
 	}
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36605", "RHEL7-51417"})
 	@Test(	description="subscription-manager: facts and rules: check arch",
 			groups={}, dependsOnGroups={},
 			dataProvider="getClientsData",
@@ -424,6 +443,9 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		// now assert that all the pools can be subscribed to by the consumer (registered as type candlepin)
 		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
 	}
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36607", "RHEL7-51419"})
 	@Test(	description="subscription-manager: facts and rules: bypass rules due to candlepin type and capabilities",
 			groups={"blockedByBug-641027","BypassRulesDueToTypeAndCapabilities_Test"}, dependsOnGroups={},
 			enabled=true)
@@ -553,6 +575,8 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6}
+			       , testCaseID = {"RHEL6-36365"})
 	@Test (description = "Verify the FQDN in facts list ", groups= {"Tier1Tests","blockedByBug-1367128"}, enabled = true)
 	public void VerifyFullyQualifiedDomainNameInFacts_Test()throws JSONException,Exception{
 		if (clienttasks.isPackageVersion("subscription-manager","<","1.18.3-1")){
@@ -579,6 +603,9 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		
 		Assert.assertEquals(factValue,fqdn,"System fact '"+fact+"' matches the system value from command '"+command+"'.");
 	}
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20019", "RHEL7-51036"})
 	@Test(	description="subscription-manager: assert presence of the new fact cpu.topology_source use to tell us what algorithm subscription-manager employed",
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-978466"}, dependsOnGroups={},
 			enabled=true)
@@ -587,8 +614,9 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		String cpuTopologyFact = "cpu.topology_source";	// this fact was invented as a result of the fix for Bug 978466 - subscription-manager fact 'cpu.cpu_socket(s)' is missing in ppc64 and s390x
 		Assert.assertNotNull(clienttasks.getFactValue(cpuTopologyFact), "The '"+cpuTopologyFact+"' is set by subscription-manager to tell us what algorthm was used to determine the facts for cpu.cpu_socket(s) and cpu.core(s)_per_socket.");
 	}
-	
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20018", "RHEL7-51035"})
 	@Test(	description="subscription-manager: assert that the cpu.cpu_socket(s) fact matches lscpu.socket(s)",
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-707292"/*,"blockedByBug-751205","blockedByBug-978466"*//*,"blockedByBug-844532"*//*,"blockedByBug-1070908"*/}, dependsOnGroups={},
 			enabled=true)
@@ -705,8 +733,10 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		
 		if (!assertedSockets) Assert.fail("Could not figure out how to assert the expected number of sockets.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20017", "RHEL7-51034"})
 	@Test(	description="subscription-manager: assert that the cores calculation using facts cpu.cpu_socket(s)*cpu.core(s)_per_socket matches the cores calculation using lscpu facts",
 			groups={"AcceptanceTests","Tier1Tests"/*,"blockedByBug-751205","blockedByBug-978466"*//*,"blockedByBug-1070908"*/}, dependsOnGroups={},
 			enabled=true)
@@ -957,7 +987,9 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		if (!assertedCores) Assert.fail("Could not figure out how to assert the expected number of cores.");
 	}
 
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36604", "RHEL7-51416"})
 	@Test(	description="when registering to an existing consumerid, the facts for the system should be updated automatically upon registering",
 			groups={"blockedByBug-810236"}, dependsOnGroups={},
 			enabled=true)
@@ -1016,8 +1048,10 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		Assert.assertTrue(doSystemFactsMatchConsumerFacts(consumerId, client2FactsMap, consumer2FactsMap),"The facts on consumer '"+consumerId+"' known to the candlepin server have automatically been updated after client system '"+client2tasks.hostname+"' registered using an existing consumerId.");
 		Assert.assertTrue(!consumer2FactsMap.containsKey(client1CustomFactName),"After client2 "+client2tasks.hostname+" registered to existing consumerId '"+consumerId+"', the original custom fact '"+client1CustomFactName+"' set by original client1 system '"+client1tasks.hostname+"' is has been automatically cleaned from the consumer facts known on the candlepin server.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36603", "RHEL7-51415"})
 	@Test(	description="the facts for net.interface.sit0.mac_address and net.interface.lo.mac_address should not be listed",
 			groups={"blockedByBug-838123","blockedByBug-866645"}, dependsOnGroups={},
 			enabled=true)	// TODO re-implement this test after fix for Bug 866645
@@ -1029,8 +1063,10 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 			Assert.assertNull(clientFactsMap.get(macAddressFact), "After fix for bug 838123, the '"+macAddressFact+"' fact should not exist.");
 		}
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36364", "RHEL7-57875"})
 	@Test(	description="assert the addition of new facts collected to capture multiple IPs per network interface device - net.interface.<device>.ipv<4|6>_<addressinfo>_list",
 			groups={"blockedByBug-874735","AcceptanceTests","Tier1Tests"}, dependsOnGroups={},
 			enabled=true)
@@ -1109,6 +1145,9 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		if (clienttasks==null) return;
 		rhsm_report_package_profile	= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsm", "report_package_profile");
 	}
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36609", "RHEL7-59317"})
 	@Test(	description="subscription-manager: assert the ability to enable/disable the reporting of the consumers package profile",
 			groups={"EnablementOfReportPackageProfile_Test","blockedByBug-905922"},
 			enabled=true)
@@ -1156,8 +1195,10 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	public void afterEnablementOfReportPackageProfile_Test() {
 		if (rhsm_report_package_profile!=null) clienttasks.config(null, null, true, new String[]{"rhsm","report_package_profile",rhsm_report_package_profile});
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36602", "RHEL7-51414"})
 	@Test(	description="verify the fact value for system.certificate_version which tells the candlepin server the maximum entitlement certificate version this system knows how to consume. ",
 			groups={"blockedByBug-957218"}, dependsOnGroups={},
 			enabled=true)
@@ -1180,8 +1221,10 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		}
 		Assert.assertEquals(actualSystemCertificateVersion, expectedSystemCertificateVersion,"fact value for system.certificate_version");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36615", "RHEL7-51425"})
 	@Test(	description="subscription-manager: subscription-manager should handle malformed custom facts with grace",
 			groups={"MalformedCustomFacts_Test","blockedByBug-966747"/*Uncomment for rhel66,"blockedByBug-1112326"*/},
 			enabled=true)
@@ -1228,8 +1271,10 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		clienttasks.deleteFactsFileWithOverridingValues(malformedFactsFilename);
 	}
 	private final String malformedFactsFilename = "malformed.facts";
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36608", "RHEL7-51420"})
 	@Test(	description="subscription-manager: subscription-manager should handle empty custom facts with grace",
 			groups={"EmptyCustomFacts_Test","blockedByBug-966747"/*Uncomment for rhel66,"blockedByBug-1112326"*/},
 			enabled=true)
@@ -1273,9 +1318,10 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		clienttasks.deleteFactsFileWithOverridingValues(emptyFactsFilename);
 	}
 	private final String emptyFactsFilename = "empty.facts";
-	
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36616", "RHEL7-51426"})
 	@Test(	description="verify that the facts --list of name keys is independent of LANG/LC_ALL...  For example when LC_ALL=fr_FR.UTF-8 subscription-manager facts --list, EXPECTED: lscpu.virtualization_type: full  ACTUAL(failed): lscpu.type_de_virtualisation: complet",
 			groups={"blockedByBug-1225435"},
 			enabled=true)
@@ -1304,9 +1350,10 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		}
 		Assert.assertTrue(allBaseFactKeyAreLangIndependent, "All the fact keys are independent of lang.  If this fails, see the warnings logged above.");
 	}
-	
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-22221", "RHEL7-51427"})
 	@Test(	description="Verify proc_cpuinfo facts are now collected on subscription-manager-1.16.8-2+.  On ppc64 systems, also verify that a virt.uuid is collected on a pSeries platform.",
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1300805","blockedByBug-1300816"},
 			enabled=true)

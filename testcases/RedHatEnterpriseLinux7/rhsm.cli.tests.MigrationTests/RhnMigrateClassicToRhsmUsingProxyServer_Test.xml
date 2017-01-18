@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<testcase id="RHEL7-51113">
+    <title>rhsm.cli.tests.MigrationTests.RhnMigrateClassicToRhsmUsingProxyServer_Test</title>
+    <description></description>
+    <test-steps>
+        <test-step>
+            <test-step-column id="step">
+                <parameter name="bugzilla" scope="local"/>
+                <parameter name="rhnreg_ksUsername" scope="local"/>
+                <parameter name="rhnreg_ksPassword" scope="local"/>
+                <parameter name="rhnHostname" scope="local"/>
+                <parameter name="rhnChannelsToAdd" scope="local"/>
+                <parameter name="options" scope="local"/>
+                <parameter name="rhnUsername" scope="local"/>
+                <parameter name="rhnPassword" scope="local"/>
+                <parameter name="rhsmUsername" scope="local"/>
+                <parameter name="rhsmPassword" scope="local"/>
+                <parameter name="rhsmOrg" scope="local"/>
+                <parameter name="proxy_hostnameConfig" scope="local"/>
+                <parameter name="proxy_portConfig" scope="local"/>
+                <parameter name="proxy_userConfig" scope="local"/>
+                <parameter name="proxy_passwordConfig" scope="local"/>
+                <parameter name="exitCode" scope="local"/>
+                <parameter name="stdout" scope="local"/>
+                <parameter name="stderr" scope="local"/>
+                <parameter name="proxyRunner" scope="local"/>
+                <parameter name="proxyLog" scope="local"/>
+                <parameter name="proxyLogRegex" scope="local"/>
+            </test-step-column>
+        </test-step>
+    </test-steps>
+    <custom-fields>
+        <custom-field id="caseautomation" content="automated"/>
+        <custom-field id="caseimportance" content="high"/>
+        <custom-field id="caselevel" content="component"/>
+        <custom-field id="caseposneg" content="positive"/>
+        <custom-field id="testtype" content="functional"/>
+        <custom-field id="subtype1" content="-"/>
+        <custom-field id="subtype2" content="-"/>
+    </custom-fields>
+</testcase>

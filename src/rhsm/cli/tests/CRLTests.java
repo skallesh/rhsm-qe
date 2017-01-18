@@ -12,6 +12,8 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.TestDefinition;
 import org.apache.xmlrpc.XmlRpcException;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -44,6 +46,8 @@ public class CRLTests extends SubscriptionManagerCLITestScript{
 
 	// Test Methods ***********************************************************************
 
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-27133", "RHEL7-51947"})
 	@Test(	description="subscription-manager-cli: change subscription pool start/end dates and refresh subscription pools",
 			groups={"ChangeSubscriptionPoolStartEndDatesAndRefreshSubscriptionPools_Test"},
 			dependsOnGroups={},
@@ -214,7 +218,9 @@ public class CRLTests extends SubscriptionManagerCLITestScript{
 	}
 	protected List<String> alreadySubscribedProductIdsInChangeSubscriptionPoolStartEndDatesAndRefreshSubscriptionPools_Test = new ArrayList<String>();
 
-	
+
+	@TestDefinition( projectID = {Project.RHEL6}
+			       , testCaseID = {"RHEL6-39302"})
 	@Test(	description="verify that candlepin's crl file does not contain duplicate serials otherwise it may be growing out of control",
 			groups = {"blockedByBug-1399356"},
 			enabled=true)

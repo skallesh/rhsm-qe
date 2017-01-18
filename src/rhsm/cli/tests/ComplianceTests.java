@@ -11,6 +11,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.TestDefinition;
 import org.apache.xmlrpc.XmlRpcException;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -64,6 +66,9 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		factsMap.put("memory.memtotal","1");
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
 	}
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20064", "RHEL7-51070"})
 	@Test(	description="when a subscription is attached that does not match the system's arch, assert the installed product status is blocked from going green",
 			groups={"cli.tests","VerifyComplianceConsidersSystemArch_Test","blockedByBug-909467"},
 			dataProvider="getSubscriptionPoolProvidingProductIdOnArchData",
@@ -197,10 +202,11 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 
 		return ll;
 	}
-	
-	
-	
-	
+
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21704", "RHEL7-51071"})
 	@Test(	description="subscription-manager: verify the system.compliant fact is True when all installed products are subscribable by more than one common service level",
 			groups={"configureProductCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevel","cli.tests","blockedbyBug-859652","blockedbyBug-1183175"},
 			dataProvider="getAllProductsSubscribableByMoreThanOneCommonServiceLevelValuesData",
@@ -246,7 +252,9 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 				"When a system has been registered with autosubscribe without specifying a common service level, then this auto consumed product subscription ("+productSubscription+") must provide a case-insensitive match to the consumer's service level preference '"+servicelevel+"'.");
 		}
 	}
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21705", "RHEL7-33096"})
 	@Test(	description="rhsm-complianced: verify rhsm-complianced -d -s reports a compliant status when all installed products are subscribable by more than one common service level",
 			groups={"cli.tests","blockedByBug-991580","blockedByBug-1395794"},
 			priority=110,//dependsOnMethods={"VerifySystemCompliantFactWhenAllProductsSubscribableByMoreThanOneCommonServiceLevel_Test"},			
@@ -257,7 +265,9 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		if (clienttasks.getCurrentlyRegisteredOwnerKey()==null) throw new SkipException("Unsatisfied dependency - expected system to already have been registered during a preceding testcase.");
 		verifyRhsmCompliancedWhenAllProductsAreSubscribable();
 	}
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21706", "RHEL7-51072"})
 	@Test(	description="when all installed products are subscribable by more than one common service level and system is compliant, auto-subscribe should abort",
 			groups={"cli.tests","blockedByBug-864207"},
 			priority=120,//dependsOnMethods={"VerifySystemCompliantFactWhenAllProductsSubscribableByMoreThanOneCommonServiceLevel_Test"},
@@ -269,7 +279,9 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		SSHCommandResult result = clienttasks.subscribe(true, null, (List<String>)null, null, null, null, null, null, null, null, null, null);
 		Assert.assertTrue(result.getStdout().trim().startsWith(autosubscribeCompliantMessage), "When the system is already compliant, an attempt to auto-subscribe should inform us with exactly this message: "+autosubscribeCompliantMessage);
 	}
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21707", "RHEL7-51073"})
 	@Test(	description="when the candlepin server goes offline, assert the Installed Product Status is reported from cache",
 			groups={"cli.tests","VerifyListInstalledIsCachedAfterAllProductsSubscribableByMoreThanOneCommonServiceLevel_Test"},
 			priority=130,//dependsOnMethods={"VerifySystemCompliantFactWhenAllProductsSubscribableByMoreThanOneCommonServiceLevel_Test"},
@@ -284,10 +296,11 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	public void afterVerifyListInstalledIsCachedAfterAllProductsSubscribableByMoreThanOneCommonServiceLevel_Test() {
 		if (serverHostname!=null) clienttasks.config(null, null, true, new String[]{"server","hostname",serverHostname});
 	}
-	
-	
-	
-	
+
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21708", "RHEL7-51074"})
 	@Test(	description="subscription-manager: verify the system.compliant fact is True when all installed products are subscribable by one common service level",
 			groups={"configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevel","cli.tests","blockedbyBug-859652","blockedbyBug-1183175"},
 			priority=200,
@@ -296,7 +309,9 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	public void VerifySystemCompliantFactWhenAllProductsSubscribableByOneCommonServiceLevel_Test() {
 		VerifySystemCompliantFactWhenAllProductsSubscribableByMoreThanOneCommonServiceLevel_Test(null,allProductsSubscribableByOneCommonServiceLevelValue);
 	}
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21709", "RHEL7-51075"})
 	@Test(	description="rhsm-complianced: verify rhsm-complianced -d -s reports a compliant status when all installed products are subscribable by one common service level",
 			groups={"cli.tests","blockedByBug-864383","blockedByBug-865193","blockedByBug-991580","blockedByBug-1395794"},
 			priority=210,//dependsOnMethods={"VerifySystemCompliantFactWhenAllProductsSubscribableByOneCommonServiceLevel_Test"},
@@ -307,7 +322,9 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		if (clienttasks.getCurrentlyRegisteredOwnerKey()==null) throw new SkipException("Unsatisfied dependency - expected system to already have been registered during a preceding testcase.");
 		verifyRhsmCompliancedWhenAllProductsAreSubscribable();
 	}
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21710", "RHEL7-51076"})
 	@Test(	description="when all installed products are subscribable by one common service level and system is compliant, auto-subscribe should abort",
 			groups={"cli.tests","blockedByBug-864207"},
 			priority=220,//dependsOnMethods={"VerifySystemCompliantFactWhenAllProductsSubscribableByOneCommonServiceLevel_Test"},	
@@ -319,7 +336,9 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		SSHCommandResult result = clienttasks.subscribe(true, null, (List<String>)null, null, null, null, null, null, null, null, null, null);
 		Assert.assertTrue(result.getStdout().trim().startsWith(autosubscribeCompliantMessage), "When the system is already compliant, an attempt to auto-subscribe should inform us with exactly this message: "+autosubscribeCompliantMessage);
 	}
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21711", "RHEL7-33084"})
 	@Test(	description="when the candlepin server goes offline, assert the Installed Product Status is reported from cache",
 			groups={"cli.tests","VerifyListInstalledIsCachedAfterAllProductsSubscribableByOneCommonServiceLevel_Test"},
 			priority=230,//dependsOnMethods={"VerifySystemCompliantFactWhenAllProductsSubscribableByOneCommonServiceLevel_Test"},
@@ -334,10 +353,11 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	public void afterVerifyListInstalledIsCachedAfterAllProductsSubscribableByOneCommonServiceLevel_Test() {
 		if (serverHostname!=null) clienttasks.config(null, null, true, new String[]{"server","hostname",serverHostname});
 	}
-	
-	
-	
-	
+
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21712", "RHEL7-51077"})
 	@Test(	description="subscription-manager: verify the system.compliant fact is False when some installed products are subscribable",
 			groups={"configureProductCertDirForSomeProductsSubscribable","cli.tests","blockedbyBug-1183175"},
 			priority=300,
@@ -358,7 +378,9 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 			Assert.assertEquals(clienttasks.status_(null, null, null, null).getExitCode(), new Integer(1), "Expected exitCode from a call to status when the system is '"+factValueForSystemNonCompliance+"'.");
 		}
 	}
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21713", "RHEL7-51078"})
 	@Test(	description="rhsm-complianced: verify rhsm-complianced -d -s reports a non-compliant status when some installed products are subscribable",
 			groups={"cli.tests","blockedbyBug-723336","blockedbyBug-691480","blockedbyBug-846834","blockedByBug-991580","blockedByBug-1395794"},
 			priority=310,//dependsOnMethods={"VerifySystemCompliantFactWhenSomeProductsAreSubscribable_Test"},
@@ -386,7 +408,9 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(sshCommandResult.getStdout().trim(), rhsmComplianceDSyslogMessageWhenNonCompliant, "Stdout from command '"+command+"'");
 		Assert.assertEquals(sshCommandResult.getStderr().trim(), "", "Stderr from command '"+command+"'");
 	}
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21714", "RHEL7-51079"})
 	@Test(	description="when some installed products are subscribable and system is NOT compliant, auto-subscribing again should try but not get any new entitlements",
 			groups={"cli.tests","blockedByBug-723044"},
 			priority=320,//dependsOnMethods={"VerifySystemCompliantFactWhenSomeProductsAreSubscribable_Test"},
@@ -402,7 +426,9 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		Assert.assertTrue(entitlementCertsBefore.containsAll(entitlementCertsAfter)&&entitlementCertsAfter.containsAll(entitlementCertsBefore),"The entitlement certs have not changed after an attempt to autosubscribe a second time.");
 		Assert.assertEquals(entitlementCertsBefore.size(), entitlementCertsAfter.size(), "The number of entitlement certs did not change after an attempt to autosubscribe a second time.");
 	}
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21715", "RHEL7-51080"})
 	@Test(	description="when the candlepin server goes offline, assert the Installed Product Status is reported from cache",
 			groups={"cli.tests","VerifyListInstalledIsCachedAfterSomeProductsAreSubscribable_Test"},
 			priority=330,//dependsOnMethods={"VerifySystemCompliantFactWhenSomeProductsAreSubscribable_Test"},
@@ -417,10 +443,11 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	public void afterVerifyListInstalledIsCachedAfterSomeProductsAreSubscribable_Test() {
 		if (serverHostname!=null) clienttasks.config(null, null, true, new String[]{"server","hostname",serverHostname});
 	}
-	
-	
-	
-	
+
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21716", "RHEL7-51081"})
 	@Test(	description="subscription-manager: verify the system.compliant fact is True when all installed products are subscribable",
 			groups={"configureProductCertDirForAllProductsSubscribable","cli.tests","blockedbyBug-1183175"},
 			priority=400,
@@ -443,7 +470,9 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 			Assert.assertEquals(clienttasks.status_(null, null, null, null).getExitCode(), new Integer(0), "Expected exitCode from a call to status when the system is '"+factValueForSystemCompliance+"'.");
 		}
 	}
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21717", "RHEL7-51082"})
 	@Test(	description="rhsm-complianced: verify rhsm-complianced -d -s reports a compliant status when all installed products are subscribable (or an appropriate warning period status if an entitlement is within its warning period status)",
 			groups={"cli.tests","blockedbyBug-723336","blockedByBug-991580","blockedByBug-1395794"},
 			priority=410,//dependsOnMethods={"VerifySystemCompliantFactWhenAllProductsAreSubscribable_Test"},
@@ -455,7 +484,9 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		log.info("The success of this test depends on the success of prior test VerifySystemCompliantFactWhenAllProductsAreSubscribable_Test");
 		verifyRhsmCompliancedWhenAllProductsAreSubscribable();
 	}
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21718", "RHEL7-51083"})
 	@Test(	description="when all installed products are subscribable and system in compliant, auto-subscribe should abort",
 			groups={"cli.tests","blockedByBug-864207"},
 			priority=420,//dependsOnMethods={"VerifySystemCompliantFactWhenAllProductsAreSubscribable_Test"},
@@ -468,7 +499,9 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		SSHCommandResult result = clienttasks.subscribe(true, null, (List<String>)null, null, null, null, null, null, null, null, null, null);
 		Assert.assertTrue(result.getStdout().trim().startsWith(autosubscribeCompliantMessage), "When the system is already compliant, an attempt to auto-subscribe should inform us with exactly this message: "+autosubscribeCompliantMessage);
 	}
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21719", "RHEL7-51084"})
 	@Test(	description="when the candlepin server goes offline, assert the Installed Product Status is reported from cache",
 			groups={"cli.tests","VerifyListInstalledIsCachedAfterAllProductsSubscribable_Test"},
 			priority=430,//dependsOnMethods={"VerifySystemCompliantFactWhenAllProductsAreSubscribable_Test"},
@@ -484,10 +517,11 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	public void afterVerifyListInstalledIsCachedAfterAllProductsSubscribable_Test() {
 		if (serverHostname!=null) clienttasks.config(null, null, true, new String[]{"server","hostname",serverHostname});
 	}
-	
-	
-	
-	
+
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21720", "RHEL7-51085"})
 	@Test(	description="subscription-manager: verify the system.compliant fact is False when no installed products are subscribable",
 			groups={"configureProductCertDirForNoProductsSubscribable","cli.tests","blockedbyBug-1183175"},
 			priority=500,
@@ -510,7 +544,9 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 			Assert.assertEquals(clienttasks.status_(null, null, null, null).getExitCode(), new Integer(1), "Expected exitCode from a call to status when the system is '"+factValueForSystemNonCompliance+"'.");
 		}
 	}
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21721", "RHEL7-51086"})
 	@Test(	description="rhsm-complianced: verify rhsm-complianced -d -s reports a non-compliant status when no installed products are subscribable",
 			groups={"cli.tests","blockedbyBug-723336","blockedbyBug-691480","blockedbyBug-846834","blockedByBug-991580","blockedByBug-1395794"},
 			priority=510,//dependsOnMethods={"VerifySystemCompliantFactWhenNoProductsAreSubscribable_Test"},
@@ -538,7 +574,9 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(sshCommandResult.getStdout().trim(), rhsmComplianceDSyslogMessageWhenNonCompliant, "Stdout from command '"+command+"'");
 		Assert.assertEquals(sshCommandResult.getStderr().trim(), "", "Stderr from command '"+command+"'");
 	}
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21722", "RHEL7-51087"})
 	@Test(	description="when no installed products are subscribable and system is NOT compliant, auto-subscribing again should try but not get any new entitlements",
 			groups={"cli.tests","blockedByBug-723044"},
 			priority=520,//dependsOnMethods={"VerifySystemCompliantFactWhenNoProductsAreSubscribable_Test"},
@@ -554,7 +592,9 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		Assert.assertTrue(entitlementCertsBefore.containsAll(entitlementCertsAfter)&&entitlementCertsAfter.containsAll(entitlementCertsBefore),"The entitlement certs have not changed after an attempt to autosubscribe a second time.");
 		Assert.assertEquals(entitlementCertsBefore.size(), entitlementCertsAfter.size(), "The number of entitlement certs did not change after an attempt to autosubscribe a second time.");
 	}
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21723", "RHEL7-51088"})
 	@Test(	description="when the candlepin server goes offline, assert the Installed Product Status is reported from cache",
 			groups={"cli.tests","VerifyListInstalledIsCachedAfterNoProductsAreSubscribable_Test"},
 			priority=530,//dependsOnMethods={"VerifySystemCompliantFactWhenNoProductsAreSubscribable_Test"},
@@ -569,10 +609,11 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	public void afterVerifyListInstalledIsCachedAfterNoProductsAreSubscribable_Test() {
 		if (serverHostname!=null) clienttasks.config(null, null, true, new String[]{"server","hostname",serverHostname});
 	}
-	
-	
-	
-	
+
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20065", "RHEL7-51089"})
 	@Test(	description="subscription-manager: verify the system.compliant fact is True when no products are installed",
 			groups={"configureProductCertDirForNoProductsInstalled","cli.tests","blockedbyBug-1183175"},
 			priority=600,
@@ -593,7 +634,9 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 			Assert.assertEquals(clienttasks.status_(null, null, null, null).getExitCode(), new Integer(0), "Expected exitCode from a call to status when the system is '"+factValueForSystemCompliance+"'.");
 		}
 	}
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20066", "RHEL7-51090"})
 	@Test(	description="rhsm-complianced: verify rhsm-complianced -d -s reports a compliant status when no products are installed (and a warning period status when at least one entitlement cert is within its warning period)",
 			groups={"cli.tests","blockedbyBug-723336","blockedByBug-991580","blockedByBug-1395794"},
 			priority=610,//dependsOnMethods={"VerifySystemCompliantFactWhenNoProductsAreInstalled_Test"},		
@@ -643,7 +686,9 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(sshCommandResult.getStderr().trim(), "", "Stderr from command '"+command+"'");
 		
 	}
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20067", "RHEL7-33100"})
 	@Test(	description="when no products are installed, auto-subscribe should abort",
 			groups={"cli.tests","blockedByBug-864207","blockedByBug-962545"},
 			priority=620,//dependsOnMethods={"VerifySystemCompliantFactWhenNoProductsAreInstalled_Test"},
@@ -669,10 +714,11 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		Assert.assertTrue(result.getStdout().trim().endsWith(expectedMsg), "When the there are no installed products on the system, an attempt to auto-subscribe should be intercepted with expected message '"+expectedMsg+"'.");
 		Assert.assertEquals(result.getExitCode(),Integer.valueOf(1), "Expected exitCode when no entitlements are granted.");
 	}
-	
-	
-	
-	
+
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21724", "RHEL7-51091"})
 	@Test(	description="subscription-manager: verify the system.compliant fact when system is unregistered and has installed products (should be incompliant)",
 			groups={"RHNClassicTests","cli.tests"},
 			priority=700,
@@ -695,7 +741,9 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance), factValueForSystemNonCompliance,
 				"While at least one product cert is installed and we are NOT registered to RHN Classic, the system should NOT be compliant (see value for fact '"+factNameForSystemCompliance+"').");
 	}
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20068", "RHEL7-51092"})
 	@Test(	description="subscription-manager: verify the system.compliant fact when system is already registered to RHN Classic",
 			groups={"RHNClassicTests","cli.tests","blockedByBug-742027"},
 			priority=710,//dependsOnMethods={"VerifySystemCompliantFactWhenUnregistered_Test"},
@@ -721,7 +769,9 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 			Assert.assertEquals(clienttasks.status_(null, null, null, null).getExitCode(), new Integer(0), "Expected exitCode from a call to status when the system is '"+factValueForSystemCompliance+"'.");
 		}
 	}
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20069", "RHEL7-51093"})
 	@Test(	description="rhsm-complianced: verify rhsm-complianced -d -s reports a compliant status when registered to RHN Classic",
 			groups={"RHNClassicTests","cli.tests","blockedByBug-1395794"},
 			priority=720,//dependsOnMethods={"VerifySystemCompliantFactWhenRegisteredToRHNClassic_Test"},
@@ -740,11 +790,12 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(sshCommandResult.getStdout().trim(), rhsmComplianceDStdoutMessageWhenCompliantByRHNClassic, "Stdout from command '"+command+"'");
 		Assert.assertEquals(sshCommandResult.getStderr().trim(), "", "Stderr from command '"+command+"'");
 	}
-	
-	
-	
-	
-	
+
+
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21725", "RHEL7-33103"})
 	@Test(	description="subscription-manager: verify the system.compliant fact remains False when all installed products are subscribable in the future",
 			groups={"configureProductCertDirForAllProductsSubscribableInTheFuture","cli.tests","blockedbyBug-737553","blockedbyBug-649068","blockedbyBug-1183175"},
 			priority=800,
@@ -807,7 +858,9 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance), factValueForSystemNonCompliance,
 				"When a system has products installed for which ALL are covered by future available subscription pools, the system should remain non-compliant (see value for fact '"+factNameForSystemCompliance+"') after having subscribed to every available subscription pool.");
 	}
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21726", "RHEL7-51094"})
 	@Test(	description="rhsm-complianced: verify rhsm-complianced -d -s reports a non-compliant status when all installed products are subscribable in the future",
 			groups={"cli.tests","blockedByBug-991580","blockedByBug-1395794"},
 			priority=810,//dependsOnMethods={"VerifySystemCompliantFactWhenAllProductsAreSubscribableInTheFuture_Test"},
@@ -826,7 +879,9 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(sshCommandResult.getStdout().trim(), rhsmComplianceDStdoutMessageWhenNonCompliant, "Stdout from command '"+command+"'");
 		Assert.assertEquals(sshCommandResult.getStderr().trim(), "", "Stderr from command '"+command+"'");
 	}
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21727", "RHEL7-51095"})
 	@Test(	description="when the candlepin server goes offline, assert the Installed Product Status is reported from cache",
 			groups={"cli.tests","VerifyListInstalledIsCachedAfterAllProductsAreSubscribableInTheFuture_Test"},
 			priority=830,//dependsOnMethods={"VerifySystemCompliantFactWhenAllProductsAreSubscribableInTheFuture_Test"},

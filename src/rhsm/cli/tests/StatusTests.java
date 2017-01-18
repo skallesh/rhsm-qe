@@ -23,6 +23,9 @@ import com.redhat.qe.auto.bugzilla.BzChecker;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.TestDefinition;
+
 /**
  *  @author jsefler
  *
@@ -50,7 +53,10 @@ public class StatusTests extends SubscriptionManagerCLITestScript{
 		statusResult = clienttasks.status(null, null, null, null);
 		Assert.assertTrue(defaultResult.toString().split(overallStatusLabel)[0].equals(statusResult.toString().split(overallStatusLabel)[0]), "When registered, the default output running subscription-manager with no arguments should default to the status module.");
 	}
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36569", "RHEL7-51357"})
 	@Test(	description="run subscription-manager status without being registered; status should be Unknown",
 			groups={},
 			enabled=true)
@@ -70,8 +76,10 @@ public class StatusTests extends SubscriptionManagerCLITestScript{
 		Assert.assertTrue(statusResult.getStdout().contains(expectedStatus), "Expecting '"+expectedStatus+"' when not registered.");
 		Assert.assertEquals(statusResult.getStdout().replaceFirst("\\+-+\\+\\n\\s*System Status Details\\s*\\n\\+-+\\+", "").trim(),expectedStatus, "Expecting ONLY '"+expectedStatus+"' to be reported when not registered.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-19969", "RHEL7-51008"})
 	@Test(	description="run subscription-manager status when registered without entitlements",
 			groups={"AcceptanceTests","Tier1Tests"},
 			enabled=true)
@@ -115,8 +123,10 @@ public class StatusTests extends SubscriptionManagerCLITestScript{
 			Assert.assertTrue(statusResult.getStdout().trim().endsWith(expectedStatus), "There should be no report of installed product details when there are no installed products; only expected '"+expectedStatus+"'.");
 		}
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-19968", "RHEL7-51007"})
 	@Test(	description="run subscription-manager status when registered with entitlements",
 			groups={"AcceptanceTests","Tier1Tests", "blockedByBug-958827","StatusWhileRegisteredWithEntitlements_Test"},
 			enabled=true)
@@ -330,8 +340,10 @@ public class StatusTests extends SubscriptionManagerCLITestScript{
 		if (clienttasks==null) return;
 		clienttasks.deleteFactsFileWithOverridingValues();
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-19967", "RHEL7-33081"})
 	@Test(	description="run subscription-manager status ondate (tomorrow and a future date after one of today's entitlements expire)",
 			groups={"AcceptanceTests","Tier1Tests"},
 			enabled=true)
@@ -385,7 +397,10 @@ public class StatusTests extends SubscriptionManagerCLITestScript{
 		Assert.assertTrue(statusResultFuture.getStdout().contains(expectedStatus), "Expecting '"+expectedStatus+"' onDate '"+onDateFuture+"' which is one day beyond the most future endDate of the currently consumed subscriptions.");
 
 	}
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36568", "RHEL7-51356"})
 	@Test(	description="run subscription-manager status ondate (yesterday)",
 			groups={"blockedByBug-1092594"},
 			enabled=true)
@@ -409,7 +424,10 @@ public class StatusTests extends SubscriptionManagerCLITestScript{
 			Assert.assertEquals(statusResultYesterday.getExitCode(), Integer.valueOf(1), "ExitCode from call to status ondate yesterday.");
 		}
 	}
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36567", "RHEL7-51355"})
 	@Test(	description="run subscription-manager status ondate (invalid)",
 			groups={},
 			enabled=true)

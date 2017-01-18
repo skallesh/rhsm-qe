@@ -3,6 +3,8 @@ package rhsm.cli.tests;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.TestDefinition;
 import org.json.JSONException;
 import org.testng.SkipException;
 import org.testng.annotations.AfterClass;
@@ -25,7 +27,9 @@ import com.redhat.qe.tools.SSHCommandResult;
 public class CleanTests extends SubscriptionManagerCLITestScript {
 
 	// Test methods ***********************************************************************
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20022", "RHEL7-51039"})
 	@Test(	description="subscription-manager-cli: clean and verify the identity is removed",
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-654429","blockedByBug-962520"},
 			enabled=true)
@@ -60,8 +64,10 @@ public class CleanTests extends SubscriptionManagerCLITestScript {
 			Assert.assertEquals(result.getStdout().trim(), clienttasks.msg_ConsumerNotRegistered, "Consumer identity has been removed after clean, therefore we must register to restore our identity.");
 		}
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20021", "RHEL7-51038"})
 	@Test(	description="subscription-manager: set manage_repos to 0 and assert clean still works.",
 			enabled=true,
 			groups={"AcceptanceTests","Tier1Tests", "blockedByBug-799394", "CleanAfterRhsmManageReposIsConfigured_Test"})
@@ -77,8 +83,10 @@ public class CleanTests extends SubscriptionManagerCLITestScript {
 		}
 		
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36617", "RHEL7-51428"})
 	@Test(	description="verify redhat.repo file is deleted of after calling subscription-manager clean",
 			groups={"blockedByBug-781510"},
 			enabled=true)
@@ -93,8 +101,10 @@ public class CleanTests extends SubscriptionManagerCLITestScript {
 		clienttasks.clean(null, null, null);
 	    Assert.assertTrue(!RemoteFileTasks.testExists(client, clienttasks.redhatRepoFile),"Expecting the redhat repo file '"+clienttasks.redhatRepoFile+"' to NOT exist after running clean.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36618", "RHEL7-51429"})
 	@Test(	description="verify Splice cert/key pair remains after subscription-manager clean",
 			groups={"blockedByBug-1026501"},
 			enabled=true)

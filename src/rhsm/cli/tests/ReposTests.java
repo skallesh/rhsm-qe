@@ -39,6 +39,9 @@ import rhsm.data.YumRepo;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.TestDefinition;
+
 /**
  * @author jsefler
  *
@@ -49,7 +52,9 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 
 	
 	// Test methods ***********************************************************************
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-19972", "RHEL7-51011"})
 	@Test(	description="subscription-manager: subscribe to a pool and verify that the newly entitled content namespaces are represented in the repos list",
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-807407","blockedByBug-962520","blockedByBug-1034649"},
 			//dataProvider="getAvailableSubscriptionPoolsData",	// very thorough, but takes too long to execute and rarely finds more bugs
@@ -150,8 +155,10 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		//if (randomGenerator.nextInt(2)==1) clienttasks.unsubscribe(null, entitlementCert.serialNumber, null, null, null); AND ALSO REMOVE pool FROM priorSubscribedPools
 	}
 	protected Set<String> priorSubscribedPoolIds=new HashSet<String>();
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20295", "RHEL7-51691"})
 	@Test(	description="subscription-manager: subscribe to a future pool and verify that NO content namespaces are represented in the repos list",
 			groups={"blockedByBug-768983","unsubscribeAllBeforeThisTest"},
 			dataProvider="getAllFutureSystemSubscriptionPoolsData",
@@ -180,8 +187,10 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		
 		// TODO we may want to randomly unsubscribe from serial number without asserting to save some computation of the accumulating entitlement certs
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20397", "RHEL7-51690"})
 	@Test(	description="subscription-manager: after subscribing to all pools, verify that manual edits to enable repos in redhat.repo are preserved.",
 			groups={"blockedByBug-905546","blockedByBug-1098891","blockedByBug-1101571","blockedByBug-1101584"},
 			dataProvider="getRandomSubsetOfYumReposData",	// dataProvider="getYumReposData", takes too long to execute
@@ -190,6 +199,10 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	public void ReposListPreservesManualEditsToEnablementOfRedhatRepos_Test(YumRepo yumRepo){
 		verifyTogglingTheEnablementOfRedhatRepo(yumRepo,true);
 	}
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20379", "RHEL7-51674"})
 	@Test(	description="subscription-manager: verify that manual edits to enable repos in redhat.repo are forbidden by documented warning.",
 			groups={"blockedByBug-1032243"},
 			enabled=true)
@@ -220,7 +233,9 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(result.getStdout().contains(expectedMessage),"File '"+clienttasks.redhatRepoFile+"' warns the user with expected message '"+expectedMessage+"'.");
 	}
 
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20386", "RHEL7-51689"})
 	@Test(	description="subscription-manager: after subscribing to all pools, verify that edits (using subscription-manager --enable --disable options) to repos in redhat.repo are preserved.",
 			groups={"blockedByBug-905546"},
 			dataProvider="getRandomSubsetOfYumReposData",	// dataProvider="getYumReposData", takes too long to execute
@@ -229,8 +244,10 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	public void ReposListPreservesEnablementOfRedhatRepos_Test(YumRepo yumRepo){
 		verifyTogglingTheEnablementOfRedhatRepo(yumRepo,false);
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-19971", "RHEL7-51010"})
 	@Test(	description="subscription-manager: after subscribing to all pools, verify that edits (using subscription-manager --enable --disable options specified multiple times in a single call) to repos in redhat.repo are preserved.",
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-843915","blockedByBug-962520","blockedByBug-1034649","blockedByBug-1121272","blockedByBug-1366301"},
 			enabled=true)
@@ -293,8 +310,10 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 			Assert.assertTrue(toggledRepo.enabled.equals(!originalRepo.enabled), "Even after refreshing certificates, repo ["+originalRepo.repoId+"] enablement has been toggled from '"+originalRepo.enabled+"' to '"+!originalRepo.enabled+"'.");
 		}
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20396", "RHEL7-51687"})
 	@Test(	description="subscription-manager: repos --list reports no entitlements when not registered",
 			groups={"blockedByBug-724809","blockedByBug-807360","blockedByBug-837447"},
 			enabled=true)
@@ -303,8 +322,10 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		clienttasks.unregister(null,null,null);		
 		Assert.assertEquals(clienttasks.getCurrentlySubscribedRepos().size(),0, "No repos are reported by subscription-manager repos --list when not registered.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20371", "RHEL7-51694"})
 	@Test(	description="subscription-manager: repos --list reports no entitlements when not registered",
 			groups={"blockedByBug-837447"},
 			enabled=true)
@@ -315,8 +336,10 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		//Assert.assertEquals(result.getStdout().trim(), "The system is not entitled to use any repositories.");
 		Assert.assertEquals(result.getStdout().trim(), "This system has no repositories available through subscriptions.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20366", "RHEL7-51692"})
 	@Test(	description="subscription-manager: repos --list should not fail when config rhsm.manage_repos is blank.",
 			groups={"ReposListWhenManageReposIsBlank_Test","blockedByBug-1251853"},
 			enabled=true)
@@ -342,8 +365,10 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		//clienttasks.config(null, null, true, new String[]{"rhsm", "manage_repos", "1"});
 		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "manage_repos", "1");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20365", "RHEL7-51693"})
 	@Test(	description="subscription-manager: repos --list should provide feedback when config rhsm.manage_repos is off.",
 			groups={"ReposListWhenManageReposIsOff_Test"},
 			enabled=true)
@@ -361,8 +386,10 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(result.getStderr().trim(), "", "Stderr when calling repos with rhsm.manage_repos configured to 0.");
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(0), "ExitCode when calling repos with rhsm.manage_repos configured to 0.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20378", "RHEL7-51695"})
 	@Test(	description="subscription-manager: repos (without any options) reports no entitlements when not registered (rhel63 and rhel58 previously reported 'Error: No options provided. Please see the help comand.')",
 			groups={"blockedByBug-837447"},
 			enabled=true)
@@ -373,8 +400,10 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		//Assert.assertEquals(result.getStdout().trim(), "The system is not entitled to use any repositories.");
 		Assert.assertEquals(result.getStdout().trim(), "This system has no repositories available through subscriptions.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-19970", "RHEL7-51009"})
 	@Test(	description="subscription-manager: set manage_repos to 0 and assert redhat.repo is removed.",
 			groups={"ManageReposTests","AcceptanceTests","Tier1Tests","blockedByBug-767620","blockedByBug-797996","blockedByBug-895462","blockedByBug-1034649"},
 			enabled=true)
@@ -423,8 +452,10 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		//Assert.assertTrue(reposListResult.getStdout().contains("This system has no repositories available through subscriptions."), "This system has no repositories available through subscriptions even after subscribing to all pools while the rhsm.manage_repos configuration value is 0.");
 		Assert.assertTrue(!RemoteFileTasks.testExists(client, clienttasks.redhatRepoFile),"Even after subscribing to all subscription pools while the rhsm.manage_repos configuration value is 0, the redhat.repo is not generated.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20377", "RHEL7-51688"})
 	@Test(	description="subscription-manager: set manage_repos to 1 and assert redhat.repo is restored.",
 			groups={"blockedByBug-767620","blockedByBug-797996","blockedByBug-895462","ManageReposTests"},
 			enabled=true)
@@ -468,8 +499,10 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		clienttasks.getYumRepolist(null);
 		Assert.assertTrue(RemoteFileTasks.testExists(client, clienttasks.redhatRepoFile),"When the rhsm.manage_repos configuration value is non-zero, the redhat.repo file should now exist.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20375", "RHEL7-51681"})
 	@Test(	description="subscription-manager: attempt to enable an invalid repo id",
 			groups={"blockedByBug-846207"},
 			enabled=true)
@@ -487,8 +520,10 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(result.getStdout().trim(), expectedStdout, "Stdout from an attempt to enable an invalid-repo-id.");
 		Assert.assertEquals(result.getStderr().trim(), "", "Stderr from an attempt to enable an invalid-repo-id.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20372", "RHEL7-51675"})
 	@Test(	description="subscription-manager: attempt to disable an invalid repo id",
 			groups={"blockedByBug-846207"},
 			enabled=true)
@@ -506,8 +541,10 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(result.getStdout().trim(), expectedStdout, "Stdout from an attempt to disable an invalid-repo-id.");
 		Assert.assertEquals(result.getStderr().trim(), "", "Stderr from an attempt to disable an invalid-repo-id.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20382", "RHEL7-51678"})
 	@Test(	description="subscription-manager: attempt multiple enable/disable invalid repo ids",
 			groups={"blockedByBug-846207","blockedByBug-918746"},
 			enabled=true)
@@ -545,8 +582,10 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		}
 		*/
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20395", "RHEL7-51677"})
 	@Test(	description="subscription-manager: attempt enable/disable all repos (using wildcard *)",
 			groups={},
 			enabled=true)
@@ -628,8 +667,10 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 			Assert.assertTrue(yumRepoListDisabled.contains(subscribedRepo.repoId), "After using wildcard * to enable all repos using subscription-manager, entitled repo '"+subscribedRepo.repoId+"' appears on the yum repolist enabled.");
 		}
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20370", "RHEL7-51680"})
 	@Test(	description="subscription-manager: attempt enable/disable some repos (using wildcard ?)",
 			groups={},
 			enabled=true)
@@ -703,8 +744,10 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 			}
 		}
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20387", "RHEL7-51679"})
 	@Test(	description="subscription-manager: attempt enable/disable/enable/disable repos in an order",
 			groups={"blockedByBug-1115499"},
 			enabled=true)
@@ -757,6 +800,8 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 * @throws Exception
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20369", "RHEL7-51682"})
 	@Test(	description="subscription-manager: enable a repo.",
 			enabled=true,
 			groups={})
@@ -778,6 +823,10 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 			Assert.assertEquals(result.getStdout().trim(),expectedStdout);
 		}
 	}
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20388", "RHEL7-51676"})
 	@Test(	description="subscription-manager: disable a repo.",
 			groups={},
 			enabled=true)
@@ -799,8 +848,10 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 			Assert.assertEquals(result.getStdout().trim(),expectedStdout);
 		}
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-19974", "RHEL7-51013"})
 	@Test(	description="subscription-manager: manually add more yum repository options to redhat.repo and assert persistence.",
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-845349","blockedByBug-834806","blockedByBug-1098891","blockedByBug-1101571","blockedByBug-1101584","blockedByBug-1366301"},
 			enabled=true)
@@ -864,6 +915,10 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 			// THIS WILL LIKELY NOT BE EQUAL WHEN THE yumRepoAfterUpdate.baseurl POINTS TO RHEL CONTENT SINCE IT WILL CONTAIN THE RELEASE PREFERENCE SUBSTITUTED FOR $releasever	//Assert.assertEquals(yumRepoAfterUpdate, yumRepo, "Yum repo ["+yumRepo.id+"] has persisted all of its repository option values even after setting a release and issuing a yum transaction.");
 		}
 	}
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-19975", "RHEL7-51014"})
 	@Test(	description="subscription-manager: add more yum repository options to redhat.repo and assert persistence using repo-override module.",
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-845349","blockedByBug-834806","blockedByBug-803746","blockedByBug-1086316","blockedByBug-1069230","blockedByBug-1366301"},
 			enabled=true)
@@ -936,6 +991,10 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 			// THIS WILL LIKELY NOT BE EQUAL WHEN THE yumRepoAfterUpdate.baseurl POINTS TO RHEL CONTENT SINCE IT WILL CONTAIN THE RELEASE PREFERENCE SUBSTITUTED FOR $releasever	//Assert.assertEquals(yumRepoAfterUpdate, yumRepo, "Yum repo ["+yumRepo.id+"] has persisted all of its repository option values even after setting a release and issuing a yum transaction.");
 		}
 	}
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20298", "RHEL7-51698"})
 	@Test(	description="subscription-manager: verify that overrides take precedence to manually edited repository options in redhat.repo and assert persistence.",
 			groups={"blockedByBug-1098891","blockedByBug-1101571","blockedByBug-1101584"},
 			enabled=true)
@@ -978,8 +1037,10 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		Assert.assertNotNull(yumRepoAfterUpdate, "Found yum repo ["+yumRepo.id+"] in '"+clienttasks.redhatRepoFile+"'.");
 		Assert.assertFalse(yumRepoAfterUpdate.enabled, "Yum repo ["+yumRepo.id+"] is still disabled after an attempt to manually enable it (because repo-override should take precedence).");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-19973", "RHEL7-51012"})
 	@Test(	description="Verify that the redhat.repo file is refreshed with changes to the entitlements (yum transactions are no longer required to update the redhat.repo)",
 			enabled=true,
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1008016","blockedByBug-1090206","blockedByBug-1034429"})	// TODO: review all tests and tasks that issue yum transactions simply to re-populate the redhat.repo
@@ -1017,8 +1078,10 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		log.info("Immediately after unregistering, we will now assert that the redhat.repo is empty without having triggered a yum transaction...");
 		verifyCurrentEntitlementCertsAreReflectedInCurrentlySubscribedYumRepos(productCerts);
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20381", "RHEL7-51697"})
 	@Test(	description="Verify that redhat.repo file is unnecessarily re-written with every yum transaction",
 			groups={"blockedByBug-1035440"/*,"blockedByBug-1090206","blockedByBug-1008016"*/,"blockedByBug-1104731","blockedByBug-1104777"},
 			enabled=true)
@@ -1053,8 +1116,10 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		clienttasks.yumClean("all");
 		Assert.assertEquals(client.runCommandAndWait("stat -c %y "+clienttasks.redhatRepoFile).getStdout().trim(), finalModTime, "The modification time of '"+clienttasks.redhatRepoFile+"' before and after a yum transaction.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20385", "RHEL7-51686"})
 	@Test(	description="subscription-manager: subscribe to a pool and verify that repos list --list-enabled reports only the enabled repos from the newly entitled content namespaces",
 			groups={"blockedByBug-1119648"},
 			enabled=true)
@@ -1080,8 +1145,10 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		}
 		Assert.assertEquals(listEnabledRepos.size(), enabledYumRepos.size(),"The number of --list-enabled repos matches the number of enabled yum repos in '"+clienttasks.redhatRepoFile+"'.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20368", "RHEL7-51684"})
 	@Test(	description="subscription-manager: subscribe to a pool and verify that repos list --list-disabled reports only the disabled repos from the newly entitled content namespaces",
 			groups={"blockedByBug-1119648"},
 			enabled=true)
@@ -1107,8 +1174,10 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		}
 		Assert.assertEquals(listDisabledRepos.size(), disabledYumRepos.size(),"The number of --list-disabled repos matches the number of disabled yum repos in '"+clienttasks.redhatRepoFile+"'.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20300", "RHEL7-51683"})
 	@Test(	description="subscription-manager: repos --list-disabled should give feedback when there are no disabled repos",
 			groups={"blockedByBug-1151925"},
 			enabled=true)
@@ -1134,8 +1203,10 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		String expectedStdout = "There were no available repositories matching the specified criteria.";
 		Assert.assertEquals(sshCommandResult.getStdout().trim(),expectedStdout,"After using a wildcard to enable all repos, the repos --list-disabled should report feedback indicating no matches.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20389", "RHEL7-51685"})
 	@Test(	description="subscription-manager: repos --list-enabled should give feedback when there are no enabled repos",
 			groups={"blockedByBug-1151925"},
 			enabled=true)
@@ -1161,8 +1232,10 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		String expectedStdout = "There were no available repositories matching the specified criteria.";
 		Assert.assertEquals(sshCommandResult.getStdout().trim(),expectedStdout,"After using a wildcard to disable all repos, the repos --list-enabled should report feedback indicating no matches.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20398", "RHEL7-51696"})
 	@Test(	description="Verify that RepoActionInvoker.is_managed('some_repo') returns False when 'some_repo' does not exist and True when it is entitled",
 			groups={"blockedByBug-1223038"},
 			enabled=true)

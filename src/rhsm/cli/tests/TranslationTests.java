@@ -27,6 +27,9 @@ import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.TestDefinition;
+
 /**
  * @author jsefler
  * References:
@@ -85,7 +88,9 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	// Test Methods ***********************************************************************
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21766", "RHEL7-32176"})
 	@Test(	description="subscription-manager-cli: assert help commands return translated text",
 			groups={"blockedByBug-756156","blockedByBug-906124","blockedByBug-919584"},
 			dataProvider="getTranslatedCommandLineHelpData")
@@ -119,8 +124,10 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(!RemoteFileTasks.testExists(client,clienttasks.consumerKeyFile()), "Consumer key file '"+clienttasks.consumerKeyFile()+"' does NOT exist after an attempt to register with invalid credentials.");
 		Assert.assertTrue(!RemoteFileTasks.testExists(client,clienttasks.consumerCertFile()), "Consumer cert file '"+clienttasks.consumerCertFile()+" does NOT exist after an attempt to register with invalid credentials.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21765", "RHEL7-32170"})
 	@Test(	description="attempt LANG=C subscription-manager register",
 			groups={"blockedByBug-729988"},
 			enabled=true)
@@ -190,7 +197,10 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(RemoteFileTasks.testExists(client, localeFile.getPath()),"Supported locale file '"+localeFile+"' is installed.");
 		if (!translationFileMapForSubscriptionManager.keySet().contains(localeFile)) Assert.fail("Something went wrong in TranslationTests.buildTranslationFileMap().  File '"+localeFile+"' was not found in the translationFileMap.keySet().");
 	}
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-19945", "RHEL7-68144"})
 	@Test(	description="verify that only the expected rhsm.mo tranlation files are installed for each of the supported locales",
 			groups={"AcceptanceTests","Tier1Tests", "blockedByBug-824100"},
 			enabled=true)
@@ -221,7 +231,10 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(!unexpectedTranslationFilesFound, "No unexpected translation files were found installed.");
 		Assert.assertTrue(allExpectedTranslationFilesFound, "All expected translation files were found installed.");
 	}
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-25823", "RHEL7-68145"})
 	@Test(	description="verify that only the expected rhsm.mo tranlation files are installed for each of the supported locales",
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1057532",
 					"blockedByBug-1391681",	// Zanata translations for subscription-manager 1.18 are not 100%
@@ -367,7 +380,10 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 		// assert that there are no failed pofilter translation test results
 		Assert.assertEquals(pofilterFailedTranslations.size(),0, "Discounting the ignored test results, the number of failed pofilter '"+pofilterTest+"' tests for translation file '"+translationFile+"'.");
 	}
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21768", "RHEL7-51284"})
 	@Test(	description="verify that msgid \"Deprecated, see attach\" did NOT translate the command line module \"attach\" for all languages",
 			groups={"blockedByBug-891375","blockedByBug-891378","blockedByBug-891380","blockedByBug-891383","blockedByBug-891384","blockedByBug-891386","blockedByBug-891391","blockedByBug-891394","blockedByBug-891398","blockedByBug-891402","blockedByBug-1061381"},
 			enabled=true)
@@ -375,7 +391,10 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	public void VerifyMsgIdDeprecatedSeeAttach_Test() {
 		verifyTranslatedMsgIdContainsSubStringForAllLangs("Deprecated, see attach","attach");
 	}
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21770", "RHEL7-51286"})
 	@Test(	description="verify that msgid \"Deprecated, see remove\" did NOT translate the command line module \"remove\" for all languages",
 			groups={"blockedByBug-891375","blockedByBug-891378","blockedByBug-891380","blockedByBug-891383","blockedByBug-891384","blockedByBug-891386","blockedByBug-891391","blockedByBug-891394","blockedByBug-891398","blockedByBug-891402"},
 			enabled=true)
@@ -383,7 +402,10 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	public void VerifyMsgIdDeprecatedSeeRemove_Test() {
 		verifyTranslatedMsgIdContainsSubStringForAllLangs("Deprecated, see remove","remove");
 	}
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21769", "RHEL7-51285"})
 	@Test(	description="verify that msgid \"deprecated, see auto-attach-interval\" did NOT translate the command line option \"auto-attach-interval\" for all languages",
 			groups={"blockedByBug-891375","blockedByBug-891434","blockedByBug-891377","blockedByBug-928073","blockedByBug-928082"},
 			enabled=true)
@@ -392,7 +414,10 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 		//verifyTranslatedMsgIdContainsSubStringForAllLangs("deprecated, see auto-attach-interval","auto-attach-interval");	// was valid prior to bug 891377 implementation
 		verifyTranslatedMsgIdContainsSubStringForAllLangs("deprecated, see --auto-attach-interval","--auto-attach-interval");	// now that bug 891377 is fixed, this test is effectively now a duplicate of pofilter -t options
 	}
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36513", "RHEL7-32165"})
 	@Test(	description="verify that translation msgstr does NOT contain paragraph character ¶ unless also in msgid",
 			groups={},
 			dataProvider="getTranslationFileDataForVerifyTranslationsDoNotUseParagraphCharacter_Test",
@@ -437,7 +462,10 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 		}
 		return ll;
 	}
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21771", "RHEL7-32172"})
 	@Test(	description="verify that translation msgstr does NOT contain over-escaped newline character \\n (should be \n)",
 			groups={},
 			dataProvider="getTranslationFileDataForVerifyTranslationsDoNotContainOverEscapedNewlineCharacter_Test",
@@ -474,8 +502,10 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 		}
 		return ll;
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21767", "RHEL7-51283"})
 	@Test(	description="verify that candlepin translation msgstr does NOT contain unescaped single quotes in the msgid",
 			groups={},
 			dataProvider="getTranslationFileDataForVerifyCandlepinTranslationsDoNotContainUnescapedSingleQuotes_Test",
@@ -537,8 +567,10 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 		}
 		return ll;
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21772", "RHEL7-32178"})
 	@Test(	description="verify that Red Hat product names (e.g. 'Red Hat','RHN') remain untranslated",
 			groups={},
 			dataProvider="getTranslationFileDataForVerifyTranslationsDoNotTranslateSubStrings_Test",
@@ -732,6 +764,10 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 		String pkg="python-simplejson";
 		if (clienttasks.isPackageInstalled(pkg)) clienttasks.yumRemovePackage(pkg);
 	}
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-19946", "RHEL7-55158"})
 	@Test(	description="verify that \"'ascii' codec can't decode byte\" errors do not occur with yum search",
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1199597","VerifyYumSearchDoesNotThrowAsciiCodecError_Test"},
 			dataProvider="getSupportedLangsData",

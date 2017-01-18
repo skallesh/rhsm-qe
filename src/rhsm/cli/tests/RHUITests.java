@@ -19,6 +19,9 @@ import rhsm.data.SubscriptionPool;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.TestDefinition;
+
 /**
  * @author jsefler
  * 
@@ -68,7 +71,9 @@ RHEL-6.2-RHUI-2.0.3-20120416.0-Server-x86_64-DVD1.iso.sha256sum
 public class RHUITests extends SubscriptionManagerCLITestScript {
 
 	// Test methods ***********************************************************************
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-22224", "RHEL7-55199"})
 	@Test(	description="register to the stage/prod environment as a RHUI consumer type",
 			groups={},
 			enabled=true)
@@ -83,7 +88,9 @@ public class RHUITests extends SubscriptionManagerCLITestScript {
 		} else
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,ConsumerType.RHUI,null,null,null,null,null,(String)null,null,null, null, true, null, null, null, null);
 	}
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-22225", "RHEL7-55200"})
 	@Test(	description="after registering to the stage/prod environment as a RHUI consumer, subscribe to the expected RHUI product subscription",
 			groups={"blockedByBug-885325","blockedByBug-962520"},
 			dependsOnMethods={"RegisterRHUIConsumer_Test"},
@@ -136,7 +143,10 @@ public class RHUITests extends SubscriptionManagerCLITestScript {
 		RemoteFileTasks.runCommandAndAssert(client, "wget --no-check-certificate --certificate="+entitlementCertFile+" --private-key="+entitlementKeyFile+" --output-document="+downloadedIsoFile+" -- "+repoUrl+"/"+sm_rhuiDownloadIso, 0/*, stdoutRegex, stderrRegex*/);
 		Assert.assertEquals(RemoteFileTasks.testFileExists(client, downloadedIsoFile.getPath()), 1,"Expected RHUI Download ISO was downloaded.");
 	}
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-22305", "RHEL7-55202"})
 	@Test(	description="download an expected RHUI iso from an expected file repoUrl",
 			groups={"blockedByBug-860516","blockedByBug-894184"},
 			dependsOnMethods={"ConsumeRHUISubscriptionProduct_Test"},
@@ -183,8 +193,10 @@ public class RHUITests extends SubscriptionManagerCLITestScript {
 		RemoteFileTasks.runCommandAndAssert(client, "wget --no-check-certificate --certificate="+entitlementCertFile+" --private-key="+entitlementKeyFile+" --output-document="+downloadedIsoFile+" -- "+repoUrl+"/"+sm_rhuiDownloadIso, 0/*, stdoutRegex, stderrRegex*/);
 		Assert.assertTrue(RemoteFileTasks.testExists(client, downloadedIsoFile.getPath()),"Expected RHUI Download ISO was downloaded.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-22306", "RHEL7-55201"})
 	@Test(	description="mount the downloaded RHUI iso and list the packages in the iso",
 			groups={},
 			dependsOnMethods={"DownloadRHUIISOFromFileRepo_Test"},

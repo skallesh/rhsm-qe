@@ -25,6 +25,9 @@ import com.redhat.qe.auto.bugzilla.BlockedByBzBug;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.tools.SSHCommandResult;
 
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.TestDefinition;
+
 /**
  * @author jsefler
  *
@@ -34,8 +37,9 @@ import com.redhat.qe.tools.SSHCommandResult;
 public class OrgsTests extends SubscriptionManagerCLITestScript {
 
 	// Test methods ***********************************************************************
-	
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-27119", "RHEL7-51361"})
 	@Test(	description="subscription-manager: run the orgs module with valid user credentials and verify the expected organizations are listed",
 			groups={"blockedByBug-719739","blockedByBug-1254353"/*is a duplicate of*/,"blockedByBug-1254349"},
 			dataProvider="getCredentialsForOrgsData",
@@ -62,8 +66,10 @@ public class OrgsTests extends SubscriptionManagerCLITestScript {
 		}
 		Assert.assertEquals(actualOrgs.size(), expectedOrgs.size(),"The number of orgs returned by subscription-manager for user '"+username+"'.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36575", "RHEL7-51376"})
 	@Test(	description="subscription-manager: run the orgs module with invalid user credentials",
 			groups={"blockedByBug-1254353"/*is a duplicate of*/,"blockedByBug-1254349"},
 			dataProvider="getInvalidCredentialsForOrgsData",
@@ -82,8 +88,10 @@ public class OrgsTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(sshCommandResult.getStdout().trim(), "", "The expected stdout result from orgs with invalid credentials.");
 		Assert.assertContainsMatch(sshCommandResult.getStderr().trim(), servertasks.invalidCredentialsRegexMsg(), "The expected stderr result from orgs with invalid credentials.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36574", "RHEL7-51375"})
 	@Test(	description="subscription-manager: run the orgs module while prompting for user credentials interactively",
 			groups={"blockedbyBug-878986"},
 			dataProvider = "getInteractiveCredentialsForOrgsData",
@@ -127,8 +135,10 @@ public class OrgsTests extends SubscriptionManagerCLITestScript {
 		if (expectedStdoutRegex!=null) Assert.assertContainsMatch(sshCommandResult.getStdout(), expectedStdoutRegex, "The expected stdout result from orgs while supplying interactive credentials.");
 		if (expectedStderrRegex!=null) Assert.assertContainsMatch(sshCommandResult.getStderr(), expectedStderrRegex, "The expected stderr result from orgs while supplying interactive credentials.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36571", "RHEL7-51359"})
 	@Test(	description="subscription-manager: attempt to get a bogus owner via the candlepin api",
 			groups={"blockedByBug-729780","blockedByBug-796468"},
 			enabled=true)
@@ -164,6 +174,9 @@ public class OrgsTests extends SubscriptionManagerCLITestScript {
 		server_port		= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "port");
 		server_prefix	= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "prefix");
 	}
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36576", "RHEL7-51377"})
 	@Test(	description="subscription-manager: orgs with --serverurl",
 			dataProvider="getServerurl_TestData",
 			groups={"OrgsWithServerurl_Test"},
@@ -214,6 +227,9 @@ public class OrgsTests extends SubscriptionManagerCLITestScript {
 		if (clienttasks==null) return;
 		rhsm_ca_cert_dir	= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsm", "ca_cert_dir");
 	}
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36573", "RHEL7-51374"})
 	@Test(	description="subscription-manager: orgs with --insecure",
 			groups={"OrgsWithInsecure_Test","blockedByBug-844411","blockedByBug-993202","blockedByBug-1254353"/*is a duplicate of*/,"blockedByBug-1254349"},
 			enabled=true)
@@ -263,6 +279,9 @@ public class OrgsTests extends SubscriptionManagerCLITestScript {
 		// This also allows us to individually run this Test Class on Hudson.
 		RegisterWithCredentials_Test(); // needed to populate registrationDataList
 	}
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36570", "RHEL7-51358"})
 	@Test(	description="consumers should NOT be able to attach subscriptions from other orgs",
 			groups={"AttemptToAttachSubscriptionsFromOtherOrgs_Test","blockedByBug-994711"},
 			enabled=true)
@@ -290,8 +309,10 @@ public class OrgsTests extends SubscriptionManagerCLITestScript {
 		}
 		if (skipTest) throw new SkipException("Could not find any subscription pools from orgs other than '"+ownerKey+"' to execute this test.");		
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36572", "RHEL7-51360"})
 	@Test(	description="create an owner via the candlepin api and then update fields on the owner",
 			groups={"CreateAnOwnerAndSetAttributesOnTheOwner_Test"},
 			enabled=true)

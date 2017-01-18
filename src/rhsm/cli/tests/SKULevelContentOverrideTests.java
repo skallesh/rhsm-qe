@@ -25,6 +25,9 @@ import rhsm.cli.tasks.SubscriptionManagerTasks;
 import rhsm.data.Repo;
 import rhsm.data.SubscriptionPool;
 
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.TestDefinition;
+
 /**
  * @author skallesh
  *
@@ -37,6 +40,8 @@ import rhsm.data.SubscriptionPool;
 @Test(groups = { "SKULevelContentOverrideTests", "Tier3Tests" })
 public class SKULevelContentOverrideTests extends SubscriptionManagerCLITestScript {
 
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-37020", "RHEL7-54835"})
 	@Test(description = "Verify content can be overriden at SKU level,content overriden at sku level can be enabled/disabled by using subscription-manager repos --enable/--disable commands and enabled repo is given prefrence over disabled repo", groups = {
 			"OverrideAtSKULevelTest", "blockedByBug-1403160" }, dataProvider = "getSubscriptions", enabled = true)
 	public void OverrideAtSKULevelTest(Object Bugzilla, SubscriptionPool subscriptionpool)

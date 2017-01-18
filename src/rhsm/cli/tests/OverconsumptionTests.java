@@ -20,6 +20,9 @@ import rhsm.data.EntitlementCert;
 import rhsm.data.SubscriptionPool;
 import com.redhat.qe.tools.SSHCommandResult;
 
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.TestDefinition;
+
 /**
  * @author jsefler
  *
@@ -34,7 +37,9 @@ public class OverconsumptionTests extends SubscriptionManagerCLITestScript{
 	
 	
 	// Test Methods ***********************************************************************
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36655", "RHEL7-51495"})
 	@Test(	description="subscription-manager: Basic attempt to oversubscribe the pool quantity",
 			groups={},
 			enabled=true)
@@ -99,8 +104,10 @@ public class OverconsumptionTests extends SubscriptionManagerCLITestScript{
 				"Asserting the test pool's consumed attribute has not overconsumed it's total quantity after attempting a basic overconsumption of its entitlements.");
 
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-37718", "RHEL7-51496"})
 	@Test(	description="subscription-manager: Concurrent attempt to subscribe",
 			groups={},
 			dependsOnMethods={"BasicAttemptToOversubscribe_Test"},
@@ -184,8 +191,10 @@ public class OverconsumptionTests extends SubscriptionManagerCLITestScript{
 		EntitlementCert client2EntitlementCert = client2tasks.getEntitlementCertFromEntitlementCertFile(client2EntitlementCerts.get(0));
 		Assert.assertFalse(client1EntitlementCert.serialNumber.equals(client2EntitlementCert.serialNumber), "Asserting that the entitlement serials granted to each of the concurent subscribers are unique to each other.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-37719", "RHEL7-51497"})
 	@Test(	description="subscription-manager: Concurrent attempt to oversubscribe the pool quantity",
 			groups={"blockedByBug-671195","blockedByBug-1336054"},
 			dependsOnMethods={"ConcurrentAttemptToSubscribe_Test"},

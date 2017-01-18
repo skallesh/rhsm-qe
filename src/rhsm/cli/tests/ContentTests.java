@@ -12,6 +12,8 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.TestDefinition;
 import org.apache.xmlrpc.XmlRpcException;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -52,7 +54,8 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 
 	
 	// Test methods ***********************************************************************
-	
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-25987", "RHEL7-51485"})
 	@Test(	description="subscription-manager Yum plugin: enable/disable",
 			groups={"FipsTests","EnableDisableManageReposAndVerifyContentAvailable_Test","blockedByBug-804227","blockedByBug-871146","blockedByBug-905546","blockedByBug-1017866"},
 			//dataProvider="getAvailableSubscriptionPoolsData",	// very thorough, but takes too long to execute and rarely finds more bugs
@@ -169,9 +172,10 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		clienttasks.config(null, null, true, new String[]{"rhsm","manage_repos","1"});
 		clienttasks.restart_rhsmcertd(Integer.valueOf(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, /*"certFrequency" WAS CHANGED BY BUG 882459 TO */ "certCheckInterval")), null, null);
 	}
-	
 
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20085", "RHEL7-51099"})
 	@Test(	description="subscription-manager content flag : Default content flag should enable",
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-804227","blockedByBug-871146","blockedByBug-924919","blockedByBug-962520"},
 	        enabled=true)
@@ -216,8 +220,10 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 			}
 		}
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20082", "RHEL7-51098"})
 	@Test(	description="subscription-manager content flag : gpgcheck value in redhat.repo should be disabled when gpg_url is empty or null",
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-741293","blockedByBug-805690","blockedByBug-962520"},
 	        enabled=true)
@@ -350,8 +356,10 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 			}
 		}
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-22222", "RHEL7-55190"})
 	@Test(	description="subscription-manager Yum plugin: ensure content can be downloaded/installed/removed",
 			groups={"FipsTests","AcceptanceTests","Tier1Tests","blockedByBug-701425","blockedByBug-871146","blockedByBug-962520"},
 			dataProvider="getEnabledRepoAndSubscriptionPoolData",
@@ -401,8 +409,10 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	public void InstallAndRemovePackageAfterSubscribingToPersonalSubPool_Test(String pkg, String repoLabel, SubscriptionPool pool) throws JSONException, Exception {
 		InstallAndRemovePackageFromEnabledRepoAfterSubscribingToPool_Test(pkg, repoLabel, pool, null);
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-25986", "RHEL7-56655"})
 	@Test(	description="subscription-manager Yum plugin: ensure yum groups can be installed/removed",
 			groups={"FipsTests"},
 			dataProvider="getYumAvailableGroupFromEnabledRepoAndSubscriptionPoolData",
@@ -531,7 +541,9 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		Assert.assertContainsMatch(redhatRepoFileContents,"^# Certificate-Based Repositories$",null,"Comment heading \"Certificate-Based Repositories\" was found inside "+clienttasks.redhatRepoFile);
 		Assert.assertContainsMatch(redhatRepoFileContents,"^# Managed by \\(rhsm\\) subscription-manager$",null,"Comment heading \"Managed by (rhsm) subscription-manager\" was found inside "+clienttasks.redhatRepoFile);		
 	}
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20083", "RHEL7-51096"})
 	@Test(	description="verify redhat.repo file is purged of successive blank lines by subscription-manager yum plugin",
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-737145","blockedByBug-838113","blockedByBug-924919","blockedByBug-979492","blockedByBug-1017969","blockedByBug-1035440"},	/* yum stdout/stderr related bugs 872310 901612 1017354 1017969 */
 			enabled=true)
@@ -662,13 +674,14 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		//Assert.assertContainsMatch(redhatRepoFileContents,"^# Red Hat Repositories$",null,"Comment heading \"Red Hat Repositories\" was found inside "+clienttasks.redhatRepoFile);
 		Assert.assertContainsMatch(redhatRepoFileContents,"^# Certificate-Based Repositories$",null,"Comment heading \"Certificate-Based Repositories\" was found inside "+clienttasks.redhatRepoFile);
 		Assert.assertContainsMatch(redhatRepoFileContents,"^# Managed by \\(rhsm\\) subscription-manager$",null,"Comment heading \"Managed by (rhsm) subscription-manager\" was found inside "+clienttasks.redhatRepoFile);		
-	}	
-	
-	
-	
-	
-	
+	}
 
+
+
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36652", "RHEL7-51484"})
 	@Test(	description="Verify that a 185 content set product subscription is always subscribable",
 			groups={"SubscribabilityOfContentSetProduct_Tests","blockedByBug-871146","blockedByBug-905546"},
 			enabled=true)
@@ -735,8 +748,10 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		//clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		clienttasks.unsubscribeFromSerialNumber(clienttasks.getSerialNumberFromEntitlementCertFile(entitlementCertFile));
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36653", "RHEL7-51486"})
 	@Test(	description="Verify that a 186 content set product subscription is subscribable only when system.certificate_version >= 3.0",
 			groups={"SubscribabilityOfContentSetProduct_Tests","blockedByBug-871146","blockedByBug-905546"},
 			enabled=true)
@@ -744,8 +759,10 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	public void VerifySubscribabilityOfSKUProvidingA186ContentSetProduct_Test() {
 		VerifySubscribabilityOfSKUProvidingTooManyContentSets(subscriptionSKUProvidingA186ContentSetProduct,186);
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36654", "RHEL7-51487"})
 	@Test(	description="Verify that a subscription providing two 93 content set products is subscribable only when system.certificate_version >= 3.0",
 			groups={"SubscribabilityOfContentSetProduct_Tests","blockedByBug-879022","blockedByBug-905546"},
 			enabled=true)
@@ -753,8 +770,10 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	public void VerifySubscribabilityOfSKUProvidingTwo93ContentSetProducts_Test() {
 		VerifySubscribabilityOfSKUProvidingTooManyContentSets(subscriptionSKUProvidingTwo93ContentSetProducts,93*2);
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20086", "RHEL7-51097"})
 	@Test(	description="Verify that yum vars used in a baseurl are listed in a yum repo parameter called ui_repoid_vars",
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-906554"},
 			enabled=true)
@@ -803,8 +822,10 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		}
 		if (!UiRepoIdVarsTested) throw new SkipException("Could not find any YumRepos containing yum vars to assert this test.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20080", "RHEL7-33076"})
 	@Test(	description="Verify that all content sets granted from a subscription pool that are restricted to specific arches satisfy the current system's arch.",
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-706187","blockedByBug-975520","VerifyArchRestrictedContentSetsEntitledAfterSubscribeAllSatisfiesTheSystemArch_Test"},
 			enabled=true)
@@ -858,8 +879,10 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	public void deleteFactsFileWithOverridingValues() {
 		if (clienttasks!=null) clienttasks.deleteFactsFileWithOverridingValues();
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20081", "RHEL7-50720"})
 	@Test(	description="Verify that all content sets granted from a subscription pool satisfy the system arch and subset the provided product's arch",
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-706187","blockedByBug-975520"},
 			dataProvider="getAllAvailableSubscriptionPoolsProvidingArchBasedContentData",//"getAvailableSubscriptionPoolsData",
@@ -1076,8 +1099,10 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		}
 	}
 	protected Set<String> poolIds = new HashSet<String>();
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20084", "RHEL7-55189"})
 	@Test(	description="Verify that all there is at least one available RHEL subscription and that yum content is available for the installed RHEL product cert",
 			groups={"FipsTests","AcceptanceTests","Tier1Tests","blockedByBug-1156638"},
 			enabled=true)
@@ -1176,8 +1201,10 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		Assert.assertTrue(rhelSubscriptionIsAvailable,"Successfully subscribed to at least one available RHEL subscription that provided for our installed RHEL product cert: "+rhelProductCert);
 		Assert.assertTrue(rhelYumContentIsAvailable,"All of the RHEL subscriptions subscribed provided at least one enabled yum content package applicable for our installed RHEL product cert: "+rhelProductCert+" (See WARNINGS logged above for failed subscriptions)");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20087", "RHEL7-55191"})
 	@Test(	description="Verify that yum install does not fail when service rsyslog is stopped",
 			groups={"FipsTests","AcceptanceTests","Tier1Tests","blockedByBug-1211557","VerifyYumInstallSucceedsWhenServiceRsyslogIsStopped_Test"},
 			dependsOnMethods={"VerifyRhelSubscriptionContentIsAvailable_Test"},

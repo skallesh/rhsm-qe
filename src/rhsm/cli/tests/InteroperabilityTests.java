@@ -22,6 +22,9 @@ import rhsm.data.SubscriptionPool;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.TestDefinition;
+
 /**
  * @author jsefler
  *
@@ -31,7 +34,9 @@ import com.redhat.qe.tools.SSHCommandResult;
 public class InteroperabilityTests extends SubscriptionManagerCLITestScript {
 
 	// Test methods ***********************************************************************
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-19954", "RHEL7-51003"})
 	@Test(	description="User is warned when already registered using RHN Classic",
 			groups={"InteroperabilityRegister_Test", "AcceptanceTests","Tier1Tests", "blockedByBug-730018", "blockedByBug-755130", "blockedByBug-847795", "blockedByBug-859090", "blockedByBug-877590"},
 			enabled=true)
@@ -75,8 +80,10 @@ public class InteroperabilityTests extends SubscriptionManagerCLITestScript {
 		//Assert.assertContainsNoMatch(result.getStdout(),interoperabilityWarningMessageRegex, "subscription-manager does NOT warn registerer when the system is NOT already registered via RHN Classic.");
 		Assert.assertTrue(!result.getStdout().contains(interoperabilityWarningMessage), "subscription-manager does NOT warn registerer when the system is NOT already registered via RHN Classic.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36531", "RHEL7-51304"})
 	@Test(	description="When registered to RHSM (and all subscriptions have expired), the subscription-manager yum plugin should inform that: The subscription for following product(s) has expired: etc.",
 			groups={"YumPluginMessageCase_Tests","blockedByBug-818383","blockedByBug-832119","blockedByBug-871146", "blockedbyBug-901612", "blockedbyBug-1017354","blockedByBug-1087620","blockedByBug-1058380","blockedByBug-1122772"},
 			enabled=true)
@@ -136,7 +143,9 @@ public class InteroperabilityTests extends SubscriptionManagerCLITestScript {
 		expectedMsgRHSM += "\n"+"You no longer have access to the repositories that provide these products.  It is important that you apply an active subscription in order to resume access to security and other critical updates. If you don't have other active subscriptions, you can renew the expired subscription.";
 		Assert.assertTrue(result.getStdout().contains(expectedMsgRHSM), "When registered to RHSM (and some subscriptions have expired), the subscription-manager yum plugin stdout should inform that:\n"+expectedMsgRHSM+"\n");	// Bug 901612 - Subscription-manager-s yum plugin prints warning to stdout instead of stderr.	// Bug 901612 was reverted by Bug 1017354 
 	}
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36532", "RHEL7-51305"})
 	@Test(	description="When not registered to either RHN nor RHSM, the subscription-manager yum plugin should inform that: This system is not registered to Red Hat Subscription Management. You can use subscription-manager to register.",
 			groups={"YumPluginMessageCase_Tests","blockedByBug-818383","blockedByBug-832119","blockedByBug-830193","blockedByBug-830194","blockedByBug-906875","blockedByBug-1058380","blockedByBug-1122772"},
 			enabled=true)
@@ -161,7 +170,9 @@ public class InteroperabilityTests extends SubscriptionManagerCLITestScript {
 		else Assert.assertTrue(!(result.getStdout()+result.getStderr()).contains(expectedMsgRHSM), "When not registered to either RHN nor RHSM, the subscription-manager yum plugin should NO LONGER inform that:\n"+expectedMsgRHSM+"\nBugzilla https://bugzilla.redhat.com/show_bug.cgi?id=1058380 was used to remove this usability messaging implemented for https://bugzilla.redhat.com/show_bug.cgi?id=818383");
 		if (isRhnClientToolsInstalled) Assert.assertTrue((/*result.getStdout()+*/result.getStderr()).contains(expectedMsgRHN), "When not registered to either RHN nor RHSM, the rhnplugin yum plugin should inform that:\n"+expectedMsgRHN+"\n");
 	}
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36533", "RHEL7-51306"})
 	@Test(	description="When registered to RHN but not RHSM, the subscription-manager yum plugin should inform that: This system is not registered to Red Hat Subscription Management. You can use subscription-manager to register.",
 			groups={"YumPluginMessageCase_Tests","blockedByBug-818383","blockedByBug-832119","blockedByBug-830193","blockedByBug-830194","blockedByBug-906875","blockedByBug-924919"},
 			enabled=true)
@@ -187,7 +198,9 @@ public class InteroperabilityTests extends SubscriptionManagerCLITestScript {
 		else Assert.assertTrue(!(result.getStdout()+result.getStderr()).contains(expectedMsgRHSM), "When registered to RHN but not RHSM, the subscription-manager yum plugin should NO LONGER inform that:\n"+expectedMsgRHSM+"\nBugzilla https://bugzilla.redhat.com/show_bug.cgi?id=1058380 was used to remove this usability messaging implemented for https://bugzilla.redhat.com/show_bug.cgi?id=818383");
 		if (expectedMsgRHN!=null) Assert.assertTrue((result.getStdout()/*+result.getStderr()*/).contains(expectedMsgRHN), "When registered to RHN but not RHSM, the rhnplugin yum plugin should inform that:\n"+expectedMsgRHN+"\n");
 	}
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36534", "RHEL7-51307"})
 	@Test(	description="When registered to RHSM (but not subscribed) but not RHN, the subscription-manager yum plugin should inform that: This system is registered to Red Hat Subscription Management, but is not receiving updates. You can use subscription-manager to assign subscriptions.",
 			groups={"YumPluginMessageCase_Tests","blockedByBug-818383","blockedByBug-832119","blockedByBug-830193","blockedByBug-830194","blockedByBug-906875","blockedByBug-1058380","blockedByBug-1122772"},
 			enabled=true)
@@ -211,7 +224,9 @@ public class InteroperabilityTests extends SubscriptionManagerCLITestScript {
 		else Assert.assertTrue(!(result.getStdout()+result.getStderr()).contains(expectedMsgRHSM), "When registered to RHSM (but not subscribed) but not RHN, the subscription-manager yum plugin should NO LONGER inform that:\n"+expectedMsgRHSM+"\nBugzilla https://bugzilla.redhat.com/show_bug.cgi?id=1058380 was used to remove this usability messaging implemented for https://bugzilla.redhat.com/show_bug.cgi?id=818383");
 		if (isRhnClientToolsInstalled) Assert.assertTrue((/*result.getStdout()+*/result.getStderr()).contains(expectedMsgRHN), "When registered to RHSM (but not subscribed) but not RHN, the rhnplugin yum plugin should inform that:\n"+expectedMsgRHN+"\n");
 	}
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36535", "RHEL7-51308"})
 	@Test(	description="When registered to RHSM (and subscribed) but not RHN, the subscription-manager yum plugin should inform that: This system is receiving updates from Red Hat Subscription Management.",
 			groups={"YumPluginMessageCase_Tests","blockedByBug-818383","blockedByBug-832119","blockedByBug-830193","blockedByBug-830194","blockedByBug-906875"},
 			enabled=true)
@@ -234,7 +249,9 @@ public class InteroperabilityTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(!(result.getStdout()+result.getStderr()).contains(expectedMsgRHSM), "When registered to RHSM (and subscribed) but not RHN, the subscription-manager yum plugin NO LONGER informs that:\n"+expectedMsgRHSM+"\nFor justification, see https://bugzilla.redhat.com/show_bug.cgi?id=1017354#c12");	// commit 39eadae14eead4bb79978e52d38da2b3e85cba57 1017354: remove msg printed to stderr via yum
 		if (isRhnClientToolsInstalled) Assert.assertTrue((/*result.getStdout()+*/result.getStderr()).contains(expectedMsgRHN), "When registered to RHSM (and subscribed) but not RHN, the rhnplugin yum plugin should inform that:\n"+expectedMsgRHN+"\n");
 	}
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36536", "RHEL7-51309"})
 	@Test(	description="When registered to both RHN and RHSM (but not subscribed), the subscription-manager yum plugin should inform that: This system is registered to Red Hat Subscription Management, but is not receiving updates. You can use subscription-manager to assign subscriptions.",
 			groups={"YumPluginMessageCase_Tests","blockedByBug-818383","blockedByBug-832119","blockedByBug-830193","blockedByBug-830194","blockedByBug-871146","blockedByBug-906875","blockedByBug-924919"},
 			enabled=true)
@@ -260,7 +277,9 @@ public class InteroperabilityTests extends SubscriptionManagerCLITestScript {
 		else Assert.assertTrue(!(result.getStdout()+result.getStderr()).contains(expectedMsgRHSM), "When registered to both RHN and RHSM (but not subscribed), the subscription-manager yum plugin should NO LONGER inform that:\n"+expectedMsgRHSM+"\nBugzilla https://bugzilla.redhat.com/show_bug.cgi?id=1058380 was used to remove this usability messaging implemented for https://bugzilla.redhat.com/show_bug.cgi?id=818383");
 		if (expectedMsgRHN!=null) Assert.assertTrue((result.getStdout()/*+result.getStderr()*/).contains(expectedMsgRHN), "When registered to both RHN and RHSM (but not subscribed), the rhnplugin yum plugin should inform that:\n"+expectedMsgRHN+"\n");
 	}
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36537", "RHEL7-51310"})
 	@Test(	description="When registered to both RHN and RHSM (and subscribed), the subscription-manager yum plugin should inform that: This system is registered to Red Hat Subscription Management, but is not receiving updates. You can use subscription-manager to assign subscriptions.",
 			groups={"YumPluginMessageCase_Tests","blockedByBug-818383","blockedByBug-832119","blockedByBug-830193","blockedByBug-830194","blockedByBug-906875","blockedByBug-924919"},
 			enabled=true)

@@ -21,6 +21,8 @@ import rhsm.cli.tasks.CandlepinTasks;
 import rhsm.data.EntitlementCert;
 import rhsm.data.SubscriptionPool;
 
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.TestDefinition;
 
 /**
  * @author jsefler
@@ -32,7 +34,9 @@ public class ModifierTests extends SubscriptionManagerCLITestScript {
 
 	
 	// Test methods ***********************************************************************
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21728", "RHEL7-51102"})
 	@Test(	description="verify content label for modifier subscription (EUS) is only available in yum repolist after providing subscriptions are entitled",
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-804227","blockedByBug-871146","blockedByBug-905546","blockedByBug-958182"},
 			dependsOnGroups={},

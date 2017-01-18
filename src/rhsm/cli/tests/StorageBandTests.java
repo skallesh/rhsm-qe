@@ -17,6 +17,11 @@ import rhsm.data.SubscriptionPool;
 
 import com.redhat.qe.Assert;
 import com.redhat.qe.auto.testng.TestNGUtils;
+
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.TestDefinition;
+
+
 /**
  * @author skallesh
  * 
@@ -40,6 +45,8 @@ public class StorageBandTests extends SubscriptionManagerCLITestScript{
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21462", "RHEL7-51711"})
 	@Test(description = "verify that attaching a quantity of 1 entitlement from a pool capable of covering 256TB on a system with 300TB of usage, installed product will be partially subscribed", 
 			groups = {"PartiallySubscribeStorageBandSubscription"},dataProvider="getStorageBandSubscriptions", enabled = true)
 	public void PartiallySubscribeStorageBandSubscription(Object Bugzilla,SubscriptionPool storagebandpool) throws JSONException, Exception{
@@ -65,6 +72,8 @@ public class StorageBandTests extends SubscriptionManagerCLITestScript{
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21463", "RHEL7-51712"})
 	@Test(description = "verify if you attach one subscription that covers 256TB on a system with 300TB of usage, the installed product will be partially subscribed", 
 			groups = { "SubscribeStorageBandSubscription"},dataProvider="getStorageBandSubscriptions", enabled = true)
 	public void SubscribeStorageBandSubscription(Object Bugzilla,SubscriptionPool storagebandpool) throws JSONException, Exception{
@@ -90,6 +99,8 @@ public class StorageBandTests extends SubscriptionManagerCLITestScript{
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21460", "RHEL7-51709"})
 	@Test(description = "verify after auto-attaching a system using 300TB of storage, installed storage product is fully subscribed from multiple pools that provide 256TB of coverage.", 
 			groups = { "AutoAttachStorageBandSubscription"},dataProvider="getStorageBandSubscriptions", enabled = true)
 	public void AutoAttachStorageBandSubscription(Object Bugzilla,SubscriptionPool storagebandpool) throws JSONException, Exception{
@@ -111,6 +122,8 @@ public class StorageBandTests extends SubscriptionManagerCLITestScript{
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21461", "RHEL7-51710"})
 	@Test(description = "verify if you auto-heal a system using 300TB of storage, installed storage product is fully subscribed from multiple pools that provide 256TB of coverage.", 
 			groups = { "AutoHealStorageBandSubscription"}, dataProvider="getStorageBandSubscriptions",enabled = true)
 	public void AutoHealStorageBandSubscription(Object Bugzilla,SubscriptionPool storagebandpool) throws JSONException, Exception{

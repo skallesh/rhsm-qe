@@ -26,7 +26,9 @@
            org.testng.SkipException
            [rhsm.cli.tests ImportTests]
            [rhsm.cli.tasks SubscriptionManagerTasks]
-           [com.redhat.qe.auto.bugzilla BzChecker]))
+           [com.redhat.qe.auto.bugzilla BzChecker]
+           [com.github.redhatqe.polarize.metadata TestDefinition]
+           [com.github.redhatqe.polarize.metadata DefTypes$Project]))
 
 (def importedcert (atom nil))
 ; paths here have to be lowercase because of rhel5 ldtp's
@@ -134,13 +136,15 @@
       true
       false)))
 
-(defn ^{Test {:groups ["import"
-                       "tier2"
-                       "blockedByBug-712980"
-                       ;checking this one in the function
-                       ;"blockedByBug-860344"
-                       "blockedByBug-712978"]
-              :priority (int 10)}}
+(defn ^{Test           {:groups   ["import"
+                                   "tier2"
+                                   "blockedByBug-712980"
+                                   ;checking this one in the function
+                                   ;"blockedByBug-860344"
+                                   "blockedByBug-712978"]
+                        :priority (int 10)}
+        TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-37691" "RHEL7-55597"]}}
   import_valid_cert
   "Tests to see if a valid certificate can be imported sucessfully."
   [_]
@@ -188,9 +192,11 @@
              :key key
              :entname entname})))
 
-(defn ^{Test {:groups ["import"
-                       "tier2"]
-              :dependsOnMethods ["import_valid_cert"]}}
+(defn ^{Test           {:groups           ["import"
+                                           "tier2"]
+                        :dependsOnMethods ["import_valid_cert"]}
+        TestDefinition {:projectID  [`DefTypes$Project/RHEL6]
+                        :testCaseID ["RHEL6-37693"]}}
   import_unregister
   "Asserts that imported certs are sucessfully removed after unregister."
   [_]
@@ -429,7 +435,9 @@
               4. Removes local data via a subscription-manager clean command
               5. Imports the cert associated with the random product we attached
               6. Runs the list --consumed command to verify that product is still consumed
-              7. Verifies that the product shows in the My Subscriptions tab"}}
+              7. Verifies that the product shows in the My Subscriptions tab"}
+        TestDefinition {:projectID [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-37690" "RHEL7-55596"]}}
   import_validate_cert_shows_in_consumed
   [_]
   (tasks/restart-app)
@@ -457,11 +465,13 @@
     (verify (some #{subscription}
                   (tasks/get-table-elements :my-subscriptions-view 0)))))
 
-(defn ^{Test {:groups ["import"
-                       "tier2"
-                       "blockedByBug-1141128"]
-              :dependsOnMethods ["import_validate_cert_shows_in_consumed"]
-              :description "Verifies that a product that was attached via an import can be removed"}}
+(defn ^{Test           {:groups           ["import"
+                                           "tier2"
+                                           "blockedByBug-1141128"]
+                        :dependsOnMethods ["import_validate_cert_shows_in_consumed"]
+                        :description      "Verifies that a product that was attached via an import can be removed"}
+        TestDefinition {:projectID  [`DefTypes$Project/RHEL6]
+                        :testCaseID ["RHEL6-37695"]}}
   import_validate_cert_removal
   [_]
   ;; We can't be sure which product we imported through the cert, so remove all of them

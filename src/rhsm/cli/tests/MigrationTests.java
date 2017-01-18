@@ -44,6 +44,9 @@ import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 import com.redhat.qe.tools.SSHCommandRunner;
 
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.TestDefinition;
+
 /**
  * @author jsefler
  *
@@ -211,8 +214,10 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		
 		return result;
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-26761", "RHEL7-55204"})
 	@Test(	description="Execute migration tool install-num-migrate-to-rhsm with install-num used to provision this machine",
 			groups={"AcceptanceTests","Tier1Tests","InstallNumMigrateToRhsm_Test","blockedByBug-854879"},
 			dependsOnMethods={},
@@ -336,6 +341,8 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	}
 
 
+	@TestDefinition( projectID = {Project.RHEL6}
+			       , testCaseID = {"RHEL6-26760"})
 	@Test(	description="Execute migration tool install-num-migrate-to-rhsm with no install-num found on machine",
 			groups={},
 			dependsOnMethods={},
@@ -352,8 +359,10 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		}
 		InstallNumMigrateToRhsmWithInvalidInstNumber_Test(null, installNumTool,1,"Could not read installation number from "+machineInstNumberFile+".  Aborting.","");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21885", "RHEL7-51740"})
 	@Test(	description="Assert that install-num-migrate-to-rhsm is only installed on RHEL5",
 			groups={"blockedByBug-790205","blockedByBug-1092754"},
 			dependsOnMethods={},
@@ -372,7 +381,9 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	// rhn-migrate-classic-to-rhsm Test methods ***********************************************************************
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20111", "RHEL7-51115"})
 	@Test(	description="Register system using RHN Classic and then Execute migration tool rhn-migrate-classic-to-rhsm with options after adding RHN Channels",
 			groups={"AcceptanceTests","Tier1Tests","RhnMigrateClassicToRhsm_Test","blockedByBug-966745","blockedByBug-840169","blockedbyBug-878986","blockedByBug-1052297","blockedByBug-1111258"},
 			dependsOnMethods={},
@@ -891,8 +902,10 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			}
 		}
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20108", "RHEL7-51113"})
 	@Test(	description="With a proxy configured in rhn/up2date, register system using RHN Classic and then Execute migration tool rhn-migrate-classic-to-rhsm with options after adding RHN Channels",
 			groups={"AcceptanceTests","Tier1Tests","RhnMigrateClassicToRhsm_Test","RhnMigrateClassicToRhsmUsingProxyServer_Test","blockedbyBug-798015","blockedbyBug-861693","blockedbyBug-878986","blockedbyBug-912776","blockedByBug-1052297","blockedByBug-1111258","blockedByBug-1345962"},
 			dependsOnMethods={},
@@ -1115,8 +1128,10 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		
 		log.info("No need to assert any more details of the migration since they are covered in the non-proxy test.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21895", "RHEL7-51751"})
 	@Test(	description="Execute migration tool rhn-migrate-classic-to-rhsm with a non-default rhsm.productcertdir configured",
 			groups={"RhnMigrateClassicToRhsmWithNonDefaultProductCertDir_Test","blockedbyBug-878986","blockedByBug-966745","blockedByBug-1111258"},
 			dependsOnMethods={},
@@ -1128,7 +1143,9 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsm", "productCertDir"), nonDefaultProductCertDir,"A non-default rhsm.productCertDir has been configured.");
 		RhnMigrateClassicToRhsm_Test(bugzilla,rhnreg_ksUsername,rhnreg_ksPassword,rhnServer,rhnChannelsToAdd,options,rhnUsername,rhnPassword,rhsmUsername,rhsmPassword,rhsmOrg,serviceLevelIndex,serviceLevelExpected);
 	}
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20109", "RHEL7-51742"})
 	@Test(	description="Execute migration tool rhn-migrate-classic-to-rhsm with a valid activation-key (and a good org)",
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1154375"},
 			enabled=true)
@@ -1164,8 +1181,10 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(consumedProductSubscriptions.size(), 1, "Number of consumed subscriptions after migrating from RHN Classic to RHSM with activation key '"+activationKeyName+"'.");
 		Assert.assertEquals(consumedProductSubscriptions.get(0).poolId, pool.poolId, "The sole consumed subscription poolId after migrating from RHN Classic to RHSM with activation key '"+activationKeyName+"'.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21887", "RHEL7-51743"})
 	@Test(	description="Execute migration tool rhn-migrate-classic-to-rhsm with a bad activation-key (and a good org)",
 			groups={"blockedByBug-1154375"},
 			enabled=true)
@@ -1242,8 +1261,10 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		// assert that the system is not registered
 		Assert.assertNull(clienttasks.getCurrentConsumerCert(),"Confirmed that system is NOT registered with Subscription Manager after an attempt to migrate from RHN Classic using activation key '"+activationKeyName+"'.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21888", "RHEL7-51744"})
 	@Test(	description="Execute migration tool rhn-migrate-classic-to-rhsm with valid comma separated keys (and a good org)",
 			groups={"blockedByBug-1154375"},
 			enabled=true)
@@ -1286,8 +1307,10 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		if (activationKeyName1.equals(activationKeyName2)) expectedNumberOfConsumedSubscription=1;
 		Assert.assertEquals(consumedProductSubscriptions.size(), expectedNumberOfConsumedSubscription, "Number of consumed subscriptions after migrating from RHN Classic to RHSM with activation key '"+name+"'.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21893", "RHEL7-51749"})
 	@Test(	description="Execute migration tool rhn-migrate-classic-to-rhsm with multiple --activation-key options specified",
 			groups={"blockedByBug-1154375"},
 			enabled=true)
@@ -1326,8 +1349,10 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		Assert.assertNotNull(ProductSubscription.findFirstInstanceWithMatchingFieldFromList("poolId", pool2.poolId, consumedProductSubscriptions), "Found consumed subscription from pool '"+pool2.poolId+"' after migrating with activation keys '"+name1+"' and '"+name2+"'.");
 		Assert.assertEquals(consumedProductSubscriptions.size(), 2, "Number of consumed subscriptions after migrating from RHN Classic to RHSM with activation keys '"+name1+"' and '"+name2+"'.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-26764", "RHEL7-55205"})
 	@Test(	description="migrating a RHEL5 Client - Desktop versus Workstation",
 			groups={"RhnMigrateClassicToRhsm_Test","AcceptanceTests","Tier1Tests","blockedByBug-786257","blockedByBug-853233","blockedByBug-1111258"},
 			dependsOnMethods={},
@@ -1547,8 +1572,10 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			Assert.assertEquals(productCert.productId, productIdForWorkstation, "Migration tool "+rhnMigrateTool+" should only install product certificate id '"+productIdForWorkstation+"' when consuming RHN Child Channels "+rhnChannelsToAddForBoth);
 		}
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6}
+			       , testCaseID = {"RHEL6-21897"})
 	@Test(	description="when more than one JBoss Application Enterprise Platform (JBEAP) RHN Channel is currently being consumed classically, rhn-migrate-to-rhsm should abort",
 			groups={"blockedByBug-852894","blockedByBug-1052297","RhnMigrateClassicToRhsm_Test"},
 			dependsOnMethods={},
@@ -1634,8 +1661,10 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(clienttasks.isRhnSystemIdRegistered(sm_rhnUsername, sm_rhnPassword, sm_rhnHostname, rhnSystemId),"Confirmed that rhn systemId '"+rhnSystemId+"' is still registered when '"+rhnMigrateTool+" was aborted.");
 		Assert.assertTrue(RemoteFileTasks.testExists(client, clienttasks.rhnSystemIdFile),"The system id file '"+clienttasks.rhnSystemIdFile+"' exists.  This indicates this system is still registered using RHN Classic.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6}
+			       , testCaseID = {"RHEL6-26763"})
 	@Test(	description="Execute migration tool rhn-migrate-classic-to-rhsm with invalid credentials",
 			groups={"blockedByBug-789008","blockedByBug-807477","blockedByBug-1052297"},
 			dependsOnMethods={},
@@ -1653,6 +1682,9 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		String expectedStdout = "Unable to connect to certificate server: "+servertasks.invalidCredentialsMsg()+".  See "+clienttasks.rhsmLogFile+" for more details.";
 		Assert.assertTrue(sshCommandResult.getStdout().trim().endsWith(expectedStdout), "The expected stdout result from call to '"+rhnMigrateTool+"' with invalid credentials ended with: "+expectedStdout);
 	}
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21890", "RHEL7-51746"})
 	@Test(	description="Execute migration tool rhn-migrate-classic-to-rhsm with invalid RHSM credentials, but valid RHN credentials",
 			groups={"blockedByBug-789008","blockedByBug-807477","blockedByBug-1052297"},
 			dependsOnMethods={},
@@ -1674,8 +1706,10 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		String expectedStdout = "Unable to connect to certificate server: "+servertasks.invalidCredentialsMsg()+".  See "+clienttasks.rhsmLogFile+" for more details.";
 		Assert.assertTrue(sshCommandResult.getStdout().trim().endsWith(expectedStdout), "The expected stdout result from call to '"+rhnMigrateTool+"' with invalid RHSM credentials ended with: "+expectedStdout);
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21889", "RHEL7-51745"})
 	@Test(	description="Execute migration tool rhn-migrate-classic-to-rhsm with invalid RHN credentials, but valid RHSM credentials",
 			groups={"blockedByBug-1052297"},
 			dependsOnMethods={},
@@ -1720,8 +1754,10 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		String expectedFault = "Either the password or username is incorrect.";
 		Assert.assertTrue(getTracebackCommandResult.getStdout().contains(expectedFault), "The '"+rhnMigrateTool+"' did not complete with expected fault '"+expectedFault+"' written to "+clienttasks.rhsmLogFile+".");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20110", "RHEL7-51114"})
 	@Test(	description="Execute migration tool rhn-migrate-classic-to-rhsm without having registered to classic (no /etc/sysconfig/rhn/systemid)",
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-807477","blockedByBug-1052297","blockedByBug-1111258","blockedByBug-1212515"},
 			dependsOnMethods={},
@@ -1764,8 +1800,10 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		// -from up2date_client.rhnChannel import getChannels => "This system is not associated with any channel." when rhnBaseChannel==null
 		// ????? - Traceback
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21894", "RHEL7-51750"})
 	@Test(	description="Attempt to execute migration tool rhn-migrate-classic-to-rhsm with --no-auto and --service-level",
 			groups={"blockedByBug-850920","blockedByBug-1052297","blockedByBug-1149007"},
 			dependsOnMethods={},
@@ -1782,8 +1820,10 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(sshCommandResult.getStderr().trim(), "", "Stderr from call to '"+rhnMigrateTool+"' specifying both --no-auto and --servicelevel.");
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "Exit code from call to '"+rhnMigrateTool+"' specifying both --no-auto and --servicelevel.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21886", "RHEL7-51741"})
 	@Test(	description="Execute migration tool rhn-migrate-classic-to-rhsm while already registered to RHSM",
 			groups={"blockedByBug-807477","blockedByBug-1052297","blockedByBug-1212515"},
 			dependsOnMethods={},
@@ -1827,8 +1867,10 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(sshCommandResult.getStderr().trim(),"", "The expected stderr result from call to '"+rhnMigrateTool+"' while already registered to RHSM.");
 		// Stdout and Stderr asserts are sufficient Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The expected exit code from call to '"+rhnMigrateTool+"' while already registered to RHSM.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6}
+			       , testCaseID = {"RHEL6-26762"})
 	@Test(	description="attempt to execute migration tool rhn-migrate-classic-to-rhsm while while under attack by a man-in-the-middle security vulnerability",
 			groups={"blockedByBug-966745","blockedByBug-885130","blockedByBug-918967","blockedByBug-918968","blockedByBug-918969","blockedByBug-918970","blockedByBug-1052297","RhnMigrateClassicToRhsmCertificateVerification_Test"},
 			dependsOnMethods={},
@@ -1904,6 +1946,8 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 
 
 
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21896", "RHEL7-51752"})
 	@Test(	description="attempt to execute migration tool rhn-migrate-classic-to-rhsm when subscription-manager-migration-data is not installed",
 			groups={"blockedByBug-967863","blockedByBug-1052297","RhnMigrateClassicToRhsmWithoutDataInstalled_Test"},
 			dependsOnMethods={},
@@ -1943,8 +1987,10 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		client.runCommandAndWait("mv -f "+backupChannelCertMappingFilename+" "+channelCertMappingFilename);
 		RemoteFileTasks.runCommandAndAssert(client, "rpm --verify --query subscription-manager-migration-data",0);
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21892", "RHEL7-51748"})
 	@Test(	description="Attempt to execute migration tool rhn-migrate-classic-to-rhsm with --keep classic which implies that we do not want to deregister from classic which will result in dual interoperability registration.",
 			groups={"blockedByBug-1180273"},
 			dependsOnMethods={},
@@ -2059,7 +2105,9 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(clienttasks.isRhnSystemIdRegistered(sm_rhnUsername, sm_rhnPassword, sm_rhnHostname, rhnSystemId), "Confirmed that rhn systemId '"+rhnSystemId+"' is STILL registered on the RHN Classic server (because we passed an option to keep the classic registration).");
 		Assert.assertTrue(sshCommandResult.getStdout().trim().contains(clienttasks.msg_InteroperabilityWarning), "The expected stdout result from a call to '"+rhnMigrateTool+"' with the option to keep the classic registration should warn the user with the interoperability message: "+clienttasks.msg_InteroperabilityWarning);
 	}
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21891", "RHEL7-51747"})
 	@Test(	description="Attempt to execute migration tool rhn-migrate-classic-to-rhsm with --keep-classic AND unnecessary classic credentials --legacy-user/--legacy-password (unnecessary because --keep-classic implies that we do NOT want to deregister from classic)",
 			groups={"blockedByBug-1180273"},
 			dependsOnMethods={},
@@ -2144,8 +2192,10 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(clienttasks.isRhnSystemIdRegistered(sm_rhnUsername, sm_rhnPassword, sm_rhnHostname, rhnSystemId), "Confirmed that rhn systemId '"+rhnSystemId+"' is STILL registered on the RHN Classic server (because we passed an option to keep the classic registration).");
 		Assert.assertTrue(sshCommandResult.getStdout().trim().contains(clienttasks.msg_InteroperabilityWarning), "The expected stdout result from a call to '"+rhnMigrateTool+"' with the option to keep the classic registration should warn the user with the interoperability message: "+clienttasks.msg_InteroperabilityWarning);
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6}
+			       , testCaseID = {"RHEL6-38191"})
 	@Test(	description="Attempt to execute migration tool rhn-migrate-classic-to-rhsm with --remove-rhn-packages which should disable some classic services and remove several classic packages. As a result, subsequent attempts to migrate will be halted with a friendly message.",
 			groups={"blockedByBug-1185914","RhnMigrateClassicToRhsmWithRemoveRhnPackages_Test"},
 			dependsOnMethods={},

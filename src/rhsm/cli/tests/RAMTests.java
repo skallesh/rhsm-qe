@@ -17,6 +17,9 @@ import rhsm.data.SubscriptionPool;
 
 import com.redhat.qe.Assert;
 
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.TestDefinition;
+
 /**
  * @author skallesh
  *
@@ -36,6 +39,8 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36684", "RHEL7-51529"})
 	@Test(description = "verify status of partially covered Ram based products", 
 			groups = {"PartiallySubscribedRamBasedProducts"}, enabled = true)
 	public void PartiallySubscribedRamBasedProducts() throws JSONException,Exception {
@@ -67,6 +72,8 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36682", "RHEL7-51527"})
 	@Test(description = "verify healing of partially subscribed RAM products covered by stackable RAM-based subscriptions", 
 			groups = { "HealingPartiallySubscribedRamBasedProducts","blockedByBug-907638"}, enabled = true)
 	public void HealingPartiallySubscribedRamBasedProducts() throws JSONException,Exception {
@@ -106,6 +113,8 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36680", "RHEL7-51525"})
 	@Test(description = "verify Auto Heal for Ram subscription .", 
 			groups = { "AutoHealRamBasedSubscription","blockedByBug-907638","blockedByBug-976867"}, enabled = true)
 	public void AutoHealRamBasedSubscription() throws JSONException,Exception {
@@ -136,6 +145,8 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36681", "RHEL7-51526"})
 	@Test(description = "verify Auto-attach for Ram based subscription", 
 			groups = { "AutoSubscribeRamBasedProducts"}, enabled = true)
 	public void AutoSubscribeRamBasedProducts() throws JSONException,Exception {
@@ -159,6 +170,8 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36683", "RHEL7-51528"})
 	@Test(description = "verify Partial subscription of Ram subscription. ", 
 			groups = { "PartialSubscriptionOfRamBasedSubscription"}, enabled = true)
 	public void PartialSubscriptionOfRamBasedSubscription() throws JSONException,Exception {
@@ -205,6 +218,8 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36685", "RHEL7-51530"})
 	@Test(description = "verify Ram info in product and entitlement certificate", 
 			groups = { "RamBasedSubscriptionInfoInEntitlementCert"}, enabled = true)
 	public void RamBasedSubscriptionInfoInEntitlementCert() throws JSONException,Exception {
@@ -238,6 +253,8 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36686", "RHEL7-51531"})
 	@Test(description = "verify subscription of Ram based subscription", 
 			groups = { "SubscribeToRamBasedSubscription","blockedByBug-907315"}, enabled = true)
 	public void SubscribeToRamBasedSubscription() throws JSONException,Exception {

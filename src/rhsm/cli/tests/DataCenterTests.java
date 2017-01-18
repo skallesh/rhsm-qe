@@ -8,6 +8,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.TestDefinition;
 import org.apache.xmlrpc.XmlRpcException;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -39,6 +41,8 @@ public class DataCenterTests extends SubscriptionManagerCLITestScript {
 	
 	// Test methods ***********************************************************************
 
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-19987", "RHEL7-33089"})
 	@Test(	description="given an available data center pool, consume it and assert that a pool for the derivedProduct is generated and available only to its guests",
 			groups={"AcceptanceTests","Tier1Tests","VerifyAvailabilityOfDerivedProductSubpools_Test"},
 			dataProvider="getAvailableDataCenterSubscriptionPoolsData",

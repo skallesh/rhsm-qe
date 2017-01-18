@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<testcase id="RHEL6-27134">
+    <title>rhsm.cli.tests.RolesTests.UserRoleOrgPermissionAccess_Test</title>
+    <description></description>
+    <test-steps>
+        <test-step>
+            <test-step-column id="step">
+                <parameter name="username" scope="local"/>
+                <parameter name="password" scope="local"/>
+                <parameter name="roleName" scope="local"/>
+                <parameter name="orgKey" scope="local"/>
+                <parameter name="access" scope="local"/>
+            </test-step-column>
+        </test-step>
+    </test-steps>
+    <custom-fields>
+        <custom-field id="caseautomation" content="automated"/>
+        <custom-field id="caseimportance" content="high"/>
+        <custom-field id="caselevel" content="component"/>
+        <custom-field id="caseposneg" content="positive"/>
+        <custom-field id="testtype" content="functional"/>
+        <custom-field id="subtype1" content="-"/>
+        <custom-field id="subtype2" content="-"/>
+    </custom-fields>
+</testcase>

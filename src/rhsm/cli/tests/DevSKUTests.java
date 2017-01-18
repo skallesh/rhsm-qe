@@ -11,6 +11,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.TestDefinition;
 import org.apache.xmlrpc.XmlRpcException;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -73,6 +75,8 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 	
 	// Test methods ***********************************************************************
 
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-25335", "RHEL7-52092"})
 	@Test(	description="given an available SKU, configure the system with custom facts dev_sku=SKU, register the system with auto-attach and verify several requirements of the attached entitlement",
 			groups={},
 			dataProvider="getDevSkuData",
@@ -265,10 +269,11 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 		String devSkuDevPool = CandlepinTasks.getPoolAttributeValue(jsonDevSkuPool, "dev_pool");	// "true" or "false"
 		Assert.assertEquals(Boolean.valueOf(devSkuDevPool), Boolean.TRUE, "The dev_pool attribute on pool '"+devSkuProductSubscription.poolId+"' generated for devSku product '"+devSku+"'.");
 	}
-	
-	
-	
-	
+
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20116", "RHEL7-51857"})
 	@Test(	description="configure the system with custom facts for a dev_sku, register the system with auto-subscribe verify the attached entitlement can be removed and re-autoattached",
 			groups={},
 			enabled=true)
@@ -318,8 +323,10 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(!devSkuProductSubscription2.poolId.equals(devSkuProductSubscription1.poolId), "A dev_sku enabled system that has been re-autosubscribed is granted another product subscription from a different pool id.");
 		Assert.assertTrue(!devSkuProductSubscription2.serialNumber.equals(devSkuProductSubscription1.serialNumber), "A dev_sku enabled system that has been re-autosubscribed is granted another product subscription with a different serial.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-22313", "RHEL7-51859"})
 	@Test(	description="configure the system with custom facts for a dev_sku, register the system with auto-subscribe and verify that an attempt to redundantly autosubscribed will re-issue a replacement entitlement (remove the old and attach a new).",
 			groups={"blockedByBug-1292877"},
 			enabled=true)
@@ -371,8 +378,10 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 			Assert.assertTrue(!devSkuProductSubscription2.serialNumber.equals(devSkuProductSubscription1.serialNumber), "When system is not already compliant, a dev_sku enabled system that has been re-autosubscribed is granted another product subscription with a different serial.");
 		}
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-26779", "RHEL7-51858"})
 	@Test(	description="configure the system with custom facts for a dev_sku, register the system with auto-subscribe and verify that a cost-based subscription can be manually attached without affecting the devSku entitlement",
 			groups={"blockedByBug-1298577"},
 			enabled=true)
@@ -420,8 +429,10 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 			} else devSkuProductSubscription1.serialNumber=devSkuProductSubscription2.serialNumber;	// save for the next loop's serial assert
 		}
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21993", "RHEL7-51855"})
 	@Test(	description="configure the system with custom facts for a dev_sku, register the system with auto-subscribe, alter the dev_sku facts, re-autosubscribe, and verify the initial entitlement was purged",
 			groups={"blockedByBug-1295452"},
 			enabled=true)
@@ -479,9 +490,10 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 		ProductSubscription devSkuProductSubscription2 = productSubscriptions.get(0);
 		Assert.assertEquals(devSkuProductSubscription2.productId, devSku2, "The consumed entitlement SKU after autosubscribing a system with dev_sku fact altered to '"+devSku2+"'.");
 	}
-	
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21994", "RHEL7-51856"})
 	@Test(	description="configure the system with custom facts for a dev_sku, register the system with auto-subscribe, alter the dev_sku facts, re-autosubscribe, and verify the initial entitlement was purged",
 			groups={"blockedByBug-1294465","VerifyAutosubscribedDevSkuWithAnUnknownProductInstalled_Test"},
 			enabled=true)

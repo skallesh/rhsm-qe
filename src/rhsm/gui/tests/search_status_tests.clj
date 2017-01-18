@@ -24,19 +24,13 @@
             Test
             DataProvider
             AfterClass]
-           <<<<<<< Updated upstream
            org.testng.SkipException
            [com.github.redhatqe.polarize.metadata TestDefinition]
            [com.github.redhatqe.polarize.metadata DefTypes$Project]
            [com.github.redhatqe.polarize.metadata DefTypes$Importance DefTypes DefTypes$PosNeg]))
-=======
-            org.testng.SkipException
-           [com.github.redhatqe.polarize.metadata TestDefinition]
-           [com.github.redhatqe.polarize.metadata DefTypes$Project]))
 
 (def PLATTP DefTypes$Project/PLATTP)
 (println "PLATTP " PLATTP)
->>>>>>> Stashed changes
 
 (def servicelist (atom {}))
 (def productlist (atom {}))
@@ -143,7 +137,7 @@
                                  "check_subscription_type_all_available"]
                         :dataProvider "all-subscriptions"}
         TestDefinition {:projectID [`DefTypes$Project/RHEL6]
-                        :testCaseID ["RHEL6-38767"]
+                        :testCaseID ["RHEL6-20132"]
                         :importance `DefTypes$Importance/MEDIUM}}
   check_subscription_type_all_subscriptions
   "Checks for subscription type in all available subscriptions"

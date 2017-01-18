@@ -27,6 +27,9 @@ import com.redhat.qe.auto.bugzilla.BzChecker;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.TestDefinition;
+
 /**
  * @author jsefler
  *
@@ -45,6 +48,8 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 	
 	// UninstalledPlugin Tests ************************************************************
 
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20038", "RHEL7-51047"})
 	@Test(	description="execute subscription-manager plugins --listslots",
 			groups={},
 			priority=10, enabled=true)
@@ -57,6 +62,8 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(actualSlots.containsAll(slots)&&slots.containsAll(actualSlots), "Including --verbose option should produce the same list of slots.");
 	}
 
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20039", "RHEL7-51048"})
 	@Test(	description="execute subscription-manager plugins --list (with no plugins installed)",
 			groups={},
 			priority=20, enabled=true)
@@ -66,7 +73,9 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(clienttasks.plugins(true,null,null,null).getStdout().trim(), "", "Stdout from the plugins --list command indicates no plugins are installed.");
 		Assert.assertEquals(clienttasks.plugins(null,null,null,true).getStdout().trim(), "", "Stdout from the plugins command indicates no plugins are installed (--verbose has no affect).");
 	}
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20040", "RHEL7-51049"})
 	@Test(	description="execute subscription-manager plugins --listhooks (with no plugins installed)",
 			groups={},
 			priority=30, enabled=true)
@@ -85,7 +94,9 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 	
 	
 	// DisabledPlugin Tests ***************************************************************
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20041", "RHEL7-51050"})
 	@Test(	description="execute subscription-manager plugins --list (with plugins installed and disabled)",
 			groups={"DisabledPluginTests"},
 			priority=110, enabled=true)
@@ -110,7 +121,9 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		}
 
 	}
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20042", "RHEL7-51051"})
 	@Test(	description="execute subscription-manager plugins --listhooks (with plugins installed and disabled)",
 			groups={"DisabledPluginTests"},
 			priority=120, enabled=true)
@@ -129,7 +142,9 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 	
 	
 	// RegisterConsumerTestPlugin Tests ***************************************************
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20043", "RHEL7-51052"})
 	@Test(	description="enable the RegisterConsumerTestPlugin and assert the plugins list reports enablement",
 			groups={},
 			priority=210, enabled=true)
@@ -143,6 +158,9 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		// enable and verify
 		enableTestPluginAndVerifyListReport(installedPlugin);
 	}
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20044", "RHEL7-51053"})
 	@Test(	description="verify plugins listhooks reports all of the expected hooks for RegisterConsumerTestPlugin",
 			groups={},
 			priority=220, enabled=true)
@@ -171,6 +189,9 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 					"The plugins listhooks reports no hooks for slot '"+slot+"' because RegisterConsumerTestPlugin is the only enabled plugin.");
 		}
 	}
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20045", "RHEL7-51054"})
 	@Test(	description="execute subscription-manager modules and verify the expected RegisterConsumerTestPlugin hooks are called",
 			groups={},
 			priority=230, enabled=true)
@@ -221,7 +242,9 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		if (              logTail.replaceAll("\n","").matches(".*"+joinListToString(expectedLogInfo,".*")+".*") == false) clienttasks.plugins_(null,null,null,true);	// used for debugging
 		Assert.assertTrue(logTail.replaceAll("\n","").matches(".*"+joinListToString(expectedLogInfo,".*")+".*"), "The '"+clienttasks.rhsmLogFile+"' reports expected log messages: "+expectedLogInfo);
 	}
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20046", "RHEL7-51055"})
 	@Test(	description="enable another RegisterConsumerTestPlugin and assert the plugins list reports enablement",
 			groups={},
 			priority=240, enabled=true)
@@ -235,6 +258,9 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		// enable and verify
 		enableTestPluginAndVerifyListReport(installedPlugin);
 	}
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20047", "RHEL7-51056"})
 	@Test(	description="verify plugins listhooks reports all of the expected hooks for another RegisterConsumerTestPlugin",
 			groups={},
 			priority=250, enabled=true)
@@ -255,6 +281,9 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		List<String> actualPostRegisterConsumerHooks = parseHooksForSlotFromPluginsListhooksResult("post_register_consumer", pluginsListhooksResult);
 		Assert.assertTrue(actualPostRegisterConsumerHooks.contains(expectedPostRegisterConsumerHook),"The plugins listhooks report expected post_register_consumer hook '"+expectedPostRegisterConsumerHook+"'.");
 	}
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20048", "RHEL7-51057"})
 	@Test(	description="execute subscription-manager modules and verify the expected RegisterConsumerTestPlugin hooks are called",
 			groups={},
 			priority=260, enabled=true)
@@ -313,6 +342,8 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 	
 	// FactsCollectionTestPlugin Tests ****************************************************
 
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20049", "RHEL7-51058"})
 	@Test(	description="enable FactsCollectionTestPlugin and assert the plugins list reports enablement",
 			groups={},
 			priority=310, enabled=true)
@@ -326,6 +357,9 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		// enable and verify
 		enableTestPluginAndVerifyListReport(installedPlugin);
 	}
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20050", "RHEL7-51059"})
 	@Test(	description="verify plugins listhooks reports all of the expected hooks for FactsCollectionTestPlugin",
 			groups={},
 			priority=320, enabled=true)
@@ -343,6 +377,9 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		List<String> actualPostRegisterConsumerHooks = parseHooksForSlotFromPluginsListhooksResult("post_facts_collection", pluginsListhooksResult);
 		Assert.assertTrue(actualPostRegisterConsumerHooks.contains(expectedPostFactsCollectionHook),"The plugins listhooks report expected post_facts_collection hook '"+expectedPostFactsCollectionHook+"'.");
 	}
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20051", "RHEL7-51060"})
 	@Test(	description="execute subscription-manager modules and verify the expected FactsCollectionTestPlugin hooks are called",
 			groups={},
 			priority=330, enabled=true)
@@ -407,6 +444,8 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 	
 	// SubscribeTestPlugin Tests ********************************************************
 
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20052", "RHEL7-51061"})
 	@Test(	description="enable SubscribeTestPlugin and assert the plugins list reports enablement",
 			groups={},
 			priority=410, enabled=true)
@@ -420,6 +459,9 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		// enable and verify
 		enableTestPluginAndVerifyListReport(installedPlugin);
 	}
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20053", "RHEL7-33083"})
 	@Test(	description="verify plugins listhooks reports all of the expected hooks for SubscribeTestPlugin",
 			groups={},
 			priority=420, enabled=true)
@@ -441,6 +483,9 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		List<String> actualPostHooks = parseHooksForSlotFromPluginsListhooksResult("post_subscribe", pluginsListhooksResult);
 		Assert.assertTrue(actualPostHooks.contains(expectedPostHook),"The plugins listhooks report expected post_subscribe hook '"+expectedPostHook+"'.");
 	}
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20054", "RHEL7-51062"})
 	@Test(	description="execute subscription-manager modules and verify the expected SubscribeTestPlugin hooks are called",
 			groups={},
 			priority=430, enabled=true)
@@ -506,6 +551,8 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 	
 	// AutoAttachTestPlugin Tests ********************************************************
 
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20055", "RHEL7-51063"})
 	@Test(	description="enable AutoAttachTestPlugin and assert the plugins list reports enablement",
 			groups={},
 			priority=510, enabled=true)
@@ -519,6 +566,9 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		// enable and verify
 		enableTestPluginAndVerifyListReport(installedPlugin);
 	}
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20056", "RHEL7-51064"})
 	@Test(	description="verify plugins listhooks reports all of the expected hooks for AutoAttachTestPlugin",
 			groups={},
 			priority=520, enabled=true)
@@ -556,6 +606,9 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		}
 		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile,"productCertDir",productCertDirForAutoAttachTestPluginHooks);	
 	}
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20057", "RHEL7-51065"})
 	@Test(	description="execute subscription-manager modules and verify the expected AutoAttachTestPlugin hooks are called",
 			groups={"verifyEnabledAutoAttachTestPluginHooksAreCalled_Test"},
 			priority=530, enabled=true)
@@ -636,6 +689,8 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 	
 	// ProductIdInstallTestPlugin Tests ***************************************************
 
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20058", "RHEL7-51066"})
 	@Test(	description="enable ProductIdInstallTestPlugin and assert the plugins list reports enablement",
 			groups={},
 			priority=610, enabled=true)
@@ -649,6 +704,9 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		// enable and verify
 		enableTestPluginAndVerifyListReport(installedPlugin);
 	}
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20059", "RHEL7-51067"})
 	@Test(	description="verify plugins listhooks reports all of the expected hooks for ProductIdInstallTestPlugin",
 			groups={},
 			priority=620, enabled=true)
@@ -670,6 +728,9 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		List<String> actualPostHooks = parseHooksForSlotFromPluginsListhooksResult("post_product_id_install", pluginsListhooksResult);
 		Assert.assertTrue(actualPostHooks.contains(expectedPostHook),"The plugins listhooks report expected post_facts_collection hook '"+expectedPostHook+"'.");
 	}
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20060", "RHEL7-55177"})
 	@Test(	description="execute subscription-manager modules and verify the expected ProductIdInstallTestPlugin hooks are called",
 			groups={"blockedByBug-859197", "blockedByBug-922871"/*, "blockedByBug-922882"*/},
 			priority=630, enabled=true)
@@ -778,6 +839,8 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 	
 	// TODO ProductIdRemoveTestPlugin Tests ***************************************************
 	// CURRENTLY BLOCKED BY BUGZILLA 922882
+	@TestDefinition( projectID = {Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL7-55178"})
 	@Test(	description="enable ProductIdRemoveTestPlugin and assert the plugins list reports enablement",
 			groups={"blockedByBug-922882"},
 			priority=710, enabled=true)
@@ -820,6 +883,8 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 
 	// AllSlotsTestPlugin Tests ********************************************************
 
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20061", "RHEL7-33087"})
 	@Test(	description="enable AllSlotsTestPlugin and assert the plugins list reports enablement",
 			groups={},
 			priority=810, enabled=true)
@@ -833,6 +898,9 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		// enable and verify
 		enableTestPluginAndVerifyListReport(installedPlugin);
 	}
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20062", "RHEL7-51068"})
 	@Test(	description="verify plugins listhooks reports all of the expected hooks for AllSlotsTestPlugin",
 			groups={},
 			priority=820, enabled=true)
@@ -850,6 +918,9 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 			Assert.assertTrue(actualHooks.contains(expectedHook),"The plugins listhooks report expected '"+slot+"' hook '"+expectedHook+"'.");
 		}
 	}
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20063", "RHEL7-51069"})
 	@Test(	description="execute subscription-manager modules and verify the expected AllSlotsTestPlugin hooks are called",
 			groups={},
 			priority=830, enabled=true)

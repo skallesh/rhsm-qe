@@ -16,6 +16,9 @@ import rhsm.cli.tasks.CandlepinTasks;
 import rhsm.data.SubscriptionPool;
 import com.redhat.qe.tools.SSHCommandResult;
 
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.TestDefinition;
+
 /**
  * @author jsefler
  *
@@ -27,6 +30,8 @@ public class MultiClientTests extends SubscriptionManagerCLITestScript{
 	// Test Methods ***********************************************************************
 
 	// FIXME Redesign this test to use only one client box and use clean and register --consumerid to switch users  (see SubscribeTests.MultiConsumerSubscribeWithQuantity_Test as an example)
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21882", "RHEL7-51734"})
 	@Test(	description="bind/unbind with two users/consumers",
 			groups={"blockedByBug-979492"},
 			dataProvider="getAvailableSubscriptionPoolsData")
@@ -99,10 +104,11 @@ public class MultiClientTests extends SubscriptionManagerCLITestScript{
 		}
 	}
 	protected List<String> alreadySubscribedProductIdsInMultiClientSubscribeToSameSubscriptionPool_Test = new ArrayList<String>();
-	
-	
-	
-	
+
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21881", "RHEL7-51733"})
 	@Test(	description="verify that only one person can be registered under username at a time",
 			groups={"MultiClientRegisterAsPerson_Test"},
 			enabled=true)

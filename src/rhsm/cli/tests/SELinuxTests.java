@@ -13,6 +13,9 @@ import rhsm.cli.tasks.SubscriptionManagerTasks;
 
 import com.redhat.qe.tools.RemoteFileTasks;
 
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.TestDefinition;
+
 /**
  * @author jsefler
  * 
@@ -107,7 +110,9 @@ And then the altered files should be deleted because the will still have the con
 public class SELinuxTests extends SubscriptionManagerCLITestScript {
 
 	// Test methods ***********************************************************************
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20117", "RHEL7-51117"})
 	@Test(	description="assert that no SELinux denials were logged during this TestSuite",
 			groups={"blockedByBug-694879", "blockedByBug-822402"},
 			enabled=true)

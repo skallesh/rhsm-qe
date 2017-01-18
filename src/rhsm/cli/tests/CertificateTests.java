@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.TestDefinition;
 import org.apache.xmlrpc.XmlRpcException;
 import org.json.JSONException;
 import org.testng.SkipException;
@@ -59,7 +61,9 @@ import com.redhat.qe.tools.SSHCommandResult;
 public class CertificateTests extends SubscriptionManagerCLITestScript {
 
 	// Test methods ***********************************************************************
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20031", "RHEL7-51044"})
 	@Test(	description="Verify that no more than one RHEL product cert is ever installed.",
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-854879","blockedByBug-904193"},
 			enabled=true)
@@ -111,8 +115,10 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		
 		Assert.assertNotNull(clienttasks.getCurrentRhelProductCert(),"Discovered the currently installed base RHEL product cert based on an expected tag.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20036", "RHEL7-51045"})
 	@Test(	description="Verify that a base product cert corresponding to the /etc/redhat-release is installed",
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-706518","blockedByBug-844368","blockedByBug-1104498","blockedByBug-904193"},
 			dependsOnMethods={"VerifyOnlyOneBaseRHELProductCertIsInstalled_Test"},
@@ -164,8 +170,10 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		Assert.assertNotNull(rhelProductCert,"Found an installed product cert that matches the system's base RHEL release version '"+clienttasks.releasever+"' on arch '"+clienttasks.arch+"':");
 		log.info(rhelProductCert.toString());
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20037", "RHEL7-51046"})
 	@Test(	description="Verify that the installed base RHEL product cert provides the expected tags",
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1259820","blockedByBug-1259839"},
 			dependsOnMethods={"VerifyBaseRHELProductCertIsInstalled_Test"},
@@ -221,8 +229,10 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 			Assert.assertTrue(providedTags.contains(expectedTag),"Actuals RHEL Product Cert tags "+providedTags+" contain expected tag '"+expectedTag+"' for RHEL '"+clienttasks.redhatReleaseX+"' product id '"+productCert.productNamespace.id+"'");
 		}
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20033", "RHEL7-33094"})
 	@Test(	description="candidate product cert validity dates",
 			groups={"AcceptanceTests","Tier1Tests"},
 			dataProvider="getProductCertFilesData",
@@ -260,6 +270,9 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		factsMap.put("system.certificate_version", "1.0");
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
 	}
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20029", "RHEL7-51904"})
 	@Test(	description="Make sure the entitlement cert contains all expected OIDs",
 			groups={"VerifyEntitlementCertContainsExpectedOIDs_Test","AcceptanceTests","Tier1Tests","blockedByBug-744259","blockedByBug-754426","blockedByBug-962520","blockedByBug-997970","blockedByBug-1021581"},
 			dataProvider="getAllAvailableSubscriptionPoolsData",
@@ -404,8 +417,10 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	public void deleteFactsFileWithOverridingValues() {
 		clienttasks.deleteFactsFileWithOverridingValues();
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36643", "RHEL7-51454"})
 	@Test(	description="assert that the rct cat-cert tool reports the currently installed product certs are Certificate: Version: 1.0 (Note: this is not the ProductNamespace.version)",
 			groups={},
 			enabled=true)
@@ -429,8 +444,10 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 			Assert.assertEquals(productCert.version, "1.0", "The rct cat-cert tool reports this product cert to be a V1 Certificate: "+productCert);
 		}
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36641", "RHEL7-51452"})
 	@Test(	description="assert that the rct cat-cert tool reports the current consumer cert is a Certificate: Version: 1.0",
 			groups={"blockedByBug-863961"},
 			enabled=true)
@@ -441,8 +458,10 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
 		Assert.assertEquals(consumerCert.version, "1.0", "The rct cat-cert tool reports this consumer cert to be a V1 Certificate: "+consumerCert);
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			, testCaseID = {"RHEL6-36641", "RHEL7-51452"})
 	@Test(	description="assert the rct cat-cert tool does not traceback when run as non-root user.",
 			groups={"blockedByBug-1315901","VerifyConsumerCertsAreNotAccessibleByNonRootUserUsingRct_Test"},
 			enabled=true)
@@ -499,8 +518,10 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		client.runCommandAndWait("userdel -rf "+nonRootUser);
 	}
 	protected final String nonRootUser = "non-root-user";
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20030", "RHEL7-33093"})
 	@Test(	description="assert that the rct cat-cert tool reports the issuer of consumer/entitlement/product certificates",
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-968364"},
 			enabled=true)
@@ -553,8 +574,10 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		}
 
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20032", "RHEL7-33086"})
 	@Test(	description="assert that the rct cat-cert tool reports orders as Unlimited instead of -1",
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1011961"},
 			enabled=true)
@@ -583,8 +606,10 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		}
 		if (numberOfUnlimitedPools==0) throw new SkipException("Could not find any available pools with an unlimited quantity for this test.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36639", "RHEL7-51451"})
 	@Test(	description="assert the statistic values reported by the rct stat-cert tool for the current consumer cert",
 			groups={},
 			enabled=true)
@@ -611,8 +636,10 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		Assert.assertNotNull(certStatistics.subjectKeyIdSize, "rct stat-cert reports this Subject Key ID size.");	// TODO assert something better than not null
 		Assert.assertNull(certStatistics.contentSets, "rct stat-cert does NOT report a number of Content sets.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36644", "RHEL7-51455"})
 	@Test(	description="assert the statistic values reported by the rct stat-cert tool for currently installed product certs",
 			groups={},
 			enabled=true)
@@ -647,8 +674,10 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 			Assert.assertNull(certStatistics.contentSets, "rct stat-cert does NOT report a number of Content sets.");
 		}
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20035", "RHEL7-33079"})
 	@Test(	description="assert the statistic values reported by the rct stat-cert tool for currently subscribed entitlements",
 			groups={"AcceptanceTests","Tier1Tests"},
 			enabled=true)
@@ -683,8 +712,10 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 			Assert.assertEquals(certStatistics.contentSets, Integer.valueOf(entitlementCert.contentNamespaces.size()), "rct stat-cert reports this number of Content sets.");
 		}
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36642", "RHEL7-51453"})
 	@Test(	description="assert the statistic values reported by the rct stat-cert tool for a zero-content set entitlement",
 			groups={"blockedByBug-966137"},
 			enabled=true)
@@ -806,13 +837,14 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		"fZoRA85ol5M1QdmOHKXuOhZXaresFw9E3M92hFKrp5XBo1cTthWbkPsUrj6WmWf6"+"\n"+
 		"b2h6lEAZ0zjcWjGzwW+W1N/HVs833/qydQ4heQEC60K/gUreSKekA0I="+"\n"+
 		"-----END RSA PRIVATE KEY-----";
-	
-	
-	
-	
-	
-	
-	
+
+
+
+
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20028", "RHEL7-33082"})
 	@Test(	description="Verify that the base RHEL product certs on the CDN for each release correctly reflect the release version.  For example, this affects users that want use subcription-manager release --set=6.3 to keep yum updates fixed to an older release.",
 			groups={"VerifyBaseRHELProductCertVersionFromEachCDNReleaseVersion_Test","AcceptanceTests","Tier1Tests"},
 			dataProvider="VerifyBaseRHELProductCertVersionFromEachCDNReleaseVersion_TestData",
@@ -980,9 +1012,10 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		
 		return ll;
 	}
-	
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36366", "RHEL7-33085"})
 	@Test(	description="Verify that the base RHEL product cert will upgrade to match the releaseVer set when a package is installed/upgraded/downgraded",
 			groups={"VerifyBaseRHELProductCertVersionUpdates_Test","AcceptanceTests","Tier1Tests"},
 			dataProvider="getVerifyBaseRHELProductCertVersionUpdates_TestData",
@@ -1239,14 +1272,14 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	protected final String tmpProductCertDir = "/tmp/sm-tmpProductCertDir";
 	protected List<ProductCert> rhelProductCertsFromRhnDefinition = new ArrayList<ProductCert>();
 	protected String productIdJsonFile = null;	// original /var/lib/rhsm/productid.js
-	
-	
-	
-	
-	
-	
-	
-	
+
+
+
+
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20034", "RHEL7-55176"})
 	@Test(	description="When updating a RHEL package on a system with JBoss, verify that the JBoss productId is not deleted when calling yum update with --disablerepo=jb-eap-6-for-rhel-6-server-rpms",
 			groups={"VerifyYumUpdateWithDisabledRepoWillNotDeleteJBossProductId_Test","AcceptanceTests","Tier1Tests","blockedByBug-1159163"},
 			enabled=true)

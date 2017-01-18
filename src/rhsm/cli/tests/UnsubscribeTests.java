@@ -26,6 +26,9 @@ import com.redhat.qe.jul.TestRecords;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.TestDefinition;
+
 /**
  * @author jsefler
  *
@@ -36,6 +39,8 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	// Test Methods ***********************************************************************
 
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-27126", "RHEL7-51409"})
 	@Test(	description="subscription-manager-cli: unsubscribe consumer from an entitlement using product ID",
 			groups={"blockedByBug-584137", "blockedByBug-602852", "blockedByBug-873791"},
 			//dataProvider="getAllConsumedProductSubscriptionsData",	// 06/04/2014 takes too long; rarely reveals a bug
@@ -47,8 +52,10 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 //		sm.unsubscribeFromEachOfTheCurrentlyConsumedProductSubscriptions();
 		clienttasks.unsubscribeFromProductSubscription(productSubscription);
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-27124", "RHEL7-51397"})
 	@Test(	description="Unsubscribe product entitlement and re-subscribe",
 			groups={"blockedByBug-584137","blockedByBug-602852","blockedByBug-873791","blockedByBug-979492"},
 			//dataProvider="getAllConsumedProductSubscriptionsData",	// 06/04/2014 takes too long; rarely reveals a bug
