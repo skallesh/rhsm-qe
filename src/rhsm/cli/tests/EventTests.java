@@ -356,6 +356,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 
 		// assert the consumer feed...
         //assertTheNewConsumerFeed(ownerKey, consumerCert.consumerid, oldConsumerFeed, newEventTitles);
+//1/19/2017 TODO FIXME: The following assert has been failing with the expected and actual events ENTITLEMENT DELETED and COMPLIANCE CREATED in reverse order from expected.  This might be due to https://github.com/candlepin/candlepin/commit/6beae873733174df24178a552b116fcb8c8876ef and is being troubleshot be crog and vritant
         assertTheNewConsumerFeedIgnoringEventTitles(ownerKey, consumerCert.consumerid, oldConsumerFeed, newEventTitles, new HashSet<String>(){{add("COMPLIANCE CREATED");}});
 
         // adjust the expected events when the candlepin server is standalone and the pool has a non-zero virt_limit 
