@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<testcase id="RHEL6-36488">
+    <title>rhsm.gui.tests.proxy_tests.no_litter_in_location_when_using_proxy</title>
+    <description>Given a system is subscribed without proxy.
+When I click on 'Configure Proxy'
+ and I click on 'I would like to connect via an HTTP Proxy'
+ and I click on 'Use Authentication with HTTP Proxy'
+Then I should see nothing in a field 'Proxy Location'.</description>
+    <test-steps>
+        <test-step>
+            <test-step-column id="step"/>
+        </test-step>
+    </test-steps>
+    <custom-fields>
+        <custom-field id="caseautomation" content="automated"></custom-field>
+        <custom-field id="caseimportance" content="high"></custom-field>
+        <custom-field id="caselevel" content="component"></custom-field>
+        <custom-field id="caseposneg" content="positive"></custom-field>
+        <custom-field id="testtype" content="functional"></custom-field>
+        <custom-field id="subtype1" content="-"></custom-field>
+        <custom-field id="subtype2" content="-"></custom-field>
+    </custom-fields>
+</testcase>

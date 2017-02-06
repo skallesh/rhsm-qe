@@ -1,0 +1,195 @@
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
+
+<suite name="CLI Acceptance TestSuite">
+
+    <listeners>
+        <listener class-name="com.redhat.qe.auto.testng.TestNGListener" />
+        <listener class-name="com.redhat.qe.auto.bugzilla.BugzillaTestNGListener" />
+        <listener class-name="org.uncommons.reportng.HTMLReporter" />
+        <listener class-name="org.testng.reporters.XMLReporter" />
+    </listeners>
+
+
+
+    <test name="CLI: TemporaryPool Tests">
+        <classes>
+            <class name="rhsm.cli.tests.TemporaryPoolTests" />
+        </classes>
+        <groups>
+            <run>
+                <include name="setup" />
+                <include name="Tier1Tests" />
+                <include name="cleanup" />
+            </run>
+        </groups>
+    </test>
+
+    <!-- CLI ACCEPTANCE TESTS
+
+    <test name="CLI: Register Tests">
+        <classes>
+            <class name="rhsm.cli.tests.RegisterTests" />
+        </classes>
+        <groups>
+            <run>
+                <include name="setup" />
+                <include name="Tier1Tests" />
+                <include name="Tier2Tests" />
+                <include name="Tier3Tests" />
+                <include name="cleanup" />
+            </run>
+        </groups>
+    </test>
+
+        <test name="CLI: Help Tests">
+        <classes>
+            <class name="rhsm.cli.tests.HelpTests" />
+        </classes>
+        <groups>
+            <run>
+                <include name="setup" />
+                <include name="Tier1Tests" />
+                <include name="Tier2Tests" />
+                <include name="Tier3Tests" />
+                <include name="cleanup" />
+            </run>
+        </groups>
+    </test>
+
+            <test name="CLI: BashCompletion Tests">
+        <classes>
+            <class name="rhsm.cli.tests.BashCompletionTests" />
+        </classes>
+        <groups>
+            <run>
+                <include name="setup" />
+                <include name="Tier1Tests" />
+                <include name="Tier2Tests" />
+                <include name="Tier3Tests" />
+                <include name="cleanup" />
+            </run>
+        </groups>
+    </test>
+
+        <test name="CLI: General Tests">
+            <classes>
+                <class name="rhsm.cli.tests.GeneralTests" />
+            </classes>
+            <groups>
+                <run>
+                    <include name="setup" />
+                    <include name="AcceptanceTests" />
+                    <include name="cleanup" />
+                </run>
+            </groups>
+        </test>
+
+
+        <test name="CLI: Translation Tests">
+            <classes>
+                <class name="rhsm.cli.tests.TranslationTests" />
+            </classes>
+            <groups>
+                <run>
+                    <include name="setup" />
+                    <include name="AcceptanceTests" />
+                    <include name="cleanup" />
+                </run>
+            </groups>
+        </test>
+
+
+        <test name="CLI: Pofilter Translation Tests">
+            <classes>
+                <class name="rhsm.cli.tests.PofilterTranslationTests" />
+            </classes>
+            <groups>
+                <run>
+                    <include name="setup" />
+                    <include name="Tier1Tests" />
+                    <include name="Tier2Tests" />
+                    <include name="Tier3Tests" />
+                    <include name="cleanup" />
+                </run>
+            </groups>
+        </test>
+
+
+
+
+    <test name="CLI: Interoperability Tests">
+        <classes>
+            <class name="rhsm.cli.tests.InteroperabilityTests" />
+        </classes>
+        <groups>
+            <run>
+                <include name="setup" />
+                <include name="Tier1Tests" />
+                <include name="Tier2Tests" />
+                <include name="Tier3Tests" />
+                <include name="cleanup" />
+            </run>
+        </groups>
+    </test>
+
+    <test name="CLI: Branding Tests">
+        <classes>
+            <class name="rhsm.cli.tests.BrandingTests" />
+        </classes>
+        <groups>
+            <run>
+                <include name="setup" />
+                <include name="AcceptanceTests" />
+                <include name="cleanup" />
+            </run>
+        </groups>
+    </test>
+
+    <test name="CLI: Proxy Tests">
+		<classes>
+			<class name="rhsm.cli.tests.ProxyTests" />
+		</classes>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="AcceptanceTests" />
+				<include name="cleanup" />
+			</run>
+		</groups>
+	</test>
+
+	    <test name="CLI: Event Tests">
+        <classes>
+            <class name="rhsm.cli.tests.EventTests" />
+        </classes>
+        <groups>
+            <run>
+                <include name="setup" />
+                <include name="Tier1Tests" />
+                <include name="Tier2Tests" />
+                <include name="Tier3Tests" />
+                <include name="cleanup" />
+            </run>
+        </groups>
+    </test>
+
+        <test name="CLI: ActivationKey Tests">
+        <classes>
+            <class name="rhsm.cli.tests.ActivationKeyTests" />
+        </classes>
+        <groups>
+            <run>
+                <include name="setup" />
+                <include name="Tier1Tests" />
+                <include name="Tier2Tests" />
+                <include name="Tier3Tests" />
+                <include name="cleanup" />
+            </run>
+        </groups>
+    </test>
+
+	-->
+
+
+
+</suite>

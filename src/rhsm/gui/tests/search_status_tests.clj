@@ -29,8 +29,6 @@
            [com.github.redhatqe.polarize.metadata DefTypes$Project]
            [com.github.redhatqe.polarize.metadata DefTypes$Importance DefTypes DefTypes$PosNeg]))
 
-(def PLATTP DefTypes$Project/PLATTP)
-(println "PLATTP " PLATTP)
 
 (def servicelist (atom {}))
 (def productlist (atom {}))
@@ -70,12 +68,12 @@
   (assert-valid-testing-arch)
   (tasks/restart-app :unregister? true))
 
-(defn ^{Test {:groups ["search_status"
-                       "tier3"
-                       "blockedByBug-707041"
-                       "blockedByBug-1248821"]}
-        TestDefinition {:projectID [`DefTypes$Project/RHEL6]
-                        :testCaseID ["RHEL6-38769"]}}
+(defn ^{Test           {:groups ["search_status"
+                                 "tier3"
+                                 "blockedByBug-707041"
+                                 "blockedByBug-1248821"]}
+        TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-38769" "RHEL7-57871"]}}
   date_picker_traceback
   "Asserts that the date chooser does not throw a traceback."
   [_]
@@ -100,8 +98,8 @@
                                  "tier1"
                                  "acceptance"
                                  "blockedByBug-818282"]}
-        TestDefinition {:projectID [`DefTypes$Project/RHEL6]
-                        :testCaseID ["RHEL6-20132"]}}
+        TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-20132" "RHEL7-31895"]}}
   check_ordered_contract_options
   "Checks if contracts in contract selection dialog are ordered based on host type"
   [_]
@@ -132,12 +130,12 @@
               (if (bool (tasks/ui guiexist :contract-selection-dialog))
                 (tasks/ui click :cancel-contract-selection)))))))))
 
-(defn ^{Test           {:groups ["search_status"
-                                 "tier3"
-                                 "check_subscription_type_all_available"]
+(defn ^{Test           {:groups       ["search_status"
+                                       "tier3"
+                                       "check_subscription_type_all_available"]
                         :dataProvider "all-subscriptions"}
-        TestDefinition {:projectID [`DefTypes$Project/RHEL6]
-                        :testCaseID ["RHEL6-20132"]
+        TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-20132" "RHEL7-57946"]
                         :importance `DefTypes$Importance/MEDIUM}}
   check_subscription_type_all_subscriptions
   "Checks for subscription type in all available subscriptions"
@@ -158,8 +156,8 @@
 (defn ^{Test           {:groups ["search_status"
                                  "tier1" "acceptance"
                                  "tier2"]}
-        TestDefinition {:projectID [`DefTypes$Project/RHEL6]
-                        :testCaseID ["RHEL6-20133"]}}
+        TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-20133" "RHEL7-31896"]}}
   check_physical_only_pools
   "Identifies physical only pools from JSON and checks
    whether it throws appropriate error message"
@@ -196,8 +194,8 @@
           (run-command "subscription-manager facts --update")))
       (tasks/unsubscribe_all))))
 
-(defn ^{TestDefinition {:projectID [`DefTypes$Project/RHEL6]
-                        :testCaseID ["RHEL6-38766"]}
+(defn ^{TestDefinition {:projectID [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-38766" "RHEL7-57870"]}
         Test           {:groups ["search_status"
                                  "tier3"
                                  "blockedByBug-801434"
@@ -218,8 +216,8 @@
       (verify (not (substring? "Traceback" output))))
     (finally (tasks/restart-app))))
 
-(defn ^{TestDefinition {:projectID [`DefTypes$Project/RHEL6]
-                        :testCaseID ["RHEL6-38773"]}
+(defn ^{TestDefinition {:projectID [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-38773" "RHEL7-57874"]}
         Test           {:groups ["search_status"
                                  "tier3"
                                  "blockedByBug-704408"
@@ -242,12 +240,12 @@
     ;; verify that today's date was filled in here...
     (finally (tasks/restart-app))))
 
-(defn ^{TestDefinition {:projectID [`DefTypes$Project/RHEL6]
-                        :testCaseID ["RHEL6-38765"]}
-        Test {:groups ["search_status"
-                       "tier3"
-                       "blockedByBug-688454"
-                       "blockedByBug-704408"]}}
+(defn ^{TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-38765" "RHEL7-57869"]}
+        Test           {:groups ["search_status"
+                                 "tier3"
+                                 "blockedByBug-688454"
+                                 "blockedByBug-704408"]}}
   check_blank_date_search
   "Tests the behavior when the date search is blank and you try to search."
   [_]
@@ -265,12 +263,12 @@
     (verify (= "" (tasks/ui gettextvalue :date-entry)))
     (finally (tasks/restart-app))))
 
-(defn ^{Test           {:groups       ["search_status"
+(defn ^{TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-38770" "RHEL7-57947"]}
+        Test           {:groups       ["search_status"
                                        "tier3"
                                        "blockedByBug-858773"]
-                        :dataProvider "installed-products"}
-        TestDefinition {:projectID [`DefTypes$Project/RHEL6]
-                        :testCaseID ["RHEL6-38770"]}}
+                        :dataProvider "installed-products"}}
   filter_by_product
   "Tests that the product filter works when searching."
   [_ product]
@@ -303,11 +301,11 @@
             (tasks/ui click :close-filters))
           (tasks/search))))))
 
-(defn ^{Test           {:groups ["search_status"
+(defn ^{TestDefinition {:projectID [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-38772" "RHEL7-57873"]}
+        Test           {:groups ["search_status"
                                  "tier3"
-                                 "blockedByBug-817901"]}
-        TestDefinition {:projectID [`DefTypes$Project/RHEL6]
-                        :testCaseID ["RHEL6-38772"]}}
+                                 "blockedByBug-817901"]}}
   check_no_search_results_message
   "Tests the message when the search returns no results."
   [_]
@@ -320,11 +318,11 @@
     (verify (tasks/ui showing? :all-subscriptions-view))
     (verify (not (= 0 (tasks/ui getrowcount :all-subscriptions-view))))))
 
-(defn ^{Test           {:groups ["search_status"
+(defn ^{TestDefinition {:projectID [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-38771" "RHEL7-57872"]}
+        Test           {:groups ["search_status"
                                  "tier3"
-                                 "blockedByBug-817901"]}
-        TestDefinition {:projectID [`DefTypes$Project/RHEL6]
-                        :testCaseID ["RHEL6-38771"]}}
+                                 "blockedByBug-817901"]}}
   check_please_search_message
   "Tests for the initial message before you search."
   [_]
@@ -336,12 +334,12 @@
     (verify (tasks/ui showing? :all-subscriptions-view))
     (verify (not (= 0 (tasks/ui getrowcount :all-subscriptions-view))))))
 
-(defn ^{Test           {:groups       ["search_status"
+(defn ^{TestDefinition {:projectID [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-37400" "RHEL7-57945"]}
+        Test           {:groups       ["search_status"
                                        "tier3"
                                        "blockedByBug-911386"]
-                        :dataProvider "all-subscriptions"}
-        TestDefinition {:projectID [`DefTypes$Project/RHEL6]
-                        :testCaseID ["RHEL6-37400"]}}
+                        :dataProvider "all-subscriptions"}}
   check_service_levels
   "Asserts that the displayed service levels are correct in the subscriptons view."
   [_ subscription]
@@ -359,7 +357,8 @@
                                        "blockedByBug-865193"]
                         :dataProvider "all-subscriptions"
                         :priority     (int 99)}
-        TestDefinition {:projectID [`DefTypes$Project/RHEL6]}}
+        TestDefinition {:projectID [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-45962" ""]}}
   check_provides_products
   "Checks if provide products is populated in all available subscriptions view"
   [_ subscription]
@@ -370,7 +369,8 @@
 (defn ^{Test           {:group        ["search_status"
                                        "tier3"]
                         :dataProvider "all-subscriptions"}
-        TestDefinition {:projectID [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]}}
+        TestDefinition {:projectID [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-45963" ""]}}
   check_subscription_selected_after_update
   "Checks if subscription remains selected after update is clicked
    case 1: If subscription is stackable, it no longer remains selected
@@ -388,7 +388,8 @@
 (defn ^{Test           {:group ["search_status"
                                 "tier 2"
                                 "blockedByBug-1248729"]}
-        TestDefinition {:projectID [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]}}
+        TestDefinition {:projectID [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-45964" ""]}}
   check_filter_focus
   "Checks if the filter dialog comes up in a focused state when opened."
   [_]

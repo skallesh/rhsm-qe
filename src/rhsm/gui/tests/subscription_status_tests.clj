@@ -22,7 +22,9 @@
             AfterGroups
             Test
             DataProvider]
-           org.testng.SkipException))
+           org.testng.SkipException
+           [com.github.redhatqe.polarize.metadata TestDefinition]
+           [com.github.redhatqe.polarize.metadata DefTypes$Project]))
 
 (def status-before-subscribe (atom {}))
 (def contractlist (atom {}))
@@ -64,12 +66,14 @@
              (:stdout (run-command time-cmd))
              (:stdout (run-command time-cmd :runner @candlepin-runner)))))
 
-(defn ^{Test {:groups ["subscription_status"
-                       "tier2"
-                       "tier1" "acceptance"
-                       "blockedByBug-1012501"
-                       "blockedByBug-1040119"]
-              :priority (int 100)}}
+(defn ^{TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-20130" "RHEL7-31893"]}
+        Test           {:groups   ["subscription_status"
+                                   "tier2"
+                                   "tier1" "acceptance"
+                                   "blockedByBug-1012501"
+                                   "blockedByBug-1040119"]
+                        :priority (int 100)}}
   check_status_message_before_attaching
   "Asserts that status message displayed in main-window is right before subscriptions are attached"
   [_]
@@ -85,13 +89,15 @@
               (Integer. (re-find #"\d*" (tasks/ui gettextvalue :overall-status))))
       (verify (= @installed-products @status-before-subscribe)))))
 
-(defn ^{Test {:groups ["subscription_status"
-                       "tier2"
-                       "tier1" "acceptance"
-                       "blockedByBug-1012501"
-                       "blockedByBug-1040119"
-                       "blockedByBug-1199671"]
-              :dependsOnMethods ["check_status_message_before_attaching"]}}
+(defn ^{TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-37292" "RHEL7-31894"]}
+        Test           {:groups           ["subscription_status"
+                                           "tier2"
+                                           "tier1" "acceptance"
+                                           "blockedByBug-1012501"
+                                           "blockedByBug-1040119"
+                                           "blockedByBug-1199671"]
+                        :dependsOnMethods ["check_status_message_before_attaching"]}}
   check_status_message_after_attaching
   "Asserts that status message displayed in main-window is right after attaching subscriptions"
   [_]
@@ -120,12 +126,14 @@
         before-subscribe @status-before-subscribe]
     (verify (= after-subscribe (- before-subscribe subscribed-products)))))
 
-(defn ^{Test {:groups ["subscription_status"
-                       "tier2"
-                       "blockedByBug-1012501"
-                       "blockedByBug-1040119"
-                       "blockedByBug-1199671"]
-              :dependsOnMethods ["check_status_message_after_attaching"]}}
+(defn ^{TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-37696" "RHEL7-63328"]}
+        Test           {:groups           ["subscription_status"
+                                           "tier2"
+                                           "blockedByBug-1012501"
+                                           "blockedByBug-1040119"
+                                           "blockedByBug-1199671"]
+                        :dependsOnMethods ["check_status_message_after_attaching"]}}
   check_status_message_future_subscriptions
   "Asserts that status message displayed in main-window is right after attaching future
    subscriptions"
@@ -157,7 +165,9 @@
           before-subscribe @status-before-subscribe]
       (verify (= after-date-products (- before-subscribe subscribed-products-date))))))
 
-(defn ^{Test {:groups ["subscription_status"
+(defn ^{TestDefinition {:projectID [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-45959", "RHEL7-63329"]}
+        Test {:groups ["subscription_status"
                        "tier2"
                        "blockedByBug-1012501"
                        "blockedByBug-1040119"
@@ -230,10 +240,12 @@
             (run-command "date -s \"-1 year\"" :runner @candlepin-runner)
             (run-command "date -s \"-1 year\"")))))))
 
-(defn ^{Test {:groups ["subscription_status"
-                       "tier3"
-                       "check_subscription_type_my_subs"]
-              :dataProvider "my-subscriptions"}}
+(defn ^{TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-37014" "RHEL7-55659"]}
+        Test           {:groups       ["subscription_status"
+                                       "tier3"
+                                       "check_subscription_type_my_subs"]
+                        :dataProvider "my-subscriptions"}}
   check_subscription_type_my_subscriptions
   "Checks for subscription type in my subscriptions"
   [_ product]
@@ -250,10 +262,12 @@
   (tasks/unsubscribe_all)
   (tasks/unregister))
 
-(defn ^{Test {:groups ["subscription_status"
-                       "tier2"
-                       "blockedByBug-924766"]
-              :dataProvider "subscribed"}}
+(defn ^{TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-38740" "RHEL7-57643"]}
+        Test           {:groups       ["subscription_status"
+                                       "tier2"
+                                       "blockedByBug-924766"]
+                        :dataProvider "subscribed"}}
   check_subscribed_virt_type
   "Asserts that the virt type is displayed properly for all of 'My Subscriptions'"
   [_ subscription]

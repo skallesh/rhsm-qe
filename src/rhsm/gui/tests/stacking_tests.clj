@@ -27,7 +27,9 @@
             Test
             DataProvider]
            org.testng.SkipException
-           [com.redhat.qe.auto.bugzilla BzChecker]))
+           [com.redhat.qe.auto.bugzilla BzChecker]
+           [com.github.redhatqe.polarize.metadata TestDefinition]
+           [com.github.redhatqe.polarize.metadata DefTypes$Project DefTypes]))
 
 (def prod-dir-atom (atom {}))  ; "ProductCertDir" value from conf file
 (def new-list (atom {}))    ; Used to dynamically alter the list of subscriptions
@@ -110,9 +112,11 @@
       (tasks/set-conf-file-value "productCertDir" @prod-dir-atom)
       (tasks/restart-app))))
 
-(defn ^{Test {:groups ["stacking"
-                       "tier3"
-                       "blockedByBug-854380"]}}
+(defn ^{TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-38189" ""]}
+        Test           {:groups ["stacking"
+                                 "tier3"
+                                 "blockedByBug-854380"]}}
   assert_subscriptions_displayed
   "Asserts the matching subscriptions are displayed when the system is partially subscribed"
   [_]
@@ -143,9 +147,11 @@
       (tasks/write-facts "{\"cpu.cpu_socket(s)\": \"2\"}")
       (tasks/unsubscribe_all))))
 
-(defn ^{Test {:groups ["stacking"
-                       "tier3"
-                       "blockedByBug-990639"]}}
+(defn ^{TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-38190" ""]}
+        Test           {:groups ["stacking"
+                                 "tier3"
+                                 "blockedByBug-990639"]}}
   check_dates_partially_subscribed
   "Checks if start and end dates are displayed for partially subscribed poducts"
   [_]
@@ -205,10 +211,12 @@
   (run-command (str "cp " prod-dir pem-file "  " new-prod-dir))
   (tasks/set-conf-file-value "productCertDir" new-prod-dir))
 
-(defn ^{Test {:groups ["stacking"
-                       "tier3"
-                       "blockedByBug-745965"
-                       "blockedByBug-1040119"]}}
+(defn ^{TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-38186" ""]}
+        Test           {:groups ["stacking"
+                                 "tier3"
+                                 "blockedByBug-745965"
+                                 "blockedByBug-1040119"]}}
   assert_future_cert_status
   "Asserts cert status for future entitilment"
   [_]
@@ -263,9 +271,11 @@
         (tasks/unsubscribe_all)
         (tasks/restart-app)))))
 
-(defn ^{Test {:groups ["tier1" "acceptance"
-                       "blockedByBug-827173"
-                       "stacking-sockets"]}}
+(defn ^{TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-20125" "RHEL7-32866"]}
+        Test           {:groups ["tier1" "acceptance"
+                                 "blockedByBug-827173"
+                                 "stacking-sockets"]}}
   assert_auto_attach
   "Asserts if autosubscribe is possible when client is partially subscribed"
   [_]
@@ -305,9 +315,11 @@
       (tasks/write-facts "{\"cpu.cpu_socket(s)\": \"2\"}")
       (tasks/unsubscribe_all))))
 
-(defn ^{Test {:groups ["stacking"
-                       "tier3"
-                       "blockedByBug-845600"]}}
+(defn ^{TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-38188" ""]}
+        Test           {:groups ["stacking"
+                                 "tier3"
+                                 "blockedByBug-845600"]}}
   assert_quantity_displayed
   "Asserts if quantity displayed for stacking subscriptions is correct"
   [_]

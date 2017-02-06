@@ -22,7 +22,9 @@
             AfterGroups
             Test
             DataProvider]
-           org.testng.SkipException))
+           org.testng.SkipException
+           [com.github.redhatqe.polarize.metadata TestDefinition]
+           [com.github.redhatqe.polarize.metadata DefTypes$Project]))
 
 (def ns-log "rhsm.gui.tests.product_status_tests")
 (def unreg-status "Keep your system up to date by registering.")
@@ -50,10 +52,12 @@
       (reset! (skip-groups :product_status) true)
       (throw e))))
 
-(defn ^{Test {:groups ["product_status"
-                       "tier3"
-                       "blockedByBug-964332"]
-              :dataProvider "subscribed"}}
+(defn ^{Test           {:groups       ["product_status"
+                                       "tier3"
+                                       "blockedByBug-964332"]
+                        :dataProvider "subscribed"}
+        TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-37399" "RHEL7-57944"]}}
   check_product_status_subscribed
   "Asserts that all product statuses match the known statuses in the CLI."
   [_ product row]
@@ -61,10 +65,12 @@
         cli-value (get @productstatus product)]
     (verify (= gui-value cli-value))))
 
-(defn ^{Test {:groups ["product_status"
-                       "tier3"]
-              :dependsOnMethods ["check_product_status_subscribed"]
-              :dataProvider "installed-products"}}
+(defn ^{Test           {:groups           ["product_status"
+                                           "tier3"]
+                        :dependsOnMethods ["check_product_status_subscribed"]
+                        :dataProvider     "installed-products"}
+        TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-37016" "RHEL7-55661"]}}
   check_product_status_unsubscribed
   "Checks product status is correct after unsubscribing."
   [_ product]
@@ -72,9 +78,11 @@
                              (tasks/skip-dropdown :installed-view product) 2)]
     (verify (= gui-status "Not Subscribed"))))
 
-(defn ^{Test {:groups ["product_status"
-                       "tier2"
-                       "blockedByBug-923873"]}}
+(defn ^{Test           {:groups ["product_status"
+                                 "tier2"
+                                 "blockedByBug-923873"]}
+        TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-37697" "RHEL7-57644"]}}
   check_status_when_unregistered
   "To verify that status in MyInstalledProducts icon color and product status
    are appropriately displayed when client is unregistered"
@@ -87,10 +95,12 @@
    (fn [status]
      (verify (= status "Unknown")))))
 
-(defn ^{Test {:groups ["product_status"
-                       "tier3"
-                       "assert_subscription_field"]
-              :dataProvider "installed-products"}}
+(defn ^{Test           {:groups       ["product_status"
+                                       "tier3"
+                                       "assert_subscription_field"]
+                        :dataProvider "installed-products"}
+        TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-37015" "RHEL7-55660"]}}
   assert_subscription_field
   "Tests whether the subscripton field in installed view is populated when the entitlement
    is subscribed"
@@ -113,10 +123,12 @@
   (tasks/unsubscribe_all)
   (tasks/unregister))
 
-(defn ^{Test {:groups ["system"
-                       "tier1" "acceptance"
-                       "tier2"
-                       "blockedByBug-1051383"]}}
+(defn ^{Test           {:groups ["system"
+                                 "tier1" "acceptance"
+                                 "tier2"
+                                 "blockedByBug-1051383"]}
+        TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-20131" "RHEL7-27024"]}}
   check_status_column
   "Asserts that the status column of GUI has only 'Subscribed', 'Partially Subscribed'
    and 'Not Subscribed'"
@@ -136,14 +148,16 @@
     (finally
       (run-command "killall -9 firefox"))))
 
-(defn ^{Test {:groups ["system"
-                       "tier2"]
-              :dataProvider "sorting-headers-at-my-installed-products-view"
-              :description "Given a system is subscribed
+(defn ^{Test           {:groups       ["system"
+                                       "tier2"]
+                        :dataProvider "sorting-headers-at-my-installed-products-view"
+                        :description  "Given a system is subscribed
  and I have clicked on the tab 'My Installed Products'
 When I click on a table header 'Product'
 Then I see names of products to be redrawn
- and the names are sorted some way"}}
+ and the names are sorted some way"}
+        TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-37698" ""]}}
   my_installed_products_table_is_sortable
   [_ header-name column-index]
   (tasks/ui selecttab :my-installed-products)

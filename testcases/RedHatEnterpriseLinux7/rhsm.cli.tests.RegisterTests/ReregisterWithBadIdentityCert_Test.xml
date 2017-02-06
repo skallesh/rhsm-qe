@@ -1,19 +1,34 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <testcase id="RHEL7-51302">
     <title>rhsm.cli.tests.RegisterTests.ReregisterWithBadIdentityCert_Test</title>
-    <description></description>
+    <description>subscription-manager-cli: bad identity cert
+		Actions:
+
+	 		* register a client to candlepin (take note of the uuid returned)
+	 		* take note of your identity cert info using openssl x509
+	 		* subscribe to a pool
+	 		* list consumed
+	 		* ls /etc/pki/entitlement/products
+	 		* Now.. mess up your identity..  mv /etc/pki/consumer/cert.pem /bak
+	 		* run the "reregister" command w/ username and passwd AND w/consumerid=&lt;uuid&gt;
+
+		Expected Results:
+
+	 		* after running reregister you should have a new identity cert
+	 		* after registering you should still the same products consumed (list consumed)
+	 		* the entitlement serials should be the same as before the registration</description>
     <test-steps>
         <test-step>
             <test-step-column id="step"/>
         </test-step>
     </test-steps>
     <custom-fields>
-        <custom-field id="caseautomation" content="automated"/>
-        <custom-field id="caseimportance" content="high"/>
-        <custom-field id="caselevel" content="component"/>
-        <custom-field id="caseposneg" content="positive"/>
-        <custom-field id="testtype" content="functional"/>
-        <custom-field id="subtype1" content="-"/>
-        <custom-field id="subtype2" content="-"/>
+        <custom-field id="caseautomation" content="automated"></custom-field>
+        <custom-field id="caseimportance" content="high"></custom-field>
+        <custom-field id="caselevel" content="component"></custom-field>
+        <custom-field id="caseposneg" content="positive"></custom-field>
+        <custom-field id="testtype" content="functional"></custom-field>
+        <custom-field id="subtype1" content="-"></custom-field>
+        <custom-field id="subtype2" content="-"></custom-field>
     </custom-fields>
 </testcase>

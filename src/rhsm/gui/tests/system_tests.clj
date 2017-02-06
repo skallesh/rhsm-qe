@@ -25,7 +25,9 @@
             Test
             DataProvider
             AfterClass]
-           org.testng.SkipException))
+           org.testng.SkipException
+           [com.github.redhatqe.polarize.metadata TestDefinition]
+           [com.github.redhatqe.polarize.metadata DefTypes$Project]))
 
 (def ldtpd-log "/var/log/ldtpd/ldtpd.log")
 (def rhsm-log "/var/log/rhsm/rhsm.log")
@@ -67,9 +69,11 @@
       (verify (not (substring? "Gtk-WARNING" output))))
     (finally (tasks/kill-app))))
 
-(defn ^{Test {:groups ["system"
-                       "tier3"
-                       "blockedByBug-656896"]}}
+(defn ^{TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-36998" "RHEL7-55640"]}
+        Test           {:groups ["system"
+                                 "tier3"
+                                 "blockedByBug-656896"]}}
   check_libglade_warnings
   "Asserts that the libglade-WARNINGs are corrected."
   [_]
@@ -82,9 +86,11 @@
       (verify (not (substring? "libglade-WARNING" output))))
     (finally (tasks/kill-app))))
 
-(defn ^{Test {:groups ["system"
-                       "tier3"
-                       "blockedByBug-909823"]}}
+(defn ^{TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-37008" "RHEL7-55648"]}
+        Test           {:groups ["system"
+                                 "tier3"
+                                 "blockedByBug-909823"]}}
   check_gtype_warnings
   "Asserts that the gtype WARNINGs are corrected."
   [_]
@@ -96,10 +102,12 @@
     (verify (not (substring? "gtype" output))))
   (tasks/kill-app))
 
-(defn ^{Test {:groups ["system"
-                       "tier3"
-                       "blockedByBug-1330515"]
-              :description "Given 'subscription-manager-gui' is not running
+(defn ^{TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-37003" ""]}
+        Test           {:groups      ["system"
+                                      "tier3"
+                                      "blockedByBug-1330515"]
+                        :description "Given 'subscription-manager-gui' is not running
   and I have launched 'gnome-terminal'
 When I launch 'subscription-manager-gui' in the terminal
   and I wait 5 seconds
@@ -138,10 +146,12 @@ Then I should not see any 'Traceback' written in the terminal
         (tasks/kill-app)
         (tasks/ui click terminal-name "mnuCloseAllTerminals")))))
 
-(defn ^{Test {:groups ["system"
-                       "tier3"
-                       "blockedByBug-1315591"]
-              :description "Given a system is registered
+(defn ^{TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-37002" ""]}
+        Test           {:groups      ["system"
+                                      "tier3"
+                                      "blockedByBug-1315591"]
+                        :description "Given a system is registered
   and at least one subscription is attached
   and I have run 'subscription-manager-gui'
 When the network goes down
@@ -164,10 +174,12 @@ Then I should see a dialog 'Network is down'
      (tasks/close-error-dialog)
      (base/open-connection-to-candlepin))))
 
-(defn ^{Test {:groups ["system"
-                       "tier2"
-                       "blockedByBug-1327179 "]
-              :description "Given a system is registered
+(defn ^{TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-38739" ""]}
+        Test           {:groups      ["system"
+                                      "tier2"
+                                      "blockedByBug-1327179 "]
+                        :description "Given a system is registered
   and at least one subscription is attached
   and a proxy connection is configured to be used
   and I have run 'subscription-manager-gui'
@@ -200,9 +212,11 @@ Then I should see a dialog 'Network is down'
        (tasks/close-error-dialog)
        (open-connection-to-candlepin-on-the-proxy-server)))))
 
-(defn ^{Test {:groups ["system"
-                       "tier2"
-                       "blockedByBug-706384"]}}
+(defn ^{TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-36510" "RHEL7-55600"]}
+        Test           {:groups ["system"
+                                 "tier2"
+                                 "blockedByBug-706384"]}}
   run_second_instance
   "Asserts that a second instance of rhsm-gui cannot be run."
   [_]
@@ -217,11 +231,13 @@ Then I should see a dialog 'Network is down'
     (verify (substring? "subscription-manager-gui is already running" output))
     (verify (not (substring? "Traceback" output)))))
 
-(defn ^{Test {:groups ["system"
-                       "tier2"
-                       "blockedByBug-747014"
-                       "blockedByBug-1120611"
-                       "blockedByBug-1142427"]}}
+(defn ^{TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-36508" "RHEL7-55598"]}
+        Test           {:groups ["system"
+                                 "tier2"
+                                 "blockedByBug-747014"
+                                 "blockedByBug-1120611"
+                                 "blockedByBug-1142427"]}}
   check_help_button
   "Assertst that the help window opens."
   [_]
@@ -293,9 +309,11 @@ Then I should see a dialog 'Network is down'
       [:about-dialog "<CTRL>a"])
     (to-array-2d []))])
 
-(defn ^{Test {:groups ["system"
-                       "tier3"
-                       "blockedByBug-785203"]}}
+(defn ^{TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-37009" "RHEL7-55649"]}
+        Test           {:groups ["system"
+                                 "tier3"
+                                 "blockedByBug-785203"]}}
   check_close_button
   "Checks that the close menu item works."
   [_]
@@ -307,9 +325,11 @@ Then I should see a dialog 'Network is down'
     (verify (not (bool (tasks/ui guiexist :main-window))))
     (finally (tasks/restart-app))))
 
-(defn ^{Test {:groups ["system"
-                       "tier3"
-                       "blockedByBug-833578"]}}
+(defn ^{TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-37006" "RHEL7-55646"]}
+        Test           {:groups ["system"
+                                 "tier3"
+                                 "blockedByBug-833578"]}}
   check_online_documentation
   "Asserts that the online documentation opens."
   [_]
@@ -330,9 +350,11 @@ Then I should see a dialog 'Network is down'
     (finally
       (run-command "killall -9 firefox"))))
 
-(defn ^{Test {:groups ["system"
-                       "tier3"
-                       "blockedByBug-1254460"]}}
+(defn ^{TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-36997" "RHEL7-55639"]}
+        Test           {:groups ["system"
+                                 "tier3"
+                                 "blockedByBug-1254460"]}}
   check_closing_of_about_window
   "Asserts that we can close About window by clicking on =x= icon."
   [_]
@@ -364,9 +386,11 @@ Then I should see a dialog 'Network is down'
 
   (tasks/ui click :close-about-dialog))
 
-(defn ^{Test {:groups ["system"
-                       "tier2"
-                       "blockedByBug-947485"]}}
+(defn ^{TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-36509" "RHEL7-55599"]}
+        Test           {:groups ["system"
+                                 "tier2"
+                                 "blockedByBug-947485"]}}
   open_with_bad_hostname
   "Verifies that the gui can open with a bad hostname in /etc/rhsm/rhsm.conf."
   [_]
@@ -383,11 +407,13 @@ Then I should see a dialog 'Network is down'
       (finally
         (tasks/set-conf-file-value "hostname" hostname)))))
 
-(defn ^{Test {:groups ["system"
-                       "tier3"
-                       "blockedByBug-920091"
-                       "blockedByBug-1037712"
-                       "blockedByBug-1170324"]}}
+(defn ^{TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-37001" "RHEL7-55643"]}
+        Test           {:groups ["system"
+                                 "tier3"
+                                 "blockedByBug-920091"
+                                 "blockedByBug-1037712"
+                                 "blockedByBug-1170324"]}}
   cli_unregister_check_traceback
   "Verifies whether it causes traceback when GUI is running and sub-man is unregistered through CLI"
   [_]
@@ -401,9 +427,11 @@ Then I should see a dialog 'Network is down'
     (verify (not (substring? "Traceback" output))))
   (tasks/kill-app))
 
-(defn ^{Test {:groups ["system"
-                       "tier3"
-                       "blockedByBug-960465"]}}
+(defn ^{TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-37004" "RHEL7-55644"]}
+        Test           {:groups ["system"
+                                 "tier3"
+                                 "blockedByBug-960465"]}}
   launch_gui_with_invalid_cert
   "Test to verify GUI can be launched with invalid certs"
   [_]
@@ -417,11 +445,13 @@ Then I should see a dialog 'Network is down'
     (finally
       (tasks/set-conf-file-value "ca_cert_dir" CAcertpath))))
 
-(defn ^{Test {:groups ["system"
-                       "tier3"
-                       "blockedByBug-1086377"
-                       "blockedByBug-916666"]
-              :priority (int 30)}}
+(defn ^{TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-37011" "RHEL7-55650"]}
+        Test           {:groups   ["system"
+                                   "tier3"
+                                   "blockedByBug-1086377"
+                                   "blockedByBug-916666"]
+                        :priority (int 30)}}
   rhsmcertd_restart_check_timestamp
   "Checks whether the timestamp at which cert check was intiated is
    in sync with that displayed in help dialog"
@@ -479,11 +509,13 @@ Then I should see a dialog 'Network is down'
           (run-command "service rhsmcertd start")))
       (sleep 150000))))
 
-(defn ^{Test {:groups ["system"
-                       "tier3"
-                       "blockedByBug-1086377"
-                       "blockedByBug-916666"]
-              :dependsOnMethods ["rhsmcertd_restart_check_timestamp"]}}
+(defn ^{TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-45961" ""]}
+        Test           {:groups           ["system"
+                                           "tier3"
+                                           "blockedByBug-1086377"
+                                           "blockedByBug-916666"]
+                        :dependsOnMethods ["rhsmcertd_restart_check_timestamp"]}}
   rhsmcertd_stop_check_timestamp
   "Checks wheter the timestamp in about dialog is displayed when rhsmcertd is stopped"
   [_]
@@ -505,9 +537,11 @@ Then I should see a dialog 'Network is down'
      ;; start as it does not affect the normal functioning of sub-man
 )))
 
-(defn ^{Test {:groups ["system"
-                       "tier3"
-                       "blockedByBug-984083"]}}
+(defn ^{TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-37007" "RHEL7-55647"]}
+        Test           {:groups ["system"
+                                 "tier3"
+                                 "blockedByBug-984083"]}}
   check_for_break_charecters_in_popups
   "Test to ceck if there are any break characters in pop-ups"
   [_]
@@ -525,9 +559,11 @@ Then I should see a dialog 'Network is down'
       (if-not (tasks/ui showing? :register-system) (tasks/unregister))
       (tasks/restart-app))))
 
-(defn ^{Test {:groups ["system"
-                       "tier3"
-                       "blockedByBug-977850"]}}
+(defn ^{TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-37005" "RHEL7-55645"]}
+        Test           {:groups ["system"
+                                 "tier3"
+                                 "blockedByBug-977850"]}}
   check_preferences_menu_state
   "Asserts that the preferences menu behaves properly when unregistered"
   [_]
@@ -543,9 +579,11 @@ Then I should see a dialog 'Network is down'
   (sleep 2000)
   (verify (some #(= "visible" %) (tasks/ui getallstates :preferences))))
 
-(defn ^{Test {:groups ["system"
-                       "tier3"
-                       "blockedByBug-977850"]}}
+(defn ^{TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-37000" "RHEL7-55642"]}
+        Test           {:groups ["system"
+                                 "tier3"
+                                 "blockedByBug-977850"]}}
   check_system_preference_dialog
   "Verifies behavior of system preference dialog and its content"
   [_]
@@ -573,10 +611,12 @@ Then I should see a dialog 'Network is down'
                  (tasks/ui check :autoheal-checkbox)
                  (tasks/ui click :close-system-prefs))))))
 
-(defn ^{Test {:group ["system"
-                      "tier3"
-                      "blockedByBug-723992"
-                      "blockedByBug-1040119"]}}
+(defn ^{TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-45960" ""]}
+        Test           {:group ["system"
+                                "tier3"
+                                "blockedByBug-723992"
+                                "blockedByBug-1040119"]}}
   check_gui_refresh
   "Checks whether the GUI refreshes in a reasonable amount of time"
   [_]
@@ -599,9 +639,11 @@ Then I should see a dialog 'Network is down'
       (tasks/unsubscribe_all)
       (tasks/unregister))))
 
-(defn ^{Test {:groups ["system"
-                       "tier2"
-                       "tier1" "acceptance"]}}
+(defn ^{TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-20124" "RHEL7-32003"]}
+        Test           {:groups ["system"
+                                 "tier2"
+                                 "tier1" "acceptance"]}}
   launch_gui_from_gnome
   "Launches gui from gnome"
   [_]

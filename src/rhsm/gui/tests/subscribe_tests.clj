@@ -26,7 +26,9 @@
             AfterGroups
             Test
             DataProvider]
-           org.testng.SkipException))
+           org.testng.SkipException
+           [com.github.redhatqe.polarize.metadata TestDefinition]
+           [com.github.redhatqe.polarize.metadata DefTypes$Project]))
 
 (def productlist (atom {}))
 (def servicelist (atom {}))
@@ -68,11 +70,13 @@
       (reset! (skip-groups :subscribe) true)
       (throw e))))
 
-(defn ^{Test {:groups ["subscribe"
-                       "tier1" "acceptance"
-                       "tier2"]
-              :dataProvider "subscriptions"
-              :priority (int 100)}}
+(defn ^{TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-25970" "RHEL7-32847"]}
+        Test           {:groups       ["subscribe"
+                                       "tier1" "acceptance"
+                                       "tier2"]
+                        :dataProvider "subscriptions"
+                        :priority     (int 100)}}
   subscribe_each
   "Asserts that each subscripton can be subscribed to sucessfully."
   [_ subscription]
@@ -89,11 +93,13 @@
    (catch [:type :wrong-consumer-type]
           {:keys [log-warning]} (log-warning))))
 
-(defn ^{Test {:groups ["subscribe"
-                       "tier1" "acceptance"
-                       "tier2"]
-              :dataProvider "subscribed"
-              :dependsOnMethods ["subscribe_each"]}}
+(defn ^{TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-25971" "RHEL7-32849"]}
+        Test           {:groups           ["subscribe"
+                                           "tier1" "acceptance"
+                                           "tier2"]
+                        :dataProvider     "subscribed"
+                        :dependsOnMethods ["subscribe_each"]}}
   unsubscribe_each
   "Asserts that each subscripton can be unsubscribed from sucessfully."
   [_ subscription]
@@ -104,10 +110,12 @@
         (verify (= false (tasks/ui rowexist? :my-subscriptions-view subscription)))
         (catch [:type :not-subscribed] _)))
 
-(defn ^{Test {:groups ["subscribe"
-                       "tier2"
-                       "blockedByBug-918617"]
-              :dependsOnMethods ["unsubscribe_each"]}}
+(defn ^{TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-38279" "RHEL7-57639"]}
+        Test           {:groups           ["subscribe"
+                                           "tier2"
+                                           "blockedByBug-918617"]
+                        :dependsOnMethods ["unsubscribe_each"]}}
   subscribe_check_syslog
   "Asserts that subscribe events are logged in the syslog."
   [_]
@@ -123,10 +131,12 @@
    (catch [:type :error-getting-subscription] _))
   (sleep 5000))
 
-(defn ^{Test {:groups ["subscribe"
-                       "tier2"
-                       "blockedByBug-918617"]
-              :dependsOnMethods ["subscribe_check_syslog"]}}
+(defn ^{TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-38280" "RHEL7-57640"]}
+        Test           {:groups           ["subscribe"
+                                           "tier2"
+                                           "blockedByBug-918617"]
+                        :dependsOnMethods ["subscribe_check_syslog"]}}
   unsubscribe_check_syslog
   "Asserts that unsubscribe events are logged in the syslog."
   [_]
@@ -138,7 +148,9 @@
                             (tasks/unsubscribe subscription))]
     (verify (not (blank? output)))))
 
-(defn ^{Test {:groups ["subscribe"
+(defn ^{TestDefinition {:projectID [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-45953" ""]}
+        Test {:groups ["subscribe"
                        "tier2"
                        "blockedByBug-1370623"]
               :dataProvider "sorting-headers-at-my-subscriptions-view"
@@ -159,7 +171,9 @@ Then I see names of subscriptions to be redrawn
            (keyword header-name)
            column-index)))
 
-(defn ^{Test {:groups ["subscribe"
+(defn ^{TestDefinition {:projectID [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-45952" ""]}
+        Test {:groups ["subscribe"
                        "tier2"
                        "blockedByBug-1370623"]
               :dataProvider "sorting-headers-at-all-subscriptions-view"
@@ -177,11 +191,13 @@ Then I see names of subscriptions to be redrawn
            (keyword header-name)
            column-index)))
 
-(defn ^{Test {:groups ["subscribe"
-                       "tier3"
-                       "blockedByBug-703920"
-                       "blockedByBug-869028"]
-              :dataProvider "multi-contract"}}
+(defn ^{TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-37396" "RHEL7-57942"]}
+        Test           {:groups       ["subscribe"
+                                       "tier3"
+                                       "blockedByBug-703920"
+                                       "blockedByBug-869028"]
+                        :dataProvider "multi-contract"}}
   check_contract_selection_dates
   "Asserts that the dates in the contract selection dialog are displayed correctly."
   [_ subscription]
@@ -203,13 +219,15 @@ Then I see names of subscriptions to be redrawn
                {:keys [log-warning]} (log-warning))))
 
   ;; https://bugzilla.redhat.com/show_bug.cgi?id=723248#c3
-(defn ^{Test {:groups ["subscribe"
-                       "tier3"
-                       "blockedByBug-766778"
-                       "blockedByBug-723248"
-                       "blockedByBug-855257"
-                       "blockedByBug-962905"]
-              :dataProvider "subscriptions"}}
+(defn ^{TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-37397" "RHEL7-61824"]}
+        Test           {:groups       ["subscribe"
+                                       "tier3"
+                                       "blockedByBug-766778"
+                                       "blockedByBug-723248"
+                                       "blockedByBug-855257"
+                                       "blockedByBug-962905"]
+                        :dataProvider "subscriptions"}}
   check_quantity_scroller
   "Tests the quantity scroller assiciated with subscriptions."
   [_ subscription]
@@ -291,12 +309,14 @@ Then I see names of subscriptions to be redrawn
               (tasks/ui click :cancel-contract-selection)))))
 
 ;; https://bugzilla.redhat.com/show_bug.cgi?id=723248#c3
-(defn ^{Test {:groups ["subscribe"
-                       "tier3"
-                       "blockedByBug-723248"
-                       "blockedByBug-962905"]
-              :dataProvider "multi-entitle"
-              :priority (int 500)}}
+(defn ^{TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-37398" "RHEL7-61825"]}
+        Test           {:groups       ["subscribe"
+                                       "tier3"
+                                       "blockedByBug-723248"
+                                       "blockedByBug-962905"]
+                        :dataProvider "multi-entitle"
+                        :priority     (int 500)}}
   check_quantity_subscribe
   "Asserts that the selected quantity is given when subscribed to."
   [_ subscription contract]
@@ -330,12 +350,14 @@ Then I see names of subscriptions to be redrawn
    (catch [:type :contract-selection-not-available] _)
    (catch [:type :error-getting-subscription] _)))
 
-(defn ^{Test {:groups ["subscribe"
-                       "tier3"
-                       "blockedByBug-755861"
-                       "blockedByBug-962905"]
-              :dataProvider "multi-entitle"
-              :dependsOnMethods ["check_quantity_subscribe"]}}
+(defn ^{TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-45951" ""]}
+        Test           {:groups           ["subscribe"
+                                           "tier3"
+                                           "blockedByBug-755861"
+                                           "blockedByBug-962905"]
+                        :dataProvider     "multi-entitle"
+                        :dependsOnMethods ["check_quantity_subscribe"]}}
   check_quantity_subscribe_traceback
   "Asserts no traceback is shown when subscribing in quantity."
   [_ subscription contract]
@@ -360,12 +382,14 @@ Then I see names of subscriptions to be redrawn
     check_subscribe_greyout [_]))
 
 ;;https://tcms.engineering.redhat.com/case/77359/?from_plan=2110
-(defn ^{Test {:groups ["subscribe"
-                       "tier1" "acceptance"
-                       "tier2"
-                       "blockedByBug-874624"
-                       "blockedByBug-753057"]
-              :dataProvider "subscriptions"}}
+(defn ^{TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-25968" "RHEL7-32850"]}
+        Test           {:groups       ["subscribe"
+                                       "tier1" "acceptance"
+                                       "tier2"
+                                       "blockedByBug-874624"
+                                       "blockedByBug-753057"]
+                        :dataProvider "subscriptions"}}
   check_contracts_and_virt_type
   "Asserts that the contract number and virt type of each subscription is displayed properly"
   [_ subscription]
@@ -410,11 +434,13 @@ Then I see names of subscriptions to be redrawn
    (finally (if (tasks/ui showing? :contract-selection-table)
               (tasks/ui click :cancel-contract-selection)))))
 
-(defn ^{Test {:groups ["subscribe"
-                       "tier1" "acceptance"
-                       "tier2"
-                       "blockedByBug-877579"]
-              :dataProvider "unlimited-pools"}}
+(defn ^{TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-25969" "RHEL7-32848"]}
+        Test           {:groups       ["subscribe"
+                                       "tier1" "acceptance"
+                                       "tier2"
+                                       "blockedByBug-877579"]
+                        :dataProvider "unlimited-pools"}}
   check_unlimited_quantities
   "Tests that unlimted pools are displayed properly"
   [_ subscription contract]
@@ -432,10 +458,12 @@ Then I see names of subscriptions to be redrawn
    (finally (if (tasks/ui showing? :contract-selection-table)
               (tasks/ui click :cancel-contract-selection)))))
 
-(defn ^{Test {:group ["subscribe"
-                      "tier3"
-                      "blockedByBug-951633"]
-              :priority (int 300)}}
+(defn ^{TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-45955" ""]}
+        Test           {:group    ["subscribe"
+                                   "tier3"
+                                   "blockedByBug-951633"]
+                        :priority (int 300)}}
   product_with_comma_separated_arch
   "This is to assert products with comma seperated products when subscribed are fully subscribed"
   [_]
@@ -449,11 +477,13 @@ Then I see names of subscriptions to be redrawn
                 (or (substring? sub-arch machine-arch) substring? machine-arch sub-arch ()))
          (verify (= "Subscribed" (tasks/ui getcellvalue :installed-view index 2))))))))
 
-(defn ^{Test {:group ["subscribe"
-                      "tier3"
-                      "blockedByBug-950672"
-                      "blockedByBug-988411"]
-              :dependsOnMethods ["product_with_comma_separated_arch"]}}
+(defn ^{TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-45956" ""]}
+        Test           {:group            ["subscribe"
+                                           "tier3"
+                                           "blockedByBug-950672"
+                                           "blockedByBug-988411"]
+                        :dependsOnMethods ["product_with_comma_separated_arch"]}}
   check_subscription_in_subscribed_products
   "Asserts there is a valid subscription value for all Subscribed products"
   [_]
@@ -464,11 +494,13 @@ Then I see names of subscriptions to be redrawn
      (if (not (= "Not Subscribed" (tasks/ui gettextvalue :certificate-status)))
        (verify (not (blank? (tasks/ui gettextvalue :providing-subscriptions))))))))
 
-(defn ^{Test {:group ["subscribe"
-                      "tier3"
-                      "blockedByBug-909467"
-                      "blockedByBug-988411"]
-              :dependsOnMethods ["check_subscription_in_subscribed_products"]}}
+(defn ^{TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-45954" ""]}
+        Test           {:group            ["subscribe"
+                                           "tier3"
+                                           "blockedByBug-909467"
+                                           "blockedByBug-988411"]
+                        :dependsOnMethods ["check_subscription_in_subscribed_products"]}}
   check_subscription_compliance
   "Checks for status of subscriptions when archs dont match that of the system"
   [_]
@@ -492,10 +524,12 @@ Then I see names of subscriptions to be redrawn
                                  (tasks/ui gettextvalue :status-details-text)))
              (tasks/ui selecttab :my-installed-products))))))))
 
-(defn ^{Test {:groups ["subscribe"
-                       "tier3"
-                       "blockedByBug-962933"]
-              :dataProvider "subscriptions"}}
+(defn ^{TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-37395" "RHEL7-61823"]}
+        Test           {:groups       ["subscribe"
+                                       "tier3"
+                                       "blockedByBug-962933"]
+                        :dataProvider "subscriptions"}}
   check_multiplier_logic
   "Assert instance multiplier logic does not apply to Virtual machines"
   [_ subscription]
@@ -541,11 +575,13 @@ Then I see names of subscriptions to be redrawn
            (if (tasks/ui showing? :contract-selection-table)
              (tasks/ui click :cancel-contract-selection))))))))
 
-(defn ^{Test {:groups ["subscribe"
-                       "tier1" "acceptance"
-                       "tier2"
-                       "blockedByBug-874624"]
-              :dataProvider "subscriptions"}}
+(defn ^{TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-22235" "RHEL7-32846"]}
+        Test           {:groups       ["subscribe"
+                                       "tier1" "acceptance"
+                                       "tier2"
+                                       "blockedByBug-874624"]
+                        :dataProvider "subscriptions"}}
   check_contract_number
   "Checks if every subsciption has contract numbers displayed"
   [_ subscription]
@@ -569,10 +605,12 @@ Then I see names of subscriptions to be redrawn
      (if (bool (tasks/ui guiexist :contract-selection-dialog))
        (tasks/ui click :cancel-contract-selection)))))
 
-(defn ^{Test {:groups ["subscribe"
-                       "tier3"
-                       "blockedByBug-1321831"]
-              :description "Given a system is registered
+(defn ^{TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-38182" ""]}
+        Test           {:groups      ["subscribe"
+                                      "tier3"
+                                      "blockedByBug-1321831"]
+                        :description "Given a system is registered
 When the consumer is deleted in registration server
   and subscription-manager-gui is launched
   and I click on 'Auto-attach' button

@@ -4913,112 +4913,670 @@
       "parameters" : [ ]
     }
   },
+  "rhsm.gui.tests.product_status_tests.assert_subscription_field" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-55660",
+      "parameters" : [ "arg0" ]
+    }
+  },
+  "rhsm.gui.tests.product_status_tests.check_product_status_subscribed" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-57944",
+      "parameters" : [ "arg0", "arg1" ]
+    }
+  },
+  "rhsm.gui.tests.product_status_tests.check_product_status_unsubscribed" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-55661",
+      "parameters" : [ "arg0" ]
+    }
+  },
+  "rhsm.gui.tests.product_status_tests.check_status_column" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-27024",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.gui.tests.product_status_tests.check_status_when_unregistered" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-57644",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.gui.tests.product_status_tests.my_installed_products_table_is_sortable" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-83967",
+      "parameters" : [ "arg0", "arg1" ]
+    }
+  },
+  "rhsm.gui.tests.proxy_tests.bad_proxy" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-55634",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.gui.tests.proxy_tests.bad_proxy_facts" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-55634",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.gui.tests.proxy_tests.disable_proxy" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-55581",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.gui.tests.proxy_tests.disable_proxy_connect" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-55586",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.gui.tests.proxy_tests.enable_proxy_auth" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-55579",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.gui.tests.proxy_tests.enable_proxy_noauth" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-55580",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.gui.tests.proxy_tests.error_dialog_when_registering_via_proxy" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-83968",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.gui.tests.proxy_tests.no_litter_in_location_when_using_proxy" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-77199",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.gui.tests.proxy_tests.proxy_auth_connect" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-55582",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.gui.tests.proxy_tests.proxy_noauth_connect" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-55583",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.gui.tests.proxy_tests.test_auth_proxy" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-55584",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.gui.tests.proxy_tests.test_bad_proxy" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-55577",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.gui.tests.proxy_tests.test_connection_button_is_blocked_before_all_fields_are_set" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-77200",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.gui.tests.proxy_tests.test_disabled_proxy" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-55587",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.gui.tests.proxy_tests.test_invalid_proxy_restart" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-55635",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.gui.tests.proxy_tests.test_noauth_proxy" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-55585",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.gui.tests.proxy_tests.test_proxy_formatting" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-55578",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.gui.tests.proxy_tests.test_proxy_with_blank_credentials" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-55588",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.gui.tests.proxy_tests.test_proxy_with_blank_proxy" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-55589",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.gui.tests.register_tests.check_activation_key_register_dialog" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-55573",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.gui.tests.register_tests.check_auto_to_register_button" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-55574",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.gui.tests.register_tests.check_default_subscription_url" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-49267",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.gui.tests.register_tests.check_traceback_unregister" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-57122",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.gui.tests.register_tests.register_bad_credentials" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-61904",
+      "parameters" : [ "arg0", "arg1" ]
+    }
+  },
+  "rhsm.gui.tests.register_tests.register_check_syslog" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-57124",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.gui.tests.register_tests.register_multi_click" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-55575",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.gui.tests.register_tests.simple_register" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-27020",
+      "parameters" : [ "arg0", "arg1", "arg2" ]
+    }
+  },
+  "rhsm.gui.tests.register_tests.unregister" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-27021",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.gui.tests.register_tests.unregister_check_syslog" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-57125",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.gui.tests.register_tests.unregister_traceback" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-57123",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.gui.tests.register_tests.verify_password_tip" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-57121",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.gui.tests.repo_tests.check_repo_message_unsubscribed" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-31897",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.gui.tests.repo_tests.check_repo_name_url" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-55657",
+      "parameters" : [ "arg0" ]
+    }
+  },
+  "rhsm.gui.tests.repo_tests.check_repo_remove_override_button" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-83973",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.gui.tests.repo_tests.check_repo_table_populated" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-55601",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.gui.tests.repo_tests.check_repo_table_sortable" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-83974",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.gui.tests.repo_tests.enable_repo_remove_all_overrides" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-55658",
+      "parameters" : [ "arg0" ]
+    }
+  },
+  "rhsm.gui.tests.repo_tests.verify_repo_name_and_url" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-59520",
+      "parameters" : [ ]
+    }
+  },
   "rhsm.gui.tests.rhn_interop_tests.check_no_warning" : {
-    "RHEL6" : {
-      "id" : "RHEL6-37687",
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-55593",
       "parameters" : [ ]
     }
   },
   "rhsm.gui.tests.rhn_interop_tests.check_warning" : {
-    "RHEL6" : {
-      "id" : "RHEL6-36503",
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-55590",
       "parameters" : [ ]
     }
   },
   "rhsm.gui.tests.rhn_interop_tests.check_warning_cancel" : {
-    "RHEL6" : {
-      "id" : "RHEL6-37685",
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-55591",
       "parameters" : [ ]
     }
   },
   "rhsm.gui.tests.rhn_interop_tests.check_warning_ok" : {
-    "RHEL6" : {
-      "id" : "",
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-55592",
       "parameters" : [ ]
     }
   },
   "rhsm.gui.tests.search_status_tests.check_blank_date_click" : {
-    "RHEL6" : {
-      "id" : "RHEL6-38773",
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-57874",
       "parameters" : [ ]
     }
   },
   "rhsm.gui.tests.search_status_tests.check_blank_date_search" : {
-    "RHEL6" : {
-      "id" : "RHEL6-38765",
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-57869",
       "parameters" : [ ]
     }
   },
   "rhsm.gui.tests.search_status_tests.check_date_chooser_traceback" : {
-    "RHEL6" : {
-      "id" : "RHEL6-38766",
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-57870",
       "parameters" : [ ]
     }
   },
   "rhsm.gui.tests.search_status_tests.check_filter_focus" : {
     "RedHatEnterpriseLinux7" : {
-      "id" : "",
+      "id" : "RHEL7-83977",
       "parameters" : [ ]
     }
   },
   "rhsm.gui.tests.search_status_tests.check_no_search_results_message" : {
-    "RHEL6" : {
-      "id" : "RHEL6-38772",
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-57873",
       "parameters" : [ ]
     }
   },
   "rhsm.gui.tests.search_status_tests.check_ordered_contract_options" : {
-    "RHEL6" : {
-      "id" : "RHEL6-20132",
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-31895",
       "parameters" : [ ]
     }
   },
   "rhsm.gui.tests.search_status_tests.check_physical_only_pools" : {
-    "RHEL6" : {
-      "id" : "RHEL6-20133",
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-31896",
       "parameters" : [ ]
     }
   },
   "rhsm.gui.tests.search_status_tests.check_please_search_message" : {
-    "RHEL6" : {
-      "id" : "RHEL6-38771",
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-57872",
       "parameters" : [ ]
     }
   },
   "rhsm.gui.tests.search_status_tests.check_provides_products" : {
-    "RHEL6" : {
-      "id" : "",
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-83975",
       "parameters" : [ "arg0" ]
     }
   },
   "rhsm.gui.tests.search_status_tests.check_service_levels" : {
-    "RHEL6" : {
-      "id" : "RHEL6-37400",
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-57945",
       "parameters" : [ "arg0" ]
     }
   },
   "rhsm.gui.tests.search_status_tests.check_subscription_selected_after_update" : {
     "RedHatEnterpriseLinux7" : {
-      "id" : "",
+      "id" : "RHEL7-83976",
       "parameters" : [ "arg0" ]
     }
   },
   "rhsm.gui.tests.search_status_tests.check_subscription_type_all_subscriptions" : {
-    "RHEL6" : {
-      "id" : "RHEL6-20132",
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-57946",
       "parameters" : [ "arg0" ]
     }
   },
   "rhsm.gui.tests.search_status_tests.date_picker_traceback" : {
-    "RHEL6" : {
-      "id" : "RHEL6-38769",
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-57871",
       "parameters" : [ ]
     }
   },
   "rhsm.gui.tests.search_status_tests.filter_by_product" : {
-    "RHEL6" : {
-      "id" : "RHEL6-38770",
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-57947",
       "parameters" : [ "arg0" ]
+    }
+  },
+  "rhsm.gui.tests.stacking_tests.assert_auto_attach" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-32866",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.gui.tests.stacking_tests.assert_future_cert_status" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-83970",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.gui.tests.stacking_tests.assert_quantity_displayed" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-83969",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.gui.tests.stacking_tests.assert_subscriptions_displayed" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-83971",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.gui.tests.stacking_tests.check_dates_partially_subscribed" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-83972",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.gui.tests.subscribe_tests.all_subscriptions_table_is_sortable" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-83961",
+      "parameters" : [ "arg0", "arg1" ]
+    }
+  },
+  "rhsm.gui.tests.subscribe_tests.changes_when_consumer_is_purged" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-83964",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.gui.tests.subscribe_tests.check_contract_number" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-32846",
+      "parameters" : [ "arg0" ]
+    }
+  },
+  "rhsm.gui.tests.subscribe_tests.check_contract_selection_dates" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-57942",
+      "parameters" : [ "arg0" ]
+    }
+  },
+  "rhsm.gui.tests.subscribe_tests.check_contracts_and_virt_type" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-32850",
+      "parameters" : [ "arg0" ]
+    }
+  },
+  "rhsm.gui.tests.subscribe_tests.check_multiplier_logic" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-61823",
+      "parameters" : [ "arg0" ]
+    }
+  },
+  "rhsm.gui.tests.subscribe_tests.check_quantity_scroller" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-61824",
+      "parameters" : [ "arg0" ]
+    }
+  },
+  "rhsm.gui.tests.subscribe_tests.check_quantity_subscribe" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-61825",
+      "parameters" : [ "arg0", "arg1" ]
+    }
+  },
+  "rhsm.gui.tests.subscribe_tests.check_quantity_subscribe_traceback" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-83960",
+      "parameters" : [ "arg0", "arg1" ]
+    }
+  },
+  "rhsm.gui.tests.subscribe_tests.check_subscription_compliance" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-83963",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.gui.tests.subscribe_tests.check_subscription_in_subscribed_products" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-83966",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.gui.tests.subscribe_tests.check_unlimited_quantities" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-32848",
+      "parameters" : [ "arg0", "arg1" ]
+    }
+  },
+  "rhsm.gui.tests.subscribe_tests.my_subscriptions_table_is_sortable" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-83962",
+      "parameters" : [ "arg0", "arg1" ]
+    }
+  },
+  "rhsm.gui.tests.subscribe_tests.product_with_comma_separated_arch" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-83965",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.gui.tests.subscribe_tests.subscribe_check_syslog" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-57639",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.gui.tests.subscribe_tests.subscribe_each" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-32847",
+      "parameters" : [ "arg0" ]
+    }
+  },
+  "rhsm.gui.tests.subscribe_tests.unsubscribe_check_syslog" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-57640",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.gui.tests.subscribe_tests.unsubscribe_each" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-32849",
+      "parameters" : [ "arg0" ]
+    }
+  },
+  "rhsm.gui.tests.subscription_status_tests.check_status_message_after_attaching" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-31894",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.gui.tests.subscription_status_tests.check_status_message_before_attaching" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-31893",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.gui.tests.subscription_status_tests.check_status_message_future_subscriptions" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-63328",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.gui.tests.subscription_status_tests.check_status_message_future_temporary_subscriptions" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-63329",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.gui.tests.subscription_status_tests.check_subscribed_virt_type" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-57643",
+      "parameters" : [ "arg0" ]
+    }
+  },
+  "rhsm.gui.tests.subscription_status_tests.check_subscription_type_my_subscriptions" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-55659",
+      "parameters" : [ "arg0" ]
+    }
+  },
+  "rhsm.gui.tests.system_tests.check_close_button" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-55649",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.gui.tests.system_tests.check_closing_of_about_window" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-55639",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.gui.tests.system_tests.check_for_break_charecters_in_popups" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-55647",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.gui.tests.system_tests.check_gtype_warnings" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-55648",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.gui.tests.system_tests.check_gui_refresh" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-83978",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.gui.tests.system_tests.check_help_button" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-55598",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.gui.tests.system_tests.check_libglade_warnings" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-55640",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.gui.tests.system_tests.check_online_documentation" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-55646",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.gui.tests.system_tests.check_preferences_menu_state" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-55645",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.gui.tests.system_tests.check_system_preference_dialog" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-55642",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.gui.tests.system_tests.cli_unregister_check_traceback" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-55643",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.gui.tests.system_tests.error_dialog_and_no_traceback_when_candlepin_is_down_and_proxy_is_used" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-83982",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.gui.tests.system_tests.error_dialog_and_no_traceback_when_network_is_down" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-83980",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.gui.tests.system_tests.launch_gui_from_gnome" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-32003",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.gui.tests.system_tests.launch_gui_with_invalid_cert" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-55644",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.gui.tests.system_tests.no_traceback_on_console_after_ctrl_c_pressed" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-83981",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.gui.tests.system_tests.open_with_bad_hostname" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-55599",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.gui.tests.system_tests.rhsmcertd_restart_check_timestamp" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-55650",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.gui.tests.system_tests.rhsmcertd_stop_check_timestamp" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-83979",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.gui.tests.system_tests.run_second_instance" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-55600",
+      "parameters" : [ ]
     }
   }
 }

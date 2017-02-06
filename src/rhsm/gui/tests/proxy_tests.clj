@@ -17,7 +17,9 @@
             BeforeClass
             AfterClass
             BeforeGroups
-            AfterGroups]))
+            AfterGroups]
+           [com.github.redhatqe.polarize.metadata TestDefinition]
+           [com.github.redhatqe.polarize.metadata DefTypes$Project]))
 
 (def rhsm-log "/var/log/rhsm/rhsm.log")
 (def ldtpd-log "/var/log/ldtpd/ldtpd.log")
@@ -40,10 +42,12 @@
                {:keys [unregister-first]} (unregister-first)))
   (verify (not (tasks/ui showing? :register-system))))
 
-(defn ^{Test {:groups ["proxy"
-                       "tier2"
-                       "blockedByBug-1250348"]
-              :priority (int 100)}}
+(defn ^{Test           {:groups   ["proxy"
+                                   "tier2"
+                                   "blockedByBug-1250348"]
+                        :priority (int 100)}
+        TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-36492" "RHEL7-55579"]}}
   enable_proxy_auth
   "Asserts that the rhsm.conf file is correctly set after setting a proxy with auth."
   [_]
@@ -54,10 +58,12 @@
     (tasks/enableproxy hostname :port port :user username :pass password)
     (tasks/verify-conf-proxies hostname port username password)))
 
-(defn ^{Test {:groups ["proxy"
-                       "tier2"
-                       "blockedByBug-1250348"]
-              :priority (int 101)}}
+(defn ^{Test           {:groups   ["proxy"
+                                   "tier2"
+                                   "blockedByBug-1250348"]
+                        :priority (int 101)}
+        TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-36493" "RHEL7-55580"]}}
   enable_proxy_noauth
   "Asserts that the rhsm.conf file is correctly set after setting a proxy without auth."
   [_]
@@ -66,19 +72,23 @@
     (tasks/enableproxy hostname :port port)
     (tasks/verify-conf-proxies hostname port "" "")))
 
-(defn ^{Test {:groups ["proxy"
-                       "tier2"]
-              :dependsOnMethods ["enable_proxy_auth"
-                                 "enable_proxy_noauth"]}}
+(defn ^{Test           {:groups           ["proxy"
+                                           "tier2"]
+                        :dependsOnMethods ["enable_proxy_auth"
+                                           "enable_proxy_noauth"]}
+        TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-36494" "RHEL7-55581"]}}
   disable_proxy
   "Asserts that the rhsm.conf file is correctly set after diabling proxies."
   [_]
   (tasks/disableproxy)
   (tasks/verify-conf-proxies "" "" "" ""))
 
-(defn ^{Test {:groups ["proxy"
-                       "tier2"]
-              :dependsOnMethods ["enable_proxy_auth"]}}
+(defn ^{Test           {:groups           ["proxy"
+                                           "tier2"]
+                        :dependsOnMethods ["enable_proxy_auth"]}
+        TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-36495" "RHEL7-55582"]}}
   proxy_auth_connect
   "Asserts that rhsm can connect after setting a proxy with auth."
   [_]
@@ -90,9 +100,11 @@
                                (register))]
     (verify (not  (clojure.string/blank? logoutput)))))
 
-(defn ^{Test {:groups ["proxy"
-                       "tier2"]
-              :dependsOnMethods ["enable_proxy_noauth"]}}
+(defn ^{Test           {:groups           ["proxy"
+                                           "tier2"]
+                        :dependsOnMethods ["enable_proxy_noauth"]}
+        TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-36496" "RHEL7-55583"]}}
   proxy_noauth_connect
   "Asserts that rhsm can connect after setting a proxy without auth."
   [_]
@@ -104,9 +116,11 @@
                                (register))]
     (verify (not  (clojure.string/blank? logoutput)))))
 
-(defn ^{Test {:groups ["proxy"
-                       "tier2"]
-              :dependsOnMethods ["disable_proxy"]}}
+(defn ^{Test           {:groups           ["proxy"
+                                           "tier2"]
+                        :dependsOnMethods ["disable_proxy"]}
+        TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-36499" "RHEL7-55586"]}}
   disable_proxy_connect
   "Asserts that a proxy is not used after clearing proxy settings."
   [_]
@@ -140,9 +154,11 @@
         (verify (= "" (tasks/ui gettextvalue :connection-status)))))
     (finally (tasks/ui click :close-proxy))))
 
-(defn ^{Test {:groups ["proxy"
-                       "tier2"]
-              :dependsOnMethods ["enable_proxy_auth"]}}
+(defn ^{Test           {:groups           ["proxy"
+                                           "tier2"]
+                        :dependsOnMethods ["enable_proxy_auth"]}
+        TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-36497" "RHEL7-55584"]}}
   test_auth_proxy
   "Tests the 'test connection' button when using a proxy with auth."
   [_]
@@ -150,9 +166,11 @@
   (test_proxy "Proxy connection succeeded")
   (tasks/disableproxy))
 
-(defn ^{Test {:groups ["proxy"
-                       "tier2"]
-              :dependsOnMethods ["enable_proxy_noauth"]}}
+(defn ^{Test           {:groups           ["proxy"
+                                           "tier2"]
+                        :dependsOnMethods ["enable_proxy_noauth"]}
+        TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-36498" "RHEL7-55585"]}}
   test_noauth_proxy
   "Tests the 'test connection' button when using a proxy without auth."
   [_]
@@ -160,9 +178,11 @@
   (test_proxy "Proxy connection succeeded")
   (tasks/disableproxy))
 
-(defn ^{Test {:groups ["proxy"
-                       "tier2"]
-              :dependsOnMethods ["disable_proxy"]}}
+(defn ^{Test           {:groups           ["proxy"
+                                           "tier2"]
+                        :dependsOnMethods ["disable_proxy"]}
+        TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-36500" "RHEL7-55587"]}}
   test_disabled_proxy
   "Test that the 'test connection' button is disabled when proxy settings are cleared."
   [_]
@@ -173,11 +193,13 @@
       (if (bool (tasks/ui guiexist :proxy-config-dialog))
         (tasks/ui click :close-proxy)))))
 
-(defn ^{Test {:groups ["proxy"
-                       "tier2"
-                       "blockedByBug-927340"
-                       "blockedByBug-1371632"]
-              :dependsOnMethods ["disable_proxy"]}}
+(defn ^{Test           {:groups           ["proxy"
+                                           "tier2"
+                                           "blockedByBug-927340"
+                                           "blockedByBug-1371632"]
+                        :dependsOnMethods ["disable_proxy"]}
+        TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-36502" "RHEL7-55589"]}}
   test_proxy_with_blank_proxy
   "Test whether 'Test Connection' returns appropriate message when 'Location Proxy' is empty"
   [_]
@@ -187,11 +209,13 @@
     (test_proxy "Proxy connection failed")
     (finally (tasks/disableproxy))))
 
-(defn ^{Test {:groups ["proxy"
-                       "tier2"
-                       "blockedByBug-927340"
-                       "blockedByBug-1371632"]
-              :dependsOnMethods ["disable_proxy"]}}
+(defn ^{Test           {:groups           ["proxy"
+                                           "tier2"
+                                           "blockedByBug-927340"
+                                           "blockedByBug-1371632"]
+                        :dependsOnMethods ["disable_proxy"]}
+        TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-36501" "RHEL7-55588"]}}
   test_proxy_with_blank_credentials
   "Test whether 'Test Connection' returns appropriate message when User and Password fields are empty"
   [_]
@@ -201,8 +225,10 @@
     (test_proxy "Proxy connection failed")
     (finally (tasks/disableproxy))))
 
-(defn ^{Test {:groups ["proxy"
-                       "tier2"]}}
+(defn ^{Test           {:groups ["proxy"
+                                 "tier2"]}
+        TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-36489" "RHEL7-55577"]}}
   test_bad_proxy
   "Tests the 'test connection' button when using a non-existant proxy."
   [_]
@@ -213,8 +239,10 @@
      (tasks/close-error-dialog)
      (tasks/disableproxy))))
 
-(defn ^{Test {:groups ["proxy"
-                       "tier2"]}}
+(defn ^{Test           {:groups ["proxy"
+                                 "tier2"]}
+        TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-36993" "RHEL7-55634"]}}
   bad_proxy
   "Tests error message when using a non-existant proxy."
   [_]
@@ -234,9 +262,11 @@
       (tasks/close-error-dialog)
       (disable_proxy nil))))
 
-(defn ^{Test {:groups ["proxy"
-                       "tier3"
-                       "blockedByBug-729688"]}}
+(defn ^{Test           {:groups ["proxy"
+                                 "tier3"
+                                 "blockedByBug-729688"]}
+        TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-36993" "RHEL7-55634"]}}
   bad_proxy_facts
   "Tests facts-update through a bad proxy."
   [_]
@@ -260,9 +290,11 @@
       (tasks/close-error-dialog)
       (disable_proxy nil))))
 
-(defn ^{Test {:groups ["proxy"
-                       "tier2"
-                       "blockedByBug-806993"]}}
+(defn ^{Test           {:groups ["proxy"
+                                 "tier2"
+                                 "blockedByBug-806993"]}
+        TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-36491" "RHEL7-55578"]}}
   test_proxy_formatting
   "Tests the auto-formatting feature of the proxy location field."
   [_]
@@ -277,14 +309,16 @@
      (tasks/ui click :close-proxy)
      (disable_proxy nil))))
 
-(defn ^{Test {:groups ["proxy"
-                       "tier2"
-                       "blockedByBug-1323276"]
-              :description "Given a system is subscribed without proxy.
+(defn ^{Test           {:groups      ["proxy"
+                                      "tier2"
+                                      "blockedByBug-1323276"]
+                        :description "Given a system is subscribed without proxy.
 When I click on 'Configure Proxy'
  and I click on 'I would like to connect via an HTTP Proxy'
  and I click on 'Use Authentication with HTTP Proxy'
-Then I should see nothing in a field 'Proxy Location'."}}
+Then I should see nothing in a field 'Proxy Location'."}
+        TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-36488" "RHEL7-77199"]}}
   no_litter_in_location_when_using_proxy
   [_]
   (tasks/restart-app :force-kill? true)
@@ -298,15 +332,17 @@ Then I should see nothing in a field 'Proxy Location'."}}
   (tasks/ui check :authentication-checkbox)
   (verify (->> :proxy-location (tasks/ui gettextvalue) clojure.string/blank?)))
 
-(defn ^{Test {:groups ["proxy"
-                       "tier2"
-                       "blockedByBug-1371632"]
-              :description "Given a system is unregistered
+(defn ^{Test           {:groups      ["proxy"
+                                      "tier2"
+                                      "blockedByBug-1371632"]
+                        :description "Given a system is unregistered
     and I run subscription-manager-gui
     and I click on 'System' -> 'Configure proxy'
 When I click on 'I would like to connect via an HTTP Proxy'
  and I click on 'Use Authentication with HTTP Proxy'
-Then I should see a button 'Test connection' being disabled."}}
+Then I should see a button 'Test connection' being disabled."}
+        TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-36490" "RHEL7-77200"]}}
   test_connection_button_is_blocked_before_all_fields_are_set
   [_]
   (tasks/restart-app :force-kill? true)
@@ -331,7 +367,9 @@ When I click on 'Use Authentication with HTTP Proxy'
  and I click on the button 'Save'
  and I click on the button 'Next' in the 'System Registration' dialog
 Then I should see the message 'Proxy connection failed, please check your settings.'
- and no traceback should appear in the log file."}}
+ and no traceback should appear in the log file."}
+        TestDefinition {:projectID [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-39185" ""]}}
   error_dialog_when_registering_via_proxy
   [_]
   (tasks/restart-app :force-kill? true)
@@ -359,9 +397,11 @@ Then I should see the message 'Proxy connection failed, please check your settin
    (let [thrown-error (try+ (tasks/checkforerror) (catch Object e (:type e)))]
      (verify (= thrown-error :proxy-connection-failed)))))
 
-(defn ^{Test {:groups ["proxy"
-                       "tier3"
-                       "blockedByBug-920551"]}}
+(defn ^{Test           {:groups ["proxy"
+                                 "tier3"
+                                 "blockedByBug-920551"]}
+        TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-36994" "RHEL7-55635"]}}
   test_invalid_proxy_restart
   "Test to check whether traceback is thrown when an invalid proxy is configured and sub-man is restarted"
   [_]

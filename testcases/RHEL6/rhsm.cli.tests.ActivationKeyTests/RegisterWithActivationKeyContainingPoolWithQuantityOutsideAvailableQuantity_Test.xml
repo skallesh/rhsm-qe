@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <testcase id="RHEL6-21797">
     <title>rhsm.cli.tests.ActivationKeyTests.RegisterWithActivationKeyContainingPoolWithQuantityOutsideAvailableQuantity_Test</title>
-    <description></description>
+    <description>create an activation key, add it to a pool with a quantity outside the total possible available.  Also test adding a key with quantity 0 and -1. Also test pools with an unlimited quantity.</description>
     <test-steps>
         <test-step>
             <test-step-column id="step">
@@ -12,12 +12,12 @@
         </test-step>
     </test-steps>
     <custom-fields>
-        <custom-field id="caseautomation" content="automated"/>
-        <custom-field id="caseimportance" content="high"/>
-        <custom-field id="caselevel" content="component"/>
-        <custom-field id="caseposneg" content="positive"/>
-        <custom-field id="testtype" content="functional"/>
-        <custom-field id="subtype1" content="-"/>
-        <custom-field id="subtype2" content="-"/>
+        <custom-field id="caseautomation" content="automated"></custom-field>
+        <custom-field id="caseimportance" content="high"></custom-field>
+        <custom-field id="caselevel" content="component"></custom-field>
+        <custom-field id="caseposneg" content="positive"></custom-field>
+        <custom-field id="testtype" content="functional"></custom-field>
+        <custom-field id="subtype1" content="-"></custom-field>
+        <custom-field id="subtype2" content="-"></custom-field>
     </custom-fields>
 </testcase>
