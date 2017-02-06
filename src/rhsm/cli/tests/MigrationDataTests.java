@@ -250,7 +250,13 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyRHEL6AUSChannelMappings_Test() {
 		
-		// hand assemble a list of expected RHEL6 aus channels
+		// What is AUS? Advanced Mission Critical Update Support
+		// For RHEL 6, AUS provides access to a 6-year “Long Life” maintenance stream for specific minor releases (4 years longer than EUS)
+		// For RHEL 6, EUS provides a 24-month maintenance stream for every Production 1 phase minor release (GA+24 months)
+		// https://mojo.redhat.com/docs/DOC-1027471
+		// AUS is EUS for customers who slower evolution
+		
+		// hand assemble a list of expected RHEL6 aus channels (WILL NEED TO BE UPDATED AS NEW AUS CHANNELS ARE SUPPORTED)
 		//	[root@jsefler-os6 ~]# grep ".aus" /usr/share/rhsm/product/RHEL-6/channel-cert-mapping.txt
 		//	rhel-x86_64-server-6.2.aus: AUS-Server-x86_64-570a9cca61c9-251.pem
 		//	[root@jsefler-os6 ~]# grep ".aus" /usr/share/rhsm/product/RHEL-6/channel-cert-mapping.txt | cut -d: -f 1 | xargs -i[] echo \"[]\",
@@ -268,6 +274,9 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				"rhel-x86_64-server-6.5.aus",
 				"rhel-x86_64-server-6.5.aus-debuginfo",
 				"rhel-x86_64-server-6.5.aus-thirdparty-oracle-java",	// TODO
+				"rhel-x86_64-server-6.6.aus",
+				"rhel-x86_64-server-6.6.aus-debuginfo",
+				"rhel-x86_64-server-6.6.aus-thirdparty-oracle-java",
 				"rhel-x86_64-server-ha-6.2.aus",
 				"rhel-x86_64-server-ha-6.2.aus-debuginfo",
 				"rhel-x86_64-server-ha-6.4.aus",
@@ -286,6 +295,8 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				"rhel-x86_64-server-optional-6.4.aus-debuginfo",
 				"rhel-x86_64-server-optional-6.5.aus",
 				"rhel-x86_64-server-optional-6.5.aus-debuginfo",
+				"rhel-x86_64-server-optional-6.6.aus",
+				"rhel-x86_64-server-optional-6.6.aus-debuginfo",
 				"rhel-x86_64-server-rs-6.2.aus",
 				"rhel-x86_64-server-rs-6.2.aus-debuginfo",
 				"rhel-x86_64-server-rs-6.4.aus",
@@ -298,18 +309,26 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				"rhel-x86_64-server-sfs-6.4.aus-debuginfo",
 				"rhel-x86_64-server-sfs-6.5.aus",
 				"rhel-x86_64-server-sfs-6.5.aus-debuginfo",
+// TODO: Bug 1418467 - NEEDINFO on rhel-x86_64-server-sjis-6.*.aus-debuginfo channel mappings to product certs before including...
+//				"rhel-x86_64-server-sjis-6.2.aus-debuginfo",
+//				"rhel-x86_64-server-sjis-6.4.aus-debuginfo",
+//				"rhel-x86_64-server-sjis-6.5.aus-debuginfo",
 				"rhel-x86_64-server-supplementary-6.2.aus",
 				"rhel-x86_64-server-supplementary-6.2.aus-debuginfo",
 				"rhel-x86_64-server-supplementary-6.4.aus",
 				"rhel-x86_64-server-supplementary-6.4.aus-debuginfo",
 				"rhel-x86_64-server-supplementary-6.5.aus",
 				"rhel-x86_64-server-supplementary-6.5.aus-debuginfo",
+				"rhel-x86_64-server-supplementary-6.6.aus",
+				"rhel-x86_64-server-supplementary-6.6.aus-debuginfo",
 				"rhn-tools-rhel-x86_64-server-6.2.aus",
 				"rhn-tools-rhel-x86_64-server-6.2.aus-debuginfo",
 				"rhn-tools-rhel-x86_64-server-6.4.aus",
 				"rhn-tools-rhel-x86_64-server-6.4.aus-debuginfo",
 				"rhn-tools-rhel-x86_64-server-6.5.aus",
-				"rhn-tools-rhel-x86_64-server-6.5.aus-debuginfo"
+				"rhn-tools-rhel-x86_64-server-6.5.aus-debuginfo",
+				"rhn-tools-rhel-x86_64-server-6.6.aus",
+				"rhn-tools-rhel-x86_64-server-6.6.aus-debuginfo"
 		});
 		
 		// use a regex and grep to detect actual RHEL6 aus channel mappings
@@ -343,7 +362,18 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 		boolean allActualRhel6AusChannelsMappedAreExpected = true;
 		for (String channel : actualRhel6AusChannels) {
 			if (!expectedRhel6AusChannels.contains(channel)) {
-				log.warning("Actual RHEL6 AUS channel '"+channel+"' in channel cert mapping file '"+channelCertMappingFilename+"' that was not expected.  This automated test may need an update.");
+				
+				// TEMPORARY WORKAROUND
+				boolean invokeWorkaroundWhileBugIsOpen = true;
+				String bugId="1418467";	// Bug 1418467 - NEEDINFO on rhel-x86_64-server-sjis-6.*.aus-debuginfo channel mappings to product certs
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				if (invokeWorkaroundWhileBugIsOpen && channel.matches("rhel-x86_64-server-sjis-6\\..\\.aus-debuginfo")) {
+					log.warning("Skipping assertion that Actual RHEL6 AUS channel '"+channel+"' in channel cert mapping file '"+channelCertMappingFilename+"' was not expected while bug "+bugId+" is open.");
+					continue;
+				}
+				// END OF WORKAROUND
+				
+				log.warning("Actual RHEL6 AUS channel '"+channel+"' in channel cert mapping file '"+channelCertMappingFilename+"' was not expected.  This automated test may need an update.");
 				allActualRhel6AusChannelsMappedAreExpected = false;
 			}
 		}
@@ -1063,6 +1093,37 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 			Assert.assertTrue(!channelsToProductCertFilenamesMap.containsKey(classicRhnChannel), "Special case RHN Classic channel '"+classicRhnChannel+"' is NOT accounted for in subscription-manager-migration-data file '"+channelCertMappingFilename+"'.");
 			return;
 		}
+		if (classicRhnChannel.equals("rhel-x86_64-server-6-cf-me-3-beta") ||
+			classicRhnChannel.equals("rhel-x86_64-server-6-cf-me-3-beta-debuginfo")) {
+			// Bug 1127880 - rhel-x86_64-server-6-cf-me-3-beta channel maps are missing from channel-cert-mapping.txt
+			log.warning("(anthomas 11/04/2014) These channels are requested to remain disabled. If possible please skip these in future tests for the time being.  https://bugzilla.redhat.com/show_bug.cgi?id=1127880#c8");
+			Assert.assertTrue(!channelsToProductCertFilenamesMap.containsKey(classicRhnChannel), "Special case RHN Classic channel '"+classicRhnChannel+"' is NOT accounted for in subscription-manager-migration-data file '"+channelCertMappingFilename+"'.");
+			return;
+		}
+		if (classicRhnChannel.equals("rhel-x86_64-server-6-rhevm-3-beta") ||
+			classicRhnChannel.equals("rhel-x86_64-server-6-rhevm-3-beta-debuginfo")) {
+			//	[root@rhsm-sat5 ~]# grep -- 6-rhevm-3 allchannels.txt 
+			//	12:24:47       p rhel-x86_64-server-6-rhevm-3              153 
+			//	12:24:47       p rhel-x86_64-server-6-rhevm-3-beta           0		<====  NO CONTENT
+			//	12:24:47       p rhel-x86_64-server-6-rhevm-3-beta-debuginfo    0	<====  NO CONTENT
+			//	12:24:47       p rhel-x86_64-server-6-rhevm-3-debuginfo      8 
+			//	12:24:47       p rhel-x86_64-server-6-rhevm-3.1            107 
+			//	12:24:47       p rhel-x86_64-server-6-rhevm-3.1-debuginfo    0 
+			//	12:24:47       p rhel-x86_64-server-6-rhevm-3.2            182 
+			//	12:24:47       p rhel-x86_64-server-6-rhevm-3.2-debuginfo    9 
+			//	12:24:47       p rhel-x86_64-server-6-rhevm-3.3            165 
+			//	12:24:47       p rhel-x86_64-server-6-rhevm-3.3-debuginfo    8 
+			//	12:24:47       p rhel-x86_64-server-6-rhevm-3.4            232 
+			//	12:24:47       p rhel-x86_64-server-6-rhevm-3.4-debuginfo   11 
+			//	12:24:47       p rhel-x86_64-server-6-rhevm-3.5            311 
+			//	12:24:47       p rhel-x86_64-server-6-rhevm-3.5-debuginfo   21 
+			//	12:24:47       p rhel-x86_64-server-6-rhevm-3.6            250 
+			//	12:24:47       p rhel-x86_64-server-6-rhevm-3.6-debuginfo   14 
+			log.warning("RHN channel '"+classicRhnChannel+"' has no content as determined by a satellite-sync --list-channels.  Therefore we should assert that there is no channel mapping in subscription-manager-migration-data because there is no need for one.");
+			Assert.assertTrue(!channelsToProductCertFilenamesMap.containsKey(classicRhnChannel), "Special case RHN Classic channel '"+classicRhnChannel+"' is NOT accounted for in subscription-manager-migration-data file '"+channelCertMappingFilename+"'.");
+			return;
+		}
+		
 		/* commented out in favor of bug https://bugzilla.redhat.com/show_bug.cgi?id=1105656#c5
 		if (classicRhnChannel.startsWith("rhel-x86_64-server-productivity-5-beta")) {	// rhel-x86_64-server-productivity-5-beta rhel-x86_64-server-productivity-5-beta-debuginfo
 			if (!channelsToProductCertFilenamesMap.containsKey(classicRhnChannel)) {
@@ -2788,6 +2849,12 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				rhnAvailableChildChannel.equals("rhel-x86_64-server-6-ost-beta-debuginfo")) {
 				// Bug 1393563 - rhel-x86_64-server-6-ost-beta channel maps are absent from channel-cert-mapping.txt
 				bugIds.add("1393563");
+			}
+			
+			if (rhnAvailableChildChannel.equals("rhel-x86_64-server-6-rhevh-beta") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-6-rhevh-beta-debuginfo")) {
+				// Bug 1418476 - rhel-x86_64-server-6-rhevh-beta channel maps are missing from channel-cert-mapping.txt
+				bugIds.add("1418476");
 			}
 			
 			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));

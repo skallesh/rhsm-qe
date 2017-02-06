@@ -1,7 +1,6 @@
 package rhsm.cli.tests;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -11,15 +10,17 @@ import java.util.Map;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.testng.annotations.AfterClass;
-import org.testng.annotations.AfterGroups;
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeGroups;
 import org.testng.annotations.Test;
 
 import com.redhat.qe.Assert;
+import com.redhat.qe.tools.RemoteFileTasks;
 
 import rhsm.base.SubscriptionManagerCLITestScript;
 import rhsm.cli.tasks.CandlepinTasks;
 import rhsm.cli.tasks.SubscriptionManagerTasks;
+import rhsm.data.ProductCert;
 import rhsm.data.SubscriptionPool;
 
 /**
@@ -79,8 +80,12 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript {
 		CandlepinTasks.putResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl,
 				"/consumers/" + consumerId, jsonData);
 		String pool = getGuestlimitPool(String.valueOf(guestLimit));
-
-		installProductCert(providedProductIds.get(randomGenerator.nextInt(providedProductIds.size())));
+		System.out.println(pool + " *************" + providedProductIds.size());
+		ProductCert installedProductCert = ProductCert.findFirstInstanceWithMatchingFieldFromList("productId",
+				providedProductIds.get(randomGenerator.nextInt(providedProductIds.size())),
+				clienttasks.getCurrentProductCerts());
+		Assert.assertNotNull(installedProductCert, "Found installed product cert needed for this test.");
+		configureTmpProductCertDirWithInstalledProductCerts(Arrays.asList(new ProductCert[] { installedProductCert }));
 		clienttasks.subscribe(null, null, pool, null, null, "1", null, null, null, null, null, null);
 		String compliance = clienttasks.getFactValue(factname);
 		// Assert the system compliance
@@ -126,7 +131,11 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript {
 				"/consumers/" + consumerId));
 
 		String pool = getGuestlimitPool(String.valueOf(guestLimit - 1));
-		installProductCert(providedProductIds.get(randomGenerator.nextInt(providedProductIds.size())));
+		ProductCert installedProductCert = ProductCert.findFirstInstanceWithMatchingFieldFromList("productId",
+				providedProductIds.get(randomGenerator.nextInt(providedProductIds.size())),
+				clienttasks.getCurrentProductCerts());
+		Assert.assertNotNull(installedProductCert, "Found installed product cert needed for this test.");
+		configureTmpProductCertDirWithInstalledProductCerts(Arrays.asList(new ProductCert[] { installedProductCert }));
 		clienttasks.subscribe(null, null, pool, null, null, "1", null, null, null, null, null, null);
 		String compliance = clienttasks.getFactValue(factname);
 		// Assert the system compliance
@@ -168,7 +177,11 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript {
 		CandlepinTasks.putResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl,
 				"/consumers/" + consumerId, jsonData);
 		String pool = getGuestlimitPool("-1");
-		installProductCert(providedProductIds.get(randomGenerator.nextInt(providedProductIds.size())));
+		ProductCert installedProductCert = ProductCert.findFirstInstanceWithMatchingFieldFromList("productId",
+				providedProductIds.get(randomGenerator.nextInt(providedProductIds.size())),
+				clienttasks.getCurrentProductCerts());
+		Assert.assertNotNull(installedProductCert, "Found installed product cert needed for this test.");
+		configureTmpProductCertDirWithInstalledProductCerts(Arrays.asList(new ProductCert[] { installedProductCert }));
 		clienttasks.subscribe(null, null, pool, null, null, "1", null, null, null, null, null, null);
 		String compliance = clienttasks.getFactValue(factname);
 		// Assert the system compliance
@@ -214,7 +227,11 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript {
 				"/consumers/" + consumerId, jsonData);
 		String pool = getGuestlimitPool(String.valueOf(guestLimit));
 
-		installProductCert(providedProductIds.get(randomGenerator.nextInt(providedProductIds.size())));
+		ProductCert installedProductCert = ProductCert.findFirstInstanceWithMatchingFieldFromList("productId",
+				providedProductIds.get(randomGenerator.nextInt(providedProductIds.size())),
+				clienttasks.getCurrentProductCerts());
+		Assert.assertNotNull(installedProductCert, "Found installed product cert needed for this test.");
+		configureTmpProductCertDirWithInstalledProductCerts(Arrays.asList(new ProductCert[] { installedProductCert }));
 		clienttasks.subscribe(null, null, pool, null, null, "1", null, null, null, null, null, null);
 		String compliance = clienttasks.getFactValue(factname);
 		// Assert the system compliance
@@ -227,35 +244,61 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript {
 		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
 			String GuestLimitAttribute = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername,
 					sm_clientPassword, sm_serverUrl, pool.poolId, "guest_limit");
+
 			if ((!(GuestLimitAttribute == null)) && (GuestLimitAttribute.equals(guestLimit))) {
 				poolId = pool.poolId;
 				providedProductIds = (CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername, sm_clientPassword,
 						sm_serverUrl, pool.poolId));
+
 				log.info("Found the following subscription pool with guest_limit '" + guestLimit
 						+ "' that provides at least one product: " + pool);
 				if (!providedProductIds.isEmpty())
 					return poolId;
 			}
+
 		}
+
 		if (providedProductIds.isEmpty()) {
+			System.out.println("inside isempty");
 			poolId = createTestPool(-60 * 24, 60 * 24);
+			providedProductIds = (CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername, sm_clientPassword,
+					sm_serverUrl, poolId));
+			System.out.println(providedProductIds);
 		}
 		return poolId;
+
 	}
 
-	protected void installProductCert(String filename) throws IOException {
-		String installDir = "/root/temp1/";
-		client.runCommandAndWait("mkdir " + installDir);
-		client.runCommandAndWait("mv " + clienttasks.productCertDir + "/" + "*" + " " + installDir);
-		client.runCommand("mv " + installDir + "/" + filename + ".pem" + " " + clienttasks.productCertDir);
+	protected String rhsmProductCertDir = null;
+	protected final String tmpProductCertDir = "/tmp/sm-tmpProductCertDir-guestlimittests";
+
+	protected void configureTmpProductCertDirWithInstalledProductCerts(List<ProductCert> installedProductCerts) {
+		if (rhsmProductCertDir == null) {
+			rhsmProductCertDir = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsm", "productCertDir");
+			Assert.assertNotNull(rhsmProductCertDir);
+		}
+		log.info(
+				"Initializing a new product cert directory with the currently installed product certs for this test...");
+		RemoteFileTasks.runCommandAndAssert(client, "mkdir -p " + tmpProductCertDir, Integer.valueOf(0));
+		RemoteFileTasks.runCommandAndAssert(client, "rm -f " + tmpProductCertDir + "/*.pem", Integer.valueOf(0));
+		for (ProductCert productCert : installedProductCerts) {
+			RemoteFileTasks.runCommandAndAssert(client, "cp " + productCert.file + " " + tmpProductCertDir,
+					Integer.valueOf(0));
+		}
+
+		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir", tmpProductCertDir);
 	}
 
-	@AfterGroups(groups = { "setup" }, value = { "complianceOfHostWithOneInactiveGuest",
-			"complianceOfHostWithOnlyGuests", "complianceOfHostWithFiveGuests", "complianceOfGuests" })
-	@AfterClass(groups = "setup")
-	public void restoreProductCerts() throws IOException {
-		client.runCommandAndWait("mv " + "/root/temp1/*.pem" + " " + clienttasks.productCertDir);
-		client.runCommandAndWait("rm -rf " + "/root/temp1");
+	@BeforeGroups(groups = "setup", value = { "complianceOfHostWithFiveGuests", "complianceOfGuests",
+			"complianceOfHostWithOneInactiveGuest", "complianceOfHostWithOnlyGuests" })
+	@AfterClass(groups = "setup") // called after class for insurance
+	public void restoreRhsmProductCertDir() {
+		if (clienttasks == null)
+			return;
+		if (rhsmProductCertDir == null)
+			return;
+		log.info("Restoring the originally configured product cert directory...");
+		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir", rhsmProductCertDir);
 	}
 
 	public static JSONObject createGuestIdRequestBody(String guestId, Map<String, String> attributes)
@@ -313,6 +356,7 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript {
 		attributes.put("type", "MKT");
 		attributes.put("type", "SVC");
 		attributes.put("guest_limit", "4");
+		providedProduct.add("37060");
 		CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword,
 				sm_serverUrl, sm_clientOrg, productId);
 		String resourcePath = "/products/" + productId;
@@ -327,31 +371,31 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript {
 				getRandInt(), getRandInt(), productId, providedProduct, null).getString("id");
 	}
 
-	@BeforeClass(groups = { "setup" })
-	public void findRandomAvailableProductIdBeforeClass() throws Exception {
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
-				null, (String) null, null, null, null, true, false, null, null, null);
-		List<SubscriptionPool> pools = clienttasks.getAvailableSubscriptionsMatchingInstalledProducts();
-		// int i = randomGenerator.nextInt(pools.size());
-		System.out.println("inside findRandomAvailableProductIdBeforeClass ");
-		for (SubscriptionPool availablepools : pools) {
-			if ((CandlepinTasks.getPoolProvidedProductIds(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,
-					availablepools.poolId).contains("37060"))) {
-				providedProduct.add("37060");
-				randomAvailableProductId = availablepools.productId;
-				System.out.println("randomAvailableProductId is ........" + randomAvailableProductId);
+	/*
+	 * @BeforeClass(groups = { "setup" }) public void
+	 * findRandomAvailableProductIdBeforeClass() throws Exception {
+	 * clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg,
+	 * null, null, null, null, null, null, null, (String) null, null, null,
+	 * null, true, false, null, null, null); List<SubscriptionPool> pools =
+	 * clienttasks.getAvailableSubscriptionsMatchingInstalledProducts(); // int
+	 * i = randomGenerator.nextInt(pools.size()); for (SubscriptionPool
+	 * availablepools : pools) { if
+	 * ((CandlepinTasks.getPoolProvidedProductIds(sm_serverAdminUsername,
+	 * sm_serverAdminPassword, sm_serverUrl,
+	 * availablepools.poolId).contains("37060"))) {
+	 * providedProduct.add("37060"); randomAvailableProductId =
+	 * availablepools.productId; System.out.println(randomAvailableProductId +
+	 * " ................" + providedProduct.get(0)); }
+	 *
+	 * break; }
+	 *
+	 * }
+	 */
 
-			}
-			System.out.println("randomAvailableProductId is ........" + randomAvailableProductId);
-			// providedProduct =
-			// CandlepinTasks.getPoolProvidedProductIds(sm_serverAdminUsername,
-			// sm_serverAdminPassword,
-			// sm_serverUrl, availablepools.poolId);
-			System.out.println("providedProduct is ........" + providedProduct.get(0));
-
-			break;
-		}
-
+	@BeforeClass(groups = "setup")
+	public void getRhsmProductCertDir() {
+		rhsmProductCertDir = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsm", "productCertDir");
+		Assert.assertNotNull(rhsmProductCertDir);
 	}
 
 	@AfterClass(groups = "setup")

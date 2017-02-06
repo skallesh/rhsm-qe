@@ -520,6 +520,14 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 		}
 		
 		// *******************************************************************************************
+		if (pofilterTest.equals("long")) {
+			// common long msgid translations to ignore for all langs
+			
+			// long msgids to ignore for specific langs
+			if((translationFile.getPath().contains("/ru/"))) ignorableMsgIds.addAll(Arrays.asList("SLA"));	// msgstr "Соглашение об уровне обслуживания"	// "SLA" is actually a placeholder string for the actual value in the confirm SLA workflow dialog.  This string/translation will not be seen.
+		}
+		
+		// *******************************************************************************************
 		if (pofilterTest.equals("doublewords")) {
 			// common doublewords in the translation to ignore for all langs
 			ignorableMsgIds.addAll(Arrays.asList("Subscription Subscriptions Box", "Subscription Subscriptions Label"));
@@ -1040,6 +1048,12 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 				// Bug 1227886 - [pt_BR][es_ES] msg_id="_Save" was not translated to "_Salvar" or "_Guardar"
 				if (pofilterTest.equals("unchanged") && translationFile.getPath().contains("/pt_BR/")) bugIds.add("1227886");		
 				if (pofilterTest.equals("unchanged") && translationFile.getPath().contains("/es_ES/")) bugIds.add("1227886");
+				// Bug 1417746 - [it][fr][ja][es_ES][pt_BR] pofilter unchanged test fails for subscription-manager 1.18.X
+				if (pofilterTest.equals("unchanged") && translationFile.getPath().contains("/it/")) bugIds.add("1417746");
+				if (pofilterTest.equals("unchanged") && translationFile.getPath().contains("/fr/")) bugIds.add("1417746");
+				if (pofilterTest.equals("unchanged") && translationFile.getPath().contains("/ja/")) bugIds.add("1417746");
+				if (pofilterTest.equals("unchanged") && translationFile.getPath().contains("/es_ES/")) bugIds.add("1417746");
+				if (pofilterTest.equals("unchanged") && translationFile.getPath().contains("/pt_BR/")) bugIds.add("1417746");
 				
 				// Bug 841011 - [kn] failed pofilter unchanged option test for subscription manager translations
 				if (pofilterTest.equals("doublewords") && translationFile.getPath().contains("/kn/")) bugIds.add("841011");
@@ -1082,6 +1096,18 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 				if (pofilterTest.equals("endwhitespace") && translationFile.getPath().contains("/pt_BR/")) bugIds.add("1372816");
 				if (pofilterTest.equals("startwhitespace") && translationFile.getPath().contains("/pt_BR/")) bugIds.add("1372816");
 				if (pofilterTest.equals("endwhitespace") && translationFile.getPath().contains("/fr/")) bugIds.add("1372816");
+				
+				// Bug 1417731 - [ko][pt_BR] pofilter endwhitespace test fails for subscription-manager 1.18.X
+				if (pofilterTest.equals("endwhitespace") && translationFile.getPath().contains("/ko/")) bugIds.add("1417731");
+				if (pofilterTest.equals("endwhitespace") && translationFile.getPath().contains("/pt_BR/")) bugIds.add("1417731");
+				
+				// Bug 1417736 - [pt_BR][fr][ja] pofilter accelerators test fails for subscription-manager 1.18.X
+				if (pofilterTest.equals("accelerators") && translationFile.getPath().contains("/pt_BR/")) bugIds.add("1417736");
+				if (pofilterTest.equals("accelerators") && translationFile.getPath().contains("/fr/")) bugIds.add("1417736");
+				if (pofilterTest.equals("accelerators") && translationFile.getPath().contains("/ja/")) bugIds.add("1417736");
+				
+				// Bug 1417740 - [ko] pofilter startwhitespace test fails for subscription-manager 1.18.X 
+				if (pofilterTest.equals("startwhitespace") && translationFile.getPath().contains("/ko/")) bugIds.add("1417740");
 				
 				BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 				ll.add(Arrays.asList(new Object[] {blockedByBzBug, pofilterTest, translationFile}));

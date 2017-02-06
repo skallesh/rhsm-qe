@@ -2727,14 +2727,14 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null,
 				null, (String) null, null, null, null, true, null, null, null, null);
 		List<YumRepo> originalRepos = clienttasks.getCurrentlySubscribedYumRepos();
-		Assert.assertFalse(originalRepos.isEmpty());
+		Assert.assertFalse(originalRepos.isEmpty(), "list is not empty after setting manage_repos to 1");
 		listOfSectionNameValues = new ArrayList<String[]>();
 		listOfSectionNameValues.add(new String[] { "rhsm", "manage_repos", "0" });
 		clienttasks.config(null, null, true, listOfSectionNameValues);
 		clienttasks.getYumRepolist("all"); // needed to trigger
 		// subscription-manager yum plugin
 		originalRepos = clienttasks.getCurrentlySubscribedYumRepos();
-		Assert.assertTrue(originalRepos.isEmpty());
+		Assert.assertTrue(originalRepos.isEmpty(), "list is  empty after setting manage_repos to 0");
 
 	}
 
@@ -3780,13 +3780,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		SSHCommandResult factsResult = clienttasks.facts_(null, true, basicauthproxyUrl, null, null);
 		String factsResultExpected = clienttasks.msg_NetworkErrorUnableToConnect;
 		factsResultExpected = "Error updating system data on the server, see /var/log/rhsm/rhsm.log for more details.";
-		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.17.6-1")) {
-			factsResultExpected = clienttasks.msg_ProxyConnectionFailed;
-		}
-		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.18.5-1")) {
-			factsResultExpected = "Unable to reach the server at " + sm_serverHostname + ":" + sm_serverPort
-					+ sm_serverPrefix;
-		}
+		factsResultExpected = clienttasks.msg_ProxyConnectionFailed;
+
 		Assert.assertEquals(factsResult.getStdout().trim() + factsResult.getStderr().trim(), factsResultExpected);
 	}
 
@@ -3825,7 +3820,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
 				null, (String) null, null, null, null, true, null, null, null, null);
 		clienttasks.autoheal(null, null, true, null, null, null);
-		int sockets = 9;
+		int sockets = 5;
 		int core = 2;
 		int ram = 10;
 
@@ -5286,6 +5281,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				null, (String) null, null, null, null, true, false, null, null, null);
 		List<SubscriptionPool> pools = clienttasks.getAvailableSubscriptionsMatchingInstalledProducts();
 		// int i = randomGenerator.nextInt(pools.size());
+		// the following assumes that there is at least one available subscription matching the installed products; if not you will get java.lang.IllegalArgumentException: bound must be positive
 		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size()));
 		randomAvailableProductId = pool.productId;
 		providedProduct = CandlepinTasks.getPoolProvidedProductIds(sm_serverAdminUsername, sm_serverAdminPassword,
@@ -5314,22 +5310,30 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				"This test class was developed before the addition of /etc/pki/product-default/ certs (Bug 1123029).  Therefore, let's back them up before running this test class.");
 		for (File productCertFile : clienttasks.getCurrentProductCertFiles()) {
 			if (productCertFile.getPath().startsWith(clienttasks.productCertDefaultDir)) {
+				// copy the default installed product cert to the original /etc/pki/product/ dir
+				client.runCommandAndWait("cp -n " + productCertFile + " " + clienttasks.productCertDir);
+				// move the new default cert to a backup file
 				client.runCommandAndWait("mv " + productCertFile + " " + productCertFile + ".bak");
 			}
 		}
 	}
 
-	@BeforeGroups(groups = "setup", value = { "VerifyEUSRHELProductCertVersionFromEachCDNReleaseVersion_Test",
-			"InstalledProductMultipliesAfterSubscription" }, enabled = true)
+// TODO: jsefler commented out this BeforeGroups; I don't think this is a good idea.  It breaks the original purpose of backupProductDefaultCerts()/restoreProductDefaultCerts(); TODO discuss with Shwetha
+//	@BeforeGroups(groups = "setup", value = { "VerifyEUSRHELProductCertVersionFromEachCDNReleaseVersion_Test",
+//			"InstalledProductMultipliesAfterSubscription" }, enabled = true)
+// TODO: jsefler commented out this AfterGroups; I don't think this is a good idea.  It breaks the original purpose of backupProductDefaultCerts()/restoreProductDefaultCerts(); TODO discuss with Shwetha
+//	@AfterGroups(groups = "setup", value = { "UpdateWithNoInstalledProducts" })
 	@AfterClass(groups = "setup")
-	@AfterGroups(groups = "setup", value = { "UpdateWithNoInstalledProducts" })
 	public void restoreProductDefaultCerts() {
 		client.runCommandAndWait("ls -1 " + clienttasks.productCertDefaultDir + "/*.bak");
 		String lsBakFiles = client.getStdout().trim();
 		if (!lsBakFiles.isEmpty()) {
 			log.info("restoring the default product cert files");
 			for (String lsFile : Arrays.asList(lsBakFiles.split("\n"))) {
+				// restore the default installed product cert
 				client.runCommandAndWait("mv " + lsFile + " " + lsFile.replaceFirst("\\.bak$", ""));
+				// remove its copy from /etc/pki/product/ dir that was created in backupProductDefaultCerts()
+				client.runCommandAndWait("rm -f " + lsFile.replace(clienttasks.productCertDefaultDir, clienttasks.productCertDir).replaceFirst("\\.bak$", ""));
 			}
 		}
 	}

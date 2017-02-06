@@ -746,8 +746,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		RemoteFileTasks.runCommandAndWait(client,"grep proxy "+clienttasks.rhsmConfFile,TestRecords.action());
 
 		// attempt the moduleTask with the proxy options
-		// NOTE: Because the status module should return a cached status report when connectivity has been interrupted, this call should always pass
-		SSHCommandResult attemptResult = clienttasks.status/*_*/(null, proxy, proxyuser, proxypassword);
+		SSHCommandResult attemptResult = clienttasks.status_(null, proxy, proxyuser, proxypassword);
 		// NOTE: Due RFE Bug 1119688, the exit code will no longer indicate a PASS every time.
 		if (exitCode.equals(new Integer(0))) {
 			if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit 7957b8df95c575e6e8713c2f1a0f8f754e32aed3 bug 1119688
@@ -1100,6 +1099,25 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		}
 		// END OF WORKAROUND
 		
+		// test for use of cache (expected stderr=nErrMsg is indicative that cache will now by used when the proxy connection fails)
+		boolean assertRhsmLogForCache = false;
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.18.2-1")) {	// not too sure about this version/commit // post commit ad982c13e79917e082f336255ecc42615e1e7707	1176219: Error out if bad proxy settings detected
+			if (nErrMsg.equals(stderr)) {	// indicative that cache will be used
+				// Bug 1176219 - subscription-manager repos --list with bad proxy options is silently using cache
+				// rhsm.log will now report: [WARNING] subscription-manager:27964:MainThread @cache.py:235 - Unable to reach server, using cached status.
+				assertRhsmLogForCache = true;
+				
+				// modify the expected results because cache will now be used
+				log.info("Alterring the expected dataProvided parameters for expected exitCode, stdout, stderr to assert use of warnings in the rhsm.log instead the command line result '"+stderr+"'.");
+				stderr = "";
+				stdout = null;
+				exitCode = new Integer(0);
+				
+				// mark the rhsm.log
+				RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, proxyLogMarker);
+			}
+		}
+		
 		// attempt the moduleTask with the proxy options
 		SSHCommandResult attemptResult = clienttasks.repos_(true,null,null,(List<String>)null, (List<String>)null, proxy, proxyuser, proxypassword);
 		if (exitCode!=null)	Assert.assertEquals(attemptResult.getExitCode(), exitCode, "The exit code from an attempt to "+moduleTask+" --list using a proxy server.");
@@ -1114,6 +1132,14 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 			String proxyLogResult = RemoteFileTasks.getTailFromMarkedFile(proxyRunner, proxyLog, proxyLogMarker, ipv4_address);	// accounts for multiple tests hitting the same proxy server simultaneously
 			//Assert.assertContainsMatch(proxyLogResult, proxyLogGrepPattern, "The proxy server appears to be logging the expected connection attempts to the candlepin server.");	// TOO MUCH LOGGING
 			Assert.assertTrue(proxyLogResult.contains(proxyLogGrepPattern), "The tail of proxy server log '"+proxyLog+"' following marker '"+proxyLogMarker+"' contains expected connection '"+proxyLogGrepPattern+"' attempts from "+ipv4_address+" to the candlepin server.");
+		}
+		
+		// assert the rhsm.log for use of cache warnings
+		if (assertRhsmLogForCache) {
+			// 2017-02-02 14:50:20,480 [WARNING] rhsmd:943:MainThread @cache.py:235 - Unable to reach server, using cached status.	
+			String rhsmLogResult = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, proxyLogMarker, "WARNING");
+			String cacheMsg = "Unable to reach server, using cached status.";
+			Assert.assertTrue(rhsmLogResult.contains(cacheMsg), "The tail of rhsm log '"+clienttasks.rhsmLogFile+"' following marker '"+proxyLogMarker+"' contains expected WARNING '"+cacheMsg+"'.");
 		}
 	}
 	
@@ -2353,7 +2379,10 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 			bugIds.add("1345962");	// Bug 1345962 - unbound method endheaders() must be called with HTTPSConnection instance as first argument (got RhsmProxyHTTPSConnection instance instead)
 			blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 			l.set(0, blockedByBzBug);
-			
+
+			if (l.get(11).equals(Integer.valueOf(69))) {	// 69 EX_UNAVAILABLE
+				// alter nothing; expected exitCode 69 indicates that "Proxy connection failed, please check your settings."
+			} else
 //DELETEME	if (!sm_serverType.equals("katello") && (!nErrMsg.equals(l.get(13))||l.get(13)==null) && clienttasks.isPackageVersion("subscription-manager",">=","1.13.10-1")) {	// post commit 13fe8ffd8f876d27079b961fb6675424e65b9a10 bug 1119688
 			if (!sm_serverType.equals("katello") && ((!nErrMsg.equals(l.get(13))&&!pErr407Msg.equals(l.get(13)))||l.get(13)==null) && clienttasks.isPackageVersion("subscription-manager",">=","1.13.10-1")) {	// post commit 13fe8ffd8f876d27079b961fb6675424e65b9a10 bug 1119688
 				l.set(11, Integer.valueOf(69));	// exitCode EX_UNAVAILABLE
@@ -2428,13 +2457,21 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		for (List<Object> l : getValidRegisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists()) {
 
+			// Object blockedByBug, String username, String password, Sring org, String proxy, String proxyuser, String proxypassword, String proxy_hostnameConfig, String proxy_portConfig, String proxy_userConfig, String proxy_passwordConfig, Integer exitCode, String stdout, String stderr, SSHCommandRunner proxyRunner, String proxyLog, String proxyLogGrepPattern
+			
 			BlockedByBzBug blockedByBzBug = null;	// nullify the blockedByBug parameter since this function was originally not blocked by any bug			
 			List<String> bugIds = blockedByBzBug==null?new ArrayList<String>():new ArrayList<String>(Arrays.asList(blockedByBzBug.getBugIds()));
 			bugIds.add("1345962");	// Bug 1345962 - unbound method endheaders() must be called with HTTPSConnection instance as first argument (got RhsmProxyHTTPSConnection instance instead)
+			if (l.get(13)==pErr407Msg)  bugIds.add("1419197");	// Bug 1419197 - subscription-manager status with bad proxy configurations should be using cache
 			blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 			
-			// Note: Because the status module should return cached results when it fails to connect to the server, the exitCode should always be 0 and we'll null out the asserts on stdout and stderr
-			ll.add(Arrays.asList(new Object[]{	blockedByBzBug,	l.get(1),	l.get(2),	l.get(3),	l.get(4),	l.get(5),	l.get(6),	l.get(7),	l.get(8),	l.get(9),	l.get(10),	Integer.valueOf(0)/*exitCode*/,null/*stdout*/,null/*stderr*/,	l.get(14),	l.get(15),	l.get(16)}));
+			if (l.get(4)!=null) {	// indicates a proxy (good or bad) specified on the command line
+				// when a proxy is specified on the command line (l.get(4)), no cache will be used, simply assert all of the expected results
+				ll.add(Arrays.asList(new Object[]{	l.get(0),	l.get(1),	l.get(2),	l.get(3),	l.get(4),	l.get(5),	l.get(6),	l.get(7),	l.get(8),	l.get(9),	l.get(10),	l.get(11)/*exitCode*/,	l.get(12)/*stdout*/,	l.get(13)/*stderr*/,	l.get(14),	l.get(15),	l.get(16)}));
+			} else {
+				// when no proxy is passed on the command line, the status module should return cached results when it fails to connect to the server, the exitCode should always be 0 and we'll null out the asserts on stdout and stderr
+				ll.add(Arrays.asList(new Object[]{	blockedByBzBug,	l.get(1),	l.get(2),	l.get(3),	l.get(4),	l.get(5),	l.get(6),	l.get(7),	l.get(8),	l.get(9),	l.get(10),	Integer.valueOf(0)/*exitCode*/,null/*stdout*/,null/*stderr*/,	l.get(14),	l.get(15),	l.get(16)}));
+			}
 		}
 		return TestNGUtils.convertListOfListsTo2dArray(ll);
 	}
@@ -2784,6 +2821,8 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		for (List<Object> l : getValidRegisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists()) {
 			
+			// Object blockedByBug, String username, String password, Sring org, String proxy, String proxyuser, String proxypassword, String proxy_hostnameConfig, String proxy_portConfig, String proxy_userConfig, String proxy_passwordConfig, Integer exitCode, String stdout, String stderr, SSHCommandRunner proxyRunner, String proxyLog, String proxyLogGrepPattern
+			
 			// get the existing BlockedByBzBug
 			BlockedByBzBug blockedByBzBug = (BlockedByBzBug) l.get(0);
 			List<String> bugIds = blockedByBzBug==null?new ArrayList<String>():new ArrayList<String>(Arrays.asList(blockedByBzBug.getBugIds()));
@@ -2797,6 +2836,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 			if (l.get(4)!=null && l.get(4).equals("bad-proxy") && l.get(7)!=null && l.get(7).equals(sm_noauthproxyHostname)) {
 				bugIds.add("975186");	// Bug 975186 - subscription-manager repos --list is failing when specifying a bad --proxy
 			}
+			
 			blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 			
 			ll.add(Arrays.asList(new Object[]{	blockedByBzBug,	l.get(1),	l.get(2),	l.get(3),	l.get(4),	l.get(5),	l.get(6),	l.get(7),	l.get(8),	l.get(9),	l.get(10),	l.get(11),	l.get(12),	l.get(13),	l.get(14),	l.get(15),	l.get(16)}));

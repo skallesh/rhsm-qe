@@ -250,6 +250,31 @@ Then I should see a dialog 'Network is down'
     (finally
       (tasks/ui closewindow :help-dialog))))
 
+(defn ^{Test {:groups ["system"
+                       "tier2"
+                       "blockedByBug-1401108"]
+              :description "Given a 'subscription-manager-gui' is run
+When I click on 'Online Documentation' in 'Help' menu
+Then I should see 'firefox' app with a page
+    'Product Documentation for RedHat Subscription Management' openned"}}
+  online_documentation_menu
+  [_]
+  (try
+    (when (some (partial re-find #"ProductDocumentationforRedHatSubscriptionManagement-RedHatCustomerPortal")
+                (tasks/ui getwindowlist))
+      (run-command "pkill firefox"))
+    (if-not (bool (tasks/ui guiexist :main-window))
+      (tasks/start-app))
+    (tasks/ui click :online-documentation)
+    (tasks/try-more 10
+                    (sleep 1000)
+                    (verify (some (partial re-find #"ProductDocumentationforRedHatSubscriptionManagement-RedHatCustomerPortal")
+                                  (tasks/ui getwindowlist))))
+    (finally
+      (when (some (partial re-find #"ProductDocumentationforRedHatSubscriptionManagement-RedHatCustomerPortal")
+                  (tasks/ui getwindowlist))
+        (run-command "pkill firefox")))))
+
 (defn check_escape_window
   "Asserts that windows correctly render after exiting them with a shortcut."
   [window shortcut]
