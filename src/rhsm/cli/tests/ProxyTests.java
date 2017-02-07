@@ -766,8 +766,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		RemoteFileTasks.runCommandAndWait(client,"grep proxy "+clienttasks.rhsmConfFile,TestRecords.action());
 
 		// attempt the moduleTask with the proxy options
-		// NOTE: Because the status module should return a cached status report when connectivity has been interrupted, this call should always pass
-		SSHCommandResult attemptResult = clienttasks.version/*_*/(proxy, proxyuser, proxypassword);
+		SSHCommandResult attemptResult = clienttasks.version_(proxy, proxyuser, proxypassword);
 		if (exitCode!=null)	Assert.assertEquals(attemptResult.getExitCode(), exitCode, "The exit code from an attempt to "+moduleTask+" using a proxy server.");
 		if (stdout!=null)	Assert.assertTrue(attemptResult.getStdout().contains(stdout), "The stdout from an attempt to "+moduleTask+" using a proxy server contains expected report '"+stdout+"'.");
 		if (stderr!=null)	Assert.assertEquals(attemptResult.getStderr().trim(), stderr, "The stderr from an attempt to "+moduleTask+" using a proxy server.");
@@ -2376,13 +2375,24 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 			if (l.get(13)==pErr407Msg)  bugIds.add("1419197");	// Bug 1419197 - subscription-manager status with bad proxy configurations should be using cache
 			blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 			
-			if (l.get(4)!=null) {	// indicates a proxy (good or bad) specified on the command line
-				// when a proxy is specified on the command line (l.get(4)), no cache will be used, simply assert all of the expected results
-				ll.add(Arrays.asList(new Object[]{	l.get(0),	l.get(1),	l.get(2),	l.get(3),	l.get(4),	l.get(5),	l.get(6),	l.get(7),	l.get(8),	l.get(9),	l.get(10),	l.get(11)/*exitCode*/,	l.get(12)/*stdout*/,	l.get(13)/*stderr*/,	l.get(14),	l.get(15),	l.get(16)}));
-			} else {
-				// when no proxy is passed on the command line, the status module should return cached results when it fails to connect to the server, the exitCode should always be 0 and we'll null out the asserts on stdout and stderr
-				ll.add(Arrays.asList(new Object[]{	blockedByBzBug,	l.get(1),	l.get(2),	l.get(3),	l.get(4),	l.get(5),	l.get(6),	l.get(7),	l.get(8),	l.get(9),	l.get(10),	Integer.valueOf(0)/*exitCode*/,null/*stdout*/,null/*stderr*/,	l.get(14),	l.get(15),	l.get(16)}));
+			// when subscription-manager can not reach the server the actual status cannot be known; no cache will be used
+			// this accepted change in behavior was decided in Bug 1419197 - subscription-manager status with bad proxy configurations should be using cache
+			if (l.get(13)==pErr407Msg)  {
+				ll.add(Arrays.asList(new Object[]{	blockedByBzBug,	l.get(1),	l.get(2),	l.get(3),	l.get(4),	l.get(5),	l.get(6),	l.get(7),	l.get(8),	l.get(9),	l.get(10),	l.get(11)/*exitCode*/,	l.get(12)/*stdout*/,	l.get(13)/*stderr*/,	l.get(14),	l.get(15),	l.get(16)}));
+				continue;
 			}
+
+			// when l.get(4)!=null, then a proxy will be specified as a command line arg which trumps the rhsm.conf configuration and NO cache will be used
+			if (l.get(4)!=null) {
+				// when a proxy is specified on the command line (l.get(4)), no cache will be used, simply assert all of the expected results
+				ll.add(Arrays.asList(new Object[]{	blockedByBzBug,	l.get(1),	l.get(2),	l.get(3),	l.get(4),	l.get(5),	l.get(6),	l.get(7),	l.get(8),	l.get(9),	l.get(10),	l.get(11)/*exitCode*/,	l.get(12)/*stdout*/,	l.get(13)/*stderr*/,	l.get(14),	l.get(15),	l.get(16)}));
+				continue;
+			}
+			
+			// if we get to here, then...
+			// the status module should return cached results when it fails to connect to the server,
+			// the exitCode should always be 0 and we'll null out the asserts on stdout and stderr
+			ll.add(Arrays.asList(new Object[]{	blockedByBzBug,	l.get(1),	l.get(2),	l.get(3),	l.get(4),	l.get(5),	l.get(6),	l.get(7),	l.get(8),	l.get(9),	l.get(10),	Integer.valueOf(0)/*exitCode*/,null/*stdout*/,null/*stderr*/,	l.get(14),	l.get(15),	l.get(16)}));
 		}
 		return TestNGUtils.convertListOfListsTo2dArray(ll);
 	}
@@ -2425,15 +2435,32 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 			BlockedByBzBug blockedByBzBug = null;	// nullify the blockedByBug parameter since this function was originally not blocked by any bug
 			List<String> bugIds = blockedByBzBug==null?new ArrayList<String>():new ArrayList<String>(Arrays.asList(blockedByBzBug.getBugIds()));
 			bugIds.add("1345962");	// Bug 1345962 - unbound method endheaders() must be called with HTTPSConnection instance as first argument (got RhsmProxyHTTPSConnection instance instead)
+			if (l.get(13)==pErr407Msg)  bugIds.add("1419197");	// Bug 1419197 - subscription-manager status with bad proxy configurations should be using cache
 			blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
-
-			// Note: The version module should always succeed, yet report subscription management server: Unknown when connection fails to the server
-//			if (l.get(12)/*stdout*/==nErrMsg) {
+			
+			// despite a Network Error, the version module should succeed with an Unknown server version
 			if (l.get(12)/*stdout*/==nErrMsg || l.get(13)/*stderr*/==nErrMsg) {
 				ll.add(Arrays.asList(new Object[]{	blockedByBzBug,	l.get(1),	l.get(2),	l.get(3),	l.get(4),	l.get(5),	l.get(6),	l.get(7),	l.get(8),	l.get(9),	l.get(10),	Integer.valueOf(0)/*exitCode*/,"subscription management server: Unknown"/*stdout*/,""/*stderr*/,	l.get(14),	l.get(15),	l.get(16)}));
-			} else {
-				ll.add(Arrays.asList(new Object[]{	blockedByBzBug,	l.get(1),	l.get(2),	l.get(3),	l.get(4),	l.get(5),	l.get(6),	l.get(7),	l.get(8),	l.get(9),	l.get(10),	Integer.valueOf(0)/*exitCode*/,"subscription management server: "+servertasks.statusVersion/*stdout*/,""/*stderr*/,	l.get(14),	l.get(15),	l.get(16)}));
+				continue;
+			}			
+			
+			// despite a Proxy 407 Error, the version module should succeed with an Unknown server version
+			// Note Bug 1419197 applies to both the status and version module
+			if (l.get(13)==pErr407Msg)  {
+				ll.add(Arrays.asList(new Object[]{	blockedByBzBug,	l.get(1),	l.get(2),	l.get(3),	l.get(4),	l.get(5),	l.get(6),	l.get(7),	l.get(8),	l.get(9),	l.get(10),	Integer.valueOf(0)/*exitCode*/,"subscription management server: Unknown"/*stdout*/,""/*stderr*/,	l.get(14),	l.get(15),	l.get(16)}));
+				continue;
 			}
+
+			// when l.get(4)!=null, then a proxy will be specified as a command line arg which trumps the rhsm.conf configuration and NO cache will be used
+			if (l.get(4)!=null) {	// assumes get(4) is a bad proxy cli option
+				// when a proxy is specified on the command line (l.get(4)), no cache will be used, simply assert all of the expected results
+				ll.add(Arrays.asList(new Object[]{	blockedByBzBug,	l.get(1),	l.get(2),	l.get(3),	l.get(4),	l.get(5),	l.get(6),	l.get(7),	l.get(8),	l.get(9),	l.get(10),	l.get(11)/*exitCode*/,	l.get(12)/*stdout*/,	l.get(13)/*stderr*/,	l.get(14),	l.get(15),	l.get(16)}));
+				continue;
+			}
+			
+			// if we get to here, then stdout should report the actual server version...
+			ll.add(Arrays.asList(new Object[]{	blockedByBzBug,	l.get(1),	l.get(2),	l.get(3),	l.get(4),	l.get(5),	l.get(6),	l.get(7),	l.get(8),	l.get(9),	l.get(10),	Integer.valueOf(0)/*exitCode*/,"subscription management server: "+servertasks.statusVersion/*stdout*/,""/*stderr*/,	l.get(14),	l.get(15),	l.get(16)}));
+			
 		}
 		return TestNGUtils.convertListOfListsTo2dArray(ll);
 	}
