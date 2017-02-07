@@ -1509,6 +1509,42 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		}
 	}
 	
+	
+	/**
+	 * @param flag 1=locked 0=unlocked
+	 * @throws SQLException 
+	 * @throws Exception
+	 */
+	protected void updateProductAndContentLockStateOnDatabase(int flag) throws SQLException   {
+		
+		// Candlepin introduced product and content locking to prevent undesirable modifications to
+		// Red Hat resources via the RestAPI when candlepin runs in hosted mode (/etc/candlepin/candlepin.conf > "candlepin.standalone", "false")
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">", "2.0.0-1")) {	// candlepin commit FIXME
+			
+			// Avoid locked products and content after toggling candlepin.conf mode to "candlepin.standalone", "false"
+			// 201702071658:23.304 - INFO: SSH alternative to HTTP request: curl --stderr /dev/null --insecure --user admin:admin --request DELETE https://jsefler-candlepin.usersys.redhat.com:8443/candlepin/owners/admin/products/99000 (rhsm.cli.tasks.CandlepinTasks.deleteResourceUsingRESTfulAPI)
+			// 201702071658:23.383 - WARNING: Attempt to DELETE resource '/owners/admin/products/99000' failed: product "99000" is locked (rhsm.cli.tasks.CandlepinTasks.deleteResourceUsingRESTfulAPI)
+			
+			// SQL statement to update the database product and content table to unlocked
+			String updateProductLockedStateSql = "UPDATE cp2_products SET locked = "+flag+";";
+			String updateContentLockedStateSql = "UPDATE cp2_content SET locked = "+flag+";";
+			
+			Statement sql = dbConnection.createStatement();
+			int rowCount;
+			
+			log.fine("Executing SQL: "+updateProductLockedStateSql);
+			 rowCount = sql.executeUpdate(updateProductLockedStateSql);
+			Assert.assertTrue(rowCount>0, "Updated at least one row (actual='"+rowCount+"') of the cp2_products table with sql: "+updateProductLockedStateSql);
+			
+			log.fine("Executing SQL: "+updateContentLockedStateSql);
+			rowCount = sql.executeUpdate(updateContentLockedStateSql);
+			Assert.assertTrue(rowCount>0, "Updated at least one row (actual='"+rowCount+"') of the cp2_content table with sql: "+updateContentLockedStateSql);
+			
+			sql.close();
+		}
+	}		
+	
+	
 	/**
 	 * On the connected candlepin server database, update the startdate and enddate in the cp_subscription table on rows where the pool id is a match.
 	 * @param pool
