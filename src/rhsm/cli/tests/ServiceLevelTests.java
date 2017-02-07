@@ -30,7 +30,6 @@ import rhsm.cli.tasks.CandlepinTasks;
 import rhsm.cli.tasks.SubscriptionManagerTasks;
 import rhsm.data.EntitlementCert;
 import rhsm.data.InstalledProduct;
-import rhsm.data.Org;
 import rhsm.data.ProductCert;
 import rhsm.data.ProductNamespace;
 import rhsm.data.ProductSubscription;
