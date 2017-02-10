@@ -418,7 +418,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager-cli: subscribe consumer to an entitlement using pool ID",
-			groups={"blockedByBug-584137"},
+			groups={"Tier0Tests","blockedByBug-584137"},
 			//dataProvider="getAvailableSubscriptionPoolsData",	// very thorough, but takes too long to execute and rarely finds more bugs
 			dataProvider="getRandomSubsetOfAvailableSubscriptionPoolsData",
 			enabled=true)
