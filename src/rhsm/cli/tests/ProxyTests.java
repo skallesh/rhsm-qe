@@ -1587,15 +1587,19 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		// c. finally the proxy environment variable applies when no proxy values are set in the CLI options nor rhsm.conf
 		// d. if hostname matches no_proxy environment variable, then override c.
 		
+		// Notes Update: 2/8/2017 The precedence rules for no_proxy defined above was flawed and was corrected by
+		// Bug 1311429 - no_proxy variable ignored when configured in virt-who config file
+		// d. if hostname matches no_proxy environment variable, then override all.  DO NOT USE A PROXY.
+		
 		// randomly test using one of these valid environment variables 
 		List<String> validHttpProxyEnvVars = Arrays.asList(new String[]{"HTTPS_PROXY","https_proxy","HTTP_PROXY","http_proxy"});
 		List<String> validHttpNoProxyEnvVars = Arrays.asList(new String[]{"NO_PROXY","no_proxy"/*,"no_PROXY" not supported by curl*/});
 		
-		
-		// TEST PART 1: let's assert that setting the proxy via an environment variable...
+		// TEST PART 1:
+		//		Assert that setting the proxy via environment variables (rhsm.conf and CLI options are void of proxy values)...
 		//           A: is ignored when hostname matches no_proxy
-		//           B: is NOT ignored when hostname does not matches no_proxy
-
+		//           B: is NOT ignored when hostname does not match no_proxy
+		
 		// assemble the value of the httpProxyVar
 		// HTTPS_PROXY=https://proxyserver
 		// HTTPS_PROXY=https://proxyserver:proxyport
@@ -1628,10 +1632,10 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 				String proxyLogResult = RemoteFileTasks.getTailFromMarkedFile(proxyRunner, proxyLog, proxyLogMarker, ipv4_address);	// accounts for multiple tests hitting the same proxy server simultaneously
 				Assert.assertTrue(proxyLogResult.isEmpty(), "The tail of proxy server log '"+proxyLog+"' following marker '"+proxyLogMarker+"' contains NO connection '"+proxyLogGrepPattern+"' attempts from "+ipv4_address+" to the candlepin server.");
 			}
-		} else {	// B: is NOT ignored when hostname does not matches no_proxy
-			if (exitCode!=null)	Assert.assertEquals(attemptResult.getExitCode(), exitCode, "The exit code from an attempt to "+moduleTask+" using a proxy server defined by an environment variable '"+httpProxyEnvVar+"'.");
-			if (stdout!=null)	Assert.assertEquals(attemptResult.getStdout().trim(), stdout, "The stdout from an attempt to "+moduleTask+" using a proxy server defined by an environment variable '"+httpProxyEnvVar+"'.");
-			if (stderr!=null)	Assert.assertEquals(attemptResult.getStderr().trim(), stderr, "The stderr from an attempt to "+moduleTask+" using a proxy server defined by an environment variable '"+httpProxyEnvVar+"'.");
+		} else if (exitCode!=Integer.valueOf(69)/* skipping Test 1B for negative bad proxy */) {	// B: is NOT ignored when hostname does not matche no_proxy
+			if (exitCode!=null)	Assert.assertEquals(attemptResult.getExitCode(), exitCode, "The exit code from an attempt to "+moduleTask+" using a proxy server defined by an environment variable '"+httpProxyEnvVar+"' that does not match the no_proxy environment variable '"+noProxyEnvVar+"'.");
+			if (stdout!=null)	Assert.assertEquals(attemptResult.getStdout().trim(), stdout, "The stdout from an attempt to "+moduleTask+" using a proxy server defined by an environment variable '"+httpProxyEnvVar+"' that does not match the no_proxy environment variable '"+noProxyEnvVar+"'.");
+			if (stderr!=null)	Assert.assertEquals(attemptResult.getStderr().trim(), stderr, "The stderr from an attempt to "+moduleTask+" using a proxy server defined by an environment variable '"+httpProxyEnvVar+"' that does not match the no_proxy environment variable '"+noProxyEnvVar+"'.");
 			
 			// assert the tail of proxyLog shows the proxyLogGrepPattern (BASIC AUTH)
 			// 1292545301.350    418 10.16.120.247 TCP_MISS/200 1438 CONNECT jsefler-f12-candlepin.usersys.redhat.com:8443 redhat DIRECT/10.16.120.146 -
@@ -1650,50 +1654,118 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 				Assert.assertTrue(proxyLogResult.contains(proxyLogGrepPattern), "The tail of proxy server log '"+proxyLog+"' following marker '"+proxyLogMarker+"' contains expected connection '"+proxyLogGrepPattern+"' attempts from "+ipv4_address+" to the candlepin server.");
 			}
 		}
+			
+		// TEST PART 2
+		if (clienttasks.isPackageVersion("python-rhsm", "<", "1.18.3-1")) { // pre commit 7b1294aa6bceb6734caa2493c54402537f0773a7 for Bug 1311429 - no_proxy variable ignored when configured in virt-who config file
 		
-		
-		// TEST PART 2: now let's assert that setting the proxy via CLI option or rhsm.conf take precedence over the environment variable...
-		//           A: regardless if hostname matches no_proxy
-		//           B: regardless if hostname does not matches no_proxy
+			// TEST PART 2: now let's assert that setting the proxy via CLI option or rhsm.conf take precedence over the environment variable...
+			//           A: regardless if hostname matches no_proxy
+			//           B: regardless if hostname does not matches no_proxy
 
-		// assemble the value of a httpProxyVar that will get overridden
-		httpProxyEnvVar = validHttpProxyEnvVars.get(randomGenerator.nextInt(validHttpProxyEnvVars.size())) + "=https://";
-		httpProxyEnvVar += "proxy.example.com:911";	// provided in https://bugzilla.redhat.com/show_bug.cgi?id=1031755#c0	Note: this does not have to be a working proxy to make this a valid test
-		
-		// set the config parameters
-		updateConfFileProxyParameters(proxy_hostnameConfig, proxy_portConfig, proxy_userConfig, proxy_passwordConfig);
-		RemoteFileTasks.runCommandAndWait(client,"grep proxy "+clienttasks.rhsmConfFile,TestRecords.action());
-		
-		// pad the tail of proxyLog with a message
-		proxyLogMarker = System.currentTimeMillis()+" Testing 2 "+moduleTask+" AttemptsToVerifyHonoringNoProxyEnvironmentVariable_Test from "+clienttasks.hostname+"...";
-		RemoteFileTasks.markFile(proxyRunner, proxyLog, proxyLogMarker);
-		
-		// attempt to register using a proxy server defined by an environment variable (no CLI option nor rhsm.conf [sever] proxy configurations set)
-		attemptResult = client.runCommandAndWait(noProxyEnvVar+" "+httpProxyEnvVar+" "+clienttasks.registerCommand(username, password, org, null, null, null, null, null, null, null, (List<String>)null, null, null, null, true, null, proxy, proxyuser, proxypassword));
-		if (hostnameMatchesNoProxyEnvVar || !hostnameMatchesNoProxyEnvVar) {	// A: regardless if hostname matches no_proxy	// B: regardless if hostname does not matches no_proxy
-			if (exitCode!=null)	Assert.assertEquals(attemptResult.getExitCode(), exitCode, "The exit code from an attempt to "+moduleTask+" using a proxy server to override environment variable '"+httpProxyEnvVar+"'.");
-			if (stdout!=null)	Assert.assertEquals(attemptResult.getStdout().trim(), stdout, "The stdout from an attempt to "+moduleTask+" using a proxy server to override environment variable '"+httpProxyEnvVar+"'.");
-			if (stderr!=null)	Assert.assertEquals(attemptResult.getStderr().trim(), stderr, "The stderr from an attempt to "+moduleTask+" using a proxy server to override environment variable '"+httpProxyEnvVar+"'.");
+			// assemble the value of a httpProxyVar that will get overridden
+			httpProxyEnvVar = validHttpProxyEnvVars.get(randomGenerator.nextInt(validHttpProxyEnvVars.size())) + "=https://";
+			httpProxyEnvVar += "proxy.example.com:911";	// provided in https://bugzilla.redhat.com/show_bug.cgi?id=1031755#c0	Note: this does not have to be a working proxy to make this a valid test
 			
-			// assert the tail of proxyLog shows the proxyLogGrepPattern (BASIC AUTH)
-			// 1292545301.350    418 10.16.120.247 TCP_MISS/200 1438 CONNECT jsefler-f12-candlepin.usersys.redhat.com:8443 redhat DIRECT/10.16.120.146 -
-			// 1292551602.625      0 10.16.120.247 TCP_DENIED/407 3840 CONNECT jsefler-f12-candlepin.usersys.redhat.com:8443 - NONE/- text/html
+			// set the config parameters
+			updateConfFileProxyParameters(proxy_hostnameConfig, proxy_portConfig, proxy_userConfig, proxy_passwordConfig);
+			RemoteFileTasks.runCommandAndWait(client,"grep proxy "+clienttasks.rhsmConfFile,TestRecords.action());
 			
-			// assert the tail of proxyLog shows the proxyLogGrepPattern (NO AUTH)
-			// CONNECT   Dec 17 18:56:22 [20793]: Connect (file descriptor 7):  [10.16.120.248]
-			// CONNECT   Dec 17 18:56:22 [20793]: Request (file descriptor 7): CONNECT jsefler-f12-candlepin.usersys.redhat.com:8443 HTTP/1.1
-			// INFO      Dec 17 18:56:22 [20793]: No proxy for jsefler-f12-candlepin.usersys.redhat.com
-			// CONNECT   Dec 17 18:56:22 [20793]: Established connection to host "jsefler-f12-candlepin.usersys.redhat.com" using file descriptor 8.
-			// INFO      Dec 17 18:56:22 [20793]: Not sending client headers to remote machine
-			// INFO      Dec 17 18:56:22 [20793]: Closed connection between local client (fd:7) and remote client (fd:8)
+			// pad the tail of proxyLog with a message
+			proxyLogMarker = System.currentTimeMillis()+" Testing 2 "+moduleTask+" AttemptsToVerifyHonoringNoProxyEnvironmentVariable_Test from "+clienttasks.hostname+"...";
+			RemoteFileTasks.markFile(proxyRunner, proxyLog, proxyLogMarker);
 			
-			if (proxyLogGrepPattern!=null) {
-				String proxyLogResult = RemoteFileTasks.getTailFromMarkedFile(proxyRunner, proxyLog, proxyLogMarker, ipv4_address);	// accounts for multiple tests hitting the same proxy server simultaneously
-				Assert.assertTrue(proxyLogResult.contains(proxyLogGrepPattern), "The tail of proxy server log '"+proxyLog+"' following marker '"+proxyLogMarker+"' contains expected connection '"+proxyLogGrepPattern+"' attempts from "+ipv4_address+" to the candlepin server.");
+			// attempt to register using a proxy server defined by an environment variable (no CLI option nor rhsm.conf [sever] proxy configurations set)
+			attemptResult = client.runCommandAndWait(noProxyEnvVar+" "+httpProxyEnvVar+" "+clienttasks.registerCommand(username, password, org, null, null, null, null, null, null, null, (List<String>)null, null, null, null, true, null, proxy, proxyuser, proxypassword));
+			if (hostnameMatchesNoProxyEnvVar || !hostnameMatchesNoProxyEnvVar) {	// A: regardless if hostname matches no_proxy	// B: regardless if hostname does not matches no_proxy
+				if (exitCode!=null)	Assert.assertEquals(attemptResult.getExitCode(), exitCode, "The exit code from an attempt to "+moduleTask+" using a proxy server to override environment variable '"+httpProxyEnvVar+"'.");
+				if (stdout!=null)	Assert.assertEquals(attemptResult.getStdout().trim(), stdout, "The stdout from an attempt to "+moduleTask+" using a proxy server to override environment variable '"+httpProxyEnvVar+"'.");
+				if (stderr!=null)	Assert.assertEquals(attemptResult.getStderr().trim(), stderr, "The stderr from an attempt to "+moduleTask+" using a proxy server to override environment variable '"+httpProxyEnvVar+"'.");
+				
+				// assert the tail of proxyLog shows the proxyLogGrepPattern (BASIC AUTH)
+				// 1292545301.350    418 10.16.120.247 TCP_MISS/200 1438 CONNECT jsefler-f12-candlepin.usersys.redhat.com:8443 redhat DIRECT/10.16.120.146 -
+				// 1292551602.625      0 10.16.120.247 TCP_DENIED/407 3840 CONNECT jsefler-f12-candlepin.usersys.redhat.com:8443 - NONE/- text/html
+				
+				// assert the tail of proxyLog shows the proxyLogGrepPattern (NO AUTH)
+				// CONNECT   Dec 17 18:56:22 [20793]: Connect (file descriptor 7):  [10.16.120.248]
+				// CONNECT   Dec 17 18:56:22 [20793]: Request (file descriptor 7): CONNECT jsefler-f12-candlepin.usersys.redhat.com:8443 HTTP/1.1
+				// INFO      Dec 17 18:56:22 [20793]: No proxy for jsefler-f12-candlepin.usersys.redhat.com
+				// CONNECT   Dec 17 18:56:22 [20793]: Established connection to host "jsefler-f12-candlepin.usersys.redhat.com" using file descriptor 8.
+				// INFO      Dec 17 18:56:22 [20793]: Not sending client headers to remote machine
+				// INFO      Dec 17 18:56:22 [20793]: Closed connection between local client (fd:7) and remote client (fd:8)
+				
+				if (proxyLogGrepPattern!=null) {
+					String proxyLogResult = RemoteFileTasks.getTailFromMarkedFile(proxyRunner, proxyLog, proxyLogMarker, ipv4_address);	// accounts for multiple tests hitting the same proxy server simultaneously
+					Assert.assertTrue(proxyLogResult.contains(proxyLogGrepPattern), "The tail of proxy server log '"+proxyLog+"' following marker '"+proxyLogMarker+"' contains expected connection '"+proxyLogGrepPattern+"' attempts from "+ipv4_address+" to the candlepin server.");
+				}
+
+			} else {
+				Assert.fail("This line of code should be logically unreachable.");
 			}
+		
+		} else { // post commit 7b1294aa6bceb6734caa2493c54402537f0773a7 for Bug 1311429 - no_proxy variable ignored when configured in virt-who config file
+			
+			// TEST PART 2:
+			//		Assert that setting the no_proxy environment variable is honored when it matches...
+			//           A: the proxy hostname specified within the rhsm.conf or the proxy hostname specified on the command line
 
-		} else {
-			Assert.fail("This line of code should be logically unreachable.");
+			// do not assemble an environment variable for httpProxyVar - that was covered in Test 1
+			httpProxyEnvVar = "";
+			
+			// set the config parameters
+			updateConfFileProxyParameters(proxy_hostnameConfig, proxy_portConfig, proxy_userConfig, proxy_passwordConfig);
+			RemoteFileTasks.runCommandAndWait(client,"grep proxy "+clienttasks.rhsmConfFile,TestRecords.action());
+			
+			// pad the tail of proxyLog with a message
+			proxyLogMarker = System.currentTimeMillis()+" Testing 2 "+moduleTask+" AttemptsToVerifyHonoringNoProxyEnvironmentVariable_Test from "+clienttasks.hostname+"...";
+			RemoteFileTasks.markFile(proxyRunner, proxyLog, proxyLogMarker);
+			
+			// attempt to register while a no_proxy environment variable has been defined with a list of proxy servers to ignore
+			attemptResult = client.runCommandAndWait(noProxyEnvVar+" "+httpProxyEnvVar+" "+clienttasks.registerCommand(username, password, org, null, null, null, null, null, null, null, (List<String>)null, null, null, null, true, null, proxy, proxyuser, proxypassword));
+			if (exitCode==Integer.valueOf(69)) {	// EX_UNAVAILABLE	// indicative of a bad proxy
+				// when the proxy is unavailable, subscription-manager now aborts before making any decisions about no_proxy environment variables... Bug 1176219: Error out if bad proxy settings detected
+				if (exitCode!=null)	Assert.assertEquals(attemptResult.getExitCode(), exitCode, "The exit code from an attempt to "+moduleTask+" with an unavailable proxy should abort in honor of bug 1176219 regardless of a no_proxy environment variable setting.");
+				if (stdout!=null)	Assert.assertEquals(attemptResult.getStdout().trim(), stdout, "The stdout from an attempt to "+moduleTask+" with an unavailable proxy should abort in honor of bug 1176219 regardless of a no_proxy environment variable setting.");
+				if (stderr!=null)	Assert.assertEquals(attemptResult.getStderr().trim(), stderr, "The stderr from an attempt to "+moduleTask+" with an unavailable proxy should abort in honor of bug 1176219 regardless of a no_proxy environment variable setting.");
+			} else
+			if (hostnameMatchesNoProxyEnvVar) {	// no_proxy environment variable matches proxy
+				Assert.assertEquals(attemptResult.getExitCode(), Integer.valueOf(0), "The exit code from an attempt to "+moduleTask+" using a no_proxy environment variable '"+noProxyEnvVar+"' that matches the hostname to override both the configured and CLI option proxy.");
+				Assert.assertEquals(attemptResult.getStderr().trim(), "", "The stderr from an attempt to "+moduleTask+" using a no_proxy environment variable '"+noProxyEnvVar+"' that matches the hostname to override both the configured and CLI option proxy.");
+				Assert.assertNotNull(clienttasks.getCurrentConsumerCert(), "The system has succesfully registered a consumer.");
+				
+				// assert that no traffic has gone through the proxy logs
+				String proxyLogResult = RemoteFileTasks.getTailFromMarkedFile(proxyRunner, proxyLog, proxyLogMarker, ipv4_address);	// accounts for multiple tests hitting the same proxy server simultaneously
+				// TEMPORARY WORKAROUND FOR BUG 1420533 - no_proxy environment variable is ignored by the rhsmd process
+				String bugId = "1420533"; boolean invokeWorkaroundWhileBugIsOpen = true;
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				if (invokeWorkaroundWhileBugIsOpen) {
+					log.warning("Skipping assertion that tail of proxy server log '"+proxyLog+"' contains no attempts from "+ipv4_address+" to the candlepin server while bug '"+bugId+"' is open.");
+				} else
+				// END OF WORKAROUND
+				Assert.assertTrue(proxyLogResult.isEmpty(), "The tail of proxy server log '"+proxyLog+"' following marker '"+proxyLogMarker+"' contains no attempts from "+ipv4_address+" to the candlepin server.");
+
+
+			} else {	// the proxy does NOT match no_proxy and the no_proxy environment variable should have no effect.  Assert expected results from dataProvider.
+				if (exitCode!=null)	Assert.assertEquals(attemptResult.getExitCode(), exitCode, "The exit code from an attempt to "+moduleTask+" when no_proxy environment variable '"+noProxyEnvVar+"' does not match the hostname.");
+				if (stdout!=null)	Assert.assertEquals(attemptResult.getStdout().trim(), stdout, "The stdout from an attempt to "+moduleTask+" when no_proxy environment variable '"+noProxyEnvVar+"' does not match the hostname.");
+				if (stderr!=null)	Assert.assertEquals(attemptResult.getStderr().trim(), stderr, "The stderr from an attempt to "+moduleTask+" when no_proxy environment variable '"+noProxyEnvVar+"' does not match the hostname.");
+				
+				// assert the tail of proxyLog shows the proxyLogGrepPattern (BASIC AUTH)
+				// 1292545301.350    418 10.16.120.247 TCP_MISS/200 1438 CONNECT jsefler-f12-candlepin.usersys.redhat.com:8443 redhat DIRECT/10.16.120.146 -
+				// 1292551602.625      0 10.16.120.247 TCP_DENIED/407 3840 CONNECT jsefler-f12-candlepin.usersys.redhat.com:8443 - NONE/- text/html
+				
+				// assert the tail of proxyLog shows the proxyLogGrepPattern (NO AUTH)
+				// CONNECT   Dec 17 18:56:22 [20793]: Connect (file descriptor 7):  [10.16.120.248]
+				// CONNECT   Dec 17 18:56:22 [20793]: Request (file descriptor 7): CONNECT jsefler-f12-candlepin.usersys.redhat.com:8443 HTTP/1.1
+				// INFO      Dec 17 18:56:22 [20793]: No proxy for jsefler-f12-candlepin.usersys.redhat.com
+				// CONNECT   Dec 17 18:56:22 [20793]: Established connection to host "jsefler-f12-candlepin.usersys.redhat.com" using file descriptor 8.
+				// INFO      Dec 17 18:56:22 [20793]: Not sending client headers to remote machine
+				// INFO      Dec 17 18:56:22 [20793]: Closed connection between local client (fd:7) and remote client (fd:8)
+				
+				if (proxyLogGrepPattern!=null) {
+					String proxyLogResult = RemoteFileTasks.getTailFromMarkedFile(proxyRunner, proxyLog, proxyLogMarker, ipv4_address);	// accounts for multiple tests hitting the same proxy server simultaneously
+					Assert.assertTrue(proxyLogResult.contains(proxyLogGrepPattern), "The tail of proxy server log '"+proxyLog+"' following marker '"+proxyLogMarker+"' contains expected connection '"+proxyLogGrepPattern+"' attempts from "+ipv4_address+" to the candlepin server.");
+				}
+			}
 		}
 	}
 	@DataProvider(name="getRegisterAttemptsToVerifyHonoringNoProxyEnvironmentVariableData")
@@ -1702,7 +1774,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	}
 	protected List<List<Object>> getRegisterAttemptsToVerifyHonoringNoProxyEnvironmentVariableDataAsListOfLists() {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
-		// TOO EXHAUSTIVE for (List<Object> l : getValidRegisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists()) {
+		// TOO EXHAUSTIVE TAKES 40 MINUTES for (List<Object> l : getValidRegisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists()) {
 		for (List<Object> l : getRandomSubsetOfList(getValidRegisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists(),3)) {
 			
 			// append a value for no_proxy environment variable and a boolean to indicate if it should be honored or not
