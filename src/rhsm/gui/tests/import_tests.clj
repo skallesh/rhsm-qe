@@ -26,7 +26,7 @@
            org.testng.SkipException
            [rhsm.cli.tests ImportTests]
            [rhsm.cli.tasks SubscriptionManagerTasks]
-           [com.redhat.qe.auto.bugzilla BzChecker]))
+           [com.redhat.qe.auto.bugzilla BzChecker OldBzChecker]))
 
 (def importedcert (atom nil))
 ; paths here have to be lowercase because of rhel5 ldtp's
@@ -146,7 +146,7 @@
   [_]
   ;only run this test if the bug is fixed or if we're using version 1.x certs
   (if-not (cert-version-one?)
-    (verify (not (.isBugOpen (BzChecker/getInstance) "860344"))))
+    (verify (not (.isBugOpen (OldBzChecker/getInstance) "860344"))))
   (tasks/restart-app)
   (let [certlocation (str (get-valid-import-cert))
         certdir (tasks/conf-file-value "entitlementCertDir")

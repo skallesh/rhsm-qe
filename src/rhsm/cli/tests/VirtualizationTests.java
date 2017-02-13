@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -24,6 +23,7 @@ import org.testng.annotations.Test;
 import com.redhat.qe.Assert;
 import com.redhat.qe.auto.bugzilla.BlockedByBzBug;
 import com.redhat.qe.auto.bugzilla.BzChecker;
+import com.redhat.qe.auto.bugzilla.OldBzChecker;
 import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.jul.TestRecords;
@@ -148,7 +148,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 			// TEMPORARY WORKAROUND FOR BUG
 			if (virtHostType.contains("ibm_systemz") && expectedUuid.equals("Unknown")) {
 				String bugId = "815598"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 815598 - [RFE] virt.uuid should not be "Unknown" in s390x when list facts
-				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} catch (Exception ex) {/* ignore exception */}
 				if (invokeWorkaroundWhileBugIsOpen) {
 					throw new SkipException("Skipping the virt.uuid fact assertion on a '"+clienttasks.arch+"' virtual guest while bug '"+bugId+"' is open.");
 				}
@@ -158,7 +158,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 			if (/*clienttasks.redhatReleaseX.equals("7") && */virtUuid==null && clienttasks.arch.startsWith("ppc")) {
 				// APPLIES TO BOTH RHEL6 and RHEL7)
 				String bugId = "1372108"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1372108 - facts related to the identification of a virtual/physical system on ppc64le are conflicting
-				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} catch (Exception ex) {/* ignore exception */}
 				if (invokeWorkaroundWhileBugIsOpen) {
 					throw new SkipException("Skipping the virt.uuid fact assertion on a '"+clienttasks.arch+"' while virt-what bug '"+bugId+"' is open.");
 				}
@@ -171,7 +171,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 			// TEMPORARY WORKAROUND FOR BUG
 			if (clienttasks.redhatReleaseX.equals("6") && virtUuid!=null && clienttasks.arch.startsWith("ppc")) {
 				String bugId = "1312431"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1312431 - Add support for detecting ppc64 LPAR as virt guests
-				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} catch (Exception ex) {/* ignore exception */}
 				if (invokeWorkaroundWhileBugIsOpen) {
 					throw new SkipException("Skipping the virt.uuid fact assertion on a '"+clienttasks.arch+"' virtual guest while virt-what bug '"+bugId+"' is open.");
 				}
@@ -180,7 +180,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 			// TEMPORARY WORKAROUND FOR BUG
 			if (clienttasks.redhatReleaseX.equals("7") && virtUuid!=null && clienttasks.arch.startsWith("ppc")) {
 				String bugId = "1072524"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1072524 - Add support for detecting ppc64 LPAR as virt guests
-				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} catch (Exception ex) {/* ignore exception */}
 				if (invokeWorkaroundWhileBugIsOpen) {
 					throw new SkipException("Skipping the virt.uuid fact assertion on a '"+clienttasks.arch+"' while virt-what bug '"+bugId+"' is open.");
 				}
@@ -190,7 +190,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 			if (/*clienttasks.redhatReleaseX.equals("7") && */virtUuid!=null && clienttasks.arch.startsWith("ppc")) {
 				// APPLIES TO BOTH RHEL6 and RHEL7
 				String bugId = "1372108"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1372108 - facts related to the identification of a virtual/physical system on ppc64le are conflicting
-				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} catch (Exception ex) {/* ignore exception */}
 				if (invokeWorkaroundWhileBugIsOpen) {
 					throw new SkipException("Skipping the virt.uuid fact assertion on a '"+clienttasks.arch+"' while virt-what bug '"+bugId+"' is open.");
 				}

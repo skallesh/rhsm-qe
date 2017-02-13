@@ -10,7 +10,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.testng.SkipException;
 import org.testng.annotations.AfterGroups;
-import org.testng.annotations.BeforeGroups;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
@@ -18,7 +17,6 @@ import com.redhat.qe.Assert;
 import com.redhat.qe.auto.bugzilla.BlockedByBzBug;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import rhsm.base.CandlepinType;
-import rhsm.base.SubscriptionManagerBaseTestScript;
 import rhsm.base.SubscriptionManagerCLITestScript;
 import rhsm.cli.tasks.CandlepinTasks;
 import rhsm.cli.tasks.SubscriptionManagerTasks;

@@ -9,7 +9,7 @@
                  [com.google.code.guice/guice "1.0"] ;; required for new testng
                  [com.redhat.qe/assertions "1.0.2"]
                  [com.redhat.qe/bugzilla-testng "1.0.4"]
-                 [com.redhat.qe/bz-checker "1.0.3-SNAPSHOT"]
+                 [com.redhat.qe/bz-checker "2.0.3-SNAPSHOT"]
                  [com.redhat.qe/json-java "20110202"]
                  [com.redhat.qe/jul.test.records "1.0.1"]
                  [com.redhat.qe/ssh-tools "1.0.2-SNAPSHOT"]

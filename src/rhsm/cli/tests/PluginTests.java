@@ -24,6 +24,7 @@ import rhsm.data.SubscriptionPool;
 
 import com.redhat.qe.Assert;
 import com.redhat.qe.auto.bugzilla.BzChecker;
+import com.redhat.qe.auto.bugzilla.OldBzChecker;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 
@@ -583,7 +584,7 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 // A BETTER SOLUTION FOR THIS WORKAROUND IS configureRhelProductCertDirBeforeGroups() unconfigureRhelProductCertDirAfterGroups()
 //		// TEMPORARY WORKAROUND FOR BUG
 //		String bugId = "964332"; boolean invokeWorkaroundWhileBugIsOpen = true;
-//		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+//		try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} catch (Exception ex) {/* ignore exception */}
 //		if (invokeWorkaroundWhileBugIsOpen) {
 //			// issue a sacrificial autosubscribe call to get most of the entitlements attached.  If it times out, the post_auto_attach hooks will not get called
 //			clienttasks.subscribe_(true, null, (String)null, null, null, null, null, null, null, null, null);
@@ -790,7 +791,7 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		// TEMPORARY WORKAROUND FOR BUG
 		String bugId = "922882"; boolean invokeWorkaroundWhileBugIsOpen = true;
 		// RFE Bug 922882 was CLOSED NOTABUG and will be re-opened when actually needed.  However, we still need to invoke this workaround to remove the ccs package from the prior test
-		try {if (invokeWorkaroundWhileBugIsOpen/*&&BzChecker.getInstance().isBugOpen(bugId)*/) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		try {if (invokeWorkaroundWhileBugIsOpen/*&&OldBzChecker.getInstance().isBugOpen(bugId)*/) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} catch (Exception ex) {/* ignore exception */}
 		if (invokeWorkaroundWhileBugIsOpen) {
 			// remove the HA package that was installed by prior test verifyEnabledProductIdInstallTestPluginHooksAreCalled_Test
 			if (!sm_haPackages.isEmpty() && clienttasks.isPackageInstalled(sm_haPackages.get(0))) {

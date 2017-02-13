@@ -17,6 +17,7 @@ import rhsm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.Assert;
 import com.redhat.qe.auto.bugzilla.BlockedByBzBug;
 import com.redhat.qe.auto.bugzilla.BzChecker;
+import com.redhat.qe.auto.bugzilla.OldBzChecker;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.tools.SSHCommandResult;
 
@@ -92,7 +93,7 @@ public class BashCompletionTests extends SubscriptionManagerCLITestScript{
 		if ((bashCommand.startsWith("/usr/libexec/rhsmcertd-worker ") || bashCommand.startsWith("/usr/libexec/rhsmd ")) &&
 			!actualCompletions.containsAll(expectedCompletions)) {
 			String bugId="1004402"; 
-			try {if (!BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else { }} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			try {if (!OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else { }} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} catch (Exception ex) {/* ignore exception */}
 			throw new SkipException("Bash completion for '"+bashCommand+"' is broken and bug '"+bugId+"' was CLOSED/WONTFIX.");
 		}
 		// END OF WORKAROUND
