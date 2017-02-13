@@ -32,6 +32,7 @@ import rhsm.data.ProductCert;
 import com.redhat.qe.Assert;
 import com.redhat.qe.auto.bugzilla.BlockedByBzBug;
 import com.redhat.qe.auto.bugzilla.BzChecker;
+import com.redhat.qe.auto.bugzilla.OldBzChecker;
 import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.tools.RemoteFileTasks;
@@ -355,7 +356,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				// TEMPORARY WORKAROUND
 				boolean invokeWorkaroundWhileBugIsOpen = true;
 				String bugId="1418467";	// Bug 1418467 - NEEDINFO on rhel-x86_64-server-sjis-6.*.aus-debuginfo channel mappings to product certs
-				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} catch (Exception ex) {/* ignore exception */}
 				if (invokeWorkaroundWhileBugIsOpen && channel.matches("rhel-x86_64-server-sjis-6\\..\\.aus-debuginfo")) {
 					log.warning("Skipping assertion that Actual RHEL6 AUS channel '"+channel+"' in channel cert mapping file '"+channelCertMappingFilename+"' was not expected while bug "+bugId+" is open.");
 					continue;
@@ -1143,7 +1144,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 			String bugId1="1078527";	// Bug 1078527 - channel-cert-mapping for ComputeNode rhel-7 product certs are missing and wrong
 			String bugId2="1078530";	// Bug 1078530 - product-certs.json appears to contain bad/missing mappings for ComputeNode rhel7 channels
 			invokeWorkaroundWhileBugIsOpen = false;
-			try {if (invokeWorkaroundWhileBugIsOpen&&(BzChecker.getInstance().isBugOpen(bugId1)||BzChecker.getInstance().isBugOpen(bugId2))) {log.fine("Invoking workaround for Bugzillas:  https://bugzilla.redhat.com/show_bug.cgi?id="+bugId1+" https://bugzilla.redhat.com/show_bug.cgi?id="+bugId2);SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId1);SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId2);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			try {if (invokeWorkaroundWhileBugIsOpen&&(OldBzChecker.getInstance().isBugOpen(bugId1)||OldBzChecker.getInstance().isBugOpen(bugId2))) {log.fine("Invoking workaround for Bugzillas:  https://bugzilla.redhat.com/show_bug.cgi?id="+bugId1+" https://bugzilla.redhat.com/show_bug.cgi?id="+bugId2);SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId1);SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId2);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} catch (Exception ex) {/* ignore exception */}
 			if (invokeWorkaroundWhileBugIsOpen) {
 				throw new SkipException("Skipping this test on '"+clienttasks.redhatReleaseX+"' while bug "+bugId1+" or "+bugId2+" is open.");
 			}
@@ -1162,7 +1163,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 		if (clienttasks.redhatReleaseX.equals("6")) {
 //			// TEMPORARY WORKAROUND FOR BUG
 //			String bugId = "0000"; boolean invokeWorkaroundWhileBugIsOpen = true;
-//			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+//			try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 //			if (invokeWorkaroundWhileBugIsOpen) {
 //				throw new SkipException("Skipping this test on '"+clienttasks.redhatReleaseX+"' while bug '"+bugId+"' is open.");
 //			}
@@ -1180,7 +1181,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 		if (clienttasks.redhatReleaseX.equals("5")) {
 //			// TEMPORARY WORKAROUND FOR BUG
 //			String bugId = "0000"; boolean invokeWorkaroundWhileBugIsOpen = true;
-//			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+//			try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 //			if (invokeWorkaroundWhileBugIsOpen) {
 //				throw new SkipException("Skipping this test on '"+clienttasks.redhatReleaseX+"' while bug '"+bugId+"' is open.");
 //			}

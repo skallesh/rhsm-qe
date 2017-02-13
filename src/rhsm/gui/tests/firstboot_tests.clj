@@ -19,8 +19,7 @@
             BeforeClass
             BeforeGroups
             Test]
-           org.testng.SkipException
-           [com.redhat.qe.auto.bugzilla BzChecker]))
+           org.testng.SkipException))
 
 (def window-name "Choose Service")
 

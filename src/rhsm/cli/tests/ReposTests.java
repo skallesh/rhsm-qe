@@ -23,6 +23,7 @@ import org.testng.annotations.Test;
 
 import com.redhat.qe.Assert;
 import com.redhat.qe.auto.bugzilla.BzChecker;
+import com.redhat.qe.auto.bugzilla.OldBzChecker;
 import com.redhat.qe.auto.testng.TestNGUtils;
 
 import rhsm.base.SubscriptionManagerCLITestScript;
@@ -31,7 +32,6 @@ import rhsm.cli.tasks.SubscriptionManagerTasks;
 import rhsm.data.ContentNamespace;
 import rhsm.data.EntitlementCert;
 import rhsm.data.ProductCert;
-import rhsm.data.ProductSubscription;
 import rhsm.data.Repo;
 import rhsm.data.SubscriptionPool;
 import rhsm.data.YumRepo;
@@ -126,7 +126,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 				if (expectedRepo.repoName.equals("content") && !actualRepos.contains(expectedRepo)) {
 					boolean invokeWorkaroundWhileBugIsOpen = true;
 					String bugId="1246636"; 
-					try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+					try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} catch (Exception ex) {/* ignore exception */}
 					if (invokeWorkaroundWhileBugIsOpen) {
 						log .warning("The newly entitled contentNamespace '"+contentNamespace+"' is NOT represented in the subscription-manager repos --list by: "+expectedRepo);
 						continue;

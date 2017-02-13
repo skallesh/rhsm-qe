@@ -43,7 +43,8 @@ import org.testng.annotations.DataProvider;
 
 import com.redhat.qe.Assert;
 import com.redhat.qe.auto.bugzilla.BlockedByBzBug;
-import com.redhat.qe.auto.bugzilla.BzChecker;
+//import com.redhat.qe.auto.bugzilla.BzChecker;
+import com.redhat.qe.auto.bugzilla.OldBzChecker;
 import com.redhat.qe.auto.testng.TestNGUtils;
 
 import rhsm.cli.tasks.CandlepinTasks;
@@ -545,7 +546,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		if (CandlepinType.hosted.equals(sm_serverType)) {
 			boolean invokeWorkaroundWhileBugIsOpen = true;
 			String bugId="1358508";	// Bug 1358508 - Error updating system data on the server
-			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} catch (Exception e) {/* ignore exception */}
 			if (invokeWorkaroundWhileBugIsOpen) {
 				//smt.updateConfFileParameter(smt.rhsmConfFile, "rhsm", "report_package_profile", "0");
 				smt.config(null, null, true, new String[]{"rhsm", "report_package_profile", "0"});
@@ -584,7 +585,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 				// TEMPORARY WORKAROUND
 				boolean invokeWorkaroundWhileBugIsOpen = true;
 				String bugId="1257940";	// Bug 1257940 - systemd-hwdb should be confined 
-				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}  catch (Exception e) {/* ignore exception */}
 				if (invokeWorkaroundWhileBugIsOpen) {
 					log.warning("Skipping BeforeSuite assertion that selinux is Enforcing while bug "+bugId+" is open.");
 					continue;
@@ -593,7 +594,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 				// TEMPORARY WORKAROUND
 				invokeWorkaroundWhileBugIsOpen = true;
 				bugId="1342401";	// Bug 1342401 - Allow NetworkManager to create temporary /etc/resolv.conf.XXXXXX file 
-				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}  catch (Exception e) {/* ignore exception */}
 				if (invokeWorkaroundWhileBugIsOpen) {
 					log.warning("Skipping BeforeSuite assertion that selinux is Enforcing while bug "+bugId+" is open.");
 					continue;
@@ -602,7 +603,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 				// TEMPORARY WORKAROUND
 				invokeWorkaroundWhileBugIsOpen = true;
 				bugId="1343648";	// Bug 1343648 - SELinux label for /etc/udev/hwdb.bin is etc_t instead of systemd_hwdb_etc_t after "#systemd-hwdb update" 
-				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}  catch (Exception e) {/* ignore exception */}
 				if (invokeWorkaroundWhileBugIsOpen) {
 					log.warning("Skipping BeforeSuite assertion that selinux is Enforcing while bug "+bugId+" is open.");
 					continue;
@@ -611,7 +612,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 				// TEMPORARY WORKAROUND
 				invokeWorkaroundWhileBugIsOpen = true;
 				bugId="1350756";	// Bug 1350756 - SELinux label for /etc/udev/hwdb.bin is etc_t instead of systemd_hwdb_etc_t after "#systemd-hwdb update" 
-				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}  catch (Exception e) {/* ignore exception */}
 				if (invokeWorkaroundWhileBugIsOpen) {
 					log.warning("Skipping BeforeSuite assertion that selinux is Enforcing while bug "+bugId+" is open.");
 					continue;
@@ -647,7 +648,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 				if (!tailFromMarkedFile.isEmpty() && doesStringContainMatches(tailFromMarkedFile, avcRegex)) {
 					boolean invokeWorkaroundWhileBugIsOpen = true;
 					String bugId="1362273"; // Bug 1362273 - avc denied /var/log/audit/audit.log when "systemd: Started Session # of user root." is written to /var/log/messages every two minutes
-					try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+					try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}  catch (Exception e) {/* ignore exception */}
 					if (invokeWorkaroundWhileBugIsOpen) {
 						log.warning("Ignoring the presence of AVC denials matching '"+avcRegex+"' while bug '"+bugId+"' is open.");
 						tailFromMarkedFile = tailFromMarkedFile.replaceAll(avcRegex, "");
@@ -2063,7 +2064,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			if (username.equals("anonymous")) {
 				boolean invokeWorkaroundWhileBugIsOpen = true;
 				String bugId="741961"; 
-				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} catch (Exception e) {/* ignore exception */}
 				if (invokeWorkaroundWhileBugIsOpen) {
 					log.warning("Ignoring the presence of user '"+username+"'.  No automated testing with this user will be executed.");
 					continue;
