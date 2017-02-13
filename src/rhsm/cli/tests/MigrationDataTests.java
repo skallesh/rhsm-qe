@@ -1110,6 +1110,28 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 		}
 		*/
 		
+		if (classicRhnChannel.equals("rhel-x86_64-server-6-cf-ce-1-beta") ||
+			classicRhnChannel.equals("rhel-x86_64-server-6-cf-ce-1-beta-debuginfo")) {
+			// Bug 1299620 - rhel-x86_64-server-6-cf-ce-1-beta channel maps are absent from channel-cert-mapping.txt
+			log.warning("(anthomas 02/07/2017) All CF-SE, CF-AE, CF-CE, CF-Tools, and CF-ME-2 are all EOL and not supported. We can probably ignore these mappings safely.  https://bugzilla.redhat.com/show_bug.cgi?id=1299620#c3");
+			Assert.assertTrue(!channelsToProductCertFilenamesMap.containsKey(classicRhnChannel), "Special case RHN Classic channel '"+classicRhnChannel+"' is NOT accounted for in subscription-manager-migration-data file '"+channelCertMappingFilename+"'.");
+			return;
+		}
+		if (classicRhnChannel.equals("rhel-x86_64-server-6-cf-se-1-beta") ||
+			classicRhnChannel.equals("rhel-x86_64-server-6-cf-se-1-beta-debuginfo")) {
+			// Bug 1299621 - rhel-x86_64-server-6-cf-se-1-beta channel maps are absent from channel-cert-mapping.txt
+			log.warning("(anthomas 02/07/2017) All CF-SE, CF-AE, CF-CE, CF-Tools, and CF-ME-2 are all EOL and not supported. We can probably ignore these mappings safely.  https://bugzilla.redhat.com/show_bug.cgi?id=1299621#c3");
+			Assert.assertTrue(!channelsToProductCertFilenamesMap.containsKey(classicRhnChannel), "Special case RHN Classic channel '"+classicRhnChannel+"' is NOT accounted for in subscription-manager-migration-data file '"+channelCertMappingFilename+"'.");
+			return;
+		}
+		if (classicRhnChannel.equals("rhel-x86_64-server-6-cf-tools-1-beta") ||
+			classicRhnChannel.equals("rhel-x86_64-server-6-cf-tools-1-beta-debuginfo")) {
+			// Bug 1299623 - rhel-x86_64-server-6-cf-tools-1-beta channel maps are absent from channel-cert-mapping.txt
+			log.warning("(anthomas 02/07/2017) All CF-SE, CF-AE, CF-CE, CF-Tools, and CF-ME-2 are all EOL and not supported. We can probably ignore these mappings safely.  https://bugzilla.redhat.com/show_bug.cgi?id=1299623#c7");
+			Assert.assertTrue(!channelsToProductCertFilenamesMap.containsKey(classicRhnChannel), "Special case RHN Classic channel '"+classicRhnChannel+"' is NOT accounted for in subscription-manager-migration-data file '"+channelCertMappingFilename+"'.");
+			return;
+		}
+		
 		Assert.assertTrue(channelsToProductCertFilenamesMap.containsKey(classicRhnChannel), "RHN Classic channel '"+classicRhnChannel+"' is accounted for in subscription-manager-migration-data file '"+channelCertMappingFilename+"'.");
 	}
 	
