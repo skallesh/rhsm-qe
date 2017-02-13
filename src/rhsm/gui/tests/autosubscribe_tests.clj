@@ -27,7 +27,7 @@
             DataProvider]
            org.testng.SkipException
            [rhsm.cli.tests ComplianceTests]
-           [com.redhat.qe.auto.bugzilla BzChecker]))
+           [com.redhat.qe.auto.bugzilla BzChecker OldBzChecker]))
 
 (def somedir (ComplianceTests/productCertDirForSomeProductsSubscribable))
 (def alldir (ComplianceTests/productCertDirForAllProductsSubscribable))
@@ -62,8 +62,8 @@
   (try
     ;; https://bugzilla.redhat.com/show_bug.cgi?id=723051
     ;; this bug crashes everything, so fail the BeforeClass if this is open
-    (verify (not (.isBugOpen (BzChecker/getInstance) "723051")))
-    (verify (not (.isBugOpen (BzChecker/getInstance) "1040119")))
+    (verify (not (.isBugOpen (OldBzChecker/getInstance) "723051")))
+    (verify (not (.isBugOpen (OldBzChecker/getInstance) "1040119")))
     (if (= "RHEL7" (get-release)) (base/startup nil))
     (tasks/kill-app)
     (reset! product-cert-dir (tasks/conf-file-value "productCertDir"))

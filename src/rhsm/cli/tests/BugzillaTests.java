@@ -34,6 +34,7 @@ import org.testng.annotations.Test;
 import com.redhat.qe.Assert;
 import com.redhat.qe.auto.bugzilla.BlockedByBzBug;
 import com.redhat.qe.auto.bugzilla.BzChecker;
+import com.redhat.qe.auto.bugzilla.OldBzChecker;
 import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.tools.RemoteFileTasks;
@@ -2012,8 +2013,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 					boolean invokeWorkaroundWhileBugIsOpen = true;
 					String bugId = "1016300";
 					try {
-						if (invokeWorkaroundWhileBugIsOpen && BzChecker.getInstance().isBugOpen(bugId)) {
-							log.fine("Invoking workaround for " + BzChecker.getInstance().getBugState(bugId).toString()
+						if (invokeWorkaroundWhileBugIsOpen && OldBzChecker.getInstance().isBugOpen(bugId)) {
+							log.fine("Invoking workaround for " + OldBzChecker.getInstance().getBugState(bugId).toString()
 									+ " Bugzilla " + bugId + ".  (https://bugzilla.redhat.com/show_bug.cgi?id=" + bugId
 									+ ")");
 							SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);
@@ -2022,7 +2023,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 						}
 					} catch (XmlRpcException xre) {
 						/* ignore exception */} catch (RuntimeException re) {
-						/* ignore exception */}
+						/* ignore exception */} catch (Exception ex) {/* ignore exception */}
 					if (invokeWorkaroundWhileBugIsOpen) {
 						log.warning("Ignoring the provided MKT product '" + providedProduct
 								+ "'.  No syslog assertion for this product will be made.");

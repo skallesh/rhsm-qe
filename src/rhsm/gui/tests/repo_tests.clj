@@ -27,8 +27,7 @@
             AfterGroups
             Test
             DataProvider]
-           org.testng.SkipException
-           [com.redhat.qe.auto.bugzilla BzChecker]))
+           org.testng.SkipException))
 
 (def random_row_num (atom nil)) ;; Used to dynamically select a random row number
 (def list_row (atom []))        ;; Used to hold probable row numbers

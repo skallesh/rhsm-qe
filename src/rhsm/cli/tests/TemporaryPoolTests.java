@@ -1,7 +1,6 @@
 package rhsm.cli.tests;
 
 import java.io.File;
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -11,7 +10,6 @@ import java.util.Map;
 
 import org.apache.xmlrpc.XmlRpcException;
 import org.json.JSONException;
-import org.json.JSONObject;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterGroups;
 import org.testng.annotations.BeforeClass;
@@ -25,12 +23,12 @@ import rhsm.cli.tasks.CandlepinTasks;
 import rhsm.data.ConsumerCert;
 import rhsm.data.EntitlementCert;
 import rhsm.data.InstalledProduct;
-import rhsm.data.ProductNamespace;
 import rhsm.data.ProductSubscription;
 import rhsm.data.SubscriptionPool;
 
 import com.redhat.qe.Assert;
 import com.redhat.qe.auto.bugzilla.BzChecker;
+import com.redhat.qe.auto.bugzilla.OldBzChecker;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
@@ -230,7 +228,7 @@ public class TemporaryPoolTests extends SubscriptionManagerCLITestScript {
 				// TEMPORARY WORKAROUND FOR BUG
 				String bugId = "1199443";	// Bug 1199443 - Wrong "End date" in installed list after attaching 24-hour subscription on a unmapped-guest
 				boolean invokeWorkaroundWhileBugIsOpen = true;
-				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} catch (Exception ex) {/* ignore exception */}
 				if (invokeWorkaroundWhileBugIsOpen) {
 					log.warning("Skipping assertion of the End Date for installed product '"+installedProduct.productName+"' provided by a temporary pool while bug '"+bugId+"' is open.");
 				} else	// assert the End Date
@@ -328,7 +326,7 @@ public class TemporaryPoolTests extends SubscriptionManagerCLITestScript {
 		// TEMPORARY WORKAROUND FOR BUG
 		String bugId = "1366301";	// Bug 1366301 - Server error attempting a PUT to /subscription/consumers/<UUID>/certificates?lazy_regen=true returned status 404
 		boolean invokeWorkaroundWhileBugIsOpen = true;
-		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} catch (Exception ex) {/* ignore exception */}
 		if (invokeWorkaroundWhileBugIsOpen && CandlepinType.hosted.equals(sm_serverType)) {
 			log.warning("Skipping a random call to refresh local certificates while bug '"+bugId+"' is open.");
 			clienttasks.run_rhsmcertd_worker(null);	// no need to pass autoheal option because it is already set true on the consumer
@@ -374,7 +372,7 @@ public class TemporaryPoolTests extends SubscriptionManagerCLITestScript {
 		// TEMPORARY WORKAROUND FOR BUG
 		String bugId = "1366301";	// Bug 1366301 - Server error attempting a PUT to /subscription/consumers/<UUID>/certificates?lazy_regen=true returned status 404
 		boolean invokeWorkaroundWhileBugIsOpen = true;
-		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} catch (Exception ex) {/* ignore exception */}
 		if (invokeWorkaroundWhileBugIsOpen && CandlepinType.hosted.equals(sm_serverType)) {
 			log.warning("Skipping a random call to refresh local certificates while bug '"+bugId+"' is open.");
 			clienttasks.run_rhsmcertd_worker(null);	// no need to pass autoheal option because it is already set true on the consumer

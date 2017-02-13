@@ -26,8 +26,7 @@
             AfterGroups
             Test
             DataProvider]
-           org.testng.SkipException
-           [com.redhat.qe.auto.bugzilla BzChecker]))
+           org.testng.SkipException))
 
 (def prod-dir-atom (atom {}))  ; "ProductCertDir" value from conf file
 (def new-list (atom {}))    ; Used to dynamically alter the list of subscriptions

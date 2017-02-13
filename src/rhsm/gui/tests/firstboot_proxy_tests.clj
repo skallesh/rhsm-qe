@@ -21,8 +21,7 @@
             BeforeClass
             BeforeGroups
             Test]
-           org.testng.SkipException
-           [com.redhat.qe.auto.bugzilla BzChecker]))
+           org.testng.SkipException))
 
 (def firstboot-auth-log "/var/log/squid/access.log")
 (def firstboot-noauth-log "/var/log/tinyproxy.log")
