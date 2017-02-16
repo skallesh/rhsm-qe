@@ -1,10 +1,7 @@
 (defproject org.clojars.jsefler/sm "1.0.0-SNAPSHOT"
   :description "Automated tests for Red Hat Subsciption Manager CLI and GUI"
   :java-source-path "src" ;lein1
-  :java-source-paths ["src"
-                      ;"/home/jstavel/src/bugzilla-testng/src"
-                      ;"/home/jstavel/src/bz-checker/src"
-                      ]
+  :java-source-paths ["src"]
   :main rhsm.runtestng
   :aot [#"^rhsm.gui.tests" rhsm.runtestng] ;regex to find tests that testng will run
   :keep-non-project-classes true
@@ -37,10 +34,6 @@
                  [levand/immuconf "0.1.0"]
                  [org.json/json "20160810"]
                  [mount "0.1.10"]]
-  :exclusions [[com.redhat.qe/bugzilla-testng]
-               [org.json/json]
-               [com.redhat.qe/bz-checker]
-               [org.clojure/clojure]]
   ;lein1
   :dev-dependencies [[fn.trace "1.3.2.0-SNAPSHOT"]
                      [lein-eclipse "1.0.0"]]
