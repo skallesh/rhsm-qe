@@ -8,12 +8,13 @@
   :dependencies [[clj-http "2.0.0"]
                  [com.google.code.guice/guice "1.0"] ;; required for new testng
                  [com.redhat.qe/assertions "1.0.2"]
-                 [com.redhat.qe/bugzilla-testng "1.1.3-SNAPSHOT"]
+                 [com.redhat.qe/bugzilla-testng "1.1.4-SNAPSHOT"]
                  [com.redhat.qe/bz-checker "2.0.3-SNAPSHOT"]
                  [com.redhat.qe/json-java "20110202"]
                  [com.redhat.qe/jul.test.records "1.0.1"]
                  [com.redhat.qe/ssh-tools "1.0.2-SNAPSHOT"]
-                 [com.redhat.qe/testng-listeners "1.0.0"]
+                 [com.redhat.qe/testng-listeners "1.0.0" 
+                  :exclusions [com.redhat.qe/bugzilla-testng]]
                  [com.redhat.qe/verify-testng "1.0.0-SNAPSHOT"]
                  [gnome.ldtp "1.2.1-SNAPSHOT"]
                  [matchure "0.10.1"]
@@ -49,6 +50,8 @@
   :javac-options {:debug "on"}
   ;:javac-options ["-target" "1.7" "-source" "1.7"]
   ;:jvm-opts ["-Xdebug" "-Xrunjdwp:transport=dt_socket,address=13172,server=y,suspend=n"]
+
+  :manifest {"Class-Path" "lib/clojure-1.8.0.jar"}
 
   :repl-options {:timeout 120000})
 
