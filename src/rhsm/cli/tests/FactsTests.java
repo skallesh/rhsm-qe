@@ -1540,6 +1540,14 @@ if (false) { // DO NOT RUN, BUT NOT READY TO DELETE CODE
 					continue;
 				}
 				
+				// ignore white space that has been trimmed from candlepin's consumer fact value
+				if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.22-1")) {	// candlepin commit 7fb81bb296e7603353af571a8305de95fa98070f  1405125: Remove null byte from end of any fact value
+					if (systemFactsMap.get(key).trim().equals(consumerFactsMap.get(key))) {
+						log.info("Ignoring leading/trailing whitespace mismatch for fact '"+key+"'; see Bugzilla https://bugzilla.redhat.com/show_bug.cgi?id=1405125#c3");
+						continue;
+					}
+				}
+				
 				mapsAreEqual=false;
 			} else if (!systemFactsMap.containsKey(key)) {
 				log.warning("Consumer '"+consumerId+"' from the remote candlepin API has a fact '"+key+"' which is absent from the local system facts on client "+client1tasks.hostname+".");
@@ -1578,6 +1586,14 @@ if (false) { // DO NOT RUN, BUT NOT READY TO DELETE CODE
 				if (systemFactsMap.get(key).equals("Unknown") && consumerFactsMap.get(key).trim().equals("")) {
 					log.info("Ignoring mismatch for fact '"+key+"'; see Bugzilla https://bugzilla.redhat.com/show_bug.cgi?id=722248");
 					continue;
+				}
+				
+				// ignore white space that has been trimmed from candlepin's consumer fact value
+				if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.22-1")) {	// candlepin commit 7fb81bb296e7603353af571a8305de95fa98070f  1405125: Remove null byte from end of any fact value
+					if (consumerFactsMap.get(key).equals(systemFactsMap.get(key).trim())) {
+						log.info("Ignoring leading/trailing whitespace mismatch for fact '"+key+"'; see Bugzilla https://bugzilla.redhat.com/show_bug.cgi?id=1405125#c3");
+						continue;
+					}
 				}
 				
 				mapsAreEqual=false;
