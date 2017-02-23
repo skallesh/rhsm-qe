@@ -3740,8 +3740,10 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	
 		// negative tests
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.17.5-1")) {	// post commit ea10b99095ad58df57ed107e13bf19498e003ae8	// Bug 1320507 - Wrong prefix prompts when register using serverurl without prefix
-			if (isCurrentlyConfiguredServerTypeHosted()) {
+//			if (isCurrentlyConfiguredServerTypeHosted()) {
+			if (isCurrentlyConfiguredServerTypeHosted() && SubscriptionManagerTasks.isVersion(servertasks.statusVersion, "<", "0.9.51.21-1")) {
 				// 08-11-2015, I don't like this behavior because IT is blacklisting any prefix that does not match /subscription causing a inaccessible server to masquerade as a CA certificate error"
+				// 02-17-2017, Good News - yesterday IT bumped candlepin-0.9.51.20-1 to 0.9.51.21-1 and the CA certificate error response disappeared.
 				serverurl= "https://"+server_hostname+(server_port.isEmpty()?"":":"+server_port)+"/PREFIX";		ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"1119688","842885"}),								serverurl,	null,	null,	null,		new Integer(78),	null,						"Error: CA certificate for subscription service has not been installed."}));
 				serverurl= "/";																					ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"1119688","830767"}),								serverurl,	null,	null,	null,		new Integer(78),	null,						"Error: CA certificate for subscription service has not been installed."}));
 			} else {
