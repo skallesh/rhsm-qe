@@ -1440,7 +1440,8 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		
 		
 		// TEST PART 1: let's assert that setting the proxy via an environment variable works
-		
+		//-------------
+		if (exitCode!=Integer.valueOf(69)/* EX_UNAVAILABLE is indicative of a bad proxy */) {	// skipping Test 1 for negative bad proxy
 		// assemble the value of the httpProxyVar
 		// HTTPS_PROXY=https://proxyserver
 		// HTTPS_PROXY=https://proxyserver:proxyport
@@ -1485,10 +1486,11 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		
 		// cleanup
 		clienttasks.unregister_(null, null, null);
+		}	// skipped Test 1 for negative bad proxy
 		
 		
 		// TEST PART 2: now let's assert that setting the proxy via CLI option or rhsm.conf take precedence over the environment variable
-		
+		//-------------
 		// assemble the value of a httpProxyVar that will get overridden
 		httpProxyEnvVar = validHttpProxyEnvVars.get(randomGenerator.nextInt(validHttpProxyEnvVars.size())) + "=https://";
 		httpProxyEnvVar += "proxy.example.com:911";	// provided in https://bugzilla.redhat.com/show_bug.cgi?id=1031755#c0	Note: this does not have to be a working proxy to make this a valid test
@@ -1596,6 +1598,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		List<String> validHttpNoProxyEnvVars = Arrays.asList(new String[]{"NO_PROXY","no_proxy"/*,"no_PROXY" not supported by curl*/});
 		
 		// TEST PART 1:
+		//-------------
 		//		Assert that setting the proxy via environment variables (rhsm.conf and CLI options are void of proxy values)...
 		//           A: is ignored when hostname matches no_proxy
 		//           B: is NOT ignored when hostname does not match no_proxy
@@ -1632,7 +1635,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 				String proxyLogResult = RemoteFileTasks.getTailFromMarkedFile(proxyRunner, proxyLog, proxyLogMarker, ipv4_address);	// accounts for multiple tests hitting the same proxy server simultaneously
 				Assert.assertTrue(proxyLogResult.isEmpty(), "The tail of proxy server log '"+proxyLog+"' following marker '"+proxyLogMarker+"' contains NO connection '"+proxyLogGrepPattern+"' attempts from "+ipv4_address+" to the candlepin server.");
 			}
-		} else if (exitCode!=Integer.valueOf(69)/* skipping Test 1B for negative bad proxy */) {	// B: is NOT ignored when hostname does not matche no_proxy
+		} else if (exitCode!=Integer.valueOf(69)/* EX_UNAVAILABLE is indicative of a bad proxy; skip Test 1B for negative bad proxy */) {	// B: is NOT ignored when hostname does not match no_proxy
 			if (exitCode!=null)	Assert.assertEquals(attemptResult.getExitCode(), exitCode, "The exit code from an attempt to "+moduleTask+" using a proxy server defined by an environment variable '"+httpProxyEnvVar+"' that does not match the no_proxy environment variable '"+noProxyEnvVar+"'.");
 			if (stdout!=null)	Assert.assertEquals(attemptResult.getStdout().trim(), stdout, "The stdout from an attempt to "+moduleTask+" using a proxy server defined by an environment variable '"+httpProxyEnvVar+"' that does not match the no_proxy environment variable '"+noProxyEnvVar+"'.");
 			if (stderr!=null)	Assert.assertEquals(attemptResult.getStderr().trim(), stderr, "The stderr from an attempt to "+moduleTask+" using a proxy server defined by an environment variable '"+httpProxyEnvVar+"' that does not match the no_proxy environment variable '"+noProxyEnvVar+"'.");
@@ -1656,6 +1659,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		}
 			
 		// TEST PART 2
+		//-------------
 		if (clienttasks.isPackageVersion("python-rhsm", "<", "1.18.3-1")) { // pre commit 7b1294aa6bceb6734caa2493c54402537f0773a7 for Bug 1311429 - no_proxy variable ignored when configured in virt-who config file
 		
 			// TEST PART 2: now let's assert that setting the proxy via CLI option or rhsm.conf take precedence over the environment variable...
