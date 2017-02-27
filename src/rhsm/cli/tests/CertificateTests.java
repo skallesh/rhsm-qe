@@ -166,6 +166,30 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
+	@Test(	description="Verify that default-product cert(s) provided by the redhat-release package for this release are expected (e.g. '6.9 Beta' during Beta/Snapshot composes and '6.9' during RC composes)",
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1426759","blockedByBug-1387101","blockedByBug-1327016","blockedByBug-1198931"},	// Bug 1318584 - /etc/pki/product-default/*.pem should supply only GA product cert (HTB versus Beta versus GA discussion)
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void VerifyDefaultProductCertVersion_Test() {
+		if (sm_clientDefProdCertVersion==null) throw new SkipException("No automation property value for the expected '"+clienttasks.productCertDefaultDir+"' cert(s) version was supplied.");
+
+		boolean productDefaultCertTested=false;
+		// due to the implementation of Bug 1123029 - [RFE] Use default product certificates when they are present
+		for (ProductCert productDefaultCert : clienttasks.getProductCerts(clienttasks.productCertDefaultDir)) {
+			// log what package provides the productDefaultCert
+			SSHCommandResult result = client.runCommandAndWait("rpm -q --whatprovides "+productDefaultCert.file.getPath());
+			
+			// assert that the Version of the /etc/pki/product-default/*.pem cert matches the expected value
+			// TODO: It would be nice if we can automatically know what builds are tagged for Beta/Snapshot/RC.  For now we'll take this value from the automation.properties (Jenkins job parameters).
+			Assert.assertEquals(productDefaultCert.productNamespace.version, sm_clientDefProdCertVersion, "The version of the default product cert (provided by '"+result.getStdout().trim()+"') for this RHEL compose.");
+			productDefaultCertTested=true;
+		}
+		
+		// make sure we attempted the test
+		Assert.assertTrue(productDefaultCertTested, "Successfully attempted to test the epected version of the '"+clienttasks.productCertDefaultDir+"' cert(s)");	
+	}
+
+	
 	@Test(	description="Verify that the installed base RHEL product cert provides the expected tags",
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1259820","blockedByBug-1259839"},
 			dependsOnMethods={"VerifyBaseRHELProductCertIsInstalled_Test"},

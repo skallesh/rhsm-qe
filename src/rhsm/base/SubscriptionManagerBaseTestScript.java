@@ -77,6 +77,7 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 	public String sm_clientOrg					= sm_client1Org;
 	
 	public String sm_clientCertificateVersion	= getProperty("sm.client.certificateVersion",null);
+	public String sm_clientDefProdCertVersion	= getProperty("sm.client.defaultProductCertVersion",null);
 	public Boolean sm_clientFips				= Boolean.valueOf(getProperty("sm.client.fips","false"));
 
 
