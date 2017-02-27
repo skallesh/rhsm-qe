@@ -9258,8 +9258,40 @@ if (false) {
 			//	    version, status, reason = self._read_status()
 			//	  File "/usr/lib64/python2.7/httplib.py", line 408, in _read_status
 			//	    raise BadStatusLine(line)
-			//	BadStatusLine: ''		
+			//	BadStatusLine: ''
 			issue = "BadStatusLine: ''";
+			//	2017-02-24 22:10:28.427  FINE: ssh root@ivanova.idmqe.lab.eng.bos.redhat.com subscription-manager register --username=stage_auto_testuser1 --password=redhat --autosubscribe --servicelevel=stAndarD --force
+			//	2017-02-24 22:13:10.090  FINE: Stdout:
+			//	The system with UUID 032c087d-0c70-48a2-96b3-3db2233d7628 has been unregistered
+			//	Registering to: subscription.rhsm.stage.redhat.com:443/subscription
+			//
+			//	2017-02-24 22:13:10.091  FINE: Stderr: Remote server error. Please check the connection details, or see /var/log/rhsm/rhsm.log for more information.
+			//
+			//	2017-02-24 22:13:10.091  FINE: ExitCode: 70
+			//	2017-02-24 22:13:10.091  FINE: ssh root@ivanova.idmqe.lab.eng.bos.redhat.com LINE_NUMBER=$(grep --line-number 'Making request:' /var/log/rhsm/rhsm.log | tail --lines=1 | cut --delimiter=':' --field=1); if [ -n "$LINE_NUMBER" ]; then tail -n +$LINE_NUMBER /var/log/rhsm/rhsm.log; fi;
+			//	2017-02-24 22:13:10.359  WARNING: Last request from /var/log/rhsm/rhsm.log:
+			//	2017-02-24 22:10:38,227 [DEBUG] subscription-manager:6475:MainThread @connection.py:490 - Making request: POST /subscription/consumers?owner=7964055
+			//	2017-02-24 22:13:16,278 [ERROR] subscription-manager:6475:MainThread @managercli.py:177 - Error during registration:
+			//	2017-02-24 22:13:16,279 [ERROR] subscription-manager:6475:MainThread @managercli.py:178 -
+			//	Traceback (most recent call last):
+			//	  File "/usr/lib/python2.6/site-packages/subscription_manager/managercli.py", line 1149, in _do_command
+			//	    content_tags=self.installed_mgr.tags)
+			//	  File "/usr/lib64/python2.6/site-packages/rhsm/connection.py", line 856, in registerConsumer
+			//	    return self.conn.request_post(url, params)
+			//	  File "/usr/lib64/python2.6/site-packages/rhsm/connection.py", line 626, in request_post
+			//	    return self._request("POST", method, params)
+			//	  File "/usr/lib64/python2.6/site-packages/rhsm/connection.py", line 512, in _request
+			//	    response = conn.getresponse()
+			//	  File "/usr/lib64/python2.6/site-packages/rhsm/m2cryptohttp.py", line 182, in getresponse
+			//	    return self._connection.getresponse(*args, **kwargs)
+			//	  File "/usr/lib64/python2.6/httplib.py", line 1049, in getresponse
+			//	    response.begin()
+			//	  File "/usr/lib64/python2.6/httplib.py", line 433, in begin
+			//	    version, status, reason = self._read_status()
+			//	  File "/usr/lib64/python2.6/httplib.py", line 397, in _read_status
+			//	    raise BadStatusLine(line)
+			//	BadStatusLine
+			issue = "BadStatusLine";
 			if (getTracebackCommandResult.getStdout().contains(issue) || result.getStderr().contains(issue)) {
 				String bugId = "1374460"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1374460 - sometimes stage candlepin does not return any error message; appears as a BadStatusLine: ''
 				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
