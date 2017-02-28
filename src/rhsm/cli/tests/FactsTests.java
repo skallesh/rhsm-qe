@@ -7,7 +7,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.xmlrpc.XmlRpcException;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -19,7 +18,7 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import com.redhat.qe.Assert;
-import com.redhat.qe.auto.bugzilla.BzChecker;
+import com.redhat.qe.auto.bugzilla.BugzillaAPIException;
 import com.redhat.qe.auto.bugzilla.OldBzChecker;
 import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.TestNGUtils;
@@ -147,7 +146,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 				"stderr from facts without options should match stderr from the facts --list");
 		// TEMPORARY WORKAROUND FOR BUG
 		String bugId = "838123"; boolean invokeWorkaroundWhileBugIsOpen = true;
-		try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} catch (Exception ex) {/* ignore exception */}
+		try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} catch (Exception ex) {/* ignore exception */}
 		if (invokeWorkaroundWhileBugIsOpen) {
 			String fact = "net.interface.sit0.mac_address";
 			String factRegex = "net\\.interface\\.sit0\\.mac_address: [A-F\\d:]+\\n";
@@ -571,7 +570,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		if (!factValue.equals(fqdn) && (Arrays.asList(client.runCommandAndWait("hostname --all-fqdn").getStdout().trim().split(" ")).contains(factValue))) {
 			boolean invokeWorkaroundWhileBugIsOpen = true;
 			String bugId="1401394"; // Bug 1401394 - Mismatch in the 'fqdn' fact value on s390x machine
-			try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} catch (Exception ex) {/* ignore exception */}
+			try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} catch (Exception ex) {/* ignore exception */}
 			if (invokeWorkaroundWhileBugIsOpen) {
 				throw new SkipException("Skipping this test while bug '"+bugId+"' is open.");
 			}
@@ -605,7 +604,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		if (!factsMap.containsKey(cpuSocketsFact) && (factsMap.get("uname.machine").equalsIgnoreCase("ppc64") || factsMap.get("uname.machine").equalsIgnoreCase("s390x"))) {
 			boolean invokeWorkaroundWhileBugIsOpen = true;
 			String bugId="978466"; // Bug 978466 - subscription-manager fact 'cpu.cpu_socket(s)' is missing in ppc64 and s390x
-			try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} catch (Exception ex) {/* ignore exception */}
+			try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} catch (Exception ex) {/* ignore exception */}
 			if (invokeWorkaroundWhileBugIsOpen) {
 				throw new SkipException("Skipping this test on '"+factsMap.get("uname.machine")+"' while bug '"+bugId+"' is open.");
 			}
@@ -643,7 +642,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 			if (!cpuSockets.equals(socketsCalculatedUsingLscpu) && (factsMap.get("uname.machine").equalsIgnoreCase("ppc64"))) {
 				boolean invokeWorkaroundWhileBugIsOpen = true;
 				String bugId="1070908"; // Bug 1070908 - subscription-manager facts collection for hardware does not match lscpu on ppc64
-				try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} catch (Exception ex) {/* ignore exception */}
+				try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} catch (Exception ex) {/* ignore exception */}
 				if (invokeWorkaroundWhileBugIsOpen) {
 					throw new SkipException("Skipping this test on '"+factsMap.get("uname.machine")+"' while bug '"+bugId+"' is open.");
 				}
@@ -723,7 +722,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		if (!factsMap.containsKey(cpuSocketsFact) && (factsMap.get("uname.machine").equalsIgnoreCase("ppc64") || factsMap.get("uname.machine").equalsIgnoreCase("s390x"))) {
 			boolean invokeWorkaroundWhileBugIsOpen = true;
 			String bugId="978466"; // Bug 978466 - subscription-manager fact 'cpu.cpu_socket(s)' is missing in ppc64 and s390x
-			try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} catch (Exception ex) {/* ignore exception */}
+			try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} catch (Exception ex) {/* ignore exception */}
 			if (invokeWorkaroundWhileBugIsOpen) {
 				throw new SkipException("Skipping this test on '"+factsMap.get("uname.machine")+"' while bug '"+bugId+"' is open.");
 			}
@@ -742,7 +741,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 			if (!cpuCores.equals(coresCalculatedUsingLscpu) && (factsMap.get("uname.machine").equalsIgnoreCase("ppc64"))) {
 				boolean invokeWorkaroundWhileBugIsOpen = true;
 				String bugId="1070908"; // Bug 1070908 - subscription-manager facts collection for hardware does not match lscpu on ppc64
-				try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} catch (Exception ex) {/* ignore exception */}
+				try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} catch (Exception ex) {/* ignore exception */}
 				if (invokeWorkaroundWhileBugIsOpen) {
 					throw new SkipException("Skipping this test on '"+factsMap.get("uname.machine")+"' while bug '"+bugId+"' is open.");
 				}
@@ -1350,7 +1349,7 @@ if (false) { // DO NOT RUN, BUT NOT READY TO DELETE CODE
 				// assert virt.uuid not Unknown
 				// TEMPORARY WORKAROUND FOR BUG
 				String bugId = "1310846"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1310846 - The virt.uuid fact value 'Unknown' is not Unknown on a pSeries 'ppc64' platform. expected:<true> but was:<false>
-				try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} catch (Exception ex) {/* ignore exception */}
+				try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} catch (Exception ex) {/* ignore exception */}
 				if (invokeWorkaroundWhileBugIsOpen) {
 					log.warning("Skipping the assertion of fact virt.uuid is not Unknown on a '"+clienttasks.arch+"' '"+procCpuInfoFacts.get("proc_cpuinfo.common.platform")+"' platform.");
 				} else
@@ -1360,7 +1359,7 @@ if (false) { // DO NOT RUN, BUT NOT READY TO DELETE CODE
 				// assert virt.is_guest is True
 				// TEMPORARY WORKAROUND FOR BUG
 				/*String*/ bugId = "1072524"; /*boolean*/ invokeWorkaroundWhileBugIsOpen = true;	// Bug 1072524 - Add support for detecting ppc64 LPAR as virt guests
-				try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} catch (Exception ex) {/* ignore exception */}
+				try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} catch (Exception ex) {/* ignore exception */}
 				if (invokeWorkaroundWhileBugIsOpen) {
 					log.warning("Skipping the assertion of fact virt.is_guest:True on a '"+clienttasks.arch+"' '"+procCpuInfoFacts.get("proc_cpuinfo.common.platform")+"' platform.");
 				} else
@@ -1390,7 +1389,7 @@ if (false) { // DO NOT RUN, BUT NOT READY TO DELETE CODE
 //				// END OF WORKAROUND
 				// TEMPORARY WORKAROUND FOR BUG
 				String bugId = "1372108"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1372108 - facts related to the identification of a virtual/physical system on ppc64/ppc64le are conflicting
-				try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} catch (Exception ex) {/* ignore exception */}
+				try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} catch (Exception ex) {/* ignore exception */}
 				if (virtIsGuest==false && invokeWorkaroundWhileBugIsOpen) {
 					log.warning("Skipping the assertion for fact virt.is_guest:True on a '"+clienttasks.arch+"' '"+procCpuInfoFacts.get("proc_cpuinfo.common.model")+"' '"+procCpuInfoFacts.get("proc_cpuinfo.common.platform")+"' platform.");
 				} else
@@ -1399,7 +1398,7 @@ if (false) { // DO NOT RUN, BUT NOT READY TO DELETE CODE
 			} else {
 				// TEMPORARY WORKAROUND FOR BUG
 				String bugId = "1372108"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1372108 - facts related to the identification of a virtual/physical system on ppc64/ppc64le are conflicting
-				try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} catch (Exception ex) {/* ignore exception */}
+				try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} catch (Exception ex) {/* ignore exception */}
 				if (virtIsGuest==true && invokeWorkaroundWhileBugIsOpen) {
 					log.warning("Skipping the assertion for fact virt.is_guest:False on a '"+clienttasks.arch+"' '"+procCpuInfoFacts.get("proc_cpuinfo.common.model")+"' '"+procCpuInfoFacts.get("proc_cpuinfo.common.platform")+"' platform.");
 				} else
