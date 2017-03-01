@@ -8,7 +8,8 @@
   :dependencies [[clj-http "2.0.0"]
                  [com.google.code.guice/guice "1.0"] ;; required for new testng
                  [com.redhat.qe/assertions "1.0.2"]
-                 [com.redhat.qe/bugzilla-testng "1.1.4-SNAPSHOT"]
+                 [com.redhat.qe/bugzilla-testng "1.1.4-SNAPSHOT"
+                  :exclusions [com.redhat.qe/bz-checker]]
                  [com.redhat.qe/bz-checker "2.1.3-SNAPSHOT"]
                  [com.redhat.qe/json-java "20110202"]
                  [com.redhat.qe/jul.test.records "1.0.1"]
