@@ -151,7 +151,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		
 //		// TEMPORARY WORKAROUND FOR BUG
 //		String bugId = "840415"; boolean invokeWorkaroundWhileBugIsOpen = true;
-//		try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} catch (Exception ex) {/* ignore exception */}
+//		try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} catch (Exception ex) {/* ignore exception */}
 //		if (invokeWorkaroundWhileBugIsOpen) {
 //			if (clienttasks.productCertDir.equals(nonDefaultProductCertDir))
 //			log.warning("Skipping the removal of the non default productCertDir '"+nonDefaultProductCertDir+"' before Testing without the dryrun option...");

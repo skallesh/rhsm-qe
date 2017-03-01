@@ -736,7 +736,7 @@ schema generation failed
 //				if (jsonErrors.getString(l).equals(invalidServerResponseMessage)) {
 //					String bugId = "1105173"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1105173 - subscription-manager encounters frequent 502 responses from stage IT-Candlepin
 //					// duplicate of Bug 1113741 - RHEL 7 (and 6?): subscription-manager fails with "JSON parsing error: No JSON object could be decoded" error
-//					try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+//					try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 //					if (invokeWorkaroundWhileBugIsOpen) {
 //						log.warning("Re-attempting one more time to get a valid JSON response from the server...");
 //						jsonString = getHTTPResponseAsString(client, get, authenticator, password);

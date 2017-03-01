@@ -583,7 +583,7 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 // A BETTER SOLUTION FOR THIS WORKAROUND IS configureRhelProductCertDirBeforeGroups() unconfigureRhelProductCertDirAfterGroups()
 //		// TEMPORARY WORKAROUND FOR BUG
 //		String bugId = "964332"; boolean invokeWorkaroundWhileBugIsOpen = true;
-//		try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} catch (Exception ex) {/* ignore exception */}
+//		try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} catch (Exception ex) {/* ignore exception */}
 //		if (invokeWorkaroundWhileBugIsOpen) {
 //			// issue a sacrificial autosubscribe call to get most of the entitlements attached.  If it times out, the post_auto_attach hooks will not get called
 //			clienttasks.subscribe_(true, null, (String)null, null, null, null, null, null, null, null, null);

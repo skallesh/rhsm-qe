@@ -457,7 +457,7 @@ public class OstreeTests extends SubscriptionManagerCLITestScript {
 //		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=1152734
 //		boolean invokeWorkaroundWhileBugIsOpen = true;
 //		String bugId="1152734"; 
-//		try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} catch (Exception ex) {/* ignore exception */}
+//		try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} catch (Exception ex) {/* ignore exception */}
 //		if (invokeWorkaroundWhileBugIsOpen) {
 //			log.warning("Skipping the assertion that other remotes in '"+ostreeRepoConfigFile+"' remain unchanged when removing an atomic subscription.");
 //		} else

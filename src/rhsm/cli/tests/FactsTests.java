@@ -1382,7 +1382,7 @@ if (false) { // DO NOT RUN, BUT NOT READY TO DELETE CODE
 //				// TEMPORARY WORKAROUND FOR BUG
 //				// Bug 1072524 has been VERIFIED
 //				String bugId = "1072524"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1072524 - Add support for detecting ppc64 LPAR as virt guests
-//				try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} catch (Exception ex) {/* ignore exception */}
+//				try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} catch (Exception ex) {/* ignore exception */}
 //				if (invokeWorkaroundWhileBugIsOpen) {
 //					log.warning("Skipping the assertion for fact virt.is_guest:True on a '"+clienttasks.arch+"' '"+procCpuInfoFacts.get("proc_cpuinfo.common.model")+"' '"+procCpuInfoFacts.get("proc_cpuinfo.common.platform")+"' platform.");
 //				} else

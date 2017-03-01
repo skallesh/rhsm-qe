@@ -6633,7 +6633,7 @@ if (false) {
 			boolean invokeWorkaroundWhileBugIsOpen = true;
 			String bugId="697087"; 
 			// NOTE: LET'S MAKE THIS A PERMANENT WORKAROUND FOR THIS METHOD
-			// try {if (invokeWorkaroundWhileBugIsOpen/*&&OldBzChecker.getInstance().isBugOpen(bugId)*/) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			// try {if (invokeWorkaroundWhileBugIsOpen/*&&OldBzChecker.getInstance().isBugOpen(bugId)*/) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 			if (invokeWorkaroundWhileBugIsOpen) {
 				
 				List<String> yumRepoListAll			= this.getYumRepolist("all");
@@ -6723,7 +6723,7 @@ if (false) {
 //		if (this.redhatReleaseX.equals("7") && (options.startsWith("all") || options.startsWith("disabled"))) {
 //			boolean invokeWorkaroundWhileBugIsOpen = true;
 //			String bugId="905546"; // Bug 905546 - yum repolist all|disabled is throwing a traceback 
-//			try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+//			try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 //			if (invokeWorkaroundWhileBugIsOpen) {
 //				throw new SkipException("There is no workaround for yum repolist "+options+" bug "+bugId+".");
 //			}
@@ -8129,7 +8129,7 @@ if (false) {
 		// Bug 895447 - the count of subscriptions removed is zero,for the certs that have been imported
 		// subscription-manager commit 46cbbe61713f5e9b43ff54793e2d1897d56191fd
 		// subscription-manager commit 8e10e76fb5951e0b5d6c867c6c7209d8ec80dead
-		//try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		//try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 		if (invokeWorkaroundWhileBugIsOpen) {
 			// Any local-only certificates have been deleted.
 			String subString = "Any local-only certificates have been deleted.";

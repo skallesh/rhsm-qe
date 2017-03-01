@@ -1186,7 +1186,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 		if (clienttasks.redhatReleaseX.equals("6")) {
 //			// TEMPORARY WORKAROUND FOR BUG
 //			String bugId = "0000"; boolean invokeWorkaroundWhileBugIsOpen = true;
-//			try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+//			try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 //			if (invokeWorkaroundWhileBugIsOpen) {
 //				throw new SkipException("Skipping this test on '"+clienttasks.redhatReleaseX+"' while bug '"+bugId+"' is open.");
 //			}
@@ -1204,7 +1204,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 		if (clienttasks.redhatReleaseX.equals("5")) {
 //			// TEMPORARY WORKAROUND FOR BUG
 //			String bugId = "0000"; boolean invokeWorkaroundWhileBugIsOpen = true;
-//			try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+//			try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 //			if (invokeWorkaroundWhileBugIsOpen) {
 //				throw new SkipException("Skipping this test on '"+clienttasks.redhatReleaseX+"' while bug '"+bugId+"' is open.");
 //			}
