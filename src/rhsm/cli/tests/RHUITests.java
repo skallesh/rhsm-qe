@@ -138,7 +138,7 @@ public class RHUITests extends SubscriptionManagerCLITestScript {
 	}
 	
 	@Test(	description="download an expected RHUI iso from an expected file repoUrl",
-			groups={"blockedByBug-860516","blockedByBug-894184"},
+			groups={"blockedByBug-860516","blockedByBug-894184","blockedByBug-1427516"},	// RHEL-6-RHUI-2-LATEST-Server-x86_64-DVD.iso ERROR 404: Not Found. https://projects.engineering.redhat.com/browse/RCMPROJ-6571
 			dependsOnMethods={"ConsumeRHUISubscriptionProduct_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)

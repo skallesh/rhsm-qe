@@ -8601,6 +8601,10 @@ if (false) {
 		//	Stderr: Unable to serialize objects to JSON.
 		//	ExitCode: 70
 		
+		//	ssh root@qe-blade-09.idmqe.lab.eng.bos.redhat.com subscription-manager register --username=stage_2013_data_center_test --password=redhat --org=7965071
+		//	Stdout: Registering to: subscription.rhsm.stage.redhat.com:443/subscription
+		//	Stderr: 'idCert'
+		//	ExitCode: 70
 		
 		//	2014-04-08 16:41:56,930 [INFO] subscription-manager @managercli.py:299 - Server Versions: {'candlepin': 'Unknown', 'server-type': 'Red Hat Subscription Management'}
 		//	2014-04-08 16:41:56,933 [DEBUG] subscription-manager @connection.py:418 - Loaded CA certificates from /etc/rhsm/ca/: candlepin-stage.pem, redhat-uep.pem
@@ -8639,6 +8643,7 @@ if (false) {
 			(result.getStdout()+result.getStderr()).toLowerCase().contains("object is not iterable".toLowerCase()) ||
 			(result.getStdout()+result.getStderr()).toLowerCase().contains("Unable to serialize objects to JSON.".toLowerCase()) ||
 			(result.getStdout()+result.getStderr()).toLowerCase().contains("timed out".toLowerCase()) ||
+			(result.getStdout()+result.getStderr()).toLowerCase().contains("'idCert'".toLowerCase()) ||
 			(result.getStdout()+result.getStderr()).toLowerCase().contains(("See "+rhsmLogFile).toLowerCase()) ||
 			(result.getStdout()+result.getStderr()).toLowerCase().contains("''".toLowerCase()) ||
 			(result.getStdout()+result.getStderr()).toLowerCase().trim().isEmpty() ||
@@ -9253,8 +9258,40 @@ if (false) {
 			//	    version, status, reason = self._read_status()
 			//	  File "/usr/lib64/python2.7/httplib.py", line 408, in _read_status
 			//	    raise BadStatusLine(line)
-			//	BadStatusLine: ''		
+			//	BadStatusLine: ''
 			issue = "BadStatusLine: ''";
+			//	2017-02-24 22:10:28.427  FINE: ssh root@ivanova.idmqe.lab.eng.bos.redhat.com subscription-manager register --username=stage_auto_testuser1 --password=redhat --autosubscribe --servicelevel=stAndarD --force
+			//	2017-02-24 22:13:10.090  FINE: Stdout:
+			//	The system with UUID 032c087d-0c70-48a2-96b3-3db2233d7628 has been unregistered
+			//	Registering to: subscription.rhsm.stage.redhat.com:443/subscription
+			//
+			//	2017-02-24 22:13:10.091  FINE: Stderr: Remote server error. Please check the connection details, or see /var/log/rhsm/rhsm.log for more information.
+			//
+			//	2017-02-24 22:13:10.091  FINE: ExitCode: 70
+			//	2017-02-24 22:13:10.091  FINE: ssh root@ivanova.idmqe.lab.eng.bos.redhat.com LINE_NUMBER=$(grep --line-number 'Making request:' /var/log/rhsm/rhsm.log | tail --lines=1 | cut --delimiter=':' --field=1); if [ -n "$LINE_NUMBER" ]; then tail -n +$LINE_NUMBER /var/log/rhsm/rhsm.log; fi;
+			//	2017-02-24 22:13:10.359  WARNING: Last request from /var/log/rhsm/rhsm.log:
+			//	2017-02-24 22:10:38,227 [DEBUG] subscription-manager:6475:MainThread @connection.py:490 - Making request: POST /subscription/consumers?owner=7964055
+			//	2017-02-24 22:13:16,278 [ERROR] subscription-manager:6475:MainThread @managercli.py:177 - Error during registration:
+			//	2017-02-24 22:13:16,279 [ERROR] subscription-manager:6475:MainThread @managercli.py:178 -
+			//	Traceback (most recent call last):
+			//	  File "/usr/lib/python2.6/site-packages/subscription_manager/managercli.py", line 1149, in _do_command
+			//	    content_tags=self.installed_mgr.tags)
+			//	  File "/usr/lib64/python2.6/site-packages/rhsm/connection.py", line 856, in registerConsumer
+			//	    return self.conn.request_post(url, params)
+			//	  File "/usr/lib64/python2.6/site-packages/rhsm/connection.py", line 626, in request_post
+			//	    return self._request("POST", method, params)
+			//	  File "/usr/lib64/python2.6/site-packages/rhsm/connection.py", line 512, in _request
+			//	    response = conn.getresponse()
+			//	  File "/usr/lib64/python2.6/site-packages/rhsm/m2cryptohttp.py", line 182, in getresponse
+			//	    return self._connection.getresponse(*args, **kwargs)
+			//	  File "/usr/lib64/python2.6/httplib.py", line 1049, in getresponse
+			//	    response.begin()
+			//	  File "/usr/lib64/python2.6/httplib.py", line 433, in begin
+			//	    version, status, reason = self._read_status()
+			//	  File "/usr/lib64/python2.6/httplib.py", line 397, in _read_status
+			//	    raise BadStatusLine(line)
+			//	BadStatusLine
+			issue = "BadStatusLine";
 			if (getTracebackCommandResult.getStdout().contains(issue) || result.getStderr().contains(issue)) {
 				String bugId = "1374460"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1374460 - sometimes stage candlepin does not return any error message; appears as a BadStatusLine: ''
 				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
@@ -9264,6 +9301,48 @@ if (false) {
 			}
 			// END OF WORKAROUND
 			
+			// TEMPORARY WORKAROUND FOR BUG
+			//	2017-02-27 00:06:57.786  FINE: ssh root@qe-blade-09.idmqe.lab.eng.bos.redhat.com subscription-manager register --username=stage_2013_data_center_test --password=redhat --org=7965071
+			//	2017-02-27 00:07:00.089  FINE: Stdout: Registering to: subscription.rhsm.stage.redhat.com:443/subscription
+			//
+			//	2017-02-27 00:07:00.090  FINE: Stderr: 'idCert'
+			//
+			//	2017-02-27 00:07:00.090  FINE: ExitCode: 70
+			//	2017-02-27 00:07:00.090  FINE: ssh root@qe-blade-09.idmqe.lab.eng.bos.redhat.com LINE_NUMBER=$(grep --line-number 'Making request:' /var/log/rhsm/rhsm.log | tail --lines=1 | cut --delimiter=':' --field=1); if [ -n "$LINE_NUMBER" ]; then tail -n +$LINE_NUMBER /var/log/rhsm/rhsm.log; fi;
+			//	2017-02-27 00:07:00.273  WARNING: Last request from /var/log/rhsm/rhsm.log:
+			//	2017-02-27 00:07:06,243 [DEBUG] subscription-manager:11832:MainThread @connection.py:490 - Making request: POST /subscription/consumers?owner=7965071
+			//	2017-02-27 00:07:07,042 [INFO] subscription-manager:11832:MainThread @connection.py:525 - Response: status=202, request="POST /subscription/consumers?owner=7965071"
+			//	2017-02-27 00:07:07,044 [DEBUG] subscription-manager:11832:MainThread @cache.py:110 - Wrote cache: /var/lib/rhsm/cache/installed_products.json
+			//	2017-02-27 00:07:07,044 [ERROR] subscription-manager:11832:MainThread @managercli.py:177 - exception caught in subscription-manager
+			//	2017-02-27 00:07:07,044 [ERROR] subscription-manager:11832:MainThread @managercli.py:178 - 'idCert'
+			//	Traceback (most recent call last):
+			//	  File "/usr/sbin/subscription-manager", line 85, in <module>
+			//	    sys.exit(abs(main() or 0))
+			//	  File "/usr/sbin/subscription-manager", line 76, in main
+			//	    return managercli.ManagerCLI().main()
+			//	  File "/usr/lib/python2.6/site-packages/subscription_manager/managercli.py", line 2768, in main
+			//	    return CLI.main(self)
+			//	  File "/usr/lib/python2.6/site-packages/subscription_manager/cli.py", line 160, in main
+			//	    return cmd.main()
+			//	  File "/usr/lib/python2.6/site-packages/subscription_manager/managercli.py", line 537, in main
+			//	    return_code = self._do_command()
+			//	  File "/usr/lib/python2.6/site-packages/subscription_manager/managercli.py", line 1159, in _do_command
+			//	    consumer_info = self._persist_identity_cert(consumer)
+			//	  File "/usr/lib/python2.6/site-packages/subscription_manager/managercli.py", line 1225, in _persist_identity_cert
+			//	    return managerlib.persist_consumer_cert(consumer)
+			//	  File "/usr/lib/python2.6/site-packages/subscription_manager/managerlib.py", line 72, in persist_consumer_cert
+			//	    consumer = identity.ConsumerIdentity(consumerinfo['idCert']['key'],
+			//	KeyError: 'idCert'
+
+			issue = "KeyError: 'idCert'";
+			if (getTracebackCommandResult.getStdout().contains(issue) || result.getStderr().contains(issue)) {
+				String bugId = "1393965"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1393965 - Fail to register a system to stage
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				if (invokeWorkaroundWhileBugIsOpen) {
+					throw new SkipException("Encountered a '"+issue+"' and could not complete this test while bug '"+bugId+"' is open.");
+				}
+			}
+			// END OF WORKAROUND
 			
 			// TEMPORARY WORKAROUND FOR BUG
 			//	2015-10-12 17:58:54,620 [DEBUG] subscription-manager:44349 @connection.py:523 - Making request: PUT /subscription/consumers/d8018dbc-7e66-4c0a-b322-9c28037fd8cf

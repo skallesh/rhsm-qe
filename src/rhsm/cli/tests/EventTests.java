@@ -346,8 +346,9 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		}
 // TODO FIXME 7/21/2016 assertTheNewConsumerFeedIgnoringEventTitles() call below started failing because the actual newEventTitles occur in reverse order from expected
 		if (clienttasks.isVersion(servertasks.statusVersion, ">=", "2.0.16-1")) {	// probably candlepin commit 6beae873733174df24178a552b116fcb8c8876ef Dont trigger async compliance during batch revoke
-			// attempting to reversing the order; only works sometimes. 
-			newEventTitles = new String[]{"ENTITLEMENT DELETED","COMPLIANCE CREATED"};	// switched the expected order; after discussions with vritant and crog who said the order of the expected new event titles may not be a guaranteed and apparently that's okay; hence a TODO might be to alter the assertTheNew*() methods.
+			// attempting to reversing the order
+			// if this does not help, then we might try to alter the assertTheNew*() methods to IgnoreOrder of just call the assertTheNew**Contains() methods .. 
+			newEventTitles = new String[]{"ENTITLEMENT DELETED","COMPLIANCE CREATED"};	// switched the expected order; after discussions with vritant and crog who said the order of the expected new event titles may not be a guaranteed and apparently that's okay
 		}
 		
 		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=721136 - jsefler 07/14/2011
@@ -361,23 +362,21 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 
 		// assert the consumer feed...
         //assertTheNewConsumerFeed(ownerKey, consumerCert.consumerid, oldConsumerFeed, newEventTitles);
-// TODO FIXME 7/21/2016 assertTheNewConsumerFeedIgnoringEventTitles() call below started failing because the actual newEventTitles occur in reverse order from expected
         assertTheNewConsumerFeedIgnoringEventTitles(ownerKey, consumerCert.consumerid, oldConsumerFeed, newEventTitles, new HashSet<String>(){{add("COMPLIANCE CREATED");}});
 
-        // adjust the expected events when the candlepin server is standalone and the pool has a non-zero virt_limit 
+        // adjust the expected events when the candlepin server is standalone and the pool has a non-zero virt_limit
         String virt_limit = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, testPool.poolId, "virt_limit");
-		if (servertasks.statusStandalone && virt_limit!=null && !virt_limit.equals("0")) {
+        if (clienttasks.isVersion(servertasks.statusVersion, "<", "2.0.16-1"))	// DO NOT INTERFERE WITH THE "switched the expected order" FROM ABOVE
+        if (servertasks.statusStandalone && virt_limit!=null && !virt_limit.equals("0")) {
 			newEventTitles = new String[]{"COMPLIANCE CREATED","ENTITLEMENT DELETED"};
 		}
 		
 		// assert the owner feed...
 		//assertTheNewOwnerFeed(ownerKey, oldOwnerFeed, newEventTitles);
-// TODO FIXME 7/21/2016 assertTheNewConsumerFeedIgnoringEventTitles() call below started failing because the actual newEventTitles occur in reverse order from expected
 		assertTheNewOwnerFeedIgnoringEventTitles(ownerKey, oldOwnerFeed, newEventTitles, new HashSet<String>(){{add("COMPLIANCE CREATED");}});
 
 		// assert the feed...
 		//assertTheNewFeed(oldFeed, newEventTitles);
-// TODO FIXME 7/21/2016 assertTheNewConsumerFeedIgnoringEventTitles() call below started failing because the actual newEventTitles occur in reverse order from expected
 		assertTheNewFeedIgnoringEventTitles(oldFeed, newEventTitles, new HashSet<String>(){{add("COMPLIANCE CREATED");}});
 	}
 	
