@@ -1085,6 +1085,38 @@ Column index starts from 0"
       ;; If I click twice I should see two different sort orders in the same column
       (= (set [:desc-sorting :asc-sorting]) (set [sorting-after-click-01 sorting-after-click-02])))))
 
+(defn take-pki-dir
+  [name]
+  "The function saves a directory /etc/pki in a tested system.
+It appends timestamp at the end of a name.
+If the function finds 'BUILD_TAG' it uses it as prefix for a file name.
+
+'BUILD_TAG' is set by Jenkins and depends on an actual build."
+  (let [suffix (-> (java.time.Instant/now) (.toString))
+        jenkins-run-id (System/getenv "BUILD_TAG")]
+    (let [file-name (if (clojure.string/blank? jenkins-run-id)
+                       (format "etc-pki-dir-%s@%s.tar.gz" name suffix)
+                       (format "%s-etc-pki-dir-%s@%s.tar.gz" jenkins-run-id name suffix))]
+      (run-command (format "tar cfz '%s' /etc/pki " file-name))
+      file-name)))
+
+(defmacro take-pki-dir-on-exception
+  [suffix & body]
+  "suffix - :default-name
+          - 'some text'
+   ... suffix will be prepended to a name of a tar file"
+  `(let [suffix# (match/match ~suffix
+                              :default-name             "on-exception"
+                              (no-care# :guard blank?)  "on-exception" 
+                              :else                     ~suffix)]
+     (try+ ~@body
+           (catch Object e#
+             (let [name# (take-pki-dir suffix#)
+                   out-dir# (io/file (System/getProperty "automation.dir") "test-output")]
+               (RemoteFileTasks/getFile (.getConnection @clientcmd) (.toString out-dir#) name#)
+               (log/info (format "A directory /etc/pki has been saved as '%s'." (.toString (io/file out-dir# name#)))))
+             (throw+)))))
+
 (defn take-screenshot
   [name]
   "The function saves screenshot of a desktop root.
