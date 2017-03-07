@@ -57,7 +57,7 @@ public class UnregisterTests extends SubscriptionManagerCLITestScript {
 			boolean invokeWorkaroundWhileBugIsOpen = true;
 			String bugId="1185958"; 	// Bug 1185958 - Error looking up OSTree origin file.
 			
-			try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} catch (Exception ex) { /* ignore exception */}
+			try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
 			if (invokeWorkaroundWhileBugIsOpen) {
 				pluginConfDir_forUnregisterShouldNotThrowUnauthorizedRequests_Test = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile,"pluginConfDir");
 				ostreeContentPluginEnabled_forUnregisterShouldNotThrowUnauthorizedRequests_Test = clienttasks.getConfFileParameter((pluginConfDir_forUnregisterShouldNotThrowUnauthorizedRequests_Test+"/"+"ostree_content.OstreeContentPlugin.conf").replaceAll("//+","/"),"enabled");
@@ -70,7 +70,7 @@ public class UnregisterTests extends SubscriptionManagerCLITestScript {
 		// TEMPORARY WORKAROUND
 		boolean invokeWorkaroundWhileBugIsOpen = true;
 		String bugId="1351370";	// Bug 1351370 - [ERROR] subscription-manager:31276 @dbus_interface.py:60 - org.freedesktop.DBus.Python.OSError: Traceback
-		try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} catch (Exception ex) { /* ignore exception */}
+		try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
 		if (invokeWorkaroundWhileBugIsOpen) {
 			// this is a workaround as shown in the ADDTIONAL INFO of Bug 1351370 TO RECOVER FROM A BAD STATE
 			SSHCommandResult selinuxModeResult = client.runCommandAndWait("getenforce");	// Enforcing
