@@ -476,7 +476,7 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 		// TEMPORARY WORKAROUND FOR BUG: Bug 1183175 - changing to a different rhsm.productcertdir configuration throws OSError: [Errno 17] File exists
 		boolean invokeWorkaroundWhileBugIsOpen = true;
 		String bugId="1183175"; 
-		try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} catch (Exception ex) {/* ignore exception */}
+		try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
 		if (invokeWorkaroundWhileBugIsOpen) {
 			throw new SkipException("Cannot configure a different productCertDir while bug '"+bugId+"' is open.");
 		}
