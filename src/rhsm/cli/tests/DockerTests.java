@@ -934,7 +934,7 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 		if (clienttasks!=null) {
 			String bugId="1343139"; // Bug 1343139 - Docker containers don't start when using user namespace and selinux
 			boolean invokeWorkaroundWhileBugIsOpen = true;
-			try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} catch (Exception ex) {/* ignore exception */}
+			try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
 			if (invokeWorkaroundWhileBugIsOpen && selinuxModeBeforeClass==null) {
 				log.warning("Turning off selinux while bug '"+bugId+"' is open to avoid: "+bug1343139ErrorMsg);
 
