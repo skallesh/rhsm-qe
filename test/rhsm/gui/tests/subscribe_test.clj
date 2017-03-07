@@ -30,6 +30,11 @@
   (let [subscriptions #spy/d (tests/get_subscriptions nil)]
     (tests/check_multiplier_logic nil (-> subscriptions first))))
 
+(deftest subscribe_each-test
+  (let [subscriptions (tests/get_subscriptions nil)]
+    (for [subscription subscriptions]
+      (tests/subscribe_each nil subscription))))
+
 (deftest unsubscribe_each-test
   (let [subscriptions (tests/get_subscriptions nil)]
     (for [subscription subscriptions]
