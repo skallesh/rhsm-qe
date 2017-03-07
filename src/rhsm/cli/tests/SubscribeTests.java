@@ -103,7 +103,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		// TEMPORARY WORKAROUND
 		boolean invokeWorkaroundWhileBugIsOpen = true;
 		String bugId="1016300"; // Bug 1016300 - the "Provides:" field in subscription-manager list --available should exclude "MKT" products.
-		try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} catch (Exception ex) {/* ignore exception */}
+		try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
 		if (invokeWorkaroundWhileBugIsOpen) {
 			log.warning("While bug '"+bugId+"' is open, skip assertion that the actual list of SubscriptionPool provided product names "+pool.provides+" matches the expected list of bundledProductDataNames "+bundledProductNames+".");
 		} else
@@ -113,7 +113,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			// TEMPORARY WORKAROUND
 			invokeWorkaroundWhileBugIsOpen = true;
 			bugId="1394401"; // Bug 1394401 - The list of provided products for Temporary Subscriptions is empty
-			try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} catch (Exception ex) {/* ignore exception */}
+			try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
 			if (invokeWorkaroundWhileBugIsOpen && !bundledProductNames.isEmpty() && pool.provides.isEmpty() && pool.subscriptionType.contains("Temporary")) {
 				log.warning("While bug '"+bugId+"' is open, skip assertion that the actual list of SubscriptionPool provided product names "+pool.provides+" matches the expected list of bundledProductDataNames "+bundledProductNames+".");
 			} else
@@ -181,7 +181,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		// TEMPORARY WORKAROUND
 		/*boolean*/ invokeWorkaroundWhileBugIsOpen = true;
 		/*String*/ bugId="1204311"; // Bug 1204311 - Refreshing pools causes unexpected temporary pools for unmapped guests to become available 
-		try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} catch (Exception ex) {/* ignore exception */}
+		try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
 		if (invokeWorkaroundWhileBugIsOpen && isPoolRestrictedToUnmappedVirtualSystems) {
 			log.warning("While bug '"+bugId+"' is open and we have subscrbed to a Temporary pool, skip assertion that the consumed productSubscription provides all of the expected bundled product names "+bundledProductNames+" after subscribing to pool: "+pool);
 		} else
@@ -190,7 +190,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			// TEMPORARY WORKAROUND
 			invokeWorkaroundWhileBugIsOpen = true;
 			bugId="1394401"; // Bug 1394401 - The list of provided products for Temporary Subscriptions is empty
-			try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} catch (Exception ex) {/* ignore exception */}
+			try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
 			if (invokeWorkaroundWhileBugIsOpen && isPoolRestrictedToUnmappedVirtualSystems) {
 				log.warning("While bug '"+bugId+"' is open and we have subscrbed to a Temporary pool, skip assertion that the consumed productSubscription provides all of the expected bundled product names "+bundledProductNames+" after subscribing to pool: "+pool);
 			} else
@@ -231,7 +231,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			// TEMPORARY WORKAROUND
 			invokeWorkaroundWhileBugIsOpen = true;
 			bugId="1394401"; // Bug 1394401 - The list of provided products for Temporary Subscriptions is empty
-			try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} catch (Exception ex) {/* ignore exception */}
+			try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
 			if (invokeWorkaroundWhileBugIsOpen && !bundledProductNames.isEmpty() && pool.provides.isEmpty() && pool.subscriptionType.contains("Temporary")) {
 				log.warning("While bug '"+bugId+"' is open, skip assertion of the consumed entitlement provided products amongst the list of install products.");
 			} else
@@ -266,7 +266,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 					if (installedProduct.arch.contains(",")) {
 						/*boolean*/ invokeWorkaroundWhileBugIsOpen = true;
 						/*String*/ bugId="951633"; // Bug 951633 - installed product with comma separated arch attribute fails to go green
-						try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} catch (Exception ex) {/* ignore exception */}
+						try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
 						if (invokeWorkaroundWhileBugIsOpen) {
 							throw new SkipException("Verification for status of Installed Product name='"+installedProduct.productName+"' with arch='"+installedProduct.arch+"' is blocked by open bugzilla '"+bugId+"'.");
 						}
@@ -298,7 +298,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 						// TEMPORARY WORKAROUND
 						/*boolean*/ invokeWorkaroundWhileBugIsOpen = true;
 						/*String*/ bugId="1200882"; // Bug 1200882 - Wrong installed product status is displayed when a unmapped_guests_only pool is attached
-						try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} catch (Exception ex) {/* ignore exception */}
+						try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
 						if (invokeWorkaroundWhileBugIsOpen) {
 							log.warning("Skipping the assertion of the installed product status after subscribing to an unmapped_guests_only pool for ProductId '"+productId+"' while bug '"+bugId+"' is open.");
 						} else
@@ -330,7 +330,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 					// TEMPORARY WORKAROUND
 					/*boolean*/ invokeWorkaroundWhileBugIsOpen = true;
 					/*String*/ bugId="1199443"; // Bug 1199443 - Wrong "End date" in installed list after attaching 24-hour subscription on a unmapped-guest
-					try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} catch (Exception ex) {/* ignore exception */}
+					try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
 					if (invokeWorkaroundWhileBugIsOpen && isPoolRestrictedToUnmappedVirtualSystems) {
 						log.warning("Skipping the assertion of installed product start-end date range after subscribing to an unmapped_guests_only pool for ProductId '"+productId+"' while bug '"+bugId+"' is open.");
 					} else	// call if (installedProduct.status.equals("Subscribed")) {
@@ -928,7 +928,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		if (Boolean.valueOf(clienttasks.getFactValue("virt.is_guest"))) {
 			boolean invokeWorkaroundWhileBugIsOpen = true;
 			String bugId="1198494"; // Bug 1198494 - Auto-heal continuously attaches subscriptions to make the system compliant on a guest machine
-			try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} catch (Exception ex) {/* ignore exception */}
+			try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
 			if (invokeWorkaroundWhileBugIsOpen) {
 				clienttasks.mapSystemAsAGuestOfItself();
 			}
@@ -1545,7 +1545,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 					if (virtualPool.subscriptionType.contains("(Temporary)") && virtualProductIds.isEmpty() && !physicalProductIds.isEmpty()) {
 						boolean invokeWorkaroundWhileBugIsOpen = true;
 						String bugId="1394401"; // Bug 1394401 - The list of provided products for Temporary Subscriptions is empty
-						try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} catch (Exception ex) {/* ignore exception */}
+						try {if (invokeWorkaroundWhileBugIsOpen&&OldBzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+OldBzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
 						if (invokeWorkaroundWhileBugIsOpen) {
 							log.warning("Virtual pool '"+virtualPool.poolId+"' and and Physical pool '"+physicalPool.poolId+"' are not good candidates for this test while bug '"+bugId+"' is open.  Looking for another pair.");
 							continue;
