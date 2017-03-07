@@ -2022,7 +2022,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 						}
 					} catch (BugzillaAPIException be) {
 						/* ignore exception */} catch (RuntimeException re) {
-						/* ignore exception */} catch (Exception ex) {/* ignore exception */}
+						/* ignore exception */} 
 					if (invokeWorkaroundWhileBugIsOpen) {
 						log.warning("Ignoring the provided MKT product '" + providedProduct
 								+ "'.  No syslog assertion for this product will be made.");
