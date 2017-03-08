@@ -36,6 +36,10 @@ public class EntitlementCert extends AbstractCommandLineData {
 	public File file;
 	public String version;
 	public String poolId;
+
+
+	
+
 	public String serialString;
 	public OrderNamespace orderNamespace;
 	public List<ProductNamespace> productNamespaces;
@@ -67,6 +71,7 @@ public class EntitlementCert extends AbstractCommandLineData {
 	public String toString() {
 
 		String string = "";
+
 		if (serialNumber != null)
 			string += String.format(" %s='%s'", "serialNumber", serialNumber);
 		if (id != null)
@@ -83,6 +88,16 @@ public class EntitlementCert extends AbstractCommandLineData {
 			string += String.format(" %s='%s'", "version", version);
 		if (poolId != null)
 			string += String.format(" %s='%s'", "poolId", poolId);
+
+		if (serialNumber != null)			string += String.format(" %s='%s'", "serialNumber",serialNumber);
+		if (id != null)						string += String.format(" %s='%s'", "id",id);
+		if (issuer != null)					string += String.format(" %s='%s'", "issuer",issuer);
+		if (validityNotBefore != null)		string += String.format(" %s='%s'", "validityNotBefore",formatDateString(validityNotBefore));
+		if (validityNotAfter != null)		string += String.format(" %s='%s'", "validityNotAfter",formatDateString(validityNotAfter));
+		if (file != null)					string += String.format(" %s='%s'", "file",file);
+		if (version != null)				string += String.format(" %s='%s'", "version",version);
+		if (poolId != null)				string += String.format(" %s='%s'", "poolId",poolId);
+
 		return string.trim();
 	}
 
@@ -605,6 +620,7 @@ public class EntitlementCert extends AbstractCommandLineData {
 		// Expires: 600
 		// Required Tags:
 		//
+
 		// Content:
 		// Name: tagged-content
 		// Label: tagged-content
@@ -640,6 +656,7 @@ public class EntitlementCert extends AbstractCommandLineData {
 		regexes.put("validityNotAfter", "Certificate:(?:(?:\\n.+)+)End Date: (.+)");
 		regexes.put("file", "Certificate:(?:(?:\\n.+)+)Path: (.+)");
 		regexes.put("version", "Certificate:(?:(?:\\n.+)+)Version: (.+)");
+
 
 		// split the rawCertificates process each individual rawCertificate
 		String rawCertificateRegex = "\\+-+\\+\\n\\s+Entitlement Certificate\\n\\+-+\\+";
@@ -751,7 +768,7 @@ public class EntitlementCert extends AbstractCommandLineData {
 // 'Digital Signature, Key Encipherment, Data Encipherment',
 // '1.3.6.1.4.1.2312.9.4.3': 'sfs', '1.3.6.1.4.1.2312.9.4.14': '0'}
 //
-// In [4]: print cert. <============= USE TAB COMPLETION TO SEE ALL THE
+// In [4]: print cert. <====== USE TAB COMPLETION TO SEE ALL THE
 // POSSIBILITIES
 // cert.__class__ cert.__doc__ cert.__module__ cert.__repr__ cert.content
 // cert.is_valid cert.serial cert.version
