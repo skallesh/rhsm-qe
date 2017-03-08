@@ -8,3 +8,7 @@
   
      - replaced `catch XmlRpcException` by `catch BugzillaAPIException`
      - removed `catch Exception` from the whole testware
+
+### Updates
+
+   - new version of a project `bugzilla-testng`
