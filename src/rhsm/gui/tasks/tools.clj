@@ -10,7 +10,7 @@
   (:require [clojure.tools.logging :as log])
   (:import [com.redhat.qe.tools RemoteFileTasks]
                org.testng.SkipException
-               [com.redhat.qe.auto.bugzilla BzChecker OldBzChecker]
+               [com.redhat.qe.auto.bugzilla BzChecker]
                [java.lang.Math]))
 
 (def skip-groups {:suite (atom false)
@@ -150,7 +150,7 @@
      (RemoteFileTasks/getTailFromMarkedFile ~runner ~logfile marker# ~grep)))
 
 (defmacro skip-if-bz-open [bugid & forms]
-  `(let [bz# (OldBzChecker/getInstance)
+  `(let [bz# (BzChecker/getInstance)
          open?# (.isBugOpen bz# ~bugid)
          state# (str (.getBugState bz# ~bugid))
          summary# (.getBugField bz# ~bugid "summary")]
@@ -166,7 +166,7 @@
 (defn check-bz-open?
   "This is a helper function to acheck the state of the bug"
   [bug-id]
-  (let [bz (OldBzChecker/getInstance)
+  (let [bz (BzChecker/getInstance)
         open? (.isBugOpen bz bug-id)]
     open?))
 
