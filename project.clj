@@ -1,4 +1,4 @@
-(defproject org.clojars.jsefler/sm "1.0.0-SNAPSHOT"
+(defproject org.clojars.jsefler/sm "1.1.0-SNAPSHOT"
   :description "Automated tests for Red Hat Subsciption Manager CLI and GUI"
   :java-source-path "src" ;lein1
   :java-source-paths ["src"]
