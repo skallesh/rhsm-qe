@@ -33,7 +33,7 @@ import org.testng.annotations.Test;
 import com.redhat.qe.Assert;
 import com.redhat.qe.auto.bugzilla.BlockedByBzBug;
 import com.redhat.qe.auto.bugzilla.BugzillaAPIException;
-import com.redhat.qe.auto.bugzilla.OldBzChecker;
+import com.redhat.qe.auto.bugzilla.BzChecker;
 import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.tools.RemoteFileTasks;
@@ -2012,8 +2012,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 					boolean invokeWorkaroundWhileBugIsOpen = true;
 					String bugId = "1016300";
 					try {
-						if (invokeWorkaroundWhileBugIsOpen && OldBzChecker.getInstance().isBugOpen(bugId)) {
-							log.fine("Invoking workaround for " + OldBzChecker.getInstance().getBugState(bugId).toString()
+						if (invokeWorkaroundWhileBugIsOpen && BzChecker.getInstance().isBugOpen(bugId)) {
+							log.fine("Invoking workaround for " + BzChecker.getInstance().getBugState(bugId).toString()
 									+ " Bugzilla " + bugId + ".  (https://bugzilla.redhat.com/show_bug.cgi?id=" + bugId
 									+ ")");
 							SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);
