@@ -1,14 +1,12 @@
 package rhsm.cli.tests;
 
 import java.io.File;
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.xmlrpc.XmlRpcException;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.testng.SkipException;
@@ -25,6 +23,7 @@ import rhsm.data.SubscriptionPool;
 
 import com.redhat.qe.Assert;
 import com.redhat.qe.auto.bugzilla.BzChecker;
+import com.redhat.qe.auto.bugzilla.BugzillaAPIException;
 import com.redhat.qe.auto.testng.TestNGUtils;
 
 /**
@@ -62,7 +61,7 @@ public class DataCenterTests extends SubscriptionManagerCLITestScript {
 		if (sm_serverType.equals(CandlepinType.hosted)) {
 			String bugId = "1214001";	// Bug 1214001 - after stage refresh, Virtual Data Center SKUs no longer have a host_limited pool productAttributes
 			boolean invokeWorkaroundWhileBugIsOpen = true;
-			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
 			if (invokeWorkaroundWhileBugIsOpen) {
 				throw new SkipException("Skipping this Virtual Data Center test against SKU '"+pool.productId+"' while bug '"+bugId+"' is open.");
 			}
@@ -73,7 +72,7 @@ public class DataCenterTests extends SubscriptionManagerCLITestScript {
 		if (sm_serverType.equals(CandlepinType.hosted)) {
 			String bugId = "1261193";	// Bug 1261193 - Datacenter subscriptions in stage candlepin-0.9.51.5-1 should create Temporary pools for their derived products
 			boolean invokeWorkaroundWhileBugIsOpen = true;
-			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
 			if (invokeWorkaroundWhileBugIsOpen) {
 				throw new SkipException("Skipping this Virtual Data Center test against SKU '"+pool.productId+"' while bug '"+bugId+"' is open.");
 			}
@@ -236,7 +235,7 @@ public class DataCenterTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(hostEntitlementCert.orderNamespace.quantity, String.valueOf(jsonPool.getInt("quantity")),																													"hostEntitlementCert.orderNamespace.quantity should match the data center subscription pool's total quantity");
 		// TEMPORARY WORKAROUND FOR BUG
 		String bugId = "983193"; boolean invokeWorkaroundWhileBugIsOpen = true;
-		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
 		if (invokeWorkaroundWhileBugIsOpen) {
 			log.warning("Skipping the assertion of quantity while bug '"+bugId+"' is open.");
 		} else {
