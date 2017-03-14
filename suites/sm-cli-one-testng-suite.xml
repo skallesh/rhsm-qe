@@ -1,0 +1,28 @@
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
+
+<!-- Running on the command line:  java -cp `lein classpath` org.testng.TestNG [testng options] [suitefile] -->
+<suite name="CLI Tier1 TestSuite">
+
+	<listeners>
+		<listener class-name="com.redhat.qe.auto.testng.TestNGListener" />
+		<listener class-name="com.redhat.qe.auto.bugzilla.BugzillaTestNGListener" />
+		<listener class-name="org.uncommons.reportng.HTMLReporter" />
+		<listener class-name="org.testng.reporters.XMLReporter" />
+	</listeners>
+
+	<!-- CLI TIER 1 TESTS -->
+	
+	<test name="CLI: BashCompletion Tests">
+		<classes>
+			<class name="rhsm.cli.tests.BashCompletionTests" />
+		</classes>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="Tier1Tests" />
+				<include name="cleanup" />
+			</run>
+		</groups>
+	</test>
+
+</suite>

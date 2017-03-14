@@ -30,7 +30,6 @@ import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.xmlrpc.XmlRpcException;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -43,6 +42,7 @@ import org.testng.annotations.DataProvider;
 
 import com.redhat.qe.Assert;
 import com.redhat.qe.auto.bugzilla.BlockedByBzBug;
+import com.redhat.qe.auto.bugzilla.BugzillaAPIException;
 import com.redhat.qe.auto.bugzilla.BzChecker;
 import com.redhat.qe.auto.testng.TestNGUtils;
 
@@ -545,7 +545,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		if (CandlepinType.hosted.equals(sm_serverType)) {
 			boolean invokeWorkaroundWhileBugIsOpen = true;
 			String bugId="1358508";	// Bug 1358508 - Error updating system data on the server
-			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 			if (invokeWorkaroundWhileBugIsOpen) {
 				//smt.updateConfFileParameter(smt.rhsmConfFile, "rhsm", "report_package_profile", "0");
 				smt.config(null, null, true, new String[]{"rhsm", "report_package_profile", "0"});
@@ -584,7 +584,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 				// TEMPORARY WORKAROUND
 				boolean invokeWorkaroundWhileBugIsOpen = true;
 				String bugId="1257940";	// Bug 1257940 - systemd-hwdb should be confined 
-				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 				if (invokeWorkaroundWhileBugIsOpen) {
 					log.warning("Skipping BeforeSuite assertion that selinux is Enforcing while bug "+bugId+" is open.");
 					continue;
@@ -593,7 +593,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 				// TEMPORARY WORKAROUND
 				invokeWorkaroundWhileBugIsOpen = true;
 				bugId="1342401";	// Bug 1342401 - Allow NetworkManager to create temporary /etc/resolv.conf.XXXXXX file 
-				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 				if (invokeWorkaroundWhileBugIsOpen) {
 					log.warning("Skipping BeforeSuite assertion that selinux is Enforcing while bug "+bugId+" is open.");
 					continue;
@@ -602,7 +602,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 				// TEMPORARY WORKAROUND
 				invokeWorkaroundWhileBugIsOpen = true;
 				bugId="1343648";	// Bug 1343648 - SELinux label for /etc/udev/hwdb.bin is etc_t instead of systemd_hwdb_etc_t after "#systemd-hwdb update" 
-				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 				if (invokeWorkaroundWhileBugIsOpen) {
 					log.warning("Skipping BeforeSuite assertion that selinux is Enforcing while bug "+bugId+" is open.");
 					continue;
@@ -611,7 +611,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 				// TEMPORARY WORKAROUND
 				invokeWorkaroundWhileBugIsOpen = true;
 				bugId="1350756";	// Bug 1350756 - SELinux label for /etc/udev/hwdb.bin is etc_t instead of systemd_hwdb_etc_t after "#systemd-hwdb update" 
-				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 				if (invokeWorkaroundWhileBugIsOpen) {
 					log.warning("Skipping BeforeSuite assertion that selinux is Enforcing while bug "+bugId+" is open.");
 					continue;
@@ -647,7 +647,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 				if (!tailFromMarkedFile.isEmpty() && doesStringContainMatches(tailFromMarkedFile, avcRegex)) {
 					boolean invokeWorkaroundWhileBugIsOpen = true;
 					String bugId="1362273"; // Bug 1362273 - avc denied /var/log/audit/audit.log when "systemd: Started Session # of user root." is written to /var/log/messages every two minutes
-					try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+					try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 					if (invokeWorkaroundWhileBugIsOpen) {
 						log.warning("Ignoring the presence of AVC denials matching '"+avcRegex+"' while bug '"+bugId+"' is open.");
 						tailFromMarkedFile = tailFromMarkedFile.replaceAll(avcRegex, "");
@@ -1509,6 +1509,42 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		}
 	}
 	
+	
+	/**
+	 * @param flag 1=locked 0=unlocked
+	 * @throws SQLException 
+	 * @throws Exception
+	 */
+	protected void updateProductAndContentLockStateOnDatabase(int flag) throws SQLException   {
+		
+		// Candlepin introduced product and content locking to prevent undesirable modifications to
+		// Red Hat resources via the RestAPI when candlepin runs in hosted mode (/etc/candlepin/candlepin.conf > "candlepin.standalone", "false")
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">", "2.0.0-1")) {	// candlepin commit FIXME
+			
+			// Avoid locked products and content after toggling candlepin.conf mode to "candlepin.standalone", "false"
+			// 201702071658:23.304 - INFO: SSH alternative to HTTP request: curl --stderr /dev/null --insecure --user admin:admin --request DELETE https://jsefler-candlepin.usersys.redhat.com:8443/candlepin/owners/admin/products/99000 (rhsm.cli.tasks.CandlepinTasks.deleteResourceUsingRESTfulAPI)
+			// 201702071658:23.383 - WARNING: Attempt to DELETE resource '/owners/admin/products/99000' failed: product "99000" is locked (rhsm.cli.tasks.CandlepinTasks.deleteResourceUsingRESTfulAPI)
+			
+			// SQL statement to update the database product and content table to unlocked
+			String updateProductLockedStateSql = "UPDATE cp2_products SET locked = "+flag+";";
+			String updateContentLockedStateSql = "UPDATE cp2_content SET locked = "+flag+";";
+			
+			Statement sql = dbConnection.createStatement();
+			int rowCount;
+			
+			log.fine("Executing SQL: "+updateProductLockedStateSql);
+			 rowCount = sql.executeUpdate(updateProductLockedStateSql);
+			Assert.assertTrue(rowCount>0, "Updated at least one row (actual='"+rowCount+"') of the cp2_products table with sql: "+updateProductLockedStateSql);
+			
+			log.fine("Executing SQL: "+updateContentLockedStateSql);
+			rowCount = sql.executeUpdate(updateContentLockedStateSql);
+			Assert.assertTrue(rowCount>0, "Updated at least one row (actual='"+rowCount+"') of the cp2_content table with sql: "+updateContentLockedStateSql);
+			
+			sql.close();
+		}
+	}		
+	
+	
 	/**
 	 * On the connected candlepin server database, update the startdate and enddate in the cp_subscription table on rows where the pool id is a match.
 	 * @param pool
@@ -2027,7 +2063,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			if (username.equals("anonymous")) {
 				boolean invokeWorkaroundWhileBugIsOpen = true;
 				String bugId="741961"; 
-				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 				if (invokeWorkaroundWhileBugIsOpen) {
 					log.warning("Ignoring the presence of user '"+username+"'.  No automated testing with this user will be executed.");
 					continue;
@@ -3704,8 +3740,10 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	
 		// negative tests
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.17.5-1")) {	// post commit ea10b99095ad58df57ed107e13bf19498e003ae8	// Bug 1320507 - Wrong prefix prompts when register using serverurl without prefix
-			if (isCurrentlyConfiguredServerTypeHosted()) {
+//			if (isCurrentlyConfiguredServerTypeHosted()) {
+			if (isCurrentlyConfiguredServerTypeHosted() && SubscriptionManagerTasks.isVersion(servertasks.statusVersion, "<", "0.9.51.21-1")) {
 				// 08-11-2015, I don't like this behavior because IT is blacklisting any prefix that does not match /subscription causing a inaccessible server to masquerade as a CA certificate error"
+				// 02-17-2017, Good News - yesterday IT bumped candlepin-0.9.51.20-1 to 0.9.51.21-1 and the CA certificate error response disappeared.
 				serverurl= "https://"+server_hostname+(server_port.isEmpty()?"":":"+server_port)+"/PREFIX";		ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"1119688","842885"}),								serverurl,	null,	null,	null,		new Integer(78),	null,						"Error: CA certificate for subscription service has not been installed."}));
 				serverurl= "/";																					ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug(new String[]{"1119688","830767"}),								serverurl,	null,	null,	null,		new Integer(78),	null,						"Error: CA certificate for subscription service has not been installed."}));
 			} else {

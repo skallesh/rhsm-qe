@@ -19,7 +19,6 @@
             BeforeClass
             BeforeGroups
             Test]
-           org.testng.SkipException
            [com.redhat.qe.auto.bugzilla BzChecker]
            [com.github.redhatqe.polarize.metadata TestDefinition]
            [com.github.redhatqe.polarize.metadata DefTypes$Project]))

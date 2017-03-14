@@ -13,7 +13,7 @@ import java.util.Set;
 
 import com.github.redhatqe.polarize.metadata.DefTypes.Project;
 import com.github.redhatqe.polarize.metadata.TestDefinition;
-import org.apache.xmlrpc.XmlRpcException;
+
 import org.json.JSONException;
 import org.testng.SkipException;
 import org.testng.annotations.AfterClass;
@@ -25,6 +25,7 @@ import org.testng.annotations.Test;
 
 import com.redhat.qe.Assert;
 import com.redhat.qe.auto.bugzilla.BlockedByBzBug;
+import com.redhat.qe.auto.bugzilla.BugzillaAPIException;
 import com.redhat.qe.auto.bugzilla.BzChecker;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.tools.RemoteFileTasks;
@@ -956,7 +957,7 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 		if (clienttasks!=null) {
 			String bugId="1343139"; // Bug 1343139 - Docker containers don't start when using user namespace and selinux
 			boolean invokeWorkaroundWhileBugIsOpen = true;
-			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
 			if (invokeWorkaroundWhileBugIsOpen && selinuxModeBeforeClass==null) {
 				log.warning("Turning off selinux while bug '"+bugId+"' is open to avoid: "+bug1343139ErrorMsg);
 
@@ -1128,3 +1129,54 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 //	> docker-1.4.1-4.el7.x86_64
 //	>
 
+
+// MANUAL EXAMPLE OF PULLING A DOCKER IMAGE AND RUNNING AN INTERACTIVE SESSION TO ENABLE REPOS AND SET REPO VARS
+/*
+[root@jsefler-rhel7 ~]# systemctl restart docker.service && systemctl is-active docker.service
+active
+[root@jsefler-rhel7 ~]# docker pull registry.access.redhat.com/rhel7:latest
+Trying to pull repository registry.access.redhat.com/rhel7 ... 
+latest: Pulling from registry.access.redhat.com/rhel7
+c196631bd9ac: Pull complete 
+Digest: sha256:0614d58c96e8d1a04a252880a6c33b48b4685cafae048a70dd9e821edf62cab9
+[root@jsefler-rhel7 ~]# 
+[root@jsefler-rhel7 ~]# docker run -i -t --rm registry.access.redhat.com/rhel7:latest /bin/bash 
+[root@d686d25831f3 /]# 
+[root@d686d25831f3 /]# cat /etc/yum.repos.d/redhat.repo         <==== Example of Bug https://bugzilla.redhat.com/show_bug.cgi?id=1375162
+cat: /etc/yum.repos.d/redhat.repo: No such file or directory
+[root@d686d25831f3 /]# 
+[root@d686d25831f3 /]# yum repolist --quiet
+repo id                                   repo name                                         status
+rhel-7-server-rpms/7Server/x86_64         Red Hat Enterprise Linux 7 Server (RPMs)          13855
+[root@d686d25831f3 /]# 
+[root@d686d25831f3 /]# yum-config-manager --quiet --enable rhel-7-server-optional-rpms rhel-7-server-extras-rpms
+[root@d686d25831f3 /]# yum repolist
+[root@d686d25831f3 /]# 
+Loaded plugins: ovl, product-id, search-disabled-repos, subscription-manager
+repo id                                    repo name                                        status
+rhel-7-server-extras-rpms/x86_64           Red Hat Enterprise Linux 7 Server - Extras (RPMs   393
+rhel-7-server-optional-rpms/7Server/x86_64 Red Hat Enterprise Linux 7 Server - Optional (RP 10617
+rhel-7-server-rpms/7Server/x86_64          Red Hat Enterprise Linux 7 Server (RPMs)         13855
+repolist: 24865
+[root@d686d25831f3 /]# 
+[root@d686d25831f3 /]# yum-config-manager --quiet --save --setopt=rhel-7-server-rpms.skip_if_unavailable=true
+[root@d686d25831f3 /]#
+[root@d686d25831f3 /]# grep skip_if_unavailable /etc/yum.repos.d/redhat.repo -B13
+[rhel-7-server-rpms]
+metadata_expire = 86400
+sslclientcert = /etc/pki/entitlement-host/4413529599692228026.pem
+baseurl = https://cdn.redhat.com/content/dist/rhel/server/7/$releasever/$basearch/os
+ui_repoid_vars = releasever basearch
+sslverify = 1
+name = Red Hat Enterprise Linux 7 Server (RPMs)
+sslclientkey = /etc/pki/entitlement-host/4413529599692228026-key.pem
+gpgkey = file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+enabled = 1
+sslcacert = /etc/rhsm-host/ca/redhat-uep.pem
+gpgcheck = 1
+skip_if_unavailable = 1
+[root@d686d25831f3 /]# 
+[root@d686d25831f3 /]# exit
+exit
+[root@jsefler-rhel7 ~]# 
+*/

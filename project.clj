@@ -1,4 +1,4 @@
-(defproject org.clojars.jsefler/sm "1.0.0-SNAPSHOT"
+(defproject org.clojars.jsefler/sm "1.1.0-SNAPSHOT"
   :description "Automated tests for Red Hat Subsciption Manager CLI and GUI"
   :java-source-path "src" ;lein1
   :java-source-paths ["src"]
@@ -8,19 +8,20 @@
   :dependencies [[clj-http "2.0.0"]
                  [com.google.code.guice/guice "1.0"]        ;; required for new testng
                  [com.redhat.qe/assertions "1.0.2"]
-                 [com.redhat.qe/bugzilla-testng "1.0.4"]
-                 [com.redhat.qe/bz-checker "1.0.3-SNAPSHOT"]
+                 [com.redhat.qe/bugzilla-testng "1.2.4-SNAPSHOT"
+                  :exclusions [com.redhat.qe/bz-checker]]
+                 [com.redhat.qe/bz-checker "2.1.3-SNAPSHOT"]
                  [com.redhat.qe/json-java "20110202"]
                  [com.redhat.qe/jul.test.records "1.0.1"]
                  [com.redhat.qe/ssh-tools "1.0.2-SNAPSHOT"]
-                 [com.redhat.qe/testng-listeners "1.0.0"]
+                 [com.redhat.qe/testng-listeners "1.0.0" 
+                  :exclusions [com.redhat.qe/bugzilla-testng]]
                  [com.redhat.qe/verify-testng "1.0.0-SNAPSHOT"]
-                 [gnome.ldtp "1.2.1-SNAPSHOT"
-                  :exclusions [org.clojure/clojure]]
+                 [gnome.ldtp "1.2.1-SNAPSHOT"]
                  [matchure "0.10.1"]
                  [org.clojure/core.match "0.3.0-alpha4"]
                  [net.java.dev.rome/rome "1.0.0"]
-                 [org.clojure/clojure "1.7.0"]
+                 [org.clojure/clojure "1.8.0"]
                  [org.clojure/data.json "0.1.2"]
                  [org.clojure/tools.cli "0.2.4"]
                  [org.clojure/tools.logging "0.2.3"]
@@ -33,9 +34,9 @@
                  ;[test_clj.testng "1.0.1-SNAPSHOT"]
                  [test-clj.testng "1.1.0-SNAPSHOT"]
                  [levand/immuconf "0.1.0"]
-                 [mount "0.1.10"]
-                 [com.github.redhatqe.polarize/polarize "0.5.5-SNAPSHOT"]]
-
+                 [com.github.redhatqe.polarize/polarize "0.5.5-SNAPSHOT"]
+                 [org.json/json "20160810"]
+                 [mount "0.1.10"]]
   ;lein1
   :dev-dependencies [[fn.trace "1.3.2.0-SNAPSHOT"]
                      [lein-eclipse "1.0.0"]]
@@ -79,6 +80,8 @@
   ;; uncomment this to remote debug.  This is useful to debug annotation processing or xunit importing which can't be
   ;; handled through the regular clojure debugger
   ;:jvm-opts ["-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5007"]
+
+  :manifest {"Class-Path" "lib/clojure-1.8.0.jar"}
 
   :repl-options {:timeout 120000})
 

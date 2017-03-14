@@ -12,7 +12,7 @@ import java.util.Set;
 
 import com.github.redhatqe.polarize.metadata.DefTypes.Project;
 import com.github.redhatqe.polarize.metadata.TestDefinition;
-import org.apache.xmlrpc.XmlRpcException;
+
 import org.json.JSONException;
 import org.testng.SkipException;
 import org.testng.annotations.AfterClass;
@@ -23,6 +23,7 @@ import org.testng.annotations.Test;
 
 import com.redhat.qe.Assert;
 import com.redhat.qe.auto.bugzilla.BlockedByBzBug;
+import com.redhat.qe.auto.bugzilla.BugzillaAPIException;
 import com.redhat.qe.auto.bugzilla.BzChecker;
 import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.TestNGUtils;
@@ -174,6 +175,30 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 
 	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
 			       , testCaseID = {"RHEL6-20037", "RHEL7-51046"})
+	@Test(	description="Verify that default-product cert(s) provided by the redhat-release package for this release are expected (e.g. '6.9 Beta' during Beta/Snapshot composes and '6.9' during RC composes)",
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1426759","blockedByBug-1387101","blockedByBug-1327016","blockedByBug-1198931"},	// Bug 1318584 - /etc/pki/product-default/*.pem should supply only GA product cert (HTB versus Beta versus GA discussion)
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void VerifyDefaultProductCertVersion_Test() {
+		if (sm_clientDefProdCertVersion==null) throw new SkipException("No automation property value for the expected '"+clienttasks.productCertDefaultDir+"' cert(s) version was supplied.");
+
+		boolean productDefaultCertTested=false;
+		// due to the implementation of Bug 1123029 - [RFE] Use default product certificates when they are present
+		for (ProductCert productDefaultCert : clienttasks.getProductCerts(clienttasks.productCertDefaultDir)) {
+			// log what package provides the productDefaultCert
+			SSHCommandResult result = client.runCommandAndWait("rpm -q --whatprovides "+productDefaultCert.file.getPath());
+			
+			// assert that the Version of the /etc/pki/product-default/*.pem cert matches the expected value
+			// TODO: It would be nice if we can automatically know what builds are tagged for Beta/Snapshot/RC.  For now we'll take this value from the automation.properties (Jenkins job parameters).
+			Assert.assertEquals(productDefaultCert.productNamespace.version, sm_clientDefProdCertVersion, "The version of the default product cert (provided by '"+result.getStdout().trim()+"') for this RHEL compose.");
+			productDefaultCertTested=true;
+		}
+		
+		// make sure we attempted the test
+		Assert.assertTrue(productDefaultCertTested, "Successfully attempted to test the epected version of the '"+clienttasks.productCertDefaultDir+"' cert(s)");	
+	}
+
+
 	@Test(	description="Verify that the installed base RHEL product cert provides the expected tags",
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1259820","blockedByBug-1259839"},
 			dependsOnMethods={"VerifyBaseRHELProductCertIsInstalled_Test"},
@@ -554,7 +579,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 				if (clienttasks.arch.equals("ppc64le")) {
 					boolean invokeWorkaroundWhileBugIsOpen = true;
 					String bugId="1156638"; // Bug 1156638 - "Red Hat Enterprise Linux for IBM POWER" subscriptions need to provide content for arch "ppc64le"
-					try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+					try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
 					if (invokeWorkaroundWhileBugIsOpen) {
 						throw new SkipException("Skipping the remainder of this test on arch '"+clienttasks.arch+"' while blocking bug '"+bugId+"' is open.");
 					}
@@ -1370,7 +1395,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		// TEMPORARY WORKAROUND
 		boolean invokeWorkaroundWhileBugIsOpen = true;
 		String bugId="1222627"; // Bug 1222627 - deletion of JBOSS product certificate is neglected by product-id plugin on running 'yum remove JBOSS-PKG --disablerepo=RHEL-REPO'
-		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
 		if (invokeWorkaroundWhileBugIsOpen) {
 			log.warning("While bug '"+bugId+"' is open, we will exclude the --disablerepo="+rhelRepo+" option from the yum removal of the jboss package.");
 			clienttasks.yumRemovePackage(jbossPackage); // THIS PASSES THE FOLLOWING Assert.assertNull(jbossInstalledProduct,...

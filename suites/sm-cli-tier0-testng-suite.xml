@@ -1,7 +1,7 @@
 <!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
 
 <!-- Running on the command line:  java -cp `lein classpath` org.testng.TestNG [testng options] [suitefile] -->
-<suite name="CLI Tier1 TestSuite">
+<suite name="CLI Tier0 TestSuite">
 
 	<listeners>
 		<listener class-name="com.redhat.qe.auto.testng.TestNGListener" />
@@ -10,7 +10,7 @@
 		<listener class-name="org.testng.reporters.XMLReporter" />
 	</listeners>
 
-	<!-- CLI TIER 1 TESTS -->
+	<!-- CLI TIER 0 TESTS -->
 	
 	<test name="CLI: Help Tests">
 		<classes>
@@ -19,7 +19,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="Tier1Tests" />
+				<include name="Tier0Tests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -32,7 +32,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="Tier1Tests" />
+				<include name="Tier0Tests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -45,7 +45,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="Tier1Tests" />
+				<include name="Tier0Tests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -58,7 +58,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="Tier1Tests" />
+				<include name="Tier0Tests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -71,7 +71,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="Tier1Tests" />
+				<include name="Tier0Tests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -84,7 +84,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="Tier1Tests" />
+				<include name="Tier0Tests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -97,7 +97,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="Tier1Tests" />
+				<include name="Tier0Tests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -110,7 +110,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="Tier1Tests" />
+				<include name="Tier0Tests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -123,7 +123,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="Tier1Tests" />
+				<include name="Tier0Tests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -136,7 +136,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="Tier1Tests" />
+				<include name="Tier0Tests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -149,7 +149,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="Tier1Tests" />
+				<include name="Tier0Tests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -162,7 +162,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="Tier1Tests" />
+				<include name="Tier0Tests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -175,7 +175,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="Tier1Tests" />
+				<include name="Tier0Tests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -188,7 +188,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="Tier1Tests" />
+				<include name="Tier0Tests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -201,7 +201,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="Tier1Tests" />
+				<include name="Tier0Tests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -214,7 +214,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="Tier1Tests" />
+				<include name="Tier0Tests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -227,7 +227,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="Tier1Tests" />
+				<include name="Tier0Tests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -240,7 +240,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="Tier1Tests" />
+				<include name="Tier0Tests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -253,7 +253,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="Tier1Tests" />
+				<include name="Tier0Tests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -266,7 +266,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="Tier1Tests" />
+				<include name="Tier0Tests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -279,7 +279,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="Tier1Tests" />
+				<include name="Tier0Tests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -292,7 +292,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="Tier1Tests" />
+				<include name="Tier0Tests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -305,7 +305,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="Tier1Tests" />
+				<include name="Tier0Tests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -318,7 +318,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="Tier1Tests" />
+				<include name="Tier0Tests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -331,7 +331,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="Tier1Tests" />
+				<include name="Tier0Tests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -344,7 +344,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="Tier1Tests" />
+				<include name="Tier0Tests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -357,7 +357,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="Tier1Tests" />
+				<include name="Tier0Tests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -370,7 +370,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="Tier1Tests" />
+				<include name="Tier0Tests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -383,7 +383,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="Tier1Tests" />
+				<include name="Tier0Tests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -396,7 +396,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="Tier1Tests" />
+				<include name="Tier0Tests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -409,7 +409,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="Tier1Tests" />
+				<include name="Tier0Tests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -422,7 +422,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="Tier1Tests" />
+				<include name="Tier0Tests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -435,7 +435,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="Tier1Tests" />
+				<include name="Tier0Tests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -448,7 +448,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="Tier1Tests" />
+				<include name="Tier0Tests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -461,7 +461,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="Tier1Tests" />
+				<include name="Tier0Tests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -474,7 +474,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="Tier1Tests" />
+				<include name="Tier0Tests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -487,7 +487,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="Tier1Tests" />
+				<include name="Tier0Tests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -500,7 +500,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="Tier1Tests" />
+				<include name="Tier0Tests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -513,7 +513,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="Tier1Tests" />
+				<include name="Tier0Tests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -526,7 +526,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="Tier1Tests" />
+				<include name="Tier0Tests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -539,7 +539,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="Tier1Tests" />
+				<include name="Tier0Tests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -552,7 +552,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="Tier1Tests" />
+				<include name="Tier0Tests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -565,7 +565,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="Tier1Tests" />
+				<include name="Tier0Tests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -578,7 +578,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="Tier1Tests" />
+				<include name="Tier0Tests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -591,7 +591,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="Tier1Tests" />
+				<include name="Tier0Tests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -604,7 +604,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="Tier1Tests" />
+				<include name="Tier0Tests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -617,7 +617,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="Tier1Tests" />
+				<include name="Tier0Tests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -630,7 +630,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="Tier1Tests" />
+				<include name="Tier0Tests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -643,7 +643,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="Tier1Tests" />
+				<include name="Tier0Tests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -656,7 +656,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="Tier1Tests" />
+				<include name="Tier0Tests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -669,7 +669,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="Tier1Tests" />
+				<include name="Tier0Tests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -682,7 +682,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="Tier1Tests" />
+				<include name="Tier0Tests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -695,7 +695,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="Tier1Tests" />
+				<include name="Tier0Tests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -708,7 +708,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="Tier1Tests" />
+				<include name="Tier0Tests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -721,7 +721,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="Tier1Tests" />
+				<include name="Tier0Tests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -734,7 +734,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="Tier1Tests" />
+				<include name="Tier0Tests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -747,7 +747,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="Tier1Tests" />
+				<include name="Tier0Tests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -760,7 +760,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="Tier1Tests" />
+				<include name="Tier0Tests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -773,7 +773,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="Tier1Tests" />
+				<include name="Tier0Tests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -786,7 +786,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="Tier1Tests" />
+				<include name="Tier0Tests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -799,7 +799,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="Tier1Tests" />
+				<include name="Tier0Tests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -812,7 +812,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="Tier1Tests" />
+				<include name="Tier0Tests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -825,7 +825,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="Tier1Tests" />
+				<include name="Tier0Tests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -838,7 +838,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="Tier1Tests" />
+				<include name="Tier0Tests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -851,7 +851,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="Tier1Tests" />
+				<include name="Tier0Tests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -864,7 +864,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="Tier1Tests" />
+				<include name="Tier0Tests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -877,7 +877,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="Tier1Tests" />
+				<include name="Tier0Tests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -890,7 +890,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="Tier1Tests" />
+				<include name="Tier0Tests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -903,10 +903,10 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="Tier1Tests" />
+				<include name="Tier0Tests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
 	</test>
-
+	
 </suite>

@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.xmlrpc.XmlRpcException;
 import org.testng.SkipException;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -20,6 +19,7 @@ import rhsm.base.SubscriptionManagerCLITestScript;
 import rhsm.data.Translation;
 
 import com.redhat.qe.Assert;
+import com.redhat.qe.auto.bugzilla.BugzillaAPIException;
 import com.redhat.qe.auto.bugzilla.BzChecker;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
@@ -167,7 +167,7 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 			if (msgId.contains("Susbscriptions")) {
 				boolean invokeWorkaroundWhileBugIsOpen = true;
 				String bugId="1188265";	// Bug 1188265 - typo in subscription-manager-gui popup message
-				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
 				if (invokeWorkaroundWhileBugIsOpen) {
 					log.warning("Ignoring known misspelling of '"+"Susbscriptions"+"' while bug '"+bugId+"' is open.");
 					msgId = msgId.replace("Susbscriptions", "Subscriptions");
@@ -179,7 +179,7 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 			if (msgId.contains("unentitle")) {
 				boolean invokeWorkaroundWhileBugIsOpen = true;
 				String bugId="1189880";	// Bug 1189880 - Grammar issue, "unentitle" not a word.
-				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
 				if (invokeWorkaroundWhileBugIsOpen) {
 					log.warning("Ignoring unrecognized word '"+"unentitle"+"' while bug '"+bugId+"' is open.");
 					msgId = msgId.replace("unentitle", "unsubscribed");
@@ -198,7 +198,7 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 			if (msgId.contains("unregister")||msgId.contains("Unregister")||msgId.contains("unregistration")||msgId.contains("reregister")) {
 				boolean invokeWorkaroundWhileBugIsOpen = true;
 				String bugId="1149098";	// Bug 1149098 - Grammar issue, "unregister" not a word.
-				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
 				if (invokeWorkaroundWhileBugIsOpen) {
 					log.warning("Ignoring unrecognized word '"+"unregister"+"' while bug '"+bugId+"' is open.");
 					msgId = msgId.replace("unregister", "deregister");
@@ -226,7 +226,7 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 			if (msgId.contains("Wildcard")) {
 				boolean invokeWorkaroundWhileBugIsOpen = true;
 				String bugId="1189937";	// Bug 1189937 - Grammar issue, "Wildcard" is not a word
-				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
 				if (invokeWorkaroundWhileBugIsOpen) {
 					log.warning("Ignoring unrecognized word '"+"Wildcard"+"' while bug '"+bugId+"' is open.");
 					msgId = msgId.replace("Wildcard", "Wild card");
@@ -242,7 +242,7 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 			if (msgId.contains("_Ok") || msgId.contains("Ok ")) {
 				boolean invokeWorkaroundWhileBugIsOpen = true;
 				String bugId="1189933";	// Bug 1189933 - Grammar issue, "Ok" not a word.
-				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
 				if (invokeWorkaroundWhileBugIsOpen) {
 					log.warning("Ignoring unrecognized word '"+"Ok"+"' while bug '"+bugId+"' is open.");
 					msgId = msgId.replace("_Ok", "OK");
@@ -255,7 +255,7 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 			if (msgId.contains("startup")) {
 				boolean invokeWorkaroundWhileBugIsOpen = true;
 				String bugId="1189953";	// Bug 1189953 - Grammar issue, "startup" is not a word.
-				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
 				if (invokeWorkaroundWhileBugIsOpen) {
 					log.warning("Ignoring unrecognized word '"+"startup"+"' while bug '"+bugId+"' is open.");
 					msgId = msgId.replace("startup", "start-up");
@@ -271,7 +271,7 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 			if (msgId.contains("pre-configure")) {
 				boolean invokeWorkaroundWhileBugIsOpen = true;
 				String bugId="1189946";	// Bug 1189946 - Grammar issue, "pre-configure" versus "preconfigure".
-				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
 				if (invokeWorkaroundWhileBugIsOpen) {
 					log.warning("Ignoring unrecognized word '"+"pre-configure"+"' while bug '"+bugId+"' is open.");
 					msgId = msgId.replace("pre-configure", "preconfigure");
@@ -291,7 +291,7 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 			if (msgId.contains("plugin")) {
 				boolean invokeWorkaroundWhileBugIsOpen = true;
 				String bugId="1200507";	// Bug 1200507 - Grammar issue, "plugin" should be hyphenated.
-				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
 				if (invokeWorkaroundWhileBugIsOpen) {
 					log.warning("Ignoring unrecognized word '"+"plugin"+"' while bug '"+bugId+"' is open.");
 					msgId = msgId.replace("plugin", "plug-in");
@@ -307,7 +307,7 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 			if (msgId.contains("Deletedfd")) {
 				boolean invokeWorkaroundWhileBugIsOpen = true;
 				String bugId="1223852";	// Bug 1223852 - repolib report has 'deletedfd' typo in string catalog
-				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
 				if (invokeWorkaroundWhileBugIsOpen) {
 					log.warning("Ignoring unrecognized word '"+"Deletedfd"+"' while bug '"+bugId+"' is open.");
 					msgId = msgId.replace("Deletedfd", "Deleted");
@@ -319,7 +319,7 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 			if (msgId.contains("systemid")) {
 				boolean invokeWorkaroundWhileBugIsOpen = true;
 				String bugId="1233379";	// Bug 1233379 - Grammar issue, "systemid" is not a word
-				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
 				String word = "systemid";
 				if (invokeWorkaroundWhileBugIsOpen) {
 					log.warning("Ignoring unrecognized word '"+word+"' while bug '"+bugId+"' is open.");
@@ -332,7 +332,7 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 			if (msgId.contains("Editition")) {
 				boolean invokeWorkaroundWhileBugIsOpen = true;
 				String bugId="1317613";	// Bug 1317613 - typo in src/subscription_manager/gui/data/ui/selectsla.ui
-				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
 				if (invokeWorkaroundWhileBugIsOpen) {
 					log.warning("Ignoring known misspelling of '"+"Awesome Developer Editition"+"' while bug '"+bugId+"' is open.");
 					msgId = msgId.replace("Awesome Developer Editition", "Awesome Developer Edition");
@@ -344,7 +344,7 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 			if (msgId.contains("Proxy connnection")) {
 				boolean invokeWorkaroundWhileBugIsOpen = true;
 				String bugId="1372779";	// Bug 1372779 - another typo in "Proxy connnection failed, please check your settings." 
-				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
 				if (invokeWorkaroundWhileBugIsOpen) {
 					log.warning("Ignoring known misspelling of '"+"Proxy connnection"+"' while bug '"+bugId+"' is open.");
 					msgId = msgId.replace("Proxy connnection", "Proxy connection");
@@ -436,7 +436,7 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 				if (msgId.contains(word)) {
 					boolean invokeWorkaroundWhileBugIsOpen = true;
 					String bugId="1190814";	// Bug 1190814 - typos in candlepin msgids
-					try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+					try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
 					if (invokeWorkaroundWhileBugIsOpen) {
 						log.warning("Ignoring known misspelling of '"+word+"' while bug '"+bugId+"' is open.");
 						msgId = msgId.replace(word, "TYPO");
@@ -452,7 +452,7 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 				msgId.contains("reregister")) {
 				boolean invokeWorkaroundWhileBugIsOpen = true;
 				String bugId="1149098";	// Bug 1149098 - Grammar issue, "unregister" not a word.
-				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
 				if (invokeWorkaroundWhileBugIsOpen) {
 					log.warning("Ignoring unrecognized word '"+"unregister"+"' while bug '"+bugId+"' is open.");
 					msgId = msgId.replace("unregister", "deregister");
@@ -528,7 +528,7 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 		if (doesStringContainMatches(modifiedManPage,"[^-]servicelevel")) {
 			boolean invokeWorkaroundWhileBugIsOpen = true;
 			String bugId="1192094";	// Bug 1192094 - man page for subscription-manager references "servicelevel" command when it should say "service-level
-			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
 			String word="servicelevel";
 			if (invokeWorkaroundWhileBugIsOpen) {
 				log.warning("Ignoring unrecognized word '"+word+"' while bug '"+bugId+"' is open.");
@@ -549,7 +549,7 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 			modifiedManPage.contains("UNREGISTER")) {
 			boolean invokeWorkaroundWhileBugIsOpen = true;
 			String bugId="1149098";	// Bug 1149098 - Grammar issue, "unregister" not a word.
-			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
 			if (invokeWorkaroundWhileBugIsOpen) {
 				log.warning("Ignoring unrecognized word '"+"unregister"+"' while bug '"+bugId+"' is open.");
 
@@ -571,7 +571,7 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 			if (modifiedManPage.contains(word)) {
 				boolean invokeWorkaroundWhileBugIsOpen = true;
 				String bugId="1192120";	// Bug 1192120 - typos and poor grammar in subscription-manager man page
-				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
 				if (invokeWorkaroundWhileBugIsOpen) {
 					log.warning("Ignoring known misspelling of '"+word+"' while bug '"+bugId+"' is open.");
 					modifiedManPage = modifiedManPage.replace(word, "TYPO");
@@ -640,7 +640,7 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 			if (modifiedManPage.contains(word)) {
 				boolean invokeWorkaroundWhileBugIsOpen = true;
 				String bugId="1192574";	// Bug 1192574 - typos and poor grammar in subscription-manager-gui man page
-				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
 				if (invokeWorkaroundWhileBugIsOpen) {
 					log.warning("Ignoring known misspelling of '"+word+"' while bug '"+bugId+"' is open.");
 					modifiedManPage = modifiedManPage.replace(word, "TYPO");
@@ -684,7 +684,7 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 			boolean invokeWorkaroundWhileBugIsOpen = true;
 			String bugId="1192574";	// Bug 1192574 - typos and poor grammar in subscription-manager-gui man page
 			// TODO Wrong bug 1192574
-			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
 			if (invokeWorkaroundWhileBugIsOpen) {
 				log.warning("Ignoring poor man page title while bug '"+bugId+"' is open.");
 				modifiedManPage = modifiedManPage.replaceAll("System Manager's Manr", "System Manager's Manual r");
@@ -698,7 +698,7 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 			modifiedManPage.contains("Unregister") /*||modifiedManPage.contains("UNREGISTER")*/) {
 			boolean invokeWorkaroundWhileBugIsOpen = true;
 			String bugId="1149098";	// Bug 1149098 - Grammar issue, "unregister" not a word.
-			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
 			if (invokeWorkaroundWhileBugIsOpen) {
 				log.warning("Ignoring unrecognized word '"+"unregister"+"' while bug '"+bugId+"' is open.");
 
@@ -756,7 +756,7 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 			if (modifiedManPage.contains(word)) {
 				boolean invokeWorkaroundWhileBugIsOpen = true;
 				String bugId="1192646";	// Bug 1192646 - typos and poor grammar in rhsm.conf man page
-				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
 				if (invokeWorkaroundWhileBugIsOpen) {
 					log.warning("Ignoring known misspelling of '"+word+"' while bug '"+bugId+"' is open.");
 					modifiedManPage = modifiedManPage.replace(word, "TYPO");
@@ -817,7 +817,7 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 			if (modifiedManPage.contains(word)) {
 				boolean invokeWorkaroundWhileBugIsOpen = true;
 				String bugId="1193991";	// Bug 1193991 - typos and poor grammar in rct man page
-				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
 				if (invokeWorkaroundWhileBugIsOpen) {
 					log.warning("Ignoring known misspelling of '"+word+"' while bug '"+bugId+"' is open.");
 					modifiedManPage = modifiedManPage.replace(word, "TYPO");
@@ -860,7 +860,7 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 			if (modifiedManPage.contains(word)) {
 				boolean invokeWorkaroundWhileBugIsOpen = true;
 				String bugId="1194453";	// Bug 1194453 - typos and poor grammar in rhsmcertd man page
-				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
 				if (invokeWorkaroundWhileBugIsOpen) {
 					log.warning("Ignoring known misspelling of '"+word+"' while bug '"+bugId+"' is open.");
 					modifiedManPage = modifiedManPage.replace(word, "TYPO");
@@ -931,7 +931,7 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 			if (modifiedManPage.contains(word)) {
 				boolean invokeWorkaroundWhileBugIsOpen = true;
 				String bugId="1194468";	// Bug 1194468 - typos and poor grammar in rhsm-debug man page
-				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
 				if (invokeWorkaroundWhileBugIsOpen) {
 					log.warning("Ignoring known misspelling of '"+word+"' while bug '"+bugId+"' is open.");
 					modifiedManPage = modifiedManPage.replace(word, "TYPO");

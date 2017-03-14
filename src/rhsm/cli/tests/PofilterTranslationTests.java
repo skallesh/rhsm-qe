@@ -12,7 +12,6 @@ import java.util.Stack;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.xmlrpc.XmlRpcException;
 import org.testng.SkipException;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
@@ -20,6 +19,7 @@ import org.testng.annotations.Test;
 
 import com.redhat.qe.Assert;
 import com.redhat.qe.auto.bugzilla.BlockedByBzBug;
+import com.redhat.qe.auto.bugzilla.BugzillaAPIException;
 import com.redhat.qe.auto.bugzilla.BzChecker;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import rhsm.base.SubscriptionManagerCLITestScript;
@@ -320,7 +320,7 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 			// TEMPORARY WORKAROUND FOR BUG
 			if (failedTranslation!=null) {
 				String bugId = "928401"; boolean invokeWorkaroundWhileBugIsOpen = true;
-				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
 				if (invokeWorkaroundWhileBugIsOpen) {
 					log.warning("Ignoring this failed pofilter newlines test translation while bug '"+bugId+"' is open. "+failedTranslation);
 					ignorableMsgIds.add(msgId);
@@ -349,7 +349,7 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 			// TEMPORARY WORKAROUND FOR BUG
 			if (failedTranslation!=null) {
 				String bugId = "928401"; boolean invokeWorkaroundWhileBugIsOpen = true;
-				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
 				if (invokeWorkaroundWhileBugIsOpen) {
 					log.warning("Ignoring this failed pofilter newlines test translation while bug '"+bugId+"' is open. "+failedTranslation);
 					ignorableMsgIds.add(msgId);
@@ -362,7 +362,7 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 			// TEMPORARY WORKAROUND FOR BUG
 			if (failedTranslation!=null) {
 				String bugId = "928401"; boolean invokeWorkaroundWhileBugIsOpen = true;
-				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
 				if (invokeWorkaroundWhileBugIsOpen) {
 					log.warning("Ignoring this failed pofilter newlines test translation while bug '"+bugId+"' is open. "+failedTranslation);
 					ignorableMsgIds.add(msgId);
@@ -507,7 +507,7 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 			// TEMPORARY WORKAROUND FOR BUG 984206 - def friendly_join(items): in utils.py should not use string " and "
 			else if (failedTranslation!=null) {
 				String bugId = "984206"; boolean invokeWorkaroundWhileBugIsOpen = true;
-				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
 				if (invokeWorkaroundWhileBugIsOpen) {
 					log.warning("Ignoring this failed pofilter short test translation while bug '"+bugId+"' is open. "+failedTranslation);
 					ignorableMsgIds.add(msgId);
@@ -563,13 +563,13 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 			// Move de_DE to be just de; Move es_ES to be just es; candlepin commit 51c338274b7194b70b472f15a0deef48d61f7804
 			if (doesStringContainMatches(translationFile.getPath(),"/bn_IN/|/bn_IN\\.po$"))	ignorableMsgIds.addAll(Arrays.asList("Subscription Validity Applet","Auto-attach"));
 			if (doesStringContainMatches(translationFile.getPath(),"/ta_IN/|/ta_IN\\.po$"))	ignorableMsgIds.addAll(Arrays.asList("Org: ","org id: %s","org ID: %s","Repo Id:              \\t%s","Repo Url:             \\t%s"/*,"Auto-attach" Bug 1140644*/));
-			if (doesStringContainMatches(translationFile.getPath(),"/pt_BR/|/pt_BR\\.po$"))	ignorableMsgIds.addAll(Arrays.asList("Org: ","org id: %s","org ID: %s","<b>subscription management service version:</b> %s","Status","Status:               \\t%s","<b>Status:</b>","Login:","Virtual","_Help","virtual", "Repo Id:              \\t%s", "Arch:                 \\t%s"/* omaciel says "Arquitetura:" is better */, "Pool Id:              \\t%s"/* omaciel says "ID do pool:" is better */, "<b>Base URL:</b>","_Ok"));
+			if (doesStringContainMatches(translationFile.getPath(),"/pt_BR/|/pt_BR\\.po$"))	ignorableMsgIds.addAll(Arrays.asList("Org: ","org id: %s","org ID: %s","<b>subscription management service version:</b> %s","Status","Status:               \\t%s","<b>Status:</b>","Login:","Virtual","_Help","virtual", "Repo Id:              \\t%s", "Arch:                 \\t%s"/* omaciel says "Arquitetura:" is better */, "Pool Id:              \\t%s"/* omaciel says "ID do pool:" is better */, "<b>Base URL:</b>","_Ok","_Login:"));
 			if (doesStringContainMatches(translationFile.getPath(),"/de_DE/|/de_DE\\.po$|/de\\.po$"))	ignorableMsgIds.addAll(Arrays.asList("Subscription Manager","Red Hat account: ","Account","<b>Account:</b>","Account:              \\t%s","<b>Subscription Management Service Version:</b> %s","<b>subscription management service version:</b> %s","subscription management server: %s","Login:","Arch","Arch:","Name","Name:                 \\t%s","Name:","<b>Name:</b>","Status","<b>Status:</b>","Status:               \\t%s","Status:","<b>Status Details:</b>","Status Details","Status Details:","Status Details Text","System Status Details","Version: %s","Version","Version:              \\t%s","Version:","<b>%s version:</b> %s","_System","long integer","name: %s","label","Label","Name: %s","Release: %s","integer","Tags","Org: ","org ID: %s","\\tManifest","<b>Account:</b>","Account","Account:","Red Hat account: ","Server","Standard","Repository: %s","_Ok","<b>Support:</b>","<b>Downloads &amp; Upgrades:</b>"));
-			if (doesStringContainMatches(translationFile.getPath(),"/es_ES/|/es_ES\\.po$|/es\\.po$"))	ignorableMsgIds.addAll(Arrays.asList("Org: ","Serial","Serial:","No","%s: error: %s","General:"));
+			if (doesStringContainMatches(translationFile.getPath(),"/es_ES/|/es_ES\\.po$|/es\\.po$"))	ignorableMsgIds.addAll(Arrays.asList("Org: ","Serial","Serial:","No","%s: error: %s","General:","_Login:"));
 			if (doesStringContainMatches(translationFile.getPath(),"/te/|/te\\.po$"))		ignorableMsgIds.addAll(Arrays.asList("page 2"));
 			if (doesStringContainMatches(translationFile.getPath(),"/pa/|/pa\\.po$"))		ignorableMsgIds.addAll(Arrays.asList("<b>python-rhsm version:</b> %s"));
 			if (doesStringContainMatches(translationFile.getPath(),"/fr/|/fr\\.po$"))		ignorableMsgIds.addAll(Arrays.asList("Auto-attach","Options","options","Type","Arch","Arches","Architectures","Version","page 2","Standard"));
-			if (doesStringContainMatches(translationFile.getPath(),"/it/|/it\\.po$"))		ignorableMsgIds.addAll(Arrays.asList("Auto-attach","Org: ","org id: %s","org ID: %s","Account","Account:","<b>Account:</b>","Account:              \\t%s","<b>Arch:</b>","Arch:                 \\t%s","Arch:","Arch","Login:","No","Password:","Release: %s","Password: ","Server","Standard","Stack ","_Ok"));
+			if (doesStringContainMatches(translationFile.getPath(),"/it/|/it\\.po$"))		ignorableMsgIds.addAll(Arrays.asList("Auto-attach","Org: ","org id: %s","org ID: %s","Account","Account:","<b>Account:</b>","Account:              \\t%s","<b>Arch:</b>","Arch:                 \\t%s","Arch:","Arch","Login:","_Login:","No","Password:","_Password:","Release: %s","Password: ","Server","Standard","Stack ","_Ok"));
 			if (doesStringContainMatches(translationFile.getPath(),"/ru/|/ru\\.po$"))		ignorableMsgIds.addAll(Arrays.asList("_Ok"));
 			if (doesStringContainMatches(translationFile.getPath(),"/ko/|/ko\\.po$"))		ignorableMsgIds.addAll(Arrays.asList("_Ok"));
 			if (doesStringContainMatches(translationFile.getPath(),"/ja/|/ja\\.po$"))		ignorableMsgIds.addAll(Arrays.asList("_Ok"));
@@ -588,7 +588,7 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 			Translation failedTranslation = Translation.findFirstInstanceWithMatchingFieldFromList("msgid", msgId, pofilterFailedTranslations);
 			if (translationFile.getPath().contains("/server/") && failedTranslation!=null) {
 				String bugId = "1142824"; boolean invokeWorkaroundWhileBugIsOpen = true;
-				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
 				if (invokeWorkaroundWhileBugIsOpen) {
 					log.warning("Ignoring this failed pofilter "+pofilterTest+" test while bug '"+bugId+"' is open. "+failedTranslation);
 					ignorableMsgIds.add(msgId);	
@@ -598,7 +598,7 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 			failedTranslation = Translation.findFirstInstanceWithMatchingFieldFromList("msgid", msgId, pofilterFailedTranslations);
 			if (translationFile.getPath().contains("/server/") && failedTranslation!=null) {
 				String bugId = "1142824"; boolean invokeWorkaroundWhileBugIsOpen = true;
-				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
 				if (invokeWorkaroundWhileBugIsOpen) {
 					log.warning("Ignoring this failed pofilter "+pofilterTest+" test while bug '"+bugId+"' is open. "+failedTranslation);
 					ignorableMsgIds.add(msgId);	
@@ -608,7 +608,7 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 			failedTranslation = Translation.findFirstInstanceWithMatchingFieldFromList("msgid", msgId, pofilterFailedTranslations);
 			if (translationFile.getPath().contains("/server/") && failedTranslation!=null) {
 				String bugId = "1142824"; boolean invokeWorkaroundWhileBugIsOpen = true;
-				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
 				if (invokeWorkaroundWhileBugIsOpen) {
 					log.warning("Ignoring this failed pofilter "+pofilterTest+" test while bug '"+bugId+"' is open. "+failedTranslation);
 					ignorableMsgIds.add(msgId);	
@@ -618,7 +618,7 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 			failedTranslation = Translation.findFirstInstanceWithMatchingFieldFromList("msgid", msgId, pofilterFailedTranslations);
 			if (translationFile.getPath().contains("/server/") && failedTranslation!=null) {
 				String bugId = "1142824"; boolean invokeWorkaroundWhileBugIsOpen = true;
-				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
 				if (invokeWorkaroundWhileBugIsOpen) {
 					log.warning("Ignoring this failed pofilter "+pofilterTest+" test while bug '"+bugId+"' is open. "+failedTranslation);
 					ignorableMsgIds.add(msgId);	

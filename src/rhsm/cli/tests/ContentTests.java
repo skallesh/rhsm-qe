@@ -14,7 +14,7 @@ import java.util.regex.Pattern;
 
 import com.github.redhatqe.polarize.metadata.DefTypes.Project;
 import com.github.redhatqe.polarize.metadata.TestDefinition;
-import org.apache.xmlrpc.XmlRpcException;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -26,6 +26,7 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import com.redhat.qe.Assert;
+import com.redhat.qe.auto.bugzilla.BugzillaAPIException;
 import com.redhat.qe.auto.bugzilla.BzChecker;
 import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.TestNGUtils;
@@ -37,7 +38,6 @@ import rhsm.cli.tasks.CandlepinTasks;
 import rhsm.cli.tasks.SubscriptionManagerTasks;
 import rhsm.data.ContentNamespace;
 import rhsm.data.EntitlementCert;
-import rhsm.data.InstalledProduct;
 import rhsm.data.ProductCert;
 import rhsm.data.ProductSubscription;
 import rhsm.data.SubscriptionPool;
@@ -554,7 +554,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		if (clienttasks.arch.equals("ppc64le")) {
 			boolean invokeWorkaroundWhileBugIsOpen = true;
 			String bugId="1156638"; // Bug 1156638 - "Red Hat Enterprise Linux for IBM POWER" subscriptions need to provide content for arch "ppc64le"
-			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
 			if (invokeWorkaroundWhileBugIsOpen) {
 				throw new SkipException("Skipping this test on arch '"+clienttasks.arch+"' while blocking bug '"+bugId+"' is open.");
 			}
@@ -587,7 +587,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 			// TEMPORARY WORKAROUND
 			boolean invokeWorkaroundWhileBugIsOpen = true;
 			String bugId="1282961"; // Bug 1282961 - Plugin "search-disabled-repos" requires API 2.7. Supported API is 2.6.
-			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
 			if (invokeWorkaroundWhileBugIsOpen && clienttasks.redhatReleaseX.equals("6") && clienttasks.isPackageVersion("subscription-manager", ">=", "1.15")) {
 			    Assert.assertEquals((client.getStdout()+client.getStderr()).replace("Plugin \"search-disabled-repos\" requires API 2.7. Supported API is 2.6.", "").trim(),"","Ignoring bug '"+bugId+"', Stdout+Stderr from prior command should be blank due to --quiet option.");
 			} else
@@ -610,7 +610,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 			// TEMPORARY WORKAROUND
 			boolean invokeWorkaroundWhileBugIsOpen = true;
 			String bugId="1282961"; // Bug 1282961 - Plugin "search-disabled-repos" requires API 2.7. Supported API is 2.6.
-			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
 			if (invokeWorkaroundWhileBugIsOpen && clienttasks.redhatReleaseX.equals("6") && clienttasks.isPackageVersion("subscription-manager", ">=", "1.15")) {
 			    Assert.assertEquals((client.getStdout()+client.getStderr()).replace("Plugin \"search-disabled-repos\" requires API 2.7. Supported API is 2.6.", "").trim(),"","Ignoring bug '"+bugId+"', Stdout+Stderr from prior command should be blank due to --quiet option.");
 			} else
@@ -741,8 +741,9 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		//entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
 		clienttasks.subscribe(null, null, pool.poolId, null, null, null, null, null, null, null, null, null);
 		entitlementCert = clienttasks.getEntitlementCertCorrespondingToSubscribedPool(pool);
-		entitlementCertFile = clienttasks.getEntitlementCertFileFromEntitlementCert(entitlementCert);
-		Assert.assertTrue(Float.valueOf(entitlementCert.version)<=Float.valueOf(systemCertificateVersionFactValue),"The version of the entitlement certificate '"+entitlementCert.version+"' granted by candlepin is less than or equal to the system.certificate_version '"+systemCertificateVersionFactValue+"' which indicates the maximum certificate version this system knows how to handle.");
+		entitlementCertFile = clienttasks.getEntitlementCertFileFromEntitlementCert(entitlementCert);	
+		// TOO ASSERTIVE  Assert.assertTrue(Float.valueOf(entitlementCert.version)<=Float.valueOf(systemCertificateVersionFactValue),"The version of the entitlement certificate '"+entitlementCert.version+"' granted by candlepin is less than or equal to the system.certificate_version '"+systemCertificateVersionFactValue+"' which indicates the maximum certificate version this system knows how to handle.");	// This assert was too assertive according to https://bugzilla.redhat.com/show_bug.cgi?id=1425236#c2
+		Assert.assertEquals(Float.valueOf(entitlementCert.version).intValue(),Float.valueOf(systemCertificateVersionFactValue).intValue(),"The major value of the entitlement certificate '"+entitlementCert.version+"' granted by candlepin matches the major value of the system.certificate_version '"+systemCertificateVersionFactValue+"' which indicates certificate compatibility.");	// Reference: https://bugzilla.redhat.com/show_bug.cgi?id=1425236#c2
 		Assert.assertEquals(entitlementCert.contentNamespaces.size(), 185, "The number of content sets provided in this version '"+entitlementCert.version+"' entitlement cert parsed using the rct cat-cert tool.");
 		clienttasks.assertEntitlementCertsInYumRepolist(Arrays.asList(entitlementCert), true);
 		//clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
@@ -1114,7 +1115,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		if (clienttasks.arch.equals("ppc64le")) {
 			boolean invokeWorkaroundWhileBugIsOpen = true;
 			String bugId="1156638"; // Bug 1156638 - "Red Hat Enterprise Linux for IBM POWER" subscriptions need to provide content for arch "ppc64le"
-			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
 			if (invokeWorkaroundWhileBugIsOpen) {
 				throw new SkipException("Skipping this test on arch '"+clienttasks.arch+"' while blocking bug '"+bugId+"' is open.");
 			}
@@ -1156,7 +1157,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 				if (rhelProductCert.productId.equals("261") && clienttasks.arch.equals("aarch64")) {
 					boolean invokeWorkaroundWhileBugIsOpen = true;
 					String bugId="1174966"; 
-					try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+					try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
 					if (invokeWorkaroundWhileBugIsOpen) {
 						String enablerepo = "rhel-server-for-arm-development-preview-rpms";
 						log.info("Explicitly enabling repo '"+enablerepo+"' to gain access to ARM content.");
@@ -1186,7 +1187,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		if (clienttasks.redhatReleaseX.equals("5") && clienttasks.arch.startsWith("ppc")) {
 			boolean invokeWorkaroundWhileBugIsOpen = true;
 			String bugId="1090058"; 
-			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
 			if (invokeWorkaroundWhileBugIsOpen) {
 				if (!rhelSubscriptionIsAvailable) throw new SkipException("skipping this test while bug '"+bugId+"' is open");
 			}
@@ -1586,7 +1587,8 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		clienttasks.subscribe(null, null, pool.poolId, null, null, null, null, null, null, null, null, null);
 		entitlementCert = clienttasks.getEntitlementCertCorrespondingToSubscribedPool(pool);
 		entitlementCertFile = clienttasks.getEntitlementCertFileFromEntitlementCert(entitlementCert);
-		Assert.assertTrue(Float.valueOf(entitlementCert.version)<=Float.valueOf(systemCertificateVersionFactValue),"The version of the entitlement certificate '"+entitlementCert.version+"' granted by candlepin is less than or equal to the system.certificate_version '"+systemCertificateVersionFactValue+"' which indicates the maximum certificate version this system knows how to handle.");
+		// TOO ASSERTIVE Assert.assertTrue(Float.valueOf(entitlementCert.version)<=Float.valueOf(systemCertificateVersionFactValue),"The version of the entitlement certificate '"+entitlementCert.version+"' granted by candlepin is less than or equal to the system.certificate_version '"+systemCertificateVersionFactValue+"' which indicates the maximum certificate version this system knows how to handle.");	// This assert was too assertive according to https://bugzilla.redhat.com/show_bug.cgi?id=1425236#c2
+		Assert.assertEquals(Float.valueOf(entitlementCert.version).intValue(),Float.valueOf(systemCertificateVersionFactValue).intValue(),"The major value of the entitlement certificate '"+entitlementCert.version+"' granted by candlepin matches the major value of the system.certificate_version '"+systemCertificateVersionFactValue+"' which indicates certificate compatibility.");	// Reference: https://bugzilla.redhat.com/show_bug.cgi?id=1425236#c2
 		Assert.assertEquals(entitlementCert.contentNamespaces.size(), totalContentSets, "The number of content sets provided in this version '"+entitlementCert.version+"' entitlement cert parsed using the rct cat-cert tool.");
 		clienttasks.assertEntitlementCertsInYumRepolist(Arrays.asList(entitlementCert), true);
 		clienttasks.unsubscribeFromSerialNumber(clienttasks.getSerialNumberFromEntitlementCertFile(entitlementCertFile));

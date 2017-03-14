@@ -2,6 +2,7 @@ package rhsm.cli.tests;
 
 import java.io.File;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -13,7 +14,7 @@ import java.util.Set;
 
 import com.github.redhatqe.polarize.metadata.DefTypes.Project;
 import com.github.redhatqe.polarize.metadata.TestDefinition;
-import org.apache.xmlrpc.XmlRpcException;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.testng.SkipException;
@@ -25,6 +26,7 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import com.redhat.qe.Assert;
+import com.redhat.qe.auto.bugzilla.BugzillaAPIException;
 import com.redhat.qe.auto.bugzilla.BzChecker;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.tools.RemoteFileTasks;
@@ -222,7 +224,7 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 			// TEMPORARY WORKAROUND
 			boolean invokeWorkaroundWhileBugIsOpen = true;
 			String bugId="1297863"; // Bug 1297863 - to account for daylight savings events, dev_sku (CDK) entitlements should add Calendar.DATE units of expires_after to establish the subscription end date
-			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
 			if (invokeWorkaroundWhileBugIsOpen && clienttasks.redhatReleaseX.equals("6") && clienttasks.isPackageVersion("subscription-manager", ">=", "1.15")) {
 				// NOTE: This will be an hour off when the duration crosses the "Fall" back or "Spring" forward daylight saving dates.
 				expectedEndDate.add(Calendar.HOUR, Integer.valueOf(defaultExpiresAfter)*24);
@@ -240,7 +242,7 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 			// TEMPORARY WORKAROUND
 			boolean invokeWorkaroundWhileBugIsOpen = true;
 			String bugId="1297863"; // Bug 1297863 - to account for daylight savings events, dev_sku (CDK) entitlements should add Calendar.DATE units of expires_after to establish the subscription end date
-			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
 			if (invokeWorkaroundWhileBugIsOpen && clienttasks.redhatReleaseX.equals("6") && clienttasks.isPackageVersion("subscription-manager", ">=", "1.15")) {
 				// NOTE: This will be an hour off when the duration crosses the "Fall" back or "Spring" forward daylight saving dates.
 				expectedEndDate.add(Calendar.HOUR, Integer.valueOf(devSkuExpiresAfter)*24);
@@ -613,12 +615,33 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 	}
 
 	@AfterClass(groups="setup")
-	public void teardownAfterClass() throws JSONException, IOException {
+	public void teardownAfterClass() throws IOException, JSONException, SQLException {
 		if (CandlepinType.standalone.equals(sm_serverType)) {	// indicates that we are testing a standalone candlepin server
 			servertasks.updateConfFileParameter("candlepin.standalone", "true");
 			servertasks.commentConfFileParameter("module.config.hosted.configuration.module");
 			servertasks.restartTomcat();
 			servertasks.initialize(clienttasks.candlepinAdminUsername,clienttasks.candlepinAdminPassword,clienttasks.candlepinUrl);
+			
+			// 2/6/2017 BEWARE! toggling between "candlepin.standalone", to "false" and back to "true" will lock
+			// engineering products.  Subsequent delete and modify requests will be blocked as occurred in a Tier3
+			// run of ServiceLevelTests... 
+			// 		SSH alternative to HTTP request: curl --stderr /dev/null --insecure --user admin:admin --request DELETE https://jsefler-candlepin6.usersys.redhat.com:8443/candlepin/owners/admin/products/99000
+			// 		Attempt to DELETE resource '/owners/admin/products/99000' failed: product "99000" is locked
+			// A. workaround to avoid the subsequent error is to delete the products ahead of time
+			// B. another workaround is to re-deploy the database with -g  regenerates the database, -t inserts test data along with it after restarting tomcat.
+			// C. most reliable workaround is to update the locked columns for all of the cp2_products and cp2_content tables
+//			if (CandlepinType.standalone.equals(sm_serverType)) {	// indicates that we are testing a standalone candlepin server
+//				// delete already existing subscription and products
+//				String resourcePath;
+//				//CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, "exempt-sla-product-sku");
+//				resourcePath = "/products/"+"exempt-sla-product-sku";
+//				if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) resourcePath = "/owners/"+sm_clientOrg+resourcePath;
+//				CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, resourcePath);
+//				resourcePath = "/products/"+"99000";
+//				if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) resourcePath = "/owners/"+sm_clientOrg+resourcePath;
+//				CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, resourcePath);
+//			}
+			updateProductAndContentLockStateOnDatabase(0); // unlock all product and content after toggling out of hosted mode
 		}
 		
 		clienttasks.deleteFactsFileWithOverridingValues();	// to get rid of the dev_sku settings

@@ -1,13 +1,11 @@
 package rhsm.cli.tests;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 import org.json.JSONException;
 import org.testng.SkipException;
-import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterGroups;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -18,7 +16,6 @@ import com.redhat.qe.jul.TestRecords;
 import rhsm.base.SubscriptionManagerCLITestScript;
 import rhsm.data.EntitlementCert;
 import rhsm.data.ProductNamespace;
-import rhsm.data.SubscriptionPool;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 
