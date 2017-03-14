@@ -32,7 +32,7 @@
 
 (deftest subscribe_each-test
   (let [subscriptions (tests/get_subscriptions nil)]
-    (for [subscription subscriptions]
+    (doseq [[subscription] subscriptions]
       (tests/subscribe_each nil subscription))))
 
 (deftest unsubscribe_each-test
