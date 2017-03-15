@@ -2220,7 +2220,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Attempt to execute migration tool rhn-migrate-classic-to-rhsm with --remove-rhn-packages which should disable some classic services and remove several classic packages. As a result, subsequent attempts to migrate will be halted with a friendly message.",
-			groups={"blockedByBug-1185914","RhnMigrateClassicToRhsmWithRemoveRhnPackages_Test"},
+			groups={"blockedByBug-1185914","blockedByBug-1432642","RhnMigrateClassicToRhsmWithRemoveRhnPackages_Test"},
 			dependsOnMethods={},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -2349,6 +2349,15 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	@AfterGroups(groups="setup",value={"RhnMigrateClassicToRhsmWithRemoveRhnPackages_Test"})
 	public void installRhnClassicPackages() throws IOException, JSONException {
 		if (clienttasks==null) return;
+		
+		// TEMPORARY WORKAROUND FOR BUG
+		String bugId = "1432642";	// Bug 1432642 - released/RHN-Tools-5.7-RHEL-7/<ARCH>/tree/RHNTools/ is missing repodata
+		boolean invokeWorkaroundWhileBugIsOpen = true;
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
+		if (invokeWorkaroundWhileBugIsOpen) {
+			throw new SkipException("Blocked from installing RHN Classic packages on RHEL7 while bug "+bugId+" is open.  There is no workaround.");
+		}
+		// END OF WORKAROUND
 		
 		// install the rhn classic packages
 		clienttasks.installReleasedRhnClassicPackages(sm_yumInstallOptions, legacyRHNClassicPackages);
