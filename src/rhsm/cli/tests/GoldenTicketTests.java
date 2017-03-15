@@ -167,7 +167,7 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
 		attributeName, attributeValue);
 	String activationKeyName = String.format("%s_%s-ActivationKey%s", sm_clientUsername, sm_clientOrg,
 		System.currentTimeMillis());
-	Map<String, String> mapActivationKeyRequest = new HashMap<>();
+	Map<String, String> mapActivationKeyRequest = new HashMap<String, String>();
 	mapActivationKeyRequest.put("name", activationKeyName);
 	mapActivationKeyRequest.put("autoAttach", "false");
 	JSONObject jsonActivationKeyRequest = new JSONObject(mapActivationKeyRequest);
@@ -187,7 +187,7 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
 
 	String activationKeyNameTrue = String.format("%s_%s-ActivationKey%s", sm_clientUsername, org,
 		System.currentTimeMillis());
-	Map<String, String> mapActivationKeyTrueRequest = new HashMap<>();
+	Map<String, String> mapActivationKeyTrueRequest = new HashMap<String, String>();
 	mapActivationKeyTrueRequest.put("name", activationKeyNameTrue);
 	mapActivationKeyTrueRequest.put("autoAttach", "true");
 	JSONObject jsonActivationKeyTrueRequest = new JSONObject(mapActivationKeyTrueRequest);
