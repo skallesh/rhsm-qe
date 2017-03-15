@@ -33,3 +33,6 @@ sm.iml
 ## ssh key files
 .ssh/*
 !.ssh/README
+
+## polarize generated files
+groups-to-methods.json
