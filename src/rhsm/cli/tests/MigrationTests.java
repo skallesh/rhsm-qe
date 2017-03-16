@@ -15,8 +15,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
-import org.apache.xmlrpc.XmlRpcException;
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.testng.SkipException;
@@ -29,6 +27,7 @@ import org.testng.annotations.Test;
 
 import com.redhat.qe.Assert;
 import com.redhat.qe.auto.bugzilla.BlockedByBzBug;
+import com.redhat.qe.auto.bugzilla.BugzillaAPIException;
 import com.redhat.qe.auto.bugzilla.BzChecker;
 import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.TestNGUtils;
@@ -152,7 +151,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		
 //		// TEMPORARY WORKAROUND FOR BUG
 //		String bugId = "840415"; boolean invokeWorkaroundWhileBugIsOpen = true;
-//		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+//		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 //		if (invokeWorkaroundWhileBugIsOpen) {
 //			if (clienttasks.productCertDir.equals(nonDefaultProductCertDir))
 //			log.warning("Skipping the removal of the non default productCertDir '"+nonDefaultProductCertDir+"' before Testing without the dryrun option...");
@@ -168,10 +167,10 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		
 		// TEMPORARY WORKAROUND FOR BUG
 		String bugId = "783278"; boolean invokeWorkaroundWhileBugIsOpen = true;
-		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 		String bugPkg = "subscription-manager-migration";
 		String bugVer = "subscription-manager-migration-0.98";	// RHEL58
-		try {if (clienttasks.installedPackageVersionMap.get(bugPkg).contains(bugVer) && !invokeWorkaroundWhileBugIsOpen) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+" which has NOT been fixed in this installed version of "+bugVer+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId); invokeWorkaroundWhileBugIsOpen=true;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		try {if (clienttasks.installedPackageVersionMap.get(bugPkg).contains(bugVer) && !invokeWorkaroundWhileBugIsOpen) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+" which has NOT been fixed in this installed version of "+bugVer+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId); invokeWorkaroundWhileBugIsOpen=true;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 		if (invokeWorkaroundWhileBugIsOpen) {
 			log.warning("Skipping the assertion of the fact '"+migrationFromFact+"' fact.");
 		} else
@@ -286,10 +285,10 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		
 		// TEMPORARY WORKAROUND FOR BUG
 		String bugId = "773707"; boolean invokeWorkaroundWhileBugIsOpen = true;
-		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 		String bugPkg = "subscription-manager-migration";
 		String bugVer = "subscription-manager-migration-0.98";	// RHEL58
-		try {if (clienttasks.installedPackageVersionMap.get(bugPkg).contains(bugVer) && !invokeWorkaroundWhileBugIsOpen) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+" which has NOT been fixed in this installed version of "+bugVer+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId); invokeWorkaroundWhileBugIsOpen=true;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		try {if (clienttasks.installedPackageVersionMap.get(bugPkg).contains(bugVer) && !invokeWorkaroundWhileBugIsOpen) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+" which has NOT been fixed in this installed version of "+bugVer+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId); invokeWorkaroundWhileBugIsOpen=true;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 		if (invokeWorkaroundWhileBugIsOpen) {
 			throw new SkipException("There is no workaround for this installed version of "+bugVer+".  Blocked by Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");
 		}
@@ -324,10 +323,10 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		if (expectedStderr!=null) Assert.assertEquals(result.getStderr().trim(), expectedStderr, "Stderr from running :"+command);
 		// TEMPORARY WORKAROUND FOR BUG
 		String bugId="783542"; boolean invokeWorkaroundWhileBugIsOpen = true;
-		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
 		String bugPkg = "subscription-manager-migration";
 		String bugVer = "subscription-manager-migration-0.98";	// RHEL58
-		try {if (clienttasks.installedPackageVersionMap.get(bugPkg).contains(bugVer) && !invokeWorkaroundWhileBugIsOpen) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+" which has NOT been fixed in this installed version of "+bugVer+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId); invokeWorkaroundWhileBugIsOpen=true;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		try {if (clienttasks.installedPackageVersionMap.get(bugPkg).contains(bugVer) && !invokeWorkaroundWhileBugIsOpen) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+" which has NOT been fixed in this installed version of "+bugVer+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId); invokeWorkaroundWhileBugIsOpen=true;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
 		if (invokeWorkaroundWhileBugIsOpen) {
 			log.warning("Skipping the exitCode assertion from running: "+command);
 		} else
@@ -466,7 +465,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			// TEMPORARY WORKAROUND FOR BUG
 			String bugId = "1006985"; // Bug 1006985 - rhn-migrate-classic-to-rhsm should abort when it encounters RHN channels that map to different products certs that share the same productId
 			boolean invokeWorkaroundWhileBugIsOpen = true;
-			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
 			if (invokeWorkaroundWhileBugIsOpen) {
 				throw new SkipException("The remainder of this test is blocked by bug "+bugId+".  There is no workaround.");
 			}
@@ -692,13 +691,15 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		//	Stopping and disabling legacy services...
 		//	osad: unrecognized service
 		//	osad: unrecognized service
-		// TODO Implement this block for RHEL7
 		// TEMPORARY WORKAROUND FOR BUG
-		String bugId = "1390341"; // Bug 1390341 - rhn-migrate-classic-to-rhsm is failing to stop and disable services
-		boolean invokeWorkaroundWhileBugIsOpen = true;
-		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
-		if (invokeWorkaroundWhileBugIsOpen) {
-			log.warning("Skipping assertion of stopped and disabled services while bug '"+bugId+"' is open.");;
+		String bugId1 = "1390341"; // Bug 1390341 - rhn-migrate-classic-to-rhsm is failing to stop and disable services
+		String bugId2 = "1432231"; // Bug 1432231 - rhn-migrate-classic-to-rhsm is failing to stop and disable services
+		boolean invokeWorkaroundWhileBug1IsOpen = true;
+		boolean invokeWorkaroundWhileBug2IsOpen = true;
+		try {if (BzChecker.getInstance().isBugOpen(bugId1)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId1).toString()+" Bugzilla "+bugId1+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId1+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId1);} else {invokeWorkaroundWhileBug1IsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
+		try {if (BzChecker.getInstance().isBugOpen(bugId2)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId2).toString()+" Bugzilla "+bugId2+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId2+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId2);} else {invokeWorkaroundWhileBug2IsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
+		if (invokeWorkaroundWhileBug1IsOpen||invokeWorkaroundWhileBug2IsOpen) {
+			log.warning("Skipping assertion of stopped and disabled services while bug '"+bugId1+"' OR '"+bugId2+"' is open.");;
 		} else
 		// END OF WORKAROUND
 		if (clienttasks.isPackageVersion("subscription-manager-migration", ">=", "1.18.2-1")) {
@@ -708,30 +709,102 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			// assert these LEGACY_DAEMONS = ["osad", "rhnsd"] are stopped and disabled
 			// taken from https://bugzilla.redhat.com/show_bug.cgi?id=1185914#c0
 			if (clienttasks.isPackageInstalled("osad")) {
-				//	[root@jsefler-rhel6 ~]# service osad status
-				//	osad is stopped
-				SSHCommandResult sshServiceCommandResult = client.runCommandAndWait("service osad status");
-				Assert.assertEquals(sshServiceCommandResult.getExitCode(),Integer.valueOf(3), "Expected exitCode for service osad status");
-				Assert.assertEquals(sshServiceCommandResult.getStdout().trim(),"osad is stopped", "Expected stdout for service osad status");
-				//	[root@jsefler-rhel6 ~]# chkconfig --list osad
-				//	osad           	0:off	1:off	2:off	3:off	4:off	5:off	6:off
-				SSHCommandResult sshChkconfigCommandResult = client.runCommandAndWait("chkconfig --list osad");
-				Assert.assertEquals(sshChkconfigCommandResult.getExitCode(),Integer.valueOf(0), "Expected exitCode for chkconfig --list osad");
-				String sshChkconfigRegex = "osad\\s+0:off\\s+1:off\\s+2:off\\s+3:off\\s+4:off\\s+5:off\\s+6:off";
-				Assert.assertTrue(sshChkconfigCommandResult.getStdout().trim().matches(sshChkconfigRegex), "Expected stdout for chkconfig --list osad to match regex '"+sshChkconfigRegex+"'.");
+				if (Integer.valueOf(clienttasks.redhatReleaseX)>=7) {
+					//	[root@jsefler-rhel7 ~]# systemctl is-enabled osad.service 
+					//	osad.service is not a native service, redirecting to /sbin/chkconfig.
+					//	Executing /sbin/chkconfig osad --level=5
+					//	disabled
+					//	[root@jsefler-rhel7 ~]# echo $?
+					//	1
+					SSHCommandResult sshSystemctlIsEnabledCommandResult = client.runCommandAndWait("systemctl is-enabled osad.service");
+					Assert.assertEquals(sshSystemctlIsEnabledCommandResult.getStdout().trim(),"disabled", "Expected stdout for systemctl is-enabled osad.service");
+					Assert.assertEquals(sshSystemctlIsEnabledCommandResult.getExitCode(),Integer.valueOf(1), "Expected exitCode for systemctl is-enabled osad.service");
+					//	[root@jsefler-rhel7 ~]# chkconfig --list osad
+					//
+					//	Note: This output shows SysV services only and does not include native
+					//	      systemd services. SysV configuration data might be overridden by native
+					//	      systemd configuration.
+					//
+					//	      If you want to list systemd services use 'systemctl list-unit-files'.
+					//	      To see services enabled on particular target use
+					//	      'systemctl list-dependencies [target]'.
+					//
+					//	osad          	0:off	1:off	2:off	3:off	4:off	5:off	6:off
+					SSHCommandResult sshChkconfigCommandResult = client.runCommandAndWait("chkconfig --list osad");
+					Assert.assertEquals(sshChkconfigCommandResult.getExitCode(),Integer.valueOf(0), "Expected exitCode for chkconfig --list osad");
+					String sshChkconfigRegex = "osad\\s+0:off\\s+1:off\\s+2:off\\s+3:off\\s+4:off\\s+5:off\\s+6:off";
+					Assert.assertTrue(sshChkconfigCommandResult.getStdout().trim().matches(sshChkconfigRegex), "Expected stdout for chkconfig --list osad to match regex '"+sshChkconfigRegex+"'.");
+					//	[root@jsefler-rhel7 ~]# systemctl is-active osad.service
+					//	unknown
+					//	[root@jsefler-rhel7 ~]# echo $?
+					//	3
+					SSHCommandResult sshSystemctlIsActiveCommandResult = client.runCommandAndWait("systemctl is-active osad.service");
+					Assert.assertEquals(sshSystemctlIsActiveCommandResult.getStdout().trim(),"unknown", "Expected stdout for systemctl is-active osad.service");
+					Assert.assertEquals(sshSystemctlIsActiveCommandResult.getExitCode(),Integer.valueOf(3), "Expected exitCode for systemctl is-active osad.service");
+
+				} else {
+					//	[root@jsefler-rhel6 ~]# service osad status
+					//	osad is stopped
+					//	[root@jsefler-rhel6 ~]# echo $?
+					//	3
+					SSHCommandResult sshServiceCommandResult = client.runCommandAndWait("service osad status");
+					Assert.assertEquals(sshServiceCommandResult.getExitCode(),Integer.valueOf(3), "Expected exitCode for service osad status");
+					Assert.assertEquals(sshServiceCommandResult.getStdout().trim(),"osad is stopped", "Expected stdout for service osad status");
+					//	[root@jsefler-rhel6 ~]# chkconfig --list osad
+					//	osad           	0:off	1:off	2:off	3:off	4:off	5:off	6:off
+					SSHCommandResult sshChkconfigCommandResult = client.runCommandAndWait("chkconfig --list osad");
+					Assert.assertEquals(sshChkconfigCommandResult.getExitCode(),Integer.valueOf(0), "Expected exitCode for chkconfig --list osad");
+					String sshChkconfigRegex = "osad\\s+0:off\\s+1:off\\s+2:off\\s+3:off\\s+4:off\\s+5:off\\s+6:off";
+					Assert.assertTrue(sshChkconfigCommandResult.getStdout().trim().matches(sshChkconfigRegex), "Expected stdout for chkconfig --list osad to match regex '"+sshChkconfigRegex+"'.");
+				}
 			}
 			if (clienttasks.isPackageInstalled("rhnsd")) {
-				//	[root@jsefler-rhel6 ~]# service rhnsd status
-				//	[root@jsefler-rhel6 ~]# 
-				SSHCommandResult sshServiceCommandResult = client.runCommandAndWait("service rhnsd status");
-				Assert.assertEquals(sshServiceCommandResult.getExitCode(),Integer.valueOf(6), "Expected exitCode for service rhnsd status - because /etc/init.d/rhnsd is programmed to exit 6 when there is no systemid file");
-				Assert.assertEquals(sshServiceCommandResult.getStdout().trim(),"", "Expected stdout for service rhnsd status");
-				//	[root@jsefler-rhel6 ~]# chkconfig --list rhnsd
-				//	rhnsd           	0:off	1:off	2:off	3:off	4:off	5:off	6:off
-				SSHCommandResult sshChkconfigCommandResult = client.runCommandAndWait("chkconfig --list rhnsd");
-				Assert.assertEquals(sshChkconfigCommandResult.getExitCode(),Integer.valueOf(0), "Expected exitCode for chkconfig --list rhnsd");
-				String sshChkconfigRegex = "rhnsd\\s+0:off\\s+1:off\\s+2:off\\s+3:off\\s+4:off\\s+5:off\\s+6:off";
-				Assert.assertTrue(sshChkconfigCommandResult.getStdout().trim().matches(sshChkconfigRegex), "Expected stdout for chkconfig --list rhnsd to match regex '"+sshChkconfigRegex+"'.");
+				if (Integer.valueOf(clienttasks.redhatReleaseX)>=7) {
+					//	[root@jsefler-rhel7 ~]# systemctl is-enabled rhnsd.service 
+					//	rhnsd.service is not a native service, redirecting to /sbin/chkconfig.
+					//	Executing /sbin/chkconfig rhnsd --level=5
+					//	disabled
+					//	[root@jsefler-rhel7 ~]# echo $?
+					//	1
+					SSHCommandResult sshSystemctlIsEnabledCommandResult = client.runCommandAndWait("systemctl is-enabled rhnsd.service");
+					Assert.assertEquals(sshSystemctlIsEnabledCommandResult.getStdout().trim(),"disabled", "Expected stdout for systemctl is-enabled rhnsd.service");
+					Assert.assertEquals(sshSystemctlIsEnabledCommandResult.getExitCode(),Integer.valueOf(1), "Expected exitCode for systemctl is-enabled rhnsd.service");
+					//	[root@jsefler-rhel7 ~]# chkconfig --list rhnsd
+					//
+					//	Note: This output shows SysV services only and does not include native
+					//	      systemd services. SysV configuration data might be overridden by native
+					//	      systemd configuration.
+					//
+					//	      If you want to list systemd services use 'systemctl list-unit-files'.
+					//	      To see services enabled on particular target use
+					//	      'systemctl list-dependencies [target]'.
+					//
+					//	rhnsd          	0:off	1:off	2:off	3:off	4:off	5:off	6:off
+					SSHCommandResult sshChkconfigCommandResult = client.runCommandAndWait("chkconfig --list rhnsd");
+					Assert.assertEquals(sshChkconfigCommandResult.getExitCode(),Integer.valueOf(0), "Expected exitCode for chkconfig --list rhnsd");
+					String sshChkconfigRegex = "rhnsd\\s+0:off\\s+1:off\\s+2:off\\s+3:off\\s+4:off\\s+5:off\\s+6:off";
+					Assert.assertTrue(sshChkconfigCommandResult.getStdout().trim().matches(sshChkconfigRegex), "Expected stdout for chkconfig --list rhnsd to match regex '"+sshChkconfigRegex+"'.");
+					//	[root@jsefler-rhel7 ~]# systemctl is-active rhnsd.service
+					//	unknown
+					//	[root@jsefler-rhel7 ~]# echo $?
+					//	3
+					SSHCommandResult sshSystemctlIsActiveCommandResult = client.runCommandAndWait("systemctl is-active rhnsd.service");
+					Assert.assertEquals(sshSystemctlIsActiveCommandResult.getStdout().trim(),"unknown", "Expected stdout for systemctl is-active rhnsd.service");
+					Assert.assertEquals(sshSystemctlIsActiveCommandResult.getExitCode(),Integer.valueOf(3), "Expected exitCode for systemctl is-active rhnsd.service");
+				} else {
+					//	[root@jsefler-rhel6 ~]# service rhnsd status
+					//	[root@jsefler-rhel6 ~]# echo $?
+					//	6
+					SSHCommandResult sshServiceCommandResult = client.runCommandAndWait("service rhnsd status");
+					Assert.assertEquals(sshServiceCommandResult.getExitCode(),Integer.valueOf(6), "Expected exitCode for service rhnsd status - because /etc/init.d/rhnsd is programmed to exit 6 when there is no systemid file");
+					Assert.assertEquals(sshServiceCommandResult.getStdout().trim(),"", "Expected stdout for service rhnsd status");
+					//	[root@jsefler-rhel6 ~]# chkconfig --list rhnsd
+					//	rhnsd           	0:off	1:off	2:off	3:off	4:off	5:off	6:off
+					SSHCommandResult sshChkconfigCommandResult = client.runCommandAndWait("chkconfig --list rhnsd");
+					Assert.assertEquals(sshChkconfigCommandResult.getExitCode(),Integer.valueOf(0), "Expected exitCode for chkconfig --list rhnsd");
+					String sshChkconfigRegex = "rhnsd\\s+0:off\\s+1:off\\s+2:off\\s+3:off\\s+4:off\\s+5:off\\s+6:off";
+					Assert.assertTrue(sshChkconfigCommandResult.getStdout().trim().matches(sshChkconfigRegex), "Expected stdout for chkconfig --list rhnsd to match regex '"+sshChkconfigRegex+"'.");
+				}
 			}
 			
 			// assert that no FAILED nor Usage errors occurred
@@ -1150,7 +1223,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		// TEMPORARY WORKAROUND FOR BUG
 		String bugId = "1196416"; // Bug 1196416 - rhn-migrate-classic-to-rhsm with --activation-key option should not prompt for destination credentials 
 		boolean invokeWorkaroundWhileBugIsOpen = true;
-		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
 		if (invokeWorkaroundWhileBugIsOpen) {
 			RhnMigrateClassicToRhsm_Test(null,sm_rhnUsername,sm_rhnPassword,sm_rhnHostname,new ArrayList<String>(),"--activation-key="+activationKeyName+" "+"--org="+clientOrgKey, sm_rhnUsername,sm_rhnPassword,sm_clientUsername,sm_clientPassword,null,null,null);
 		} else	// call RhnMigrateClassicToRhsm_Test with rhsmUsername=null and rhsmPassword=null
@@ -1194,7 +1267,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		// TEMPORARY WORKAROUND FOR BUG
 		String bugId = "1196416"; // Bug 1196416 - rhn-migrate-classic-to-rhsm with --activation-key option should not prompt for destination credentials 
 		boolean invokeWorkaroundWhileBugIsOpen = true;
-		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
 		if (invokeWorkaroundWhileBugIsOpen) {
 			executeRhnMigrateClassicToRhsmResult = executeRhnMigrateClassicToRhsm("--activation-key="+activationKeyName+" "+"--org="+clientOrgKey, sm_rhnUsername,sm_rhnPassword,sm_clientUsername,sm_clientPassword,null,null,null);
 		} else	// call executeRhnMigrateClassicToRhsm with rhsmUsername=null and rhsmPassword=null
@@ -1269,7 +1342,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		// TEMPORARY WORKAROUND FOR BUG
 		String bugId = "1196416"; // Bug 1196416 - rhn-migrate-classic-to-rhsm with --activation-key option should not prompt for destination credentials 
 		boolean invokeWorkaroundWhileBugIsOpen = true;
-		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
 		if (invokeWorkaroundWhileBugIsOpen) {
 			RhnMigrateClassicToRhsm_Test(null,sm_rhnUsername,sm_rhnPassword,sm_rhnHostname,new ArrayList<String>(),"--activation-key="+name+" "+"--org="+clientOrgKey, sm_rhnUsername,sm_rhnPassword,sm_clientUsername,sm_clientPassword,clientOrgKey,null,null);
 		} else	// call RhnMigrateClassicToRhsm_Test with rhsmUsername=null and rhsmPassword=null
@@ -1313,7 +1386,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		// TEMPORARY WORKAROUND FOR BUG
 		String bugId = "1196416"; // Bug 1196416 - rhn-migrate-classic-to-rhsm with --activation-key option should not prompt for destination credentials 
 		boolean invokeWorkaroundWhileBugIsOpen = true;
-		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
 		if (invokeWorkaroundWhileBugIsOpen) {
 			RhnMigrateClassicToRhsm_Test(null,sm_rhnUsername,sm_rhnPassword,sm_rhnHostname,new ArrayList<String>(),"--activation-key="+name1+" "+"--activation-key="+name2,sm_rhnUsername,sm_rhnPassword,sm_clientUsername,sm_clientPassword,clientOrgKey,null,null);
 		} else	// call RhnMigrateClassicToRhsm_Test with rhsmUsername=null and rhsmPassword=null
@@ -2147,7 +2220,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Attempt to execute migration tool rhn-migrate-classic-to-rhsm with --remove-rhn-packages which should disable some classic services and remove several classic packages. As a result, subsequent attempts to migrate will be halted with a friendly message.",
-			groups={"blockedByBug-1185914","RhnMigrateClassicToRhsmWithRemoveRhnPackages_Test"},
+			groups={"blockedByBug-1185914","blockedByBug-1432642","RhnMigrateClassicToRhsmWithRemoveRhnPackages_Test"},
 			dependsOnMethods={},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -2276,6 +2349,15 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	@AfterGroups(groups="setup",value={"RhnMigrateClassicToRhsmWithRemoveRhnPackages_Test"})
 	public void installRhnClassicPackages() throws IOException, JSONException {
 		if (clienttasks==null) return;
+		
+		// TEMPORARY WORKAROUND FOR BUG
+		String bugId = "1432642";	// Bug 1432642 - released/RHN-Tools-5.7-RHEL-7/<ARCH>/tree/RHNTools/ is missing repodata
+		boolean invokeWorkaroundWhileBugIsOpen = true;
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
+		if (invokeWorkaroundWhileBugIsOpen) {
+			throw new SkipException("Blocked from installing RHN Classic packages on RHEL7 while bug "+bugId+" is open.  There is no workaround.");
+		}
+		// END OF WORKAROUND
 		
 		// install the rhn classic packages
 		clienttasks.installReleasedRhnClassicPackages(sm_yumInstallOptions, legacyRHNClassicPackages);
@@ -3096,7 +3178,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		if (sshCommandResult.getStdout().trim().endsWith(tracebackMsg)) {
 			String bugId = "1130637";
 			boolean invokeWorkaroundWhileBugIsOpen = true;
-			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
 			if (invokeWorkaroundWhileBugIsOpen) {
 				throw new SkipException("Encountered unexpected traceback message '"+tracebackMsg+"' from open bug "+bugId+".");
 			}

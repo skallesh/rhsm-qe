@@ -1,0 +1,29 @@
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
+
+<!-- Running on the command line:  java -cp `lein classpath` org.testng.TestNG [testng options] [suitefile] -->
+<suite name="GUI TestSuite">
+
+	<listeners>
+		<listener class-name="com.redhat.qe.auto.testng.TestNGListener" />
+		<listener class-name="com.redhat.qe.auto.bugzilla.BugzillaTestNGListener" />
+		<listener class-name="org.uncommons.reportng.HTMLReporter" />
+		<listener class-name="org.testng.reporters.XMLReporter" />
+	</listeners>
+
+  <!-- GUI TESTS -->
+
+  <test name="GUI: Registration">
+    <packages>
+      <package name="rhsm.gui.tests" />
+      <package name="rhsm.base"></package>
+    </packages>
+    <groups>
+      <run>
+        <include name="setup" />
+        <include name="registration"/>
+        <include name="cleanup" />
+      </run>
+    </groups>
+  </test>
+
+</suite>
