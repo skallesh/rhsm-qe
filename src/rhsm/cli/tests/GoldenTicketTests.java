@@ -3,14 +3,10 @@ package rhsm.cli.tests;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Arrays;
+
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import com.redhat.qe.tools.SSHCommandRunner;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -18,18 +14,19 @@ import org.testng.Assert;
 import org.testng.SkipException;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
-import org.testng.annotations.DataProvider;
+
 import org.testng.annotations.Test;
 
-import com.redhat.qe.auto.testng.TestNGUtils;
-import com.redhat.qe.tools.RemoteFileTasks;
+import com.redhat.qe.auto.bugzilla.BugzillaAPIException;
+import com.redhat.qe.auto.bugzilla.BzChecker;
 import com.redhat.qe.tools.SSHCommandResult;
-
 import rhsm.base.CandlepinType;
 import rhsm.base.SubscriptionManagerCLITestScript;
 import rhsm.cli.tasks.CandlepinTasks;
 import rhsm.cli.tasks.SubscriptionManagerTasks;
 import rhsm.data.EntitlementCert;
+
+
 import rhsm.data.Repo;
 import rhsm.data.SubscriptionPool;
 
@@ -45,10 +42,12 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
     protected String attributeValue = "org_environment";
     protected String org = "snowwhite";
     public static String subscriptionPoolProductId =null;
+    private String subscriptionPoolId;
+    private boolean executeAfterClassMethod = true;
 
 
     @Test(description = "Verify golden ticket entitlement is granted when system is registered to an org that has contentaccessmode set", groups = {
-    "verifyGoldenTicketfunctionality" }, enabled = true)
+    "verifyGoldenTicketfunctionality" /*"blockedByBug-1425438"*/}, enabled = true)
     public void verifyGoldenTicketfunctionality() throws Exception {
 
 	CandlepinTasks.setAttributeForOrg(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, org,
@@ -59,8 +58,8 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
 	clienttasks.autoheal(null, null, true, null, null, null);
 	String ExpectedRepoMsg = "There were no available repositories matching the specified criteria.";
 
-	// verify the if an extra entitlement is granted upon refresh on
-	// subscription-manager version lesser than equal to 1.18.9-1
+	// verify the if an extra entitlement is granted upon refresh on subscription-manager version lesser than equal to 1.18.9-1
+
 	if (clienttasks.isPackageVersion("subscription-manager", "<=", "1.18.9-1")) {
 	    SSHCommandResult repoResult = clienttasks.repos(false, false, true, (String) null, null, null, null, null);
 	    Assert.assertEquals(repoResult.getStdout().toString().trim(), ExpectedRepoMsg);
@@ -69,12 +68,12 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
 
 	// verify only the extra entitlement cert granted by or/environment is
 	// present
+
 	List<EntitlementCert> entitlementCerts = clienttasks.getCurrentEntitlementCerts();
 	Assert.assertTrue(entitlementCerts.size() == 1,
 		"Only extra entitlement granted by the org/environment is present");
 
-	// verify repos --list lists all the repos but none of them are enabled
-	// when the system has golden ticket certificate access
+	// verify repos --list lists all the repos but none of them are enabled when the system has golden ticket certificate access
 	SSHCommandResult resultListEnabled = clienttasks.repos(false, true, false, (String) null, null, null, null,
 		null);
 	Assert.assertEquals(resultListEnabled.getStdout().toString().trim(), ExpectedRepoMsg);
@@ -94,25 +93,34 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
 		null, null, null, null);
 	String expectedMessageForListConsumed = "No consumed subscription pools to list";
 
-	Assert.assertTrue(listConsumedResult.getStdout().trim().equals(expectedMessageForListConsumed),
-		"Expecting '" + expectedMessageForListConsumed
-		+ "subscription-manager list --consumed doesnot list golden ticket entitlement");
+	// TEMPORARY WORKAROUND FOR BUG
+	String bugId="1425438"; // Bug 1425438 - subscription-manager list --consumed shows the consumption of extra entitlement granted from the organization or environment.
+	boolean invokeWorkaroundWhileBugIsOpen = true;
+	try {if (invokeWorkaroundWhileBugIsOpen&& BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+	if (invokeWorkaroundWhileBugIsOpen) {
+	    log.warning("Skipping assertion: "+"subscription-manager list --consumed does not list golden ticket entitlement");
+	} else
+	    // END OF WORKAROUND
 
-	// verify after manually deleting the certs from /etc/pki/entitlement
-	// dir , refresh command regenerates the entitlement
+	    Assert.assertTrue(listConsumedResult.getStdout().trim().equals(expectedMessageForListConsumed),
+		    "Expecting '" + expectedMessageForListConsumed
+		    + "subscription-manager list --consumed doesnot list golden ticket entitlement");
+
+	// verify after manually deleting the certs from /etc/pki/entitlement dir , refresh command regenerates the entitlement
+
 	clienttasks.removeAllCerts(false, true, false);
-	Assert.assertTrue(clienttasks.getCurrentlyConsumedProductSubscriptions().size() == 0,
+	Assert.assertTrue(clienttasks.getCurrentEntitlementCerts().size() == 0,
 		"Golden ticket cert is successfully removed");
 	clienttasks.refresh(null, null, null);
-	Assert.assertTrue(clienttasks.getCurrentlyConsumedProductSubscriptions().size() >= 1,
+	Assert.assertTrue(clienttasks.getCurrentlyConsumedProductSubscriptions().size() == 1,
 		"Golden ticket regenerated successfully");
 	resultListDisabled = clienttasks.repos(false, false, true, (String) null, null, null, null, null);
 	Assert.assertNotEquals(resultListDisabled.getStdout().toString().trim(), ExpectedRepoMsg);
 
-	// Verify remove --all command doesnot remove the golden ticket
-	// entitlement along with other subscriptions
+	// Verify remove --all command doesnot remove the golden ticket entitlement along with other subscriptions
+
 	clienttasks.subscribe(true, null, null, (String) null, null, null, null, null, null, null, null, null);
-	Assert.assertTrue(clienttasks.getCurrentlyConsumedProductSubscriptions().size() > 1,
+	Assert.assertTrue(clienttasks.getCurrentEntitlementCerts().size() > 1,
 		"There are more subscriptions attached other than the golden ticket");
 	SSHCommandResult AutoAttachlistConsumedResult = clienttasks.list(null, null, true, null, null, null, null, null,
 		null, null, null, null, null);
@@ -127,9 +135,8 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
 	Assert.assertTrue(entitlementCertsAfterRemoveAll.size() == 1,
 		"Only extra entitlement granted by the org/environment is present");
 
-	// verify removing the golden ticekt entitlement by subscription-manager
-	// remove --serial <serial_id> fails to remove the golden ticket
-	// entitlement
+	// verify removing the golden ticekt entitlement by subscription-manager remove --serial <serial_id> fails to remove the golden ticket entitlement
+
 	List<EntitlementCert> entitlementCertsToRemove = EntitlementCert.findAllInstancesWithMatchingFieldFromList(
 		"poolId", "Not Available", clienttasks.getCurrentEntitlementCerts());
 	for (EntitlementCert entitlementCert : entitlementCertsToRemove) {
@@ -147,18 +154,20 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
 
     }
 
-    @Test(description = "Verify golden ticket entitlement is granted when system is registered using an activationkey that belongs org that has contentaccessmode set", groups = {
-    "goldenTicketEntitlementIsGrantedWhenRegisteredUsingActivationKey" }, enabled = true)
-    public void ExtraEntitlementIsGrantedWhenRegisteredUsingActivationKey() throws JSONException, Exception {
-	// verify registering the system to activation key belonging to
-	// owner(contentAccessmode set) with auto-attach false has access to
-	// golden ticket
 
+
+
+
+    @Test(description = "Verify golden ticket entitlement is granted when system is registered using an activationkey that belongs org that has contentaccessmode set", groups = {
+    "goldenTicketEntitlementIsGrantedWhenRegisteredUsingActivationKey" },enabled = true)
+    public void ExtraEntitlementIsGrantedWhenRegisteredUsingActivationKey() throws JSONException, Exception {
+
+	// verify registering the system to activation key belonging to owner(contentAccessmode set) with auto-attach false has access to golden ticket
 	CandlepinTasks.setAttributeForOrg(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, org,
 		attributeName, attributeValue);
 	String activationKeyName = String.format("%s_%s-ActivationKey%s", sm_clientUsername, sm_clientOrg,
 		System.currentTimeMillis());
-	Map<String, String> mapActivationKeyRequest = new HashMap<>();
+	Map<String, String> mapActivationKeyRequest = new HashMap<String, String>();
 	mapActivationKeyRequest.put("name", activationKeyName);
 	mapActivationKeyRequest.put("autoAttach", "false");
 	JSONObject jsonActivationKeyRequest = new JSONObject(mapActivationKeyRequest);
@@ -174,13 +183,11 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
 	Assert.assertTrue(entitlementCertsAfterRegisteringToactivationKeyFalse.size() == 1,
 		"Only extra entitlement granted by the org/environment is present");
 
-	// verify registering the system to activation key belonging to owner
-	// (contentAccessmode set) with auto-attach true also has access to
-	// golden ticket
+	// verify registering the system to activation key belonging to owner (contentAccessmode set) with auto-attach true also has access to golden ticket
 
 	String activationKeyNameTrue = String.format("%s_%s-ActivationKey%s", sm_clientUsername, org,
 		System.currentTimeMillis());
-	Map<String, String> mapActivationKeyTrueRequest = new HashMap<>();
+	Map<String, String> mapActivationKeyTrueRequest = new HashMap<String, String>();
 	mapActivationKeyTrueRequest.put("name", activationKeyNameTrue);
 	mapActivationKeyTrueRequest.put("autoAttach", "true");
 	JSONObject jsonActivationKeyTrueRequest = new JSONObject(mapActivationKeyTrueRequest);
@@ -190,23 +197,28 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
 	clienttasks.register(null, null, org, null, null, null, null, null, null, null, activationKeyNameTrue, null,
 		null, null, true, null, null, null, null);
 
-	// verify only the extra entitlement cert granted by or/environment is
-	// present
+	// verify the extra entitlement cert granted by or/environment is present along with other ent certs granted by auto-attach process
+
+	Assert.assertTrue(clienttasks.getCurrentEntitlementCerts().size() > 1,
+		"extra entitlement granted by owner is present along with other entitlements attached by auto-attach");
 
 	List<EntitlementCert> extraEntitlementCerts = EntitlementCert.findAllInstancesWithMatchingFieldFromList(
 		"poolId", "Not Available", clienttasks.getCurrentEntitlementCerts());
-	System.out.println(extraEntitlementCerts.size());
-
+	// verify the extra entitlement cert granted by or/environment is present
 	Assert.assertTrue(extraEntitlementCerts.size() == 1,
 		"extra entitlement granted by owner is present along with other entitlements attached by auto-attach");
     }
 
+
+
+
+
     @Test(description = "Verify revoking contentAccessMode set on the owner removes extra entitlement", groups = {
     "revokingcontentAccessModeOnOwnerRemovesEntitlement" }, enabled = true)
     public void revokingcontentAccessModeOnOwnerRemovesEntitlement() throws Exception {
+
 	CandlepinTasks.setAttributeForOrg(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, org,
 		attributeName, attributeValue);
-
 	clienttasks.register(sm_clientUsername, sm_clientPassword, org, null, null, null, null, null, null, null,
 		(String) null, null, null, null, true, null, null, null, null);
 	clienttasks.autoheal(null, null, true, null, null, null);
@@ -217,16 +229,14 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
 	    clienttasks.refresh(null, null, null);
 
 	}
+
 	SSHCommandResult repoResult = clienttasks.repos(false, false, true, (String) null, null, null, null, null);
 	Assert.assertNotEquals(repoResult.getStdout().toString().trim(), ExpectedRepoMsg);
-	// verify only the extra entitlement cert granted by or/environment is
-	// present
+	// verify only the extra entitlement cert granted by or/environment is present
 	List<EntitlementCert> entitlementCerts = clienttasks.getCurrentEntitlementCerts();
 	Assert.assertTrue(entitlementCerts.size() == 1,
 		"Only extra entitlement granted by the org/environment is present");
-
 	// now revoke the contentAccessMode set on the owner
-
 	CandlepinTasks.setAttributeForOrg(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, org,
 		attributeName, "");
 	clienttasks.refresh(null, null, null);
@@ -235,26 +245,28 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
 	String ExpectedRepoMsgAfterRevoke = "This system has no repositories available through subscriptions.";
 	Assert.assertEquals(repoResult.getStdout().toString().trim(), ExpectedRepoMsgAfterRevoke);
 	List<EntitlementCert> entitlementCertsAfterRevoke = clienttasks.getCurrentEntitlementCerts();
+	//Assert that extra entitlement is now revoked
 	Assert.assertTrue(entitlementCertsAfterRevoke.size() == 0,
 		"No extra entitlement granted by the org/environment is present");
-
     }
-    
-    
+
+
+
+
+
     @Test(description = "Verify SKU level contentOverride is given priority over default golden ticket one", groups = {
-    "reporoverridePreference" ,"blockedByBug-1427069"}, enabled = true)
+	    "reporoverridePreference" ,"blockedByBug-1427069"},enabled = true)
+
     public void reporoverridePreference() throws Exception {
+
 	CandlepinTasks.setAttributeForOrg(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, org,
 		attributeName, attributeValue);
-
 	String resourcePath = null;
-	String consumerId = clienttasks.getCurrentConsumerId(
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null,
-			null, null, (String) null, null, null, null, true, null, null, null, null));
+	String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null,
+		null, null, (String) null, null, null, null, true, null, null, null, null));
 	String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_clientUsername, sm_clientPassword, sm_serverUrl,
 		consumerId);
 	clienttasks.subscribe(true, null,(String)null, null, null, null, null, null, null, null, null, null);
-
 	List<Repo> availableRepos = clienttasks.getCurrentlySubscribedRepos();
 	List<String> repoIdsDisabledByDefault = new ArrayList<String>();
 	Map<String, String> attributesMap = new HashMap<String, String>();
@@ -263,28 +275,25 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
 	Assert.assertNotEquals(repoResult.getStdout().toString().trim(), ExpectedRepoMsg);
 	SSHCommandResult enabledResult = clienttasks.repos(false, true, false, (String) null, null, null, null, null);
 	Assert.assertEquals(enabledResult.getStdout().toString().trim(), ExpectedRepoMsg);
-	
+
 	// remember a list of all the repoIds enable/disabled by default
 	// entitled by the subscriptionpool
 	for (Repo repo : availableRepos) {
 	    if (!(repo.enabled)) {
-
 		repoIdsDisabledByDefault.add(repo.repoId);
 	    }
 	}
 	String repoIdToEnable = repoIdsDisabledByDefault.get(randomGenerator.nextInt(repoIdsDisabledByDefault.size()));
 	String contentIdToEnable = getContent(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,
 		repoIdToEnable);
-	for (SubscriptionPool availableSubscriptionPoolsMatchingInstalled : SubscriptionPool.parse(clienttasks
+	for (SubscriptionPool consumedSubscriptionPools : SubscriptionPool.parse(clienttasks
 		.list(null, null, true, null, null, null, null, null, null, null, null, null, null).getStdout())) {
-
-	    SubscriptionPool pool = availableSubscriptionPoolsMatchingInstalled;
-
+	    SubscriptionPool pool = consumedSubscriptionPools;
 	    subscriptionPoolProductId=pool.productId; 
+	    subscriptionPoolId= pool.poolId;
 	    break;
 	}
-	resourcePath = "/owners/" + ownerKey + "/products/" + subscriptionPoolProductId
-		+ "?exclude=id&exclude=name&exclude=multiplier&exclude=productContent&exclude=dependentProductIds&exclude=href&exclude=created&exclude=updated&exclude=attributes.created&exclude=attributes.updated";
+	resourcePath = "/owners/" + ownerKey + "/products/" + subscriptionPoolProductId+ "?exclude=id&exclude=name&exclude=multiplier&exclude=productContent&exclude=dependentProductIds&exclude=href&exclude=created&exclude=updated&exclude=attributes.created&exclude=attributes.updated";
 	JSONObject jsonPoolToEnable = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,
 		sm_serverAdminPassword, sm_serverUrl, resourcePath));
 	resourcePath = "/owners/" + ownerKey + "/products/" + subscriptionPoolProductId;
@@ -307,16 +316,21 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
 	CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,
 		ownerKey);
 	clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
-	clienttasks.subscribe(true, null, (String)null, null, null, null, null, null, null, null, null,
-		null);
-	Assert.assertTrue(
-		clienttasks.repos_(null, true, null, (String) null, null, null, null, null).getStdout()
-		.contains(repoIdToEnable),
-		"After subscribing to SKU '" + subscriptionPoolProductId + "' which contains a content_override_enabled for repoId '" + repoIdToEnable + "' (contentid='"
-		+ contentIdToEnable + "'), it now appears in the list of enabled subscription-manager repos.");
-
+	clienttasks.subscribe(null, null, subscriptionPoolId, null, null, null, null, null, null, null, null,null);
+	Assert.assertTrue(clienttasks.repos_(null, true, null, (String) null, null, null, null, null).getStdout()
+		.contains(repoIdToEnable),"After subscribing to SKU '" + subscriptionPoolProductId + "' which contains a content_override_enabled for repoId '" + repoIdToEnable + "' (contentid='"
+			+ contentIdToEnable + "'), it now appears in the list of enabled subscription-manager repos.");
     }
-
+    
+    
+    @BeforeClass(groups = "setup")
+    public void verifyCandlepinVersionBeforeClass() {
+	if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, "<", "2.0.25-1")) {
+	    executeAfterClassMethod=false;
+	    throw new SkipException("this candlepin version '" + servertasks.statusVersion
+		    + "' does not support Golden Ticket functionality.");
+	}
+    }
 
     // configuration
 
@@ -353,26 +367,14 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
 	    if (jsonContentAttribute.getString("label").equals(repoids)) {
 		// the actual attribute value is null, return null
 		contentId = jsonContentAttribute.getString("id");
-
 		break;
 	    }
 	}
-
 	return contentId;
     }
-    
-    
 
-    @BeforeClass(groups = "setup")
-    public void verifyCandlepinVersion() {
-	if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, "<", "2.0.25-1")) {
-	    throw new SkipException("this candlepin version '" + servertasks.statusVersion
-		    + "' does not support Golden Ticket functionality.");
-	}
 
-    }
-
-    @BeforeClass(groups = "setup")
+    @BeforeClass(groups = "setup",dependsOnMethods={"verifyCandlepinVersionBeforeClass"})
     public void BeforeClassSetup() throws IOException, JSONException, SQLException {
 	if (CandlepinType.standalone.equals(sm_serverType)) {
 	    servertasks.updateConfFileParameter("candlepin.standalone", "false");
@@ -380,21 +382,23 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
 	    servertasks.addConfFileParameter("module.config.hosted.configuration.module","org.candlepin.hostedtest.AdapterOverrideModule");
 	    servertasks.deploy();
 	    updateProductAndContentLockStateOnDatabase(0);
-
-
 	}
-
     }
 
-    @AfterClass(groups = "setup")
+
+    /* couldnot add dependsOnMethods="verifyCandlepinVersionBeforeClass" because of following error 
+     * GoldenTicketTests.AfterClassTeardown() is depending on method public void rhsm.cli.tests.GoldenTicketTests.verifyCandlepinVersionBeforeClass(), which is not annotated with @Test or not included.
+     */
+
+    @AfterClass(groups = "setup"/*, alwaysRun=false,dependsOnMethods={"verifyCandlepinVersionBeforeClass"}*/)
     public void AfterClassTeardown() throws IOException, JSONException, SQLException {
-	if (CandlepinType.standalone.equals(sm_serverType)) {
+	if (CandlepinType.standalone.equals(sm_serverType) && executeAfterClassMethod) {
 	    servertasks.updateConfFileParameter("candlepin.standalone", "true");
 	    servertasks.commentConfFileParameter("module.config.hosted.configuration.module");
 	    servertasks.deploy();
-	    updateProductAndContentLockStateOnDatabase(0);
 	}
-
     }
+
+
 
 }

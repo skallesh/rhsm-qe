@@ -896,6 +896,19 @@
 		</groups>
 	</test>
 	
+	<test name="CLI: GoldenTicket Tests">
+		<classes>
+			<class name="rhsm.cli.tests.GoldenTicketTests" />
+		</classes>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="GoldenTicketTests" />
+				<include name="cleanup" />
+			</run>
+		</groups>
+	</test>
+	
 	<test name="CLI: SELinux Tests">
 		<packages>
 			<package name="rhsm.cli.tests" />
