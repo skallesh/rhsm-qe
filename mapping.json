@@ -839,12 +839,6 @@
       "parameters" : [ ]
     }
   },
-  "rhsm.cli.tests.CertificateTests.VerifyBaseRHELProductCertArchAndTags_Test" : {
-    "RedHatEnterpriseLinux7" : {
-      "id" : "RHEL7-51046",
-      "parameters" : [ ]
-    }
-  },
   "rhsm.cli.tests.CertificateTests.VerifyBaseRHELProductCertIsInstalled_Test" : {
     "RedHatEnterpriseLinux7" : {
       "id" : "RHEL7-51045",
@@ -872,6 +866,12 @@
   "rhsm.cli.tests.CertificateTests.VerifyConsumerCertsAreV1Certificates_Test" : {
     "RedHatEnterpriseLinux7" : {
       "id" : "RHEL7-51452",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.cli.tests.CertificateTests.VerifyDefaultProductCertVersion_Test" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-51046",
       "parameters" : [ ]
     }
   },
@@ -2270,7 +2270,7 @@
   "rhsm.cli.tests.ListTests.EnsureConsumedEntitlementsListed_Test" : {
     "RedHatEnterpriseLinux7" : {
       "id" : "RHEL7-51350",
-      "parameters" : [ ]
+      "parameters" : [ "productId", "bundledProductDataAsJSONArray" ]
     }
   },
   "rhsm.cli.tests.ListTests.EnsureHardwareMatchingSubscriptionsAreListedAsAvailable_Test" : {
