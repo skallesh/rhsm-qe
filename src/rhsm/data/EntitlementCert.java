@@ -30,6 +30,7 @@ public class EntitlementCert extends AbstractCommandLineData {
 	public Calendar validityNotAfter;	// Entitlement End Date versus ProductSubscription End Date, see https://bugzilla.redhat.com/show_bug.cgi?id=1210149#c3 for a Local Time Zone explanation
 	public File file;
 	public String version;
+	public String poolId;
 	
 	public String serialString;
 	public OrderNamespace orderNamespace;
@@ -63,7 +64,8 @@ public class EntitlementCert extends AbstractCommandLineData {
 		if (validityNotAfter != null)		string += String.format(" %s='%s'", "validityNotAfter",formatDateString(validityNotAfter));
 		if (file != null)					string += String.format(" %s='%s'", "file",file);
 		if (version != null)				string += String.format(" %s='%s'", "version",version);
-	
+		if (poolId != null)					string += String.format(" %s='%s'", "poolId",poolId);
+		
 		return string.trim();
 	}
 	
@@ -465,9 +467,9 @@ public class EntitlementCert extends AbstractCommandLineData {
 		for (String rawCertificate : rawCertificates.split(certificateDelimiter)) {
 			if (rawCertificate.trim().length()==0) continue;
 			rawCertificate = certificateDelimiter+rawCertificate;
-	
+			
 			Map<String,String> regexes = new HashMap<String,String>();
-
+			
 			// abstraction field				regex pattern (with a capturing group) Note: the captured group will be trim()ed
 			regexes.put("serialString",			"Serial Number:\\s*([\\d\\w:]+)");
 			regexes.put("id",					"Subject: CN=(.+)");
@@ -475,7 +477,7 @@ public class EntitlementCert extends AbstractCommandLineData {
 			regexes.put("validityNotBefore",	"Validity[\\n\\s\\w:]*Not Before\\s*:\\s*(.*)");
 			regexes.put("validityNotAfter",		"Validity[\\n\\s\\w:]*Not After\\s*:\\s*(.*)");
 			regexes.put("file",					"File: (.+)");
-
+			
 			List<Map<String,String>> certDataList = new ArrayList<Map<String,String>>();
 			for(String field : regexes.keySet()){
 				Pattern pat = Pattern.compile(regexes.get(field), Pattern.MULTILINE);
@@ -726,6 +728,7 @@ public class EntitlementCert extends AbstractCommandLineData {
 		regexes.put("validityNotAfter",		"Certificate:(?:(?:\\n.+)+)End Date: (.+)");
 		regexes.put("file",					"Certificate:(?:(?:\\n.+)+)Path: (.+)");
 		regexes.put("version",				"Certificate:(?:(?:\\n.+)+)Version: (.+)");
+		regexes.put("poolId",				"Certificate:(?:(?:\\n.+)+)Pool ID: (.+)");
 		
 		// split the rawCertificates process each individual rawCertificate
 		String rawCertificateRegex = "\\+-+\\+\\n\\s+Entitlement Certificate\\n\\+-+\\+";
