@@ -690,6 +690,7 @@ The function uses an utility 'import' from package 'imagemagick'"
    (if (bool (ui guiexist :contract-selection-dialog))
      (do (ui selectrowindex :contract-selection-table 0)
          (when (= "Awesome OS Instance Based one socket" s)
+           (run-command "ls -al /etc/pki/product /etc/pki/product-default")
            (take-and-download-screenshot "before-attach"))
          (ui click :attach-contract-selection)))
    (checkforerror)
