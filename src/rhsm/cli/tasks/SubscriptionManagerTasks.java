@@ -769,9 +769,11 @@ if (false) {
 	    if (arch.equals("i686")) basearch = "x86_64"; // all the rhn tools are noarch packages, so it really should not matter what basearch we use so long as the path exists.  I see arches ppc64 s390x x86_64 for RHN-Tools-5.7-RHEL-7.  I see arches i386 ppc64 s390x x86_64 for RHN-Tools-5.7-RHEL-6.
 	    if (arch.equals("s390")) basearch = "s390x";
 	    if (arch.equals("ppc")) basearch = "ppc64";
-	    String baseurl = "http://download.devel.redhat.com/released/RHN-Tools-5.7-RHEL-"+redhatReleaseX+"/"+basearch+"/tree/RHNTools/";	// <p>The document has moved <a href="http://download-node-02.eng.bos.redhat.com/released/RHN-Tools-5.7-RHEL-6/i686/tree/RHNTools/">here</a>.</p>
-	    baseurl = "http://download-node-02.eng.bos.redhat.com/released/RHN-Tools-5.7-RHEL-"+redhatReleaseX+"/"+basearch+"/tree/RHNTools/";
-	    
+	    String baseurl;
+	    baseurl = "http://download.devel.redhat.com/released/RHN-Tools-5.7-RHEL-"+redhatReleaseX+"/"+basearch+"/tree/RHNTools/";	// <p>The document has moved <a href="http://download-node-02.eng.bos.redhat.com/released/RHN-Tools-5.7-RHEL-6/i686/tree/RHNTools/">here</a>.</p>
+	    baseurl = "http://download-node-02.eng.bos.redhat.com/released/RHN-Tools-5.7-RHEL-"+redhatReleaseX+"/"+basearch+"/tree/RHNTools/";	// Bug 1432642 fails on RHE7 because...  repodata/repomd.xml: [Errno 14] HTTP Error 404 - Not Found
+	    baseurl = "http://pulp.dist.prod.ext.phx2.redhat.com/content/dist/rhel/server/"+redhatReleaseX+"/"+redhatReleaseX+"Server/"+basearch+"/rhn-tools/os/";	// recommended by Tomas Mlcoch in https://projects.engineering.redhat.com/browse/RCM-13960
+
 	    // check the baseurl for problems
 	    SSHCommandResult baseurlTestResult = sshCommandRunner.runCommandAndWait("curl --stderr /dev/null --insecure --request GET "+baseurl);
 	    if (baseurlTestResult.getStdout().contains("404 Not Found") || baseurlTestResult.getStdout().contains("The document has moved")) {
