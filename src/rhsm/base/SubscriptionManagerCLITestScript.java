@@ -124,7 +124,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			Assert.assertEquals(client2.runCommandAndWait("sysctl crypto.fips_enabled").getStdout().trim(), "crypto.fips_enabled = "+(sm_clientFips?"1":"0"), "Asserting the expected enablement of FIPS on client '"+sm_client2Hostname+"' before running any tests.");
 		}
 		
-		File serverCaCertFile = null;
+		
 		List<File> generatedProductCertFiles = new ArrayList<File>();
 		
 		// can we create an SSHCommandRunner to connect to the candlepin server ?
@@ -181,12 +181,8 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			}
 		}
 		
-		// fetch the candlepin CA Cert (only when the candlepin server is not hosted)
-		if (server!=null && !sm_serverType.equals(CandlepinType.hosted)) {
-			log.info("Fetching Candlepin CA cert...");
-			serverCaCertFile = new File((getProperty("automation.dir", "/tmp")+"/tmp/"+servertasks.candlepinCACertFile.getName()).replace("tmp/tmp", "tmp"));
-			RemoteFileTasks.getFile(server.getConnection(), serverCaCertFile.getParent(), servertasks.candlepinCACertFile.getPath());
-		}
+		// fetch the candlepin CA Cert
+		File serverCaCertFile = serverCaCertFile = fetchServerCaCertFile();
 		
 		// setup the client(s) (with the fetched candlepin CA Cert and the generated product certs)
 		for (SubscriptionManagerTasks smt : new SubscriptionManagerTasks[]{client2tasks, client1tasks}) {
@@ -260,6 +256,19 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		isSetupBeforeSuiteComplete = true;
 	}
 	
+	/**
+	 * @return the candlepin CA Cert (only when the candlepin server is not hosted) otherwise return null
+	 * @throws IOException
+	 */
+	protected File fetchServerCaCertFile () throws IOException {
+		File serverCaCertFile=null;
+		if (server!=null && !sm_serverType.equals(CandlepinType.hosted)) {
+			log.info("Fetching Candlepin CA cert...");
+			serverCaCertFile = new File((getProperty("automation.dir", "/tmp")+"/tmp/"+servertasks.candlepinCACertFile.getName()).replace("tmp/tmp", "tmp"));
+			RemoteFileTasks.getFile(server.getConnection(), serverCaCertFile.getParent(), servertasks.candlepinCACertFile.getPath());
+		}
+		return serverCaCertFile;
+	}
 	
 	/**
 	 * @param ciMessage - the value of an environment variable called CI_MESSAGE

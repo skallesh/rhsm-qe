@@ -162,8 +162,7 @@ public class CandlepinTasks {
 	
 	
 	public void deploy() throws IOException {
-		String hostname = sshCommandRunner.getConnection().getHostname();
-
+		
 		if (branch==null || branch.equals("")) {
 			log.info("Skipping deploy of candlepin server since no branch was specified.");
 			return;
@@ -188,6 +187,18 @@ public class CandlepinTasks {
 			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverImportDir+" && git pull", Integer.valueOf(0));
 		}
 		
+		redeploy();
+	}
+	/**
+	 * redeploy the candlepin server with new TESTDATA<br>
+	 * Note: Existing clients will need to install the new server CA Cert File, otherwise they will encounter: Unable to verify server's identity: [SSL: CERTIFICATE_VERIFY_FAILED]<br>
+	 * clienttasks.installRepoCaCert(fetchServerCaCertFile(), sm_serverHostname.split("\\.")[0]+".pem");<br>
+	 * You may also want to deleteSomeSecondarySubscriptionsBeforeSuite();
+	 * @throws IOException
+	 */
+	public void redeploy() throws IOException {
+		String hostname = sshCommandRunner.getConnection().getHostname();
+		
 		// kill all runaway instances of tomcat6
 		SSHCommandResult tomcatProcesses = sshCommandRunner.runCommandAndWait("ps u -U tomcat | grep tomcat6");
 		if (tomcatProcesses.getStdout().trim().split("\\n").length>1) {
@@ -209,7 +220,7 @@ public class CandlepinTasks {
 			//	[root@jsefler-f14-5candlepin ~]# ls -l  /var/log/tomcat6/catalina.out*
 			//	-rw-r--r--. 1 tomcat tomcat     102646 May 15 11:56 /var/log/tomcat6/catalina.out
 			//	-rw-r--r--. 1 tomcat tomcat 1813770240 May 12 03:10 /var/log/tomcat6/catalina.out-20130512
-			RemoteFileTasks.runCommandAndWait(sshCommandRunner, "echo \"\" > "+tomcat6LogFile, TestRecords.action());
+			RemoteFileTasks.runCommandAndWait(sshCommandRunner, "truncate --size=0 --no-create "+tomcat6LogFile, TestRecords.action());	//  "echo \"\" > "+tomcat6LogFile
 			RemoteFileTasks.runCommandAndWait(sshCommandRunner, "rm -f "+tomcat6LogFile+"-*", TestRecords.action());
 		}
 		
