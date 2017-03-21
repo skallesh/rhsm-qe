@@ -380,8 +380,12 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
 	    servertasks.updateConfFileParameter("candlepin.standalone", "false");
 	    //Adding the parameter "module.config.hosted.configuration.module" is better as we dont have it most of the times
 	    servertasks.addConfFileParameter("module.config.hosted.configuration.module","org.candlepin.hostedtest.AdapterOverrideModule");
-	    servertasks.deploy();
-	    updateProductAndContentLockStateOnDatabase(0);
+	     String serverBranch = servertasks.branch; // remember the original server branch
+            if (serverBranch.isEmpty()) servertasks.branch="master";
+            servertasks.deploy();
+            updateProductAndContentLockStateOnDatabase(0);
+            servertasks.branch = serverBranch;
+
 	}
     }
 
@@ -395,7 +399,11 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
 	if (CandlepinType.standalone.equals(sm_serverType) && executeAfterClassMethod) {
 	    servertasks.updateConfFileParameter("candlepin.standalone", "true");
 	    servertasks.commentConfFileParameter("module.config.hosted.configuration.module");
+	    String serverBranch = servertasks.branch; // remember the original server branch
+	    if (serverBranch.isEmpty()) servertasks.branch="master";	   
 	    servertasks.deploy();
+	    servertasks.branch = serverBranch;
+
 	}
     }
 
