@@ -86,8 +86,10 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		RemoteFileTasks.runCommandAndAssert(client, "service "+clienttasks.rhsmCertD+" stop  && service "+clienttasks.rhsmCertD+" status", new Integer(3));
 		RemoteFileTasks.runCommandAndAssert(client, "service "+clienttasks.rhsmCertD+" start && service "+clienttasks.rhsmCertD+" status", new Integer(0));
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			      , testCaseID = {"RHEL6-19943", "RHEL7-32162"})
 	@Test(	description="assert the exit code from service rhsmcertd status when running and stopped",
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-913118","blockedByBug-912707","blockedByBug-914113","blockedByBug-1241247","blockedByBug-1395794"})
 	protected void verifyRhsmcertdDoesNotThrowDeprecationWarnings_Test() throws JSONException, Exception {
