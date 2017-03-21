@@ -54,6 +54,13 @@ import com.redhat.qe.tools.SSHCommandResult;
  *	Red Hat Product Certificates
  *		https://mojo.redhat.com/docs/DOC-103535
  *
+ *  Note: Rich Jerrido says...
+ *  	We depend on migration-data heavily for satellite 6's bootstrap script.
+ *  	bootstrap.py is the primary means to migrate systems from {RHN,RHSM,SAM,Sat5} to Satellite 6.
+ *      We explicitly call rhn-migrate-classic-to-rhsm when needed to deploy product certs. (And for the platforms where rhn-migrate doesn't work the way we want, RHEL5, we explicitly fetch product certs from /usr/share/RHSM) 
+ *  	https://github.com/Katello/katello-client-bootstrap
+ *  	https://access.redhat.com/articles/2280691
+ *  
  *	// OLD LOCATION
  *	git clone git://git.app.eng.bos.redhat.com/rcm/rhn-definitions.git
  *  http://git.app.eng.bos.redhat.com/?p=rcm/rhn-definitions.git;a=tree
