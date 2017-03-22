@@ -589,8 +589,10 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 	
 	
 	// Configuration methods ***********************************************************************
+	@SuppressWarnings("unused")
 	@BeforeClass(groups="setup")
-	public void setupBeforeClass() throws IOException, JSONException {
+	public void setupBeforeClass() throws Exception {
+if (false) { // keep for historical reference but never execute
 		// restart candlepin in hosted mode (candlepin.standalone=false)
 		if (CandlepinType.standalone.equals(sm_serverType)) {	// indicates that we are testing a standalone candlepin server
 			servertasks.updateConfFileParameter("candlepin.standalone", "false");
@@ -599,10 +601,23 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 			servertasks.initialize(clienttasks.candlepinAdminUsername,clienttasks.candlepinAdminPassword,clienttasks.candlepinUrl);
 		}
 		// BEWARE: DO NOT RUN servertasks.refreshPoolsUsingRESTfulAPI(user, password, url, owner) OR IT WILL DELETE ALL SUBSCRIPTIONS AND POOLS IN CANDLEPIN 2.0+
+} // Replacing code block above with the following redeployment of candlepin to avoid the BEWARE issue
+
+		// redeploy candlepin in hosted mode (candlepin.standalone=false)
+		if (CandlepinType.standalone.equals(sm_serverType)) {	// indicates that we are testing a standalone candlepin server
+			servertasks.updateConfFileParameter("candlepin.standalone", "false");
+			servertasks.uncommentConfFileParameter("module.config.hosted.configuration.module");
+			servertasks.redeploy();
+			servertasks.initialize(clienttasks.candlepinAdminUsername,clienttasks.candlepinAdminPassword,clienttasks.candlepinUrl);
+    		if (client1tasks!=null) client1tasks.installRepoCaCert(fetchServerCaCertFile(), sm_serverHostname.split("\\.")[0]+".pem");
+    		if (client2tasks!=null) client2tasks.installRepoCaCert(fetchServerCaCertFile(), sm_serverHostname.split("\\.")[0]+".pem");
+		}
 	}
 
+	@SuppressWarnings("unused")
 	@AfterClass(groups="setup")
-	public void teardownAfterClass() throws IOException, JSONException, SQLException {
+	public void teardownAfterClass() throws Exception {
+if (false) { // keep for historical reference but never execute
 		if (CandlepinType.standalone.equals(sm_serverType)) {	// indicates that we are testing a standalone candlepin server
 			servertasks.updateConfFileParameter("candlepin.standalone", "true");
 			servertasks.commentConfFileParameter("module.config.hosted.configuration.module");
@@ -617,18 +632,18 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 			// A. workaround to avoid the subsequent error is to delete the products ahead of time
 			// B. another workaround is to re-deploy the database with -g  regenerates the database, -t inserts test data along with it after restarting tomcat.
 			// C. most reliable workaround is to update the locked columns for all of the cp2_products and cp2_content tables
-//			if (CandlepinType.standalone.equals(sm_serverType)) {	// indicates that we are testing a standalone candlepin server
-//				// delete already existing subscription and products
-//				String resourcePath;
-//				//CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, "exempt-sla-product-sku");
-//				resourcePath = "/products/"+"exempt-sla-product-sku";
-//				if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) resourcePath = "/owners/"+sm_clientOrg+resourcePath;
-//				CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, resourcePath);
-//				resourcePath = "/products/"+"99000";
-//				if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) resourcePath = "/owners/"+sm_clientOrg+resourcePath;
-//				CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, resourcePath);
-//			}
 			updateProductAndContentLockStateOnDatabase(0); // unlock all product and content after toggling out of hosted mode
+		}
+} // Replacing code block above with the following redeployment of candlepin (workaround B) to avoid the BEWARE issue
+		
+		if (CandlepinType.standalone.equals(sm_serverType)) {	// indicates that we are testing a standalone candlepin server
+			servertasks.updateConfFileParameter("candlepin.standalone", "true");
+			servertasks.commentConfFileParameter("module.config.hosted.configuration.module");
+			servertasks.redeploy();
+			servertasks.initialize(clienttasks.candlepinAdminUsername,clienttasks.candlepinAdminPassword,clienttasks.candlepinUrl);
+			deleteSomeSecondarySubscriptionsBeforeSuite();
+    		if (client1tasks!=null) client1tasks.installRepoCaCert(fetchServerCaCertFile(), sm_serverHostname.split("\\.")[0]+".pem");
+    		if (client2tasks!=null) client2tasks.installRepoCaCert(fetchServerCaCertFile(), sm_serverHostname.split("\\.")[0]+".pem");
 		}
 		
 		clienttasks.deleteFactsFileWithOverridingValues();	// to get rid of the dev_sku settings
