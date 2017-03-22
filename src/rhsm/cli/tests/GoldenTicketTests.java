@@ -381,6 +381,7 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
 	    //Adding the parameter "module.config.hosted.configuration.module" is better as we dont have it most of the times
 	    servertasks.addConfFileParameter("module.config.hosted.configuration.module","org.candlepin.hostedtest.AdapterOverrideModule");
             servertasks.redeploy();
+			servertasks.initialize(clienttasks.candlepinAdminUsername,clienttasks.candlepinAdminPassword,clienttasks.candlepinUrl);
     		if (client1tasks!=null) client1tasks.installRepoCaCert(fetchServerCaCertFile(), sm_serverHostname.split("\\.")[0]+".pem");
     		if (client2tasks!=null) client2tasks.installRepoCaCert(fetchServerCaCertFile(), sm_serverHostname.split("\\.")[0]+".pem");
             updateProductAndContentLockStateOnDatabase(0);
@@ -394,11 +395,13 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
      */
 
     @AfterClass(groups = "setup"/*, alwaysRun=false,dependsOnMethods={"verifyCandlepinVersionBeforeClass"}*/)
-    public void AfterClassTeardown() throws IOException, JSONException, SQLException {
+    public void AfterClassTeardown() throws Exception {
 	if (CandlepinType.standalone.equals(sm_serverType) && executeAfterClassMethod) {
 	    servertasks.updateConfFileParameter("candlepin.standalone", "true");
 	    servertasks.commentConfFileParameter("module.config.hosted.configuration.module");   
 	    servertasks.redeploy();
+		servertasks.initialize(clienttasks.candlepinAdminUsername,clienttasks.candlepinAdminPassword,clienttasks.candlepinUrl);
+		deleteSomeSecondarySubscriptionsBeforeSuite();
 		if (client1tasks!=null) client1tasks.installRepoCaCert(fetchServerCaCertFile(), sm_serverHostname.split("\\.")[0]+".pem");
 		if (client2tasks!=null) client2tasks.installRepoCaCert(fetchServerCaCertFile(), sm_serverHostname.split("\\.")[0]+".pem");
 	}
