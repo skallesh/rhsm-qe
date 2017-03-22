@@ -380,11 +380,10 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
 	    servertasks.updateConfFileParameter("candlepin.standalone", "false");
 	    //Adding the parameter "module.config.hosted.configuration.module" is better as we dont have it most of the times
 	    servertasks.addConfFileParameter("module.config.hosted.configuration.module","org.candlepin.hostedtest.AdapterOverrideModule");
-	     String serverBranch = servertasks.branch; // remember the original server branch
-            if (serverBranch.isEmpty()) servertasks.branch="master";
-            servertasks.deploy();
+            servertasks.redeploy();
+    		if (client1tasks!=null) client1tasks.installRepoCaCert(fetchServerCaCertFile(), sm_serverHostname.split("\\.")[0]+".pem");
+    		if (client2tasks!=null) client2tasks.installRepoCaCert(fetchServerCaCertFile(), sm_serverHostname.split("\\.")[0]+".pem");
             updateProductAndContentLockStateOnDatabase(0);
-            servertasks.branch = serverBranch;
 
 	}
     }
@@ -398,12 +397,10 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
     public void AfterClassTeardown() throws IOException, JSONException, SQLException {
 	if (CandlepinType.standalone.equals(sm_serverType) && executeAfterClassMethod) {
 	    servertasks.updateConfFileParameter("candlepin.standalone", "true");
-	    servertasks.commentConfFileParameter("module.config.hosted.configuration.module");
-	    String serverBranch = servertasks.branch; // remember the original server branch
-	    if (serverBranch.isEmpty()) servertasks.branch="master";	   
-	    servertasks.deploy();
-	    servertasks.branch = serverBranch;
-
+	    servertasks.commentConfFileParameter("module.config.hosted.configuration.module");   
+	    servertasks.redeploy();
+		if (client1tasks!=null) client1tasks.installRepoCaCert(fetchServerCaCertFile(), sm_serverHostname.split("\\.")[0]+".pem");
+		if (client2tasks!=null) client2tasks.installRepoCaCert(fetchServerCaCertFile(), sm_serverHostname.split("\\.")[0]+".pem");
 	}
     }
 
