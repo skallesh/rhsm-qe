@@ -1839,6 +1839,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	public static String nErrMsg = null;
 	public static String pErrMsg = null;
 	public static String pErr407Msg = null;
+	public static String rErrMsg = null;
 	protected String ipv4_address = null;
 
 	@BeforeClass(groups={"setup"})
@@ -1848,6 +1849,12 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		if (clienttasks!=null) nErrMsg = clienttasks.msg_NetworkErrorUnableToConnect;
 		if (clienttasks!=null) pErrMsg = clienttasks.msg_ProxyConnectionFailed;
 		if (clienttasks!=null) pErr407Msg = clienttasks.msg_ProxyConnectionFailed407;
+		if (clienttasks!=null) {		
+			String hostname = clienttasks.getConfParameter("hostname");
+			String prefix = clienttasks.getConfParameter("prefix");
+			String port = clienttasks.getConfParameter("port");
+			rErrMsg = "Unable to reach the server at "+hostname+":"+port+prefix;	// Unable to reach the server at jsefler-candlepin7.usersys.redhat.com:8443/candlepin	// Last request from /var/log/rhsm/rhsm.log results in: error: Tunnel connection failed: 407 Proxy Authentication Required
+		}
 		if (clienttasks!=null) ipv4_address = clienttasks.getIPV4Address();
 	}
 	
@@ -1933,10 +1940,6 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		String uErrMsg = servertasks.invalidCredentialsMsg(); //"Invalid username or password";
 		String oErrMsg = /*"Organization/Owner bad-org does not exist."*/"Organization bad-org does not exist.";
 		if (sm_serverType.equals(CandlepinType.katello))	oErrMsg = "Couldn't find organization 'bad-org'";
-		String hostname = clienttasks.getConfParameter("hostname");
-		String prefix = clienttasks.getConfParameter("prefix");
-		String port = clienttasks.getConfParameter("port");
-		String rErrMsg = "Unable to reach the server at "+hostname+":"+port+prefix;	// Unable to reach the server at jsefler-candlepin7.usersys.redhat.com:8443/candlepin	// Last request from /var/log/rhsm/rhsm.log results in: error: Tunnel connection failed: 407 Proxy Authentication Required
 		
 		// Object blockedByBug, String username, String password, String org, String proxy, String proxyuser, String proxypassword, Integer exitCode, String stdout, String stderr
 
@@ -2347,7 +2350,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 			l.set(0, blockedByBzBug);
 			
 //DELETEME	if (!sm_serverType.equals("katello") && (!nErrMsg.equals(l.get(9))||l.get(9)==null) && clienttasks.isPackageVersion("subscription-manager",">=","1.13.10-1")) {	// post commit 13fe8ffd8f876d27079b961fb6675424e65b9a10 bug 1119688
-			if (!sm_serverType.equals("katello") && ((!nErrMsg.equals(l.get(9))&&!pErrMsg.equals(l.get(9)))||l.get(9)==null) && clienttasks.isPackageVersion("subscription-manager",">=","1.13.10-1")) {	// post commit 13fe8ffd8f876d27079b961fb6675424e65b9a10 bug 1119688
+			if (!sm_serverType.equals("katello") && ((!nErrMsg.equals(l.get(9))&&!pErrMsg.equals(l.get(9))&&!rErrMsg.equals(l.get(9)))||l.get(9)==null) && clienttasks.isPackageVersion("subscription-manager",">=","1.13.10-1")) {	// post commit 13fe8ffd8f876d27079b961fb6675424e65b9a10 bug 1119688
 				l.set(7, Integer.valueOf(69));	// exitCode EX_UNAVAILABLE
 				l.set(8,"");
 				l.set(9,"Error: Server does not support environments.");
