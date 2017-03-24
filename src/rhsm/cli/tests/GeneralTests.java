@@ -331,6 +331,10 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 			if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.10.5-1")) expectedRequiresList.remove("manual: python-simplejson");	// Bug 1006748 - remove subscription-manager dependency on python-simplejson; subscription-manager commit ee34aef839d0cb367e558f1cd7559590d95cd636
 			if (clienttasks.isPackageVersion("python-rhsm", ">=", "1.11.5-1")) expectedRequiresList.add("manual: python-dateutil");	// Bug 1090350 - Clock skew detected when the dates of server and client have no big time drift. commit b597dae53aacf2d8a307b77b7f38756ce3ee6860
 			if (clienttasks.isPackageVersion("python-rhsm", ">=", "1.17.5-1")) expectedRequiresList.add("manual: python-rhsm-certificates = "+clienttasks.installedPackageVersionMap.get("python-rhsm").replace("python-rhsm-", "").replaceFirst("\\."+clienttasks.arch, ""));	// Bug 1104332 - [RFE] Separate out the rhsm certs into a separate RPM	// python-rhsm commit 790aa1ddaa20db05c63019fcdd4bd7f5cd2adeb8	// manual: python-rhsm-certificates = 1.17.4-1.git.1.790aa1d.el7
+			
+			if (clienttasks.redhatReleaseX.equals("7")) {
+				if (clienttasks.isPackageVersion("python-rhsm", ">=", "1.18.5-1")) expectedRequiresList.remove("manual: m2crypto");	// python-rhsm commit 214103dcffce29e31858ffee414d79c1b8063970	// Reduce usage of m2crypto (#184) on RHEL7+
+			}
 		}
 		
 		for (String expectedRequires : expectedRequiresList) if (!actualRequiresList.contains(expectedRequires)) log.warning("The actual requires list is missing expected requires '"+expectedRequires+"'.");
@@ -417,6 +421,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 			}
 			
 			if		(clienttasks.isPackageVersion("subscription-manager",">=","1.10.5-1"))	expectedRequiresList.remove("manual: python-simplejson");		// Bug 1006748 - remove subscription-manager dependency on python-simplejson; subscription-manager commit ee34aef839d0cb367e558f1cd7559590d95cd636
+			
 			if		(clienttasks.isPackageVersion("subscription-manager",">=","1.18.2-1"))	expectedRequiresList.add("manual: python-rhsm >= 1.18.1");		// RHEL6.9	// commit 82f1e7c89a8729ac2c4843922f14921a20f26beb
 			else if	(clienttasks.isPackageVersion("subscription-manager",">=","1.18.1-1"))	expectedRequiresList.add("manual: python-rhsm >= 1.18.0");		// RHEL6.9	// commit 0415e0d3ca2be57253bd79b4a9dc8b5863ca5110
 			else if	(clienttasks.isPackageVersion("subscription-manager",">=","1.16.0-1"))	expectedRequiresList.add("manual: python-rhsm >= 1.16.0");		// RHEL6.8	// commit c52630da1d45aee68c122d39fe92607e9a38ff8e
@@ -463,7 +468,9 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 				expectedRequiresList.add("manual: yum >= 3.2.29-73");
 			}
 			
-			if		(clienttasks.isPackageVersion("subscription-manager",">=","1.17.1-1"))	expectedRequiresList.add("manual: python-rhsm >= 1.17.0");		// RHEL7.3	// commit 18d6aa6889b701288f66c14b2f313f04069aa753
+			if		(clienttasks.isPackageVersion("subscription-manager",">=","1.19.4-1"))	expectedRequiresList.add("manual: python-rhsm >= 1.19.2");		// RHEL7.4	// commit a40f97e7cc5c5a660e5a25cca417e534d75f0edd
+			else if	(clienttasks.isPackageVersion("subscription-manager",">=","1.19.0-1"))	expectedRequiresList.add("manual: python-rhsm >= 1.19.0");		// RHEL7.4	// commit 3cffd6948f939966774f39c9e79fb3c6b09df61a
+			else if	(clienttasks.isPackageVersion("subscription-manager",">=","1.17.1-1"))	expectedRequiresList.add("manual: python-rhsm >= 1.17.0");		// RHEL7.3	// commit 18d6aa6889b701288f66c14b2f313f04069aa753
 			else if	(clienttasks.isPackageVersion("subscription-manager",">=","1.15.1-1"))	expectedRequiresList.add("manual: python-rhsm >= 1.15.0");		// RHEL7.2	// commit a2a4794d9eb7b8d74b0eb4bd27d0b6974b87d716
 			else if	(clienttasks.isPackageVersion("subscription-manager",">=","1.13.13-1"))	expectedRequiresList.add("manual: python-rhsm >= 1.13.10");		// RHEL7.1	// commit 649f5f7a814e05374b5c0ba56f29a59f4925f7ff Use custom JSON encoding function to encode sets.
 			else if	(clienttasks.isPackageVersion("subscription-manager",">=","1.13.6-1"))	expectedRequiresList.add("manual: python-rhsm >= 1.13.5");		// RHEL7.1
@@ -474,6 +481,14 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.18.5-1")) {	// commit bb47b2a6b4f3e823240e5f882bd4dc4d57c3b36e	1395794: Include python-decorator as a required dependency
 			expectedRequiresList.add("manual: python-decorator");
+		}
+		
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.19.0-1")) {	// commit 2aa48ef65ec9c98f395abb114285135512325fe3	Provide DBus objects for configuration, facts, and registration
+			expectedRequiresList.add("manual: dbus-x11");
+		}
+		
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.19.2-1")) {	// commit f5eab0e3492469ff4fc01ba19db9e61acfe0bad4	Add missing Requires and BuildRequires needed by F25.
+			expectedRequiresList.add("manual: dbus-glib");
 		}
 		
 		for (String expectedRequires : expectedRequiresList) if (!actualRequiresList.contains(expectedRequires)) log.warning("The actual requires list is missing expected requires '"+expectedRequires+"'.");
