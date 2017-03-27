@@ -543,7 +543,8 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 		}
 		if (clienttasks.redhatReleaseX.equals("7")) {
 			haPackage1	= "omping";
-			haPackage2	= "resource-agents";
+			haPackage2	= "resource-agents";	// 03/2017 started failing due to dependency... Error: Package: resource-agents-3.9.5-82.el7_3.6.x86_64 (rhel-ha-for-rhel-7-server-rpms) Requires: /usr/sbin/mount.cifs
+			haPackage2	= "libqb";
 			haSupportedArches	= Arrays.asList("x86_64","s390x");
 		}
 	}
