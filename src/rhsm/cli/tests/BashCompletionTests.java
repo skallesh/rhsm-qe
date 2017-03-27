@@ -97,6 +97,14 @@ public class BashCompletionTests extends SubscriptionManagerCLITestScript{
 		}
 		// END OF WORKAROUND
 		
+		// PERMANENT WORKAROUND
+		if ((bashCommand.equals("rct stat-cert -")) && actualCompletions.contains("--no-content") && !expectedCompletions.contains("--no-content")) {
+			if (clienttasks.isPackageVersion("subscription-manager","<","1.18.2-1")) {	// commit ac70fc3a50e172030c042bd5f18d78256c56470c // 1374389: rm --no-content from stat-cert completion
+				throw new SkipException("Bash completion for '"+bashCommand+"' is broken in this version of subscription-manager '"+clienttasks.installedPackageVersionMap.get("subscription-manager")+"' and was not fixed until subscription-manager-1.18.2-1 by Bug 1374389.");
+			}
+		}
+		// END OF WORKAROUND
+		
 		Assert.assertTrue(actualCompletions.containsAll(expectedCompletions), "All of the expected bash-completions for command '"+bashCommand+"' were presented.");
 		Assert.assertTrue(expectedCompletions.containsAll(actualCompletions), "All of the presented bash-completions for command '"+bashCommand+"' were expected.");
 		
