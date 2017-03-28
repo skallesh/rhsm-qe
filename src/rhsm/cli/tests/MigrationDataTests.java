@@ -57,6 +57,13 @@ import com.github.redhatqe.polarize.metadata.TestDefinition;
  *	Red Hat Product Certificates
  *		https://mojo.redhat.com/docs/DOC-103535
  *
+ *  Note: Rich Jerrido says...
+ *  	We depend on migration-data heavily for satellite 6's bootstrap script.
+ *  	bootstrap.py is the primary means to migrate systems from {RHN,RHSM,SAM,Sat5} to Satellite 6.
+ *      We explicitly call rhn-migrate-classic-to-rhsm when needed to deploy product certs. (And for the platforms where rhn-migrate doesn't work the way we want, RHEL5, we explicitly fetch product certs from /usr/share/RHSM) 
+ *  	https://github.com/Katello/katello-client-bootstrap
+ *  	https://access.redhat.com/articles/2280691
+ *  
  *	// OLD LOCATION
  *	git clone git://git.app.eng.bos.redhat.com/rcm/rhn-definitions.git
  *  http://git.app.eng.bos.redhat.com/?p=rcm/rhn-definitions.git;a=tree
@@ -478,7 +485,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
 			       , testCaseID = {"RHEL6-20106", "RHEL7-51111"})
 	@Test(	description="Verify that the migration product certs support this system's RHEL release version",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-782208","blockedByBug-1006060","blockedByBug-1025338","blockedByBug-1080072","blockedByBug-1110863","blockedByBug-1148110","blockedByBug-1197864","blockedByBug-1300766","blockedByBug-1241221","blockedByBug-1328579","blockedByBug-1393573"},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-782208","blockedByBug-1006060","blockedByBug-1025338","blockedByBug-1080072","blockedByBug-1110863","blockedByBug-1148110","blockedByBug-1197864","blockedByBug-1300766","blockedByBug-1241221","blockedByBug-1328579","blockedByBug-1393573","blockedByBug-1436441"},
 			dependsOnMethods={"VerifyChannelCertMapping_Test"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=130940)
@@ -1184,7 +1191,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
 			       , testCaseID = {"RHEL6-20105", "RHEL7-55203"})
 	@Test(	description="Verify that the expected RHN base channels supporting this system's RHEL release version are mapped to product certs whose version matches this system's RHEL release",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1110863","blockedByBug-1148110","blockedByBug-1197864","blockedByBug-1300766","blockedByBug-1222712","blockedByBug-1228387","blockedByBug-1241221","blockedByBug-1328579","blockedByBug-1328609","blockedByBug-1366747","blockedByBug-1393573"},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1110863","blockedByBug-1148110","blockedByBug-1197864","blockedByBug-1300766","blockedByBug-1222712","blockedByBug-1228387","blockedByBug-1241221","blockedByBug-1328579","blockedByBug-1328609","blockedByBug-1366747","blockedByBug-1393573","blockedByBug-1436441"},
 			dependsOnMethods={"VerifyChannelCertMapping_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -1289,7 +1296,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
 			       , testCaseID = {"RHEL6-20107", "RHEL7-51112"})
 	@Test(	description="Verify that the expected RHN RHEL channels supporting this system's RHEL release X.Y version are mapped to product certs whose version matches this system's RHEL release X.Y (also asserts beta channels to Beta product certs)",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1080072","blockedByBug-1110863","blockedByBug-1148110","blockedByBug-1197864","blockedByBug-1300766","blockedByBug-1222712","blockedByBug-1241221","blockedByBug-1328579","blockedByBug-1393573"},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1080072","blockedByBug-1110863","blockedByBug-1148110","blockedByBug-1197864","blockedByBug-1300766","blockedByBug-1222712","blockedByBug-1241221","blockedByBug-1328579","blockedByBug-1393573","blockedByBug-1436441"},
 			dataProvider="RhnRhelChannelsFromChannelMappingData",
 			dependsOnMethods={"VerifyChannelCertMapping_Test"},
 			enabled=true)
@@ -2879,6 +2886,18 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				rhnAvailableChildChannel.equals("rhel-x86_64-server-6-rhevh-beta-debuginfo")) {
 				// Bug 1418476 - rhel-x86_64-server-6-rhevh-beta channel maps are missing from channel-cert-mapping.txt
 				bugIds.add("1418476");
+			}
+			
+			if (rhnAvailableChildChannel.equals("rhel-x86_64-server-7-rhevh-beta") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-7-rhevh-beta-debuginfo")) {
+				// Bug 1435255 - RHN channels to product cert maps for "rhel-x86_64-server-7-rhevh-beta*" disappeared
+				bugIds.add("1435255");
+			}
+			
+			if (rhnAvailableChildChannel.equals("rhel-x86_64-rhev-mgmt-agent-7-beta") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-rhev-mgmt-agent-7-beta-debuginfo")) {
+				// Bug 1435245 - RHN channels to product cert maps for "rhel-x86_64-rhev-mgmt-agent-7-beta*" disappeared
+				bugIds.add("1435245");
 			}
 			
 			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));

@@ -1227,7 +1227,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
 			       , testCaseID = {"RHEL6-36615", "RHEL7-51425"})
 	@Test(	description="subscription-manager: subscription-manager should handle malformed custom facts with grace",
-			groups={"MalformedCustomFacts_Test","blockedByBug-966747"/*Uncomment for rhel66,"blockedByBug-1112326"*/},
+			groups={"MalformedCustomFacts_Test","blockedByBug-966747","blockedByBug-1112326","blockedByBug-1435771"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void MalformedCustomFacts_Test() {
@@ -1277,7 +1277,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
 			       , testCaseID = {"RHEL6-36608", "RHEL7-51420"})
 	@Test(	description="subscription-manager: subscription-manager should handle empty custom facts with grace",
-			groups={"EmptyCustomFacts_Test","blockedByBug-966747"/*Uncomment for rhel66,"blockedByBug-1112326"*/},
+			groups={"EmptyCustomFacts_Test","blockedByBug-966747","blockedByBug-1112326","blockedByBug-1435771"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void EmptyCustomFacts_Test() {

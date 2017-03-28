@@ -165,6 +165,34 @@
 
 (defn setchecked [needs-check?] (if needs-check? check uncheck))
 
+(defn take-screenshot
+  [name]
+  "The function saves screenshot of a desktop root.
+It appends timestamp at the end of a name.
+If the function finds 'BUILD_TAG' it uses it as prefix for image name.
+
+'BUILD_TAG' is set by Jenkins and depends on an actual build.
+
+The function uses an utility 'import' from package 'imagemagick'"
+  (let [suffix (-> (java.time.Instant/now) (.toString))
+        jenkins-run-id (System/getenv "BUILD_TAG")]
+    (let [image-name (if (clojure.string/blank? jenkins-run-id)
+                       (format "screenshot-%s@%s.png" name suffix)
+                       (format "%s-screenshot-%s@%s.png" jenkins-run-id name suffix))]
+      (run-command (format "DISPLAY=:2 import -window root '%s'" image-name))
+      image-name)))
+
+(defn take-and-download-screenshot
+  [name]
+  "Downloads taken screenshot to a machine where the testruns is executed"
+  (let [name (take-screenshot name)
+        out-dir (io/file (System/getProperty "automation.dir") "test-output")]
+    (RemoteFileTasks/getFile (.getConnection @clientcmd)
+                             (.toString out-dir) name)
+    (log/info (format "A screenshot has been copied as '%s'."
+                      (.toString (io/file out-dir name))))))
+
+
 (defn unregister
   "Unregisters subscripton manager by clicking the 'unregister' button."
   []
@@ -558,6 +586,8 @@
 (defn skip-dropdown
   "Skips dropdown items in a table."
   [table item]
+  (println "table: " table)
+  (println "item: " item)
   (if-not (ui rowexist? table item)
     (throw+ {:type :item-not-available
              :name item
@@ -616,52 +646,55 @@
 (defn subscribe
   "Subscribes to a given subscription, s."
   ([subscription contract quantity] ;;subscribe to a given contract, subscription, and quantity
-     (open-contract-selection subscription)
-     (ui selectrow :contract-selection-table contract)
-     (let [pool (ctasks/get-pool-id (@config :username)
-                                    (@config :password)
-                                    (@config :owner-key)
-                                    subscription
-                                    contract)
-           multiplier (ctasks/get-instance-multiplier (@config :username)
-                                                      (@config :password)
-                                                      pool
-                                                      :string? false)
-           line (ui gettablerowindex :contract-selection-table contract)
-           usedmax (ui getcellvalue :contract-selection-table line 2)
-           used (first (split usedmax #" / "))
-           max (last (split usedmax #" / "))
-           enter-quantity (fn [num]
-                            (ui generatekeyevent
-                                (str (repeat-cmd 5 "<right> ")
-                                     "<space>"
-                                     (when num (str " "
-                                                    (repeat-cmd (.length max) "<backspace> ")
-                                                    (- num (mod num multiplier))
-                                                    " <enter>")))))]
-       (when quantity (do (enter-quantity quantity)
-                          (sleep 500)))
-       (ui click :attach-contract-selection)
-       (checkforerror)
-       (wait-for-progress-bar)))
-  ([s c] ;;use the default quantity
-     (subscribe s c nil))
-  ([s] ;;simple subscribe that picks the first contract and default quantity
-     (ui selecttab :all-available-subscriptions)
-     (if (= "0 *" (ui getcellvalue :all-subscriptions-view
-                      (skip-dropdown :all-subscriptions-view s) 3))
-       (do
-         (ui generatekeyevent (str
-                               (repeat-cmd 3 "<right> ")
-                               "<space> " "<up> " "<enter>"))))
-     (ui click :attach)
-     (checkforerror)
-     (ui waittillwindowexist :contract-selection-dialog 5)
-     (if (bool (ui guiexist :contract-selection-dialog))
-       (do (ui selectrowindex :contract-selection-table 0)
-           (ui click :attach-contract-selection)))
+   (open-contract-selection subscription)
+   (ui selectrow :contract-selection-table contract)
+   (let [pool (ctasks/get-pool-id (@config :username)
+                                  (@config :password)
+                                  (@config :owner-key)
+                                  subscription
+                                  contract)
+         multiplier (ctasks/get-instance-multiplier (@config :username)
+                                                    (@config :password)
+                                                    pool
+                                                    :string? false)
+         line (ui gettablerowindex :contract-selection-table contract)
+         usedmax (ui getcellvalue :contract-selection-table line 2)
+         used (first (split usedmax #" / "))
+         max (last (split usedmax #" / "))
+         enter-quantity (fn [num]
+                          (ui generatekeyevent
+                              (str (repeat-cmd 5 "<right> ")
+                                   "<space>"
+                                   (when num (str " "
+                                                  (repeat-cmd (.length max) "<backspace> ")
+                                                  (- num (mod num multiplier))
+                                                  " <enter>")))))]
+     (when quantity (do (enter-quantity quantity)
+                        (sleep 500)))
+     (ui click :attach-contract-selection)
      (checkforerror)
      (wait-for-progress-bar)))
+  ([s c] ;;use the default quantity
+   (subscribe s c nil))
+  ([s] ;;simple subscribe that picks the first contract and default quantity
+   (ui selecttab :all-available-subscriptions)
+   (if (= "0 *" (ui getcellvalue :all-subscriptions-view
+                    (skip-dropdown :all-subscriptions-view s) 3))
+     (do
+       (ui generatekeyevent (str
+                             (repeat-cmd 3 "<right> ")
+                             "<space> " "<up> " "<enter>"))))
+   (ui click :attach)
+   (checkforerror)
+   (ui waittillwindowexist :contract-selection-dialog 5)
+   (if (bool (ui guiexist :contract-selection-dialog))
+     (do (ui selectrowindex :contract-selection-table 0)
+         (when (= "Awesome OS Instance Based one socket" s)
+           (run-command "ls -al /etc/pki/product /etc/pki/product-default")
+           (take-and-download-screenshot "before-attach"))
+         (ui click :attach-contract-selection)))
+   (checkforerror)
+   (wait-for-progress-bar)))
 
 (defn subscribe_all
   "Subscribes to everything available"
@@ -1085,31 +1118,43 @@ Column index starts from 0"
       ;; If I click twice I should see two different sort orders in the same column
       (= (set [:desc-sorting :asc-sorting]) (set [sorting-after-click-01 sorting-after-click-02])))))
 
-(defn take-screenshot
+(defn take-pki-dir
   [name]
-  "The function saves screenshot of a desktop root.
+  "The function saves a directory /etc/pki in a tested system.
 It appends timestamp at the end of a name.
-If the function finds 'BUILD_TAG' it uses it as prefix for image name.
+If the function finds 'BUILD_TAG' it uses it as prefix for a file name.
 
-'BUILD_TAG' is set by Jenkins and depends on an actual build.
-
-The function uses an utility 'import' from package 'imagemagick'"
+'BUILD_TAG' is set by Jenkins and depends on an actual build."
   (let [suffix (-> (java.time.Instant/now) (.toString))
         jenkins-run-id (System/getenv "BUILD_TAG")]
-    (let [image-name (if (clojure.string/blank? jenkins-run-id)
-                       (format "screenshot-%s@%s.png" name suffix)
-                       (format "%s-screenshot-%s@%s.png" jenkins-run-id name suffix))]
-      (run-command (format "DISPLAY=:2 import -window root '%s'" image-name))
-      image-name)))
+    (let [file-name (if (clojure.string/blank? jenkins-run-id)
+                       (format "etc-pki-dir-%s@%s.tar.gz" name suffix)
+                       (format "%s-etc-pki-dir-%s@%s.tar.gz" jenkins-run-id name suffix))]
+      (run-command (format "tar cfz '%s' /etc/pki " file-name))
+      file-name)))
+
+(defmacro take-pki-dir-on-exception
+  [suffix & body]
+  "suffix - :default-name
+          - 'some text'
+   ... suffix will be prepended to a name of a tar file"
+  `(let [suffix# (match/match ~suffix
+                              :default-name             "on-exception"
+                              (no-care# :guard blank?)  "on-exception" 
+                              :else                     ~suffix)]
+     (try+ ~@body
+           (catch Object e#
+             (let [name# (take-pki-dir suffix#)
+                   out-dir# (io/file (System/getProperty "automation.dir") "test-output")]
+               (RemoteFileTasks/getFile (.getConnection @clientcmd) (.toString out-dir#) name#)
+               (log/info (format "A directory /etc/pki has been saved as '%s'." (.toString (io/file out-dir# name#)))))
+             (throw+)))))
 
 (defmacro verify-or-take-screenshot
   [expr]
   `(try+ (verify ~expr)
          (catch Object e#
-           (let [name#  (take-screenshot "not-verified")
-                 out-dir# (io/file (System/getProperty "automation.dir") "test-output")]
-             (RemoteFileTasks/getFile (.getConnection @clientcmd) (.toString out-dir#) name#)
-             (log/info (format "A screenshot has been copied as '%s'." (.toString (io/file out-dir# name#)))))
+           (take-and-download-screenshot "not-verified")
            (throw+))))
 
 (defmacro screenshot-on-exception

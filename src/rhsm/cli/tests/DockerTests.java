@@ -245,12 +245,12 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 	
 	
 	// RHEL7 Only ==============================================================================================
-
-	@TestDefinition( projectID = {Project.RedHatEnterpriseLinux7}
+    @TestDefinition( projectID = {Project.RedHatEnterpriseLinux7}
 			       , testCaseID = {"RHEL7-51754"})
 	@Test(	description="install the latest docker package on the host",
 			groups={"AcceptanceTests","Tier1Tests"},
 			enabled=true)
+	@SuppressWarnings("unused")
 	//@ImplementsNitrateTest(caseId=)
 	public void InstallDockerPackageOnHost_Test() throws IOException, JSONException {
 		// assert that the host system is rhel7+
@@ -266,6 +266,7 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 		
 		// make sure ALL docker* packages are removed so we can start from a clean slate (because a reinstall of subscription-manager during setupClient will remove only docker due to dependency) 
 		clienttasks.yumDoPackageFromRepo_("remove", "docker*", null, null);
+		clienttasks.yumDoPackageFromRepo_("remove", "container-selinux", null, null);	// avoid: Cannot install package docker-selinux-1.6.2-14.el7.x86_64. It is obsoleted by installed package 2:container-selinux-2.9-4.el7.noarch
 		
 		// install the requested docker packages
 		// good way of installing docker
