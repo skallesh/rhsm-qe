@@ -3033,6 +3033,16 @@
       "parameters" : [ ]
     }
   },
+  "rhsm.cli.tests.GeneralTests.verifyRhsmcertdDoesNotThrowDeprecationWarnings_Test" : {
+    "RHEL6" : {
+      "id" : "RHEL6-19943",
+      "parameters" : [ ]
+    },
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-32162",
+      "parameters" : [ ]
+    }
+  },
   "rhsm.cli.tests.HealingTests.VerifyAutohealAttributeCanBeToggledOffForConsumerUsingCLI_Test" : {
     "RHEL6" : {
       "id" : "RHEL6-20096",
