@@ -27,7 +27,10 @@
             AfterGroups
             Test
             DataProvider]
-           org.testng.SkipException))
+           org.testng.SkipException
+           [com.redhat.qe.auto.bugzilla BzChecker]
+           [com.github.redhatqe.polarize.metadata TestDefinition]
+           [com.github.redhatqe.polarize.metadata DefTypes$Project]))
 
 (def random_row_num (atom nil)) ;; Used to dynamically select a random row number
 (def list_row (atom []))        ;; Used to hold probable row numbers
@@ -168,9 +171,11 @@
       (when (-> (tasks/ui guiexist :repositories-dialog) bool)
         (tasks/ui click :close-repo-dialog)))))
 
-(defn ^{Test {:groups ["repo"
-                       "tier2"
-                       "tier1" "acceptance"]}}
+(defn ^{Test           {:groups ["repo"
+                                 "tier2"
+                                 "tier1" "acceptance"]}
+        TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-20126" "RHEL7-31897"]}}
   check_repo_message_unsubscribed
   "This tests for default static message in repository dialog when unsubscribed"
   [_]
@@ -193,7 +198,9 @@
 When I click 'System' -> 'Repositories'
  and I click on a table's label 'Repository ID'
 Then I see values of repositories ids to be redrawn
- and the values are sorted some way"}}
+ and the values are sorted some way"}
+        TestDefinition {:projectID [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-45958" ""]}}
   check_repo_table_sortable
   [_]
   (try
@@ -223,9 +230,11 @@ Then I see values of repositories ids to be redrawn
         (tasks/ui click :close-repo-dialog))
       (tasks/unsubscribe_all))))
 
-(defn ^{Test {:groups ["repo"
-                       "tier2"
-                       "blockedByBug-1095938"]}}
+(defn ^{Test           {:groups ["repo"
+                                 "tier2"
+                                 "blockedByBug-1095938"]}
+        TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-36511" "RHEL7-55601"]}}
   check_repo_table_populated
   "This tests if repo-table is populated when subscribed"
   [_]
@@ -244,7 +253,9 @@ Then I see values of repositories ids to be redrawn
 (defn ^{Test {:groups ["repo"
                        "tier3"
                        "blockedByBug-1095938"]
-              :enabled false}}
+              :enabled false}
+        TestDefinition {:projectID [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-45957" ""]}}
   check_repo_remove_override_button
   "This tests if repo-override button is enabled when a row is checked and applied"
   [_]
@@ -329,12 +340,14 @@ Then I see values of repositories ids to be redrawn
           (tasks/ui uncheckrow :repo-table row-num 1)
           (sleep 1000))))))
 
-(defn ^{Test {:groups ["repo"
-                       "tier3"
-                       "blockedByBug-1095938"
-                       "blockedByBug-1155954"
-                       "assert_remove_all_overrides"]
-              :dataProvider "repolist"}}
+(defn ^{Test           {:groups       ["repo"
+                                       "tier3"
+                                       "blockedByBug-1095938"
+                                       "blockedByBug-1155954"
+                                       "assert_remove_all_overrides"]
+                        :dataProvider "repolist"}
+        TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-37013" "RHEL7-55658"]}}
   enable_repo_remove_all_overrides
   "Enable all repos and click remove all override and check state"
   [_ repo]
@@ -417,7 +430,8 @@ Then I see values of repositories ids to be redrawn
                                (tasks/ui selectrow :repo-table repo)
                                (assert-and-remove-all-override)))
     (tasks/ui click :close-repo-dialog)
-    (tasks/unsubscribe_all)));; Comment ends here
+    (tasks/unsubscribe_all)))
+;; Comment ends here
 
 (defn ^{Test {:groups ["repo"
                        "tier2"
@@ -471,11 +485,13 @@ Then I see values of repositories ids to be redrawn
         (tasks/ui click :close-repo-dialog))
       (tasks/unsubscribe_all))))
 
-(defn ^{Test {:groups ["repo"
-                       "tier3"
-                       "blockedByBug-1095938"]
-              :value ["assert_repo_dialog_fields"]
-              :dataProvider "repolist"}}
+(defn ^{Test           {:groups       ["repo"
+                                       "tier3"
+                                       "blockedByBug-1095938"]
+                        :value        ["assert_repo_dialog_fields"]
+                        :dataProvider "repolist"}
+        TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-37012" "RHEL7-55657"]}}
   check_repo_name_url
   "Checks if name and URL are populated for all repositories"
   [_ repo]
@@ -495,14 +511,18 @@ Then I see values of repositories ids to be redrawn
   (tasks/unsubscribe_all))
 
 ;; Automates manual test case
-(defn ^{Test {:groups ["repo"
-                       "tier1" "acceptance"]
-              :description "Verfies that the in the Repository Details that the Name and Base Url
+(defn ^{Test           {:groups      ["repo"
+                                      "tier1" "acceptance"]
+                        :description "Verfies that the in the Repository Details that the Name and Base Url
                             fields are correct by comparing to the redhat.repo file, running
-                            subscription-manager repos --list, and by reading the product.pem data"}}
+                            subscription-manager repos --list, and by reading the product.pem data"}
+        TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-20129" "RHEL7-59520"]}}
   verify_repo_name_and_url
   [_]
-  (tasks/restart-app :reregister? true));;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  (tasks/restart-app :reregister? true))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; DATA PROVIDERS
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

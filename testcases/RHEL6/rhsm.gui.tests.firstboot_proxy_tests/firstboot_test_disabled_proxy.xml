@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<testcase id="RHEL6-39189">
+    <title>rhsm.gui.tests.firstboot_proxy_tests.firstboot_test_disabled_proxy</title>
+    <description>Test that the 'test connection' button is disabled when proxy settings are cleared.</description>
+    <test-steps>
+        <test-step>
+            <test-step-column id="step"/>
+        </test-step>
+    </test-steps>
+    <custom-fields>
+        <custom-field id="caseautomation" content="automated"></custom-field>
+        <custom-field id="caseimportance" content="high"></custom-field>
+        <custom-field id="caselevel" content="component"></custom-field>
+        <custom-field id="caseposneg" content="positive"></custom-field>
+        <custom-field id="testtype" content="functional"></custom-field>
+        <custom-field id="subtype1" content="-"></custom-field>
+        <custom-field id="subtype2" content="-"></custom-field>
+    </custom-fields>
+</testcase>

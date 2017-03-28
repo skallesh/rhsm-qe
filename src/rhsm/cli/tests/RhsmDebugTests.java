@@ -21,6 +21,9 @@ import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 import com.redhat.qe.tools.SSHCommandRunner;
 
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.TestDefinition;
+
 /**
  * @author jsefler
  *
@@ -50,8 +53,10 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(result.getStdout().trim(), "This system is not yet registered. Try 'subscription-manager register --help' for more information.", "The stdout from an attempt to run '"+rhsmDebugSystemCommand+"' without being registered.");
 		Assert.assertEquals(result.getStderr().trim(), "", "The stderr from an attempt to run '"+rhsmDebugSystemCommand+"' without being registered.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20112", "RHEL7-51116"})
 	@Test(	description="after registering and subscribing, call rhsm-debug system and verify the expected contents of the written debug file",
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1038206","blockedByBug-1040338","blockedByBug-1060727","blockedByBug-1070737","blockedByBug-1070737","blockedByBug-1039653"},
 			enabled=true)
@@ -61,8 +66,10 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 		// run the rhsmDebugSystemTest with no options
 		verifyRhsmDebugSystemTestWithOptions(null,null, null, null, null);
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36659", "RHEL7-51505"})
 	@Test(	description="after registering and subscribing, call rhsm-debug system with --no-archive option and verify the results",
 			groups={"blockedByBug-1060730","blockedByBug-1060727","blockedByBug-1070737","blockedByBug-1039653"},
 			enabled=true)
@@ -75,8 +82,10 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 		// cleanup disk space
 		removeRhsmDebugSystemArtifacts();
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36658", "RHEL7-51504"})
 	@Test(	description="after registering and subscribing, call rhsm-debug system with --destination option and verify the results",
 			groups={"blockedByBug-1040338","blockedByBug-1060727","blockedByBug-1070737","blockedByBug-1039653"},
 			enabled=true)
@@ -94,8 +103,10 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 		// cleanup disk space 
 		client.runCommandAndWait("rm -rf "+destination);
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36664", "RHEL7-51510"})
 	@Test(	description="after registering and subscribing, call rhsm-debug system with --sos option and verify the results",
 			groups={"blockedByBug-1040338","blockedByBug-1060727","blockedByBug-1070737","blockedByBug-1039653"},
 			enabled=true)
@@ -105,8 +116,10 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 		// run the rhsmDebugSystemTest with --sos
 		verifyRhsmDebugSystemTestWithOptions(null,null, true, null, null);
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36660", "RHEL7-51506"})
 	@Test(	description="after registering and subscribing, call rhsm-debug system with --no-subscriptions option and verify the results",
 			groups={"blockedByBug-1114117"},
 			enabled=true)
@@ -117,8 +130,10 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 		// run the rhsmDebugSystemTest with --no-subscriptions
 		verifyRhsmDebugSystemTestWithOptions(null,null, null, true, null);
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36666", "RHEL7-51512"})
 	@Test(	description="after registering and subscribing, call rhsm-debug system with --subscriptions option and verify the results",
 			groups={"blockedByBug-1246680"},
 			enabled=true)
@@ -129,8 +144,10 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 		// run the rhsmDebugSystemTest with --subscriptions
 		verifyRhsmDebugSystemTestWithOptions(null,null, null, null, true);
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36665", "RHEL7-51511"})
 	@Test(	description="after registering and subscribing, call rhsm-debug system with --subscriptions option and verify the results",
 			groups={"blockedByBug-1194906","blockedByBug-1246680"},
 			enabled=true)
@@ -155,8 +172,10 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 		String expectedLogInfo = "The rhsm-debug options '--subscriptions' and '--no-subscriptions' have no effect now.";
 		Assert.assertTrue(rhsmLogFileTrace.contains(expectedLogInfo), "The '"+clienttasks.rhsmLogFile+"' contains expected INFO message '"+expectedLogInfo+"' when rhsm-debug system is called with options --subscriptions and --no-subscriptions.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36657", "RHEL7-51503"})
 	@Test(	description="after registering and subscribing, call rhsm-debug system with both --no-archive and --destination option and verify the results",
 			groups={"blockedByBug-1040338","blockedByBug-1060727","blockedByBug-1070737","blockedByBug-1039653"},
 			enabled=true)
@@ -174,8 +193,10 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 		// cleanup disk space 
 		client.runCommandAndWait("rm -rf "+destination);
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36663", "RHEL7-51509"})
 	@Test(	description="after registering, call rhsm-debug system with a non-existent --destination option",
 			groups={"blockedByBug-1039653"},
 			enabled=true)
@@ -198,8 +219,10 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(result.getStderr().trim(), "", "The stderr from an attempt to run '"+rhsmDebugSystemCommand+"'.");
 		Assert.assertEquals(result.getStdout().trim(), "The destination directory for the archive must already exist.", "The stdout from an attempt to run '"+rhsmDebugSystemCommand+"'.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36656", "RHEL7-51502"})
 	@Test(	description="after registering, call rhsm-debug system with a bad (already existing as a file) --destination option",
 			groups={"blockedByBug-1070737","blockedByBug-1039653","blockedByBug-1093382"},
 			enabled=true)
@@ -231,8 +254,10 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(result.getStderr().trim().startsWith(expectedStderr), "The stderr from an attempt to run '"+rhsmDebugSystemCommand+"' should indicate '"+expectedStderr+"'.");
 		Assert.assertEquals(result.getStdout().trim(), "", "The stdout from an attempt to run '"+rhsmDebugSystemCommand+"'.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36661", "RHEL7-51507"})
 	@Test(	description="exercise the rhsm-debug tool with non-default configurations for consumerCertDir entitlementCertDir and productCertDir",
 			groups={"RhsmDebugSystemWithNonDefaultCertDirs1_Test","blockedByBug-1040546","blockedByBug-1060727","blockedByBug-1070737","blockedByBug-1039653"},
 			enabled=true)
@@ -274,8 +299,10 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 		if (originalConsumerCertDir!=null)		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "consumerCertDir", originalConsumerCertDir);
 		if (originalEntitlementCertDir!=null)	clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "entitlementCertDir", originalEntitlementCertDir);
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36662", "RHEL7-51508"})
 	@Test(	description="exercise the rhsm-debug tool with non-default configurations for ca_cert_dir pluginDir pluginConfDir",
 			groups={"RhsmDebugSystemWithNonDefaultCertDirs2_Test","blockedByBug-1055664","blockedByBug-1060727","blockedByBug-1070737","blockedByBug-1039653"},
 			enabled=true)

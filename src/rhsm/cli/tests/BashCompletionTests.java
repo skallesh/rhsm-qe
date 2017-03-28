@@ -20,6 +20,9 @@ import com.redhat.qe.auto.bugzilla.BzChecker;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.tools.SSHCommandResult;
 
+import com.github.redhatqe.polarize.metadata.TestDefinition;
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+
 /**
  * @author jsefler
  *
@@ -43,7 +46,9 @@ public class BashCompletionTests extends SubscriptionManagerCLITestScript{
 	
 	
 	// Test Methods ***********************************************************************
-	
+	@TestDefinition( projectID={Project.RHEL6, Project.RedHatEnterpriseLinux7}
+	               , testCaseID={"RHEL6-19942", "RHEL7-68140"}
+			       , tags="tier1 tier2")
 	@Test(	description="when subscription-manager is run with no args, it should default to the help report",
 			groups={"AcceptanceTests","Tier1Tests"},
 			dataProvider="BashCompletionData",

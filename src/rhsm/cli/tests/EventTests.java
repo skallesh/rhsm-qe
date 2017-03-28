@@ -10,6 +10,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.TestDefinition;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.testng.SkipException;
@@ -112,7 +115,9 @@ MESSAGES.put("ACTIVATIONKEYDELETED",
 public class EventTests extends SubscriptionManagerCLITestScript{
 
 	// Test methods ***********************************************************************
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21840", "RHEL7-51661"})
 	@Test(	description="subscription-manager: events: Consumer Created is sent over an RSS atom feed.",
 			groups={"ConsumerCreated_Test"},
 			dependsOnGroups={},
@@ -160,8 +165,10 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		//assertTheNewFeed(oldFeed, newEventTitles);
 		assertTheNewFeedIgnoringEventTitles(oldFeed, newEventTitles,new HashSet<String>(){{add("COMPLIANCE CREATED");}});
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21842", "RHEL7-51663"})
 	@Test(	description="subscription-manager: events: Enitlement Created is sent over an RSS atom feed.",
 			groups={"EntitlementCreated_Test"},
 			dependsOnGroups={"ConsumerCreated_Test"},
@@ -227,8 +234,10 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		//assertTheNewFeed(oldFeed, newEventTitles.toArray(new String[]{}));	// worked prior to RHEL59
 		assertTheNewFeedIgnoringEventTitles(oldFeed, newEventTitles.toArray(new String[]{}), new HashSet<String>(){{add("CONSUMER MODIFIED");add("COMPLIANCE CREATED");}});
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+	               , testCaseID = {"RHEL6-26757", "RHEL7-52091"})
 	@Test(	description="subscription-manager: events: Pool Modified and Entitlement Modified is sent over an RSS atom feed.",
 			groups={"blockedByBug-721141","PoolModifiedAndEntitlementModified_Test","blockedByBug-645597","blockedByBug-1303242"},
 			dependsOnGroups={"EntitlementCreated_Test"},
@@ -318,8 +327,10 @@ public class EventTests extends SubscriptionManagerCLITestScript{
         //AN org.xmlpull.v1.XmlPullParserException IS THROWN WHEN THIS FAILS: Assert.assertEquals(newConsumedProductSubscription.startDate, newStartDate, "After modifying pool '"+testPool.poolId+"' by subtracting one month from startdate and refreshing entitlements, the consumed product subscription now reflects the modified field.");
         Assert.assertEquals(ProductSubscription.formatDateString(newConsumedProductSubscription.startDate), ProductSubscription.formatDateString(newStartDate), "After modifying pool '"+testPool.poolId+"' by subtracting one month from startdate and refreshing entitlements, the consumed product subscription now reflects the modified field.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+	               , testCaseID = {"RHEL6-21844", "RHEL7-51665"})
 	@Test(	description="subscription-manager: events: Entitlement Deleted is sent over an RSS atom feed.",
 			groups={"EnititlementDeleted_Test"},
 			dependsOnGroups={"PoolModifiedAndEntitlementModified_Test"},
@@ -377,8 +388,10 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		//assertTheNewFeed(oldFeed, newEventTitles);
 		assertTheNewFeedIgnoringEventTitles(oldFeed, newEventTitles, new HashSet<String>(){{add("COMPLIANCE CREATED");}});
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+	               , testCaseID = {"RHEL6-21845", "RHEL7-51666"})
 	@Test(	description="subscription-manager: events: Consumer Modified is sent over an RSS atom feed.",
 			groups={"blockedByBug-721141","ConsumerModified_Test"}, dependsOnGroups={"EnititlementDeleted_Test"},
 			enabled=true)
@@ -411,8 +424,10 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		// assert the feed...
 		assertTheNewFeed(oldFeed, newEventTitles);
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+	               , testCaseID = {"RHEL6-21846", "RHEL7-51667"})
 	@Test(	description="subscription-manager: events: Consumer Deleted is sent over an RSS atom feed.",
 			groups={"ConsumerDeleted_Test"}, dependsOnGroups={"ConsumerModified_Test","NegativeConsumerUserPassword_Test"},
 			enabled=true)
@@ -441,8 +456,10 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		assertTheNewFeed(oldFeed, newEventTitles);
 		//assertTheNewFeedIgnoringEventTitles(oldFeed, newEventTitles, new HashSet<String>(){{add("COMPLIANCE CREATED");}});
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+	               , testCaseID = {"RHEL6-21847", "RHEL7-51668"})
 	@Test(	description="subscription-manager: events: Owner Created is sent over an RSS atom feed.",
 			groups={"OwnerCreated_Test"}, dependsOnGroups={"ConsumerDeleted_Test"},
 			enabled=true, alwaysRun=true)
@@ -473,8 +490,10 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		// assert the feed...
 		assertTheNewFeed(oldFeed, newEventTitles);
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6}
+			       , testCaseID = {"RHEL6-26758"})
 	@Test(	description="subscription-manager: events: Product Created is sent over an RSS atom feed.",
 			groups={"ProductCreated_Test"}, dependsOnGroups={"OwnerCreated_Test"},
 			enabled=true)
@@ -502,8 +521,10 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		// assert the feed...
 		assertTheNewFeed(oldFeed, newEventTitles);
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21848", "RHEL7-51669"})
 	@Test(	description="subscription-manager: events: Pool Created is sent over an RSS atom feed.",
 			groups={"PoolCreated_Test"}, dependsOnGroups={"ProductCreated_Test"},
 			enabled=true, alwaysRun=true)
@@ -570,8 +591,10 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 //		 dgoodwin dgregor_pto dgao
 //		<dgoodwin> jsefler: cool, three possible cases, creation via candlepin api (post /pools), refresh pools after creating a subscription, and creation of the rh personal "sub pool"
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21849", "RHEL7-51670"})
 	@Test(	description="subscription-manager: events: Pool Deleted is sent over an RSS atom feed.",
 			groups={"PoolDeleted_Test"}, dependsOnGroups={"PoolCreated_Test"},
 			enabled=true, alwaysRun=true)
@@ -631,8 +654,10 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		// assert the feed...
 		assertTheNewFeed(oldFeed, newEventTitles);
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6}
+			       , testCaseID = {"RHEL6-26759"})
 	@Test(	description="subscription-manager: events: Product Deleted is sent over an RSS atom feed.",
 			groups={"ProductDeleted_Test"}, dependsOnGroups={"PoolDeleted_Test"},
 			enabled=true, alwaysRun=true)
@@ -661,8 +686,10 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		// assert the feed...
 		assertTheNewFeed(oldFeed, newEventTitles);
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21850", "RHEL7-51671"})
 	@Test(	description="subscription-manager: events: Export Created is sent over an RSS atom feed.",
 			groups={"ExportCreated_Test"}, dependsOnGroups={"ProductDeleted_Test"},
 			enabled=true, alwaysRun=true)
@@ -710,8 +737,10 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		// assert the feed...
 		assertTheNewFeed(oldFeed, newEventTitles);
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21851", "RHEL7-51672"})
 	@Test(	description="subscription-manager: events: Import Created is sent over an RSS atom feed.",
 			groups={"blockedByBug-891334","ImportCreated_Test"}, dependsOnGroups={"ExportCreated_Test","OwnerCreated_Test"},
 			enabled=true)
@@ -753,8 +782,10 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		//assertTheNewFeed(oldFeed, newEventTitles);	// TODO 12/6/2012 several POOL MODIFIED may occur between new events POOL CREATED and SUBSCRIPTION CREATED.  Seems to happen when re-running the script after hours of other troubleshooting runs.  Redeploying candlepin and running EventTests does NOT encounter the extraneous POOL MODIFIED event.  We may want change this to...  assertTheNewFeedContains(oldFeed, Arrays.asList(newEventTitles));
 		assertTheNewFeedIgnoringEventTitles(oldFeed, newEventTitles, new HashSet<String>(){{add("POOL CREATED");add("POOL MODIFIED");add("RULES MODIFIED");}} );	// TODO 10/24/2013 don't yet understand why "RULES MODIFIED" have randomly started showing up like the POOL MODIFIED events in the comment above
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21852", "RHEL7-51673"})
 	@Test(	description="subscription-manager: events: Owner Deleted is sent over an RSS atom feed.",
 			groups={"OwnerDeleted_Test"}, dependsOnGroups={"ImportCreated_Test"},
 			enabled=true, alwaysRun=true)
@@ -786,8 +817,10 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		assertTheNewFeedIgnoringEventTitles(oldFeed, newEventTitles, new HashSet<String>(){{add("POOL DELETED");}} );	// TODO 10/24/2013 don't yet understand why "POOL DELETED" sometimes occurs on script re-runs
 
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21841", "RHEL7-51662"})
 	@Test(	description="subscription-manager: events: negative test for super user/password.",
 			groups={"NegativeSuperUserPassword_Test"}, dependsOnGroups={},
 			
@@ -825,8 +858,10 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		SyndFeed feed = CandlepinTasks.getSyndFeed(authuser,authpwd,sm_serverUrl);
 		Assert.assertTrue(!feed.getEntries().isEmpty(),"Atom feed for all events is successful with valid credentials "+authuser+":"+authpwd);
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21843", "RHEL7-51664"})
 	@Test(	description="subscription-manager: events: negative test for consumer user/password.",
 			groups={"NegativeConsumerUserPassword_Test"}, dependsOnGroups={"ConsumerCreated_Test"},
 			enabled=true)

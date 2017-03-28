@@ -6,6 +6,9 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.github.redhatqe.polarize.metadata.TestDefinition;
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+
 import org.testng.SkipException;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
@@ -30,7 +33,9 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 	
 	
 	// Test Methods ***********************************************************************
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			, testCaseID = {"RHEL6-21764", "RHEL7-51271"})
 	@Test(	description="when subscription-manager is run with no args, it should default to the help report",
 			groups={"blockedByBug-974123"},
 			enabled=true)
@@ -45,7 +50,9 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		defaultResult = RemoteFileTasks.runCommandAndAssert(client,clienttasks.command,Integer.valueOf(0));
 		Assert.assertTrue(defaultResult.toString().equals(helpResult.toString()), "When registered, the default output running subscription-manager with no arguments should be identical to output from running subscription-manager with --help.");
 	}
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21758", "RHEL7-51265"})
 	@Test(	description="subscription-manager-cli: man page",
 			groups={},
 			enabled=true)
@@ -57,7 +64,9 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		RemoteFileTasks.runCommandAndAssert(client,"whatis "+cliCommand,0,"^"+cliCommand+" ",null);	// run "mandb" if the result is Stderr: subscription-manager: nothing appropriate.
 		log.warning("In this test we only verified the existence of the man page; NOT the contents!");
 	}
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21759", "RHEL7-51266"})
 	@Test(	description="subscription-manager-gui: man page",
 			groups={},
 			enabled=true)
@@ -77,7 +86,9 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			log.warning("In this test we only verified the existence of the man page; NOT the contents!");
 		}
 	}
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21762", "RHEL7-51269"})
 	@Test(	description="rhsm-icon: man page",
 			groups={"blockedByBug-771726"},
 			enabled=true)
@@ -97,7 +108,9 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			log.warning("In this test we only verified the existence of the man page; NOT the contents!");
 		}
 	}
-	
+
+	@TestDefinition( projectID = {Project.RHEL6}
+			       , testCaseID = {"RHEL6-25813"})
 	@Test(	description="install-num-migrate-to-rhsm: man page",
 			groups={},
 			enabled=true)
@@ -137,7 +150,9 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			log.warning("In this test we only verified the existence of the man page; NOT the contents!");
 		}
 	}
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21763", "RHEL7-51270"})
 	@Test(	description="rhn-migrate-classic-to-rhsm: man page",
 			groups={},
 			enabled=true)
@@ -157,7 +172,9 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			log.warning("In this test we only verified the existence of the man page; NOT the contents!");
 		}
 	}
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21760", "RHEL7-51267"})
 	@Test(	description="rct: man page",
 			groups={"blockedByBug-862909"},
 			enabled=true)
@@ -169,7 +186,9 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		RemoteFileTasks.runCommandAndAssert(client,"whatis "+rctCommand,0,"^"+rctCommand+" ",null);	// run "mandb" if the result is Stderr: rct: nothing appropriate.
 		log.warning("In this test we only verified the existence of the man page; NOT the contents!");
 	}
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21761", "RHEL7-51268"})
 	@Test(	description="rhsm.conf: man page",
 			groups={"blockedByBug-990183"},
 			enabled=true)
@@ -182,7 +201,9 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		RemoteFileTasks.runCommandAndAssert(client,"whatis "+cliCommand,0,"^"+cliCommand+" ",null);	// run "mandb" if the result is Stderr: subscription-manager: nothing appropriate.
 		log.warning("In this test we only verified the existence of the man page; NOT the contents!");
 	}
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-22220", "RHEL7-51264"})
 	@Test(	description="subscription-manager-gui --help with no X-Display",
 			groups={"blockedByBug-1290885","blockedByBug-976689","blockedByBug-881095"/* ALSO INCLUDED IN ExpectedCommandLineOptionsData */},
 			enabled=true)
@@ -227,8 +248,10 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			Assert.assertEquals(result.getStderr(), "","Stderr from calling subscription-manager-gui --help with no X-Display");
 		}
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21757", "RHEL7-51263"})
 	@Test(	description="subscription-manager, subscription-manager-gui, rhn-migrate-classic-to-rhsm, and other CLI tools: assert only expected command line options are available",
 			groups={},
 			dataProvider="ExpectedCommandLineOptionsData")

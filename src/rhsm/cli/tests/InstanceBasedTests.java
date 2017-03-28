@@ -23,6 +23,9 @@ import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 import com.redhat.qe.tools.SSHCommandRunner;
 
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.TestDefinition;
+
 /**
  * @author skallesh
  *
@@ -40,6 +43,8 @@ public class InstanceBasedTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36689", "RHEL7-51534"})
 	@Test(description = "verify if instance_multiplier logic is enforced on virtual guests.", 
 			groups = { "InstanceMultiplierLogicOnVirtmachines","blockedByBug-962933"}, enabled = true)
 	public void InstanceMultiplierLogicOnVirtmachines() throws JSONException,Exception {
@@ -71,6 +76,8 @@ public class InstanceBasedTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36691", "RHEL7-51536"})
 	@Test(description = "verify Subscription of instance based subscription", 
 			groups = { "SubscriptionOfInstanceBasedTest"}, enabled = true)
 	public void SubscriptionOfInstanceBasedTest() throws JSONException,Exception {
@@ -117,6 +124,8 @@ for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36688", "RHEL7-51533"})
 	@Test(description = "verify Healing of instance based subscription", 
 			groups = { "HealingOfInstanceBasedSubscription","blockedByBug-907638"}, enabled = true)
 	public void HealingOfInstanceBasedSubscription() throws JSONException,Exception {
@@ -185,6 +194,8 @@ for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36687", "RHEL7-51532"})
 	@Test(description = "verify Auto bind of instance based subscription", 
 			groups = { "AutoBindingInstanceBasedSubscription"}, enabled = true)
 	public void AutoBindingInstanceBasedSubscription() throws JSONException,Exception {
@@ -239,6 +250,8 @@ for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36690", "RHEL7-51535"})
 	@Test(description = "verify Auto bind of instance based subscription", 
 			groups = { "StackingOfInstanceBasedSubscription"}, enabled = true)
 	public void StackingOfInstanceBasedSubscription() throws JSONException,Exception {

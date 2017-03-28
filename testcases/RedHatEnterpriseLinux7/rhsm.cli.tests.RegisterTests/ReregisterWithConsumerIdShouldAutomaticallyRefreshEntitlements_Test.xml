@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<testcase id="RHEL7-51303">
+    <title>rhsm.cli.tests.RegisterTests.ReregisterWithConsumerIdShouldAutomaticallyRefreshEntitlements_Test</title>
+    <description>register with existing consumerid should automatically refresh entitlements
+Actions:
+
+    * register with username and password and remember the consumerid
+    * subscribe to one or more subscriptions
+    * list the consumed subscriptions and remember them
+    * clean system
+    * assert that there are no entitlements on the system
+    * register with same username, password and existing consumerid
+    * assert that originally consumed subscriptions are once again being consumed
+
+	
+Expected Results:
+
+    * when registering a new system to an already existing consumer, all of the existing consumers entitlement certs should be downloaded to the new system</description>
+    <test-steps>
+        <test-step>
+            <test-step-column id="step"/>
+        </test-step>
+    </test-steps>
+    <custom-fields>
+        <custom-field id="caseautomation" content="automated"></custom-field>
+        <custom-field id="caseimportance" content="high"></custom-field>
+        <custom-field id="caselevel" content="component"></custom-field>
+        <custom-field id="caseposneg" content="positive"></custom-field>
+        <custom-field id="testtype" content="functional"></custom-field>
+        <custom-field id="subtype1" content="-"></custom-field>
+        <custom-field id="subtype2" content="-"></custom-field>
+    </custom-fields>
+</testcase>

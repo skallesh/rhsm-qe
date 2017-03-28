@@ -36,6 +36,9 @@ import rhsm.data.ProductSubscription;
 import rhsm.data.SubscriptionPool;
 import com.redhat.qe.tools.SSHCommandResult;
 
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.TestDefinition;
+
 /**
  * @author jsefler
  *
@@ -47,9 +50,10 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 
 		
 	// Test methods ***********************************************************************
-	
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21874", "RHEL7-51713"})
 	@Test(	description="subscription-manager: service-level (when not registered)",
 			groups={"blockedByBug-826856"/*,"blockedByBug-837036"*/},
 			enabled=true)
@@ -93,8 +97,10 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 			Assert.assertEquals(result.getStdout().trim(),"This system is not yet registered. Try 'subscription-manager register --help' for more information.", "Stdout from service-level --show without being registered");
 		}
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21878", "RHEL7-51717"})
 	@Test(	description="subscription-manager: service-level --show (when not registered)",
 			groups={"blockedByBug-826856",/*"blockedByBug-837036"*/},
 			enabled=true)
@@ -138,8 +144,10 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 			Assert.assertEquals(result.getStdout().trim(),"This system is not yet registered. Try 'subscription-manager register --help' for more information.", "Stdout from service-level --show without being registered");
 		}
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21871", "RHEL7-51722"})
 	@Test(	description="subscription-manager: service-level --list (when not registered)",
 			groups={},
 			enabled=true)
@@ -158,8 +166,10 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 			Assert.assertEquals(result.getStdout().trim(),"Error: you must register or specify --username and --password to list service levels", "Stdout from service-level --list without being registered");
 		}
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21872", "RHEL7-51726"})
 	@Test(	description="subscription-manager: service-level --set (when not registered)",
 			groups={},
 			enabled=true)
@@ -203,8 +213,10 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 			Assert.assertEquals(result.getStdout().trim(),"This system is not yet registered. Try 'subscription-manager register --help' for more information.", "Stdout from service-level --set without being registered");
 		}
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21868", "RHEL7-51727"})
 	@Test(	description="subscription-manager: service-level --unset (when not registered)",
 			groups={},
 			enabled=true)
@@ -248,8 +260,10 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 			Assert.assertEquals(result.getStdout().trim(),"This system is not yet registered. Try 'subscription-manager register --help' for more information.", "Stdout from service-level --unset without being registered");
 		}
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21877", "RHEL7-51729"})
 	@Test(	description="subscription-manager: service-level --list (with invalid credentials)",
 			groups={"blockedByBug-1256960"/*is a duplicate of*/,"blockedByBug-1254349"},
 			enabled=true)
@@ -276,8 +290,10 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(result.getStderr().trim(), servertasks.invalidCredentialsMsg(), "Stderr from service-level --list with invalid credentials");
 		Assert.assertEquals(result.getStdout().trim(), "", "Stdout from service-level --list with invalid credentials");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21865", "RHEL7-51721"})
 	@Test(	description="subscription-manager: service-level --list (with invalid org)",
 			groups={"blockedByBug-796468","blockedByBug-815479","blockedByBug-1256960"/*is a duplicate of*/,"blockedByBug-1254349"},
 			enabled=true)
@@ -323,8 +339,10 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		result = clienttasks.service_level(true, false, null, null, null, null, null, null, null, null, null, null);
 		Assert.assertEquals(result.getStdout().trim(), "Current service level:", "When the system has been registered without a service level, the current service level should be null.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-19993", "RHEL7-51025"})
 	@Test(	description="subscription-manager: service-level --show (after registering without a service level)",
 			groups={"AcceptanceTests","Tier1Tests"},
 			dataProvider="getRegisterCredentialsExcludingNullOrgData",
@@ -399,12 +417,13 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 			Assert.assertEquals(currentServiceLevel, serviceLevel, "When the system is auto subscribed with the service level option, the service level should be persisted as the new preference.");
 		}
 	}
-		
-	
-	
-	
-	
-	
+
+
+
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21863", "RHEL7-51725"})
 	@Test(	description="subscription-manager: register to a Candlepin server using autosubscribe with an unavailable servicelevel",
 			groups={"blockedByBug-795798","blockedByBug-864508","blockedByBug-864508","blockedByBug-1221273"},
 			enabled=true)
@@ -440,8 +459,10 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		// since the autosubscribe was aborted, we should not be consuming and entitlements
 		Assert.assertTrue(clienttasks.getCurrentEntitlementCerts().isEmpty(), "Due to a failed attempt to set a service level during register with autosubscribe, we should not be consuming any entitlements.");	
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-19991", "RHEL7-51023"})
 	@Test(	description="subscription-manager: register with autosubscribe while specifying an valid service level; assert the entitlements granted match the requested service level",
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-859652","blockedByBug-919700"},
 			// dataProvider="getAllAvailableServiceLevelData",	// 06/05/2014 takes too long; rarely reveals a bug
@@ -478,8 +499,10 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 			}
 		}
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-19995", "RHEL7-51028"})
 	@Test(	description="subscription-manager: register with autosubscribe while specifying an valid random case SeRviCEleVel; assert the installed product status is independent of the specified service level case.",
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-859652","blockedByBug-859652","blockedByBug-919700"},
 			// dataProvider="getAllAvailableServiceLevelData",	// 06/05/2014 takes too long; rarely reveals a bug
@@ -532,13 +555,14 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 					"After autosubscribed registration with service level '"+mixedCaseServiceLevel+"', this consumed ProductSubscription provides a service level '"+productSubscription.serviceLevel+"' that is a case insensitive match to '"+mixedCaseServiceLevel+"'.");
 		}
 	}
-	
-	
-	
-	
-	
-	
-	
+
+
+
+
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21862", "RHEL7-51730"})
 	@Test(	description="subscription-manager: subscribe with auto while specifying an unavailable service level",
 			groups={"blockedByBug-795798","blockedByBug-864508"},
 			enabled=true)
@@ -562,8 +586,10 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(result.getStdout().trim(), expectedStdout, "Stdout from an attempt to subscribe with auto and an unavailable service level.");
 		Assert.assertEquals(result.getStderr().trim(), expectedStderr, "Stderr from an attempt to subscribe with auto and an unavailable service level.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-19990", "RHEL7-51022"})
 	@Test(	description="subscription-manager: subscribe with auto while specifying an valid service level; assert the entitlements granted match the requested service level",
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-859652","blockedByBug-977321"},
 			// dataProvider="getAllAvailableServiceLevelData",	// 06/05/2014 takes too long; rarely reveals a bug
@@ -622,7 +648,10 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 			}
 		}
 	}
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21861", "RHEL7-51724"})
 	@Test(	description="subscription-manager: after autosubscribing with a service level, assert that another autosubscribe (without specifying service level) uses the service level persisted from the first sutosubscribe",
 			groups={"blockedByBug-859652","blockedByBug-977321"},
 			dependsOnMethods={},
@@ -668,6 +697,10 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 			Assert.assertTrue(entitlementCert.orderNamespace.supportLevel.equalsIgnoreCase(serviceLevel),"Ignoring case, this autosubscribed EntitlementCert was filled from a subscription order that provides the original service level '"+serviceLevel+"': "+entitlementCert.orderNamespace);
 		}
 	}
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-19989", "RHEL7-33078"})
 	@Test(	description="subscription-manager: subscribe with auto without specifying any service level; assert the service level used matches whatever the consumer's current preference level is set",
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-859652","blockedByBug-977321"},
 			enabled=true)
@@ -675,6 +708,10 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 	public void AutoSubscribeWithNullServiceLevel_Test() throws JSONException, Exception {
 		AutoSubscribeWithServiceLevel_Test(null,null);
 	}
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-19988", "RHEL7-51021"})
 	@Test(	description="subscription-manager: subscribe with auto specifying a service level of \"\"; assert the service level is unset and the autosubscribe proceeds without any service level preference",
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-859652","blockedByBug-977321","blockedByBug-1001169"},
 			enabled=true)
@@ -689,8 +726,10 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		clienttasks.service_level(null, null, randomAvailableServiceLevel, null, null, null, null, null, null, null, null, null);
 		AutoSubscribeWithServiceLevel_Test(null,"");
 	}
-	
- 
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-19994", "RHEL7-51026"})
 	@Test(	description="subscription-manager: autosubscribe while specifying an valid service level; assert the installed product status is independent of the specified SerViceLeVEL case.",
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-818319","blockedByBug-859652"},
 			// dataProvider="getAllAvailableServiceLevelData",	// 06/05/2014 takes too long; rarely reveals a bug
@@ -759,9 +798,10 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 						"After autosubscribe with service level '"+mixedCaseServiceLevel+"', this consumed ProductSubscription provides a service level '"+productSubscription.serviceLevel+"' that is a case insensitive match to '"+mixedCaseServiceLevel+"'.");
 		}
 	}
-	
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21703", "RHEL7-51027"})
 	@Test(	description="installed products provided by available pools with an exempt service level should be auto-subscribed regardless of what service level is specified (or is not specified)",
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-818319","blockedByBug-859652","blockedByBug-919700"},
 			dataProvider="getExemptInstalledProductAndServiceLevelData",
@@ -804,8 +844,10 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 			}
 		}
 	}
-		
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21869", "RHEL7-51714"})
 	@Test(	description="Using curl, set the default service level for an org and then register using org credentials to verify consumer's service level",
 			groups={"SetDefaultServiceLevelForOrgAndRegister_Test"},
 			// dataProvider="getAllAvailableServiceLevelData",	// 06/05/2014 takes too long; rarely reveals a bug
@@ -832,8 +874,10 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 			jsonOrg.get("defaultServiceLevel"); // should be null
 		}
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21880", "RHEL7-51732"})
 	@Test(	description="Using curl, unset the default service level for an org and then register using org credentials to verify consumer's service level is not set",
 			groups={},
 			dependsOnMethods={"SetDefaultServiceLevelForOrgAndRegister_Test"},
@@ -849,10 +893,11 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, orgForSetDefaultServiceLevelForOrgAndRegister_Test, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null);
 		Assert.assertEquals(clienttasks.getCurrentServiceLevel(), "", "Immediately upon registering, the consumer's service level preference was set to the org's default (which was unset).");
 	}
-	
-	
-	
-	
+
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21873", "RHEL7-51728"})
 	@Test(	description="subscription-manager: service-level --set (with unavailable serviceLevel)",
 			groups={"blockedByBug-864508"},
 			enabled=true)
@@ -875,8 +920,10 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(result.getStderr().trim(), expectedStderr, "Stderr from service-level --set with unavailable serviceLevel");
 		Assert.assertEquals(result.getStdout().trim(), "", "Stdout from service-level --set with unavailable serviceLevel");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21867", "RHEL7-51716"})
 	@Test(	description="subscription-manager: service-level --set (with exempt serviceLevel should be treated as unavailable)",
 			groups={"blockedByBug-864508"},
 			enabled=true)
@@ -899,8 +946,10 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(result.getStderr().trim(), expectedStderr, "Stderr from service-level --set with exempt serviceLevel");
 		Assert.assertEquals(result.getStdout().trim(), "", "Stdout from service-level --set with exempt serviceLevel");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21875", "RHEL7-51718"})
 	@Test(	description="subscription-manager: service-level --set (with available serviceLevel)",
 			groups={},
 			// dataProvider="getAllAvailableServiceLevelData",	// 06/05/2014 takes too long; rarely reveals a bug
@@ -914,8 +963,10 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		clienttasks.service_level(null, null, serviceLevel, null, null, null, null, null, null, null, null, null);
 		Assert.assertEquals(clienttasks.getCurrentServiceLevel(), serviceLevel, "The --set serviceLevel matches the current --show serviceLevel.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21870", "RHEL7-51715"})
 	@Test(	description="subscription-manager: service-level --set should accept \"\" to effectively unset",
 			groups={"blockedByBug-835050"},
 			// dataProvider="getAllAvailableServiceLevelData",	// 06/05/2014 takes too long; rarely reveals a bug
@@ -928,8 +979,10 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		clienttasks.service_level(null, null, "", null, null, null, null, null, null, null, null, null);
 		Assert.assertEquals(clienttasks.getCurrentServiceLevel(), "", "The serviceLevel can effectively be unset by setting a value of \"\".");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21866", "RHEL7-51731"})
 	@Test(	description="subscription-manager: service-level --set (with case insensitivity) is preserved throughtout an identity regeneration",
 			groups={},
 			// dataProvider="getAllAvailableServiceLevelData",	// 06/05/2014 takes too long; rarely reveals a bug
@@ -945,8 +998,10 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		clienttasks.identity(null,null,true,null,null,null,null);
 		Assert.assertEquals(clienttasks.getCurrentServiceLevel(), serviceLevel, "The --set serviceLevel matches the current --show serviceLevel even after an identity regeneration.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21876", "RHEL7-51720"})
 	@Test(	description="subscription-manager: service-level --unset after setting an available service level",
 			groups={"blockedByBug-829803","blockedByBug-829812"},
 			// dataProvider="getAllAvailableServiceLevelData",	// 06/05/2014 takes too long; rarely reveals a bug
@@ -959,8 +1014,10 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		clienttasks.service_level(null, null, null, true, null, null, null, null, null, null, null, null);
 		Assert.assertEquals(clienttasks.getCurrentServiceLevel(), "", "The serviceLevel is unset after calling with the --unset option.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-19992", "RHEL7-51024"})
 	@Test(	description="subscription-manager: service-level --list should be unique (regardless of case)",
 			groups={/*"blockedByBug-845043",*/"AcceptanceTests","Tier1Tests"},
 			dataProvider="getRegisterCredentialsExcludingNullOrgData",
@@ -991,6 +1048,10 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		server_prefix	= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "prefix");
 		clientOrg 		= clienttasks.getOrgs(sm_clientUsername,sm_clientPassword).get(0).orgKey;	// use the first org
 	}
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21879", "RHEL7-51719"})
 	@Test(	description="subscription-manager: service-level --list with --serverurl",
 			dataProvider="getServerurl_TestData",
 			groups={"ServiceLevelListWithServerurl_Test"},
@@ -1041,6 +1102,10 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		if (clienttasks==null) return;
 		rhsm_ca_cert_dir	= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsm", "ca_cert_dir");
 	}
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21864", "RHEL7-51723"})
 	@Test(	description="subscription-manager: service-level list with --insecure",
 			groups={"ServiceLevelListWithInsecure_Test","blockedByBug-844411","blockedByBug-993202","blockedByBug-1256960"/*is a duplicate of*/,"blockedByBug-1254349"},
 			enabled=true)

@@ -25,6 +25,9 @@ import com.redhat.qe.Assert;
 import com.redhat.qe.auto.bugzilla.BlockedByBzBug;
 import com.redhat.qe.auto.testng.TestNGUtils;
 
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.TestDefinition;
+
 /**
  * @author jsefler
  *
@@ -35,7 +38,9 @@ public class StackingTests extends SubscriptionManagerCLITestScript {
 
 	
 	// Test methods ***********************************************************************
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20011", "RHEL7-51033"})
 	@Test(	description="subscription-manager: subscribe to each pool with the same stacking_id to achieve compliance",
 			enabled=true,
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-739671", "blockedByBug-740377", "blockedByBug-861993", "blockedByBug-955142"},

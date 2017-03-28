@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<testcase id="RHEL6-45963">
+    <title>rhsm.gui.tests.search_status_tests.check_subscription_selected_after_update</title>
+    <description>Checks if subscription remains selected after update is clicked
+   case 1: If subscription is stackable, it no longer remains selected
+   case 2: If subscription is non-stakable, it remanins selected</description>
+    <test-steps>
+        <test-step>
+            <test-step-column id="step">
+                <parameter name="arg0" scope="local"/>
+            </test-step-column>
+        </test-step>
+    </test-steps>
+    <custom-fields>
+        <custom-field id="caseautomation" content="automated"></custom-field>
+        <custom-field id="caseimportance" content="high"></custom-field>
+        <custom-field id="caselevel" content="component"></custom-field>
+        <custom-field id="caseposneg" content="positive"></custom-field>
+        <custom-field id="testtype" content="functional"></custom-field>
+        <custom-field id="subtype1" content="-"></custom-field>
+        <custom-field id="subtype2" content="-"></custom-field>
+    </custom-fields>
+</testcase>

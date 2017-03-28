@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<testcase id="RHEL7-51033">
+    <title>rhsm.cli.tests.StackingTests.StackEachPoolToAchieveAttributeCompliance_Test</title>
+    <description>subscription-manager: subscribe to each pool with the same stacking_id to achieve compliance</description>
+    <test-steps>
+        <test-step>
+            <test-step-column id="step">
+                <parameter name="bugzilla" scope="local"/>
+                <parameter name="attribute" scope="local"/>
+                <parameter name="systemIsGuest" scope="local"/>
+                <parameter name="stackableAttributeSubscriptionPools" scope="local"/>
+            </test-step-column>
+        </test-step>
+    </test-steps>
+    <custom-fields>
+        <custom-field id="caseautomation" content="automated"></custom-field>
+        <custom-field id="caseimportance" content="high"></custom-field>
+        <custom-field id="caselevel" content="component"></custom-field>
+        <custom-field id="caseposneg" content="positive"></custom-field>
+        <custom-field id="testtype" content="functional"></custom-field>
+        <custom-field id="subtype1" content="-"></custom-field>
+        <custom-field id="subtype2" content="-"></custom-field>
+    </custom-fields>
+</testcase>

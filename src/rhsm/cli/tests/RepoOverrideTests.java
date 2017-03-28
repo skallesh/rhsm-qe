@@ -23,6 +23,9 @@ import com.redhat.qe.auto.bugzilla.BzChecker;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.TestDefinition;
+
 /**
  *  @author jsefler
  *
@@ -32,8 +35,9 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 	
 	
 	// Test Methods ***********************************************************************
-	
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21858", "RHEL7-51706"})
 	@Test(	description="when subscription-manager repos-override is run with no args, it should default to --list option",
 			groups={"blockedByBug-1034396"},
 			enabled=true)
@@ -66,7 +70,9 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(listResult.getStderr().trim(), "", "Stderr from repo-override --list without any overrides.");
 		Assert.assertEquals(listResult.getExitCode(), Integer.valueOf(0), "ExitCode from repo-override --list without any overrides.");
 	}
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-19979", "RHEL7-51705"})
 	@Test(	description="attempt to override a baseurl using subscription-manager repos-override",
 			groups={"blockedByBug-1030604", "AcceptanceTests","Tier1Tests"},
 			enabled=true)
@@ -105,7 +111,9 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 			}
 		}
 	}
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-19978", "RHEL7-51704"})
 	@Test(	description="attempt to override a bASeUrL (note the case) using subscription-manager repos-override",
 			groups={"blockedByBug-1030604","blockedByBug-1034375","AcceptanceTests","Tier1Tests"},
 			enabled=true)
@@ -189,7 +197,9 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(result.getStderr().trim(), "", "Stderr from repo-override --list after attempts to add baseurl overrides.");
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(/*1*/0), "ExitCode from repo-override --list after attempts to add baseurl overrides.");
 	}
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21855", "RHEL7-51701"})
 	@Test(	description="attempt to add an override for a name baseurl and label using subscription-manager repos-override",
 			groups={"blockedByBug-1030604","blockedByBug-1034396"},
 			enabled=true)
@@ -248,7 +258,9 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 			Assert.assertEquals(result.getStdout().trim(), "Not allowed to override values for: "+notAllowedToOverrideRegex, "Stdout from an attempt add a repo-overrides for baseurl, name, and label for repoids: "+repoids);
 		}
 	}
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21857", "RHEL7-51703"})
 	@Test(	description="attempt to add an override for a name and value that exceed 255 chars",
 			groups={"blockedByBug-1034396","blockedByBug-1033583","blockedByBug-1049001"},
 			enabled=true)
@@ -317,7 +329,9 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 			Assert.assertEquals(result.getStdout().trim(), "contentLabel: size must be between 0 and 255", "Stdout from an attempt to add a repo-override with a label exceeding 255 chars.");
 		}
 	}
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21854", "RHEL7-51700"})
 	@Test(	description="attempt to add an override to a non-existant repo (while NOT consuming entitlements)",
 			groups={"blockedByBug-1032673","blockedByBug-1034396"},
 			enabled=true)
@@ -354,7 +368,9 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 		// re-verify no entitlements are attached
 		Assert.assertTrue(clienttasks.getCurrentlyConsumedProductSubscriptions().isEmpty(), "No entitlements should be attached.");
 	}
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21853", "RHEL7-51699"})
 	@Test(	description="attempt to add an override to a non-existant repo (while consuming entitlements)",
 			groups={"blockedByBug-1032673"},
 			enabled=true)
@@ -379,7 +395,9 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 		}
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(0), "The exit code from the repo-override command indicates a success.");
 	}
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21856", "RHEL7-51702"})
 	@Test(	description="attempt to add overrides in mixed cases - add parameters should be lowercased - repoid names can be mixed case",
 			groups={"blockedByBug-1034375"},
 			enabled=true)
@@ -420,7 +438,9 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 			Assert.assertTrue(!SubscriptionManagerCLITestScript.doesStringContainMatches(listResult.getStdout(), String.format(SubscriptionManagerTasks.repoOverrideListRepositoryNameValueRegexFormat,repoId,name,value)),"After adding repo-override parameter '"+name+"' containing uppercase characters, subscription-manager repo-override should automatically lowercase it and add it to repo='"+repoId+"' as name='"+name.toLowerCase()+"'.");
 		}	
 	}
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-19976", "RHEL7-51015"})
 	@Test(	description="add yum repo overrides, verify they persist, and remove them one repo at a time",
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1069230","blockedByBug-1034396"},
 			enabled=true)
@@ -519,7 +539,9 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 		// verify the current YumRepos read from the redhat.repo file no longer contains any overrides (the original should be restored)
 		verifyCurrentYumReposReflectRepoOverrides(originalYumRepos,repoOverridesMapOfMaps, false);
 	}
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-19977", "RHEL7-33077"})
 	@Test(	description="add yum repo overrides, verify they persist, and remove them across multiple repo ids simultaneously (use multiple --repo args)",
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1069230","blockedByBug-1034396"},
 			enabled=true)
@@ -601,8 +623,10 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 		// verify the current YumRepos read from the redhat.repo file no longer contains any overrides (the original should be restored)
 		verifyCurrentYumReposReflectRepoOverrides(originalYumRepos,repoOverridesMapOfMaps, false);
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21860", "RHEL7-51708"})
 	@Test(	description="verify that the rhsm.full_refresh_on_yum is working properly",
 			groups={"VerifyRhsmConfigurationForFullRefreshOnYum_Test"},
 			enabled=true)
@@ -690,8 +714,10 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 		if (rhsmFullRefreshOnYumConfigured!=null) clienttasks.config(null,null,true, new String[]{"rhsm","full_refresh_on_yum",rhsmFullRefreshOnYumConfigured});
 	}
 	protected String rhsmFullRefreshOnYumConfigured = null;
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21859", "RHEL7-51707"})
 	@Test(	description="subscription-manager: repos --list should provide feedback when config rhsm.manage_repos is off.",
 			groups={"ReposOverridesWhenManageReposIsOff_Test","blockedByBug-1257943"},
 			enabled=true)

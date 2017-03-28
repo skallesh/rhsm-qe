@@ -37,6 +37,9 @@ import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.TestDefinition;
+
 /**
  * @author jsefler
  *
@@ -77,7 +80,9 @@ import com.redhat.qe.tools.SSHCommandResult;
 public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 
 	// Test methods ***********************************************************************
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20097", "RHEL7-51104"})
 	@Test(	description="Verify that the channel-cert-mapping.txt exists",
 			groups={"AcceptanceTests","Tier1Tests"},
 			enabled=true)
@@ -85,8 +90,10 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 	public void VerifyChannelCertMappingFileExists_Test() {
 		Assert.assertTrue(RemoteFileTasks.testExists(client, channelCertMappingFilename),"The expected channel cert mapping file '"+channelCertMappingFilename+"' exists.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20100", "RHEL7-51107"})
 	@Test(	description="Verify that the channel-cert-mapping.txt contains a unique map of channels to product certs",
 			groups={"AcceptanceTests","Tier1Tests"},
 			dependsOnMethods={"VerifyChannelCertMappingFileExists_Test"},
@@ -130,8 +137,10 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 		}
 		Assert.assertTrue(uniqueChannelsToProductCertFilenamesMap, "Each channel in "+channelCertMappingFilename+" maps to a unique product cert filename. (See above warnings for offenders.)");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20101", "RHEL7-51108"})
 	@Test(	description="Verify RHEL4 channel mappings exist in channel-cert-mapping.txt",
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1009932","blockedByBug-1025338","blockedByBug-1080072","blockedByBug-1100872"},
 			dependsOnMethods={"VerifyChannelCertMappingFileExists_Test"},
@@ -237,8 +246,10 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(allExpectedRhel4ChannelsAreMapped, "All expected RHEL4 channels are mapped in '"+channelCertMappingFilename+"'. (See above warnings for offenders.)");
 		Assert.assertTrue(allActualRhel4ChannelsMappedAreExpected, "All actual RHEL4 channels mapped in '"+channelCertMappingFilename+"' are expected. (See above warnings for offenders.)");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21883", "RHEL7-51738"})
 	@Test(	description="Verify RHEL6 channel mappings for AUS channels exist in channel-cert-mapping.txt",
 			groups={"blockedByBug-825089"},
 			dependsOnMethods={"VerifyChannelCertMappingFileExists_Test"},
@@ -377,8 +388,10 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(allExpectedRhel6AusChannelsAreMapped, "All expected RHEL6 AUS channels are mapped in '"+channelCertMappingFilename+"'. (See above warnings for offenders.)");
 		Assert.assertTrue(allActualRhel6AusChannelsMappedAreExpected, "All actual RHEL6 AUS channels mapped in '"+channelCertMappingFilename+"' are expected. (See above warnings for offenders.)");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20103", "RHEL7-51110"})
 	@Test(	description="Verify that all product cert files mapped in channel-cert-mapping.txt exist",
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-771615"},
 			dependsOnMethods={"VerifyChannelCertMapping_Test"},
@@ -398,8 +411,10 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 		}
 		Assert.assertTrue(allMappedProductCertFilesExist,"All of the productCert files mapped in '"+channelCertMappingFilename+"' exist.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20102", "RHEL7-51109"})
 	@Test(	description="Verify that all existing product cert files are mapped in channel-cert-mapping.txt",
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-799103","blockedByBug-849274","blockedByBug-909436","blockedByBug-1025338"},
 			dependsOnMethods={"VerifyChannelCertMapping_Test"},
@@ -466,6 +481,9 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 		}
 		Assert.assertTrue(verifiedVersionOfAllMigrationProductCertFiles,"All of the migration productCerts in directory '"+baseProductsDir+"' support this version of RHEL '"+clienttasks.redhatReleaseXY+"'.");
 	}
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20106", "RHEL7-51111"})
 	@Test(	description="Verify that the migration product certs support this system's RHEL release version",
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-782208","blockedByBug-1006060","blockedByBug-1025338","blockedByBug-1080072","blockedByBug-1110863","blockedByBug-1148110","blockedByBug-1197864","blockedByBug-1300766","blockedByBug-1241221","blockedByBug-1328579","blockedByBug-1393573","blockedByBug-1436441"},
 			dependsOnMethods={"VerifyChannelCertMapping_Test"},
@@ -559,6 +577,9 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 		
 		Assert.assertTrue(verifiedMatchForAllMigrationProductCertFiles,"All of the migration productCerts in directory '"+baseProductsDir+"' match the current ["+sm_rhnDefinitionsGitRepository+"] product certs for this RHEL release '"+clienttasks.redhatReleaseXY+"' ");
 	}
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20098", "RHEL7-51105"})
 	@Test(	description="Verify that the migration product certs match those from rhn definitions",
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-799152","blockedByBug-814360","blockedByBug-861420","blockedByBug-861470","blockedByBug-872959","blockedByBug-875760","blockedByBug-875802","blockedByBug-1305695"},
 			enabled=true)
@@ -770,6 +791,9 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(getProductIdFromProductCertFilename(channelsToProductCertFilenamesMap.get(productBaselineRhnChannel)), productBaselineProductId,
 				"The subscription-manager-migration-data file '"+channelCertMappingFilename+"' maps RHN Channel '"+productBaselineRhnChannel+"' to the same productId as dictated in the CDN Product Baseline.");
 	}
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21884", "RHEL7-51739"})
 	@Test(	description="Verify that all of the required RHN Channels in the product-certs.json file are accounted for in channel-cert-mapping.txt",
 			groups={"blockedByBug-1025338","blockedByBug-1080072","blockedByBug-1241221"},
 			dependsOnMethods={"VerifyChannelCertMapping_Test"},
@@ -896,8 +920,10 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				"The subscription-manager-migration-data file '"+channelCertMappingFilename+"' maps RHN Channel '"+productCertsRhnChannel+"' to the same product cert file as dictated in the CDN Product Certs.");
 		}
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20104", "RHEL7-33102"})
 	@Test(	description="Verify that all of the classic RHN Channels available to a classically registered consumer are accounted for in the in the channel-cert-mapping.txt or is a known exception",
 			groups={"AcceptanceTests","Tier1Tests"},
 			dependsOnMethods={"VerifyChannelCertMapping_Test"},
@@ -1143,8 +1169,10 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 		
 		Assert.assertTrue(channelsToProductCertFilenamesMap.containsKey(classicRhnChannel), "RHN Classic channel '"+classicRhnChannel+"' is accounted for in subscription-manager-migration-data file '"+channelCertMappingFilename+"'.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20099", "RHEL7-51106"})
 	@Test(	description="Verify that the channel-cert-mapping.txt does NOT contain any High Touch Beta channel mappings",
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1011992"},
 			dependsOnMethods={"VerifyChannelCertMappingFileExists_Test"},
@@ -1158,8 +1186,10 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(sshCommandResult.getStderr().trim(),"", "Stderr from call to grep.");
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(1), "Stderr from call to grep.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20105", "RHEL7-55203"})
 	@Test(	description="Verify that the expected RHN base channels supporting this system's RHEL release version are mapped to product certs whose version matches this system's RHEL release",
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1110863","blockedByBug-1148110","blockedByBug-1197864","blockedByBug-1300766","blockedByBug-1222712","blockedByBug-1228387","blockedByBug-1241221","blockedByBug-1328579","blockedByBug-1328609","blockedByBug-1366747","blockedByBug-1393573","blockedByBug-1436441"},
 			dependsOnMethods={"VerifyChannelCertMapping_Test"},
@@ -1262,7 +1292,9 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 		if (!allExpectedBaseChannelsMapped) Assert.fail("Review logged warnings above for expected RHN base channels that are not mapped.");
 		if (!allBaseChannelProductCertsMatchThisRhelRelease) Assert.fail("Review logged warnings above for expected RHN base channel product cert versions that do not match this system.s dot release.");
 	}
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20107", "RHEL7-51112"})
 	@Test(	description="Verify that the expected RHN RHEL channels supporting this system's RHEL release X.Y version are mapped to product certs whose version matches this system's RHEL release X.Y (also asserts beta channels to Beta product certs)",
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1080072","blockedByBug-1110863","blockedByBug-1148110","blockedByBug-1197864","blockedByBug-1300766","blockedByBug-1222712","blockedByBug-1241221","blockedByBug-1328579","blockedByBug-1393573","blockedByBug-1436441"},
 			dataProvider="RhnRhelChannelsFromChannelMappingData",

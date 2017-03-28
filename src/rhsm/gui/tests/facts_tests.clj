@@ -25,6 +25,8 @@
             AfterGroups
             Test
             DataProvider]
+           [com.github.redhatqe.polarize.metadata TestDefinition]
+           [com.github.redhatqe.polarize.metadata DefTypes$Project]
            org.testng.SkipException))
 
 (def gui-facts (atom nil))
@@ -78,9 +80,11 @@
   (skip-if-bz-open "921249" (substring? "virt" fact))
   (verify (= (@cli-facts fact) value)))
 
-(defn ^{Test {:groups ["facts"
-                       "tier3"
-                       "blockedByBug-950146"]}}
+(defn ^{Test           {:groups ["facts"
+                                 "tier3"
+                                 "blockedByBug-950146"]}
+        TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-39110" "RHEL7-57868"]}}
   facts_parity
   "Tests that the gui shows the same number of facts as the CLI."
   [_]
@@ -91,11 +95,13 @@
     (verify (empty? cli-uniq))
     (verify (empty? gui-uniq))))
 
-(defn ^{Test {:groups ["facts"
-                       "tier3"
-                       "blockedByBug-683550"
-                       "blockedByBug-825309"]
-              :dataProvider "installed-products"}}
+(defn ^{Test           {:groups       ["facts"
+                                       "tier3"
+                                       "blockedByBug-683550"
+                                       "blockedByBug-825309"]
+                        :dataProvider "installed-products"}
+        TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-21626" "RHEL7-57943"]}}
   check_version_arch
   "Checks that the version and arch field are displayed properly for each product."
   [_ product index]
@@ -116,10 +122,12 @@
 ;; run ^^this^^ in the console with:
 ;; (doseq [[p i] (ftest/get_installed_products nil :debug true)] (ftest/check_version_arch nil p i))
 
-(defn ^{Test {:groups ["facts"
-                       "tier3"
-                       "blockedByBug-905136"
-                       "blockedByBug-869306"]}}
+(defn ^{Test           {:groups ["facts"
+                                 "tier3"
+                                 "blockedByBug-905136"
+                                 "blockedByBug-869306"]}
+        TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-39109" "RHEL7-57867"]}}
   check_org_id
   "Tests that the orginization id is displayed properly in he facts dialog."
   [_]
@@ -136,12 +144,14 @@
       (verify (substring? cli-val gui-raw)))
     (finally (tasks/ui click :close-facts))))
 
-(defn ^{Test {:groups ["facts"
-                       "tier3"
-                       "blockedByBug-909294"
-                       "blockedByBug-839772"
-                       "blockedByBug-1245557"
-                       "blockedByBug-1333904"]}}
+(defn ^{Test           {:groups ["facts"
+                                 "tier3"
+                                 "blockedByBug-909294"
+                                 "blockedByBug-839772"
+                                 "blockedByBug-1245557"
+                                 "blockedByBug-1333904"]}
+        TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-39108" "RHEL7-57866"]}}
   check_available_service_levels
   "Checks that all available service levels are shown in the GUI properly."
   [_]
@@ -167,13 +177,15 @@
     (finally (if (bool (tasks/ui guiexist :system-preferences-dialog))
                (tasks/ui click :close-system-prefs)))))
 
-(defn ^{Test {:groups ["facts"
-                       "tier3"
-                       "blockedByBug-909294"
-                       "blockedByBug-908954"
-                       "blockedByBug-839772"
-                       "blockedByBug-1245557"
-                       "blockedByBug-1333906"]}}
+(defn ^{Test           {:groups ["facts"
+                                 "tier3"
+                                 "blockedByBug-909294"
+                                 "blockedByBug-908954"
+                                 "blockedByBug-839772"
+                                 "blockedByBug-1245557"
+                                 "blockedByBug-1333906"]}
+        TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-39107" "RHEL7-63022"]}}
   check_available_releases
   "Checks that all available releases are shown in the GUI properly."
   [_]
@@ -210,9 +222,11 @@
              (if (bool (tasks/ui guiexist :system-preferences-dialog))
                (tasks/ui click :close-system-prefs)))))
 
-(defn ^{Test {:groups ["facts"
-                       "tier2"
-                       "tier1" "acceptance"]}}
+(defn ^{Test           {:groups ["facts"
+                                 "tier2"
+                                 "tier1" "acceptance"]}
+        TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-20122" "RHEL7-27022"]}}
   check_releases
   "Tests that all available releases are shown in the GUI"
   [_]
@@ -230,9 +244,11 @@
     (verify (some true? certexist?)))
   (check_available_releases nil))
 
-(defn ^{Test {:groups ["facts"
-                       "tier2"
-                       "blockedByBug-829900"]}}
+(defn ^{Test           {:groups ["facts"
+                                 "tier2"
+                                 "blockedByBug-829900"]}
+        TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-37684" "RHEL7-57642"]}}
   verify_about_information
   "Asserts that all the information in the about dialog is correct."
   [_]
@@ -261,9 +277,11 @@
     (finally (if (bool (tasks/ui guiexist :about-dialog))
                (tasks/ui click :close-about-dialog)))))
 
-(defn ^{Test {:groups ["facts"
-                       "tier2"
-                       "blockedByBug-829900"]}}
+(defn ^{Test           {:groups ["facts"
+                                 "tier2"
+                                 "blockedByBug-829900"]}
+        TestDefinition {:projectID  [`DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL7-59006"]}}
   verify_about_information_without_close_button
   "Asserts that all the information in the about dialog is correct."
   [_]
@@ -293,10 +311,12 @@
     (finally (if (bool (tasks/ui guiexist :about-dialog))
                (tasks/ui closewindow :about-dialog)))))
 
-(defn ^{Test {:groups ["facts"
-                       "tier2"
-                       "blockedByBug-977855"
-                       "blockedByBug-1157383"]}}
+(defn ^{Test           {:groups ["facts"
+                                 "tier2"
+                                 "blockedByBug-977855"
+                                 "blockedByBug-1157383"]}
+        TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-37682" "RHEL7-57641"]}}
   check_persistant_autoheal
   "Asserts that the selection made in the autoheal checkbox is persistant."
   [_]
@@ -334,9 +354,11 @@
       (if (bool (tasks/ui guiexist :system-preferences-dialog))
         (tasks/ui click :close-system-prefs)))))
 
-(defn ^{Test {:groups ["facts"
-                       "tier3"
-                       "tier1" "acceptance"]}}
+(defn ^{Test           {:groups ["facts"
+                                 "tier3"
+                                 "tier1" "acceptance"]}
+        TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-20123" "RHEL7-27023"]}}
   verify_update_facts
   "Verifies if update facts grabs updated facts value"
   [_]

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<testcase id="RHEL7-59439">
+    <title>rhsm.cli.tests.VirtualizationTests.VerifyHostAndGuestPoolQuantities_Test</title>
+    <description>Verify host and guest pools quantities generated from a virtualization-aware subscription</description>
+    <test-steps>
+        <test-step>
+            <test-step-column id="step">
+                <parameter name="subscriptionId" scope="local"/>
+                <parameter name="productName" scope="local"/>
+                <parameter name="productId" scope="local"/>
+                <parameter name="quantity" scope="local"/>
+                <parameter name="virtLimit" scope="local"/>
+                <parameter name="hostPoolId" scope="local"/>
+                <parameter name="guestPoolId" scope="local"/>
+                <parameter name="physicalOnly" scope="local"/>
+            </test-step-column>
+        </test-step>
+    </test-steps>
+    <custom-fields>
+        <custom-field id="caseautomation" content="automated"></custom-field>
+        <custom-field id="caseimportance" content="high"></custom-field>
+        <custom-field id="caselevel" content="component"></custom-field>
+        <custom-field id="caseposneg" content="positive"></custom-field>
+        <custom-field id="testtype" content="functional"></custom-field>
+        <custom-field id="subtype1" content="-"></custom-field>
+        <custom-field id="subtype2" content="-"></custom-field>
+    </custom-fields>
+</testcase>

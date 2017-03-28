@@ -5,6 +5,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.TestDefinition;
+
 import org.json.JSONException;
 import org.testng.SkipException;
 import org.testng.annotations.AfterClass;
@@ -69,8 +72,10 @@ import com.redhat.qe.tools.SSHCommandResult;
 public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 
 	// Test methods ***********************************************************************
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20070", "RHEL7-55179"})
 	@Test(	description="make sure there are no High Availability packages installed",
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-904193"},
 			priority=10,
@@ -103,8 +108,10 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 		InstalledProduct serverInstalledProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", serverProductId, installedProducts);
 		Assert.assertNotNull(serverInstalledProduct, "The RHEL Server product id '"+serverProductId+"' should be installed.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20071", "RHEL7-55180"})
 	@Test(	description="verify product database and installed products are in sync",
 			groups={"AcceptanceTests","Tier1Tests"},
 			priority=12,
@@ -152,8 +159,10 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 		}
 		Assert.assertEquals(productIdRepoMap.keySet().size(), installedProductCertCount, "The product id database size matches the number of installed products (excluding TESTDATA products).");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20072", "RHEL7-55181"})
 	@Test(	description="register to the stage/prod environment with credentials to access High Availability product subscription",
 			groups={"AcceptanceTests","Tier1Tests"},
 			priority=14,
@@ -165,8 +174,10 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 		// register the to an account that offers High Availability subscriptions
 		clienttasks.register(sm_haUsername,sm_haPassword,sm_haOrg,null,null,null,null,null,null,null,(String)null,null,null, null, true, null, null, null, null);
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20073", "RHEL7-55183"})
 	@Test(	description="verify that a local yum install will not delete the product database when repolist is empty",
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-806457"},
 			priority=16,
@@ -207,9 +218,10 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 		currentProductIdJSONString = client.runCommandAndWait("cat "+clienttasks.productIdJsonFile).getStdout();
 		Assert.assertEquals(currentProductIdJSONString, originalProductIdJSONString, "The product id to repos JSON database file remains unchanged after a yum removal of locally installed package '"+haPackage1+"'.");
 	}
-	
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20074", "RHEL7-55182"})
 	@Test(	description="subscribe to the expected High Availability product subscription",
 			groups={"AcceptanceTests","Tier1Tests"},
 			priority=20,
@@ -235,8 +247,10 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 		// Subscribe to the High Availability subscription SKU
 		haEntitlementCertFile = clienttasks.subscribeToSubscriptionPool(haPool,/*sm_serverAdminUsername*/sm_haUsername,/*sm_serverAdminPassword*/sm_haPassword,sm_serverUrl);
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20075", "RHEL7-55185"})
 	@Test(	description="verify the expected High Availability packages are availabile for yum install",
 			groups={"AcceptanceTests","Tier1Tests"},
 			priority=30,
@@ -268,8 +282,10 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 		}
 		Assert.assertTrue(foundAllExpectedPkgs,"All expected High Availability packages are available for yum install.");	// see top of this file for determining the expected sm_haPackages
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20076", "RHEL7-55186"})
 	@Test(	description="yum install a High Availability package ccs and assert installed products",
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-859197","blockedByBug-958548","blockedByBug-1004893"},
 			priority=40,
@@ -292,8 +308,10 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 		InstalledProduct serverInstalledProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", serverProductId, installedProducts);
 		Assert.assertNotNull(serverInstalledProduct, "The RHEL Server product id '"+serverProductId+"' should still be installed after successful install of High Availability package '"+haPackage1+"'.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20077", "RHEL7-55184"})
 	@Test(	description="yum install a second High Availability package cman and assert installed products",
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-859197","blockedByBug-958548","blockedByBug-1004893"},
 			priority=50,
@@ -316,8 +334,10 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 		InstalledProduct serverInstalledProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", serverProductId, installedProducts);
 		Assert.assertNotNull(serverInstalledProduct, "The RHEL Server product id '"+serverProductId+"' should still be installed after successful install of High Availability package '"+haPackage2+"'.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20078", "RHEL7-55187"})
 	@Test(	description="yum remove second High Availability package cman and assert installed products",
 			groups={"AcceptanceTests","Tier1Tests"},
 			priority=60,
@@ -339,8 +359,10 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 		InstalledProduct serverInstalledProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", serverProductId, installedProducts);
 		Assert.assertNotNull(serverInstalledProduct, "The RHEL Server product id '"+serverProductId+"' should remain installed after successful removal of High Availability package '"+haPackage2+"'.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20079", "RHEL7-55188"})
 	@Test(	description="yum remove first High Availability package cman and assert installed products",
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-859197"},
 			priority=70,

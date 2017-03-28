@@ -3,6 +3,8 @@ package rhsm.cli.tests;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.TestDefinition;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.testng.annotations.AfterGroups;
@@ -26,6 +28,8 @@ public class AutoAttachDisabledByOwnerTests extends SubscriptionManagerCLITestSc
 	List<String> ownerKey = new ArrayList<String>();
 	String owner = null;
 
+	@TestDefinition( projectID = {Project.RHEL6}
+	               , testCaseID = {"RHEL6-39111"})
 	@Test(description = "Disable Auto attach by Owner", groups = { "DisableOwner",
 			"blockedByBug-1382355" }, enabled = true)
 	public void DisableAutoAttachByOwner() throws Exception {

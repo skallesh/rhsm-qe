@@ -17,6 +17,9 @@ import rhsm.base.SubscriptionManagerCLITestScript;
 import rhsm.cli.tasks.CandlepinTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.TestDefinition;
+
 /**
  * @author jsefler
  *
@@ -27,7 +30,9 @@ public class RolesTests extends SubscriptionManagerCLITestScript {
 
 	
 	// Test methods ***********************************************************************
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-27134", "RHEL7-51498"})
 	@Test(	description="for the given user credentials, verify that the permission access (READ_ONLY,ALL) are obeyed by attempting to register",
 			enabled=true,
 			groups={},

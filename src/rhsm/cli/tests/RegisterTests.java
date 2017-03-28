@@ -46,6 +46,9 @@ import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 import com.redhat.qe.tools.SSHCommandRunner;
 
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.TestDefinition;
+
 /**
  * @author ssalevan
  * @author jsefler
@@ -64,6 +67,9 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		if (clienttasks==null) return;
 		clienttasks.unregister_(null, null, null);
 	}
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-19951", "RHEL7-33090"})
 	@Test(	description="subscription-manager-cli: register to a Candlepin server",
 			groups={"RegisterWithCredentials_Test", "AcceptanceTests","Tier1Tests"},
 			dataProvider="getRegisterCredentialsData")
@@ -185,9 +191,10 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 			e.printStackTrace();
 		}
 	}
-	
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36518", "RHEL7-51290"})
 	@Test(	description="subscription-manager-cli: register to a Candlepin server using bogus credentials",
 			groups={},
 			dataProvider="getAttemptRegistrationWithInvalidCredentials_Test")
@@ -251,9 +258,10 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		
 		return ll;
 	}
-	
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-19948", "RHEL7-55160"})
 	@Test(	description="subscription-manager-cli: attempt to register a user who has not yet accepted the Red Hat Terms and Conditions",
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1089034","blockedByBug-1068766"},
 			enabled=true)
@@ -300,9 +308,10 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(!RemoteFileTasks.testExists(client,clienttasks.consumerKeyFile()), "Consumer key file '"+clienttasks.consumerKeyFile()+"' does NOT exist after an attempt to register with invalid credentials.");
 		Assert.assertTrue(!RemoteFileTasks.testExists(client,clienttasks.consumerCertFile()), "Consumer cert file '"+clienttasks.consumerCertFile()+" does NOT exist after an attempt to register with invalid credentials.");
 	}
-	
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-19947", "RHEL7-55159"})
 	@Test(	description="subscription-manager-cli: attempt to register a user who has been disabled",
 			groups={"AcceptanceTests","Tier1Tests"},
 			enabled=true)
@@ -530,6 +539,9 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(autosubscribedProductStatusList.get(0),new InstalledProduct(tmpProductCert.productName,null,null,null,"Subscribed",null,null, null),
 				"As expected, ProductName '"+tmpProductCert.productName+"' was reported as subscribed in the output from register with autotosubscribe.");
 	}
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-19949", "RHEL7-50999"})
 	@Test(	description="subscription-manager-cli: register to a Candlepin server using autosubscribe functionality",
 			groups={"AcceptanceTests","Tier1Tests", "blockedByBug-602378", "blockedByBug-616137", "blockedByBug-678049", "blockedByBug-737762", "blockedByBug-743082", "blockedByBug-919700"},
 			enabled=true)
@@ -655,9 +667,10 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 			
 		}
 	}
-	
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36522", "RHEL7-51294"})
 	@Test(	description="subscription-manager-cli: register with --force",
 			groups={"blockedByBug-623264"},
 			enabled=true)
@@ -698,9 +711,10 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		List<ProductSubscription> productSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
 		Assert.assertEquals(productSubscriptions.size(),0,"After registering with force, no product subscriptions should be consumed.");
 	}
-	
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36525", "RHEL7-51298"})
 	@Test(	description="subscription-manager-cli: register with --name",
 			dataProvider="getRegisterWithName_TestData",
 			groups={},
@@ -831,9 +845,10 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		
 		return ll;
 	}
-	
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-27114", "RHEL7-51297"})
 	@Test(	description="subscription-manager-cli: register with --name and --type",
 			dataProvider="getRegisterWithNameAndType_TestData",
 			groups={},
@@ -908,9 +923,10 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 
 		return ll;
 	}
-	
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36526", "RHEL7-51299"})
 	@Test(	description="assert that a consumer can register with a release value and that subscription-manager release will return the set value",
 			groups={},
 			enabled=true)
@@ -924,19 +940,25 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	
 	/**
 	 * https://tcms.engineering.redhat.com/case/56327/?from_plan=2476
-		Actions:
-
-			* register a client to candlepin
-			* subscribe to a pool
-			* list consumed
-			* reregister
-
-	    Expected Results:
-
-	 		* check the identity cert has not changed
-	        * check the consumed entitlements have not changed
 	 */
-	@Test(	description="subscription-manager-cli: reregister basic registration",
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-19953", "RHEL7-51002"})
+	@Test(	description="subscription-manager-cli: reregister basic registration\n" +
+			"\t\tActions:\n" +
+			"\n" +
+			"\t \t\t* register a client to candlepin (take note of the uuid returned)\n" +
+			"\t \t\t* take note of your identity cert info using openssl x509\n" +
+			"\t \t\t* subscribe to a pool\n" +
+			"\t \t\t* list consumed\n" +
+			"\t \t\t* ls /etc/pki/entitlement/products\n" +
+			"\t \t\t* Now.. mess up your identity..  mv /etc/pki/consumer/cert.pem /bak\n" +
+			"\t \t\t* run the \"reregister\" command w/ username and passwd AND w/consumerid=<uuid>\n" +
+			"\n" +
+			"\t\tExpected Results:\n" +
+			"\n" +
+			"\t \t\t* after running reregister you should have a new identity cert\n" +
+			"\t \t\t* after registering you should still the same products consumed (list consumed)\n" +
+			"\t \t\t* the entitlement serials should be the same as before the registration",
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-636843","blockedByBug-962520"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=56327)
@@ -978,24 +1000,25 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	
 	/**
 	 * https://tcms.engineering.redhat.com/case/56328/?from_plan=2476
-	 * 
-		Actions:
-
-	 		* register a client to candlepin (take note of the uuid returned)
-	 		* take note of your identity cert info using openssl x509
-	 		* subscribe to a pool
-	 		* list consumed
-	 		* ls /etc/pki/entitlement/products
-	 		* Now.. mess up your identity..  mv /etc/pki/consumer/cert.pem /bak
-	 		* run the "reregister" command w/ username and passwd AND w/consumerid=<uuid>
-
-		Expected Results:
-
-	 		* after running reregister you should have a new identity cert
-	 		* after registering you should still the same products consumed (list consumed)
-	 		* the entitlement serials should be the same as before the registration
 	 */
-	@Test(	description="subscription-manager-cli: bad identity cert",
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36529", "RHEL7-51302"})
+	@Test(	description="subscription-manager-cli: bad identity cert\n" +
+			"\t\tActions:\n" +
+			"\n" +
+			"\t \t\t* register a client to candlepin (take note of the uuid returned)\n" +
+			"\t \t\t* take note of your identity cert info using openssl x509\n" +
+			"\t \t\t* subscribe to a pool\n" +
+			"\t \t\t* list consumed\n" +
+			"\t \t\t* ls /etc/pki/entitlement/products\n" +
+			"\t \t\t* Now.. mess up your identity..  mv /etc/pki/consumer/cert.pem /bak\n" +
+			"\t \t\t* run the \"reregister\" command w/ username and passwd AND w/consumerid=<uuid>\n" +
+			"\n" +
+			"\t\tExpected Results:\n" +
+			"\n" +
+			"\t \t\t* after running reregister you should have a new identity cert\n" +
+			"\t \t\t* after registering you should still the same products consumed (list consumed)\n" +
+			"\t \t\t* the entitlement serials should be the same as before the registration",
 			groups={"blockedByBug-624106","blockedByBug-844069","ReregisterWithBadIdentityCert_Test"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=56328)
@@ -1055,26 +1078,27 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	
 	/**
 	 * https://tcms.engineering.redhat.com/case/72845/?from_plan=2476
-	 * 
-Actions:
-
-    * register with username and password and remember the consumerid
-    * subscribe to one or more subscriptions
-    * list the consumed subscriptions and remember them
-    * clean system
-    * assert that there are no entitlements on the system
-    * register with same username, password and existing consumerid
-    * assert that originally consumed subscriptions are once again being consumed
-
-	
-Expected Results:
-
-    * when registering a new system to an already existing consumer, all of the existing consumers entitlement certs should be downloaded to the new system
+	 *
 	 * @throws Exception 
-	 * @throws JSONException 
-
+	 * @throws JSONException
 	 */
-	@Test(	description="register with existing consumerid should automatically refresh entitlements",
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36530", "RHEL7-51303"})
+	@Test(	description="register with existing consumerid should automatically refresh entitlements\n" +
+			"Actions:\n" +
+			"\n" +
+			"    * register with username and password and remember the consumerid\n" +
+			"    * subscribe to one or more subscriptions\n" +
+			"    * list the consumed subscriptions and remember them\n" +
+			"    * clean system\n" +
+			"    * assert that there are no entitlements on the system\n" +
+			"    * register with same username, password and existing consumerid\n" +
+			"    * assert that originally consumed subscriptions are once again being consumed\n" +
+			"\n" +
+			"\t\n" +
+			"Expected Results:\n" +
+			"\n" +
+			"    * when registering a new system to an already existing consumer, all of the existing consumers entitlement certs should be downloaded to the new system",
 			groups={},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=72845)
@@ -1121,9 +1145,10 @@ Expected Results:
 		}
 		
 	}
-	
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36519", "RHEL7-51291"})
 	@Test(	description="register with an empty /var/lib/rhsm/facts/facts.json file",
 			groups={"blockedByBug-667953","blockedByBug-669208"},
 			enabled=true)
@@ -1139,9 +1164,10 @@ Expected Results:
 		log.info("Attempt to register with an empty rhsm facts file (expecting success)...");
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, Boolean.TRUE, false, null, null, null);
 	}
-	
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36520", "RHEL7-51292"})
 	@Test(	description="register with a missing /var/lib/rhsm/facts/facts.json file",
 			groups={},
 			enabled=true)
@@ -1156,9 +1182,10 @@ Expected Results:
 		log.info("Attempt to register with a missing rhsm facts file (expecting success)...");
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, Boolean.TRUE, false, null, null, null);
 	}
-	
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36524", "RHEL7-51296"})
 	@Test(	description="register with interactive prompting for credentials",
 			groups={"blockedByBug-678151","blockedbyBug-878986"},
 			dataProvider = "getRegisterWithInteractivePromptingForCredentials_TestData",
@@ -1259,9 +1286,10 @@ Expected Results:
 		}
 		return ll;
 	}
-	
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36516", "RHEL7-51289"})
 	@Test(	description="subscription-manager: attempt register to --environment when the candlepin server does not support environments should fail",
 			groups={},
 			enabled=true)
@@ -1282,9 +1310,10 @@ Expected Results:
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) expectedExitCode = new Integer(69);	// EX_UNAVAILABLE	// post commit 5697e3af094be921ade01e19e1dfe7b548fb7d5b bug 1119688
 		Assert.assertEquals(result.getExitCode(), expectedExitCode, "Exit code from register to environment when the candlepin server does NOT support environments.");
 	}
-	
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36517", "RHEL7-59316"})
 	@Test(	description="subscription-manager: attempt register to --environment without --org option should block on missing org",
 			groups={"blockedByBug-727092"},
 			enabled=true)
@@ -1349,6 +1378,10 @@ Expected Results:
 		if (clienttasks==null) return;
 		rhsm_baseurl = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsm", "baseurl");
 	}
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-19950", "RHEL7-51000"})
 	@Test(	description="subscription-manager-cli: register with --baseurl",
 			dataProvider="getRegisterWithBaseurl_TestData",
 			groups={"RegisterWithBaseurl_Test","AcceptanceTests","Tier1Tests"},
@@ -1511,6 +1544,10 @@ Expected Results:
 		if (server_port==null)		server_port		= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "port");
 		if (server_prefix==null)	server_prefix	= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "prefix");
 	}
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-19952", "RHEL7-51001"})
 	@Test(	description="subscription-manager-cli: register with --serverurl; assert positive registrations persist the serverurl to rhsm.conf, negative registrations do not.",
 			dataProvider="getServerurl_TestData",
 			groups={"RegisterWithServerurl_Test","AcceptanceTests","Tier1Tests"},
@@ -1553,6 +1590,10 @@ Expected Results:
 		if (server_port!=null)		clienttasks.config(null,null,true,new String[]{"server","port",server_port});
 		if (server_prefix!=null)	clienttasks.config(null,null,true,new String[]{"server","prefix",server_prefix});
 	}
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36527", "RHEL7-51300"})
 	@Test(	description="subscription-manager-cli: register with good --serverurl --autosubscribe and bad --servicelevel; assert persistance of serverurl from good registration",
 			groups={"RegisterWithServerurlAutosubscribeAndBadServicelevel_Test","blockedByBug-1221273"},
 			enabled=true)
@@ -1613,8 +1654,10 @@ Expected Results:
 		Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "port"), goodPort, "The "+clienttasks.rhsmConfFile+" configuration for [server] port has been updated from the specified --serverurl "+serverurl);
 		Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "prefix"), goodPrefix, "The "+clienttasks.rhsmConfFile+" configuration for [server] prefix has been updated from the specified --serverurl "+serverurl);
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36521", "RHEL7-51293"})
 	@Test(	description="subscription-manager: register with --autosubscribe and --auto-attach can be used interchangably",
 			groups={"blockedByBug-874749","blockedByBug-874804"},
 			enabled=true)
@@ -1644,6 +1687,10 @@ Expected Results:
 		rhsm_ca_cert_dir	= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsm", "ca_cert_dir");
 		server_insecure		= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "insecure");
 	}
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36523", "RHEL7-51295"})
 	@Test(	description="subscription-manager: register with --insecure",
 			groups={"RegisterWithInsecure_Test","blockedByBug-844411","blockedByBug-993202"},
 			enabled=true)
@@ -1694,8 +1741,10 @@ Expected Results:
 		if (rhsm_ca_cert_dir!=null) clienttasks.config(null, null, true, new String[]{"rhsm","ca_cert_dir",rhsm_ca_cert_dir});
 		if (server_insecure!=null) clienttasks.config(null, null, true, new String[]{"server","insecure",server_insecure});
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36528", "RHEL7-51301"})
 	@Test(	description="subscription-manager: register with leading or trailing whitespace on --username",
 			groups={"blockedByBug-1023166"},
 			enabled=true)

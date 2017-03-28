@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<testcase id="RHEL7-55197">
+    <title>rhsm.cli.tests.SearchDisabledReposTests.WithNotifyOnlyOffVerifyYumSearchDisabledReposWithYesYesNoResponses_Test</title>
+    <description>verify user is prompted to search disabled repos to complete an applicable yum install transaction when notify_only=0 is configured in /etc/yum/pluginconf.d/search-disabled-repos.conf and proceed with yes response to search disabled repos and install followed by no response to keep repos enabled.</description>
+    <test-steps>
+        <test-step>
+            <test-step-column id="step"/>
+        </test-step>
+    </test-steps>
+    <custom-fields>
+        <custom-field id="caseautomation" content="automated"></custom-field>
+        <custom-field id="caseimportance" content="high"></custom-field>
+        <custom-field id="caselevel" content="component"></custom-field>
+        <custom-field id="caseposneg" content="positive"></custom-field>
+        <custom-field id="testtype" content="functional"></custom-field>
+        <custom-field id="subtype1" content="-"></custom-field>
+        <custom-field id="subtype2" content="-"></custom-field>
+    </custom-fields>
+</testcase>

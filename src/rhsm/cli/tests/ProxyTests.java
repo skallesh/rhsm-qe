@@ -34,6 +34,9 @@ import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 import com.redhat.qe.tools.SSHCommandRunner;
 
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.TestDefinition;
+
 /**
  * @author jsefler
  *
@@ -46,7 +49,9 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	
 	
 	// REGISTER Test methods ***********************************************************************
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21837", "RHEL7-51656"})
 	@Test(	description="subscription-manager : register using a proxy server (Positive and Negative Variations)",
 			groups={"AcceptanceTests","Tier1Tests"},
 			dataProvider="getRegisterAttemptsUsingProxyServerData",
@@ -60,8 +65,10 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		if (stdout!=null)	Assert.assertEquals(attemptResult.getStdout().trim(), stdout, "The stdout from an attempt to "+moduleTask+" using a proxy server.");
 		if (stderr!=null)	Assert.assertEquals(attemptResult.getStderr().trim(), stderr, "The stderr from an attempt to "+moduleTask+" using a proxy server.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21819", "RHEL7-51638"})
 	@Test(	description="subscription-manager : register using a proxy server after setting rhsm.config parameters (Positive and Negative Variations)",
 			groups={},
 			dataProvider="getRegisterAttemptsUsingProxyServerViaRhsmConfigData",
@@ -112,6 +119,8 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	
 	// UNREGISTER Test methods ***********************************************************************
 
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21837", "RHEL7-51656"})
 	@Test(	description="subscription-manager : unregister using a proxy server (Positive and Negative Variations)",
 			groups={},
 			dataProvider="getUnregisterAttemptsUsingProxyServerData",
@@ -128,8 +137,10 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		if (stdout!=null)	Assert.assertEquals(attemptResult.getStdout().trim(), stdout, "The stdout from an attempt to "+moduleTask+" using a proxy server.");
 		if (stderr!=null)	Assert.assertEquals(attemptResult.getStderr().trim(), stderr, "The stderr from an attempt to "+moduleTask+" using a proxy server.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21836", "RHEL7-51655"})
 	@Test(	description="subscription-manager : unregister using a proxy server after setting rhsm.config parameters (Positive and Negative Variations)",
 			groups={},
 			dataProvider="getUnregisterAttemptsUsingProxyServerViaRhsmConfigData",
@@ -171,6 +182,8 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	
 	// IDENTITY Test methods ***********************************************************************
 
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21811", "RHEL7-51628"})
 	@Test(	description="subscription-manager : identity using a proxy server (Positive and Negative Variations)",
 			groups={},
 			dataProvider="getIdentityAttemptsUsingProxyServerData",
@@ -187,7 +200,9 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		if (stderr!=null)	Assert.assertEquals(attemptResult.getStderr().trim(), stderr, "The stderr from an attempt to "+moduleTask+" using a proxy server.");
 	}
 
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21810", "RHEL7-51627"})
 	@Test(	description="subscription-manager : identity using a proxy server after setting rhsm.config parameters (Positive and Negative Variations)",
 			groups={},
 			dataProvider="getIdentityAttemptsUsingProxyServerViaRhsmConfigData",
@@ -228,6 +243,8 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	
 	// ORGS Test methods ***********************************************************************
 
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21815", "RHEL7-51632"})
 	@Test(	description="subscription-manager : orgs using a proxy server (Positive and Negative Variations)",
 			groups={},
 			dataProvider="getOrgsAttemptsUsingProxyServerData",
@@ -243,7 +260,9 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		if (stderr!=null)	Assert.assertEquals(attemptResult.getStderr().trim(), stderr, "The stderr from an attempt to "+moduleTask+" using a proxy server.");
 	}
 
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21814", "RHEL7-51631"})
 	@Test(	description="subscription-manager : orgs using a proxy server after setting rhsm.config parameters (Positive and Negative Variations)",
 			groups={},
 			dataProvider="getOrgsAttemptsUsingProxyServerViaRhsmConfigData",
@@ -283,6 +302,8 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	
 	// SERVICE-LEVEL Test methods ***********************************************************************
 
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21832", "RHEL7-51651"})
 	@Test(	description="subscription-manager : service-level using a proxy server (Positive and Negative Variations)",
 			groups={},
 			dataProvider="getServiceLevelAttemptsUsingProxyServerData",
@@ -298,7 +319,9 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		if (stderr!=null)	Assert.assertEquals(attemptResult.getStderr().trim(), stderr, "The stderr from an attempt to "+moduleTask+" using a proxy server.");
 	}
 
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21831", "RHEL7-51650"})
 	@Test(	description="subscription-manager : service-level using a proxy server after setting rhsm.config parameters (Positive and Negative Variations)",
 			groups={},
 			dataProvider="getServiceLevelAttemptsUsingProxyServerViaRhsmConfigData",
@@ -338,6 +361,8 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	
 	// ENVIRONMENTS Test methods ***********************************************************************
 
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21807", "RHEL7-51624"})
 	@Test(	description="subscription-manager : environments using a proxy server (Positive and Negative Variations)",
 			groups={"blockedByBug-728380","blockedByBug-1254578"/*is a duplicate of*/,"blockedByBug-1254349"},
 			dataProvider="getEnvironmentsAttemptsUsingProxyServerData",
@@ -353,7 +378,9 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		if (stderr!=null)	Assert.assertEquals(attemptResult.getStderr().trim(), stderr, "The stderr from an attempt to "+moduleTask+" using a proxy server.");
 	}
 
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21806", "RHEL7-51623"})
 	@Test(	description="subscription-manager : environments using a proxy server after setting rhsm.config parameters (Positive and Negative Variations)",
 			groups={"blockedByBug-728380","blockedByBug-1254578"/*is a duplicate of*/,"blockedByBug-1254349"},
 			dataProvider="getEnvironmentsAttemptsUsingProxyServerViaRhsmConfigData",
@@ -393,6 +420,8 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	
 	// LIST Test methods ***********************************************************************
 
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21813", "RHEL7-51630"})
 	@Test(	description="subscription-manager : list using a proxy server (Positive and Negative Variations)",
 			groups={},
 			dataProvider="getListAttemptsUsingProxyServerData",
@@ -410,7 +439,9 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		if (stderr!=null)	Assert.assertEquals(attemptResult.getStderr().trim(), stderr, "The stderr from an attempt to "+moduleTask+" using a proxy server.");
 	}
 
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21823", "RHEL7-51642"})
 	@Test(	description="subscription-manager : list using a proxy server after setting rhsm.config parameters (Positive and Negative Variations)",
 			groups={},
 			dataProvider="getListAttemptsUsingProxyServerViaRhsmConfigData",
@@ -452,6 +483,8 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	
 	// RELEASE Test methods ***********************************************************************
 
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21822", "RHEL7-51641"})
 	@Test(	description="subscription-manager : release using a proxy server (Positive and Negative Variations)",
 			groups={},
 			dataProvider="getReleaseAttemptsUsingProxyServerData",
@@ -468,8 +501,10 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		if (stdout!=null)	Assert.assertEquals(attemptResult.getStdout().trim(), stdout, "The stdout from an attempt to "+moduleTask+" using a proxy server.");
 		if (stderr!=null)	Assert.assertEquals(attemptResult.getStderr().trim(), stderr, "The stderr from an attempt to "+moduleTask+" using a proxy server.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21821", "RHEL7-51640"})
 	@Test(	description="subscription-manager : release using a proxy server after setting rhsm.config parameters (Positive and Negative Variations)",
 			groups={},
 			dataProvider="getReleaseAttemptsUsingProxyServerViaRhsmConfigData",
@@ -506,10 +541,11 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 			Assert.assertTrue(proxyLogResult.contains(proxyLogGrepPattern), "The tail of proxy server log '"+proxyLog+"' following marker '"+proxyLogMarker+"' contains expected connection '"+proxyLogGrepPattern+"' attempts from "+ipv4_address+" to the candlepin server.");
 		}
 	}
-	
-	
-	
-	
+
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21824", "RHEL7-51643"})
 	@Test(	description="subscription-manager : release --list using a proxy server (Positive and Negative Variations)",
 			groups={"blockedByBug-822965","blockedByBug-824530"},
 			dataProvider="getReleaseAttemptsUsingProxyServerData",
@@ -538,8 +574,10 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		if (stdout!=null)	Assert.assertEquals(attemptResult.getStdout().trim(), stdout, "The stdout from an attempt to "+moduleTask+" using a proxy server.");
 		if (stderr!=null)	Assert.assertEquals(attemptResult.getStderr().trim(), stderr, "The stderr from an attempt to "+moduleTask+" using a proxy server.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21823", "RHEL7-51642"})
 	@Test(	description="subscription-manager : release using a proxy server after setting rhsm.config parameters (Positive and Negative Variations)",
 			groups={"blockedByBug-822965","blockedByBug-824530"},
 			dataProvider="getReleaseAttemptsUsingProxyServerViaRhsmConfigData",
@@ -591,7 +629,9 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	
 	
 	// AUTO-HEAL Test methods ***********************************************************************
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21805", "RHEL7-51622"})
 	@Test(	description="subscription-manager : auto-heal using a proxy server (Positive and Negative Variations)",
 			groups={},
 			dataProvider="getAutoHealAttemptsUsingProxyServerData",
@@ -608,8 +648,10 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		if (stdout!=null)	Assert.assertEquals(attemptResult.getStdout().trim(), stdout, "The stdout from an attempt to "+moduleTask+" using a proxy server.");
 		if (stderr!=null)	Assert.assertEquals(attemptResult.getStderr().trim(), stderr, "The stderr from an attempt to "+moduleTask+" using a proxy server.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21804", "RHEL7-51621"})
 	@Test(	description="subscription-manager : auto-heal using a proxy server after setting rhsm.config parameters (Positive and Negative Variations)",
 			groups={},
 			dataProvider="getAutoHealAttemptsUsingProxyServerViaRhsmConfigData",
@@ -649,7 +691,9 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	
 	
 	// STATUS Test methods ***********************************************************************
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21834", "RHEL7-51653"})
 	@Test(	description="subscription-manager : status using a proxy server (Positive and Negative Variations)",
 			groups={"blockedByBug-977481"},
 			dataProvider="getStatusAttemptsUsingProxyServerData",
@@ -677,8 +721,10 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		if (stdout!=null)	Assert.assertEquals(attemptResult.getStdout().trim(), stdout, "The stdout from an attempt to "+moduleTask+" using a proxy server.");
 		if (stderr!=null)	Assert.assertEquals(attemptResult.getStderr().trim(), stderr, "The stderr from an attempt to "+moduleTask+" using a proxy server.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21833", "RHEL7-51652"})
 	@Test(	description="subscription-manager : status using a proxy server after setting rhsm.config parameters (Positive and Negative Variations)",
 			groups={"blockedByBug-977481"},
 			dataProvider="getStatusAttemptsUsingProxyServerViaRhsmConfigData",
@@ -728,7 +774,9 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	
 	
 	// VERSION Test methods ***********************************************************************
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-25993", "RHEL7-51660"})
 	@Test(	description="subscription-manager : version using a proxy server (Positive and Negative Variations)",
 			groups={"blockedByBug-977481","blockedByBug-1284120"},
 			dataProvider="getVersionAttemptsUsingProxyServerData",
@@ -745,8 +793,10 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		if (stdout!=null)	Assert.assertTrue(attemptResult.getStdout().contains(stdout), "The stdout from an attempt to "+moduleTask+" using a proxy server contains expected report '"+stdout+"'.");
 		if (stderr!=null)	Assert.assertEquals(attemptResult.getStderr().trim(), stderr, "The stderr from an attempt to "+moduleTask+" using a proxy server.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-25992", "RHEL7-51659"})
 	@Test(	description="subscription-manager : status using a proxy server after setting rhsm.config parameters (Positive and Negative Variations)",
 			groups={"blockedByBug-977481","blockedByBug-1284120"},
 			dataProvider="getVersionAttemptsUsingProxyServerViaRhsmConfigData",
@@ -785,6 +835,8 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	
 	// REDEEM Test methods ***********************************************************************
 
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-26755", "RHEL7-51633"})
 	@Test(	description="subscription-manager : redeem using a proxy server (Positive and Negative Variations)",
 			groups={"ProxyRedeemTests"},
 			dataProvider="getRedeemAttemptsUsingProxyServerData",
@@ -802,7 +854,9 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		if (stderr!=null)	Assert.assertEquals(attemptResult.getStderr().trim(), stderr, "The stderr from an attempt to "+moduleTask+" using a proxy server.");
 	}
 
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-26754", "RHEL7-55662"})
 	@Test(	description="subscription-manager : redeem using a proxy server after setting rhsm.config parameters (Positive and Negative Variations)",
 			groups={"ProxyRedeemTests"},
 			dataProvider="getRedeemAttemptsUsingProxyServerViaRhsmConfigData",
@@ -844,6 +898,8 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	
 	// FACTS Test methods ***********************************************************************
 
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21809", "RHEL7-51626"})
 	@Test(	description="subscription-manager : facts using a proxy server (Positive and Negative Variations)",
 			groups={},
 			dataProvider="getFactsAttemptsUsingProxyServerData",
@@ -861,7 +917,9 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		if (stderr!=null)	Assert.assertEquals(attemptResult.getStderr().trim(), stderr, "The stderr from an attempt to "+moduleTask+" using a proxy server.");
 	}
 
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21808", "RHEL7-51625"})
 	@Test(	description="subscription-manager : facts using a proxy server after setting rhsm.config parameters (Positive and Negative Variations)",
 			groups={},
 			dataProvider="getFactsAttemptsUsingProxyServerViaRhsmConfigData",
@@ -903,6 +961,8 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	
 	// REFRESH Test methods ***********************************************************************
 
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21817", "RHEL7-51635"})
 	@Test(	description="subscription-manager : refresh using a proxy server (Positive and Negative Variations)",
 			groups={"blockedByBug-664548"},
 			dataProvider="getRefreshAttemptsUsingProxyServerData",
@@ -920,7 +980,9 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		if (stderr!=null)	Assert.assertEquals(attemptResult.getStderr().trim(), stderr, "The stderr from an attempt to "+moduleTask+" using a proxy server.");
 	}
 
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21816", "RHEL7-51634"})
 	@Test(	description="subscription-manager : refresh using a proxy server after setting rhsm.config parameters (Positive and Negative Variations)",
 			groups={"blockedByBug-664548"},
 			dataProvider="getRefreshAttemptsUsingProxyServerViaRhsmConfigData",
@@ -962,6 +1024,8 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	
 	// REPOS Test methods ***********************************************************************
 
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21828", "RHEL7-51647"})
 	@Test(	description="subscription-manager : repos using a proxy server (Positive and Negative Variations)",
 			groups={"blockedByBug-906642","blockedByBug-909778"},
 			dataProvider="getReposAttemptsUsingProxyServerData",
@@ -994,7 +1058,9 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		if (stderr!=null)	Assert.assertEquals(attemptResult.getStderr().trim(), stderr, "The stderr from an attempt to "+moduleTask+" --list using a proxy server.");
 	}
 
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21827", "RHEL7-51646"})
 	@Test(	description="subscription-manager : repos using a proxy server after setting rhsm.config parameters (Positive and Negative Variations)",
 			groups={"blockedByBug-906642","blockedByBug-909778"},
 			dataProvider="getReposAttemptsUsingProxyServerViaRhsmConfigData",
@@ -1080,6 +1146,8 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	
 	// REPO-OVERRIDE Test methods ***********************************************************************
 
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21826", "RHEL7-51645"})
 	@Test(	description="subscription-manager : repo-override --list using a proxy server (Positive and Negative Variations)",
 			groups={},
 			dataProvider="getRepoOverrideAttemptsUsingProxyServerData",
@@ -1099,8 +1167,10 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		if (stdout!=null)	Assert.assertEquals(attemptResult.getStdout().trim(), stdout, "The stdout from an attempt to "+moduleTask+" --list using a proxy server.");
 		if (stderr!=null)	Assert.assertEquals(attemptResult.getStderr().trim(), stderr, "The stderr from an attempt to "+moduleTask+" --list using a proxy server.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21825", "RHEL7-51644"})
 	@Test(	description="subscription-manager : repo-override --list using a proxy server after setting rhsm.config parameters (Positive and Negative Variations)",
 			groups={},
 			dataProvider="getRepoOverrideAttemptsUsingProxyServerViaRhsmConfigData",
@@ -1145,6 +1215,8 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	
 	// SUBSCRIBE Test methods ***********************************************************************
 
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21835", "RHEL7-51654"})
 	@Test(	description="subscription-manager : subscribe using a proxy server (Positive and Negative Variations)",
 			groups={"blockedByBug-664603"},
 			dataProvider="getSubscribeAttemptsUsingProxyServerData",
@@ -1164,7 +1236,9 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		if (stderr!=null)	Assert.assertEquals(attemptResult.getStderr().trim(), stderr, "The stderr from an attempt to "+moduleTask+" using a proxy server.");
 	}
 
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21838", "RHEL7-51657"})
 	@Test(	description="subscription-manager : subscribe using a proxy server after setting rhsm.config parameters (Positive and Negative Variations)",
 			groups={"blockedByBug-664603"},
 			dataProvider="getSubscribeAttemptsUsingProxyServerViaRhsmConfigData",
@@ -1208,6 +1282,8 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	
 	// UNSUBSCRIBE Test methods ***********************************************************************
 
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21839", "RHEL7-51658"})
 	@Test(	description="subscription-manager : unsubscribe using a proxy server (Positive and Negative Variations)",
 			groups={"blockedByBug-664603"},
 			dataProvider="getUnsubscribeAttemptsUsingProxyServerData",
@@ -1225,7 +1301,9 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		if (stderr!=null)	Assert.assertEquals(attemptResult.getStderr().trim(), stderr, "The stderr from an attempt to "+moduleTask+" using a proxy server.");
 	}
 
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21838", "RHEL7-51657"})
 	@Test(	description="subscription-manager : subscribe using a proxy server after setting rhsm.config parameters (Positive and Negative Variations)",
 			groups={"blockedByBug-664603"},
 			dataProvider="getUnsubscribeAttemptsUsingProxyServerViaRhsmConfigData",
@@ -1267,6 +1345,8 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	
 	// RHSM-DEBUG SYSTEM Test methods ***********************************************************************
 
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21830", "RHEL7-51649"})
 	@Test(	description="rhsm-debug : system using a proxy server (Positive and Negative Variations)",
 			groups={"blockedByBug-1070737","blockedByBug-1039653","blockedByBug-1093382"},
 			dataProvider="getRhsmDebugSystemAttemptsUsingProxyServerData",
@@ -1291,8 +1371,10 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 			client.runCommandAndWait("rm -f "+rhsmDebugSystemFile);
 		}
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21829", "RHEL7-51648"})
 	@Test(	description="rhsm-debug : system using a proxy server after setting rhsm.config parameters (Positive and Negative Variations)",
 			groups={"blockedByBug-1070737","blockedByBug-1039653","blockedByBug-1093382"},
 			dataProvider="getRhsmDebugSystemAttemptsUsingProxyServerViaRhsmConfigData",
@@ -1344,7 +1426,9 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	
 	
 	// More Test methods ***********************************************************************
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21820", "RHEL7-51639"})
 	@Test(	description="subscription-manager :  register with proxy configurations commented out of rhsm.conf",
 			groups={},
 			dataProvider="getRegisterWithProxyConfigurationsCommentedOutOfRhsmConfigData",
@@ -1361,8 +1445,10 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		log.info("Attempt to register with the above proxy config parameters configured (expecting success)...");
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, null, false, null, null, null);
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6}
+			       , testCaseID = {"RHEL6-26756"})
 	@Test(	description="subscription-manager : repos list with proxy set to a real server that is not truely a proxy (e.g. www.redhat.com)",
 			groups={"blockedByBug-968820","blockedByBug-1301215","blockedByBug-1345962"},
 			enabled=true)
@@ -1417,8 +1503,10 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(result.getStdout().trim(), expectedStdout, "Stdout from command '"+command+"' with a timeout of '"+timeoutMS+"' MS.");
 		Assert.assertEquals(result.getStderr().trim(), expectedStderr, "Stderr from command '"+command+"' with a timeout of '"+timeoutMS+"' MS.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21818", "RHEL7-51637"})
 	@Test(	description="subscription-manager : register using a proxy server defined by an environment variable (Positive and Negative Variations)",
 			groups={"blockedByBug-1031755"},
 			dataProvider="getRegisterAttemptsUsingProxyServerViaRhsmConfigData",
@@ -1526,12 +1614,13 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 			Assert.assertTrue(proxyLogResult.contains(proxyLogGrepPattern), "The tail of proxy server log '"+proxyLog+"' following marker '"+proxyLogMarker+"' contains expected connection '"+proxyLogGrepPattern+"' attempts from "+ipv4_address+" to the candlepin server.");
 		}
 	}
-	
-	
-	
-	
 
-	
+
+
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-22311", "RHEL7-51636"})
 	@Test(	description="subscription-manager : register when no_proxy environment variable matches our hostname regardless of proxy configurations and environment variable (Positive and Negative Variations)",
 			groups={"blockedByBug-1266608","blockedByBug-1285010"},
 			dataProvider="getRegisterAttemptsToVerifyHonoringNoProxyEnvironmentVariableData",

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<testcase id="RHEL6-36364">
+    <title>rhsm.cli.tests.FactsTests.AssertNewFactsAreCollectedForMultipleIPsPerNetworkInterface_Test</title>
+    <description>assert the addition of new facts collected to capture multiple IPs per network interface device - net.interface.&lt;device&gt;.ipv&lt;4|6&gt;_&lt;addressinfo&gt;_list</description>
+    <test-steps>
+        <test-step>
+            <test-step-column id="step"/>
+        </test-step>
+    </test-steps>
+    <custom-fields>
+        <custom-field id="caseautomation" content="automated"></custom-field>
+        <custom-field id="caseimportance" content="high"></custom-field>
+        <custom-field id="caselevel" content="component"></custom-field>
+        <custom-field id="caseposneg" content="positive"></custom-field>
+        <custom-field id="testtype" content="functional"></custom-field>
+        <custom-field id="subtype1" content="-"></custom-field>
+        <custom-field id="subtype2" content="-"></custom-field>
+    </custom-fields>
+</testcase>

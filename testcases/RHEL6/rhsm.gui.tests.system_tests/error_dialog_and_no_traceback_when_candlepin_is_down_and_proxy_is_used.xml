@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<testcase id="RHEL6-38739">
+    <title>rhsm.gui.tests.system_tests.error_dialog_and_no_traceback_when_candlepin_is_down_and_proxy_is_used</title>
+    <description>Given a system is registered
+  and at least one subscription is attached
+  and a proxy connection is configured to be used
+  and I have run 'subscription-manager-gui'
+When the candlepin server is not responding
+Then I should see a dialog 'Network is down'
+  and no traceback appears in '/var/log/rhsm/rhsm.log'</description>
+    <test-steps>
+        <test-step>
+            <test-step-column id="step"/>
+        </test-step>
+    </test-steps>
+    <custom-fields>
+        <custom-field id="caseautomation" content="automated"></custom-field>
+        <custom-field id="caseimportance" content="high"></custom-field>
+        <custom-field id="caselevel" content="component"></custom-field>
+        <custom-field id="caseposneg" content="positive"></custom-field>
+        <custom-field id="testtype" content="functional"></custom-field>
+        <custom-field id="subtype1" content="-"></custom-field>
+        <custom-field id="subtype2" content="-"></custom-field>
+    </custom-fields>
+</testcase>

@@ -34,6 +34,9 @@ import rhsm.data.SubscriptionPool;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.TestDefinition;
+
 
 
 /**
@@ -108,7 +111,9 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 
 	
 	// Test methods ***********************************************************************
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20091", "RHEL7-51101"})
 	@Test(	description="subscription-manager: facts list should report virt.is_guest and virt.host_type and virt.uuid",
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1018807","blockedByBug-1242409","blockedByBug-1308732"}, dependsOnGroups={},
 			enabled=true)
@@ -200,8 +205,10 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 			Assert.assertNull(virtUuid, "subscription-manager facts list should NOT report virt.uuid when on a host machine (indicated when virt-what reports an empty stdout).");		
 		}
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-37714", "RHEL7-51491"})
 	@Test(	description="subscription-manager: facts list reports the host hypervisor type and uuid on which the guest client is running",
 			dataProvider="getVirtWhatData",
 			groups={"VirtFactsWhenClientIsAGuest_Test","blockedByBug-1242409"}, dependsOnGroups={},
@@ -250,8 +257,10 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 			Assert.assertEquals(virtUuid,expectedUuid,"subscription-manager facts list reports virt.uuid value to be the /system/hypervisor/uuid or /proc/device-tree/vm,uuid or dmidecode -s system-uuid");
 		}
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-37715", "RHEL7-51492"})
 	@Test(	description="subscription-manager: facts list reports when the client is running on bare metal",
 			groups={"blockedByBug-726440","blockedByBug-1308732","VirtFactsWhenClientIsAHost_Test"}, dependsOnGroups={},
 			enabled=true)
@@ -290,8 +299,10 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 		String virtUuid = factsMap.get("virt.uuid");	// = clienttasks.getFactValue("virt.uuid");
 		Assert.assertNull(virtUuid,"subscription-manager facts list should NOT report virt.uuid when run on bare metal.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-37716", "RHEL7-51493"})
 	@Test(	description="subscription-manager: facts list should not crash on virt facts when virt-what fails",
 			groups={"blockedByBug-668936","blockedByBug-768397","VirtFactsWhenVirtWhatFails_Test"}, dependsOnGroups={},
 			enabled=true)
@@ -319,8 +330,10 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 		} else
 		Assert.assertEquals(virtUuid,"Unknown","subscription-manager facts list reports virt.uuid as Unknown when the hypervisor is undeterminable (virt-what fails).");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-37717", "RHEL7-51494"})
 	@Test(	description="subscription-manager: facts list should report is_guest and uuid as Unknown when virt-what is not installed",
 			groups={"blockedByBug-768397"}, dependsOnGroups={},
 			enabled=true)
@@ -349,13 +362,14 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(virtUuid,"Unknown","subscription-manager facts list reports virt.uuid as Unknown when virt-what in not installed.");
 
 	}
-	
-	
-	
-	
-	
-	
-	
+
+
+
+
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20090", "RHEL7-59440"})
 	@Test(	description="Verify host and guest pools are generated from a virtualization-aware subscription.",
 			groups={"AcceptanceTests","Tier1Tests"/*,"blockedByBug-750279"*/},
 			dependsOnGroups={},
@@ -763,8 +777,10 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 		Assert.assertNotNull(guestPoolId, "Found the virt_only/pool_derived guest pool id ("+guestPoolId+") without an attribute of requires_host");
 		Assert.assertNotNull(hostPoolId, "Found the host pool id ("+hostPoolId+")");	
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-22223", "RHEL7-59439"})
 	@Test(	description="Verify host and guest pools quantities generated from a virtualization-aware subscription",
 			groups={"AcceptanceTests","Tier1Tests","VerifyHostAndGuestPoolQuantities_Test"}, // "blockedByBug-679617" indirectly when this script is run as part of the full TestNG suite since this is influenced by other scripts calling refresh pools
 			dependsOnGroups={},
@@ -892,8 +908,10 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 		guestPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", guestPoolId, allAvailablePools);
 		Assert.assertEquals(guestPool.quantity, guestPoolQuantityBefore, "The quantity of entitlements available from the guest pool has NOT changed after refreshing pools.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-27131", "RHEL7-64494"})
 	@Test(	description="Verify host and guest pools to a virtualization-aware subscription are subscribable on a guest system (unless it is physical_only).",
 			groups={"VerifyHostAndGuestPoolsAreSubscribableOnGuestSystem_Test"},
 			dependsOnGroups={},
@@ -939,8 +957,10 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 		// attempt to subscribe to the guestPoolId
 		clienttasks.subscribeToSubscriptionPool(guestPool);
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-27132", "RHEL7-64495"})
 	@Test(	description="Verify only the derived host pool from a virtualization-aware subscription is subscribable on a host system.  The guest pool should not be available nor subscribable.",
 			groups={"VerifyHostPoolIsSubscribableOnHostSystemWhileGuestPoolIsNot_Test"},
 			dependsOnGroups={},
@@ -972,8 +992,10 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(result.getStdout().trim(), "Pool is restricted to virtual guests: '"+guestPoolId+"'.");
 
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-37713", "RHEL7-51490"})
 	@Test(	description="Verify the subscription-manager list --avail appropriately displays pools with MachineType: virtual",
 			groups={"VerifyVirtualMachineTypeIsReportedInListAvailablePools_Test"},
 			dependsOnGroups={},
@@ -994,7 +1016,10 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 		}
 		if (!poolFound) throw new SkipException("Could not find an available pool with which to verify the MachineType:virtual is reported in the Subscription Pool listing.");
 	}
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-37712", "RHEL7-51489"})
 	@Test(	description="Verify the subscription-manager list --avail appropriately displays pools with MachineType: physical",
 			groups={"VerifyPhysicalMachineTypeValuesInListAvailablePools_Test"},
 			dependsOnGroups={},
@@ -1015,8 +1040,10 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 		}
 		if (!poolFound) throw new SkipException("Could not find an available pool with which to verify the MachineType:physical is reported in the Subscription Pool listing.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-37711", "RHEL7-51488"})
 	@Test(	description="Verify the Candlepin API accepts PUTting of guestIds onto host consumer (to be used by virt-who)",
 			groups={"blockedByBug-737935","VerifyGuestIdsCanBePutOntoHostConsumer_Test"},
 			dependsOnGroups={},

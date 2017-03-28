@@ -8,6 +8,8 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
 
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.TestDefinition;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -32,7 +34,9 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 
 	
 	// Test methods ***********************************************************************
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36638", "RHEL7-51448"})
 	@Test(	description="subscribe to a pool that will expire soon and assert the entitlements are removed after it expires",
 			groups={"blockedByBug-655835","blockedByBug-660713","blockedByBug-854312","blockedByBug-907638","blockedByBug-994266"}, dependsOnGroups={},
 			enabled=true)
@@ -133,8 +137,10 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(revokedCert!=null,"Expiring entitlement certificate serial number '"+expiringCert.serialNumber+"' has been added to the Certificate Revocation List (CRL) as: "+revokedCert);
 		Assert.assertEquals(revokedCert.reasonCode, "Privilege Withdrawn","An expired entitlement certificate should be revoked with a reason code of Privilege Withdrawn.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-37710", "RHEL7-51450"})
 	@Test(	description="assert that a soon to expire pool is removed from availablity after it expires",
 			groups={}, dependsOnGroups={},
 			enabled=true)
@@ -155,8 +161,10 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 		SubscriptionPool expiredPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", expiringPoolId, clienttasks.getCurrentlyAllAvailableSubscriptionPools());
 		Assert.assertNull(expiredPool,"The expired SubscriptionPool is no longer available for subscribing");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-37709", "RHEL7-51449"})
 	@Test(	description="assert that a soon to be available pool is not yet available",
 			groups={}, dependsOnGroups={},
 			enabled=true)

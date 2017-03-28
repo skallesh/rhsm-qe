@@ -29,6 +29,10 @@ import com.redhat.qe.tools.SSHCommandResult;
 import com.redhat.qe.tools.SSHCommandRunner;
 //import com.sun.org.apache.xalan.internal.xsltc.compiler.Pattern;
 
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.TestDefinition;
+
+
 /**
  * @author fsharath
  * @author jsefler
@@ -168,6 +172,8 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 	
 	// Test Methods ***********************************************************************
 
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36515", "RHEL7-51288"})
 	@Test(	description="run pofilter translate tests on subscription manager translation files",
 			dataProvider="getSubscriptionManagerTranslationFilePofilterTestData",
 			groups={},
@@ -176,7 +182,9 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 	public void subscriptionManagerPofilter_Test(Object bugzilla, String pofilterTest, File translationFile) {
 		pofilter_Test(client, pofilterTest, translationFile);
 	}
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36514", "RHEL7-51287"})
 	@Test(	description="run pofilter translate tests on candlepin translation files",
 			dataProvider="getCandlepinTranslationFilePofilterTestData",
 			groups={},

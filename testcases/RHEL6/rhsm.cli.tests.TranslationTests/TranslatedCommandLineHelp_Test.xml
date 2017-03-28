@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<testcase id="RHEL6-21766">
+    <title>rhsm.cli.tests.TranslationTests.TranslatedCommandLineHelp_Test</title>
+    <description>subscription-manager-cli: assert help commands return translated text</description>
+    <test-steps>
+        <test-step>
+            <test-step-column id="step">
+                <parameter name="bugzilla" scope="local"/>
+                <parameter name="lang" scope="local"/>
+                <parameter name="command" scope="local"/>
+                <parameter name="exitCode" scope="local"/>
+                <parameter name="stdoutRegexs" scope="local"/>
+            </test-step-column>
+        </test-step>
+    </test-steps>
+    <custom-fields>
+        <custom-field id="caseautomation" content="automated"></custom-field>
+        <custom-field id="caseimportance" content="high"></custom-field>
+        <custom-field id="caselevel" content="component"></custom-field>
+        <custom-field id="caseposneg" content="positive"></custom-field>
+        <custom-field id="testtype" content="functional"></custom-field>
+        <custom-field id="subtype1" content="-"></custom-field>
+        <custom-field id="subtype2" content="-"></custom-field>
+    </custom-fields>
+</testcase>

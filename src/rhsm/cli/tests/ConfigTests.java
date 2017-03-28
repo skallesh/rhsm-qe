@@ -10,6 +10,8 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.TestDefinition;
 import org.testng.SkipException;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterGroups;
@@ -45,8 +47,9 @@ import com.redhat.qe.tools.SSHCommandRunner;
 public class ConfigTests extends SubscriptionManagerCLITestScript {
 
 	// Test methods ***********************************************************************
-	
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36675", "RHEL7-51520"})
 	@Test(	description="subscription-manager: use config --list to get the value of /etc/rhsm.rhsm.conf [server]ca_cert_dir (should not exist)",
 			groups={"blockedByBug-993202"},
 			priority=5,
@@ -59,8 +62,10 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 		section="rhsm";
 		Assert.assertNotNull(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, section, parameter), "Config file '"+clienttasks.rhsmConfFile+"' section '"+section+"' parameter '"+parameter+"' should be set.");		
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20113", "RHEL7-33091"})
 	@Test(	description="subscription-manager: use config to set each of the rhsm.conf parameter values and verify it is persisted to /etc/rhsm.rhsm.conf",
 			groups={"AcceptanceTests","Tier1Tests"},
 			dataProvider="getConfigSectionNameData",
@@ -75,8 +80,10 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 		// assert that the value was written to the config file
 		Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, section, name), setValue, "After executing subscription-manager config to set '"+section+"."+name+"', the value is saved to config file '"+clienttasks.rhsmConfFile+"'.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36676", "RHEL7-51521"})
 	@Test(	description="subscription-manager: use config module to list all of the currently set rhsm.conf parameter values",
 			groups={},
 			dataProvider="getConfigSectionNameData",
@@ -150,8 +157,10 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(matcher.find(),"After executing subscription-manager config to set '"+section+"."+name+"', calling config --list includes the value just set.");
 	}
 	protected SSHCommandResult sshCommandResultFromConfigGetSectionNameValue_Test = null;
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36677", "RHEL7-51522"})
 	@Test(	description="subscription-manager: use config module to remove each of the rhsm.conf parameter values from /etc/rhsm/rhsm.conf",
 			groups={"blockedByBug-1223860"},
 			dataProvider="getConfigSectionNameData",
@@ -182,8 +191,10 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 			Assert.assertNull(newValue, "After executing subscription-manager config to remove '"+section+"."+name.toLowerCase()+"', the parameter is absent from config file '"+clienttasks.rhsmConfFile+"'.");
 		}
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36678", "RHEL7-51523"})
 	@Test(	description="subscription-manager: after having removed all the config parameters using the config module, assert that the config list shows the default values in use by wrapping them in [] and the others are simply blanked.",
 			groups={},
 			dataProvider="getConfigSectionNameData",
@@ -251,6 +262,8 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 	protected SSHCommandResult sshCommandResultFromConfigGetSectionNameValueAndVerifyDefault_Test = null;
 
 
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36679", "RHEL7-51524"})
 	@Test(	description="subscription-manager: use config module to simultaneously remove multiple rhsm.conf parameter values from /etc/rhsm/rhsm.conf",
 			groups={"blockedByBug-735695","blockedByBug-927350","blockedByBug-1297337"},
 			//dependsOnMethods={"ConfigGetSectionNameValueAndVerifyDefault_Test"}, alwaysRun=true,
@@ -296,8 +309,10 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 			}
 		}
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36671", "RHEL7-51517"})
 	@Test(	description="subscription-manager: attempt to use config module to remove a non-existing-section parameter from /etc/rhsm/rhsm.conf (negative test)",
 			groups={"blockedByBug-747024","blockedByBug-746264"},
 			enabled=true)
@@ -319,8 +334,10 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(configResult.getStderr().trim(), String.format("Error: Section %s and name %s does not exist.",section,name), "Stderr message");	
 		Assert.assertEquals(configResult.getStdout().trim(), "", "Stdout message should be empty");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36670", "RHEL7-51516"})
 	@Test(	description="subscription-manager: attempt to use config module to remove a non-existing-parameter from a valid section in /etc/rhsm/rhsm.conf (negative test)",
 			groups={"blockedByBug-736784"},
 			enabled=true)
@@ -346,8 +363,10 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 		Assert.assertNull(setValue, "After executing a negative test to subscription-manager config to remove '"+section+"."+name+"', the parameter has not present in config file '"+clienttasks.rhsmConfFile+"'.");
 
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36667", "RHEL7-51513"})
 	@Test(	description="subscription-manager: attempt to use config module to list together with set and/or remove option(s) for config parameters",
 			groups={"blockedByBug-730020"},
 			dataProvider="getNegativeConfigListSetRemoveData",
@@ -366,8 +385,10 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(configResult.getStderr().trim(), "Error: --list should not be used with any other options for setting or removing configurations.", "Stderr message");
 		Assert.assertEquals(configResult.getStdout().trim(), "", "Stdout message should be empty");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36668", "RHEL7-51514"})
 	@Test(	description="subscription-manager: config (without any options) should default to --list",
 			groups={"blockedByBug-811594"},
 			enabled=true)
@@ -385,8 +406,10 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(defaultResult.getStdout(), listResult.getStdout(),
 				"stdout from config without options should be equivalent to stdout from config --list");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36669", "RHEL7-51515"})
 	@Test(	description="subscription-manager: config for repo_ca_cert should interpolate the default value for ca_cert_dir",
 			groups={"blockedByBug-997194","ConfigForRepoCaCertUsesDefaultCaCertDir_Test"},
 			enabled=true)
@@ -415,8 +438,10 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 		if (repoCaCertConfigured!=null) clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "repo_ca_cert", repoCaCertConfigured);
 	}
 	protected String repoCaCertConfigured = null;
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36673", "RHEL7-51518"})
 	@Test(	description="verify the default configurations for server hostname:port/prefix after running config removal",
 			groups={"blockedByBug-988085","blockedByBug-1223860","blockedByBug-1297337","VerifyDefaultsForServerHostnamePortPrefixAfterConfigRemoval_Test"},
 			enabled=true)
@@ -461,8 +486,10 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 	protected String serverHostnameConfigured = null;
 	protected String serverPortConfigured = null;
 	protected String serverPrefixConfigured = null;
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36674", "RHEL7-51519"})
 	@Test(	description="verify that only the expected configration parameters are present in the rhsm config file; useful for detecting newly added configurations by the subscription-manager developers",
 			groups={},
 			enabled=true)
@@ -528,8 +555,10 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 		}
 		Assert.assertTrue(allActualConfFileParameterNameAreExpected,"All of the actual configuration parameters are among the expected configuration parameters.  If this fails, see the warnings logged above.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36672", "RHEL7-57876"})
 	@Test(	description="verify the [server]server_timeout can be configured and function properly when the server does not respond within the timeout seconds",
 			groups={"blockedByBug-1346417","VerifyConfigServerTimeouts_Test"},
 			enabled=true)

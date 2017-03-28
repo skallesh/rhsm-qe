@@ -8,6 +8,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.TestDefinition;
+
 import org.testng.SkipException;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -37,8 +40,10 @@ import com.redhat.qe.tools.SSHCommandResult;
 public class ImportTests extends SubscriptionManagerCLITestScript {
 
 	// Test methods ***********************************************************************
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20027", "RHEL7-51043"})
 	@Test(	description="subscription-manager: import a valid version 1.0 entitlement cert/key bundle and verify subscriptions are consumed",
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-962520"},
 			enabled=true)
@@ -86,8 +91,10 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 		EntitlementCert importedEntitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(expectedEntitlementCertFile);
 		Assert.assertEquals(importedEntitlementCert.version, "1.0", "The version of the imported certificate/key file.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20026", "RHEL7-51042"})
 	@Test(	description="subscription-manager: import a valid entitlement cert/key bundle and verify subscriptions are consumed",
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-712980","blockedByBug-730380","blockedByBug-860344"},
 			enabled=true)
@@ -131,8 +138,10 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 		// finally verify that we are now consuming subscriptions
 		Assert.assertTrue(clienttasks.getCurrentlyConsumedProductSubscriptions().size()>0, "After importing a valid certificate, we should be consuming subscriptions.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36633", "RHEL7-51443"})
 	@Test(	description="subscription-manager: import a certificate from a file (saved as a different name) and verify subscriptions are consumed",
 			groups={"blockedByBug-734606","blockedByBug-860344"},
 			enabled=true)
@@ -183,8 +192,10 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 			Assert.assertTrue(clienttasks.getCurrentlyConsumedProductSubscriptions().size()>0, "After importing a valid certificate, we should be consuming subscriptions.");
 		}
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36635", "RHEL7-51445"})
 	@Test(	description="subscription-manager: import a valid entitlement key/cert bundle and verify subscriptions are consumed",
 			groups={"blockedByBug-860344"},
 			enabled=true)
@@ -228,8 +239,10 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 		// finally verify that we are now consuming subscriptions
 		Assert.assertTrue(clienttasks.getCurrentlyConsumedProductSubscriptions().size()>0, "After importing a valid certificate, we should be consuming subscriptions.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36634", "RHEL7-51444"})
 	@Test(	description="subscription-manager: attempt an entitlement cert import from a file in the current directory",
 			groups={"blockedByBug-849171","blockedByBug-860344"},
 			enabled=true)
@@ -275,10 +288,11 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(clienttasks.getCurrentlyConsumedProductSubscriptions().size()>0, "After importing a valid certificate, we should be consuming subscriptions.");
 	}
 
-	
 
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36632", "RHEL7-51442"})
 	@Test(	description="subscription-manager: import a certificate for a future entitlement",
 			groups={"blockedByBug-860344"},
 			enabled=true)
@@ -331,8 +345,10 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 			Assert.assertTrue(productSubscription.startDate.after(now), "The product subscription consumed from the imported future entitlement certificate begins in the future.  ProductSubscription: "+productSubscription);
 		}
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36628", "RHEL7-51436"})
 	@Test(	description="subscription-manager: attempt an entitlement cert import from a file containing the cert only (negative test)",
 			groups={"blockedByBug-735226","blockedByBug-849171"},
 			enabled=true)
@@ -341,8 +357,10 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 		File importEntitlementCertFile = entitlementCertFiles.get(randomGenerator.nextInt(entitlementCertFiles.size()));
 		attemptAnEntitlementImportFromAnInvalidFile_Test(importEntitlementCertFile);
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36630", "RHEL7-51438"})
 	@Test(	description="subscription-manager: attempt an entitlement cert import from a file containing only a key (negative test)",
 			groups={"blockedByBug-849171"},
 			enabled=true)
@@ -352,8 +370,10 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 		File importEntitlementKeyFile = clienttasks.getEntitlementCertKeyFileCorrespondingToEntitlementCertFile(importEntitlementCertFile);
 		attemptAnEntitlementImportFromAnInvalidFile_Test(importEntitlementKeyFile);
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36629", "RHEL7-51437"})
 	@Test(	description="subscription-manager: attempt an entitlement cert import using an identity cert (negative test)",
 			groups={"blockedByBug-844178","blockedByBug-849171"},
 			enabled=true)
@@ -362,8 +382,10 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 		File invalidCertificate = consumerCertFile;
 		attemptAnEntitlementImportFromAnInvalidFile_Test(invalidCertificate);
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-37707", "RHEL7-51439"})
 	@Test(	description="subscription-manager: attempt an entitlement cert import using non existent file (negative test)",
 			groups={},
 			enabled=true)
@@ -372,8 +394,10 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 		String invalidCertificate = "/tmp/nonExistentFile.pem";
 		attemptAnEntitlementImportFromAnInvalidFile_Test(new File(invalidCertificate));
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36637", "RHEL7-51447"})
 	@Test(	description="subscription-manager: import multiple valid certificates and verify subscriptions are consumed",
 			groups={"blockedByBug-860344"},
 			enabled=true)
@@ -404,7 +428,9 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 			Assert.assertTrue(RemoteFileTasks.testExists(client, expectedEntitlementKeyFile.getPath()),"After attempting multiple certificate import, the expected destination for the entitlement key file should now exist ("+expectedEntitlementKeyFile+").");
 		}
 	}
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36636", "RHEL7-51446"})
 	@Test(	description="subscription-manager: import multiple certificates including invalid ones",
 			groups={"blockedByBug-844178","blockedByBug-860344"},
 			enabled=true)
@@ -470,8 +496,10 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 		// assert results for a successful import
 		Assert.assertEquals(importResult.getExitCode(), Integer.valueOf(0), "The exit code from the import command indicates a success when there is a mix of good/bad import certs.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36631", "RHEL7-51441"})
 	@Test(	description="subscription-manager: unsubscribe from an imported entitlement (while not registered)",
 			groups={"blockedByBug-735338","blockedByBug-838146","blockedByBug-860344","blockedByBug-865590"},
 			enabled=true)
@@ -497,8 +525,10 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 		productSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
 		Assert.assertEquals(productSubscriptions.size(), 0, "We should no longer be consuming the imported entitlement after unsubscribing (while not registered).");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-37708", "RHEL7-51440"})
 	@Test(	description="subscription-manager: import (without any options) should fail",
 			groups={},
 			enabled=true)

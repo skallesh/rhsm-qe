@@ -47,6 +47,9 @@ import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.TestDefinition;
+
 /**
  *  @author ssalevan
  *  @author jsefler
@@ -57,7 +60,9 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	
 	
 	// Test Methods ***********************************************************************
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-37701", "RHEL7-51341"})
 	@Test(	description="subscription-manager-cli: list available subscriptions (when not consuming)",
 			groups={},
 			enabled=true)
@@ -76,8 +81,10 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		log.warning(" * Confirm that the marketing names match.. see prereq link https://engineering.redhat.com/trac/IntegratedMgmtQE/wiki/sm-prerequisites");
 		log.warning(" * Match the marketing names w/ https://www.redhat.com/products/");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-19963", "RHEL7-33104"})
 	@Test(	description="subscription-manager-cli: list available subscriptions - verify that among all the subscriptions available to this consumer, those that satisfy the system hardware are listed as available",
 			groups={"AcceptanceTests","Tier1Tests", "blockedByBug-712502","unsubscribeBeforeGroup"},
 			dataProvider="getAvailableSystemSubscriptionPoolProductData",
@@ -147,8 +154,10 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		SubscriptionPool pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", productId, clienttasks.getCurrentlyAvailableSubscriptionPools());
 		Assert.assertNull(pool, "As expected, SubscriptionPool with ProductId '"+productId+"' is NOT listed as available for subscribing.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-27118", "RHEL7-51350"})
 	@Test(	description="subscription-manager-cli: list consumed entitlements (when not consuming)",
 			groups={},
 			enabled=true)
@@ -160,8 +169,10 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		Assert.assertContainsMatch(consumedProductSubscription, "No consumed subscription pools to list",
 				"No consumed subscription pools listed for '"+sm_clientUsername+"' after registering (without autosubscribe).");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-27118", "RHEL7-51350"})
 	@Test(	description="subscription-manager-cli: list consumed entitlements",
 			groups={},
 			dataProvider="getAllSystemSubscriptionPoolProductData",
@@ -182,7 +193,9 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 					"SerialNumber of Consumed Product Subscription matches the serial number from the current entitlement certificate.");
 		}	
 	}
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-37700", "RHEL7-51326"})
 	@Test(	description="subscription-manager-cli: list installed products",
 			groups={},
 			enabled=true)
@@ -213,8 +226,10 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			Assert.assertEquals(installedProduct.status, "Not Subscribed", "The status of installed product when newly registered: "+installedProduct);
 		}
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-37702", "RHEL7-51347"})
 	@Test(	description="subscription-manager: ensure list [--installed] produce the same results",
 			groups={},
 			enabled=true)
@@ -295,6 +310,9 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			}
 		}
 	}
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-27117", "RHEL7-51343"})
 	@Test(	description="subscription-manager: list of consumed entitlements should display the provided product marketing names",
 			groups={"blockedByBug-878986","blockedByBug-976924"},
 			dataProvider="getAllEntitlementCertsData",
@@ -375,8 +393,10 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(ProductSubscription.formatDateString(productSubscription.startDate), ProductSubscription.formatDateString(entitlementCert.orderNamespace.startDate), "startDate from ProductSubscription in list --consumed matches startDate from OrderNamespace ("+OrderNamespace.formatDateString(entitlementCert.orderNamespace.startDate)+") after conversion from GMT in EntitlementCert to local time.");
 		Assert.assertEquals(ProductSubscription.formatDateString(productSubscription.endDate), ProductSubscription.formatDateString(entitlementCert.orderNamespace.endDate), "endDate from ProductSubscription in list --consumed matches endDate from OrderNamespace ("+OrderNamespace.formatDateString(entitlementCert.orderNamespace.endDate)+") after conversion from GMT in EntitlementCert to local time.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36551", "RHEL7-51328"})
 	@Test(	description="subscription-manager: list of consumed subscriptions should report the poolId from which the entitlement originated",
 			groups={"blockedByBug-908671"},
 			enabled=true)
@@ -395,8 +415,10 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(consumedProductSubscriptionsFromPool.size(), 1, "The number of consumed subscriptions reporting the poolId '"+pool.poolId+"' that we just attached.");
 		Assert.assertEquals(consumedProductSubscriptionsFromPool.get(0).poolId, pool.poolId, "Redundant assertion on matching poolId between the attached subscription and the list of consumed subscriptions.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36550", "RHEL7-51327"})
 	@Test(	description="subscription-manager: list of available subscriptions should include contract number",
 			groups={"blockedByBug-1007580","blockedByBug-1088507"},
 			enabled=true)
@@ -457,8 +479,10 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	public void teardownAfterEnsureOnlyRHELPersonalIsAvailableToRegisteredPerson_Test() {
 		if (clienttasks!=null) clienttasks.unregister_(null, null, null);
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-37703", "RHEL7-51348"})
 	@Test(	description="subscription-manager-cli: RHEL Personal should not be an available subscription to a consumer registered as type system",
 			groups={"EnsureRHELPersonalIsNotAvailableToRegisteredSystem_Test"},
 			enabled=true)
@@ -487,10 +511,11 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	public void teardownAfterEnsureRHELPersonalIsNotAvailableToRegisteredSystem_Test() {
 		if (clienttasks!=null) clienttasks.unregister_(null, null, null);
 	}
-	
 
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36548", "RHEL7-51324"})
 	@Test(	description="subscription-manager: subcription manager list consumed should be permitted without being registered",
 			groups={"blockedByBug-725870"},
 			enabled=true)
@@ -504,8 +529,10 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(listResult.getStdout().trim(), "No consumed subscription pools to list","List consumed should NOT require that the system be registered.");
 		Assert.assertEquals(listResult.getExitCode(), Integer.valueOf(0),"Exit code from list consumed when executed without being registered.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36549", "RHEL7-51325"})
 	@Test(	description="subscription-manager: subcription manager list installed should be permitted without being registered",
 			groups={"blockedByBug-725870"},
 			enabled=true)
@@ -515,8 +542,10 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		clienttasks.unregister(null,null,null);
 		SSHCommandResult listResult = clienttasks.listInstalledProducts();
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36564", "RHEL7-51346"})
 	@Test(	description="subscription-manager: subcription manager list should be permitted without being registered",
 			groups={"blockedByBug-725870"},
 			enabled=true)
@@ -528,8 +557,10 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		
 		Assert.assertEquals(listResult.getExitCode(), Integer.valueOf(0), "The exit code from the list command indicates a success.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-37699", "RHEL7-51323"})
 	@Test(	description="subscription-manager: subcription manager list available should require being registered",
 			groups={},
 			enabled=true)
@@ -564,8 +595,10 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			Assert.assertEquals(listResult.getStdout().trim(), clienttasks.msg_ConsumerNotRegistered,"Attempting to list --all --available subscriptions should require registration.");
 		}
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36552", "RHEL7-51329"})
 	@Test(	description="subscription-manager: subcription manager list future subscription pools for a system",
 			groups={"blockedByBug-672562"},
 			enabled=true)
@@ -646,8 +679,10 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		for (String futurePoolId : futurePoolIds) futurePoolIdsListedOnDate.remove(futurePoolId);
 		Assert.assertTrue(futurePoolIdsListedOnDate.isEmpty(),"All of the expected future subscription pools for systems were listed on future dates.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36554", "RHEL7-51332"})
 	@Test(	description="subscription-manager: subcription manager list with --match-installed option",
 			groups={"blockedByBug-654501"},
 			enabled=true)
@@ -687,8 +722,10 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			else Assert.assertTrue(!availableSubscriptionPoolsMatchingInstalled.contains(subscriptionPool),"The list of available subscriptions with match-installed option does NOT include '"+subscriptionPool.subscriptionName+"' provides="+subscriptionPool.provides);
 		}
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36553", "RHEL7-51330"})
 	@Test(	description="subscription-manager: subcription manager list all with --match-installed option",
 			groups={"blockedByBug-654501"},
 			enabled=true)
@@ -727,8 +764,10 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			else Assert.assertTrue(!allAvailableSubscriptionPoolsMatchingInstalled.contains(subscriptionPool),"The list of all available subscriptions with match-installed option does NOT include '"+subscriptionPool.subscriptionName+"' provides="+subscriptionPool.provides);
 		}
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36565", "RHEL7-51349"})
 	@Test(	description="subscription-manager: subcription manager list all with --match-installed option",
 			groups={"blockedByBug-654501","blockedByBug-1022622"/*rhel7*/,"blockedByBug-1114717"/*rhel6*/},
 			enabled=true)
@@ -811,8 +850,10 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			}
 		}
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-27115", "RHEL7-51334"})
 	@Test(	description="subscription-manager: subcription manager list all available should filter by servicelevel when this option is passed.",
 			groups={"blockedByBug-800933","blockedByBug-800999"},
 			dataProvider="getListAvailableWithServicelevelData",
@@ -864,9 +905,10 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			Assert.assertEquals(listResult.getStdout().trim(), expectedStdout, "Expected message when no subscription remain after list is filtered by --servicelevel=\""+servicelevel+"\".");
 		}
 	}
-	
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-19964", "RHEL7-51331"})
 	@Test(	description="subscription-manager: subcription manager list --available with exact --matches on Subscription Name, Provided Product Name, Contract Number, SKU, Service Level, Provided Product ID.  Note: exact match means no wildcards and is case insensitive.",
 			groups={"blockedByBug-1146125","AcceptanceTests","Tier1Tests"},
 			enabled=true)
@@ -1013,6 +1055,9 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		} else log.warning("Skipping list --available --matches test on a Provides ProductId Content Label since the provides list is empty on our random available subscription: "+randomAvailablePool);
 
 	}
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-19965", "RHEL7-33095"})
 	@Test(	description="subscription-manager: subcription manager list --available with wildcard --matches on Subscription Name, Provided Product Name, Contract Number, SKU, Service Level, Provided Product ID.  Note: wildcard match means * matches zero or more char and ? matches one char and is case insensitive.",
 			groups={"blockedByBug-1146125","blockedByBug-1301696","AcceptanceTests","Tier1Tests"},
 			enabled=true)
@@ -1293,8 +1338,10 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		Assert.assertTrue(expectedSubscriptionPoolMatches.containsAll(actualSubscriptionPoolsMatches)&&actualSubscriptionPoolsMatches.containsAll(expectedSubscriptionPoolMatches), "All of the expected available pools with an exact match (ignoring case) on '"+matchesString+"' were returned with the list --available --matches option.");
 
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36556", "RHEL7-51335"})
 	@Test(	description="subscription-manager: subcription manager list --consumed with exact --matches on Subscription Name, Provided Product Name, Contract Number, SKU, Service Level, Provided Product ID.  Note: exact match means no wildcards and is case insensitive.",
 			groups={"blockedByBug-1146125"},
 			enabled=true)
@@ -1411,6 +1458,9 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		// TODO Test 8: test exact --matches on a Content Label provided by a Provided ProductId
 		// see ListAvailableWithExactMatches_Test()		
 	}
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36557", "RHEL7-51337"})
 	@Test(	description="subscription-manager: subcription manager list --consumed with wildcard --matches on Subscription Name, Provided Product Name, Contract Number, SKU, Service Level, Provided Product ID.  Note: wildcard match means * matches zero or more char and ? matches one char and is case insensitive.",
 			groups={"blockedByBug-1146125","blockedByBug-1204311"},
 			enabled=true)
@@ -1642,9 +1692,10 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		Assert.assertTrue(expectedProductSubscriptionMatches.containsAll(actualProductSubscriptionMatches)&&actualProductSubscriptionMatches.containsAll(expectedProductSubscriptionMatches), "All of the expected consumed subscriptions with an exact match (ignoring case) on '"+matchesString+"' were returned with the list --consumed --matches option.");
 
 	}
-	
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36563", "RHEL7-51345"})
 	@Test(	description="subscription-manager: subcription manager list --installed with exact --matches on Product Name, Product ID.  Note: exact match means no wildcards and is case insensitive.",
 			groups={"blockedByBug-1146125"},
 			enabled=true)
@@ -1705,6 +1756,9 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		assertActualResultOfListInstalledWithMatches(matchesString,actualInstalledProductMatches,installedProducts);
 
 	}
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36559", "RHEL7-51339"})
 	@Test(	description="subscription-manager: subcription manager list --installed with wildcard --matches on Product Name, Product ID.  Note: wildcard match means * matches zero or more char and ? matches one char and is case insensitive.",
 			groups={"blockedByBug-1146125"},
 			enabled=true)
@@ -1808,8 +1862,10 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		Assert.assertTrue(expectedInstalledProductMatches.containsAll(actualInstalledProductMatches)&&actualInstalledProductMatches.containsAll(expectedInstalledProductMatches), "All of the expected installed products with an exact match (ignoring case) on '"+matchesString+"' were returned with the list --installed --matches option.");
 
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36555", "RHEL7-51333"})
 	@Test(	description="subscription-manager: subcription manager list --available with --matches='nothing'",
 			groups={"blockedByBug-1146125"},
 			enabled=true)
@@ -1833,8 +1889,10 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(result.getStdout().trim(),expectedStdout,	"Stdout expected from calling list --consumed --matches with no expected matches.");
 		Assert.assertEquals(result.getStderr().trim(),"",				"Stderr expected from calling list --available --matches with no expected matches.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36560", "RHEL7-51340"})
 	@Test(	description="subscription-manager: subcription manager list --consumed with --matches='nothing'",
 			groups={"blockedByBug-1146125"},
 			enabled=true)
@@ -1863,8 +1921,10 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(result.getStdout().trim(),expectedStdout,	"Stdout expected from calling list --available --consumed with no expected matches.");
 		Assert.assertEquals(result.getStderr().trim(),"",				"Stderr expected from calling list --consumed --matches with no expected matches.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36558", "RHEL7-51338"})
 	@Test(	description="subscription-manager: subcription manager list --installed with --matches='nothing'",
 			groups={"blockedByBug-1146125"},
 			enabled=true)
@@ -1881,8 +1941,10 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(result.getStdout().trim(), expectedStdout,	"Stdout expected from calling list --installed --consumed with no expected matches.");
 		Assert.assertEquals(result.getStderr().trim(),"",				"Stderr expected from calling list --installed --matches with no expected matches.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36561", "RHEL7-51342"})
 	@Test(	description="subscription-manager: subcription manager list --available --consumed --installed with --matches='nothing'",
 			groups={"blockedByBug-1146125"},
 			enabled=true)
@@ -1911,9 +1973,10 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(result.getStdout().trim(),expectedStdout,	"Stdout expected from calling list --installed --available --consumed --matches with no expected matches.");
 		Assert.assertEquals(result.getStderr().trim(),"",				"Stderr expected from calling list --installed --available --consumed --matches with no expected matches.");
 	}
-	
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36562", "RHEL7-51344"})
 	@Test(	description="subscription-manager: subcription manager list --available with --pool-only",
 			groups={"blockedByBug-1159974"},
 			enabled=true)
@@ -1950,8 +2013,10 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		for (SubscriptionPool availableSubscriptionPool : availableSubscriptionPools) Assert.assertTrue(actualSubscriptionPoolIds.contains(availableSubscriptionPool.poolId),	"The result of list --available with --pool-only contains expected poolId '"+availableSubscriptionPool.poolId+"'.");
 		Assert.assertEquals(actualSubscriptionPoolIds.size(), availableSubscriptionPools.size(),	"The number of poolIds returned from calling list --pool-only should match the number of available SubscriptionPools listed without --pool-only.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-27116", "RHEL7-51336"})
 	@Test(	description="subscription-manager: subcription manager list consumed should filter by servicelevel when this option is passed.",
 			groups={"blockedByBug-800933","blockedByBug-800999"},
 			dataProvider="getConsumedWithServicelevelData",
@@ -2011,6 +2076,9 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, subscriptionNameForSubscriptionContainingUTF8Character, productIdForSubscriptionContainingUTF8Character, 1, attributes, null);
 		CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, 20, -1*24*60/*1 day ago*/, 15*24*60/*15 days from now*/, getRandInt(), getRandInt(), productIdForSubscriptionContainingUTF8Character, providedProductIds, null);
 	}
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36566", "RHEL7-51351"})
 	@Test(	description="subscription-manager: subcription manager list available should display subscriptions containing UTF-8 character(s)",
 			groups={"SubscriptionContainingUTF8CharacterTests","blockedByBug-880070","blockedByBug-919584","blockedByBug-977535"},
 			priority=110,
@@ -2064,6 +2132,9 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		Assert.assertNotNull(poolForSubscriptionContainingUTF8Character, "Found subscription product '"+productIdForSubscriptionContainingUTF8Character+"' from the list of available subscriptions whose name contains a UTF8 character.");
 		Assert.assertEquals(poolForSubscriptionContainingUTF8Character.subscriptionName, subscriptionNameForSubscriptionContainingUTF8Character, "asserting the subscription name.");
 	}
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-37704", "RHEL7-51352"})
 	@Test(	description="subscription-manager: subcription manager attach a subscription containing UTF-8 character(s)",
 			groups={"SubscriptionContainingUTF8CharacterTests","blockedByBug-889204","blockedByBug-981689"},
 			dependsOnMethods={"ListSubscriptionContainingUTF8Character_Test"},
@@ -2087,6 +2158,9 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(sshCommandResult.getStderr().trim(), "", "Stderr from an attempt to attach '"+subscriptionNameForSubscriptionContainingUTF8Character+"'.");
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "ExitCode from an attempt to attach '"+subscriptionNameForSubscriptionContainingUTF8Character+"'.");
 	}
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-37705", "RHEL7-51353"})
 	@Test(	description="rct: cat-cert an entitlement containing UTF-8 character(s)",
 			groups={"SubscriptionContainingUTF8CharacterTests","blockedByBug-890296","blockedByBug-1048325"},
 			dependsOnMethods={"AttachSubscriptionContainingUTF8Character_Test"},
@@ -2139,6 +2213,9 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "ExitCode from an attempt to run rct cat-cert on an entitlement containing UTF-8 character(s)");
 		Assert.assertEquals(sshCommandResult.getStderr().trim(), "", "Stderr from an attempt to run rct cat-cert on an entitlement containing UTF-8 character(s)");
 	}
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-37706", "RHEL7-51354"})
 	@Test(	description="subscription-manager: subcription manager remove a consumed subscription containing UTF-8 character(s)",
 			groups={"SubscriptionContainingUTF8CharacterTests","blockedByBug-889204"},
 			dependsOnMethods={"CatCertContainingUTF8Character_Test"},
@@ -2159,9 +2236,10 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		clienttasks.unregister_(null, null, null);	// to return any consumed subscriptions containing UTF8 characters
 		if (productIdForSubscriptionContainingUTF8Character!=null && !sm_serverType.equals(CandlepinType.hosted)/* we do NOT create/delete subscriptions against hosted */) CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, productIdForSubscriptionContainingUTF8Character);
 	}
-	
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-19966", "RHEL7-33101"})
 	@Test(	description="subscription-manager: list installed should include product certs in /etc/pki/product-default",  // see description in https://github.com/candlepin/subscription-manager/pull/1009
 			groups={"AcceptanceTests","Tier1Tests","ListInstalledWithProductDefault_Test","blockedByBug-1123029"/*1080012*/},	// subscription-manager 1123029 - [RFE] Use default product certificates when they are present COMPLEMENT TO REL-ENG RFE 1080012 - [RFE] Include default product certificate in redhat-release
 			priority=150,

@@ -11,6 +11,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.TestDefinition;
+
 import org.json.JSONException;
 import org.testng.SkipException;
 import org.testng.annotations.AfterClass;
@@ -74,7 +77,9 @@ import rhsm.data.YumRepo;
 public class DockerTests extends SubscriptionManagerCLITestScript {
 
 	// Test methods ***********************************************************************
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-26768", "RHEL7-51756"})
 	@Test(	description="Verify that when in container mode, attempts to run subscription-manager are blocked",
 			groups={"VerifySubscriptionManagementCommandIsDisabledInContainerMode_Test","blockedByBug-1114126"},
 			dataProvider="getSubscriptionManagementCommandData",
@@ -117,15 +122,16 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 			Assert.assertTrue(RemoteFileTasks.testExists(client, entitlementHostDir), "After setting up container mode, directory '"+entitlementHostDir+"' should exist.");
 		}
 	}
-	
-	
-	
-	
-	
-	
-	
-	
-	
+
+
+
+
+
+
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-26769", "RHEL7-51757"})
 	@Test(	description="Verify that when in container mode, redhat.repo is populated from the entitlements in /etc/rhsm/entitlement-host",
 			groups={"VerifySubscriptionManagementEntitlementsInContainerMode_Test"},
 			enabled=true)
@@ -205,8 +211,10 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 		}
 	}
 	protected String consumerId=null;
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-26767", "RHEL7-33099"})
 	@Test(	description="Verify that subscription-manager-container-plugin provides needed registry_hostnames and CA certs",
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1184940","blockedByBug-1186386"},
 			enabled=true)
@@ -237,11 +245,12 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 	
 	
 	// RHEL7 Only ==============================================================================================
-	
-	@SuppressWarnings("unused")
+    @TestDefinition( projectID = {Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL7-51754"})
 	@Test(	description="install the latest docker package on the host",
 			groups={"AcceptanceTests","Tier1Tests"},
 			enabled=true)
+	@SuppressWarnings("unused")
 	//@ImplementsNitrateTest(caseId=)
 	public void InstallDockerPackageOnHost_Test() throws IOException, JSONException {
 		// assert that the host system is rhel7+
@@ -332,7 +341,9 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
         }
 		return new SSHCommandResult(exitCode,stdout.trim(),stderr.trim());
 	}
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-26772", "RHEL7-55316"})
 	@Test(	description="verify the specified docker image downloads and will run subscription-manager >= 1.12.4-1",
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1186386"},
 			dependsOnMethods={"InstallDockerPackageOnHost_Test"},
@@ -405,7 +416,9 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 		String subscriptionManagerVersionInDockerImage = versionResult.getStdout().trim().replace("subscription-manager"+"-", "");
 		Assert.assertTrue(clienttasks.isVersion(subscriptionManagerVersionInDockerImage, ">=", "1.12.4-1"), "Expecting the version of subscription-manager baked inside image '"+dockerImage+"' to be >= 1.12.4-1 (first docker compatible version of subscription-manager)");
 	}
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-26771", "RHEL7-55538"})
 	@Test(	description="verify a running container has no yum repolist when the host has no entitlement",
 			groups={"AcceptanceTests","Tier1Tests"},
 			dependsOnMethods={"PullDockerImage_Test"},
@@ -429,7 +442,9 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 		String expectedStdoutMsg = "repolist: 0";
 		Assert.assertTrue(yumRepolistResultOnRunningDockerImage.getStdout().trim().endsWith(expectedStdoutMsg), "Stdout from docker run yum repolist command ends with '"+expectedStdoutMsg+"'");
 	}
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-26773", "RHEL7-55539"})
 	@Test(	description="verify a running container has yum repolist access to appropriate content from the host's entitlement",
 			groups={"AcceptanceTests","Tier1Tests"},
 			dependsOnMethods={"VerifyYumRepolistIsEmptyOnRunningDockerImageWhenHostIsUnregistered_Test"},
@@ -607,8 +622,10 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 		}
 		if (!installedPackage) log.warning("Skipped attempts to install a package since the rhel-(6|7)-server-rpms repo was not entitled.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL7-60185"})
 	@Test(	description="verify a running container has access to all the entitlement certs from the host",
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1353433"},
 			dependsOnMethods={"VerifyYumRepolistOnRunningDockerImageConsumedFromHostEntitlements_Test"},
@@ -699,8 +716,10 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 		// Test 2: assert the listed filenames match (after more entitlements have been attached to the host)
 		Assert.assertEquals(entitlementCertListingResult.getStdout().trim(), entitlementHostCertListingResult.getStdout().trim(), "The entitlement cert files accessible in directory '"+entitlementHostDir+"' within a running container match the entitlment cert files found in the host's directory '"+entitlementDir+"'.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-26770", "RHEL7-51758"})
 	@Test(	description="Verify that entitlements providing containerimage content are copied to relevant directories when attached via auto-subscribe (as governed by the subscription-manager-plugin-container package)",
 			groups={"AcceptanceTests","Tier1Tests"},
 			enabled=true)
@@ -743,6 +762,9 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 			}
 		}
 	}
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-26766", "RHEL7-51755"})
 	@Test(	description="Verify that entitlements providing containerimage content are copied to relevant directories when attached via auto-heal (as governed by the subscription-manager-plugin-container package)",
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1165692","blockedByBug-1344500","blockedByBug-1343139"},
 			enabled=true)

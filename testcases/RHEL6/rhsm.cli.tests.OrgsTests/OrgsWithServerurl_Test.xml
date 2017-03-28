@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<testcase id="RHEL6-36576">
+    <title>rhsm.cli.tests.OrgsTests.OrgsWithServerurl_Test</title>
+    <description>subscription-manager: orgs with --serverurl</description>
+    <test-steps>
+        <test-step>
+            <test-step-column id="step">
+                <parameter name="bugzilla" scope="local"/>
+                <parameter name="serverurl" scope="local"/>
+                <parameter name="expectedHostname" scope="local"/>
+                <parameter name="expectedPort" scope="local"/>
+                <parameter name="expectedPrefix" scope="local"/>
+                <parameter name="expectedExitCode" scope="local"/>
+                <parameter name="expectedStdoutRegex" scope="local"/>
+                <parameter name="expectedStderrMatch" scope="local"/>
+            </test-step-column>
+        </test-step>
+    </test-steps>
+    <custom-fields>
+        <custom-field id="caseautomation" content="automated"></custom-field>
+        <custom-field id="caseimportance" content="high"></custom-field>
+        <custom-field id="caselevel" content="component"></custom-field>
+        <custom-field id="caseposneg" content="positive"></custom-field>
+        <custom-field id="testtype" content="functional"></custom-field>
+        <custom-field id="subtype1" content="-"></custom-field>
+        <custom-field id="subtype2" content="-"></custom-field>
+    </custom-fields>
+</testcase>

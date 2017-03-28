@@ -28,6 +28,9 @@ import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.TestDefinition;
+
 /**
  * @author jsefler
  *
@@ -77,6 +80,8 @@ public class ManifestTests extends SubscriptionManagerCLITestScript {
 	
 	// Test methods ***********************************************************************
 
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36647", "RHEL7-51458"})
 	@Test(	description="execute rct dump-manifest against all of the test manifest files",
 			groups={"blockedByBug-961124"},
 			priority=5, enabled=true)
@@ -96,8 +101,10 @@ public class ManifestTests extends SubscriptionManagerCLITestScript {
 		dumpResult = RemoteFileTasks.runCommandAndAssert(client, "cd "+manifestFile.getParent()+" && rct dump-manifest --force "+manifestFile, 0);
 		Assert.assertEquals(dumpResult.getStdout().trim(), "The manifest has been dumped to the current directory", "stdout from rct dump-manifest");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36648", "RHEL7-51459"})
 	@Test(	description="execute rct dump-manifest against all of the test manifest files",
 			groups={"blockedByBug-919561"},
 			dataProvider="ManifestFilesData",
@@ -130,7 +137,9 @@ public class ManifestTests extends SubscriptionManagerCLITestScript {
 			Assert.assertTrue(manifestContents.contains(expectedExportFile),"The contents of the rct dump-manifest includes '"+content+"'.");
 		}
 	}
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36649", "RHEL7-51478"})
 	@Test(	description="execute rct dump-manifest --destination=/tmp/RCTDumpManifestDestination_Test against all of the test manifest files",
 			groups={"blockedByBug-919561"},
 			dataProvider="ManifestFilesData",
@@ -166,8 +175,10 @@ public class ManifestTests extends SubscriptionManagerCLITestScript {
 			Assert.assertTrue(manifestContents.contains(expectedExportFile),"The contents of the rct dump-manifest --destination="+destination+" includes '"+content+"'.");
 		}
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36651", "RHEL7-51483"})
 	@Test(	description="execute rct cat-manifest against all of the test manifest files",
 			groups={"blockedByBug-919561","blockedByBug-913720","blockedByBug-967137","blockedByBug-914717"},
 			dependsOnMethods={"RCTDumpManifestDestination_Test"}, // to populate manifestFileContentMap
@@ -178,8 +189,10 @@ public class ManifestTests extends SubscriptionManagerCLITestScript {
 	public void RCTCatManifest_Test(Object bugzilla, File manifestFile) throws Exception {
 		verifyRCTCatManifestWithOptions(manifestFile, null);
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36650", "RHEL7-74911"})
 	@Test(	description="execute rct cat-manifest with --no-content option against all of the test manifest files",
 			groups={"blockedByBug-1336883"},
 			dependsOnMethods={"RCTDumpManifestDestination_Test"}, // to populate manifestFileContentMap
@@ -193,8 +206,10 @@ public class ManifestTests extends SubscriptionManagerCLITestScript {
 		}
 		verifyRCTCatManifestWithOptions(manifestFile, Arrays.asList("--no-content"));
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36645", "RHEL7-51456"})
 	@Test(	description="execute rct cat-manifest against a non-zip file (e.g. the identity cert)",
 			groups={"blockedByBug-994344"},
 			enabled=true)
@@ -208,8 +223,10 @@ public class ManifestTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(result.getStderr().trim(), "", "Stderr from rct cat-manifest with a non-zip file.");
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(1), "Exitcode from rct cat-manifest with a non-zip file.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36646", "RHEL7-51457"})
 	@Test(	description="execute rct dump-manifest against a non-zip file (e.g. the identity cert)",
 			groups={"blockedByBug-994344"},
 			enabled=true)

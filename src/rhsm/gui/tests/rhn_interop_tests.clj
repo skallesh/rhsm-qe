@@ -13,7 +13,9 @@
             BeforeClass
             AfterClass
             BeforeGroups
-            Test]))
+            Test])
+  (:import [com.github.redhatqe.polarize.metadata TestDefinition]
+           [com.github.redhatqe.polarize.metadata DefTypes$Project]))
 
 (def systemid "/etc/sysconfig/rhn/systemid")
 
@@ -41,8 +43,10 @@
     (tasks/start-app))
   (run-command (str "rm -f " systemid)))
 
-(defn ^{Test {:groups ["interop"
-                       "tier2"]}}
+(defn ^{Test           {:groups ["interop"
+                                 "tier2"]}
+        TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-36503" "RHEL7-55590"]}}
   check_warning
   "Tests that a warning message is shown when registered to classic and launching the app."
   [_]
@@ -52,10 +56,12 @@
   (verify (tasks/ui exists? :warning-dialog "*"))
   (kill-app))
 
-(defn ^{Test {:groups ["interop"
-                       "tier2"
-                       "blockedByBug-667991"]
-              :dependsOnMethods ["check_warning"]}}
+(defn ^{Test           {:groups           ["interop"
+                                           "tier1"
+                                           "blockedByBug-667991"]
+                        :dependsOnMethods ["check_warning"]}
+        TestDefinition {:projectID [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-37686", "RHEL7-55592"]}}
   check_warning_ok
   "Tests that the RHN Classic warning can be cleared and that the main winow is still open."
   [_]
@@ -66,10 +72,12 @@
   (verify (tasks/ui exists? :main-window "*"))
   (kill-app))
 
-(defn ^{Test {:groups ["interop"
-                       "tier2"
-                       "blockedByBug-667991"]
-              :dependsOnMethods ["check_warning"]}}
+(defn ^{Test           {:groups           ["interop"
+                                           "tier2"
+                                           "blockedByBug-667991"]
+                        :dependsOnMethods ["check_warning"]}
+        TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-37685" "RHEL7-55591"]}}
   check_warning_cancel
   "Tests the cancel button of the RHN Classic warning and that the main window closes."
   [_]
@@ -79,10 +87,12 @@
   (verify (bool (tasks/ui waittillwindownotexist :main-window 30)))
   (kill-app))
 
-(defn ^{Test {:groups ["interop"
-                       "tier2"
-                       "blockedByBug-667991"]
-              :dependsOnMethods ["check_warning" "check_warning_ok" "check_warning_cancel"]}}
+(defn ^{Test           {:groups           ["interop"
+                                           "tier1"
+                                           "blockedByBug-667991"]
+                        :dependsOnMethods ["check_warning" "check_warning_ok" "check_warning_cancel"]}
+        TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-37687" "RHEL7-55593"]}}
   check_no_warning
   "Asserts that no warning is shown when the app is started without the presence of a systemid file."
   [_]

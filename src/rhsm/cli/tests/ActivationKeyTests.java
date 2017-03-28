@@ -34,6 +34,8 @@ import rhsm.data.ProductSubscription;
 import rhsm.data.SubscriptionPool;
 
 import com.redhat.qe.tools.SSHCommandResult;
+import com.github.redhatqe.polarize.metadata.TestDefinition;
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
 
 /**
  * @author jsefler
@@ -44,7 +46,8 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 	
 	
 	// Test methods ***********************************************************************
-
+	@TestDefinition( projectID={Project.RHEL6, Project.RedHatEnterpriseLinux7}
+	               , testCaseID={"RHEL6-21790", "RHEL7-51607"})
 	@Test(	description="create an activation key named with an international character, add a pool to it (without specifying a quantity), and then register with the activation key",
 			groups={},
 			dataProvider="getRegisterWithUnknownActivationKeyData",
@@ -75,7 +78,9 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(sshCommandResult.getStderr().trim(), expectedStderr, "Stderr message from an attempt to register with an unknown activation key '"+unknownActivationKeyName+"' to org '"+org+"'.");
 		Assert.assertEquals(sshCommandResult.getExitCode(), expectedExitCode);
 	}
-	
+
+	@TestDefinition( projectID={Project.RHEL6, Project.RedHatEnterpriseLinux7}
+	               , testCaseID={"RHEL6-21786", "RHEL7-51603"})
 	@Test(	description="use the candlepin api to create valid activation keys",
 			groups={},
 			dataProvider="getRegisterCredentialsExcludingNullOrgData",
@@ -145,7 +150,9 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(true,"Deleted activation key with id '"+jsonActivationKeyC.getString("id")+"' is no longer found in the /activation_keys list.");
 	}
 
-	
+
+	@TestDefinition( projectID={Project.RHEL6, Project.RedHatEnterpriseLinux7}
+	               , testCaseID={"RHEL6-21788", "RHEL7-51605"})
 	@Test(	description="use the candlepin api to attempt creation of an activation key with a bad name",
 			groups={},
 			dataProvider="getActivationKeyCreationWithBadNameData",
@@ -175,7 +182,9 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		}
 	}
 	
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+	               , testCaseID = {"RHEL6-21787", "RHEL7-51604"})
 	@Test(	description="use the candlepin api to attempt to create a duplicate activation key",
 			groups={"blockedByBug-728636"},
 			enabled=true)
@@ -556,8 +565,10 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		
 		return registerResult;
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21797", "RHEL7-51614"})
 	@Test(	description="create an activation key, add it to a pool with a quantity outside the total possible available.  Also test adding a key with quantity 0 and -1. Also test pools with an unlimited quantity.",
 			groups={"blockedByBug-729125"},
 			dataProvider="getAllMultiEntitlementJSONPoolsData",
@@ -575,8 +586,10 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		if (!excessiveQuantity.equals(Integer.valueOf(0))/* already tested 0*/) RegisterWithActivationKeyContainingPoolWithQuantity_Test(blockedByBug, keyName+"_Quantity0", jsonPool, 0);
 		if (!excessiveQuantity.equals(Integer.valueOf(1))/* already tested 1*/) RegisterWithActivationKeyContainingPoolWithQuantity_Test(blockedByBug, keyName+"_Quantity-1", jsonPool, -1);
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21798", "RHEL7-51615"})
 	@Test(	description="create an activation key, add a pool to it (without specifying a quantity), and then register with the activation key",
 			groups={"blockedByBug-878986","blockedByBug-979492","blockedByBug-1023568"},
 			dataProvider="getRegisterWithActivationKeyContainingPool_TestData",
@@ -600,7 +613,9 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 	public void RegisterWithInternationalActivationKeyContainingPool_Test(Object blockedByBug, String keyName, JSONObject jsonPool) throws JSONException, Exception {
 		RegisterWithActivationKeyContainingPoolWithQuantity_Test(blockedByBug, keyName, jsonPool, null);
 	}
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21801", "RHEL7-51618"})
 	@Test(	description="create an activation key for each org and then attempt to register with the activation key using a different org",
 			groups={},
 			enabled=true)
@@ -674,8 +689,10 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 			}
 		}
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21796", "RHEL7-51613"})
 	@Test(	description="create an activation key with a valid quantity and attempt to register with it when not enough entitlements remain",
 			groups={},
 			dataProvider="getAllMultiEntitlementJSONPoolsData",
@@ -733,8 +750,10 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(registerResult.getExitCode(), expectedExitCode, "The exitCode from registering with an activationKey containing a pool for which non enough entitlements remain should fail.");
 		Assert.assertNull(clienttasks.getCurrentConsumerCert(), "There should be no consumer cert on the system when register with activation key fails.");	// make sure there is no consumer cert - register with activation key should be 100% successful - if any one part fails, the whole operation fails
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21795", "RHEL7-51612"})
 	@Test(	description="create an activation key and add many pools to it and then register asserting all the pools get consumed",
 			groups={"blockedByBug-1040101"},
 			enabled=true)
@@ -814,8 +833,10 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		}
 		Assert.assertEquals(clienttasks.getCurrentEntitlementCertFiles().size(), jsonActivationKey.getJSONArray("pools").length(), "Expecting a new entitlement cert file in '"+clienttasks.entitlementCertDir+"' for each of the pools added to the activation key.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21802", "RHEL7-51619"})
 	@Test(	description="create many activation keys with one added pool per key and then register with --activationkey=comma_separated_string_of_keys asserting all the pools get consumed",
 			groups={"blockedByBug-878986","blockedByBug-979492","blockedByBug-1040101"},
 			enabled=true)
@@ -899,8 +920,10 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		}
 		Assert.assertEquals(clienttasks.getCurrentEntitlementCertFiles().size(), activationKeyNames.size(), "Expecting a new entitlement cert file in '"+clienttasks.entitlementCertDir+"' for each of the single pooled activation keys used during register.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21803", "RHEL7-51620"})
 	@Test(	description="create many activation keys with one added pool per key and then register with a sequence of many --activationkey parameters asserting each pool per key gets consumed",
 			groups={"blockedByBug-878986","blockedByBug-979492","blockedByBug-1040101"},
 			enabled=true)
@@ -980,8 +1003,10 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		}
 		Assert.assertEquals(clienttasks.getCurrentEntitlementCertFiles().size(), activationKeyNames.size(), "Expecting a new entitlement cert file in '"+clienttasks.entitlementCertDir+"' for each of the single pooled activation keys used during register.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21799", "RHEL7-51616"})
 	@Test(	description="create an activation key, add a release to it, and then register with the activation key",
 			groups={"blockedByBug-1062292"},
 			enabled=true)
@@ -1096,8 +1121,10 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 			Assert.assertEquals(listResult.getStdout().trim(),"This system does not have any content overrides applied to it.","After registering with an activation key containing a releaseVer, but no contentOverrides, this is the subscription-manager repo-override report.");
 		}
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21792", "RHEL7-51609"})
 	@Test(	description="create an activation key, add content overrides, and then register with the activation key",
 			groups={"blockedByBug-1062292"},
 			enabled=true)
@@ -1230,8 +1257,10 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		// finally, verify the current release was not set
 		Assert.assertEquals(clienttasks.getCurrentRelease(), "", "The expected releaseVer after registering with an activation key containing contentOverrides but no releaseVer.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21789", "RHEL7-51606"})
 	@Test(	description="use the candlepin api to attempt creation of an activation key with a bad service level",
 			groups={},	// Candlepin commit 387463519444634bb242b456db7bc89cf0eae43e Add SLA functionality to Activation Keys.
 			enabled=true)
@@ -1256,7 +1285,9 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 			Assert.fail("The following activation key should not have been created with bad serviceLevel '"+mapActivationKeyRequest.get("serviceLevel")+"': "+jsonActivationKey);
 		}
 	}
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21800", "RHEL7-51617"})
 	@Test(	description="create an activation key, add a service level to it, and then register with the activation key",
 			groups={},	// Candlepin commit 387463519444634bb242b456db7bc89cf0eae43e Add SLA functionality to Activation Keys.
 			enabled=true)
@@ -1336,7 +1367,9 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		// verify the current serviceLevel equals the new value set in the activation key
 		Assert.assertEquals(clienttasks.getCurrentServiceLevel(), serviceLevel, "After registering with an activation key containing an updated serviceLevel, the current service level is properly set.");
 	}
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21794", "RHEL7-51611"})
 	@Test(	description="create an activation key, add a service level (for a future subscription) to it, and then register with the activation key",
 			groups={"RegisterWithActivationKeyContainingFutureServiceLevel_Test"},	// Candlepin commit 387463519444634bb242b456db7bc89cf0eae43e Add SLA functionality to Activation Keys.
 			enabled=true)
@@ -1396,8 +1429,10 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, name, productId, 1, attributes, null);
 		CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, 4, 100*24*60/*100 days from now*/, 200*24*60/*200 days from now*/, getRandInt(), getRandInt(), productId, providedProductIds, null);
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21793", "RHEL7-51610"})
 	@Test(	description="create an activation key, add a service level (for an expired subscription) to it, and then register with the activation key",
 			groups={"RegisterWithActivationKeyContainingExpiredServiceLevel_Test","blockedByBug-1262435","blockedByBug-1344765"},	// Candlepin commit 387463519444634bb242b456db7bc89cf0eae43e Add SLA functionality to Activation Keys.
 			enabled=true)
@@ -1488,8 +1523,10 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, name, productId, 1, attributes, null);
 		CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, 4, -10*24*60/*10 days ago*/, 1/*1 minute from now*/, getRandInt(), getRandInt(), productId, providedProductIds, null);
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21791", "RHEL7-51608"})
 	@Test(	description="attempt to register two different consumers with multiple activation keys (in reverse order) containing many subscriptions",
 			groups={"blockedByBug-1095939"})
 			//@ImplementsNitrateTest(caseId=)

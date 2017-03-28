@@ -7,6 +7,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
 
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.TestDefinition;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.testng.SkipException;
@@ -59,7 +62,9 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 
 	
 	// Test methods ***********************************************************************
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36543", "RHEL7-51318"})
 	@Test(	description="subscription-manager-cli: identity (when not registered)",
 			groups={"blockedByBug-654429"},
 			enabled=true)
@@ -83,8 +88,10 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 			}
 		}
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36545", "RHEL7-51320"})
 	@Test(	description="subscription-manager-cli: identity should report RHN Classic remote server type when only registered classically",
 			groups={"RHNClassicTests"},
 			enabled=true)
@@ -105,7 +112,9 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(identityResult.getStderr().trim(), "","Stderr when registered to RHN Classic, but not candlepin.");
 	}
 
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36544", "RHEL7-51319"})
 	@Test(	description="subscription-manager-cli: identity should report RHN Classic remote server type and candlepin when over-registered",
 			groups={"RHNClassicTests","blockedByBug-846834","blockedByBug-852328"},
 			enabled=true)
@@ -131,8 +140,10 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 			Assert.assertTrue(Pattern.compile(expectedStdoutRegex, Pattern.MULTILINE/* | Pattern.DOTALL*/).matcher(identityResult.getStdout()).find(),"Stdout contains expected regex: "+expectedStdoutRegex);
 		}
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36547", "RHEL7-51322"})
 	@Test(	description="subscription-manager-cli: identity",
 			groups={"blockedByBug-852001","blockedByBug-1101522"},
 			enabled=true)
@@ -165,8 +176,10 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		identityRegex = String.format("^%s%s$", "org ID: ",owner.getString("key"));	// technically the org id has been changed to display "key" which is more useful (after bug fix 852001)
 		Assert.assertContainsMatch(identityResult.getStdout().trim(), identityRegex);
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36546", "RHEL7-51321"})
 	@Test(	description="subscription-manager-cli: identity (when the client registered with --name)",
 			groups={"blockedByBug-647891","blockedByBug-1101522"},
 			enabled=true)
@@ -190,8 +203,10 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		identityRegex = String.format("^%s%s$", "name: ",nickname);
 		Assert.assertContainsMatch(identityResult.getStdout().trim(), identityRegex);
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-19961", "RHEL7-33075"})
 	@Test(	description="subscription-manager-cli: identity regenerate",
 			groups={"AcceptanceTests","Tier1Tests"},
 			enabled=true)
@@ -220,8 +235,10 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(newConsumerCert.validityNotBefore.after(origConsumerCert.validityNotBefore), "The new validity start date is after the original.");
 		Assert.assertNotSame(newConsumerCert.serialNumber, origConsumerCert.serialNumber, "The serial numbers should not match on a regenerated identity cert.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36542", "RHEL7-51317"})
 	@Test(	description="subscription-manager-cli: identity regenerate with username and password from the same owner",
 			groups={"blockedByBug-1254349"}, /*dependsOnGroups={"RegisterWithCredentials_Test"},*/
 			enabled=true)
@@ -258,8 +275,10 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 				"The original registered result is returned from identity regenerate with original authenticator.");
 		}
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36541", "RHEL7-51316"})
 	@Test(	description="subscription-manager-cli: identity regenerate with username and password from a different owner (negative test)",
 			groups={}, /*dependsOnGroups={"RegisterWithCredentials_Test"},*/
 			enabled=true)
@@ -286,8 +305,10 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 			Assert.assertEquals(identityResult.getStderr().trim(), String.format("Consumer with id %s could not be found.",consumerId));	// new server response 404 Not Found from candlepin pull request https://github.com/candlepin/candlepin/pull/444 'Update auth system to allow "my system" administrators'
 		}
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36540", "RHEL7-51315"})
 	@Test(	description="subscription-manager-cli: identity regenerate with invalid username and password (attempt with and without force) (negative test)",
 			groups={},
 			enabled=true)
@@ -322,6 +343,9 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 			origConsumerCertDir = clienttasks.consumerCertDir;
 		}
 	}
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-19962", "RHEL7-51006"})
 	@Test(	description="subscription-manager: assert that the consumer cert is backed up when a server-side deletion is detected.",
 			groups={"AcceptanceTests","Tier1Tests","VerifyIdentityIsBackedUpWhenConsumerIsDeletedServerSide_Test","blockedByBug-814466","blockedByBug-813296","blockedByBug-838187","blockedByBug-852706","blockedByBug-872847","blockedByBug-894633","blockedByBug-907638","blockedByBug-822402","blockedByBug-986572","blockedByBug-1000301","blockedByBug-1026435","blockedByBug-1019747","blockedByBug-1026501","blockedByBug-1366301","blockedByBug-1397201"},
 			dataProvider="getConsumerCertDirData",

@@ -21,7 +21,10 @@
             BeforeClass
             BeforeGroups
             Test]
-           org.testng.SkipException))
+           org.testng.SkipException
+           [com.redhat.qe.auto.bugzilla BzChecker]
+           [com.github.redhatqe.polarize.metadata TestDefinition]
+           [com.github.redhatqe.polarize.metadata DefTypes$Project]))
 
 (def firstboot-auth-log "/var/log/squid/access.log")
 (def firstboot-noauth-log "/var/log/tinyproxy.log")
@@ -103,11 +106,13 @@
   (run-command "subscription-manager clean")
   (zero-proxy-values))
 
-(defn ^{Test {:groups ["firstboot_proxy"
-                       "tier2"
-                       "tier1" "acceptance"
-                       "blockedByBug-1199211"]
-              :priority (int 100)}}
+(defn ^{Test           {:groups   ["firstboot_proxy"
+                                   "tier2"
+                                   "tier1" "acceptance"
+                                   "blockedByBug-1199211"]
+                        :priority (int 100)}
+        TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-36369" "RHEL7-32865"]}}
   firstboot_enable_proxy_auth_connect
   "Asserts that the rhsm.conf file is correctly set after setting a proxy with auth."
   [_]
@@ -141,11 +146,13 @@
       (tasks/disableproxy true)
       (kill_firstboot))))
 
-(defn ^{Test {:groups ["firstboot_proxy"
-                       "tier2"
-                       "tier1" "acceptance"
-                       "blockedByBug-1199211"]
-              :priority (int 101)}}
+(defn ^{Test           {:groups   ["firstboot_proxy"
+                                   "tier2"
+                                   "tier1" "acceptance"
+                                   "blockedByBug-1199211"]
+                        :priority (int 101)}
+        TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-36370" "RHEL7-32867"]}}
   firstboot_enable_proxy_noauth_connect
   "Asserts that the rhsm.conf file is correctly set after setting a proxy without auth."
   [_]
@@ -177,11 +184,13 @@
       (tasks/disableproxy true)
       (kill_firstboot))))
 
-(defn ^{Test {:groups ["firstboot_proxy"
-                       "tier2"
-                       "blockedByBug-1199211"]
-              :dependsOnMethods ["firstboot_enable_proxy_auth_connect"
-                                 "firstboot_enable_proxy_noauth_connect"]}}
+(defn ^{Test           {:groups           ["firstboot_proxy"
+                                           "tier2"
+                                           "blockedByBug-1199211"]
+                        :dependsOnMethods ["firstboot_enable_proxy_auth_connect"
+                                           "firstboot_enable_proxy_noauth_connect"]}
+        TestDefinition {:projectID  [`DefTypes$Project/RHEL6]
+                        :testCaseID ["RHEL6-39186"]}}
   firstboot_disable_proxy
   "Asserts that the rhsm.conf file is correctly set after diabling proxies."
   [_]
@@ -190,10 +199,12 @@
   (kill_firstboot)
   (tasks/verify-conf-proxies "" "" "" ""))
 
-(defn ^{Test {:groups ["firstboot_proxy"
-                       "tier2"
-                       "blockedByBug-1199211"]
-              :dependsOnMethods ["firstboot_enable_proxy_auth_connect"]}}
+(defn ^{Test           {:groups           ["firstboot_proxy"
+                                           "tier2"
+                                           "blockedByBug-1199211"]
+                        :dependsOnMethods ["firstboot_enable_proxy_auth_connect"]}
+        TestDefinition {:projectID  [`DefTypes$Project/RHEL6]
+                        :testCaseID ["RHEL6-37942"]}}
   firstboot_proxy_auth_connect_logging
   "Asserts that rhsm can connect after setting a proxy with auth."
   [_]
@@ -228,10 +239,12 @@
       (tasks/disableproxy true)
       (kill_firstboot))))
 
-(defn ^{Test {:groups ["firstboot_proxy"
-                       "tier2"
-                       "blockedByBug-1199211"]
-              :dependsOnMethods ["firstboot_enable_proxy_noauth_connect"]}}
+(defn ^{Test           {:groups           ["firstboot_proxy"
+                                           "tier2"
+                                           "blockedByBug-1199211"]
+                        :dependsOnMethods ["firstboot_enable_proxy_noauth_connect"]}
+        TestDefinition {:projectID  [`DefTypes$Project/RHEL6]
+                        :testCaseID ["RHEL6-39187"]}}
   firstboot_proxy_noauth_connect_logging
   "Asserts that rhsm can connect after setting a proxy without auth."
   [_]
@@ -277,10 +290,12 @@
         (verify (= "" (tasks/ui gettextvalue :connection-status)))))
     (finally (tasks/ui click :close-proxy))))
 
-(defn ^{Test {:groups ["firstboot_proxy"
-                       "tier2"
-                       "blockedByBug-1199211"]
-              :dependsOnMethods ["firstboot_enable_proxy_auth_connect"]}}
+(defn ^{Test           {:groups           ["firstboot_proxy"
+                                           "tier2"
+                                           "blockedByBug-1199211"]
+                        :dependsOnMethods ["firstboot_enable_proxy_auth_connect"]}
+        TestDefinition {:projectID  [`DefTypes$Project/RHEL6]
+                        :testCaseID ["RHEL6-37943"]}}
   firstboot_test_auth_proxy
   "Tests the 'test connection' button when using a proxy with auth."
   [_]
@@ -305,10 +320,12 @@
       (tasks/disableproxy true)
       (kill_firstboot))))
 
-(defn ^{Test {:groups ["firstboot_proxy"
-                       "tier2"
-                       "blockedByBug-1199211"]
-              :dependsOnMethods ["firstboot_enable_proxy_noauth_connect"]}}
+(defn ^{Test           {:groups           ["firstboot_proxy"
+                                           "tier2"
+                                           "blockedByBug-1199211"]
+                        :dependsOnMethods ["firstboot_enable_proxy_noauth_connect"]}
+        TestDefinition {:projectID  [`DefTypes$Project/RHEL6]
+                        :testCaseID ["RHEL6-39188"]}}
   firstboot_test_noauth_proxy
   "Tests the 'test connection' button when using a proxy without auth."
   [_]
@@ -330,10 +347,12 @@
       (tasks/disableproxy true)
       (kill_firstboot))))
 
-(defn ^{Test {:groups ["firstboot_proxy"
-                       "tier2"
-                       "blockedByBug-1199211"]
-              :dependsOnMethods ["firstboot_disable_proxy"]}}
+(defn ^{Test           {:groups           ["firstboot_proxy"
+                                           "tier2"
+                                           "blockedByBug-1199211"]
+                        :dependsOnMethods ["firstboot_disable_proxy"]}
+        TestDefinition {:projectID  [`DefTypes$Project/RHEL6]
+                        :testCaseID ["RHEL6-39189"]}}
   firstboot_test_disabled_proxy
   "Test that the 'test connection' button is disabled when proxy settings are cleared."
   [_]
@@ -372,10 +391,12 @@
     (test_proxy "Proxy connection failed")
     (finally (firstboot_disable_proxy nil))))
 
-(defn ^{Test {:groups ["firstboot_proxy"
-                       "tier2"
-                       "blockedByBug-1199211"]
-              :dependsOnMethods ["firstboot_disable_proxy"]}}
+(defn ^{Test           {:groups           ["firstboot_proxy"
+                                           "tier2"
+                                           "blockedByBug-1199211"]
+                        :dependsOnMethods ["firstboot_disable_proxy"]}
+        TestDefinition {:projectID  [`DefTypes$Project/RHEL6]
+                        :testCaseID ["RHEL6-39190"]}}
   firstboot_test_proxy_with_blank_credentials
   "Test whether 'Test Connection' returns appropriate message when User and Password fields are empty"
   [_]
@@ -392,9 +413,11 @@
     (test_proxy "Proxy connection failed")
     (finally (firstboot_disable_proxy nil))))
 
-(defn ^{Test {:groups ["firstboot_proxy"
-                       "tier3"
-                       "blockedByBug-1199211"]}}
+(defn ^{Test           {:groups ["firstboot_proxy"
+                                 "tier3"
+                                 "blockedByBug-1199211"]}
+        TestDefinition {:projectID  [`DefTypes$Project/RHEL6]
+                        :testCaseID ["RHEL6-37018"]}}
   firstboot_test_bad_proxy
   "Tests the 'test connection' button when using a non-existant proxy."
   [_]
@@ -411,9 +434,11 @@
    (test_proxy "Proxy connection failed")
    (finally (firstboot_disable_proxy nil))))
 
-(defn ^{Test {:groups ["firstboot_proxy"
-                       "tier3"
-                       "blockedByBug-1199211"]}}
+(defn ^{Test           {:groups ["firstboot_proxy"
+                                 "tier3"
+                                 "blockedByBug-1199211"]}
+        TestDefinition {:projectID  [`DefTypes$Project/RHEL6]
+                        :testCaseID ["RHEL6-37017"]}}
   firstboot_bad_proxy
   "Tests error message when using a non-existant proxy."
   [_]
@@ -439,9 +464,11 @@
     (finally
       (firstboot_disable_proxy nil))))
 
-(defn ^{Test {:groups ["firstboot_proxy"
-                       "tier3"
-                       "blockedByBug-1199211"]}}
+(defn ^{Test           {:groups ["firstboot_proxy"
+                                 "tier3"
+                                 "blockedByBug-1199211"]}
+        TestDefinition {:projectID  [`DefTypes$Project/RHEL6]
+                        :testCaseID ["RHEL6-37019"]}}
   firstboot_test_proxy_formatting
   "Tests the auto-formatting feature of the proxy location field."
   [_]

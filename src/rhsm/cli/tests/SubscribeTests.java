@@ -42,6 +42,9 @@ import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.TestDefinition;
+
 /**
  * @author ssalevan
  * @author jsefler
@@ -53,7 +56,8 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	// Test methods ***********************************************************************
 
 
-
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-19980", "RHEL7-33092"})
 	@Test(	description="subscription-manager-cli: subscribe consumer to subscription pool product id",	//; and assert the subscription pool is not available when it does not match the system hardware.",
 			dataProvider="getAllSystemSubscriptionPoolProductData",
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-660713","blockedByBug-806986","blockedByBug-878986","blockedByBug-962520","blockedByBug-1008647","blockedByBug-1009600","blockedByBug-996993"},
@@ -414,8 +418,10 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 					"ProductID '"+pid.productName+"' consumed from Pool '"+MCT0696.subscriptionName+"'");
 		}
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-27120", "RHEL7-51381"})
 	@Test(	description="subscription-manager-cli: subscribe consumer to an entitlement using pool ID",
 			groups={"Tier0Tests","blockedByBug-584137"},
 			//dataProvider="getAvailableSubscriptionPoolsData",	// very thorough, but takes too long to execute and rarely finds more bugs
@@ -451,8 +457,10 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		clienttasks.unsubscribeFromTheCurrentlyConsumedProductSubscriptionSerialsIndividually();
 		clienttasks.subscribeToRegToken(sm_regtoken);
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-27123", "RHEL7-51392"})
 	@Test(	description="Subscribed for Already subscribed Entitlement.",
 			groups={"blockedByBug-584137","blockedByBug-979492"},
 			// dataProvider="getAvailableSubscriptionPoolsData", TAKES TOO LONG AND RARELY REVEALS A BUG - changing to getRandomSubsetOfAvailableSubscriptionPoolsData
@@ -490,8 +498,10 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 				"After attempting to subscribe to pool '"+pool.poolId+"' for the second time, the first granted entilement cert file still exists.");
 		}
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36587", "RHEL7-51390"})
 	@Test(	description="subscription-manager-cli: subscribe consumer to multiple/duplicate/bad pools in one call",
 			groups={"blockedByBug-622851","blockedByBug-995597"},
 			enabled=true)
@@ -563,6 +573,10 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		if (clienttasks==null) return;
 		if (certFrequencyString==null) certFrequencyString = clienttasks.getConfParameter("certCheckInterval");
 	}
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36590", "RHEL7-51394"})
 	@Test(	description="rhsmcertd: change certFrequency",
 			dataProvider="getCertFrequencyData",
 			groups={"rhsmcertdChangeCertFrequency_Test","blockedByBug-617703","blockedByBug-700952","blockedByBug-708512","blockedByBug-907638","blockedByBug-822402","blockedByBug-986572","blockedByBug-1000301","blockedByBug-1026435"},
@@ -670,8 +684,10 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	public void afterRhsmcertdChangeCertFrequency_Test() {
 		if (certFrequencyString!=null) clienttasks.restart_rhsmcertd(Integer.valueOf(certFrequencyString), null, null);
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36584", "RHEL7-51387"})
 	@Test(	description="rhsmcertd: ensure certificates synchronize",
 			groups={"rhsmcertdEnsureCertificatesSynchronize_Test","blockedByBug-617703","blockedByBug-907638","blockedByBug-822402","blockedByBug-986572","blockedByBug-1000301","blockedByBug-1026435"},
 			enabled=true)
@@ -707,8 +723,10 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	public void afterRhsmcertdEnsureCertificatesSynchronize_Test() {
 		if (certFrequencyString!=null) clienttasks.restart_rhsmcertd(Integer.valueOf(certFrequencyString), null, null);
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-19982", "RHEL7-51016"})
 	@Test(	description="subscription-manager: make sure the normal available pools come from subscriptions that pass the hardware rules for availability.",
 			groups={"AcceptanceTests","Tier1Tests"},
 			dependsOnGroups={},
@@ -793,7 +811,10 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		}
 	}
 	protected List<List<Object>> subscriptionPoolProductData;
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-19984", "RHEL7-51018"})
 	@Test(	description="subscription-manager-cli: autosubscribe consumer and verify expected subscription pool product id are consumed",
 			groups={"AcceptanceTests","Tier1Tests","AutoSubscribeAndVerify", "blockedByBug-680399", "blockedByBug-734867", "blockedByBug-740877"},
 			dependsOnMethods={"VerifyNormalAvailablePoolsFromSubscriptionsPassTheHardwareRulesCheck_Test"},
@@ -865,8 +886,10 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		Status:               	Subscribed               
 		*/
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-19985", "RHEL7-51019"})
 	@Test(	description="subscription-manager-cli: autosubscribe consumer and verify expected subscription pool product id are consumed",
 			groups={"AcceptanceTests","Tier1Tests","AutoSubscribeAndVerify","blockedByBug-672438","blockedByBug-678049","blockedByBug-743082","blockedByBug-865193","blockedByBug-864383","blockedByBug-977321"},
 			dependsOnMethods={"InititiateAutoSubscribe_Test"},
@@ -913,8 +936,10 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 				"As expected, ProductName '"+productCert.productName+"' was reported as '"+expectedSubscribeStatus+"' in the output from register with autotosubscribe.");
 	}
 	SSHCommandResult sshCommandResultFromAutosubscribe;
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36580", "RHEL7-51382"})
 	@Test(	description="subscription-manager: autosubscribe consumer more than once and verify we are not duplicately subscribed",
 			groups={"blockedByBug-723044","blockedByBug-743082","blockedByBug-977321"},
 			enabled=true)
@@ -950,8 +975,10 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(autosubscribedProductStatusList2.size(), autosubscribedProductStatusList1.size(), "The stdout from autosubscribe reports the same number of installed product status entries after a second autosubscribe.");
 		Assert.assertTrue(autosubscribedProductStatusList1.containsAll(autosubscribedProductStatusList2), "The list of installed product status entries from a second autosubscribe is the same as the first.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36588", "RHEL7-51391"})
 	@Test(	description="subscription-manager: call the Candlepin API dry_run to get the pools and quantity that would be used to complete an autosubscribe with an unavailable service level",
 			groups={"blockedByBug-864508"},
 			enabled=true)
@@ -970,8 +997,10 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		if (!clienttasks.workaroundForBug876764(sm_serverType)) expectedDryrunResult = String.format("Service level '%s' is not available to units of organization %s.","FOO",sm_clientOrg);
 		Assert.assertEquals(jsonDryrunResult.getString("displayMessage"),expectedDryrunResult, "JSON results from a Candlepin Restful API call to dry-run with an unavailable service level.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-19983", "RHEL7-51017"})
 	@Test(	description="subscription-manager: call the Candlepin API dry_run to get the pools and quantity that would be used to complete an autosubscribe with a valid service level",
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-859652","blockedByBug-962520"},
 			dataProvider="getSubscribeWithAutoAndServiceLevelData",
@@ -1146,11 +1175,12 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		//clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 	}
 	private boolean firstcalltoCandlepinConsumerEntitlementsDryrunWithServiceLevel_Test = true;
-	
-	
 
-	
-	
+
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-19981", "RHEL7-33098"})
 	@Test(	description="subscription-manager: subscribe using various good and bad values for the --quantity option",
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-962520"},
 			dataProvider="getSubscribeWithQuantityData",
@@ -1187,8 +1217,10 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			Assert.assertEquals(subscriptionsConsumed.size(), 0, "No subscriptions should be consumed when the attempt to subscribe is not successful.");
 		}
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36578", "RHEL7-51379"})
 	@Test(	description="subscription-manager: subscribe using --quantity option and assert the available quantity is properly decremented/incremeneted as multiple consumers subscribe/unsubscribe.",
 			groups={"blockedByBug-979492"},
 			enabled=true)
@@ -1256,8 +1288,10 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(consumer2Pool.quantity, String.valueOf(totalPoolQuantity),"The pool quantity available to consumer2 has been restored to its original total quantity");
 		clienttasks.unregister(null,null,null);
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36585", "RHEL7-51388"})
 	@Test(	description="subscription-manager: subscribe to multiple pools using --quantity that exceeds some pools and is under other pools.",
 			groups={"blockedByBug-722975"},
 			enabled=true)
@@ -1326,8 +1360,10 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			}
 		}
 	}
-	
-		
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-27122", "RHEL7-51945"})
 	@Test(	description="subscription-manager: subscribe to future subscription pool",
 			groups={"blockedByBug-979492"},
 			//dataProvider="getAllFutureSystemSubscriptionPoolsData",	// 06/04/2014 takes too long; rarely reveals a bug
@@ -1353,9 +1389,11 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		Assert.assertNotNull(entitlementCert,"Found the newly granted EntitlementCert on the client after subscribing to future subscription pool '"+pool.poolId+"'.");
 		Assert.assertTrue(entitlementCert.validityNotBefore.after(now), "The newly granted EntitlementCert is not valid until the future.  EntitlementCert: "+entitlementCert);
 		Assert.assertTrue(entitlementCert.orderNamespace.startDate.after(now), "The newly granted EntitlementCert's OrderNamespace starts in the future.  OrderNamespace: "+entitlementCert.orderNamespace);	
-	}	
-	
-	
+	}
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36586", "RHEL7-51389"})
 	@Test(	description="subscription-manager: subscribe and attach can be used interchangably",
 			groups={"blockedByBug-874804","blockedByBug-981689"},
 			enabled=true)
@@ -1385,6 +1423,10 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		factsMap.put("system.certificate_version", "1.0");
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
 	}
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-27121", "RHEL7-51386"})
 	@Test(	description="Make sure that older subscription-managers are denied attempts to attach a subscription based on: ram, cores",
 			groups={"VerifyOlderClientsAreDeniedEntitlementsToRamAndCoresBasedSubscriptions_Test","blockedByBug-957218" },
 			dataProvider="getAllAvailableRamCoresSubscriptionPoolsData",
@@ -1506,8 +1548,10 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		
 		return ll;
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36577", "RHEL7-51378"})
 	@Test(	description="subscription-manager: autosubscribe on a virtual system should favor virtual pools",
 			groups={"blockedByBug-927101","AutoSubscribeOnVirtualSystemsFavorVirtualPools_Test"},
 			enabled=true)
@@ -1598,10 +1642,11 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	}
 	protected String rhsmProductCertDir = null;
 	protected final String tmpProductCertDir = "/tmp/sm-tmpProductCertDir";
-	
-	
-	
-	
+
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36583", "RHEL7-51385"})
 	@Test(	description="subscription-manager: subscribe with --file whose contents are a list of poolids",
 			groups={"blockedByBug-1159974"},
 			enabled=true)
@@ -1644,8 +1689,10 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		Assert.assertTrue(poolIdsAttached.containsAll(poolIdsFromFile)&&poolIdsFromFile.containsAll(poolIdsAttached), "The list of pool ids in file '"+tmpFile+"' is equivalent to the list of currently attached pool ids.");
 		Assert.assertEquals(poolIdsAttached.size(), poolIdsFromFile.size(),"The number of poolIds currently attached matches the number of pool ids read from the file '"+tmpFile+"'.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36582", "RHEL7-51384"})
 	@Test(	description="subscription-manager: subscribe with --file whose contents are empty.  No pools should be attached.",
 			groups={"blockedByBug-1175291"},
 			enabled=true)
@@ -1676,8 +1723,10 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		// assert that no subscriptions have been consumed
 		Assert.assertTrue(clienttasks.getCurrentlyConsumedProductSubscriptions().isEmpty(), "No subscriptions should be attached after attempting to attach an empty file of pool ids.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36589", "RHEL7-51393"})
 	@Test(	description="subscription-manager: subscribe with --file=- which indicates that the pools will be read from stdin",
 			groups={"blockedByBug-1159974"},
 			enabled=true)
@@ -1719,8 +1768,10 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(stdinFileSubscribeCommandResult.getStdout(), subscribeWithFileResult.getStdout(), "Stdout comparison between the expected result of subscribing with a file of poolIds and subscribing with the poolIds piped from stdin.");
 		Assert.assertEquals(stdinFileSubscribeCommandResult.getStderr(), subscribeWithFileResult.getStderr(), "Stderr comparison between the expected result of subscribing with a file of poolIds and subscribing with the poolIds piped from stdin.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36581", "RHEL7-51383"})
 	@Test(	description="subscription-manager: subscribe with --file=- which indicates that the pools will be read from stdin",
 			groups={"blockedByBug-1159974","blockedByBug-1175291"},
 			enabled=true)
@@ -1743,8 +1794,10 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(stdinFileSubscribeCommandResult.getStdout().trim(), "", "Stdout from subscribing with a file of empty poolIds from stdin.");
 		Assert.assertEquals(stdinFileSubscribeCommandResult.getStderr().trim(), "Error: Received data does not contain any pool IDs.", "Stderr from subscribing with a file of empty poolIds from stdin.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36579", "RHEL7-51380"})
 	@Test(	description="subscription-manager: subscribe with no args should now default to --auto",
 			groups={},
 			enabled=true)

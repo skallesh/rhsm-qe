@@ -24,7 +24,9 @@
             AfterGroups
             DataProvider]
            [rhsm.gui.tasks.tools Version]
-           (org.testng SkipException)))
+           (org.testng SkipException)
+           [com.github.redhatqe.polarize.metadata TestDefinition]
+           [com.github.redhatqe.polarize.metadata DefTypes$Project]))
 
 (def sys-log "/var/log/rhsm/rhsm.log")
 (def gui-log "/var/log/ldtpd/ldtpd.log")
@@ -47,12 +49,14 @@
             (bool (tasks/ui guiexist :error-dialog)))
     (tasks/restart-app :force-kill? true)))
 
-(defn ^{Test {:groups ["registration"
-                       "tier2"
-                       "tier1" "acceptance"
-                       "blockedByBug-995242"
-                       "blockedByBug-1251004"]
-              :dataProvider "userowners"}}
+(defn ^{Test           {:groups       ["registration"
+                                       "tier2"
+                                       "tier1" "acceptance"
+                                       "blockedByBug-995242"
+                                       "blockedByBug-1251004"]
+                        :dataProvider "userowners"}
+        TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-27627" "RHEL7-27020"]}}
   simple_register
   "Simple register with known username, password and owner."
   [_ user pass owner]
@@ -81,15 +85,17 @@
        (finally (if (bool (tasks/ui guiexist :facts-dialog))
                   (tasks/ui click :close-facts)))))))
 
-(defn ^{Test {:groups ["registration"
-                       "tier2"
-                       "blockedByBug-1255805"
-                       "blockedByBug-1283749"
-                       "blockedByBug-718045"
-                       "blockedByBug-1194365"
-                       "blockedByBug-1249723"
-                       "blockedByBug-1194365"]
-              :dataProvider "bad-credentials and corresponding errors"}}
+(defn ^{Test           {:groups       ["registration"
+                                       "tier2"
+                                       "blockedByBug-1255805"
+                                       "blockedByBug-1283749"
+                                       "blockedByBug-718045"
+                                       "blockedByBug-1194365"
+                                       "blockedByBug-1249723"
+                                       "blockedByBug-1194365"]
+                        :dataProvider "bad-credentials and corresponding errors"}
+        TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-36485" "RHEL7-61904"]}}
   register_bad_credentials
   "Checks error messages upon registering with bad credentials."
   [_ register-args expected-error]
@@ -110,9 +116,11 @@
       (tasks/ui click :register-close)
       (tasks/close-error-dialog))))
 
-(defn ^{Test {:groups ["registration"
-                       "tier2"
-                       "tier1" "acceptance"]}}
+(defn ^{Test           {:groups ["registration"
+                                 "tier2"
+                                 "tier1" "acceptance"]}
+        TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-20120" "RHEL7-27021"]}}
   unregister
   "Simple unregister."
   [_]
@@ -124,10 +132,12 @@
    (tasks/unregister)
    (verify (action exists? :register-system))))
 
-(defn ^{Test {:groups ["registration"
-                       "tier3"
-                       "blockedByBug-918303"]
-              :priority (int 10)}}
+(defn ^{Test           {:groups   ["registration"
+                                   "tier3"
+                                   "blockedByBug-918303"]
+                        :priority (int 10)}
+        TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-36992" "RHEL7-57124"]}}
   register_check_syslog
   "Asserts that register events are logged in the syslog."
   [_]
@@ -138,10 +148,12 @@
                             (tasks/register-with-creds))]
     (verify (not (blank? output)))))
 
-(defn ^{Test {:groups ["registration"
-                       "tier3"
-                       "blockedByBug-918303"]
-              :dependsOnMethods ["register_check_syslog"]}}
+(defn ^{Test           {:groups           ["registration"
+                                           "tier3"
+                                           "blockedByBug-918303"]
+                        :dependsOnMethods ["register_check_syslog"]}
+        TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-38181" "RHEL7-57125"]}}
   unregister_check_syslog
   "Asserts unregister events are logged in the syslog."
   [_]
@@ -153,11 +165,11 @@
                             (tasks/unregister))]
     (verify (not (blank? output)))))
 
-(defn ^{Test {:groups ["registration"
-                       "tier2"
-                       "blockedByBug-822706"]
-              ;:dependsOnMethods ["simple_register"]
-}}
+(defn ^{Test           {:groups ["registration"
+                                 "tier2"
+                                 "blockedByBug-822706"]}
+        TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-36484" "RHEL7-55574"]}}
   check_auto_to_register_button
   "Checks that the register button converts to the auto-subscribe button after register."
   [_]
@@ -168,9 +180,11 @@
   (verify (and (tasks/ui showing? :auto-attach)
                (not (tasks/ui showing? :register-system)))))
 
-(defn ^{Test {:groups ["registration"
-                       "tier3"
-                       "blockedByBug-878609"]}}
+(defn ^{Test           {:groups ["registration"
+                                 "tier3"
+                                 "blockedByBug-878609"]}
+        TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-36989" "RHEL7-57121"]}}
   verify_password_tip
   "Checks to see if the passeword tip no longer contains red.ht"
   [_]
@@ -185,13 +199,15 @@
     (finally
       (tasks/ui click :register-close))))
 
-(defn ^{Test {:groups ["registration"
-                       "tier3"
-                       "blockedByBug-920091"
-                       "blockedByBug-1039753"
-                       "blockedByBug-1037712"
-                       "blockedByBug-1034429"
-                       "blockedByBug-1170324"]}}
+(defn ^{Test           {:groups ["registration"
+                                 "tier3"
+                                 "blockedByBug-920091"
+                                 "blockedByBug-1039753"
+                                 "blockedByBug-1037712"
+                                 "blockedByBug-1034429"
+                                 "blockedByBug-1170324"]}
+        TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-36990" "RHEL7-57122"]}}
   check_traceback_unregister
   "Check there is no Tracebacks during unregister with GUI open"
   [_]
@@ -216,10 +232,12 @@
     (verify (not (substring? "Traceback" logout)))
     (verify (not (substring? "Traceback" @cmdout)))))
 
-(defn ^{Test {:groups ["registration"
-                       "tier2"
-                       "blockedByBug-891621"
-                       "activation-register"]}}
+(defn ^{Test           {:groups ["registration"
+                                 "tier2"
+                                 "blockedByBug-891621"
+                                 "activation-register"]}
+        TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-36483" "RHEL7-55573"]}}
   check_activation_key_register_dialog
   "checks whether checking activation key option followed by clicking default during
      register proceeds to register dialog and not to activation-key register dialog"
@@ -251,9 +269,11 @@
   (tasks/set-conf-file-value "prefix" (@config :server-prefix))
   (tasks/restart-app :force-kill? true))
 
-(defn ^{Test {:groups ["registration"
-                       "tier2"
-                       "blockedByBug-1268102"]}}
+(defn ^{Test           {:groups ["registration"
+                                 "tier2"
+                                 "blockedByBug-1268102"]}
+        TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-36486" "RHEL7-55575"]}}
   register_multi_click
   "Asserts that you can't click the register button multiple times
    and open multiple register dialogs"
@@ -271,9 +291,11 @@
     :no-verify)
   (tasks/ui click :register-close))
 
-(defn ^{Test {:groups ["registration"
-                       "tier3"
-                       "blockedByBug-1268094"]}}
+(defn ^{Test           {:groups ["registration"
+                                 "tier3"
+                                 "blockedByBug-1268094"]}
+        TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-36991" "RHEL7-57123"]}}
   unregister_traceback
   "Asserts that a traceback does not occur during unregister
    when pools are attached."
@@ -292,9 +314,11 @@
                                           nil
                                           (tasks/unregister)))))))
 
-(defn ^{Test {:groups ["registration"
-                       "tier1" "acceptance"
-                       "blockedByBug-1330054"]}}
+(defn ^{Test           {:groups ["registration"
+                                 "tier1" "acceptance"
+                                 "blockedByBug-1330054"]}
+        TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL6-27626" "RHEL7-49267"]}}
   check_default_subscription_url
   [_]
   (let [subman-ver (subman-version)

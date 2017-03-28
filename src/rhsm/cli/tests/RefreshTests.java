@@ -16,6 +16,9 @@ import rhsm.data.ProductSubscription;
 import rhsm.data.SubscriptionPool;
 import com.redhat.qe.tools.RemoteFileTasks;
 
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.TestDefinition;
+
 /**
  * @author jsefler
  *
@@ -27,6 +30,8 @@ public class RefreshTests extends SubscriptionManagerCLITestScript {
 	
 	// Test methods ***********************************************************************
 
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36530", "RHEL7-51303"})
 	@Test(	description="subscription-manager-cli: refresh and verify entitlements are updated",
 			groups={"AcceptanceTests","Tier1Tests","RefreshEntitlements_Test","blockedByBug-907638","blockedByBug-962520","blockedByBug-1366301"},
 			enabled=true)
@@ -115,8 +120,10 @@ public class RefreshTests extends SubscriptionManagerCLITestScript {
 			Assert.assertEquals(clienttasks.getCurrentlyConsumedProductSubscriptions(),consumedProductSubscriptions,"Original consumed product subscriptions have been restored.");
 		}
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36619", "RHEL7-51430"})
 	@Test(	description="[abrt] subscription-manager-0.95.17-1.el6_1: Process /usr/bin/rhsmcertd was killed by signal 11 (SIGSEGV)",
 			groups={"blockedByBug-725535","blockedByBug-907638","VerificationFixForBug725535_Test"},
 			enabled=true)

@@ -57,6 +57,9 @@ import rhsm.data.RevokedCert;
 import rhsm.data.SubscriptionPool;
 import rhsm.data.YumRepo;
 
+import com.github.redhatqe.polarize.metadata.TestDefinition;
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+
 /**
  * @author skallesh
  *
@@ -82,6 +85,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	protected final String importCertificatesDir1 = "/tmp/sm-importV1CertificatesDir".toLowerCase();
 	SSHCommandRunner sshCommandRunner = null;
 
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+	               , testCaseID = {"RHEL6-26709", "RHEL7-63527"})
 	@Test(description = "Verify that the EUS RHEL product certs on the CDN for each release correctly reflect the release version.  For example, this affects users that want use subcription-manager release --set=6.3 to keep yum updates fixed to an older release.", groups = {
 			"VerifyEUSRHELProductCertVersionFromEachCDNReleaseVersion_Test", "AcceptanceTests",
 			"Tier1Tests" }, dataProvider = "VerifyEUSRHELProductCertVersionFromEachCDNReleaseVersion_TestData", enabled = true)
@@ -286,6 +291,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RedHatEnterpriseLinux7}
+	               , testCaseID = {"RHEL7-55663"})
 	@Test(description = "verify Status Cache not used when listing repos with a bad proxy ", groups = {
 			"ListingReposWithBadProxy", "blockedByBug-1298327", "blockedByBug-1345962",
 			"blockedByBug-1389794" }, enabled = false)
@@ -330,6 +337,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+	               , testCaseID = {"RHEL6-21981", "RHEL7-51843"})
 	@Test(description = "verify rhsm-debug --no-archive --destination <destination Loc> throws [Errno 18] Invalid cross-device link", groups = {
 			"VerifyrhsmDebugWithNoArchive", "blockedByBug-1175284" }, enabled = true)
 	public void VerifyrhsmDebugWithNoArchive() throws Exception {
@@ -350,6 +359,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+	               , testCaseID = {"RHEL6-21932", "RHEL7-51794"})
 	@Test(description = "verify subscription-manager attach --file <file> ,with file being empty attaches subscription for installed product", groups = {
 			"VerifyAttachingEmptyFile", "blockedByBug-1175291" }, enabled = true)
 	public void VerifyAttachingEmptyFile() throws Exception {
@@ -374,6 +385,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+	               , testCaseID = {"RHEL6-21957", "RHEL7-51819"})
 	@Test(description = "verify subscription-manager repos --list does not delete an imported entitlement certificate on a system", groups = {
 			"VerifyImportedCertgetsDeletedByRepoCommand", "blockedByBug-1160150" }, enabled = true)
 	public void VerifyImportedCertgetsDeletedByRepoCommand() throws Exception {
@@ -411,6 +424,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+	               , testCaseID = {"RHEL6-21970", "RHEL7-51832"})
 	@Test(description = "verify End date and start date of the subscription is appropriate one when you attach a future subscription and then  heal after 1 min", groups = {
 			"VerifyStartEndDateOfSubscription", "blockedByBug-994853" }, enabled = true)
 	public void VerifyStartEndDateOfSubscription() throws Exception {
@@ -493,6 +508,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+	               , testCaseID = {"RHEL6-21971", "RHEL7-51833"})
 	@Test(description = "verify status check and response from server after addition and deletion of product to/from /etc/pki/product/", groups = {
 			"VerifyStatusCheck", "blockedByBug-921870", "blockedByBug-1183175" }, enabled = true)
 	public void VerifyStatusCheck() throws Exception {
@@ -542,6 +559,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+	               , testCaseID = {"RHEL6-21956", "RHEL7-51818"})
 	@Test(description = "verify if Status displays product name multiple times when the system had inactive stack subscriptions", groups = {
 			"VerifyIfStatusDisplaysProductNameMultipleTimes", "blockedByBug-972752" }, enabled = true)
 	public void VerifyIfStatusDisplaysProductNameMultipleTimes() throws Exception {
@@ -570,6 +589,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 */
 	@SuppressWarnings("deprecation")
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+	               , testCaseID = {"RHEL6-21947", "RHEL7-51809"})
 	@Test(description = "verify if update facts button won't recreate facts.json file", groups = {
 			"VerifyFactsFileExistenceAfterUpdate", "blockedByBug-627707" }, enabled = true)
 	public void VerifyFactsFileExistenceAfterUpdate() throws Exception {
@@ -589,6 +610,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+	               , testCaseID = {"RHEL6-21992", "RHEL7-51854"})
 	@Test(description = "verify if unsubscribe does not delete entitlement cert from location /etc/pki/entitlement/product for consumer type candlepin ", groups = {
 			"unsubscribeTheRegisteredConsumerTypeCandlepin", "blockedByBug-621962" }, enabled = true)
 	public void unsubscribeTheRegisteredConsumerTypeCandlepin() throws Exception {
@@ -607,6 +630,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+	               , testCaseID = {"RHEL6-21991", "RHEL7-51853"})
 	@Test(description = "verify if you can unsubscribe from imported cert", groups = { "unsubscribeImportedcert",
 			"blockedByBug-691784" }, enabled = true)
 	public void unsubscribeImportedcert() throws Exception {
@@ -636,6 +661,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+	               , testCaseID = {"RHEL6-21929", "RHEL7-51790"})
 	@Test(description = "verify if subscription manager CLI does not display all facts", groups = { "SystemFactsInCLI",
 			"blockedByBug-722239" }, enabled = true)
 	public void SystemFactsInCLI() throws Exception {
@@ -652,6 +679,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+	               , testCaseID = {"RHEL6-21924", "RHEL7-51785"})
 	@Test(description = "verify if Registering with an activation key which has run out of susbcriptions results in a system, but no identity certificate", groups = {
 			"RegisterWithActivationKeyWithExpiredPool", "blockedByBug-803814" }, enabled = true)
 	public void RegisterWithActivationKeyWithExpiredPool() throws Exception {
@@ -709,6 +738,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+	               , testCaseID = {"RHEL6-21983", "RHEL7-51845"})
 	@Test(description = "verify if Wrong DMI structures Error is filtered from the stderr of subscription-manager command line calls", groups = {
 			"WrongDMIstructuresError", "blockedByBug-706552" }, enabled = true)
 	public void WrongDMIstructuresError() throws Exception {
@@ -724,6 +755,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+	               , testCaseID = {"RHEL6-20114", "RHEL7-55206"})
 	@Test(description = "Verify the fix for Bug 709412 - subscription manager cli uses product name comparisons in the list command", groups = {
 			"InstalledProductMultipliesAfterSubscription", "AcceptanceTests", "Tier1Tests",
 			"blockedByBug-709412" }, enabled = true)
@@ -762,6 +795,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+	               , testCaseID = {"RHEL6-21927", "RHEL7-51788"})
 	@Test(description = "verify Stacking of a future subscription and present subsciption make the product compliant ", groups = {
 			"StackingFutureSubscriptionWithCurrentSubscription", "blockedByBug-966069" }, enabled = true)
 	public void StackingFutureSubscriptionWithCurrentSubscription() throws Exception {
@@ -848,6 +883,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+	               , testCaseID = {"RHEL6-21903", "RHEL7-51764"})
 	@Test(description = "verify the system compliance after deleting the consumer", groups = {
 			"ComplianceAfterConsumerDeletion" }, enabled = true)
 	public void ComplianceAfterConsumerDeletion() throws Exception {
@@ -873,6 +910,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+	               , testCaseID = {"RHEL6-21955", "RHEL7-51817"})
 	@Test(description = "verify if ipV4_Address is unknown in the facts list", groups = {
 			"VerifyIfIPV4_AddressIsUnknown", "blockedByBug-694662" }, enabled = true)
 	public void VerifyIfIPV4_AddressIsUnknown() throws Exception {
@@ -887,6 +926,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+	               , testCaseID = {"RHEL6-21988", "RHEL7-51850"})
 	@Test(description = "verify if configurations like manage_repos have default values", groups = {
 			"defaultValueForManageRepos", "blockedByBug-807721" }, enabled = true)
 	public void defaultValueForManageReposConfiguration() throws Exception {
@@ -1000,6 +1041,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+	               , testCaseID = {"RHEL6-21907", "RHEL7-51768"})
 	@Test(description = "verify Remote Server Exception is getting displayed for Server 500 Error", groups = {
 			"DisplayOfRemoteServerExceptionForServer500Error", "blockedByBug-668814" }, enabled = true)
 	public void DisplayOfRemoteServerExceptionForServer500Error() throws Exception {
@@ -1034,6 +1077,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+	               , testCaseID = {"RHEL6-21915", "RHEL7-51776"})
 	@Test(description = "verify Manual Changes To Redhat.Repo is sticky", groups = { "ManualChangesToRedhat_Repo",
 			"blockedByBug-797243" }, enabled = true)
 	public void ManualChangesToRedhat_Repo() throws Exception {
@@ -1081,6 +1126,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+	               , testCaseID = {"RHEL6-21911", "RHEL7-51772"})
 	@Test(description = "Extraneous / InRequest urls in the rhsm.log file", groups = { "ExtraneousSlashInRequesturls",
 			"blockedByBug-848836" }, enabled = true)
 	public void ExtraneousSlashInRequesturls() throws Exception {
@@ -1129,6 +1176,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+	               , testCaseID = {"RHEL6-21919", "RHEL7-51780"})
 	@Test(description = "verify proxy option in repos list ", groups = { "ProxyOptionForRepos" }, enabled = true)
 	public void ProxyOptionForRepos() throws Exception {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
@@ -1146,6 +1195,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+	               , testCaseID = {"RHEL6-21898", "RHEL7-51759"})
 	@Test(description = "verify Future subscription added to the activation key ", groups = {
 			"AddingFutureSubscriptionToActivationKey" }, enabled = true)
 	public void AddingFutureSubscriptionToActivationKey() throws Exception {
@@ -1190,6 +1241,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+	               , testCaseID = {"RHEL6-21987", "RHEL7-51849"})
 	@Test(description = "create virt-only pool and check if lists on available list of physical and virtual machine", groups = {
 			"createVirtOnlyPool" }, enabled = true)
 	public void createVirtOnlyPool() throws Exception {
@@ -1269,6 +1322,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+	               , testCaseID = {"RHEL6-21912", "RHEL7-51773"})
 	@Test(description = "verify Facts for change in OS ", groups = { "FactsForChangeIn_OS" }, enabled = true)
 	@ImplementsNitrateTest(caseId = 56387)
 	public void FactsForChangeIn_OS() throws Exception {
@@ -1293,6 +1348,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21902", "RHEL7-51763"})
 	@Test(description = "Consumer unsubscribed when Subscription revoked", groups = { "CRLTest", "blockedByBug-1389559",
 			"blockedByBug-1399356" }, enabled = true)
 	@ImplementsNitrateTest(caseId = 55355)
@@ -1325,6 +1382,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21905", "RHEL7-51766"})
 	@Test(description = "Consumer unsubscribed when Subscription revoked", groups = {
 			"ConsumerUnsubscribedWhenSubscriptionRevoked", "blockedByBug-947429" }, enabled = true)
 	@ImplementsNitrateTest(caseId = 56025)
@@ -1447,6 +1506,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21942", "RHEL7-51804"})
 	@Test(description = "verify if CLI lets you set consumer nameto empty string and defaults to sm_clientUsername", groups = {
 			"VerifyConsumerNameTest", "blockedByBug-669395" }, enabled = true)
 	public void VerifyConsumerNameTest() throws JSONException, Exception {
@@ -1493,6 +1554,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21939", "RHEL7-51801"})
 	@Test(description = "verify if CLI auto-subscribe tries to re-use basic auth credentials.", groups = {
 			"VerifyAutosubscribeReuseBasicAuthCredntials", "blockedByBug-707641",
 			"blockedByBug-919700" }, enabled = true)
@@ -1517,6 +1580,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 */
 	// To be tested against stage
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20115", "RHEL7-55207"})
 	@Test(description = "verify if 500 errors in stage on subscribe/unsubscribe", groups = { "AcceptanceTests",
 			"Tier1Tests", "blockedByBug-878994" }, enabled = true)
 	public void Verify500ErrorOnStage() throws JSONException, Exception {
@@ -1556,6 +1621,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21920", "RHEL7-51781"})
 	@Test(description = "verify if redhat repo is created subscription-manager yum plugin when the repo is not present", groups = {
 			"RedhatrepoNotBeingCreated", "blockedByBug-886992", "blockedByBug-919700" }, enabled = true)
 	public void RedhatrepoNotBeingCreated() throws JSONException, Exception {
@@ -1576,6 +1643,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-26774", "RHEL7-55317"})
 	@Test(description = "verify if  insecure in rhsm.comf getse updated when using --insecure option if command fails", groups = {
 			"InsecureValueInRHSMConfAfterRegistrationFailure", "blockedByBug-916369" }, enabled = true)
 	public void InsecureValueInRHSMConfAfterRegistrationFailure() throws JSONException, Exception {
@@ -1596,6 +1665,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21922", "RHEL7-51783"})
 	@Test(description = "verify if subscription-manager register fails with consumerid and activationkey specified", groups = {
 			"RegisterActivationKeyAndConsumerID", "blockedByBug-749636" }, enabled = true)
 	public void RegisterActivationKeyAndConsumerID() throws JSONException, Exception {
@@ -1629,6 +1700,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21918", "RHEL7-51779"})
 	@Test(description = "verify if Product id is displayed in intsalled list", groups = { "ProductIdInInstalledList",
 			"blockedByBug-803386" }, enabled = true)
 	public void ProductIdInInstalledList() throws JSONException, Exception {
@@ -1647,6 +1720,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 */
 	// TODO correct the pasted description
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-26775", "RHEL7-55318"})
 	@Test(description = "verify if Entitlement certs are downloaded if subscribed to expired pool", groups = {
 			"ServerURLInRHSMFile", "blockedByBug-916353" }, enabled = true)
 	public void ServerURLInRHSMFile() throws JSONException, Exception {
@@ -1668,6 +1743,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21908", "RHEL7-51769"})
 	@Test(description = "Implicitly using the consumer cert from a currently registered system, attempt to query the available service levels on a different candlepin server.", groups = {
 			"DipslayServicelevelWhenRegisteredToDifferentServer", "blockedByBug-916362" }, enabled = true)
 	public void DisplayServicelevelWhenRegisteredToDifferentServer() {
@@ -1702,6 +1779,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21910", "RHEL7-51771"})
 	@Test(description = "verify expiration of entitlement certs", groups = { "ExpirationOfEntitlementCerts",
 			"blockedByBug-907638", "blockedByBug-953830" }, enabled = true)
 	public void ExpirationOfEntitlementCerts() throws JSONException, Exception {
@@ -1767,6 +1846,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21928", "RHEL7-51789"})
 	@Test(description = "verify if Entitlement certs are downloaded if subscribed to expired pool", groups = {
 			"SubscribeToexpiredEntitlement", "blockedByBug-907638" }, enabled = true)
 	public void SubscribeToexpiredEntitlement() throws JSONException, Exception {
@@ -1790,6 +1871,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 */
 	@SuppressWarnings("unused")
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21916", "RHEL7-51777"})
 	@Test(description = "verify if no multiple repos are created,if subscribed to a product that share one or more engineering subscriptions", groups = {
 			"NoMultipleReposCreated" }, enabled = true)
 	public void NoMultipleReposCreated() throws JSONException, Exception {
@@ -1872,6 +1955,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21906", "RHEL7-51767"})
 	@Test(description = "verify that a content set can be deleted after being added to a product.", groups = {
 			"DeleteContentSourceFromProduct", "blockedByBug-687970", "blockedByBug-834125" }, enabled = true)
 	public void DeleteContentSourceFromProduct() throws JSONException, Exception {
@@ -1967,6 +2052,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21940", "RHEL7-51802"})
 	@Test(description = "verify that bind and unbind event is recorded in syslog", groups = {
 			"VerifyBindAndUnbindInSyslog", "blockedByBug-919700" }, enabled = true)
 	@ImplementsNitrateTest(caseId = 68740)
@@ -2080,6 +2167,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21964", "RHEL7-51826"})
 	@Test(description = "verify if register and unregister event is recorded in syslog", groups = {
 			"VerifyRegisterAndUnregisterInSyslog" }, enabled = true)
 	@ImplementsNitrateTest(caseId = 68749)
@@ -2117,6 +2206,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21941", "RHEL7-51803"})
 	@Test(description = "verify that Consumer Account And Contract Id are Present in the consumed list", groups = {
 			"VerifyConsumerAccountAndContractIdPresence" }, enabled = true)
 	@ImplementsNitrateTest(caseId = 68738)
@@ -2279,6 +2370,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21986", "RHEL7-51848"})
 	@Test(description = "verify if able to entitle consumer to the pool virt_only,pool_derived,bonus pool ", groups = {
 			"consumeVirtOnlyPool", "blockedByBug-756628" }, enabled = true)
 	public void consumeVirtOnlyPool() throws JSONException, Exception {
@@ -2313,6 +2406,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6}
+			       , testCaseID = {"RHEL6-26777"})
 	@Test(description = "verify if system.entitlements_valid goes from valid to partial after oversubscribing", // TODO
 			// fix
 			// this
@@ -2351,6 +2446,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21985","RHEL7-51847"})
 	@Test(description = "verify changing to a different rhsm.productcertdir configuration throws OSError", // TODO,
 			groups = { "certificateStacking", "blockedByBug-726409", "blockedByBug-1183175" }, enabled = true)
 	public void certificateStacking() throws JSONException, Exception {
@@ -2452,6 +2549,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21917","RHEL7-51778"})
 	@Test(description = "verify OwnerInfo is displayed only for pools that are active right now, for all the stats", groups = {
 			"OwnerInfoForActivePools", "blockedByBug-710141", }, enabled = true)
 	public void OwnerInfoForActivePools() throws JSONException, Exception {
@@ -2550,6 +2649,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21921","RHEL7-51782"})
 	@Test(description = "verify that refresh pools w/ auto_create_owner succeeds", groups = {
 			"RefreshPoolsWithAutoCreate", "blockedByBug-720487" }, enabled = true)
 	public void RefreshPoolsWithAutoCreate() throws JSONException, Exception {
@@ -2577,6 +2678,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-28536","RHEL6-26709"})
 	@Test(description = "verify fix for Bug 874147 - python-ethtool api changed causing facts to list ipv4 address as \"unknown\"", groups = {
 			"VerifyipV4Facts", "blockedByBug-874147" }, enabled = true)
 	public void VerifyipV4Facts() throws JSONException, Exception {
@@ -2598,6 +2701,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-28478", "RHEL6-26709"})
 	@Test(description = "verify fix for Bug 886604 - etc/yum.repos.d/ does not exist, turning manage_repos off.", groups = {
 			"VerifyRepoFileExistance", "blockedByBug-886604", "blockedByBug-919700" }, enabled = true)
 	public void VerifyRepoFileExistance() throws JSONException, Exception {
@@ -2623,6 +2728,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21899", "RHEL7-51760"})
 	@Test(description = "verify fix for Bug 755677 - failing to add a virt unlimited pool to an activation key", groups = {
 			"AddingVirtualPoolToActivationKey", "blockedByBug-755677" }, enabled = true)
 	public void AddingVirtualPoolToActivationKey() throws JSONException, Exception {
@@ -2700,6 +2807,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21984", "RHEL7-51846"})
 	@Test(description = "verify tracebacks occur running yum repolist after subscribing to a pool", groups = {
 			"YumReposListAfterSubscription", "blockedByBug-696786", "blockedByBug-919700" }, enabled = true)
 	public void YumReposListAfterSubscription() throws JSONException, Exception {
@@ -2725,6 +2834,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 */
 	@ImplementsNitrateTest(caseId = 50235)
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21931", "RHEL7-51793"})
 	@Test(description = "verify rhsm log for Update With No Installed Products", groups = {
 			"UpdateWithNoInstalledProducts", "blockedByBug-746241", "blockedByBug-1389559" }, enabled = true)
 	public void UpdateWithNoInstalledProducts() throws JSONException, Exception {
@@ -2756,6 +2867,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21913", "RHEL7-51774"})
 	@Test(description = "verify Facts Update For Deleted Consumer", groups = { "FactsUpdateForDeletedConsumer",
 			"blockedByBug-798788" }, enabled = true)
 	@ImplementsNitrateTest(caseId = 148216)
@@ -2779,6 +2892,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21925", "RHEL7-51786"})
 	@Test(description = "verify if you can register using consumer id of a deleted owner", groups = {
 			"RegisterWithConsumeridOfDeletedOwner" }, enabled = true)
 	@ImplementsNitrateTest(caseId = 148216)
@@ -2805,6 +2920,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21923", "RHEL7-51784"})
 	@Test(description = "verify if register to a deleted owner", groups = { "RegisterToDeletedOwner" }, enabled = true)
 	@ImplementsNitrateTest(caseId = 148216)
 	public void RegisterToDeletedOwner() throws JSONException, Exception {
@@ -2823,6 +2940,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21909", "RHEL7-51770"})
 	@Test(description = "verify if Repos List is empty for FutureSubscription", groups = {
 			"EmptyReposListForFutureSubscription", "blockedByBug-958775" }, enabled = true)
 	public void EmptyReposListForFutureSubscription() throws JSONException, Exception {
@@ -2867,6 +2986,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21933", "RHEL7-51795"})
 	@Test(description = "verify if auto-subscribe and activation-key are mutually exclusive", groups = {
 			"VerifyAutoSubscribeAndActivationkeyTogether", "blockedByBug-869729" }, enabled = true)
 	public void VerifyAutoSubscribeAndActivationkeyTogether() throws JSONException, Exception {
@@ -2897,6 +3018,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21963", "RHEL7-51825"})
 	@Test(description = "verify if entitlement certs are regenerated if certs are manually removed", groups = {
 			"VerifyRegenrateEntitlementCert" }, enabled = true)
 	@ImplementsNitrateTest(caseId = 64181)
@@ -2926,6 +3049,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21973", "RHEL7-51835"})
 	@Test(description = "verify if entitlement certs are downloaded if subscribed using bogus poolid", groups = {
 			"VerifySubscribingTobogusPoolID" }, enabled = true)
 	@ImplementsNitrateTest(caseId = 50223)
@@ -2952,6 +3077,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21952", "RHEL7-51814"})
 	@Test(description = "Verify Functionality Access After Unregister", groups = {
 			"VerifyFunctionalityAccessAfterUnregister" }, enabled = true)
 	@ImplementsNitrateTest(caseId = 50215)
@@ -2979,6 +3106,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21960", "RHEL7-51822"})
 	@Test(description = "Verify only One Cert is downloaded Per One Subscription", groups = {
 			"VerifyOneCertPerOneSubscription" }, enabled = true)
 	@ImplementsNitrateTest(caseId = 50215)
@@ -3022,6 +3151,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21962", "RHEL7-51824"})
 	@Test(description = "verify  rhsmcertd is logging update failed (255)", groups = { "VerifyRHSMCertdLogging",
 			"blockedByBug-708512" }, enabled = true)
 	public void VerifyRHSMCertdLogging() throws JSONException, Exception {
@@ -3039,6 +3170,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21961", "RHEL7-51823"})
 	@Test(description = "verify content set associated with product", groups = {
 			"VerifycertsAfterUnsubscribeAndunregister" }, enabled = true)
 	@ImplementsNitrateTest(caseId = 50215)
@@ -3065,6 +3198,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21965", "RHEL7-51827"})
 	@Test(description = "verify reregister with invalid consumerid", groups = {
 			"VerifyRegisterUsingInavlidConsumerId" }, enabled = true)
 	@ImplementsNitrateTest(caseId = 61716)
@@ -3098,6 +3233,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21979", "RHEL7-51841"})
 	@Test(description = "verify if corrupt identity cert displays a trace back for list command", groups = {
 			"VerifyCorruptIdentityCert", "blockedByBug-607162" }, enabled = true)
 	public void VerifycorruptIdentityCert() throws JSONException, Exception {
@@ -3124,6 +3261,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21982", "RHEL7-51844"})
 	@Test(description = "subscription-manager facts --update changes update date after facts update", groups = {
 			"VerifyUpdateConsumerFacts", "blockedByBug-700821" }, enabled = true)
 	public void VerifyupdateConsumerFacts() throws JSONException, Exception {
@@ -3151,6 +3290,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21954", "RHEL7-51816"})
 	@Test(description = "verify healing of installed products without taking future subscriptions into consideration", groups = {
 			"VerifyHealingForFutureSubscription", "blockedByBug-907638" }, enabled = true)
 	public void VerifyHealingForFutureSubscription() throws JSONException, Exception {
@@ -3234,6 +3375,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-22312", "RHEL7-51791"})
 	@Test(description = "Verify unsubscribe from multiple invalid serial numbers", groups = { "blockedByBug-1268491",
 			"UnsubscribeFromInvalidMultipleEntitlements" }, enabled = true)
 	@ImplementsNitrateTest(caseId = 50230)
@@ -3281,6 +3424,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21930", "RHEL7-51792"})
 	@Test(description = "Verify unsubscribe from multiple subscriptions", groups = {
 			"UnsubscribeFromMultipleEntitlementsTest", "blockedByBug-867766", "blockedByBug-906550" }, enabled = true)
 	@ImplementsNitrateTest(caseId = 50230)
@@ -3347,6 +3492,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21948", "RHEL7-51810"})
 	@Test(description = "verify content set associated with product", groups = {
 			"VerifyFactsListByOverridingValues" }, enabled = true)
 	@ImplementsNitrateTest(caseId = 56389)
@@ -3370,6 +3517,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21949", "RHEL7-51811"})
 	@Test(description = "verify content set associated with product", groups = {
 			"VerifyFactsListWithOutrageousValues" }, enabled = true)
 	@ImplementsNitrateTest(caseId = 56897)
@@ -3399,6 +3548,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21978", "RHEL7-51840"})
 	@Test(description = "verify content set associated with product", groups = {
 			"Verifycontentsetassociatedwithproduct" }, enabled = true)
 	@ImplementsNitrateTest(caseId = 61115)
@@ -3487,6 +3638,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21974", "RHEL7-51836"})
 	@Test(description = "subscription-manager unsubscribe --all on expired subscriptions removes certs from entitlement folder", groups = {
 			"VerifyUnsubscribeAllForExpiredSubscription", "blockedByBug-852630",
 			"blockedByBug-906550" }, enabled = true)
@@ -3533,6 +3686,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21945", "RHEL7-51807"})
 	@Test(description = "Verify One empty certificate file in /etc/rhsm/ca causes registration failure", groups = {
 			"VerifyEmptyCertCauseRegistrationFailure_Test", "blockedByBug-806958","blockedByBug-1432990" }, enabled = true)
 	public void VerifyEmptyCertCauseRegistrationFailure_Test() throws JSONException, Exception {
@@ -3557,6 +3712,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21950", "RHEL7-51812"})
 	@Test(description = "Verify facts update with incorrect proxy url produces traceback.", groups = {
 			"VerifyFactsWithIncorrectProxy_Test", "blockedByBug-744504" }, enabled = true)
 	public void VerifyFactsWithIncorrectProxy_Test() throws JSONException, Exception {
@@ -3577,6 +3734,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21967", "RHEL7-51829"})
 	@Test(description = "Verify Subscription Manager Leaves Broken Yum Repos After Unregister", groups = {
 			"ReposListAfterUnregisterTest", "blockedByBug-674652" }, enabled = true)
 	public void VerifyRepoAfterUnregisterTest() throws JSONException, Exception {
@@ -3596,6 +3755,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21944", "RHEL7-51806"})
 	@Test(description = "Verify if stacking entitlements reports as distinct entries in cli list --installed", groups = {
 			"VerifyDistinctStackingEntires", "blockedByBug-733327" }, enabled = true)
 	public void VerifyDistinctStackingEntires() throws Exception {
@@ -3649,6 +3810,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21943", "RHEL7-51805"})
 	@Test(description = "Verify that Product with UUID '%s' cannot be deleted while subscriptions exist.", groups = {
 			"DeleteProductTest", "blockedByBug-684941" }, enabled = true)
 	public void VerifyDeletionOfSubscribedProduct_Test() throws JSONException, Exception {
@@ -3685,6 +3848,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21951", "RHEL7-51813"})
 	@Test(description = "Verify Force Registration After Consumer is Deleted", groups = { "ForceRegAfterDEL",
 			"blockedByBug-853876" }, enabled = true)
 	public void VerifyForceRegistrationAfterConsumerDeletion_Test() throws JSONException, Exception {
@@ -3705,6 +3870,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21904", "RHEL7-51765"})
 	@Test(description = "verify config Server port with blank or incorrect text produces traceback", groups = {
 			"configBlankTest", "blockedByBug-744654" }, enabled = true)
 	// @ImplementsNitrateTest(caseId=)
@@ -3729,6 +3896,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21990", "RHEL7-51852"})
 	@Test(description = "subscription-manager: register --name , setting consumer name to blank", groups = {
 			"registerwithname", "blockedByBug-669395" }, enabled = true)
 	public void registerWithNameBlankTest() throws JSONException, Exception {
@@ -3760,6 +3929,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21989", "RHEL7-51851"})
 	@Test(description = "subscription-manager: register --consumerid  using a different user and valid consumerId", groups = {
 			"reregister", "blockedByBug-627665" }, enabled = true)
 	public void registerWithConsumerid_Test() throws JSONException, Exception {
@@ -3794,6 +3965,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	/**
 	 * @author skallesh
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21926", "RHEL7-51787"})
 	@Test(description = "subscription-manager: service-level --org (without --list option)", groups = {
 			"ServicelevelTest", "blockedByBug-826856" }, enabled = true)
 	public void ServiceLevelWithOrgWithoutList_Test() {
@@ -3817,6 +3990,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	/**
 	 * @author skallesh
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21914", "RHEL7-51775"})
 	@Test(description = "subscription-manager: facts --update (when registered)", groups = { "MyTestFacts",
 			"blockedByBug-707525" }, enabled = true)
 	public void FactsUpdateWhenregistered_Test() {
@@ -3830,6 +4005,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	/**
 	 * @author skallesh
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21900", "RHEL7-51761"})
 	@Test(description = "subscription-manager: attempt register to with white space in the user name should fail", groups = {
 			"registeredTests", "blockedByBug-719378" }, enabled = true)
 	public void AttemptregisterWithWhiteSpacesInUsername_Test() {
@@ -3844,6 +4021,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 * @throws Exception
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21936", "RHEL7-51798"})
 	@Test(description = "Auto-heal for partial subscription", groups = { "autohealPartial", "blockedByBug-746218",
 			"blockedByBug-907638", "blockedByBug-907400" }, enabled = true)
 	public void VerifyAutohealForPartialSubscription() throws Exception {
@@ -3905,6 +4084,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 * @throws Exception
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21938", "RHEL7-51800"})
 	@Test(description = "Verify healing only attaches with a service-level that is set on the system's preference", groups = {
 			"AutoHealWithSLA", "blockedByBug-907638", "blockedByBug-907400" }, enabled = true)
 	public void VerifyAutohealWithSLA() throws JSONException, Exception {
@@ -3967,6 +4148,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @author skallesh
 	 * @throws Exception
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21901", "RHEL7-51762"})
 	@Test(description = "verfying Auto-heal when auto-heal parameter is turned off", groups = { "AutohealTurnedOff",
 			"blockedByBug-726411" }, enabled = true)
 	public void AutohealTurnedOff() throws Exception {
@@ -3985,7 +4168,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21972", "RHEL7-51834"})
 	@Test(description = "Verify if Subscription manager displays incorrect status for partially subscribed subscription", groups = {
 			"VerifyStatusForPartialSubscription", "blockedByBug-743710" }, enabled = true)
 	@ImplementsNitrateTest(caseId = 119327)
@@ -4033,6 +4217,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-26776", "RHEL7-63526"})
 	@Test(description = "Auto-heal for Expired subscription", groups = { "AutohealForExpired", "blockedByBug-746088",
 			"blockedByBug-907638", "blockedByBug-907400" }, enabled = true)
 	public void VerifyAutohealForExpiredSubscription() throws JSONException, Exception {
@@ -4068,6 +4254,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21937", "RHEL7-51799"})
 	@Test(description = "Auto-heal for subscription", groups = { "AutoHeal", "blockedByBug-907638",
 			"blockedByBug-726411", "blockedByBug-907400" }, enabled = true)
 	@ImplementsNitrateTest(caseId = 119327)
@@ -4090,6 +4278,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 * @throws Exception
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21935", "RHEL7-51797"})
 	@Test(description = "Auto-heal with SLA", // TODO Add some more description;
 			// has same description as
 			// VerifyAutohealWithSLA()
@@ -4132,7 +4322,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @author skallesh
 	 * @throws IOException
 	 */
-
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21958", "RHEL7-51820"})
 	@Test(description = "subscription-manager: subscribe multiple pools in incorrect format", groups = {
 			"MysubscribeTest", "blockedByBug-772218" }, enabled = true)
 	public void VerifyIncorrectSubscriptionFormat() throws IOException {
@@ -4160,6 +4351,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @author skallesh
 	 * @throws Exception
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21946", "RHEL7-51808"})
 	@Test(description = "Verify that Entitlement Start Dates is the Subscription Start Date ", groups = {
 			"VerifyEntitlementStartDate_Test", "blockedByBug-670831" }, enabled = true)
 	public void VerifyEntitlementStartDate_Test() throws JSONException, Exception {
@@ -4184,6 +4377,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @author skallesh
 	 * @throws Exception
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21975", "RHEL7-51837"})
 	@Test(description = "Verify if architecture for auto-subscribe test", groups = {
 			"VerifyarchitectureForAutobind_Test", "blockedByBug-664847" }, enabled = true)
 	public void VerifyarchitectureForAutobind_Test() throws Exception {
@@ -4234,6 +4429,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @author skallesh
 	 * @throws Exception
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21969", "RHEL7-51831"})
 	@Test(description = "Verify that rhsm.log reports all products provided by an attached subsubscription.", groups = {
 			"blockedByBug-668032", "VerifyRhsmLogsProvidedProducts", "blockedByBug-1389559" }, enabled = true)
 	public void VerifyRhsmLogsProvidedProducts_Test() {
@@ -4278,6 +4475,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @author skallesh
 	 * @throws Exception
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21953", "RHEL7-51815"})
 	@Test(description = "Verify if future entitlements are disregarded by autosubscribe when determining what should be subscribed to satisfy compliance today ", groups = {
 			"VerifyFutureSubscription_Test", "blockedByBug-746035" }, enabled = true)
 	public void VerifyFutureSubscription_Test() throws Exception {
@@ -4328,6 +4527,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21977", "RHEL7-51839"})
 	@Test(description = "Verify if the status of installed products match when autosubscribed,and when you subscribe all the available products ", groups = {
 			"VerifyautosubscribeTest" }, enabled = true)
 	public void VerifyautosubscribeTest() throws JSONException, Exception {
@@ -4357,6 +4558,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @author skallesh
 	 * @throws Exception
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21976", "RHEL7-51838"})
 	@Test(description = "Verify if autosubscribe ignores socket count on non multi-entitled subscriptions ", groups = {
 			"VerifyautosubscribeIgnoresSocketCount_Test", "blockedByBug-743704" }, enabled = true)
 	public void VerifyautosubscribeIgnoresSocketCount_Test() throws Exception {
@@ -4395,6 +4598,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21959", "RHEL7-51821"})
 	@Test(description = "subscription-manager: entitlement key files created with weak permissions", groups = {
 			"MykeyTest", "blockedByBug-720360" }, enabled = true)
 	public void VerifyKeyFilePermissions() throws JSONException, Exception {
@@ -4421,7 +4626,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 *
 	 * @throws JSONException *
 	 */
-
+	@TestDefinition( projectID = {Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL7-55664"})
 	@Test(description = "Verify the file permissions on /var/lib/rhsm/cache and facts files", groups = {
 			"blockedByBug-1297485", "blockedByBug-1297493", "blockedByBug-1340525",
 			"blockedByBug-1389449" }, enabled = true)
@@ -4510,6 +4716,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 *             JSON Exception
 	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-38192", "RHEL7-77384"})
 	@Test(description = "Verify the newly added content set is immediatly available on the client", groups = {
 			"VerifyNewContentAvailability", "blockedByBug-1360909" }, enabled = true)
 	public void VerifyNewContentAvailability_Test() throws JSONException, Exception {
@@ -4629,6 +4837,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.config(null, null, true, listOfSectionNameValues);
 	}
 
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21934", "RHEL7-51796"})
 	@Test(description = "verify that the autoheal attribute of a new system consumer defaults to true", groups = {}, enabled = true)
 	public void VerifyAutohealAttributeDefaultsToTrueForNewSystemConsumer_Test() throws Exception {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,

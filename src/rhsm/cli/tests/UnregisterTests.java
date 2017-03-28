@@ -2,6 +2,9 @@ package rhsm.cli.tests;
 
 import java.util.List;
 
+import com.github.redhatqe.polarize.metadata.TestDefinition;
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+
 import org.testng.SkipException;
 import org.testng.annotations.AfterGroups;
 import org.testng.annotations.Test;
@@ -25,7 +28,8 @@ public class UnregisterTests extends SubscriptionManagerCLITestScript {
 	
 	
 	// Test Methods ***********************************************************************
-
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20392", "RHEL7-51410"})
 	@Test(description="unregister the consumer",
 			groups={"blockedByBug-589626"},
 			enabled=true)
@@ -43,8 +47,10 @@ public class UnregisterTests extends SubscriptionManagerCLITestScript {
 				"The subscription quantity count for Pool "+originalPool.poolId+" returned to its original count after subscribing to it and then unregistering from the candlepin server.");
 		}
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20016", "RHEL7-51411"})
 	@Test(description="unregister should not make unauthorized requests",
 			groups={"AcceptanceTests","Tier1Tests","UnregisterShouldNotThrowUnauthorizedRequests_Test","blockedByBug-997935","blockedByBug-1158578","blockedByBug-1207403","blockedByBug-1389559","blockedByBug-1395794"},
 			enabled=true)

@@ -23,6 +23,9 @@ import rhsm.cli.tasks.SubscriptionManagerTasks;
 
 import com.redhat.qe.tools.SSHCommandResult;
 
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.TestDefinition;
+
 /**
  * @author jsefler
  *
@@ -42,7 +45,9 @@ import com.redhat.qe.tools.SSHCommandResult;
 public class RedeemTests extends SubscriptionManagerCLITestScript {
 
 	// Test methods ***********************************************************************
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36620", "RHEL7-51431"})
 	@Test(	description="subscription-manager: verify redeem requires registration",
 			groups={},
 			enabled=true)
@@ -64,7 +69,9 @@ public class RedeemTests extends SubscriptionManagerCLITestScript {
 			Assert.assertEquals(redeemResult.getExitCode(), Integer.valueOf(255),"Exit code from redeem when executed against a standalone candlepin server.");
 		}
 	}
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20024", "RHEL7-51041"})
 	@Test(	description="subscription-manager: attempt redeem without --email option",
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-727600"},
 			enabled=true)
@@ -87,7 +94,9 @@ public class RedeemTests extends SubscriptionManagerCLITestScript {
 			Assert.assertEquals(redeemResult.getExitCode(), Integer.valueOf(255),"Exit code from redeem when executed without an email option.");
 		}
 	}
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36622", "RHEL7-60489"})
 	@Test(	description="subscription-manager: attempt redeem with --email option (against a standalone candlepin server)",
 			groups={"blockedByBug-726791","blockedByBug-1248833","blockedByBug-1263474"},
 			enabled=true)
@@ -118,7 +127,9 @@ public class RedeemTests extends SubscriptionManagerCLITestScript {
 			Assert.assertEquals(redeemResult.getExitCode(), Integer.valueOf(255),"Exit code from redeem when executed against a standalone candlepin server.");
 		}
 	}
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-27129", "RHEL7-64492"})
 	@Test(	description="subscription-manager: attempt redeem against an onpremises candlepin server that has been patched for mock testing",
 			groups={"MockRedeemTests", "blockedByBug-727978"},
 			dataProvider="getOnPremisesMockAttemptToRedeemData",
@@ -152,8 +163,10 @@ public class RedeemTests extends SubscriptionManagerCLITestScript {
 		if (expectedStderr!=null) Assert.assertEquals(redeemResult.getStderr().trim(), expectedStderr.replaceFirst("\\{0\\}", serialNumber),"stdErr");
 
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-36621", "RHEL7-51432"})
 	@Test(	description="subscription-manager: attempt change a consumers canActivate attribute",
 			groups={},
 			enabled=true)
@@ -203,6 +216,8 @@ public class RedeemTests extends SubscriptionManagerCLITestScript {
 	
 	
 	// This test is the hosted equivalent for CASE 4 from getOnPremisesMockAttemptToRedeemData
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20025", "RHEL7-52261"})
 	@Test(	description="subscription-manager: attempt redeem against a hosted candlepin server when consumer's canActivate attribute is false",
 			groups={"AcceptanceTests","Tier1Tests","MockRedeemTests", "blockedByBug-688806", "blockedByBug-1248833"},
 			enabled=true)

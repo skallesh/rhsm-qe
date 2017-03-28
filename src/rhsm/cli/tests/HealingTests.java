@@ -8,6 +8,9 @@ import rhsm.base.SubscriptionManagerCLITestScript;
 import rhsm.cli.tasks.CandlepinTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 
+import com.github.redhatqe.polarize.metadata.TestDefinition;
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+
 /**
  * @author jsefler
  *
@@ -17,7 +20,8 @@ import com.redhat.qe.tools.SSHCommandResult;
 public class HealingTests extends SubscriptionManagerCLITestScript {
 	
 	// Test methods ***********************************************************************
-
+    @TestDefinition(projectID={Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			        testCaseID={"RHEL6-21583", "RHEL7-51500"})
 	@Test(	description="a new system consumer's autoheal attribute defaults to true (on)",
 			groups={},
 			priority=100,
@@ -31,7 +35,9 @@ public class HealingTests extends SubscriptionManagerCLITestScript {
 		JSONObject jsonConsumer = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword, sm_serverUrl, "/consumers/"+consumerId));
 		Assert.assertTrue(jsonConsumer.getBoolean("autoheal"), "A new system consumer's autoheal attribute value defaults to true.");
 	}
-	
+
+	@TestDefinition(projectID={Project.RHEL6, Project.RedHatEnterpriseLinux7},
+	                testCaseID={"RHEL6-21584", "RHEL7-51501"})
 	@Test(	description="using the candlepin api, a consumer's autoheal attribute can be toggled off/on",
 			groups={},
 			priority=200, dependsOnMethods={"VerifyAutohealAttributeDefaultsToTrueForNewSystemConsumer_Test"},
@@ -47,8 +53,9 @@ public class HealingTests extends SubscriptionManagerCLITestScript {
 		jsonConsumer = CandlepinTasks.setAutohealForConsumer(sm_clientUsername,sm_clientPassword, sm_serverUrl, consumerId,true);
 		Assert.assertTrue(jsonConsumer.getBoolean("autoheal"), "A consumer's autoheal attribute value can be toggled on (expected value=true).");
 	}
-	
-	
+
+	@TestDefinition(projectID={Project.RHEL6, Project.RedHatEnterpriseLinux7},
+	                testCaseID={"RHEL6-20096", "RHEL7-51103"})
 	@Test(	description="using autoheal module, a consumer's autoheal attribute can be toggled off/on",
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-976867"},
 			enabled=true)
@@ -82,8 +89,9 @@ public class HealingTests extends SubscriptionManagerCLITestScript {
 		result = clienttasks.autoheal(true, null, null, null, null, null);
 		Assert.assertEquals(result.getStdout().trim(), "Auto-attach preference: enabled", "Stdout from the auto-attach --show.");
 	}
-	
-	
+
+	@TestDefinition(projectID={Project.RHEL6, Project.RedHatEnterpriseLinux7},
+	                testCaseID={"RHEL6-21582", "RHEL7-51499"})
 	@Test(	description="run auto-attach module without being registered",
 			groups={"blockedByBug-976867"},
 			enabled=true)

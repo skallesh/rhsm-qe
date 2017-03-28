@@ -28,6 +28,9 @@ import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.TestDefinition;
+
 /**
  * @author jsefler
  * 
@@ -120,7 +123,9 @@ import com.redhat.qe.tools.SSHCommandResult;
 public class OstreeTests extends SubscriptionManagerCLITestScript {
 
 	// Test methods ***********************************************************************
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-22238", "RHEL7-51753"})
 	@Test(	description="Verify that the ostree config and origin files are set after attaching an atomic subscription; attempt an atomic upgrade; unsubscribe and verify ostree config files are unset",
 			groups={"subscribeAndUnsubscribeTests","AcceptanceTests","Tier1Tests"},
 			dataProvider="getOstreeSubscriptionPools",

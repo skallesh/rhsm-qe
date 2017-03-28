@@ -24,6 +24,9 @@ import com.redhat.qe.auto.bugzilla.BzChecker;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.TestDefinition;
+
 /**
  * @author jsefler
  * 
@@ -53,8 +56,9 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 	
 	
 	// Test Methods ***********************************************************************
-	
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21777", "RHEL7-51594"})
 	@Test(	description="check the subscription-manager msgid strings for misspelled words and typos",
 			groups={},
 			enabled=true)
@@ -384,8 +388,10 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 		//	[root@jsefler-os7 ~]# msgunfmt --no-wrap /usr/share/locale/ja/LC_MESSAGES/rhsm.mo | grep msgid | sed 's/msgid //' > /tmp/msgids.txt && hunspell -w -d en_US /tmp/msgids.txt
 		//	[root@jsefler-os7 ~]# msgunfmt --no-wrap /usr/share/locale/ja/LC_MESSAGES/rhsm.mo | grep msgid | sed 's/msgid //' > /tmp/msgids.txt && hunspell -L -d en_US /tmp/msgids.txt
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21499", "RHEL7-51593"})
 	@Test(	description="check the candlepin msgid strings for misspelled words and typos",
 			groups={},
 			enabled=true)
@@ -497,7 +503,9 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(hunspellFailures.size(),0,"There are zero unexpected hunspell check failures in the msgids.");
 	}
 
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21785", "RHEL7-51602"})
 	@Test(	description="check the subscription-manager man page for misspelled words and typos",
 			groups={},
 			enabled=true)
@@ -606,8 +614,10 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 		// assert that there were no unexpected hunspell check failures in the modified man page
 		Assert.assertEquals(getSpellCheckFailuresForModifiedManPage(tool,manPageResult.getStdout(),modifiedManPage).size(),0,"There are zero unexpected hunspell check failures in the man page for '"+tool+"'.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			, testCaseID = {"RHEL6-21784", "RHEL7-51601"})
 	@Test(	description="check the subscription-manager-gui man page for misspelled words and typos",
 			groups={},
 			enabled=true)
@@ -649,8 +659,10 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 		// assert that there were no unexpected hunspell check failures in the modified man page
 		Assert.assertEquals(getSpellCheckFailuresForModifiedManPage(tool,manPageResult.getStdout(),modifiedManPage).size(),0,"There are zero unexpected hunspell check failures in the man page for '"+tool+"'.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21784", "RHEL7-51601"})
 	@Test(	description="check the rhn-migrate-classic-to-rhsm man page for misspelled words and typos",
 			groups={/*blockedByBug-1390712*/},
 			enabled=true)
@@ -704,8 +716,7 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 		// assert that there were no unexpected hunspell check failures in the modified man page
 		Assert.assertEquals(getSpellCheckFailuresForModifiedManPage(tool,manPageResult.getStdout(),modifiedManPage).size(),0,"There are zero unexpected hunspell check failures in the man page for '"+tool+"'.");
 	}
-	
-	
+
 	@Test(	description="check the install-num-migrate-to-rhsm man page for misspelled words and typos",
 			groups={},
 			enabled=true)
@@ -717,8 +728,10 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 		}
 		Assert.fail("This test has not been implemented for this version of subscription-manager");	// TODO
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21780", "RHEL7-51597"})
 	@Test(	description="check the rhsm.conf man page for misspelled words and typos",
 			groups={},
 			enabled=true)
@@ -780,8 +793,10 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 		// assert that there were no unexpected hunspell check failures in the modified man page
 		Assert.assertEquals(getSpellCheckFailuresForModifiedManPage(tool,manPageResult.getStdout(),modifiedManPage).size(),0,"There are zero unexpected hunspell check failures in the man page for '"+tool+"'.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21778", "RHEL7-51595"})
 	@Test(	description="check the rct man page for misspelled words and typos",
 			groups={},
 			enabled=true)
@@ -821,8 +836,10 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 		// assert that there were no unexpected hunspell check failures in the modified man page
 		Assert.assertEquals(getSpellCheckFailuresForModifiedManPage(tool,manPageResult.getStdout(),modifiedManPage).size(),0,"There are zero unexpected hunspell check failures in the man page for '"+tool+"'.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21783", "RHEL7-51600"})
 	@Test(	description="check the rhsmcertd man page for misspelled words and typos",
 			groups={},
 			enabled=true)
@@ -868,8 +885,10 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 		// assert that there were no unexpected hunspell check failures in the modified man page
 		Assert.assertEquals(getSpellCheckFailuresForModifiedManPage(tool,manPageResult.getStdout(),modifiedManPage).size(),0,"There are zero unexpected hunspell check failures in the man page for '"+tool+"'.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21782", "RHEL7-51599"})
 	@Test(	description="check the rhsm-icon man page for misspelled words and typos",
 			groups={},
 			enabled=true)
@@ -888,8 +907,10 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 		// assert that there were no unexpected hunspell check failures in the modified man page
 		Assert.assertEquals(getSpellCheckFailuresForModifiedManPage(tool,manPageResult.getStdout(),modifiedManPage).size(),0,"There are zero unexpected hunspell check failures in the man page for '"+tool+"'.");	
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-21781", "RHEL7-51598"})
 	@Test(	description="check the rhsm-debug man page for misspelled words and typos",
 			groups={},
 			enabled=true)

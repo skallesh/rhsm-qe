@@ -19,7 +19,10 @@
             BeforeClass
             BeforeGroups
             Test]
-           org.testng.SkipException))
+           org.testng.SkipException
+           [com.redhat.qe.auto.bugzilla BzChecker]
+           [com.github.redhatqe.polarize.metadata TestDefinition]
+           [com.github.redhatqe.polarize.metadata DefTypes$Project]))
 
 (def window-name "Choose Service")
 
@@ -106,16 +109,18 @@
   (run-command "subscription-manager clean")
   (zero-proxy-values))
 
-(defn ^{Test {:groups ["firstboot"
-                       "tier2"
-                       "tier1" "acceptance"
-                       "blockedByBug-1020542"
-                       "blockedByBug-1020672"
-                       "blockedByBug-1031176"
-                       "blockedByBug-1153634"
-                       "blockedByBug-1157404"
-                       "blockedByBug-1159936"]
-              :priority (int 100)}}
+(defn ^{Test           {:groups   ["firstboot"
+                                   "tier2"
+                                   "tier1" "acceptance"
+                                   "blockedByBug-1020542"
+                                   "blockedByBug-1020672"
+                                   "blockedByBug-1031176"
+                                   "blockedByBug-1153634"
+                                   "blockedByBug-1157404"
+                                   "blockedByBug-1159936"]
+                        :priority (int 100)}
+        TestDefinition {:projectID  [`DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL7-32864"]}}
   firstboot_rhel7_register
   "since firstboot in RHEL7 is minimalistic and discrepancies wont be fixed, this
    test performs a happy-path test to assert general working of firstboot screens"
@@ -199,12 +204,14 @@
             (str "This is not RHEL7 !!!
                   Skipping firstboot_rhel7_proxy_noauth test.")))))
 
-(defn ^{Test {:groups ["firstboot"
-                       "tier3"
-                       "blockedByBug-973269"
-                       "blockedByBug-988411"
-                       "blockedByBug-1199211"]
-              :priority (int 200)}}
+(defn ^{Test           {:groups   ["firstboot"
+                                   "tier3"
+                                   "blockedByBug-973269"
+                                   "blockedByBug-988411"
+                                   "blockedByBug-1199211"]
+                        :priority (int 200)}
+        TestDefinition {:projectID  [`DefTypes$Project/RHEL6]
+                        :testCaseID ["RHEL6-36996"]}}
   firstboot_enable_proxy_auth
   "Checks whether the proxy and authentication is enabled in rhsm-conf file"
   [_]
@@ -228,11 +235,13 @@
       (tasks/disableproxy true)
       (kill_firstboot))))
 
-(defn ^{Test {:groups ["firstboot"
-                       "tier3"
-                       "blockedByBug-973269"
-                       "blockedByBug-988411"]
-              :dependsOnMethods ["firstboot_enable_proxy_auth"]}}
+(defn ^{Test           {:groups           ["firstboot"
+                                           "tier3"
+                                           "blockedByBug-973269"
+                                           "blockedByBug-988411"]
+                        :dependsOnMethods ["firstboot_enable_proxy_auth"]}
+        TestDefinition {:projectID  [`DefTypes$Project/RHEL6]
+                        :testCaseID ["RHEL6-36370"]}}
   firstboot_enable_proxy_noauth
   "Checks whether the proxy is enabled and authentication is disabled in rhsm-conf file"
   [_]
@@ -299,10 +308,12 @@
       ;; https://bugzilla.redhat.com/show_bug.cgi?id=703491
       (verify (tasks/fbshowing? :firstboot-user)))))
 
-(defn ^{Test {:groups ["firstboot"
-                       "tier3"
-                       "blockedByBug-642660"
-                       "blockedByBug-863572"]}}
+(defn ^{Test           {:groups ["firstboot"
+                                 "tier3"
+                                 "blockedByBug-642660"
+                                 "blockedByBug-863572"]}
+        TestDefinition {:projectID  [`DefTypes$Project/RHEL6]
+                        :testCaseID ["RHEL6-36995"]}}
   firstboot_check_back_button_state
   "Checks the state of back and forward button (whether disabled) when firstboot is
    regestering (when progress-bar is displayed) to to a server. This check is performed
@@ -321,11 +332,13 @@
       (verify (not (bool (tasks/ui hasstate :firstboot-forward "Sensitive")))))
     (tasks/firstboot-register (@config :username) (@config :password) :back-button? true)))
 
-(defn ^{Test {:groups ["firstboot"
-                       "tier3"
-                       "blockedByBug-872727"
-                       "blockedByBug-973317"]
-              :dependsOnMethods ["firstboot_check_back_button_state"]}}
+(defn ^{Test           {:groups           ["firstboot"
+                                           "tier3"
+                                           "blockedByBug-872727"
+                                           "blockedByBug-973317"]
+                        :dependsOnMethods ["firstboot_check_back_button_state"]}
+        TestDefinition {:projectID  [`DefTypes$Project/RHEL6]
+                        :testCaseID ["RHEL6-36995"]}}
   firstboot_check_back_button
   "Checks the functionality of the back button during firstboot"
   [_]
@@ -344,10 +357,12 @@
     (verify (substring? "system identity: " output))))
 
 ;; https://tcms.engineering.redhat.com/case/72669/?from_plan=2806
-(defn ^{Test {:groups ["firstboot"
-                       "tier2"
-                       "blockedByBug-642660"
-                       "blockedByBug-1142495"]}}
+(defn ^{Test           {:groups ["firstboot"
+                                 "tier2"
+                                 "blockedByBug-642660"
+                                 "blockedByBug-1142495"]}
+        TestDefinition {:projectID  [`DefTypes$Project/RHEL6]
+                        :testCaseID ["RHEL6-36506"]}}
   firstboot_skip_register
   "Checks whether firstboot skips register if subscription manger is already registered"
   [_]
@@ -368,9 +383,11 @@
       (verify (tasks/fbshowing? :firstboot-window "Create User")))))
 
 ;; https://tcms.engineering.redhat.com/case/72670/?from_plan=2806
-(defn ^{Test {:groups ["firstboot"
-                       "tier2"]
-              :dependsOnMethods ["firstboot_skip_register"]}}
+(defn ^{Test           {:groups           ["firstboot"
+                                           "tier2"]
+                        :dependsOnMethods ["firstboot_skip_register"]}
+        TestDefinition {:projectID  [`DefTypes$Project/RHEL6]
+                        :testCaseID ["RHEL6-36507"]}}
   firstboot_check_register_sm_unregistered
   "Checks whether firstboot navigates to register screen when subscription manager is unregistered"
   [_]
@@ -401,9 +418,11 @@
   (verify (bool (tasks/ui guiexist :firstboot-window
                           "Subscription Management Registration"))))
 
-(defn ^{Test {:groups ["firstboot"
-                       "tier2"
-                       "blockedByBug-973317"]}}
+(defn ^{Test           {:groups ["firstboot"
+                                 "tier2"
+                                 "blockedByBug-973317"]}
+        TestDefinition {:projectID  [`DefTypes$Project/RHEL6]
+                        :testCaseID ["RHEL6-36504"]}}
   firstboot_back_button_after_register
   "Verifies that on clicking backbutton after registering from Create User
    menu should navigte to Choose Service menu"

@@ -29,6 +29,9 @@ import com.redhat.qe.auto.bugzilla.BzChecker;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.tools.SSHCommandResult;
 
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.TestDefinition;
+
 /**
  * @author jsefler
  * 
@@ -51,7 +54,9 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 
 	
 	// Test methods ***********************************************************************
-	
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-19997", "RHEL7-51030"})
 	@Test(	description="attempt to get the subscription-manager release when not registered",
 			groups={},
 			enabled=true)
@@ -93,8 +98,10 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 			Assert.assertEquals(result.getStdout().trim(), clienttasks.msg_ConsumerNotRegistered, "Stdout from release without being registered");
 		}
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-19998", "RHEL7-51031"})
 	@Test(	description="attempt to get the subscription-manager release when a release has not been set; should be told that the release is not set",
 			groups={},
 			enabled=true)
@@ -106,8 +113,10 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 		SSHCommandResult result = clienttasks.release(null, null, null, null, null, null, null);
 		Assert.assertEquals(result.getStdout().trim(), "Release not set", "Stdout from release without having set it");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-19996", "RHEL7-51029"})
 	@Test(	description="attempt to get the subscription-manager release list without having subscribed to any entitlements",
 			groups={"blockedByBug-824979"},
 			enabled=true)
@@ -133,8 +142,10 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(result.getExitCode(), expectedExitCode, "exitCode from release --list without any entitlements");
 
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-19999", "RHEL7-51032"})
 	@Test(	description="attempt to set the subscription-manager release value that is not currently available",
 			groups={"blockedByBug-818205", "blockedByBug-919700"},
 			enabled=true)
@@ -153,8 +164,10 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) expectedExitCode = new Integer(65);	// EX_DATAERR	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
 		Assert.assertEquals(result.getExitCode(), expectedExitCode, "exitCode from release --set with an unavailable value");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20001", "RHEL7-55165"})
 	@Test(	description="verify that the consumer's current subscription-manager release value matches the release value just set",
 			groups={"blockedByBug-814385", "blockedByBug-919700"},
 			enabled=true)
@@ -173,8 +186,10 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 		clienttasks.release(null, null, release, null, null, null, null);
 		Assert.assertEquals(clienttasks.getCurrentRelease(), release, "The release value retrieved after setting the release.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20000", "RHEL7-55164"})
 	@Test(	description="assert that the subscription-manager release can nolonger be unset by setting it to \"\".",
 			groups={"blockedByBug-807822","blockedByBug-814385", "blockedByBug-919700"},
 			enabled=true)
@@ -201,8 +216,10 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(result.getStdout(), "", "Stdout when attempting to unset the release with \"\".");
 		Assert.assertEquals(clienttasks.getCurrentRelease(), release, "The release value should still be set after a failed attempt to unset it with \"\".");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20003", "RHEL7-55167"})
 	@Test(	description="assert that the subscription-manager release can be unset by using the unset option.",
 			groups={"blockedByBug-807822","blockedByBug-814385", "blockedByBug-919700"},
 			enabled=true)
@@ -224,8 +241,10 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 		SSHCommandResult result = clienttasks.release(null, null, null, true, null, null, null);
 		Assert.assertEquals(clienttasks.getCurrentRelease(), "", "The release value retrieved after unsetting should be not set.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20002", "RHEL7-55166"})
 	@Test(	description="assert that subscription-manager release without any options defaults to --show",
 			groups={"blockedByBug-812153", "blockedByBug-919700"},
 			enabled=true)
@@ -260,8 +279,10 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(defaultResult.getExitCode(), showResult.getExitCode(), "exitCode feedback comparison between release --show and release without options.");
 
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20010", "RHEL7-55175"})
 	@Test(	description="after subscribing to all available subscriptions, assert that content with url paths that reference $releasever are substituted with the consumers current release preference",
 			groups={"blockedByBug-807407","blockedByBug-962520"},
 			enabled=true)
@@ -336,8 +357,10 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(yumReposAfterSettingReleaseVer.containsAll(yumReposBeforeSettingReleaseVer) && yumReposBeforeSettingReleaseVer.containsAll(yumReposAfterSettingReleaseVer),
 				"After unsetting the release version preference, all of the yum repolist were restored to their original values.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20009", "RHEL7-55174"})
 	@Test(	description="register to a RHEL subscription and verify that release --list matches the expected CDN listing for this x-stream release of RHEL",
 			groups={"blockedByBug-818298","blockedByBug-820639","blockedByBug-844368","blockedByBug-893746","blockedByBug-904193"},
 			dataProvider="getCredentialsToVerifyReleaseListMatchesCDN_Test",
@@ -478,8 +501,10 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(expectedReleases.containsAll(actualReleases) && actualReleases.containsAll(expectedReleases), "The actual subscription-manager releases list "+actualReleases+" matches the expected consolidated CDN listing "+expectedReleases+" after being granted an entitlement from subscription product: "+rhelSubscriptionPool.productId);
 		Assert.assertTrue(expectedReleases.size()==actualReleases.size(), "The actual subscription-manager releases list "+actualReleases+" does not contain any duplicates.  It should be a unique list.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20004", "RHEL7-55169"})
 	@Test(	description="register to a RHEL subscription and verify that release --list excludes 6.0",
 			groups={"blockedByBug-802245"},
 			enabled=true)
@@ -511,8 +536,8 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(!actualReleases.contains(release60), "The subscription-manager releases list should exclude '"+release60+"' since '"+clienttasks.command+"' did not exist in RHEL Release '"+release60+"'.");
 		//NOT PRACTICAL SINCE CONTENT FROM THIS Y-STREAM MAY NOT BE AVAILABLE UNTIL GA Assert.assertTrue(actualReleases.contains(clienttasks.redhatReleaseXY), "The subscription-manager releases list should include '"+clienttasks.redhatReleaseXY+"' since it is the current RHEL Release under test.");
 	}
-	
-	
+
+
 	@Test(	description="register to a RHEL subscription and verify that release --list excludes 5.6, 5.5, 5.4, 5.3, 5.2, 5.1, 5.0",
 			groups={"blockedByBug-785989"/*,"blockedByBug-840509" MOVED TO TEMPORARY WORKAROUND*/,"blockedByBug-919700"},
 			enabled=true)
@@ -557,8 +582,10 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 		}
 		//NOT PRACTICAL SINCE CONTENT FROM THIS Y-STREAM MAY NOT BE AVAILABLE UNTIL GA Assert.assertTrue(actualReleases.contains(clienttasks.redhatReleaseXY), "The subscription-manager releases list should include '"+clienttasks.redhatReleaseXY+"' since it is the current RHEL Release under test.");
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20007", "RHEL7-55172"})
 	@Test(	description="using a no auth proxy server, register to a RHEL subscription and verify that release --list matches the expected CDN listing for this x-stream release of RHEL",
 			groups={"blockedByBug-844368","blockedByBug-893746","blockedByBug-904193","blockedByBug-1134963","blockedByBug-1400719"},
 			enabled=true)
@@ -566,8 +593,10 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 	public void VerifyReleaseListMatchesCDNUsingNoAuthProxyCommandLineArgs_Test() throws JSONException, Exception {
 		verifyReleaseListMatchesCDN(sm_noauthproxyHostname,sm_noauthproxyPort,null,null);
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20005", "RHEL7-55170"})
 	@Test(	description="using a basic auth proxy server, register to a RHEL subscription and verify that release --list matches the expected CDN listing for this x-stream release of RHEL",
 			groups={"blockedByBug-844368","blockedByBug-893746","blockedByBug-904193","blockedByBug-1134963","blockedByBug-1400719"},
 			enabled=true)
@@ -575,8 +604,10 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 	public void VerifyReleaseListMatchesCDNUsingBasicAuthProxyCommandLineArgs_Test() {
 		verifyReleaseListMatchesCDN(sm_basicauthproxyHostname,sm_basicauthproxyPort,sm_basicauthproxyUsername,sm_basicauthproxyPassword);
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20008", "RHEL7-55173"})
 	@Test(	description="using a no auth proxy server set within rhsm.conf, register to a RHEL subscription and verify that release --list matches the expected CDN listing for this x-stream release of RHEL",
 			groups={"blockedByBug-822965","blockedByBug-844368","blockedByBug-893746","blockedByBug-904193","blockedByBug-1400719"},
 			enabled=true)
@@ -587,8 +618,10 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 				new String[]{"server","proxy_port",sm_noauthproxyPort}));
 		verifyReleaseListMatchesCDN(null,null,null,null);
 	}
-	
-	
+
+
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			       , testCaseID = {"RHEL6-20006", "RHEL7-55171"})
 	@Test(	description="using a basic auth proxy server set within rhsm.conf, register to a RHEL subscription and verify that release --list matches the expected CDN listing for this x-stream release of RHEL",
 			groups={"blockedByBug-822965","blockedByBug-844368","blockedByBug-893746","blockedByBug-904193","blockedByBug-1134963","blockedByBug-1400719"},
 			enabled=true)
