@@ -79,7 +79,7 @@
   :javac-options ["-target" "1.8" "-source" "1.8" "-parameters"]
   ;; uncomment this to remote debug.  This is useful to debug annotation processing or xunit importing which can't be
   ;; handled through the regular clojure debugger
-  ;:jvm-opts ["-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5007"]
+  :jvm-opts ["-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5007"]
 
   :manifest {"Class-Path" "lib/clojure-1.8.0.jar"}
 
