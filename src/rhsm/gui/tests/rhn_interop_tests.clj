@@ -13,9 +13,10 @@
             BeforeClass
             AfterClass
             BeforeGroups
-            Test])
-  (:import [com.github.redhatqe.polarize.metadata TestDefinition]
-           [com.github.redhatqe.polarize.metadata DefTypes$Project]))
+            Test]
+           [com.github.redhatqe.polarize.metadata
+            TestDefinition
+            DefTypes$Project]))
 
 (def systemid "/etc/sysconfig/rhn/systemid")
 
@@ -57,7 +58,7 @@
   (kill-app))
 
 (defn ^{Test           {:groups           ["interop"
-                                           "tier1"
+                                           "tier2"
                                            "blockedByBug-667991"]
                         :dependsOnMethods ["check_warning"]}
         TestDefinition {:projectID [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
@@ -88,9 +89,9 @@
   (kill-app))
 
 (defn ^{Test           {:groups           ["interop"
-                                           "tier1"
+                                           "tier2"
                                            "blockedByBug-667991"]
-                        :dependsOnMethods ["check_warning" "check_warning_ok" "check_warning_cancel"]}
+                        :dependsOnMethods ["check_warning_ok" "check_warning_cancel"]}
         TestDefinition {:projectID  [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
                         :testCaseID ["RHEL6-37687" "RHEL7-55593"]}}
   check_no_warning
