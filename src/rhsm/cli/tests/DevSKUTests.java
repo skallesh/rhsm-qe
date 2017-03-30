@@ -618,7 +618,11 @@ if (false) { // keep for historical reference but never execute
 
 		// redeploy candlepin in hosted mode (candlepin.standalone=false)
 		if (CandlepinType.standalone.equals(sm_serverType)) {	// indicates that we are testing a standalone candlepin server
-			servertasks.updateConfFileParameter("candlepin.standalone", "false");
+    		if (client1tasks!=null) client1tasks.unregister_(null, null, null);
+    		if (client2tasks!=null) client2tasks.unregister_(null, null, null);
+    		if (client1tasks!=null) client1tasks.clean_(null, null, null);
+    		if (client2tasks!=null) client2tasks.clean_(null, null, null);
+    		servertasks.updateConfFileParameter("candlepin.standalone", "false");
 			servertasks.uncommentConfFileParameter("module.config.hosted.configuration.module");
 			servertasks.redeploy();
 			servertasks.initialize(clienttasks.candlepinAdminUsername,clienttasks.candlepinAdminPassword,clienttasks.candlepinUrl);
