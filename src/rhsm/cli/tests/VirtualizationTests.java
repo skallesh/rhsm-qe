@@ -1364,15 +1364,15 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 
 		//									Object bugzilla, String host_type
 		ll.add(Arrays.asList(new Object[]{null,	"hyperv"}));
-		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1018807"}),	"ibm_systemz\nibm_systemz-direct"}));
-		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1018807"}),	"ibm_systemz\nibm_systemz-lpar"}));
-		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1018807"}),	"ibm_systemz\nibm_systemz-zvm"}));
+		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1018807","1438085"}),	"ibm_systemz\nibm_systemz-direct"}));
+		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1018807","1438085"}),	"ibm_systemz\nibm_systemz-lpar"}));
+		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1018807","1438085"}),	"ibm_systemz\nibm_systemz-zvm"}));
 		ll.add(Arrays.asList(new Object[]{null,	"linux_vserver\nlinux_vserver-host"}));
 		ll.add(Arrays.asList(new Object[]{null,	"linux_vserver\nlinux_vserver-guest"}));
 		ll.add(Arrays.asList(new Object[]{null,	"lxc"}));
 		ll.add(Arrays.asList(new Object[]{null,	"kvm"}));
 		ll.add(Arrays.asList(new Object[]{null,	"openvz"}));
-		ll.add(Arrays.asList(new Object[]{null,	"powervm_lx86"}));
+		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1438085"}),	"powervm_lx86"}));
 		ll.add(Arrays.asList(new Object[]{null,	"qemu"}));
 		ll.add(Arrays.asList(new Object[]{null,	"uml"}));
 		ll.add(Arrays.asList(new Object[]{null,	"virt"}));
