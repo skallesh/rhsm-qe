@@ -635,6 +635,13 @@ schema generation failed
 			"Commented '"+defaultConfigFile+"' parameter: "+parameter);
 	}
 	
+	public void removeConfFileParameter(String parameter){
+		log.info("Removing config file '"+defaultConfigFile+"' parameter: "+parameter);
+		Assert.assertEquals(
+				RemoteFileTasks.searchReplaceFile(sshCommandRunner, defaultConfigFile, "^"+parameter+"\\s*=.*", ""),
+				0,"Removed '"+defaultConfigFile+"' parameter: "+parameter);
+	}
+	
 	public void uncommentConfFileParameter(String parameter){
 		Assert.assertEquals(
 			RemoteFileTasks.searchReplaceFile(sshCommandRunner, defaultConfigFile, "^#\\s*"+parameter+"\\s*=", parameter+"="),0,
