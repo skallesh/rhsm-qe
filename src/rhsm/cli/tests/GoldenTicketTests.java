@@ -47,8 +47,8 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
 
 
     @Test(description = "Verify golden ticket entitlement is granted when system is registered to an org that has contentaccessmode set", groups = {
-    "verifyGoldenTicketfunctionality" /*"blockedByBug-1425438"*/}, enabled = true)
-    public void verifyGoldenTicketfunctionality() throws Exception {
+    "VerifyGoldenTicketfunctionality" /*"blockedByBug-1425438"*/}, enabled = true)
+    public void VerifyGoldenTicketfunctionality() throws Exception {
 
 	CandlepinTasks.setAttributeForOrg(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, org,
 		attributeName, attributeValue);
@@ -159,7 +159,7 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
 
 
     @Test(description = "Verify golden ticket entitlement is granted when system is registered using an activationkey that belongs org that has contentaccessmode set", groups = {
-    "goldenTicketEntitlementIsGrantedWhenRegisteredUsingActivationKey" },enabled = true)
+    "GoldenTicketEntitlementIsGrantedWhenRegisteredUsingActivationKey" },enabled = true)
     public void ExtraEntitlementIsGrantedWhenRegisteredUsingActivationKey() throws JSONException, Exception {
 
 	// verify registering the system to activation key belonging to owner(contentAccessmode set) with auto-attach false has access to golden ticket
@@ -384,7 +384,7 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
 			servertasks.initialize(clienttasks.candlepinAdminUsername,clienttasks.candlepinAdminPassword,clienttasks.candlepinUrl);
     		if (client1tasks!=null) client1tasks.installRepoCaCert(fetchServerCaCertFile(), sm_serverHostname.split("\\.")[0]+".pem");
     		if (client2tasks!=null) client2tasks.installRepoCaCert(fetchServerCaCertFile(), sm_serverHostname.split("\\.")[0]+".pem");
-            updateProductAndContentLockStateOnDatabase(0);
+   //         updateProductAndContentLockStateOnDatabase(0);
 
 	}
     }
@@ -398,7 +398,7 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
     public void AfterClassTeardown() throws Exception {
 	if (CandlepinType.standalone.equals(sm_serverType) && executeAfterClassMethod) {
 	    servertasks.updateConfFileParameter("candlepin.standalone", "true");
-	    servertasks.commentConfFileParameter("module.config.hosted.configuration.module");   
+	    servertasks.removeConfFileParameter("module.config.hosted.configuration.module");   
 	    servertasks.redeploy();
 		servertasks.initialize(clienttasks.candlepinAdminUsername,clienttasks.candlepinAdminPassword,clienttasks.candlepinUrl);
 		deleteSomeSecondarySubscriptionsBeforeSuite();

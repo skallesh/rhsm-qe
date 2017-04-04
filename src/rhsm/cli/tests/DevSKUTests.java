@@ -655,7 +655,7 @@ if (false) { // keep for historical reference but never execute
 		
 		if (CandlepinType.standalone.equals(sm_serverType)) {	// indicates that we are testing a standalone candlepin server
 			servertasks.updateConfFileParameter("candlepin.standalone", "true");
-			servertasks.commentConfFileParameter("module.config.hosted.configuration.module");
+			servertasks.removeConfFileParameter("module.config.hosted.configuration.module");   
 			servertasks.redeploy();
 			servertasks.initialize(clienttasks.candlepinAdminUsername,clienttasks.candlepinAdminPassword,clienttasks.candlepinUrl);
 			deleteSomeSecondarySubscriptionsBeforeSuite();
