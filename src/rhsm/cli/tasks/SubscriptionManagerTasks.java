@@ -8311,6 +8311,27 @@ if (false) {
 	public void logRuntimeErrors(SSHCommandResult result) {
 		String issue;
 		
+		// TEMPORARY WORKAROUND FOR BUG	
+		//	201704041152:20.587 - FINE: ssh root@hp-moonshot-03-c36.lab.eng.rdu.redhat.com subscription-manager identity
+		//	201704041152:21.594 - FINE: Stdout: 
+		//	201704041152:21.594 - FINE: Stderr: 
+		//	This system is not yet registered. Try 'subscription-manager register --help' for more information.
+		//	
+		//	** COLLECTED WARNINGS **
+		//	/sys/firmware/efi/systab: SMBIOS entry point missing
+		//	No SMBIOS nor DMI entry point found, sorry.
+		//	** END OF WARNINGS **
+		//	
+		//	201704041152:21.595 - FINE: ExitCode: 1
+		issue = "** COLLECTED WARNINGS **";
+		if (result.getStderr().contains(issue)) {
+			String bugId = "1438869"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1438869 - No SMBIOS nor DMI entry point found, sorry.
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			if (invokeWorkaroundWhileBugIsOpen) {
+				throw new SkipException("Encountered a '"+issue+"' and could not complete this test while bug '"+bugId+"' is open.");
+			}
+		}
+		// END OF WORKAROUND
 		
 		// TEMPORARY WORKAROUND FOR BUG
 		//	201611111427:53.146 - FINE: ssh root@jsefler-rhel6server.usersys.redhat.com subscription-manager register --username=testuser1 --password=password --org=admin
