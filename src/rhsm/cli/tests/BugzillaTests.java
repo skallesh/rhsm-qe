@@ -4664,13 +4664,13 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			"blockedByBug-1331739" }, enabled = true)
 	public void VerifyEmptyRepoOverrideRemove_Test() throws JSONException, Exception {
 
-		/*
-		 * if (clienttasks.isPackageVersion("subscription-manager", "<",
-		 * "NOT SURE ABT THE FIX")) {//commenting out untill the fix is in throw
-		 * new SkipException(
-		 * "This test applies a newer version of subscription manager that includes fixes for bugs 1331739"
-		 * ); }
-		 */
+
+		  if (clienttasks.isPackageVersion("subscription-manager", "<",
+		  "1.19.4-1")) { // fix : https://github.com/candlepin/subscription-manager/pull/1474
+		  new SkipException(
+		  "This test applies a newer version of subscription manager that includes fixes for bugs 1331739"
+		  ); }
+
 
 		// register
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null,
@@ -4705,10 +4705,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				null, null, null, null);
 		Assert.assertEquals(listResultBeforeRemove.getStdout().trim(), listResultAfterRemove.getStdout().trim(),
 				"Repo-overrides list After subscription-manager repo-override --repo=<id> --remove='' should be identical to the list before executing the command");
-		Assert.assertEquals(result.getExitCode(), "1",
-				"ExitCode of subscription-manager repo-override --remove without names should be 1");
-		Assert.assertEquals(result.getStdout().trim(), "name: may not be null",
-				"subscription-manager repo-override --repo=<id> --remove='' should not delete the overrides");
+		Assert.assertEquals(result.getStderr().trim(), "Error: You must specify an override name with --remove.");
+		Assert.assertEquals(result.getExitCode(), Integer.valueOf(64),
+				"ExitCode of subscription-manager repo-override --remove without names should be 64");
 	}
 
 	/**
