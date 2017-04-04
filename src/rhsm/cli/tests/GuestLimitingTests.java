@@ -11,7 +11,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeGroups;
 import org.testng.annotations.Test;
 
 import com.redhat.qe.Assert;
@@ -80,12 +79,10 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript {
 		CandlepinTasks.putResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl,
 				"/consumers/" + consumerId, jsonData);
 		String pool = getGuestlimitPool(String.valueOf(guestLimit));
-		System.out.println(pool + " *************" + providedProductIds.size());
 		ProductCert installedProductCert = ProductCert.findFirstInstanceWithMatchingFieldFromList("productId",
 				providedProductIds.get(randomGenerator.nextInt(providedProductIds.size())),
 				clienttasks.getCurrentProductCerts());
 		Assert.assertNotNull(installedProductCert, "Found installed product cert needed for this test.");
-		configureTmpProductCertDirWithInstalledProductCerts(Arrays.asList(new ProductCert[] { installedProductCert }));
 		clienttasks.subscribe(null, null, pool, null, null, "1", null, null, null, null, null, null);
 		String compliance = clienttasks.getFactValue(factname);
 		// Assert the system compliance
@@ -102,8 +99,10 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript {
 	protected void complianceOfHostWithFiveGuestsAndGuestLimitOfFour() throws JSONException, Exception {
 
 		String consumerId = clienttasks.getCurrentConsumerId(
-				clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null,
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null,
 						null, null, (String) null, null, null, null, true, null, null, null, null));
+		clienttasks.autoheal(null, null, true, null, null, null);
+
 		if (clienttasks.getFactValue("virt.is_guest").equals("True")) {
 			Map<String, String> factsMap = new HashMap<String, String>();
 			factsMap.put("virt.is_guest", "False");
@@ -127,15 +126,11 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript {
 		jsonData.put("guestIds", expectedGuestIds);
 		CandlepinTasks.putResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl,
 				"/consumers/" + consumerId, jsonData);
-		System.out.println(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl,
-				"/consumers/" + consumerId));
-
 		String pool = getGuestlimitPool(String.valueOf(guestLimit - 1));
 		ProductCert installedProductCert = ProductCert.findFirstInstanceWithMatchingFieldFromList("productId",
 				providedProductIds.get(randomGenerator.nextInt(providedProductIds.size())),
 				clienttasks.getCurrentProductCerts());
 		Assert.assertNotNull(installedProductCert, "Found installed product cert needed for this test.");
-		configureTmpProductCertDirWithInstalledProductCerts(Arrays.asList(new ProductCert[] { installedProductCert }));
 		clienttasks.subscribe(null, null, pool, null, null, "1", null, null, null, null, null, null);
 		String compliance = clienttasks.getFactValue(factname);
 		// Assert the system compliance
@@ -151,8 +146,10 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript {
 			"complianceOfGuests" }, enabled = true)
 	protected void VerifyGuestLimitIsGlobal() throws JSONException, Exception {
 		String consumerId = clienttasks.getCurrentConsumerId(
-				clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null,
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null,
 						null, null, (String) null, null, null, null, true, null, null, null, null));
+		clienttasks.autoheal(null, null, true, null, null, null);
+
 		if (clienttasks.getFactValue("virt.is_guest").equals("True")) {
 			Map<String, String> factsMap = new HashMap<String, String>();
 			factsMap.put("virt.is_guest", "False");
@@ -181,7 +178,6 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript {
 				providedProductIds.get(randomGenerator.nextInt(providedProductIds.size())),
 				clienttasks.getCurrentProductCerts());
 		Assert.assertNotNull(installedProductCert, "Found installed product cert needed for this test.");
-		configureTmpProductCertDirWithInstalledProductCerts(Arrays.asList(new ProductCert[] { installedProductCert }));
 		clienttasks.subscribe(null, null, pool, null, null, "1", null, null, null, null, null, null);
 		String compliance = clienttasks.getFactValue(factname);
 		// Assert the system compliance
@@ -197,8 +193,10 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript {
 			"complianceOfHostWithOneInactiveGuest" }, enabled = true)
 	protected void complianceOfHostWithOneOftheGuestReportedInactive() throws JSONException, Exception {
 		String consumerId = clienttasks.getCurrentConsumerId(
-				clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null,
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null,
 						null, null, (String) null, null, null, null, true, null, null, null, null));
+		clienttasks.autoheal(null, null, true, null, null, null);
+		clienttasks.autoheal(null, null, true, null, null, null);
 		if (clienttasks.getFactValue("virt.is_guest").equals("True")) {
 			Map<String, String> factsMap = new HashMap<String, String>();
 			factsMap.put("virt.is_guest", "False");
@@ -231,7 +229,6 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript {
 				providedProductIds.get(randomGenerator.nextInt(providedProductIds.size())),
 				clienttasks.getCurrentProductCerts());
 		Assert.assertNotNull(installedProductCert, "Found installed product cert needed for this test.");
-		configureTmpProductCertDirWithInstalledProductCerts(Arrays.asList(new ProductCert[] { installedProductCert }));
 		clienttasks.subscribe(null, null, pool, null, null, "1", null, null, null, null, null, null);
 		String compliance = clienttasks.getFactValue(factname);
 		// Assert the system compliance
@@ -241,7 +238,7 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript {
 	protected String getGuestlimitPool(String guestLimit) throws JSONException, Exception {
 		String poolId = null;
 		providedProductIds.clear();
-		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
+		for (SubscriptionPool pool : clienttasks.getAvailableSubscriptionsMatchingInstalledProducts()) {
 			String GuestLimitAttribute = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername,
 					sm_clientPassword, sm_serverUrl, pool.poolId, "guest_limit");
 
@@ -259,11 +256,9 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript {
 		}
 
 		if (providedProductIds.isEmpty()) {
-			System.out.println("inside isempty");
 			poolId = createTestPool(-60 * 24, 60 * 24);
 			providedProductIds = (CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername, sm_clientPassword,
 					sm_serverUrl, poolId));
-			System.out.println(providedProductIds);
 		}
 		return poolId;
 
@@ -271,26 +266,25 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript {
 
 	protected String rhsmProductCertDir = null;
 	protected final String tmpProductCertDir = "/tmp/sm-tmpProductCertDir-guestlimittests";
-
-	protected void configureTmpProductCertDirWithInstalledProductCerts(List<ProductCert> installedProductCerts) {
+	@BeforeClass(groups = "setup")
+	protected void configureTmpProductCertDirWithInstalledProductCerts() {
 		if (rhsmProductCertDir == null) {
 			rhsmProductCertDir = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsm", "productCertDir");
 			Assert.assertNotNull(rhsmProductCertDir);
 		}
 		log.info(
 				"Initializing a new product cert directory with the currently installed product certs for this test...");
+		ProductCert installedProductCert37060 = ProductCert.findFirstInstanceWithMatchingFieldFromList("productId",
+				"37060", clienttasks.getCurrentProductCerts());
 		RemoteFileTasks.runCommandAndAssert(client, "mkdir -p " + tmpProductCertDir, Integer.valueOf(0));
 		RemoteFileTasks.runCommandAndAssert(client, "rm -f " + tmpProductCertDir + "/*.pem", Integer.valueOf(0));
-		for (ProductCert productCert : installedProductCerts) {
-			RemoteFileTasks.runCommandAndAssert(client, "cp " + productCert.file + " " + tmpProductCertDir,
+		RemoteFileTasks.runCommandAndAssert(client, "cp " + installedProductCert37060.file + " " + tmpProductCertDir,
 					Integer.valueOf(0));
-		}
+		
 
 		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir", tmpProductCertDir);
 	}
 
-	@BeforeGroups(groups = "setup", value = { "complianceOfHostWithFiveGuests", "complianceOfGuests",
-			"complianceOfHostWithOneInactiveGuest", "complianceOfHostWithOnlyGuests" })
 	@AfterClass(groups = "setup") // called after class for insurance
 	public void restoreRhsmProductCertDir() {
 		if (clienttasks == null)
@@ -301,6 +295,7 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript {
 		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir", rhsmProductCertDir);
 	}
 
+	
 	public static JSONObject createGuestIdRequestBody(String guestId, Map<String, String> attributes)
 			throws JSONException {
 		JSONObject jsonGuestData = new JSONObject();
@@ -371,27 +366,7 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript {
 				getRandInt(), getRandInt(), productId, providedProduct, null).getString("id");
 	}
 
-	/*
-	 * @BeforeClass(groups = { "setup" }) public void
-	 * findRandomAvailableProductIdBeforeClass() throws Exception {
-	 * clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg,
-	 * null, null, null, null, null, null, null, (String) null, null, null,
-	 * null, true, false, null, null, null); List<SubscriptionPool> pools =
-	 * clienttasks.getAvailableSubscriptionsMatchingInstalledProducts(); // int
-	 * i = randomGenerator.nextInt(pools.size()); for (SubscriptionPool
-	 * availablepools : pools) { if
-	 * ((CandlepinTasks.getPoolProvidedProductIds(sm_serverAdminUsername,
-	 * sm_serverAdminPassword, sm_serverUrl,
-	 * availablepools.poolId).contains("37060"))) {
-	 * providedProduct.add("37060"); randomAvailableProductId =
-	 * availablepools.productId; System.out.println(randomAvailableProductId +
-	 * " ................" + providedProduct.get(0)); }
-	 *
-	 * break; }
-	 *
-	 * }
-	 */
-
+	
 	@BeforeClass(groups = "setup")
 	public void getRhsmProductCertDir() {
 		rhsmProductCertDir = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsm", "productCertDir");
