@@ -7823,7 +7823,27 @@ if (false) {
 		//	ERROR: refreshing remote package list for System Profile
 		String serverUrl = rhnHostname+"/XMLRPC"; if (!rhnHostname.startsWith("http")) serverUrl = "https://xmlrpc."+serverUrl;
 		command = String.format("rhnreg_ks --serverUrl=%s --username=%s --password=%s --profilename=%s --force --norhnsd --nohardware --nopackages --novirtinfo", serverUrl, rhnUsername, rhnPassword, profileName);
-		return sshCommandRunner.runCommandAndWait(command);
+		SSHCommandResult result = sshCommandRunner.runCommandAndWait(command);
+		
+		// TEMPORARY WORKAROUND FOR BUG
+		//	201704051554:27.985 - FINE: ssh root@bkr-hv01-guest16.dsal.lab.eng.bos.redhat.com rhnreg_ks --serverUrl=https://rhsm-sat5.usersys.redhat.com/XMLRPC --username=rhsm-client --password=REDACTED --profilename=rhsm-automation.bkr-hv01-guest16.dsal.lab.eng.bos.redhat.com --force --norhnsd --nohardware --nopackages --novirtinfo
+		//	201704051554:32.552 - FINE: Stdout: 
+		//	201704051554:32.552 - FINE: Stderr: 
+		//	Traceback (most recent call last):
+		//	  File "/usr/sbin/rhn_check", line 54, in <module>
+		//	    from rhn.i18n import bstr, sstr
+		//	ImportError: No module named i18n
+		if (result.getStderr().contains("ImportError: No module named i18n")) {
+			String bugId = "1439363"; // Bug 1439363 - ImportError: No module named i18n
+			boolean invokeWorkaroundWhileBugIsOpen = true;
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			if (invokeWorkaroundWhileBugIsOpen) {
+				throw new SkipException("The remainder of this test is blocked by bug "+bugId+".  There is no workaround.");
+			}
+		}
+		// END OF WORKAROUND
+		
+		return result;
 	}
 	
 	/**
@@ -7878,7 +7898,7 @@ if (false) {
 		// this will occur on rhel7+ where Red Hat Network Classic is not supported.  See bugzilla 906875
 		msg = "Red Hat Network Classic is not supported.";
 		if (stderr.contains(msg)) {
-			//	FINE: ssh root@jsefler-7.usersys.redhat.com rhnreg_ks --serverUrl=https://xmlrpc.rhn.code.stage.redhat.com/XMLRPC --username=qa@redhat.com --password=redhatqa --profilename=rhsm-automation.jsefler-7.usersys.redhat.com --force --norhnsd --nohardware --nopackages --novirtinfo
+			//	FINE: ssh root@jsefler-7.usersys.redhat.com rhnreg_ks --serverUrl=https://xmlrpc.rhn.code.stage.redhat.com/XMLRPC --username=qa@redhat.com --password=REDACTED --profilename=rhsm-automation.jsefler-7.usersys.redhat.com --force --norhnsd --nohardware --nopackages --novirtinfo
 			//	FINE: Stdout: 
 			//	FINE: Stderr: 
 			//	An error has occurred:
@@ -8509,7 +8529,7 @@ if (false) {
 		//	Stderr:
 		//	ExitCode: 0
 		
-		//	ssh root@jsefler-5server.usersys.redhat.com rhn-migrate-classic-to-rhsm.tcl --no-auto qa@redhat.com redhatqa testuser1 password admin null null
+		//	ssh root@jsefler-5server.usersys.redhat.com rhn-migrate-classic-to-rhsm.tcl --no-auto qa@redhat.com REDACTED testuser1 password admin null null
 		//	Stdout:
 		//	spawn rhn-migrate-classic-to-rhsm --no-auto
 		//	Red Hat username: qa@redhat.com
@@ -8521,7 +8541,7 @@ if (false) {
 		//	Stderr:
 		//	ExitCode: 1
 		
-		//	ssh root@jsefler-5server.usersys.redhat.com rhn-migrate-classic-to-rhsm.tcl --no-auto qa@redhat.com redhatqa testuser1 password admin null null
+		//	ssh root@jsefler-5server.usersys.redhat.com rhn-migrate-classic-to-rhsm.tcl --no-auto qa@redhat.com REDACTED testuser1 password admin null null
 		//	Stdout:
 		//	spawn rhn-migrate-classic-to-rhsm --no-auto
 		//	Red Hat username: qa@redhat.com

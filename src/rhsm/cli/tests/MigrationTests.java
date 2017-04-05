@@ -1293,7 +1293,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		// END OF WORKAROUND
 		executeRhnMigrateClassicToRhsmResult = executeRhnMigrateClassicToRhsm("--activation-key="+activationKeyName+" "+"--org="+clientOrgKey, sm_rhnUsername,sm_rhnPassword,null,null,null,null,null);
 		
-		//	201502272153:09.897 - FINE: ssh root@jsefler-os6.usersys.redhat.com rhn-migrate-classic-to-rhsm.tcl --activation-key=badActivationKey qa@redhat.com redhatqa testuser1 password admin null null (com.redhat.qe.tools.SSHCommandRunner.run)
+		//	201502272153:09.897 - FINE: ssh root@jsefler-os6.usersys.redhat.com rhn-migrate-classic-to-rhsm.tcl --activation-key=badActivationKey qa@redhat.com REDACTED testuser1 password admin null null
 		//	201502272153:12.049 - FINE: Stdout: 
 		//	spawn rhn-migrate-classic-to-rhsm --activation-key=badActivationKey
 		//	Legacy username: qa@redhat.com
@@ -3198,7 +3198,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	protected void checkForKnownBug1130637(SSHCommandResult sshCommandResult) {
 		
 		
-		//	201408151456:16.723 - FINE: ssh root@ibm-x3550m3-07.lab.eng.brq.redhat.com rhn-migrate-classic-to-rhsm.tcl -n qa@redhat.com redhatqa null null null null null
+		//	201408151456:16.723 - FINE: ssh root@ibm-x3550m3-07.lab.eng.brq.redhat.com rhn-migrate-classic-to-rhsm.tcl -n qa@redhat.com REDACTED null null null null null
 		//	201408151456:25.495 - FINE: Stdout: 
 		//	spawn rhn-migrate-classic-to-rhsm -n
 		//	Red Hat username: qa@redhat.com
