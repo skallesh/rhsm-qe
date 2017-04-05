@@ -662,7 +662,8 @@ if (false) { // keep for historical reference but never execute
     		if (client1tasks!=null) client1tasks.installRepoCaCert(fetchServerCaCertFile(), sm_serverHostname.split("\\.")[0]+".pem");
     		if (client2tasks!=null) client2tasks.installRepoCaCert(fetchServerCaCertFile(), sm_serverHostname.split("\\.")[0]+".pem");
 		}
-		
+		clienttasks.removeAllCerts(true, false, false);
+
 		clienttasks.deleteFactsFileWithOverridingValues();	// to get rid of the dev_sku settings
 	}
 
