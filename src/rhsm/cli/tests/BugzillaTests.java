@@ -68,7 +68,7 @@ import com.github.redhatqe.polarize.metadata.DefTypes.Project;
 @Test(groups = { "BugzillaTests", "Tier3Tests" })
 public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	protected String ownerKey = "";
-	protected List<String> providedProduct = null;
+	protected List<String> providedProduct = new ArrayList<String>();
 	protected EntitlementCert expiringCert = null;
 	protected String EndingDate;
 	protected final String importCertificatesDir = "/tmp/sm-importExpiredCertificatesDir".toLowerCase();
@@ -703,7 +703,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,
 				consumerId);
 		Calendar endCalendar = new GregorianCalendar();
-		String expiringPoolId = createTestPool(-60 * 24, endingMinutesFromNow);
+		String expiringPoolId = createTestPool(-60 * 24, endingMinutesFromNow,false);
 		endCalendar.add(Calendar.MINUTE, endingMinutesFromNow);
 		DateFormat yyyy_MM_dd_DateFormat = new SimpleDateFormat("M/d/yy h:mm aaa");
 		String EndingDate = yyyy_MM_dd_DateFormat.format(endCalendar.getTime());
@@ -1209,7 +1209,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,
 		consumerId);
 		clienttasks.autoheal(null, null, true, null, null, null);
-		String futurePool = createTestPool(60 * 24 *365, 60 * 24 *(365*2));
+		String futurePool = createTestPool(60 * 24 *365, 60 * 24 *(365*2),true);
 
 
 		List<String> providedProductIds = CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername, sm_clientPassword,
@@ -1799,7 +1799,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		// within this minute; endDate
 		// will be 1 minute behind
 		// reality
-		String expiringPoolId = createTestPool(-60 * 24, endingMinutesFromNow);
+		String expiringPoolId = createTestPool(-60 * 24, endingMinutesFromNow,false);
 		Calendar c1 = new GregorianCalendar();
 		SubscriptionPool expiringSubscriptionPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList(
 				"poolId", expiringPoolId, clienttasks.getCurrentlyAvailableSubscriptionPools());
@@ -1859,7 +1859,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		String consumerId = clienttasks.getCurrentConsumerId();
 		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,
 				consumerId);
-		String expiringPoolId = createTestPool(-60 * 24, endingMinutesFromNow);
+		String expiringPoolId = createTestPool(-60 * 24, endingMinutesFromNow,false);
 		sleep(endingMinutesFromNow * 60 * 1000);
 		clienttasks.subscribe_(null, null, expiringPoolId, null, null, null, null, null, null, null, null, null);
 		Assert.assertTrue(clienttasks.getCurrentlyConsumedProductSubscriptions().isEmpty());
@@ -2953,7 +2953,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,
 		consumerId);
 		clienttasks.autoheal(null, null, true, null, null, null);
-		String futurePool = createTestPool(60 * 24 *365, 60 * 24 *(365*2));
+		String futurePool = createTestPool(60 * 24 *365, 60 * 24 *(365*2),true);
 		DateFormat yyyy_MM_dd_DateFormat = new SimpleDateFormat("yyyy-MM-dd");
 		Calendar nextYear = new GregorianCalendar();
 		nextYear.add(Calendar.YEAR, 1);
@@ -3306,7 +3306,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		consumerId);
 		clienttasks.unsubscribeFromTheCurrentlyConsumedSerialsCollectively();
 		clienttasks.autoheal(null, null, true, null, null, null); // disabling autoheal
-		String futurePool = createTestPool(60 * 24 *365, 60 * 24 *(365*2));
+		String futurePool = createTestPool(60 * 24 *365, 60 * 24 *(365*2),true);
 		clienttasks.subscribe(null, null, futurePool, null, null, null, null, null, null,
 				null, null, null);
 		ProductSubscription futureConsumedProductSubscription = ProductSubscription
@@ -3651,7 +3651,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		String consumerId = clienttasks.getCurrentConsumerId();
 		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,
 				consumerId);
-		String expiringPoolId = createTestPool(-60 * 24, 1);
+		String expiringPoolId = createTestPool(-60 * 24, 1,false);
 		Calendar c1 = new GregorianCalendar();
 		clienttasks.subscribe(null, null, expiringPoolId, null, null, null, null, null, null, null, null, null);
 		Calendar c2 = new GregorianCalendar();
@@ -4229,7 +4229,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,
 				consumerId);
 
-		String expiringPoolId = createTestPool(-60 * 24, 1);
+		String expiringPoolId = createTestPool(-60 * 24, 1,false);
 		clienttasks.subscribe(null, null, expiringPoolId, null, null, null, null, null, null, null, null, null);
 		Calendar c1 = new GregorianCalendar();
 		Calendar c2 = new GregorianCalendar();
@@ -4241,6 +4241,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 
 		InstalledProduct productCertBeforeHealing = ProductCert.findFirstInstanceWithMatchingFieldFromList("status",
 				"Expired", clienttasks.getCurrentlyInstalledProducts());
+		
 		Assert.assertEquals(productCertBeforeHealing.status, "Expired");
 
 		clienttasks.run_rhsmcertd_worker(true);
@@ -4486,7 +4487,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		String consumerId = clienttasks.getCurrentConsumerId();
 		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,
 		consumerId);
-		String futurePool = createTestPool(60 * 24 *365, 60 * 24 *(365*2));
+		String futurePool = createTestPool(60 * 24 *365, 60 * 24 *(365*2),true);
 		boolean assertedFutureSubscriptionIsNowSubscribed = false;	
 		
 		clienttasks.subscribe(null, null, futurePool, null, null, null, null, null, null, null, null, null);
@@ -5104,9 +5105,12 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 * @throws Exception
 	 */
-	protected String createTestPool(int startingMinutesFromNow, int endingMinutesFromNow)
+	protected String createTestPool(int startingMinutesFromNow, int endingMinutesFromNow, Boolean FuturePool)
 			throws JSONException, Exception {
-		String name = "BugillaTestProduct";
+	    	String name = "BugzillaTestSubscription";
+	    	if(FuturePool){
+		name = "BugillaTestInactiveSubscription";
+	    	}
 		Map<String, String> attributes = new HashMap<String, String>();
 		attributes.clear();
 		attributes.put("version", "1.0");
@@ -5115,7 +5119,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		attributes.put("warning_period", "30");
 		attributes.put("type", "MKT");
 		attributes.put("type", "SVC");
-
+		providedProduct.add("100000000000002");
 		CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword,
 				sm_serverUrl, sm_clientOrg, productId);
 		String resourcePath = "/products/" + productId;

@@ -623,7 +623,7 @@ if (false) { // keep for historical reference but never execute
     		if (client1tasks!=null) client1tasks.clean_(null, null, null);
     		if (client2tasks!=null) client2tasks.clean_(null, null, null);
     		servertasks.updateConfFileParameter("candlepin.standalone", "false");
-			servertasks.uncommentConfFileParameter("module.config.hosted.configuration.module");
+    		servertasks.addConfFileParameter("module.config.hosted.configuration.module","org.candlepin.hostedtest.AdapterOverrideModule");
 			servertasks.redeploy();
 			servertasks.initialize(clienttasks.candlepinAdminUsername,clienttasks.candlepinAdminPassword,clienttasks.candlepinUrl);
     		if (client1tasks!=null) client1tasks.installRepoCaCert(fetchServerCaCertFile(), sm_serverHostname.split("\\.")[0]+".pem");
