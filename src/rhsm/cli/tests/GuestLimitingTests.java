@@ -234,7 +234,7 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript {
 	protected String getGuestlimitPool(String guestLimit) throws JSONException, Exception {
 		String poolId = null;
 		providedProductIds.clear();
-		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
+		for (SubscriptionPool pool : clienttasks.getAvailableSubscriptionsMatchingInstalledProducts()) {
 			String GuestLimitAttribute = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername,
 					sm_clientPassword, sm_serverUrl, pool.poolId, "guest_limit");
 			System.out.println(GuestLimitAttribute + "   " +guestLimit);

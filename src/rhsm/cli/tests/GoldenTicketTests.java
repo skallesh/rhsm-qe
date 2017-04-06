@@ -43,7 +43,7 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
     protected String org = "snowwhite";
     public static String subscriptionPoolProductId =null;
     private String subscriptionPoolId;
-    private boolean executeAfterClassMethod = true;
+    private boolean executeAfterClassMethod = false;
 
 
     @Test(description = "Verify golden ticket entitlement is granted when system is registered to an org that has contentaccessmode set", groups = {
@@ -326,7 +326,6 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
     @BeforeClass(groups = "setup")
     public void verifyCandlepinVersionBeforeClass() {
 	if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, "<", "2.0.25-1")) {
-	    executeAfterClassMethod=false;
 	    throw new SkipException("this candlepin version '" + servertasks.statusVersion
 		    + "' does not support Golden Ticket functionality.");
 	}
@@ -377,13 +376,14 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
     @BeforeClass(groups = "setup",dependsOnMethods={"verifyCandlepinVersionBeforeClass"})
     public void BeforeClassSetup() throws IOException, JSONException, SQLException {
 	if (CandlepinType.standalone.equals(sm_serverType)) {
+	    executeAfterClassMethod=true;
 	    servertasks.updateConfFileParameter("candlepin.standalone", "false");
 	    //Adding the parameter "module.config.hosted.configuration.module" is better as we dont have it most of the times
 	    servertasks.addConfFileParameter("module.config.hosted.configuration.module","org.candlepin.hostedtest.AdapterOverrideModule");
             servertasks.redeploy();
-			servertasks.initialize(clienttasks.candlepinAdminUsername,clienttasks.candlepinAdminPassword,clienttasks.candlepinUrl);
-    		if (client1tasks!=null) client1tasks.installRepoCaCert(fetchServerCaCertFile(), sm_serverHostname.split("\\.")[0]+".pem");
-    		if (client2tasks!=null) client2tasks.installRepoCaCert(fetchServerCaCertFile(), sm_serverHostname.split("\\.")[0]+".pem");
+            servertasks.initialize(clienttasks.candlepinAdminUsername,clienttasks.candlepinAdminPassword,clienttasks.candlepinUrl);
+            if (client1tasks!=null) client1tasks.installRepoCaCert(fetchServerCaCertFile(), sm_serverHostname.split("\\.")[0]+".pem");
+            if (client2tasks!=null) client2tasks.installRepoCaCert(fetchServerCaCertFile(), sm_serverHostname.split("\\.")[0]+".pem");
             updateProductAndContentLockStateOnDatabase(0);
 
 	}
@@ -407,7 +407,5 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
 		clienttasks.removeAllCerts(true, false, false);
 	}
     }
-
-
 
 }
