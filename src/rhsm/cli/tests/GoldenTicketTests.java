@@ -394,7 +394,7 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
      * GoldenTicketTests.AfterClassTeardown() is depending on method public void rhsm.cli.tests.GoldenTicketTests.verifyCandlepinVersionBeforeClass(), which is not annotated with @Test or not included.
      */
 
-    @AfterClass(groups = "setup"/*, alwaysRun=false,dependsOnMethods={"verifyCandlepinVersionBeforeClass"}*/)
+    @AfterClass(groups = "setup", alwaysRun=true)
     public void AfterClassTeardown() throws Exception {
 	if (CandlepinType.standalone.equals(sm_serverType) && executeAfterClassMethod) {
 	    servertasks.updateConfFileParameter("candlepin.standalone", "true");
