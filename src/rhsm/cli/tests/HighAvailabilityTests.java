@@ -260,6 +260,11 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 	public void VerifyHighAvailabilityPackagesAreAvailabile_Test() {
 		
 		// INFO: rhel-ha-for-rhel-7-server-rpms/7Server/x86_64 is enabled by default
+		// NOT ANYMNORE, WE NOW NEED TO ENABLE THE ADDON REPO (A GOOD CHANGE BY REL-ENG DURING THE RHEL7.4 TEST PHASE)
+		if (clienttasks.redhatReleaseX.equals("7") && clienttasks.arch.equals("x86_64")) {
+			clienttasks.repos(null, null, null, "rhel-ha-for-rhel-7-server-rpms", null, null, null, null);
+		}
+		
 		// INFO: rhel-ha-for-rhel-7-for-system-z-rpms/7Server/s390x is NOT enabled by default
 		if (clienttasks.redhatReleaseX.equals("7") && clienttasks.arch.equals("s390x")) {
 			clienttasks.repos(null, null, null, "rhel-ha-for-rhel-7-for-system-z-rpms", null, null, null, null);

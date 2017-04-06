@@ -8311,6 +8311,27 @@ if (false) {
 	public void logRuntimeErrors(SSHCommandResult result) {
 		String issue;
 		
+		// TEMPORARY WORKAROUND FOR BUG	
+		//	201704041152:20.587 - FINE: ssh root@hp-moonshot-03-c36.lab.eng.rdu.redhat.com subscription-manager identity
+		//	201704041152:21.594 - FINE: Stdout: 
+		//	201704041152:21.594 - FINE: Stderr: 
+		//	This system is not yet registered. Try 'subscription-manager register --help' for more information.
+		//	
+		//	** COLLECTED WARNINGS **
+		//	/sys/firmware/efi/systab: SMBIOS entry point missing
+		//	No SMBIOS nor DMI entry point found, sorry.
+		//	** END OF WARNINGS **
+		//	
+		//	201704041152:21.595 - FINE: ExitCode: 1
+		issue = "** COLLECTED WARNINGS **";
+		if (result.getStderr().contains(issue)) {
+			String bugId = "1438869"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1438869 - No SMBIOS nor DMI entry point found, sorry.
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			if (invokeWorkaroundWhileBugIsOpen) {
+				throw new SkipException("Encountered a '"+issue+"' and could not complete this test while bug '"+bugId+"' is open.");
+			}
+		}
+		// END OF WORKAROUND
 		
 		// TEMPORARY WORKAROUND FOR BUG
 		//	201611111427:53.146 - FINE: ssh root@jsefler-rhel6server.usersys.redhat.com subscription-manager register --username=testuser1 --password=password --org=admin
@@ -8642,6 +8663,7 @@ if (false) {
 			(result.getStdout()+result.getStderr()).toLowerCase().contains("The system is unable to complete the requested transaction".toLowerCase()) ||
 			(result.getStdout()+result.getStderr()).toLowerCase().contains("object is not iterable".toLowerCase()) ||
 			(result.getStdout()+result.getStderr()).toLowerCase().contains("Unable to serialize objects to JSON.".toLowerCase()) ||
+			(result.getStdout()+result.getStderr()).toLowerCase().contains("timeout by message bus".toLowerCase()) ||
 			(result.getStdout()+result.getStderr()).toLowerCase().contains("timed out".toLowerCase()) ||
 			(result.getStdout()+result.getStderr()).toLowerCase().contains("'idCert'".toLowerCase()) ||
 			(result.getStdout()+result.getStderr()).toLowerCase().contains(("See "+rhsmLogFile).toLowerCase()) ||
@@ -8963,6 +8985,78 @@ if (false) {
 			issue = "DBusException: org.freedesktop.DBus.Error.NoReply";
 			if (getTracebackCommandResult.getStdout().contains(issue)) {
 				String bugId = "1207306"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1207306 - dbus.exceptions.DBusException: org.freedesktop.DBus.Error.NoReply: Message did not receive a reply (timeout by message bus)
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				if (invokeWorkaroundWhileBugIsOpen) {
+					throw new SkipException("Encountered a '"+issue+"' and could not complete this test while bug '"+bugId+"' is open.");
+				}
+			}
+			// END OF WORKAROUND
+			
+			
+			// TEMPORARY WORKAROUND FOR BUG
+			//	2017-03-30 15:32:21.794  FINE: ssh root@ibm-x3550m3-07.lab.eng.brq.redhat.com subscription-manager list --available
+			//	2017-03-30 15:32:22.569  FINE: Stdout:
+			//	2017-03-30 15:32:22.569  FINE: Stderr: org.freedesktop.DBus.Error.NoReply: Message did not receive a reply (timeout by message bus)
+			//	2017-03-30 15:32:22.569  FINE: ExitCode: 70
+			//	2017-03-30 15:32:22.570  FINE: ssh root@ibm-x3550m3-07.lab.eng.brq.redhat.com LINE_NUMBER=$(grep --line-number 'Making request:' /var/log/rhsm/rhsm.log | tail --lines=1 | cut --delimiter=':' --field=1); if [ -n "$LINE_NUMBER" ]; then tail -n +$LINE_NUMBER /var/log/rhsm/rhsm.log; fi;
+			//	2017-03-30 15:32:23.124  WARNING: Last request from /var/log/rhsm/rhsm.log:
+			//	2017-03-30 21:32:16,929 [DEBUG] subscription-manager:12742:MainThread @connection.py:473 - Making request: GET /subscription/owners/7964055/pools?consumer=0d8975a8-8400-4e6a-a009-3f425f0ca843
+			//	2017-03-30 21:32:18,436 [INFO] subscription-manager:12742:MainThread @connection.py:509 - Response: status=200, requestUuid=268b7e91-fed9-4f55-ac59-e200be523559, request="GET /subscription/owners/7964055/pools?consumer=0d8975a8-8400-4e6a-a009-3f425f0ca843"
+			//	2017-03-30 21:32:18,441 [DEBUG] subscription-manager:12742:MainThread @managerlib.py:550 - Filtering 0 total pools
+			//	2017-03-30 21:32:18,441 [DEBUG] subscription-manager:12742:MainThread @managerlib.py:556 -      Removed 0 incompatible pools
+			//	2017-03-30 21:32:18,441 [DEBUG] subscription-manager:12742:MainThread @managerlib.py:589 -      13 pools to display, -13 filtered out
+			//	2017-03-30 21:32:21,558 [DEBUG] subscription-manager:12802:MainThread @https.py:54 - Using standard libs to provide httplib and ssl
+			//	2017-03-30 21:32:21,659 [DEBUG] subscription-manager:12802:MainThread @dbus_interface.py:35 - self.has_main_loop=False
+			//	2017-03-30 21:32:21,721 [DEBUG] subscription-manager:12802:MainThread @ga_loader.py:89 - ga_loader GaImporterGtk3
+			//	2017-03-30 21:32:21,729 [DEBUG] subscription-manager:12802:MainThread @plugins.py:569 - loaded plugin modules: [<module 'container_content' from '/usr/share/rhsm-plugins/container_content.pyc'>, <module 'ostree_content' from '/usr/share/rhsm-plugins/ostree_content.pyc'>]
+			//	2017-03-30 21:32:21,729 [DEBUG] subscription-manager:12802:MainThread @plugins.py:570 - loaded plugins: {'container_content.ContainerContentPlugin': <container_content.ContainerContentPlugin object at 0x1221590>, 'ostree_content.OstreeContentPlugin': <ostree_content.OstreeContentPlugin object at 0x1221b50>}
+			//	2017-03-30 21:32:21,729 [DEBUG] subscription-manager:12802:MainThread @identity.py:132 - Loading consumer info from identity certificates.
+			//	2017-03-30 21:32:21,787 [INFO] subscription-manager:12802:MainThread @managercli.py:316 - X-Correlation-ID: 47a6ded7ad2b4611935850319cf8d19b
+			//	2017-03-30 21:32:21,788 [INFO] subscription-manager:12802:MainThread @managercli.py:394 - Client Versions: {'python-rhsm': '1.19.2-1.el7', 'subscription-manager': '1.19.4-1.el7'}
+			//	2017-03-30 21:32:21,789 [INFO] subscription-manager:12802:MainThread @connection.py:763 - Connection built: host=subscription.rhsm.stage.redhat.com port=443 handler=/subscription auth=identity_cert ca_dir=/etc/rhsm/ca/ insecure=False
+			//	2017-03-30 21:32:21,789 [INFO] subscription-manager:12802:MainThread @connection.py:763 - Connection built: host=subscription.rhsm.stage.redhat.com port=443 handler=/subscription auth=none
+			//	2017-03-30 21:32:21,790 [INFO] subscription-manager:12802:MainThread @managercli.py:369 - Consumer Identity name=ibm-x3550m3-07.lab.eng.brq.redhat.com uuid=0d8975a8-8400-4e6a-a009-3f425f0ca843
+			//	2017-03-30 21:32:21,790 [DEBUG] subscription-manager:12802:MainThread @cache.py:157 - Checking current system info against cache: /var/lib/rhsm/facts/facts.json
+			//	2017-03-30 21:32:21,915 [ERROR] subscription-manager:12802:MainThread @managercli.py:179 - exception caught in subscription-manager
+			//	2017-03-30 21:32:21,915 [ERROR] subscription-manager:12802:MainThread @managercli.py:180 - org.freedesktop.DBus.Error.NoReply: Message did not receive a reply (timeout by message bus)
+			//	Traceback (most recent call last):
+			//	  File "/usr/sbin/subscription-manager", line 89, in <module>
+			//	    sys.exit(abs(main() or 0))
+			//	  File "/usr/sbin/subscription-manager", line 80, in main
+			//	    return managercli.ManagerCLI().main()
+			//	  File "/usr/lib/python2.7/site-packages/subscription_manager/managercli.py", line 2792, in main
+			//	    return CLI.main(self)
+			//	  File "/usr/lib/python2.7/site-packages/subscription_manager/cli.py", line 160, in main
+			//	    return cmd.main()
+			//	  File "/usr/lib/python2.7/site-packages/subscription_manager/managercli.py", line 544, in main
+			//	    return_code = self._do_command()
+			//	  File "/usr/lib/python2.7/site-packages/subscription_manager/managercli.py", line 2372, in _do_command
+			//	    filter_string=self.options.filter_string)
+			//	  File "/usr/lib/python2.7/site-packages/subscription_manager/managerlib.py", line 325, in get_available_entitlements
+			//	    overlapping, uninstalled, text, filter_string)
+			//	  File "/usr/lib/python2.7/site-packages/subscription_manager/managerlib.py", line 529, in get_filtered_pools_list
+			//	    self.identity.uuid, active_on=active_on, filter_string=filter_string):
+			//	  File "/usr/lib/python2.7/site-packages/subscription_manager/managerlib.py", line 283, in list_pools
+			//	    require(FACTS).update_check(uep, consumer_uuid)
+			//	  File "/usr/lib/python2.7/site-packages/subscription_manager/cache.py", line 158, in update_check
+			//	    if self.has_changed() or force:
+			//	  File "/usr/lib/python2.7/site-packages/subscription_manager/facts.py", line 69, in has_changed
+			//	    self.facts = self.get_facts(True)
+			//	  File "/usr/lib/python2.7/site-packages/subscription_manager/facts.py", line 79, in get_facts
+			//	    facts = facts_dbus_client.GetFacts()
+			//	  File "/usr/lib/python2.7/site-packages/rhsmlib/dbus/facts/client.py", line 57, in GetFacts
+			//	    return self.interface.GetFacts(*args, **kwargs)
+			//	  File "/usr/lib64/python2.7/site-packages/dbus/proxies.py", line 70, in __call__
+			//	    return self._proxy_method(*args, **keywords)
+			//	  File "/usr/lib64/python2.7/site-packages/dbus/proxies.py", line 145, in __call__
+			//	    **keywords)
+			//	  File "/usr/lib64/python2.7/site-packages/dbus/connection.py", line 651, in call_blocking
+			//	    message, timeout)
+			//	DBusException: org.freedesktop.DBus.Error.NoReply: Message did not receive a reply (timeout by message bus)
+			issue = "Message did not receive a reply (timeout by message bus)";
+			issue = "DBusException: org.freedesktop.DBus.Error.NoReply";
+			if (getTracebackCommandResult.getStdout().contains(issue)) {
+				String bugId = "1438561"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1438561 - DBusException: org.freedesktop.DBus.Error.NoReply: Message did not receive a reply (timeout by message bus)
 				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 				if (invokeWorkaroundWhileBugIsOpen) {
 					throw new SkipException("Encountered a '"+issue+"' and could not complete this test while bug '"+bugId+"' is open.");

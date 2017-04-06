@@ -68,7 +68,6 @@ import com.github.redhatqe.polarize.metadata.DefTypes.Project;
 @Test(groups = { "BugzillaTests", "Tier3Tests" })
 public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	protected String ownerKey = "";
-	protected String randomAvailableProductId = null;
 	protected List<String> providedProduct = null;
 	protected EntitlementCert expiringCert = null;
 	protected String EndingDate;
@@ -84,6 +83,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	protected List<File> entitlementCertFiles = new ArrayList<File>();
 	protected final String importCertificatesDir1 = "/tmp/sm-importV1CertificatesDir".toLowerCase();
 	SSHCommandRunner sshCommandRunner = null;
+	String productId = "BugzillaTest-product";
+
 
 	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
 	               , testCaseID = {"RHEL6-26709", "RHEL7-63527"})
@@ -716,7 +717,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		SSHCommandResult registerResult = clienttasks.register_(null, null, sm_clientOrg, null, null, null, null, null,
 				null, null, name, null, null, null, true, null, null, null, null);
 		String expected_message = "Unable to attach pool with ID '" + expiringPoolId + "'.: Subscriptions for "
-				+ randomAvailableProductId + " expired on: " + EndingDate + ".";
+				+ productId + " expired on: " + EndingDate + ".";
 		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">", "0.9.30-1"))
 			expected_message = "No activation key was applied successfully."; // Follows:
 		// candlepin-0.9.30-1
@@ -3777,7 +3778,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.facts(null, true, null, null, null);
 		int quantity = 0;
 
-		List<String> providedProductId = null;
+		String providedProductId = null;
 		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
 			if (pool.subscriptionType.equals("Stackable")) {
 				quantity = pool.suggested - 1;
@@ -3785,7 +3786,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 					clienttasks.subscribe(null, null, pool.poolId, null, null, Integer.toString(quantity), null, null,
 							null, null, null, null);
 					poolId = pool.poolId;
-					providedProductId = pool.provides;
+					providedProductId = pool.provides.get(randomGenerator.nextInt(pool.provides.size()));
 					if (!(providedProductId.isEmpty())) {
 						break;
 
@@ -3794,12 +3795,12 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			}
 		}
 		InstalledProduct BeforeAttaching = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productName",
-				providedProductId.get(providedProductId.size() - 1), clienttasks.getCurrentlyInstalledProducts());
+				providedProductId, clienttasks.getCurrentlyInstalledProducts());
 		Assert.assertEquals(BeforeAttaching.status, "Partially Subscribed",
 				"Verified that installed product is partially subscribed");
 		clienttasks.subscribe(null, null, poolId, null, null, null, null, null, null, null, null, null);
 		InstalledProduct AfterAttaching = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productName",
-				providedProductId.get(providedProductId.size() - 1), clienttasks.getCurrentlyInstalledProducts());
+				providedProductId, clienttasks.getCurrentlyInstalledProducts());
 		Assert.assertEquals(AfterAttaching.status, "Subscribed", "Verified that installed product"
 				+ AfterAttaching.productName
 				+ "is fully subscribed after attaching one more quantity of multi-entitleable stackable subscription");
@@ -4664,13 +4665,13 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			"blockedByBug-1331739" }, enabled = true)
 	public void VerifyEmptyRepoOverrideRemove_Test() throws JSONException, Exception {
 
-		/*
-		 * if (clienttasks.isPackageVersion("subscription-manager", "<",
-		 * "NOT SURE ABT THE FIX")) {//commenting out untill the fix is in throw
-		 * new SkipException(
-		 * "This test applies a newer version of subscription manager that includes fixes for bugs 1331739"
-		 * ); }
-		 */
+
+		  if (clienttasks.isPackageVersion("subscription-manager", "<",
+		  "1.19.4-1")) { // fix : https://github.com/candlepin/subscription-manager/pull/1474
+		  new SkipException(
+		  "This test applies a newer version of subscription manager that includes fixes for bugs 1331739"
+		  ); }
+
 
 		// register
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null,
@@ -4705,10 +4706,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				null, null, null, null);
 		Assert.assertEquals(listResultBeforeRemove.getStdout().trim(), listResultAfterRemove.getStdout().trim(),
 				"Repo-overrides list After subscription-manager repo-override --repo=<id> --remove='' should be identical to the list before executing the command");
-		Assert.assertEquals(result.getExitCode(), "1",
-				"ExitCode of subscription-manager repo-override --remove without names should be 1");
-		Assert.assertEquals(result.getStdout().trim(), "name: may not be null",
-				"subscription-manager repo-override --repo=<id> --remove='' should not delete the overrides");
+		Assert.assertEquals(result.getStderr().trim(), "Error: You must specify an override name with --remove.");
+		Assert.assertEquals(result.getExitCode(), Integer.valueOf(64),
+				"ExitCode of subscription-manager repo-override --remove without names should be 64");
 	}
 
 	/**
@@ -5106,8 +5106,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	protected String createTestPool(int startingMinutesFromNow, int endingMinutesFromNow)
 			throws JSONException, Exception {
-		String name = "AutoHealTestProduct";
-		String productId = "AutoHealForExpiredProduct";
+		String name = "BugillaTestProduct";
 		Map<String, String> attributes = new HashMap<String, String>();
 		attributes.clear();
 		attributes.put("version", "1.0");
@@ -5128,7 +5127,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				sm_clientOrg, name + " BITS", productId, 1, attributes, null);
 		return CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername,
 				sm_serverAdminPassword, sm_serverUrl, ownerKey, 3, startingMinutesFromNow, endingMinutesFromNow,
-				getRandInt(), getRandInt(), randomAvailableProductId, providedProduct, null).getString("id");
+				getRandInt(), getRandInt(), productId, providedProduct, null).getString("id");
 	}
 
 	@AfterClass(groups = { "setup" })
@@ -5208,23 +5207,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				null, (String) null, null, null, null, true, null, null, null, null);
 	}
 
-	@BeforeClass(groups = { "setup" })
-	public void findRandomAvailableProductIdBeforeClass() throws Exception {
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
-				null, (String) null, null, null, null, true, false, null, null, null);
-		List<SubscriptionPool> availPools = clienttasks.getAvailableSubscriptionsMatchingInstalledProducts();
-		for(SubscriptionPool pools:availPools){
-		   if(!(pools.subscriptionType.contains("Temporary"))){
-	    // int i = randomGenerator.nextInt(pools.size());
-		// the following assumes that there is at least one available subscription matching the installed products; if not you will get java.lang.IllegalArgumentException: bound must be positive
-		randomAvailableProductId = pools.productId;
-		providedProduct = CandlepinTasks.getPoolProvidedProductIds(sm_serverAdminUsername, sm_serverAdminPassword,
-				sm_serverUrl, pools.poolId);
-		break;
 
-		}
-	    }
-	}
 
 	public static Object getJsonObjectValue(JSONObject json, String jsonName) throws JSONException, Exception {
 		if (!json.has(jsonName) || json.isNull(jsonName))
