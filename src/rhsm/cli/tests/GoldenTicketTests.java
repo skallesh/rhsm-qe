@@ -384,7 +384,7 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
 			servertasks.initialize(clienttasks.candlepinAdminUsername,clienttasks.candlepinAdminPassword,clienttasks.candlepinUrl);
     		if (client1tasks!=null) client1tasks.installRepoCaCert(fetchServerCaCertFile(), sm_serverHostname.split("\\.")[0]+".pem");
     		if (client2tasks!=null) client2tasks.installRepoCaCert(fetchServerCaCertFile(), sm_serverHostname.split("\\.")[0]+".pem");
-   //         updateProductAndContentLockStateOnDatabase(0);
+            updateProductAndContentLockStateOnDatabase(0);
 
 	}
     }
