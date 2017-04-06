@@ -174,10 +174,6 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript {
 		CandlepinTasks.putResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl,
 				"/consumers/" + consumerId, jsonData);
 		String pool = getGuestlimitPool("-1");
-		ProductCert installedProductCert = ProductCert.findFirstInstanceWithMatchingFieldFromList("productId",
-				providedProductIds.get(randomGenerator.nextInt(providedProductIds.size())),
-				clienttasks.getCurrentProductCerts());
-		Assert.assertNotNull(installedProductCert, "Found installed product cert needed for this test.");
 		clienttasks.subscribe(null, null, pool, null, null, "1", null, null, null, null, null, null);
 		String compliance = clienttasks.getFactValue(factname);
 		// Assert the system compliance
