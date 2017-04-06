@@ -1,8 +1,6 @@
 package rhsm.cli.tests;
 
 import java.io.File;
-import java.io.IOException;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -74,12 +72,9 @@ import rhsm.data.SubscriptionPool;
  */
 @Test(groups={"DevSKUTests","Tier3Tests","AcceptanceTests","Tier1Tests"})
 public class DevSKUTests extends SubscriptionManagerCLITestScript {
-   
-    private boolean executeAfterClassMethod = false;
-
 	
 	// Test methods ***********************************************************************
-
+	
 	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
 			       , testCaseID = {"RHEL6-25335", "RHEL7-52092"})
 	@Test(	description="given an available SKU, configure the system with custom facts dev_sku=SKU, register the system with auto-attach and verify several requirements of the attached entitlement",
@@ -606,9 +601,9 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 	
 	// Configuration methods ***********************************************************************
 	@SuppressWarnings("unused")
-	@BeforeClass(groups = "setup",dependsOnMethods={"verifyCandlepinVersionBeforeClass"})
+	@BeforeClass(groups={"setup"}, dependsOnMethods={"verifyCandlepinVersionBeforeClass"})
 	public void setupBeforeClass() throws Exception {
-	    if (false) { // keep for historical reference but never execute
+if (false) { // keep for historical reference but never execute
 		// restart candlepin in hosted mode (candlepin.standalone=false)
 		if (CandlepinType.standalone.equals(sm_serverType)) {	// indicates that we are testing a standalone candlepin server
 			servertasks.updateConfFileParameter("candlepin.standalone", "false");
@@ -619,24 +614,27 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 		// BEWARE: DO NOT RUN servertasks.refreshPoolsUsingRESTfulAPI(user, password, url, owner) OR IT WILL DELETE ALL SUBSCRIPTIONS AND POOLS IN CANDLEPIN 2.0+
 } // Replacing code block above with the following redeployment of candlepin to avoid the BEWARE issue
 
-		// redeploy candlepin in hosted mode (candlepin.standalone=false)
+		// re-deploy candlepin in hosted mode (candlepin.standalone=false)
 		if (CandlepinType.standalone.equals(sm_serverType)) {	// indicates that we are testing a standalone candlepin server
-		executeAfterClassMethod=true;
-		if (client1tasks!=null) client1tasks.unregister_(null, null, null);
-    		if (client2tasks!=null) client2tasks.unregister_(null, null, null);
-    		if (client1tasks!=null) client1tasks.clean_(null, null, null);
-    		if (client2tasks!=null) client2tasks.clean_(null, null, null);
-    		servertasks.updateConfFileParameter("candlepin.standalone", "false");
-    		servertasks.addConfFileParameter("module.config.hosted.configuration.module","org.candlepin.hostedtest.AdapterOverrideModule");
+			// avoid post re-deploy problems like: "System certificates corrupted. Please reregister." and "Unable to verify server's identity: [SSL: SSLV3_ALERT_CERTIFICATE_UNKNOWN] sslv3 alert certificate unknown (_ssl.c:579)"
+			if (client1tasks!=null) client1tasks.removeAllCerts(true, true, false);
+			if (client2tasks!=null) client2tasks.removeAllCerts(true, true, false);
+			// update candlepin.conf and re-deploy
+			servertasks.updateConfFileParameter("candlepin.standalone", "false");
+			servertasks.addConfFileParameter("module.config.hosted.configuration.module","org.candlepin.hostedtest.AdapterOverrideModule");
 			servertasks.redeploy();
+			setupBeforeClassRedeployedCandlepin=true;
+			// re-initialize after re-deploy
 			servertasks.initialize(clienttasks.candlepinAdminUsername,clienttasks.candlepinAdminPassword,clienttasks.candlepinUrl);
-    		if (client1tasks!=null) client1tasks.installRepoCaCert(fetchServerCaCertFile(), sm_serverHostname.split("\\.")[0]+".pem");
-    		if (client2tasks!=null) client2tasks.installRepoCaCert(fetchServerCaCertFile(), sm_serverHostname.split("\\.")[0]+".pem");
+			if (client1tasks!=null) client1tasks.installRepoCaCert(fetchServerCaCertFile(), sm_serverHostname.split("\\.")[0]+".pem");
+			if (client2tasks!=null) client2tasks.installRepoCaCert(fetchServerCaCertFile(), sm_serverHostname.split("\\.")[0]+".pem");
+
 		}
 	}
+    private boolean setupBeforeClassRedeployedCandlepin=false;
 
 	@SuppressWarnings("unused")
-	@AfterClass(groups="setup",alwaysRun=true)
+	@AfterClass(groups={"setup"}, alwaysRun=true)	// dependsOnMethods={"verifyCandlepinVersionBeforeClass"} WILL THROW A TESTNG DEPENDENCY ERROR
 	public void teardownAfterClass() throws Exception {
 if (false) { // keep for historical reference but never execute
 		if (CandlepinType.standalone.equals(sm_serverType)) {	// indicates that we are testing a standalone candlepin server
@@ -657,17 +655,22 @@ if (false) { // keep for historical reference but never execute
 		}
 } // Replacing code block above with the following redeployment of candlepin (workaround B) to avoid the BEWARE issue
 		
-		if (CandlepinType.standalone.equals(sm_serverType)&& executeAfterClassMethod) {	// indicates that we are testing a standalone candlepin server
+		if (CandlepinType.standalone.equals(sm_serverType) && setupBeforeClassRedeployedCandlepin) {	// indicates that we are testing a standalone candlepin server
+			// avoid post re-deploy problems like: "System certificates corrupted. Please reregister." and "Unable to verify server's identity: [SSL: SSLV3_ALERT_CERTIFICATE_UNKNOWN] sslv3 alert certificate unknown (_ssl.c:579)"
+			if (client1tasks!=null) client1tasks.removeAllCerts(true, true, false);
+			if (client2tasks!=null) client2tasks.removeAllCerts(true, true, false);
+			// update candlepin.conf and re-deploy
 			servertasks.updateConfFileParameter("candlepin.standalone", "true");
 			servertasks.removeConfFileParameter("module.config.hosted.configuration.module");   
 			servertasks.redeploy();
+			// re-initialize after re-deploy
 			servertasks.initialize(clienttasks.candlepinAdminUsername,clienttasks.candlepinAdminPassword,clienttasks.candlepinUrl);
 			deleteSomeSecondarySubscriptionsBeforeSuite();
     		if (client1tasks!=null) client1tasks.installRepoCaCert(fetchServerCaCertFile(), sm_serverHostname.split("\\.")[0]+".pem");
     		if (client2tasks!=null) client2tasks.installRepoCaCert(fetchServerCaCertFile(), sm_serverHostname.split("\\.")[0]+".pem");
 		}
-		clienttasks.removeAllCerts(true, false, false);
-
+		
+		clienttasks.removeAllCerts(true, false, false);	// to force the removal of the consumer 
 		clienttasks.deleteFactsFileWithOverridingValues();	// to get rid of the dev_sku settings
 	}
 

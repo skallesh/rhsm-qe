@@ -43,9 +43,8 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
     protected String org = "snowwhite";
     public static String subscriptionPoolProductId =null;
     private String subscriptionPoolId;
-    private boolean executeAfterClassMethod = false;
-
-
+    
+    
     @Test(description = "Verify golden ticket entitlement is granted when system is registered to an org that has contentaccessmode set", groups = {
     "VerifyGoldenTicketfunctionality" /*"blockedByBug-1425438"*/}, enabled = true)
     public void VerifyGoldenTicketfunctionality() throws Exception {
@@ -325,10 +324,9 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
     
     @BeforeClass(groups = "setup")
     public void verifyCandlepinVersionBeforeClass() {
-	if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, "<", "2.0.25-1")) {
-	    throw new SkipException("this candlepin version '" + servertasks.statusVersion
-		    + "' does not support Golden Ticket functionality.");
-	}
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, "<", "2.0.25-1")) {
+			throw new SkipException("this candlepin version '"+servertasks.statusVersion+"' does not support Golden Ticket functionality.");
+		}
     }
 
     // configuration
@@ -373,39 +371,44 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
     }
 
 
-    @BeforeClass(groups = "setup",dependsOnMethods={"verifyCandlepinVersionBeforeClass"})
-    public void BeforeClassSetup() throws IOException, JSONException, SQLException {
-	if (CandlepinType.standalone.equals(sm_serverType)) {
-	    executeAfterClassMethod=true;
-	    servertasks.updateConfFileParameter("candlepin.standalone", "false");
-	    //Adding the parameter "module.config.hosted.configuration.module" is better as we dont have it most of the times
-	    servertasks.addConfFileParameter("module.config.hosted.configuration.module","org.candlepin.hostedtest.AdapterOverrideModule");
-            servertasks.redeploy();
-            servertasks.initialize(clienttasks.candlepinAdminUsername,clienttasks.candlepinAdminPassword,clienttasks.candlepinUrl);
-            if (client1tasks!=null) client1tasks.installRepoCaCert(fetchServerCaCertFile(), sm_serverHostname.split("\\.")[0]+".pem");
-            if (client2tasks!=null) client2tasks.installRepoCaCert(fetchServerCaCertFile(), sm_serverHostname.split("\\.")[0]+".pem");
-            updateProductAndContentLockStateOnDatabase(0);
-
+    @BeforeClass(groups={"setup"}, dependsOnMethods={"verifyCandlepinVersionBeforeClass"})
+    public void setupBeforeClass() throws IOException, JSONException, SQLException {
+		if (CandlepinType.standalone.equals(sm_serverType)) {
+			// avoid post re-deploy problems like: "System certificates corrupted. Please reregister." and "Unable to verify server's identity: [SSL: SSLV3_ALERT_CERTIFICATE_UNKNOWN] sslv3 alert certificate unknown (_ssl.c:579)"
+			if (client1tasks!=null) client1tasks.removeAllCerts(true, true, false);
+			if (client2tasks!=null) client2tasks.removeAllCerts(true, true, false);
+			// update candlepin.conf and re-deploy
+			servertasks.updateConfFileParameter("candlepin.standalone", "false");
+			//Adding the parameter "module.config.hosted.configuration.module" is better as we dont have it most of the times
+			servertasks.addConfFileParameter("module.config.hosted.configuration.module","org.candlepin.hostedtest.AdapterOverrideModule");
+			servertasks.redeploy();
+			setupBeforeClassRedeployedCandlepin=true;
+			// re-initialize after re-deploy
+			servertasks.initialize(clienttasks.candlepinAdminUsername,clienttasks.candlepinAdminPassword,clienttasks.candlepinUrl);
+			if (client1tasks!=null) client1tasks.installRepoCaCert(fetchServerCaCertFile(), sm_serverHostname.split("\\.")[0]+".pem");
+			if (client2tasks!=null) client2tasks.installRepoCaCert(fetchServerCaCertFile(), sm_serverHostname.split("\\.")[0]+".pem");
+			updateProductAndContentLockStateOnDatabase(0);
+		}
 	}
-    }
+    private boolean setupBeforeClassRedeployedCandlepin=false;
 
 
-    /* couldnot add dependsOnMethods="verifyCandlepinVersionBeforeClass" because of following error 
-     * GoldenTicketTests.AfterClassTeardown() is depending on method public void rhsm.cli.tests.GoldenTicketTests.verifyCandlepinVersionBeforeClass(), which is not annotated with @Test or not included.
-     */
-
-    @AfterClass(groups = "setup", alwaysRun=true)
-    public void AfterClassTeardown() throws Exception {
-	if (CandlepinType.standalone.equals(sm_serverType) && executeAfterClassMethod) {
-	    servertasks.updateConfFileParameter("candlepin.standalone", "true");
-	    servertasks.removeConfFileParameter("module.config.hosted.configuration.module");   
-	    servertasks.redeploy();
-		servertasks.initialize(clienttasks.candlepinAdminUsername,clienttasks.candlepinAdminPassword,clienttasks.candlepinUrl);
-		deleteSomeSecondarySubscriptionsBeforeSuite();
-		if (client1tasks!=null) client1tasks.installRepoCaCert(fetchServerCaCertFile(), sm_serverHostname.split("\\.")[0]+".pem");
-		if (client2tasks!=null) client2tasks.installRepoCaCert(fetchServerCaCertFile(), sm_serverHostname.split("\\.")[0]+".pem");
-		clienttasks.removeAllCerts(true, false, false);
-	}
+    @AfterClass(groups={"setup"}, alwaysRun=true)	// dependsOnMethods={"verifyCandlepinVersionBeforeClass"} WILL THROW A TESTNG DEPENDENCY ERROR
+    public void teardownAfterClass() throws Exception {
+		if (CandlepinType.standalone.equals(sm_serverType) && setupBeforeClassRedeployedCandlepin) {
+			// avoid post re-deploy problems like: "System certificates corrupted. Please reregister." and "Unable to verify server's identity: [SSL: SSLV3_ALERT_CERTIFICATE_UNKNOWN] sslv3 alert certificate unknown (_ssl.c:579)"
+			if (client1tasks!=null) client1tasks.removeAllCerts(true, true, false);
+			if (client2tasks!=null) client2tasks.removeAllCerts(true, true, false);
+			// update candlepin.conf and re-deploy
+			servertasks.updateConfFileParameter("candlepin.standalone", "true");
+			servertasks.removeConfFileParameter("module.config.hosted.configuration.module");   
+			servertasks.redeploy();
+			// re-initialize after re-deploy
+			servertasks.initialize(clienttasks.candlepinAdminUsername,clienttasks.candlepinAdminPassword,clienttasks.candlepinUrl);
+			deleteSomeSecondarySubscriptionsBeforeSuite();
+			if (client1tasks!=null) client1tasks.installRepoCaCert(fetchServerCaCertFile(), sm_serverHostname.split("\\.")[0]+".pem");
+			if (client2tasks!=null) client2tasks.installRepoCaCert(fetchServerCaCertFile(), sm_serverHostname.split("\\.")[0]+".pem");
+		}
     }
 
 }
