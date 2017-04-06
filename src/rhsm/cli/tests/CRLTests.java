@@ -79,7 +79,7 @@ public class CRLTests extends SubscriptionManagerCLITestScript{
 		//			* the original entitlement certificates on the client should be removed
 		//		   	* new certs should be dropped to the client
 		//			* the crl list on the server should be poplulated w/ the old entitlement cert serials
-		if (dbConnection==null) throw new SkipException("This testcase requires a connection to the candlepin database.");
+		if (servertasks.dbConnection==null) throw new SkipException("This testcase requires a connection to the candlepin database.");
 		
 		/* https://bugzilla.redhat.com/show_bug.cgi?id=663455#c1 < DUE TO THESE IMPLEMENTED CHANGES, THE FOLLOWING IS NO LONGER APPROPRIATE...
 		// Before proceeding with this test, determine if the productId provided by this subscription pool has already been entitled.
@@ -395,7 +395,7 @@ public class CRLTests extends SubscriptionManagerCLITestScript{
 			}
 		}
 		
-		Statement sql = dbConnection.createStatement();
+		Statement sql = servertasks.dbConnection.createStatement();
 		if (endDate!=null) {
 			log.fine("Executing SQL: "+updateSubscriptionPoolEndDateSql);
 //			java.sql.PreparedStatement psql = dbConnection.prepareStatement(updateSubscriptionPoolEndDateSql);
