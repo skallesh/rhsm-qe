@@ -458,6 +458,7 @@ public class SKULevelContentOverrideTests extends SubscriptionManagerCLITestScri
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		if (!isSetupBeforeSuiteComplete)
 			return ll;
+		clienttasks.removeAllCerts(true, true, false);
 		clienttasks.register(sm_client1Username, sm_client1Password, sm_client1Org);
 		for (SubscriptionPool availableSubscriptionPoolsMatchingInstalled : SubscriptionPool.parse(clienttasks
 				.list(null, true, null, null, null, null, true, null, null, null, null, null, null).getStdout())) {
@@ -465,19 +466,10 @@ public class SKULevelContentOverrideTests extends SubscriptionManagerCLITestScri
 			SubscriptionPool pool = availableSubscriptionPoolsMatchingInstalled;
 
 			ll.add(Arrays.asList(new Object[] { null, pool }));
-			subscriptionPoolProductIdsTested.add(pool.productId); // keep a
-																	// separate
-																	// list of
-																	// SKU level
-																	// product
-																	// ids upon
-																	// which
-																	// content_override
-																	// attributes
-																	// will be
-																	// added
+			subscriptionPoolProductIdsTested.add(pool.productId); 
+			// keep a separate list of SKU level product ids upon which content_override attributes will be added
 
-			break; // will only add one row to the dataProvider. This defeats
+			break; // will only add one row to the dataProvider. This defeats	
 					// the purpose of a dataProvider.
 
 		}

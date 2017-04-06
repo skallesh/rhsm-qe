@@ -174,10 +174,6 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript {
 		CandlepinTasks.putResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl,
 				"/consumers/" + consumerId, jsonData);
 		String pool = getGuestlimitPool("-1");
-		ProductCert installedProductCert = ProductCert.findFirstInstanceWithMatchingFieldFromList("productId",
-				providedProductIds.get(randomGenerator.nextInt(providedProductIds.size())),
-				clienttasks.getCurrentProductCerts());
-		Assert.assertNotNull(installedProductCert, "Found installed product cert needed for this test.");
 		clienttasks.subscribe(null, null, pool, null, null, "1", null, null, null, null, null, null);
 		String compliance = clienttasks.getFactValue(factname);
 		// Assert the system compliance
@@ -241,7 +237,7 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript {
 		for (SubscriptionPool pool : clienttasks.getAvailableSubscriptionsMatchingInstalledProducts()) {
 			String GuestLimitAttribute = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername,
 					sm_clientPassword, sm_serverUrl, pool.poolId, "guest_limit");
-
+			System.out.println(GuestLimitAttribute + "   " +guestLimit);
 			if ((!(GuestLimitAttribute == null)) && (GuestLimitAttribute.equals(guestLimit))) {
 				poolId = pool.poolId;
 				providedProductIds = (CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername, sm_clientPassword,
@@ -256,7 +252,7 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript {
 		}
 
 		if (providedProductIds.isEmpty()) {
-			poolId = createTestPool(-60 * 24, 60 * 24);
+			poolId = createTestPool(-60 * 24, 60 * 24 ,guestLimit);
 			providedProductIds = (CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername, sm_clientPassword,
 					sm_serverUrl, poolId));
 		}
@@ -266,8 +262,9 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript {
 
 	protected String rhsmProductCertDir = null;
 	protected final String tmpProductCertDir = "/tmp/sm-tmpProductCertDir-guestlimittests";
+	
 	@BeforeClass(groups = "setup")
-	protected void configureTmpProductCertDirWithInstalledProductCerts() {
+	protected void tmpProductCertDirWithInstalledProductCertsConfiguration() {
 		if (rhsmProductCertDir == null) {
 			rhsmProductCertDir = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsm", "productCertDir");
 			Assert.assertNotNull(rhsmProductCertDir);
@@ -338,10 +335,14 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 * @throws Exception
 	 */
-	protected String createTestPool(int startingMinutesFromNow, int endingMinutesFromNow)
+	protected String createTestPool(int startingMinutesFromNow, int endingMinutesFromNow,String guest_limit)
 			throws JSONException, Exception {
-		String name = "Guest_limit_TestProduct";
-		String productId = "Guest_limit_Product";
+	    String name = "Guest_limit_GlobalTestProduct";
+	    String productId ="Guest_limit_GlobalProduct";
+	    if(!(guest_limit.equals("4"))){
+		 name = "Guest_limit_TestProduct";
+		 productId = "Guest_limit_Product";
+	    }
 		Map<String, String> attributes = new HashMap<String, String>();
 		attributes.clear();
 		attributes.put("version", "1.0");
@@ -350,7 +351,7 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript {
 		attributes.put("warning_period", "30");
 		attributes.put("type", "MKT");
 		attributes.put("type", "SVC");
-		attributes.put("guest_limit", "4");
+		attributes.put("guest_limit", guest_limit);
 		providedProduct.add("37060");
 		CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword,
 				sm_serverUrl, sm_clientOrg, productId);

@@ -74,6 +74,9 @@ import rhsm.data.SubscriptionPool;
  */
 @Test(groups={"DevSKUTests","Tier3Tests","AcceptanceTests","Tier1Tests"})
 public class DevSKUTests extends SubscriptionManagerCLITestScript {
+   
+    private boolean executeAfterClassMethod = false;
+
 	
 	// Test methods ***********************************************************************
 
@@ -603,9 +606,9 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 	
 	// Configuration methods ***********************************************************************
 	@SuppressWarnings("unused")
-	@BeforeClass(groups="setup")
+	@BeforeClass(groups = "setup",dependsOnMethods={"verifyCandlepinVersionBeforeClass"})
 	public void setupBeforeClass() throws Exception {
-if (false) { // keep for historical reference but never execute
+	    if (false) { // keep for historical reference but never execute
 		// restart candlepin in hosted mode (candlepin.standalone=false)
 		if (CandlepinType.standalone.equals(sm_serverType)) {	// indicates that we are testing a standalone candlepin server
 			servertasks.updateConfFileParameter("candlepin.standalone", "false");
@@ -618,12 +621,13 @@ if (false) { // keep for historical reference but never execute
 
 		// redeploy candlepin in hosted mode (candlepin.standalone=false)
 		if (CandlepinType.standalone.equals(sm_serverType)) {	// indicates that we are testing a standalone candlepin server
-    		if (client1tasks!=null) client1tasks.unregister_(null, null, null);
+		executeAfterClassMethod=true;
+		if (client1tasks!=null) client1tasks.unregister_(null, null, null);
     		if (client2tasks!=null) client2tasks.unregister_(null, null, null);
     		if (client1tasks!=null) client1tasks.clean_(null, null, null);
     		if (client2tasks!=null) client2tasks.clean_(null, null, null);
     		servertasks.updateConfFileParameter("candlepin.standalone", "false");
-			servertasks.uncommentConfFileParameter("module.config.hosted.configuration.module");
+    		servertasks.addConfFileParameter("module.config.hosted.configuration.module","org.candlepin.hostedtest.AdapterOverrideModule");
 			servertasks.redeploy();
 			servertasks.initialize(clienttasks.candlepinAdminUsername,clienttasks.candlepinAdminPassword,clienttasks.candlepinUrl);
     		if (client1tasks!=null) client1tasks.installRepoCaCert(fetchServerCaCertFile(), sm_serverHostname.split("\\.")[0]+".pem");
@@ -632,7 +636,7 @@ if (false) { // keep for historical reference but never execute
 	}
 
 	@SuppressWarnings("unused")
-	@AfterClass(groups="setup")
+	@AfterClass(groups="setup",alwaysRun=true)
 	public void teardownAfterClass() throws Exception {
 if (false) { // keep for historical reference but never execute
 		if (CandlepinType.standalone.equals(sm_serverType)) {	// indicates that we are testing a standalone candlepin server
@@ -653,16 +657,17 @@ if (false) { // keep for historical reference but never execute
 		}
 } // Replacing code block above with the following redeployment of candlepin (workaround B) to avoid the BEWARE issue
 		
-		if (CandlepinType.standalone.equals(sm_serverType)) {	// indicates that we are testing a standalone candlepin server
+		if (CandlepinType.standalone.equals(sm_serverType)&& executeAfterClassMethod) {	// indicates that we are testing a standalone candlepin server
 			servertasks.updateConfFileParameter("candlepin.standalone", "true");
-			servertasks.commentConfFileParameter("module.config.hosted.configuration.module");
+			servertasks.removeConfFileParameter("module.config.hosted.configuration.module");   
 			servertasks.redeploy();
 			servertasks.initialize(clienttasks.candlepinAdminUsername,clienttasks.candlepinAdminPassword,clienttasks.candlepinUrl);
 			deleteSomeSecondarySubscriptionsBeforeSuite();
     		if (client1tasks!=null) client1tasks.installRepoCaCert(fetchServerCaCertFile(), sm_serverHostname.split("\\.")[0]+".pem");
     		if (client2tasks!=null) client2tasks.installRepoCaCert(fetchServerCaCertFile(), sm_serverHostname.split("\\.")[0]+".pem");
 		}
-		
+		clienttasks.removeAllCerts(true, false, false);
+
 		clienttasks.deleteFactsFileWithOverridingValues();	// to get rid of the dev_sku settings
 	}
 
