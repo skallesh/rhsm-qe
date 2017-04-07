@@ -409,6 +409,7 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
 			deleteSomeSecondarySubscriptionsBeforeSuite();
 			if (client1tasks!=null) client1tasks.installRepoCaCert(fetchServerCaCertFile(), sm_serverHostname.split("\\.")[0]+".pem");
 			if (client2tasks!=null) client2tasks.installRepoCaCert(fetchServerCaCertFile(), sm_serverHostname.split("\\.")[0]+".pem");
+			clienttasks.removeAllCerts(true, true, false);// to force the removal of the consumer and subscriptions if any
 		}
     }
 

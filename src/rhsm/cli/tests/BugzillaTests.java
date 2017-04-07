@@ -1199,7 +1199,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
 	               , testCaseID = {"RHEL6-21898", "RHEL7-51759"})
 	@Test(description = "verify Future subscription added to the activation key ", groups = {
-			"AddingFutureSubscriptionToActivationKey" }, enabled = true)
+			"AddingFutureSubscriptionToActivationKey","blockedByBug-1440180" }, enabled = true)
 	public void AddingFutureSubscriptionToActivationKey() throws Exception {
 		Integer addQuantity = 1;
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
@@ -1210,7 +1210,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		consumerId);
 		clienttasks.autoheal(null, null, true, null, null, null);
 		String futurePool = createTestPool(60 * 24 *365, 60 * 24 *(365*2),true);
-
 
 		List<String> providedProductIds = CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername, sm_clientPassword,
 		sm_serverUrl, futurePool);
@@ -1230,12 +1229,13 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				true, null, null, null, null);
 		clienttasks.autoheal(null, null, true, null, null, null);
 		clienttasks.listConsumedProductSubscriptions();
-		for (InstalledProduct result : clienttasks.getCurrentlyInstalledProducts()) {
-			if (providedProductIds.contains(result.productId)) {
-				Assert.assertEquals(result.status, "Future Subscription");
-			}
-		}
+		InstalledProduct installedProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId",
+			"100000000000002", clienttasks.getCurrentlyInstalledProducts());
+		Assert.assertEquals(installedProduct.status, "Future Subscription");
+		
 	}
+
+
 
 	/**
 	 * @author skallesh
@@ -2944,7 +2944,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
 			       , testCaseID = {"RHEL6-21909", "RHEL7-51770"})
 	@Test(description = "verify if Repos List is empty for FutureSubscription", groups = {
-			"EmptyReposListForFutureSubscription", "blockedByBug-958775" }, enabled = true)
+			"EmptyReposListForFutureSubscription", "blockedByBug-958775","blockedByBug-1440180" }, enabled = true)
 	public void EmptyReposListForFutureSubscription() throws JSONException, Exception {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
 				null, (String) null, null, null, null, true, false, null, null, null);
@@ -3294,7 +3294,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
 			       , testCaseID = {"RHEL6-21954", "RHEL7-51816"})
 	@Test(description = "verify healing of installed products without taking future subscriptions into consideration", groups = {
-			"VerifyHealingForFutureSubscription", "blockedByBug-907638" }, enabled = true)
+			"VerifyHealingForFutureSubscription", "blockedByBug-907638","blockedByBug-1440180" }, enabled = true)
 	public void VerifyHealingForFutureSubscription() throws JSONException, Exception {
 		String productId = null;
 
@@ -4480,7 +4480,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
 			       , testCaseID = {"RHEL6-21953", "RHEL7-51815"})
 	@Test(description = "Verify if future entitlements are disregarded by autosubscribe when determining what should be subscribed to satisfy compliance today ", groups = {
-			"VerifyFutureSubscription_Test", "blockedByBug-746035" }, enabled = true)
+			"VerifyFutureSubscription_Test", "blockedByBug-746035","blockedByBug-1440180" }, enabled = true)
 	public void VerifyFutureSubscription_Test() throws Exception {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
 				null, (String) null, null, null, null, true, false, null, null, null);
