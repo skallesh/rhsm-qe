@@ -68,8 +68,6 @@ import com.redhat.qe.tools.abstraction.AbstractCommandLineData;
  *
  */
 public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTestScript {
-
-	public static Connection dbConnection = null;
 	
 	protected static SubscriptionManagerTasks clienttasks	= null;
 	protected static SubscriptionManagerTasks client1tasks	= null;	// client1 subscription manager tasks
@@ -131,10 +129,10 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		if (!sm_serverHostname.equals("") && sm_serverType.equals(CandlepinType.standalone)) {
 			server = new SSHCommandRunner(sm_serverHostname, sm_serverSSHUser, new File(sm_sshKeyPrivate), sm_sshkeyPassphrase, null);
 			if (sm_sshEmergenecyTimeoutMS!=null) server.setEmergencyTimeout(Long.valueOf(sm_sshEmergenecyTimeoutMS));
-			servertasks = new rhsm.cli.tasks.CandlepinTasks(server,sm_serverInstallDir,sm_serverImportDir,sm_serverType,sm_serverBranch);
+			servertasks = new rhsm.cli.tasks.CandlepinTasks(server,sm_serverInstallDir,sm_serverImportDir,sm_serverType,sm_serverBranch,sm_dbSqlDriver,sm_dbHostname,sm_dbPort,sm_dbName,sm_dbUsername,sm_dbPassword);
 		} else {
 			log.info("Assuming the server is already setup and running.");
-			servertasks = new rhsm.cli.tasks.CandlepinTasks(null,null,null,sm_serverType,sm_serverBranch);
+			servertasks = new rhsm.cli.tasks.CandlepinTasks(null,null,null,sm_serverType,sm_serverBranch,sm_dbSqlDriver,sm_dbHostname,sm_dbPort,sm_dbName,sm_dbUsername,sm_dbPassword);
 		}
 		
 		// setup the candlepin server (only when the candlepin server is standalone)
@@ -157,9 +155,6 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			// install packages
 			SSHCommandResult yumInstallResult = server.runCommandAndWait("sudo "+"yum install -y --quiet hunspell");
 			Assert.assertEquals(yumInstallResult.getExitCode(), Integer.valueOf(0),"ExitCode from yum install of packages on server '"+server.getConnection().getHostname()+"'.");
-			
-			// also connect to the candlepin server database
-			dbConnection = connectToDatabase();  // do this after the call to deploy since deploy will restart postgresql
 			
 			// fetch the generated Product Certs
 			if (Boolean.valueOf(getProperty("sm.debug.fetchProductCerts","true"))) {
@@ -786,9 +781,9 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	public void disconnectDatabaseAfterSuite() {
 		
 		// close the candlepin database connection
-		if (dbConnection!=null) {
+		if (servertasks.dbConnection!=null) {
 			try {
-				dbConnection.close();
+				servertasks.dbConnection.close();
 			} catch (SQLException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -1141,60 +1136,6 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		return "https://"+hostname+port+prefix;	
 	}
 	
-	protected Connection connectToDatabase() {
-		/* Notes on setting up the db for a connection:
-		 * # yum install postgresql-server
-		 * 
-		 * # service postgresql initdb 
-		 * 
-		 * # su - postgres
-		 * $ psql
-		 * # CREATE USER candlepin WITH PASSWORD 'candlepin';
-		 * # ALTER user candlepin CREATEDB;
-		 * [Ctrl-D]
-		 * $ createdb -O candlepin candlepin
-		 * $ exit
-		 * 
-		 * # vi /var/lib/pgsql/data/pg_hba.conf
-		 * # TYPE  DATABASE    USER        CIDR-ADDRESS          METHOD
-		 * local   all         all                               trust
-		 * host    all         all         127.0.0.1/32          trust
-		 *
-		 * # vi /var/lib/pgsql/data/postgresql.conf
-		 * listen_addresses = '*'
-		 * 
-		 * # netstat -lpn | grep 5432
-		 * tcp        0      0 0.0.0.0:5432                0.0.0.0:*                   LISTEN      24935/postmaster    
-		 * tcp        0      0 :::5432                     :::*                        LISTEN      24935/postmaster    
-		 * unix  2      [ ACC ]     STREAM     LISTENING     1717127 24935/postmaster    /tmp/.s.PGSQL.5432
-		 * 
-		 */
-		Connection dbConnection = null;
-		try { 
-			// Load the JDBC driver 
-			Class.forName(sm_dbSqlDriver);	//	"org.postgresql.Driver" or "oracle.jdbc.driver.OracleDriver"
-			
-			// Create a connection to the database
-			String url = sm_dbSqlDriver.contains("postgres")? 
-					"jdbc:postgresql://" + sm_dbHostname + ":" + sm_dbPort + "/" + sm_dbName :
-					"jdbc:oracle:thin:@" + sm_dbHostname + ":" + sm_dbPort + ":" + sm_dbName ;
-			log.info(String.format("Attempting to connect to database with url and credentials: url=%s username=%s password=%s",url,sm_dbUsername,sm_dbPassword));
-			dbConnection = DriverManager.getConnection(url, sm_dbUsername, sm_dbPassword);
-			//log.finer("default dbConnection.getAutoCommit()= "+dbConnection.getAutoCommit());
-			dbConnection.setAutoCommit(true);
-			
-			DatabaseMetaData dbmd = dbConnection.getMetaData(); //get MetaData to confirm connection
-		    log.fine("Connection to "+dbmd.getDatabaseProductName()+" "+dbmd.getDatabaseProductVersion()+" successful.\n");
-
-		} 
-		catch (ClassNotFoundException e) { 
-			log.warning("JDBC driver not found!:\n" + e.getMessage());
-		} 
-		catch (SQLException e) {
-			log.warning("Could not connect to backend database:\n" + e.getMessage());
-		}
-		return dbConnection;
-	}
 
 	/* DELETEME  OLD CODE FROM ssalevan
 	
@@ -1538,16 +1479,16 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			String updateProductLockedStateSql = "UPDATE cp2_products SET locked = "+flag+";";
 			String updateContentLockedStateSql = "UPDATE cp2_content SET locked = "+flag+";";
 			
-			Statement sql = dbConnection.createStatement();
+			Statement sql = servertasks.dbConnection.createStatement();
 			int rowCount;
 			
 			log.fine("Executing SQL: "+updateProductLockedStateSql);
-			 rowCount = sql.executeUpdate(updateProductLockedStateSql);
-			Assert.assertTrue(rowCount>0, "Updated at least one row (actual='"+rowCount+"') of the cp2_products table with sql: "+updateProductLockedStateSql);
+			rowCount = sql.executeUpdate(updateProductLockedStateSql);
+			Assert.assertTrue(rowCount>0, "Updated at least one row (actual='"+rowCount+"') of the cp2_products table with sql: "+updateProductLockedStateSql);	// NOTE: the rowCount is not really the number of rows changed, its the number of rows retrieved by the where clause
 			
 			log.fine("Executing SQL: "+updateContentLockedStateSql);
 			rowCount = sql.executeUpdate(updateContentLockedStateSql);
-			Assert.assertTrue(rowCount>0, "Updated at least one row (actual='"+rowCount+"') of the cp2_content table with sql: "+updateContentLockedStateSql);
+			Assert.assertTrue(rowCount>0, "Updated at least one row (actual='"+rowCount+"') of the cp2_content table with sql: "+updateContentLockedStateSql);	// NOTE: the rowCount is not really the number of rows changed, its the number of rows retrieved by the where clause
 			
 			sql.close();
 		}
@@ -1569,7 +1510,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		
 		// get the master pool id (NEEDED BECAUSE WE WANT THE UPDATE THE DATA ON THE MASTER POOL, NOT THE SUB POOL)
 		String masterPoolIdSqlQuery = String.format("SELECT pool_id FROM cp2_pool_source_sub WHERE subscription_sub_key = 'master' AND subscription_id = (SELECT subscription_id FROM cp2_pool_source_sub WHERE pool_id = '%s')",pool.poolId);
-		Statement sql = dbConnection.createStatement();
+		Statement sql = servertasks.dbConnection.createStatement();
 		ResultSet resultSet = sql.executeQuery(masterPoolIdSqlQuery);
 		resultSet.next();	// assume only one row was returned
 		String masterPoolId = resultSet.getString(1); // assumes only one column was returned
@@ -1657,7 +1598,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 
 		}
 		
-		Statement sql = dbConnection.createStatement();
+		Statement sql = servertasks.dbConnection.createStatement();
 		if (endDate!=null) {
 			log.info("About to change the endDate in the database for this subscription pool: "+pool);
 			log.fine("Executing SQL: "+updateSubscriptionPoolEndDateSql);
@@ -1682,7 +1623,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			updateSubscriptionStartDateSql = "update cp_subscription set startdate='"+AbstractCommandLineData.formatDateString(startDate)+"' where id='"+subscriptionId+"';";
 		}
 		
-		Statement sql = dbConnection.createStatement();
+		Statement sql = servertasks.dbConnection.createStatement();
 		if (endDate!=null) {
 			log.info("About to change the endDate in the database for this subscription id: "+subscriptionId);
 			log.fine("Executing SQL: "+updateSubscriptionEndDateSql);

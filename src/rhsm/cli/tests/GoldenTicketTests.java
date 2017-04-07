@@ -43,12 +43,11 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
     protected String org = "snowwhite";
     public static String subscriptionPoolProductId =null;
     private String subscriptionPoolId;
-    private boolean executeAfterClassMethod = true;
-
-
+    
+    
     @Test(description = "Verify golden ticket entitlement is granted when system is registered to an org that has contentaccessmode set", groups = {
-    "verifyGoldenTicketfunctionality" /*"blockedByBug-1425438"*/}, enabled = true)
-    public void verifyGoldenTicketfunctionality() throws Exception {
+    "VerifyGoldenTicketfunctionality" /*"blockedByBug-1425438"*/}, enabled = true)
+    public void VerifyGoldenTicketfunctionality() throws Exception {
 
 	CandlepinTasks.setAttributeForOrg(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, org,
 		attributeName, attributeValue);
@@ -112,7 +111,7 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
 	Assert.assertTrue(clienttasks.getCurrentEntitlementCerts().size() == 0,
 		"Golden ticket cert is successfully removed");
 	clienttasks.refresh(null, null, null);
-	Assert.assertTrue(clienttasks.getCurrentlyConsumedProductSubscriptions().size() == 1,
+	Assert.assertTrue(clienttasks.getCurrentEntitlementCerts().size() == 1,
 		"Golden ticket regenerated successfully");
 	resultListDisabled = clienttasks.repos(false, false, true, (String) null, null, null, null, null);
 	Assert.assertNotEquals(resultListDisabled.getStdout().toString().trim(), ExpectedRepoMsg);
@@ -159,7 +158,7 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
 
 
     @Test(description = "Verify golden ticket entitlement is granted when system is registered using an activationkey that belongs org that has contentaccessmode set", groups = {
-    "goldenTicketEntitlementIsGrantedWhenRegisteredUsingActivationKey" },enabled = true)
+    "GoldenTicketEntitlementIsGrantedWhenRegisteredUsingActivationKey" },enabled = true)
     public void ExtraEntitlementIsGrantedWhenRegisteredUsingActivationKey() throws JSONException, Exception {
 
 	// verify registering the system to activation key belonging to owner(contentAccessmode set) with auto-attach false has access to golden ticket
@@ -266,7 +265,12 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
 		null, null, (String) null, null, null, null, true, null, null, null, null));
 	String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_clientUsername, sm_clientPassword, sm_serverUrl,
 		consumerId);
-	clienttasks.subscribe(true, null,(String)null, null, null, null, null, null, null, null, null, null);
+	for (SubscriptionPool availsubscriptions : clienttasks.getAvailableSubscriptionsMatchingInstalledProducts()) {
+	    subscriptionPoolProductId=availsubscriptions.productId; 
+	    subscriptionPoolId= availsubscriptions.poolId;
+	    break;
+	}
+	clienttasks.subscribe(null, null,subscriptionPoolId, null, null, null, null, null, null, null, null, null);
 	List<Repo> availableRepos = clienttasks.getCurrentlySubscribedRepos();
 	List<String> repoIdsDisabledByDefault = new ArrayList<String>();
 	Map<String, String> attributesMap = new HashMap<String, String>();
@@ -286,13 +290,7 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
 	String repoIdToEnable = repoIdsDisabledByDefault.get(randomGenerator.nextInt(repoIdsDisabledByDefault.size()));
 	String contentIdToEnable = getContent(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,
 		repoIdToEnable);
-	for (SubscriptionPool consumedSubscriptionPools : SubscriptionPool.parse(clienttasks
-		.list(null, null, true, null, null, null, null, null, null, null, null, null, null).getStdout())) {
-	    SubscriptionPool pool = consumedSubscriptionPools;
-	    subscriptionPoolProductId=pool.productId; 
-	    subscriptionPoolId= pool.poolId;
-	    break;
-	}
+	
 	resourcePath = "/owners/" + ownerKey + "/products/" + subscriptionPoolProductId+ "?exclude=id&exclude=name&exclude=multiplier&exclude=productContent&exclude=dependentProductIds&exclude=href&exclude=created&exclude=updated&exclude=attributes.created&exclude=attributes.updated";
 	JSONObject jsonPoolToEnable = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,
 		sm_serverAdminPassword, sm_serverUrl, resourcePath));
@@ -325,11 +323,9 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
     
     @BeforeClass(groups = "setup")
     public void verifyCandlepinVersionBeforeClass() {
-	if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, "<", "2.0.25-1")) {
-	    executeAfterClassMethod=false;
-	    throw new SkipException("this candlepin version '" + servertasks.statusVersion
-		    + "' does not support Golden Ticket functionality.");
-	}
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, "<", "2.0.25-1")) {
+			throw new SkipException("this candlepin version '"+servertasks.statusVersion+"' does not support Golden Ticket functionality.");
+		}
     }
 
     // configuration
@@ -374,39 +370,47 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
     }
 
 
-    @BeforeClass(groups = "setup",dependsOnMethods={"verifyCandlepinVersionBeforeClass"})
-    public void BeforeClassSetup() throws IOException, JSONException, SQLException {
-	if (CandlepinType.standalone.equals(sm_serverType)) {
-	    servertasks.updateConfFileParameter("candlepin.standalone", "false");
-	    //Adding the parameter "module.config.hosted.configuration.module" is better as we dont have it most of the times
-	    servertasks.addConfFileParameter("module.config.hosted.configuration.module","org.candlepin.hostedtest.AdapterOverrideModule");
-            servertasks.redeploy();
+
+    @BeforeClass(groups={"setup"}, dependsOnMethods={"verifyCandlepinVersionBeforeClass"})
+    public void setupBeforeClass() throws IOException, JSONException, SQLException {
+		if (CandlepinType.standalone.equals(sm_serverType)) {
+			// avoid post re-deploy problems like: "System certificates corrupted. Please reregister." and "Unable to verify server's identity: [SSL: SSLV3_ALERT_CERTIFICATE_UNKNOWN] sslv3 alert certificate unknown (_ssl.c:579)"
+			if (client1tasks!=null) client1tasks.removeAllCerts(true, true, false);
+			if (client2tasks!=null) client2tasks.removeAllCerts(true, true, false);
+			// update candlepin.conf and re-deploy
+			servertasks.updateConfFileParameter("candlepin.standalone", "false");
+			//Adding the parameter "module.config.hosted.configuration.module" is better as we dont have it most of the times
+			servertasks.addConfFileParameter("module.config.hosted.configuration.module","org.candlepin.hostedtest.AdapterOverrideModule");
+			servertasks.redeploy();
+			setupBeforeClassRedeployedCandlepin=true;
+			// re-initialize after re-deploy
 			servertasks.initialize(clienttasks.candlepinAdminUsername,clienttasks.candlepinAdminPassword,clienttasks.candlepinUrl);
-    		if (client1tasks!=null) client1tasks.installRepoCaCert(fetchServerCaCertFile(), sm_serverHostname.split("\\.")[0]+".pem");
-    		if (client2tasks!=null) client2tasks.installRepoCaCert(fetchServerCaCertFile(), sm_serverHostname.split("\\.")[0]+".pem");
-            updateProductAndContentLockStateOnDatabase(0);
-
+			if (client1tasks!=null) client1tasks.installRepoCaCert(fetchServerCaCertFile(), sm_serverHostname.split("\\.")[0]+".pem");
+			if (client2tasks!=null) client2tasks.installRepoCaCert(fetchServerCaCertFile(), sm_serverHostname.split("\\.")[0]+".pem");
+			updateProductAndContentLockStateOnDatabase(0);
+		}
 	}
+
+
+   private boolean setupBeforeClassRedeployedCandlepin=false;
+
+    @AfterClass(groups={"setup"}, alwaysRun=true)	// dependsOnMethods={"verifyCandlepinVersionBeforeClass"} WILL THROW A TESTNG DEPENDENCY ERROR
+    public void teardownAfterClass() throws Exception {
+		if (CandlepinType.standalone.equals(sm_serverType) && setupBeforeClassRedeployedCandlepin) {
+			// avoid post re-deploy problems like: "System certificates corrupted. Please reregister." and "Unable to verify server's identity: [SSL: SSLV3_ALERT_CERTIFICATE_UNKNOWN] sslv3 alert certificate unknown (_ssl.c:579)"
+			if (client1tasks!=null) client1tasks.removeAllCerts(true, true, false);
+			if (client2tasks!=null) client2tasks.removeAllCerts(true, true, false);
+			// update candlepin.conf and re-deploy
+			servertasks.updateConfFileParameter("candlepin.standalone", "true");
+			servertasks.removeConfFileParameter("module.config.hosted.configuration.module");   
+			servertasks.redeploy();
+			// re-initialize after re-deploy
+			servertasks.initialize(clienttasks.candlepinAdminUsername,clienttasks.candlepinAdminPassword,clienttasks.candlepinUrl);
+			deleteSomeSecondarySubscriptionsBeforeSuite();
+			if (client1tasks!=null) client1tasks.installRepoCaCert(fetchServerCaCertFile(), sm_serverHostname.split("\\.")[0]+".pem");
+			if (client2tasks!=null) client2tasks.installRepoCaCert(fetchServerCaCertFile(), sm_serverHostname.split("\\.")[0]+".pem");
+			clienttasks.removeAllCerts(true, true, false);// to force the removal of the consumer and subscriptions if any
+		}
     }
-
-
-    /* couldnot add dependsOnMethods="verifyCandlepinVersionBeforeClass" because of following error 
-     * GoldenTicketTests.AfterClassTeardown() is depending on method public void rhsm.cli.tests.GoldenTicketTests.verifyCandlepinVersionBeforeClass(), which is not annotated with @Test or not included.
-     */
-
-    @AfterClass(groups = "setup"/*, alwaysRun=false,dependsOnMethods={"verifyCandlepinVersionBeforeClass"}*/)
-    public void AfterClassTeardown() throws Exception {
-	if (CandlepinType.standalone.equals(sm_serverType) && executeAfterClassMethod) {
-	    servertasks.updateConfFileParameter("candlepin.standalone", "true");
-	    servertasks.commentConfFileParameter("module.config.hosted.configuration.module");   
-	    servertasks.redeploy();
-		servertasks.initialize(clienttasks.candlepinAdminUsername,clienttasks.candlepinAdminPassword,clienttasks.candlepinUrl);
-		deleteSomeSecondarySubscriptionsBeforeSuite();
-		if (client1tasks!=null) client1tasks.installRepoCaCert(fetchServerCaCertFile(), sm_serverHostname.split("\\.")[0]+".pem");
-		if (client2tasks!=null) client2tasks.installRepoCaCert(fetchServerCaCertFile(), sm_serverHostname.split("\\.")[0]+".pem");
-	}
-    }
-
-
 
 }

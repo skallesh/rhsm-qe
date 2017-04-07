@@ -7,6 +7,10 @@ import java.io.InputStream;
 import java.math.BigInteger;
 import java.net.URL;
 import java.net.URLConnection;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -75,7 +79,7 @@ import com.sun.syndication.io.XmlReader;
  * Reference: Candlepin RESTful API Documentation: https://fedorahosted.org/candlepin/wiki/API
  */
 public class CandlepinTasks {
-
+	public Connection dbConnection = null;
 	protected static Logger log = Logger.getLogger(SubscriptionManagerTasks.class.getName());
 	protected /*NOT static*/ SSHCommandRunner sshCommandRunner = null;
 	protected /*NOT static*/ String serverInstallDir = null;
@@ -89,6 +93,12 @@ public class CandlepinTasks {
 	public static HttpClient client;
 	CandlepinType serverType = CandlepinType.hosted;
 	public String branch = "";
+	public String dbSqlDriver = "";
+	public String dbHostname = "";
+	public String dbPort = "";
+	public String dbName = "";
+	public String dbUsername = "";
+	public String dbPassword = "";
 	public Integer fedoraReleaseX = new Integer(0);
 	public Integer redhatReleaseX = new Integer(0);
 	
@@ -129,13 +139,19 @@ public class CandlepinTasks {
 	 * @param serverType
 	 * @param branch - git branch (or tag) to deploy.  The most common values are "master" and "candlepin-latest-tag" (which is a special case)
 	 */
-	public CandlepinTasks(SSHCommandRunner sshCommandRunner, String serverInstallDir, String serverImportDir, CandlepinType serverType, String branch) {
+	public CandlepinTasks(SSHCommandRunner sshCommandRunner, String serverInstallDir, String serverImportDir, CandlepinType serverType, String branch, String dbSqlDriver, String dbHostname, String dbPort, String dbName, String dbUsername, String dbPassword) {
 		super();
 		this.sshCommandRunner = sshCommandRunner;
 		this.serverInstallDir = serverInstallDir;
 		this.serverImportDir = serverImportDir;
 		this.serverType = serverType;
 		this.branch = branch;
+		this.dbSqlDriver = dbSqlDriver;
+		this.dbHostname = dbHostname;
+		this.dbPort = dbPort;
+		this.dbName = dbName;
+		this.dbUsername = dbUsername;
+		this.dbPassword = dbPassword;
 		
 		// OS release detection
 		if (sshCommandRunner!=null) {
@@ -163,14 +179,15 @@ public class CandlepinTasks {
 	
 	public void deploy() throws IOException {
 		
+		// make sure we have been given a branch to deploy
 		if (branch==null || branch.equals("")) {
 			log.info("Skipping deploy of candlepin server since no branch was specified.");
 			return;
 		}
-		
 		log.info("Upgrading the server to the latest git tag...");
 		Assert.assertTrue(RemoteFileTasks.testExists(sshCommandRunner, serverInstallDir),"Found the server install directory "+serverInstallDir);
 		
+		// git the correct version of candlepin to deploy
 		RemoteFileTasks.searchReplaceFile(sshCommandRunner, "/etc/sudoers", "\\(^Defaults[[:space:]]\\+requiretty\\)", "#\\1");	// Needed to prevent error:  sudo: sorry, you must have a tty to run sudo
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+" && git reset --hard HEAD && git checkout master && git pull", Integer.valueOf(0), null, "(Already on|Switched to branch) 'master'");
 		if (branch.equals("candlepin-latest-tag")) {  // see commented python code at the end of this file */
@@ -187,6 +204,7 @@ public class CandlepinTasks {
 			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverImportDir+" && git pull", Integer.valueOf(0));
 		}
 		
+		// now that we have checked out the right branch, continue deploying...
 		redeploy();
 	}
 	/**
@@ -399,6 +417,9 @@ schema generation failed
 		bundle install
 		export TESTDATA=1 && export FORCECERT=1 && export GENDB=1 && export HOSTNAME=jsefler-f14-candlepin.usersys.redhat.com && export IMPORTDIR= && cd /root/candlepin/server && bundle exec bin/deploy
 		 */
+		
+		// also connect to the candlepin server database
+		dbConnection = connectToDatabase(dbSqlDriver,dbHostname,dbPort,dbName,dbUsername,dbPassword);  // do this after the call to deploy since deploy will restart postgresql
 	}
 	
 	public void initialize(String adminUsername, String adminPassword, String serverUrl) throws IOException, JSONException {
@@ -500,6 +521,61 @@ schema generation failed
 			// Bug 843649 - subscription-manager server version reports Unknown against prod/stage candlepin
 			log.warning("Encountered exception while getting the Candlepin server '"+serverUrl+"' version from the /status api: "+e);
 		}
+	}
+	
+	protected Connection connectToDatabase(String dbSqlDriver, String dbHostname, String dbPort, String dbName, String dbUsername, String dbPasssword) {
+		/* Notes on setting up the db for a connection:
+		 * # yum install postgresql-server
+		 * 
+		 * # service postgresql initdb 
+		 * 
+		 * # su - postgres
+		 * $ psql
+		 * # CREATE USER candlepin WITH PASSWORD 'candlepin';
+		 * # ALTER user candlepin CREATEDB;
+		 * [Ctrl-D]
+		 * $ createdb -O candlepin candlepin
+		 * $ exit
+		 * 
+		 * # vi /var/lib/pgsql/data/pg_hba.conf
+		 * # TYPE  DATABASE    USER        CIDR-ADDRESS          METHOD
+		 * local   all         all                               trust
+		 * host    all         all         127.0.0.1/32          trust
+		 *
+		 * # vi /var/lib/pgsql/data/postgresql.conf
+		 * listen_addresses = '*'
+		 * 
+		 * # netstat -lpn | grep 5432
+		 * tcp        0      0 0.0.0.0:5432                0.0.0.0:*                   LISTEN      24935/postmaster    
+		 * tcp        0      0 :::5432                     :::*                        LISTEN      24935/postmaster    
+		 * unix  2      [ ACC ]     STREAM     LISTENING     1717127 24935/postmaster    /tmp/.s.PGSQL.5432
+		 * 
+		 */
+		Connection dbConnection = null;
+		try { 
+			// Load the JDBC driver 
+			Class.forName(dbSqlDriver);	//	"org.postgresql.Driver" or "oracle.jdbc.driver.OracleDriver"
+			
+			// Create a connection to the database
+			String url = dbSqlDriver.contains("postgres")? 
+					"jdbc:postgresql://" + dbHostname + ":" + dbPort + "/" + dbName :
+					"jdbc:oracle:thin:@" + dbHostname + ":" + dbPort + ":" + dbName ;
+			log.info(String.format("Attempting to connect to database with url and credentials: url=%s username=%s password=%s",url,dbUsername,dbPassword));
+			dbConnection = DriverManager.getConnection(url, dbUsername, dbPassword);
+			//log.finer("default dbConnection.getAutoCommit()= "+dbConnection.getAutoCommit());
+			dbConnection.setAutoCommit(true);
+			
+			DatabaseMetaData dbmd = dbConnection.getMetaData(); //get MetaData to confirm connection
+		    log.fine("Connection to "+dbmd.getDatabaseProductName()+" "+dbmd.getDatabaseProductVersion()+" successful.\n");
+
+		} 
+		catch (ClassNotFoundException e) { 
+			log.warning("JDBC driver not found!:\n" + e.getMessage());
+		} 
+		catch (SQLException e) {
+			log.warning("Could not connect to backend database:\n" + e.getMessage());
+		}
+		return dbConnection;
 	}
 	
 	public void reportAPI() throws IOException {
@@ -633,6 +709,13 @@ schema generation failed
 		Assert.assertEquals(
 			RemoteFileTasks.searchReplaceFile(sshCommandRunner, defaultConfigFile, "^"+parameter+"\\s*=", "#"+parameter+"="),0,
 			"Commented '"+defaultConfigFile+"' parameter: "+parameter);
+	}
+	
+	public void removeConfFileParameter(String parameter){
+		log.info("Removing config file '"+defaultConfigFile+"' parameter: "+parameter);
+		Assert.assertEquals(
+			RemoteFileTasks.searchReplaceFile(sshCommandRunner, defaultConfigFile, "^"+parameter+"\\s*=.*", ""),0,
+			"Removed '"+defaultConfigFile+"' parameter: "+parameter);
 	}
 	
 	public void uncommentConfFileParameter(String parameter){
