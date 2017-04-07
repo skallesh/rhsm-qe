@@ -111,7 +111,7 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
 	Assert.assertTrue(clienttasks.getCurrentEntitlementCerts().size() == 0,
 		"Golden ticket cert is successfully removed");
 	clienttasks.refresh(null, null, null);
-	Assert.assertTrue(clienttasks.getCurrentlyConsumedProductSubscriptions().size() == 1,
+	Assert.assertTrue(clienttasks.getCurrentEntitlementCerts().size() == 1,
 		"Golden ticket regenerated successfully");
 	resultListDisabled = clienttasks.repos(false, false, true, (String) null, null, null, null, null);
 	Assert.assertNotEquals(resultListDisabled.getStdout().toString().trim(), ExpectedRepoMsg);
@@ -265,7 +265,12 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
 		null, null, (String) null, null, null, null, true, null, null, null, null));
 	String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_clientUsername, sm_clientPassword, sm_serverUrl,
 		consumerId);
-	clienttasks.subscribe(true, null,(String)null, null, null, null, null, null, null, null, null, null);
+	for (SubscriptionPool availsubscriptions : clienttasks.getAvailableSubscriptionsMatchingInstalledProducts()) {
+	    subscriptionPoolProductId=availsubscriptions.productId; 
+	    subscriptionPoolId= availsubscriptions.poolId;
+	    break;
+	}
+	clienttasks.subscribe(null, null,subscriptionPoolId, null, null, null, null, null, null, null, null, null);
 	List<Repo> availableRepos = clienttasks.getCurrentlySubscribedRepos();
 	List<String> repoIdsDisabledByDefault = new ArrayList<String>();
 	Map<String, String> attributesMap = new HashMap<String, String>();
@@ -285,13 +290,7 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
 	String repoIdToEnable = repoIdsDisabledByDefault.get(randomGenerator.nextInt(repoIdsDisabledByDefault.size()));
 	String contentIdToEnable = getContent(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,
 		repoIdToEnable);
-	for (SubscriptionPool consumedSubscriptionPools : SubscriptionPool.parse(clienttasks
-		.list(null, null, true, null, null, null, null, null, null, null, null, null, null).getStdout())) {
-	    SubscriptionPool pool = consumedSubscriptionPools;
-	    subscriptionPoolProductId=pool.productId; 
-	    subscriptionPoolId= pool.poolId;
-	    break;
-	}
+	
 	resourcePath = "/owners/" + ownerKey + "/products/" + subscriptionPoolProductId+ "?exclude=id&exclude=name&exclude=multiplier&exclude=productContent&exclude=dependentProductIds&exclude=href&exclude=created&exclude=updated&exclude=attributes.created&exclude=attributes.updated";
 	JSONObject jsonPoolToEnable = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,
 		sm_serverAdminPassword, sm_serverUrl, resourcePath));
@@ -371,6 +370,7 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
     }
 
 
+
     @BeforeClass(groups={"setup"}, dependsOnMethods={"verifyCandlepinVersionBeforeClass"})
     public void setupBeforeClass() throws IOException, JSONException, SQLException {
 		if (CandlepinType.standalone.equals(sm_serverType)) {
@@ -390,8 +390,9 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
 			updateProductAndContentLockStateOnDatabase(0);
 		}
 	}
-    private boolean setupBeforeClassRedeployedCandlepin=false;
 
+
+   private boolean setupBeforeClassRedeployedCandlepin=false;
 
     @AfterClass(groups={"setup"}, alwaysRun=true)	// dependsOnMethods={"verifyCandlepinVersionBeforeClass"} WILL THROW A TESTNG DEPENDENCY ERROR
     public void teardownAfterClass() throws Exception {
