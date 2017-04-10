@@ -1706,11 +1706,15 @@ if (false) {
 			String healMsg = assertCertificatesUpdate? "(Auto-attach) Certificates updated.":"(Auto-attach) Update failed (255), retry will occur on next run.";
 			String certMsg = assertCertificatesUpdate? "(Cert Check) Certificates updated.":"(Cert Check) Update failed (255), retry will occur on next run.";
 			int i=0, delay=10;
+			// TODO: 4/10/2017 WE MIGHT WANT TO CHANGE THIS LOOP TO RETRY UP TO maxSplayMinutes AFTER THE IMPLEMENTATION OF RFE BUG 1435013
 			do {	// retry every 10 seconds (up to a 90 seconds) for the expected update messages in the rhsmcertd log
 				SubscriptionManagerCLITestScript.sleep(delay*1000);i++;	// wait a few seconds before trying again
 				rhsmcertdLogResult = RemoteFileTasks.getTailFromMarkedFile(sshCommandRunner, rhsmcertdLogFile, rhsmcertdLogMarker, null).trim();
 				if (rhsmcertdLogResult.contains(healMsg) && rhsmcertdLogResult.contains(certMsg)) break;
 			} while (delay*i < 90);	// Note: should wait at least 60+ additional seconds because auto-attach can timeout after 60 seconds.  see bug https://bugzilla.redhat.com/show_bug.cgi?id=964332#c6
+			
+			boolean healMsgAssert = true;
+			boolean certMsgAssert = true;
 			
 			// TEMPORARY WORKAROUND FOR BUG
 			bugId="1241247"; // Bug 1241247 - rhsmcertd-worker throws Traceback "ImportError: cannot import name ga"
@@ -1724,13 +1728,25 @@ if (false) {
 			// TEMPORARY WORKAROUND FOR BUG
 			bugId="861443"; // Bug 861443 - rhsmcertd logging of Healing shows "Certificates updated." when it should fail.
 			invokeWorkaroundWhileBugIsOpen = true;
-			try {if (!assertCertificatesUpdate&&invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			try {if (assertCertificatesUpdate&&invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 			if (!assertCertificatesUpdate&&invokeWorkaroundWhileBugIsOpen) {
 				log.warning("Skipping assertion: "+"Tail of rhsmcertd log contains the expected restart message '"+healMsg+"'.");
-			} else
+				healMsgAssert = false;
+			}
 			// END OF WORKAROUND
-			Assert.assertTrue(rhsmcertdLogResult.contains(healMsg),"Tail of rhsmcertd log contains the expected restart message '"+healMsg+"'.");
-			Assert.assertTrue(rhsmcertdLogResult.contains(certMsg),"Tail of rhsmcertd log contains the expected restart message '"+certMsg+"'.");
+			
+			// TEMPORARY WORKAROUND FOR BUG
+			bugId="1440934"; // Bug 1440934 - rhsmcertd is not starting the Auto-attach interval
+			invokeWorkaroundWhileBugIsOpen = true;
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			if (invokeWorkaroundWhileBugIsOpen) {
+				log.warning("Skipping assertion: "+"Tail of rhsmcertd log contains the expected restart message '"+healMsg+"'.");
+				healMsgAssert = false;
+			}
+			// END OF WORKAROUND
+			
+			if (healMsgAssert) Assert.assertTrue(rhsmcertdLogResult.contains(healMsg),"Tail of rhsmcertd log contains the expected restart message '"+healMsg+"'.");
+			if (certMsgAssert) Assert.assertTrue(rhsmcertdLogResult.contains(certMsg),"Tail of rhsmcertd log contains the expected restart message '"+certMsg+"'.");
 		}
 	}
 	
