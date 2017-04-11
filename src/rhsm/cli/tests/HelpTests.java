@@ -533,6 +533,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		options.add("--proxy=PROXY_URL");
 		options.add("--proxyuser=PROXY_USER");
 		options.add("--proxypassword=PROXY_PASSWORD");
+		if (clienttasks.isPackageVersion("python-rhsm", ">=", "1.19.4-1")) options.add("--noproxy=NO_PROXY");		// added by bug 1420533 commit bd8b0538d7b0be7ee1e666ad5a66df80962c67d9
 		for (String smHelpCommand : new String[]{clienttasks.command+" -h "+module,clienttasks.command+" --help "+module}) {
 			List <String> usages = new ArrayList<String>();
 			String usage = String.format("Usage: %s %s [OPTIONS]",clienttasks.command,module);
@@ -553,6 +554,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		options.add("--proxy=PROXY_URL");
 		options.add("--proxyuser=PROXY_USER");
 		options.add("--proxypassword=PROXY_PASSWORD");
+		if (clienttasks.isPackageVersion("python-rhsm", ">=", "1.19.4-1")) options.add("--noproxy=NO_PROXY");		// added by bug 1420533 commit bd8b0538d7b0be7ee1e666ad5a66df80962c67d9
 		for (String smHelpCommand : new String[]{clienttasks.command+" -h "+module,clienttasks.command+" --help "+module}) {
 			List <String> usages = new ArrayList<String>();
 			String usage = String.format("Usage: %s %s [OPTIONS]",clienttasks.command,module);
@@ -572,6 +574,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		options.add("--proxy=PROXY_URL");		// added by bug 906642
 		options.add("--proxyuser=PROXY_USER");		// added by bug 906642
 		options.add("--proxypassword=PROXY_PASSWORD");		// added by bug 906642
+		if (clienttasks.isPackageVersion("python-rhsm", ">=", "1.19.4-1")) options.add("--noproxy=NO_PROXY");		// added by bug 1420533 commit bd8b0538d7b0be7ee1e666ad5a66df80962c67d9
 		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.4-1")) {
 			options.add("--list-enabled");		// added by bug 1119648
 			options.add("--list-disabled");		// added by bug 1119648
@@ -614,6 +617,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		options.add("--proxy=PROXY_URL");
 		options.add("--proxyuser=PROXY_USER");
 		options.add("--proxypassword=PROXY_PASSWORD");
+		if (clienttasks.isPackageVersion("python-rhsm", ">=", "1.19.4-1")) options.add("--noproxy=NO_PROXY");		// added by bug 1420533 commit bd8b0538d7b0be7ee1e666ad5a66df80962c67d9
 		for (String smHelpCommand : new String[]{clienttasks.command+" -h "+module,clienttasks.command+" --help "+module}) {
 			List <String> usages = new ArrayList<String>();
 			String usage = String.format("Usage: %s %s [OPTIONS]",clienttasks.command,module);
@@ -632,6 +636,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		options.add("--proxy=PROXY_URL");
 		options.add("--proxyuser=PROXY_USER");
 		options.add("--proxypassword=PROXY_PASSWORD");
+		if (clienttasks.isPackageVersion("python-rhsm", ">=", "1.19.4-1")) options.add("--noproxy=NO_PROXY");		// added by bug 1420533 commit bd8b0538d7b0be7ee1e666ad5a66df80962c67d9
 		for (String smHelpCommand : new String[]{clienttasks.command+" -h "+module,clienttasks.command+" --help "+module}) {
 			List <String> usages = new ArrayList<String>();
 			String usage = String.format("Usage: %s %s [OPTIONS]",clienttasks.command,module);
@@ -652,6 +657,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		options.add("--proxy=PROXY_URL");
 		options.add("--proxyuser=PROXY_USER");
 		options.add("--proxypassword=PROXY_PASSWORD");
+		if (clienttasks.isPackageVersion("python-rhsm", ">=", "1.19.4-1")) options.add("--noproxy=NO_PROXY");		// added by bug 1420533 commit bd8b0538d7b0be7ee1e666ad5a66df80962c67d9
 		for (String smHelpCommand : new String[]{clienttasks.command+" -h "+module,clienttasks.command+" --help "+module}) {
 			List <String> usages = new ArrayList<String>();
 			String usage = String.format("Usage: %s %s [OPTIONS]",clienttasks.command,module);
@@ -678,6 +684,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		options.add("--proxy=PROXY_URL");
 		options.add("--proxyuser=PROXY_USER");
 		options.add("--proxypassword=PROXY_PASSWORD");
+		if (clienttasks.isPackageVersion("python-rhsm", ">=", "1.19.4-1")) options.add("--noproxy=NO_PROXY");		// added by bug 1420533 commit bd8b0538d7b0be7ee1e666ad5a66df80962c67d9
 		for (String smHelpCommand : new String[]{clienttasks.command+" -h "+module,clienttasks.command+" --help "+module}) {
 			List <String> usages = new ArrayList<String>();
 			String usage = String.format("Usage: %s %s [OPTIONS]",clienttasks.command,module);
@@ -694,6 +701,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		options.add("--proxy=PROXY_URL");
 		options.add("--proxyuser=PROXY_USER");
 		options.add("--proxypassword=PROXY_PASSWORD");
+		if (clienttasks.isPackageVersion("python-rhsm", ">=", "1.19.4-1")) options.add("--noproxy=NO_PROXY");		// added by bug 1420533 commit bd8b0538d7b0be7ee1e666ad5a66df80962c67d9
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.9.2-1")) options.add("--ondate=ON_DATE");	// subscription-manager commit 957f3f5fb4689f22355e0101185bd560e67f3462
 		for (String smHelpCommand : new String[]{clienttasks.command+" -h "+module,clienttasks.command+" --help "+module}) {
 			List <String> usages = new ArrayList<String>();
@@ -711,6 +719,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		options.add("--proxy=PROXY_URL");
 		options.add("--proxyuser=PROXY_USER");
 		options.add("--proxypassword=PROXY_PASSWORD");
+		if (clienttasks.isPackageVersion("python-rhsm", ">=", "1.19.4-1")) options.add("--noproxy=NO_PROXY");		// added by bug 1420533 commit bd8b0538d7b0be7ee1e666ad5a66df80962c67d9
 		for (String smHelpCommand : new String[]{clienttasks.command+" -h "+module,clienttasks.command+" --help "+module}) {
 			List <String> usages = new ArrayList<String>();
 			String usage = String.format("Usage: %s %s [OPTIONS]",clienttasks.command,module);
@@ -743,6 +752,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		options.add("--proxy=PROXY_URL");
 		options.add("--proxyuser=PROXY_USER");
 		options.add("--proxypassword=PROXY_PASSWORD");
+		if (clienttasks.isPackageVersion("python-rhsm", ">=", "1.19.4-1")) options.add("--noproxy=NO_PROXY");		// added by bug 1420533 commit bd8b0538d7b0be7ee1e666ad5a66df80962c67d9
 		for (String smHelpCommand : new String[]{clienttasks.command+" -h "+module,clienttasks.command+" --help "+module}) {
 			List <String> usages = new ArrayList<String>();
 			String usage = String.format("Usage: %s %s [OPTIONS]",clienttasks.command,module);
@@ -759,6 +769,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		options.add("--proxy=PROXY_URL");
 		options.add("--proxyuser=PROXY_USER");
 		options.add("--proxypassword=PROXY_PASSWORD");
+		if (clienttasks.isPackageVersion("python-rhsm", ">=", "1.19.4-1")) options.add("--noproxy=NO_PROXY");		// added by bug 1420533 commit bd8b0538d7b0be7ee1e666ad5a66df80962c67d9
 		for (String smHelpCommand : new String[]{clienttasks.command+" -h "+module,clienttasks.command+" --help "+module}) {
 			List <String> usages = new ArrayList<String>();
 			String usage = String.format("Usage: %s %s [OPTIONS]",clienttasks.command,module);
@@ -783,6 +794,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		options.add("--proxy=PROXY_URL");
 		options.add("--proxyuser=PROXY_USER");
 		options.add("--proxypassword=PROXY_PASSWORD");
+		if (clienttasks.isPackageVersion("python-rhsm", ">=", "1.19.4-1")) options.add("--noproxy=NO_PROXY");		// added by bug 1420533 commit bd8b0538d7b0be7ee1e666ad5a66df80962c67d9
 		for (String smHelpCommand : new String[]{clienttasks.command+" -h "+module,clienttasks.command+" --help "+module}) {
 			List <String> usages = new ArrayList<String>();
 			String usage = String.format("Usage: %s %s [OPTIONS]",clienttasks.command,module);
@@ -806,6 +818,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		options.add("--proxy=PROXY_URL");
 		options.add("--proxyuser=PROXY_USER");
 		options.add("--proxypassword=PROXY_PASSWORD");
+		if (clienttasks.isPackageVersion("python-rhsm", ">=", "1.19.4-1")) options.add("--noproxy=NO_PROXY");		// added by bug 1420533 commit bd8b0538d7b0be7ee1e666ad5a66df80962c67d9
 		for (String smHelpCommand : new String[]{clienttasks.command+" -h "+module,clienttasks.command+" --help "+module}) {
 			List <String> usages = new ArrayList<String>();
 			String usage = String.format("Usage: %s %s [OPTIONS]",clienttasks.command,module);
@@ -825,6 +838,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		options.add("--proxy=PROXY_URL");
 		options.add("--proxyuser=PROXY_USER");
 		options.add("--proxypassword=PROXY_PASSWORD");
+		if (clienttasks.isPackageVersion("python-rhsm", ">=", "1.19.4-1")) options.add("--noproxy=NO_PROXY");		// added by bug 1420533 commit bd8b0538d7b0be7ee1e666ad5a66df80962c67d9
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.16.5-1")) options.add("--pool=POOL_ID");	// added by Bug 1198178 - [RFE] Subscription-manager unsubscribe command should support --pool option	// commit 3d2eb4b8ef8e2094311e3872cdb9602b84fed9be
 		for (String smHelpCommand : new String[]{clienttasks.command+" -h "+module,clienttasks.command+" --help "+module}) {
 			List <String> usages = new ArrayList<String>();
@@ -846,6 +860,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		options.add("--proxy=PROXY_URL");
 		options.add("--proxyuser=PROXY_USER");
 		options.add("--proxypassword=PROXY_PASSWORD");
+		if (clienttasks.isPackageVersion("python-rhsm", ">=", "1.19.4-1")) options.add("--noproxy=NO_PROXY");		// added by bug 1420533 commit bd8b0538d7b0be7ee1e666ad5a66df80962c67d9
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.16.5-1")) options.add("--pool=POOL_ID");	// added by Bug 1198178 - [RFE] Subscription-manager unsubscribe command should support --pool option	// commit 3d2eb4b8ef8e2094311e3872cdb9602b84fed9be
 		for (String smHelpCommand : new String[]{clienttasks.command+" -h "+module,clienttasks.command+" --help "+module}) {
 			List <String> usages = new ArrayList<String>();
@@ -873,6 +888,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		options.add("--proxy=PROXY_URL");
 		options.add("--proxyuser=PROXY_USER");
 		options.add("--proxypassword=PROXY_PASSWORD");
+		if (clienttasks.isPackageVersion("python-rhsm", ">=", "1.19.4-1")) options.add("--noproxy=NO_PROXY");		// added by bug 1420533 commit bd8b0538d7b0be7ee1e666ad5a66df80962c67d9
 		for (String smHelpCommand : new String[]{clienttasks.command+" -h "+module,clienttasks.command+" --help "+module}) {
 			List <String> usages = new ArrayList<String>();
 			String usage = String.format("Usage: %s %s [OPTIONS]",clienttasks.command,module);
@@ -889,6 +905,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		options.add("--proxy=PROXY_URL");
 		options.add("--proxyuser=PROXY_USER");
 		options.add("--proxypassword=PROXY_PASSWORD");
+		if (clienttasks.isPackageVersion("python-rhsm", ">=", "1.19.4-1")) options.add("--noproxy=NO_PROXY");		// added by bug 1420533 commit bd8b0538d7b0be7ee1e666ad5a66df80962c67d9
 		options.add("--set=RELEASE");
 		options.add("--list");
 		options.add("--unset");
@@ -927,6 +944,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		options.add("--proxy=PROXY_URL");
 		options.add("--proxyuser=PROXY_USER");
 		options.add("--proxypassword=PROXY_PASSWORD");
+		if (clienttasks.isPackageVersion("python-rhsm", ">=", "1.19.4-1")) options.add("--noproxy=NO_PROXY");		// added by bug 1420533 commit bd8b0538d7b0be7ee1e666ad5a66df80962c67d9
 		options.add("--repo=REPOID");
 		options.add("--remove=NAME");
 		options.add("--add=NAME:VALUE");
@@ -949,6 +967,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		options.add("--proxy=PROXY_URL");
 		options.add("--proxyuser=PROXY_USER");
 		options.add("--proxypassword=PROXY_PASSWORD");
+		if (clienttasks.isPackageVersion("python-rhsm", ">=", "1.19.4-1")) options.add("--noproxy=NO_PROXY");		// added by bug 1420533 commit bd8b0538d7b0be7ee1e666ad5a66df80962c67d9
 		for (String smHelpCommand : new String[]{clienttasks.command+" -h "+module,clienttasks.command+" --help "+module}) {
 			List <String> usages = new ArrayList<String>();
 			String usage = String.format("Usage: %s %s [OPTIONS]",clienttasks.command,module);
@@ -965,6 +984,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		options.add("--proxy=PROXY_URL");
 		options.add("--proxyuser=PROXY_USER");
 		options.add("--proxypassword=PROXY_PASSWORD");
+		if (clienttasks.isPackageVersion("python-rhsm", ">=", "1.19.4-1")) options.add("--noproxy=NO_PROXY");		// added by bug 1420533 commit bd8b0538d7b0be7ee1e666ad5a66df80962c67d9
 		options.add("--show");
 		options.add("--enable");
 		options.add("--disable");
@@ -1465,6 +1485,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		options.add("--proxy=PROXY_URL");
 		options.add("--proxyuser=PROXY_USER");
 		options.add("--proxypassword=PROXY_PASSWORD");
+		if (clienttasks.isPackageVersion("python-rhsm", ">=", "1.19.4-1")) options.add("--noproxy=NO_PROXY");		// added by bug 1420533 commit bd8b0538d7b0be7ee1e666ad5a66df80962c67d9
 		options.add("--destination=DESTINATION");	// https://bugzilla.redhat.com/show_bug.cgi?id=1040338#c2
 		options.add("--no-archive");
 		options.add("--sos");	// added by Bug 1060727 - rhsm-debug duplicates sos data and may collect secrets
