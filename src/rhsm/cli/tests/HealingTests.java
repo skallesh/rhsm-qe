@@ -30,7 +30,7 @@ public class HealingTests extends SubscriptionManagerCLITestScript {
 	public void VerifyAutohealAttributeDefaultsToTrueForNewSystemConsumer_Test() throws Exception {
 		
 		// register a new consumer
-		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null,null,null, true, null, null, null, null));
+		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null,null,null, true, null, null, null, null, null));
 		
 		JSONObject jsonConsumer = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword, sm_serverUrl, "/consumers/"+consumerId));
 		Assert.assertTrue(jsonConsumer.getBoolean("autoheal"), "A new system consumer's autoheal attribute value defaults to true.");
@@ -65,28 +65,28 @@ public class HealingTests extends SubscriptionManagerCLITestScript {
 		JSONObject jsonConsumer;
 		
 		// register a new consumer
-		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null,null,null, true, null, null, null, null));
+		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null,null,null, true, null, null, null, null, null));
 		
 		// assert that the default results are equivalent to the show results
 		Assert.assertEquals(
-				clienttasks.autoheal(null, null, null, null, null, null).toString(),
-				clienttasks.autoheal(true, null, null, null, null, null).toString(),
+				clienttasks.autoheal(null, null, null, null, null, null, null).toString(),
+				clienttasks.autoheal(true, null, null, null, null, null, null).toString(),
 				"The default behavior should be --show.");
 		
 		// assert the disable option
-		clienttasks.autoheal(null, null, true, null, null, null);
+		clienttasks.autoheal(null, null, true, null, null, null, null);
 		// assert autoheal on the consumer
 		jsonConsumer = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/consumers/"+consumerId));
 		Assert.assertTrue(!jsonConsumer.getBoolean("autoheal"), "As seen by the server, consumer '"+consumerId+"' autoheal is off.");
-		result = clienttasks.autoheal(true, null, null, null, null, null);
+		result = clienttasks.autoheal(true, null, null, null, null, null, null);
 		Assert.assertEquals(result.getStdout().trim(), "Auto-attach preference: disabled", "Stdout from the auto-attach --show.");
 		
 		// assert the enable option
-		clienttasks.autoheal(null, true, null, null, null, null);
+		clienttasks.autoheal(null, true, null, null, null, null, null);
 		// assert autoheal on the consumer
 		jsonConsumer = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/consumers/"+consumerId));
 		Assert.assertTrue(jsonConsumer.getBoolean("autoheal"), "As seen by the server, consumer '"+consumerId+"' autoheal is on.");
-		result = clienttasks.autoheal(true, null, null, null, null, null);
+		result = clienttasks.autoheal(true, null, null, null, null, null, null);
 		Assert.assertEquals(result.getStdout().trim(), "Auto-attach preference: enabled", "Stdout from the auto-attach --show.");
 	}
 
@@ -99,10 +99,10 @@ public class HealingTests extends SubscriptionManagerCLITestScript {
 	public void VerifyAutohealWithoutBeingRegistered_Test() throws Exception {
 		
 		// unregister
-		clienttasks.unregister(null, null, null);
+		clienttasks.unregister(null, null, null, null);
 		
 		// assert the disable option
-		SSHCommandResult result = clienttasks.autoheal_(null, null, null, null, null, null);
+		SSHCommandResult result = clienttasks.autoheal_(null, null, null, null, null, null, null);
 		
 		// assert that the default results are equivalent to the show results
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688

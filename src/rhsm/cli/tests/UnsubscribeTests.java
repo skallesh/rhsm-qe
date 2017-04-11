@@ -154,7 +154,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		now.setTimeInMillis(System.currentTimeMillis());
 		
 		// subscribe to the future SubscriptionPool
-		SSHCommandResult subscribeResult = clienttasks.subscribe(null,null,pool.poolId,null,null,null,null,null,null,null, null, null);
+		SSHCommandResult subscribeResult = clienttasks.subscribe(null,null,pool.poolId,null,null,null,null,null,null,null, null, null, null);
 		// Pool is restricted to virtual guests: '8a90f85734205a010134205ae8d80403'.
 		// Pool is restricted to physical systems: '8a9086d3443c043501443c052aec1298'.
 		if (subscribeResult.getStdout().startsWith("Pool is restricted")) {
@@ -189,14 +189,14 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 	public void UnsubscribeFromSerialWhenNotRegistered_Test() {
 	
 		// first make sure we are subscribed to a pool
-		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null, true, false, null, null, null, null);
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size()));	// random available pool
 		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(clienttasks.subscribeToSubscriptionPool(pool,/*sm_serverAdminUsername*/sm_clientUsername,/*sm_serverAdminPassword*/sm_clientPassword,sm_serverUrl));
 		
 		// now remove the consumer cert to simulate an unregister
 		clienttasks.removeAllCerts(true,false, false);
-		SSHCommandResult identityResult = clienttasks.identity_(null,null,null,null,null,null,null);
+		SSHCommandResult identityResult = clienttasks.identity_(null,null,null,null,null,null,null, null);
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) { // post commit 5697e3af094be921ade01e19e1dfe7b548fb7d5b bug 1119688
 			Assert.assertEquals(identityResult.getStderr().trim(),clienttasks.msg_ConsumerNotRegistered, "stderr");
 		} else {
@@ -206,7 +206,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		// now unsubscribe from the serial number (while not registered)
 		Assert.assertTrue(clienttasks.getCurrentlyConsumedProductSubscriptions().size()>0, "We should be consuming an entitlement (even while not registered)");
 		//clienttasks.unsubscribeFromSerialNumber(entitlementCert.serialNumber);	// this will assert a different stdout message, instead call unsubscribe manually and assert results
-		SSHCommandResult result = clienttasks.unsubscribe(null,entitlementCert.serialNumber,null,null,null, null);
+		SSHCommandResult result = clienttasks.unsubscribe(null,entitlementCert.serialNumber,null,null,null, null, null);
 		Assert.assertEquals(result.getStdout().trim(), "Subscription with serial number "+entitlementCert.serialNumber+" removed from this system", "We should always be able to remove a subscription (even while not registered).");
 		Assert.assertEquals(clienttasks.getCurrentlyConsumedProductSubscriptions().size(), 0, "We should not be consuming any entitlements after unsubscribing (while not registered).");
 	}
@@ -219,7 +219,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		SSHCommandResult result;
 		
 		BigInteger serial = BigInteger.valueOf(-123);
-		result = clienttasks.unsubscribe_(null, serial, null, null, null, null);
+		result = clienttasks.unsubscribe_(null, serial, null, null, null, null, null);
 		Integer expectedExitCode = new Integer(255);
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) expectedExitCode = new Integer(64);	// EX_USAGE // post commit 5697e3af094be921ade01e19e1dfe7b548fb7d5b bug 1119688
 		Assert.assertEquals(result.getExitCode(), expectedExitCode, "Asserting exit code when attempting to unsubscribe from an invalid serial number.");
@@ -230,7 +230,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(result.getStderr().trim(), "","Stderr");
 		
 		List<BigInteger> serials = Arrays.asList(new BigInteger[]{BigInteger.valueOf(123),BigInteger.valueOf(-456),BigInteger.valueOf(789)});
-		result = clienttasks.unsubscribe_(null, serials, null, null, null, null);
+		result = clienttasks.unsubscribe_(null, serials, null, null, null, null, null);
 		Assert.assertEquals(result.getExitCode(), expectedExitCode, "Asserting exit code when attempting to unsubscribe from an invalid serial number.");
 		Assert.assertEquals(result.getStdout().trim(), String.format("Error: '%s' is not a valid serial number",serials.get(1)),"Stdout");
 		Assert.assertEquals(result.getStderr().trim(), "", "Stderr");
@@ -243,17 +243,17 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsNitrateTest(caseId=)
 	public void UnsubscribeFromAll_Test() {
 	
-		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null, true, null, null, null, null);
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null, true, null, null, null, null, null);
 		clienttasks.subscribeToTheCurrentlyAllAvailableSubscriptionPoolsCollectively();
 		int numberSubscriptionsConsumed = clienttasks.getCurrentEntitlementCertFiles().size();
 		
 		// unsubscribe from all and assert # subscriptions are unsubscribed
-		SSHCommandResult result = clienttasks.unsubscribe(true, (BigInteger)null, null, null, null, null);
+		SSHCommandResult result = clienttasks.unsubscribe(true, (BigInteger)null, null, null, null, null, null);
 		//Assert.assertEquals(result.getStdout().trim(), String.format("This machine has been unsubscribed from %s subscriptions",pools.size()),"Expected feedback when unsubscribing from all the currently consumed subscriptions.");	// 10/18/2013 NOT SURE WHAT COMMIT/BUG CAUSED THIS CHANGE TO THE FOLLOWING...
 		Assert.assertEquals(result.getStdout().trim(), String.format("%s subscriptions removed at the server."+"\n"+"%s local certificates have been deleted.",numberSubscriptionsConsumed,numberSubscriptionsConsumed),"Expected feedback when unsubscribing from all the currently consumed subscriptions.");
 		
 		// now attempt to unsubscribe from all again and assert 0 subscriptions are unsubscribed
-		result = clienttasks.unsubscribe(true, (BigInteger)null, null, null, null, null);
+		result = clienttasks.unsubscribe(true, (BigInteger)null, null, null, null, null, null);
 		//Assert.assertEquals(result.getStdout().trim(), String.format("This machine has been unsubscribed from %s subscriptions",0),"Expected feedback when unsubscribing from all when no subscriptions are currently consumed.");	// 10/18/2013 NOT SURE WHAT COMMIT/BUG CAUSED THIS CHANGE TO THE FOLLOWING...
 		Assert.assertEquals(result.getStdout().trim(), String.format("%s subscriptions removed at the server.",0),"Expected feedback when unsubscribing from all when no subscriptions are currently consumed.");
 	}
@@ -264,7 +264,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsNitrateTest(caseId=)
 	public void UnsubscribeFromAllSerials_Test() throws Exception {
 	
-		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null, true, false, null, null, null, null);
 		List<SubscriptionPool> pools = clienttasks.subscribeToTheCurrentlyAllAvailableSubscriptionPoolsCollectively();
 		if (pools.isEmpty()) throw new SkipException("This test requires multiple available pools.");
 		
@@ -347,7 +347,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsNitrateTest(caseId=)
 	public void UnsubscribeFromAllSerialsIncludingRevokedSerials_Test() throws JSONException, Exception {
 	
-		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null,true,false,null,null,null);
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null,true,false,null,null,null, null);
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAllAvailableSubscriptionPools();
 		if (pools.isEmpty()) throw new SkipException("This test requires multiple available pools.");
 		
@@ -358,7 +358,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		// subscribe to all of the available pools
 		List<String> poolIds = new ArrayList<String>();
 		for (SubscriptionPool pool : pools) poolIds.add(pool.poolId);
-		clienttasks.subscribe(null, null, poolIds, null, null, null, null, null, null, null, null, null);
+		clienttasks.subscribe(null, null, poolIds, null, null, null, null, null, null, null, null, null, null);
 		
 		// prepare a list of currently consumed serials that we can use to collectively unsubscribe from
 		List<BigInteger> serials = new ArrayList<BigInteger>();
@@ -371,7 +371,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		}
 		
 		// unsubscribe from all serials in one call and assert the feedback;
-		SSHCommandResult result = clienttasks.unsubscribe(null,serials,null,null,null, null);
+		SSHCommandResult result = clienttasks.unsubscribe(null,serials,null,null,null, null, null);
 		String actualStdoutMsg = result.getStdout().trim();
 		actualStdoutMsg = clienttasks.workaroundForBug906550(actualStdoutMsg);
 		String expectedStdoutMsg;
@@ -387,7 +387,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		for (BigInteger serial : serials) revokedSerials.add(serial);
 		
 		// re-subscribe to all the available pools again
-		clienttasks.subscribe(null, null, poolIds, null, null, null, null, null, null, null, null, null);
+		clienttasks.subscribe(null, null, poolIds, null, null, null, null, null, null, null, null, null, null);
 		
 		// re-prepare a list of currently consumed serials that we can use to collectively unsubscribe from
 		// include the revokedSerials by interleaving them into the currently consumed serials
@@ -406,7 +406,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		}
 		
 		// now attempt to unsubscribe from both the current serials AND the previously consumed serials in one call and assert the feedback
-		result = clienttasks.unsubscribe(null,serials,null,null,null, null);
+		result = clienttasks.unsubscribe(null,serials,null,null,null, null, null);
 		actualStdoutMsg = result.getStdout().trim();
 		actualStdoutMsg = clienttasks.workaroundForBug906550(actualStdoutMsg);
 		expectedStdoutMsg = "Successfully unsubscribed serial numbers:";	// added by bug 867766	// changed by bug 874749
@@ -479,7 +479,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		SSHCommandResult unsubscribeResult;
 		SSHCommandResult removeResult;
 		
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
 		unsubscribeResult = client.runCommandAndWait(clienttasks.command+" unsubscribe --serial=123");
 		removeResult = client.runCommandAndWait(clienttasks.command+" remove --serial=123");
 		Assert.assertEquals(unsubscribeResult.toString(), removeResult.toString(), "Results from 'unsubscribe' and 'remove' module commands should be identical.");
@@ -487,7 +487,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		removeResult = client.runCommandAndWait(clienttasks.command+" remove --all");
 		Assert.assertEquals(unsubscribeResult.toString(), removeResult.toString(), "Results from 'unsubscribe' and 'remove' module commands should be identical.");
 
-		clienttasks.unregister(null,null,null);
+		clienttasks.unregister(null,null,null, null);
 		unsubscribeResult = client.runCommandAndWait(clienttasks.command+" unsubscribe --serial=123");
 		removeResult = client.runCommandAndWait(clienttasks.command+" remove --serial=123");
 		Assert.assertEquals(unsubscribeResult.toString(), removeResult.toString(), "Results from 'unsubscribe' and 'remove' module commands should be identical.");
@@ -504,8 +504,8 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		if (client2tasks==null) throw new SkipException("This multi-client test requires a second client.");
 		
 		// register two clients
-		String client1ConsumerId = client1tasks.getCurrentConsumerId(client1tasks.register(sm_client1Username, sm_client1Password, sm_client1Org, null, null, null, null, null, null, null, (List<String>)null, null, null, null, true, false, null, null, null));
-		String client2ConsumerId = client2tasks.getCurrentConsumerId(client2tasks.register(sm_client2Username, sm_client2Password, sm_client2Org, null, null, null, null, null, null, null, (List<String>)null, null, null, null, true, false, null, null, null));
+		String client1ConsumerId = client1tasks.getCurrentConsumerId(client1tasks.register(sm_client1Username, sm_client1Password, sm_client1Org, null, null, null, null, null, null, null, (List<String>)null, null, null, null, true, false, null, null, null, null));
+		String client2ConsumerId = client2tasks.getCurrentConsumerId(client2tasks.register(sm_client2Username, sm_client2Password, sm_client2Org, null, null, null, null, null, null, null, (List<String>)null, null, null, null, true, false, null, null, null, null));
 		String client1OwnerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_client1Username, sm_client1Password, sm_serverUrl, client1ConsumerId);
 		String client2OwnerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_client2Username, sm_client2Password, sm_serverUrl, client2ConsumerId);
 		if (!client1OwnerKey.equals(client2OwnerKey)) throw new SkipException("This multi-client test requires that both client registerers belong to the same owner. (client1: username="+sm_client1Username+" ownerkey="+client1OwnerKey+") (client2: username="+sm_client2Username+" ownerkey="+client2OwnerKey+")");
@@ -522,13 +522,13 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 			List<String> client2poolIds = new ArrayList<String>();
 			for (SubscriptionPool pool : /*getRandomList(*/client1pools/*)*/) client1poolIds.add(pool.poolId);
 			for (SubscriptionPool pool : /*getRandomList(*/client2pools/*)*/) client2poolIds.add(0,pool.poolId);
-			client1tasks.subscribe_(null, null, client1poolIds, null, null, null, null, null, null, null, null, null);
-			client2tasks.subscribe_(null, null, client2poolIds, null, null, null, null, null, null, null, null, null);
+			client1tasks.subscribe_(null, null, client1poolIds, null, null, null, null, null, null, null, null, null, null);
+			client2tasks.subscribe_(null, null, client2poolIds, null, null, null, null, null, null, null, null, null, null);
 			
 			// unsubscribe from all subscriptions on each client simultaneously
 			log.info("Simultaneously attempting to unsubscribe all on '"+client1tasks.hostname+"' and '"+client2tasks.hostname+"'...");
-			client1.runCommand/*AndWait*/(client1tasks.unsubscribeCommand(true, null, null, null, null, null), TestRecords.action());
-			client2.runCommand/*AndWait*/(client2tasks.unsubscribeCommand(true, null, null, null, null, null), TestRecords.action());
+			client1.runCommand/*AndWait*/(client1tasks.unsubscribeCommand(true, null, null, null, null, null, null), TestRecords.action());
+			client2.runCommand/*AndWait*/(client2tasks.unsubscribeCommand(true, null, null, null, null, null, null), TestRecords.action());
 			client1.waitForWithTimeout(new Long(10*60*1000)); // timeout after 10 min
 			client2.waitForWithTimeout(new Long(10*60*1000)); // timeout after 10 min
 			SSHCommandResult client1Result = client1.getSSHCommandResult();
@@ -569,14 +569,14 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		if (clienttasks.isPackageVersion("subscription-manager","<","1.16.5-1")) throw new SkipException("The unsubscribe --pool function was not implemented in this version of subscription-manager.  See RFE Bug 1198178");
 	
 		// first make sure we are subscribed to a pool
-		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null, true, false, null, null, null, null);
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size()));	// random available pool
 		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(clienttasks.subscribeToSubscriptionPool(pool,/*sm_serverAdminUsername*/sm_clientUsername,/*sm_serverAdminPassword*/sm_clientPassword,sm_serverUrl));
 		
 		// now remove the consumer cert to simulate an unregister
 		clienttasks.removeAllCerts(true,false, false);
-		SSHCommandResult identityResult = clienttasks.identity_(null,null,null,null,null,null,null);
+		SSHCommandResult identityResult = clienttasks.identity_(null,null,null,null,null,null,null, null);
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) { // post commit 5697e3af094be921ade01e19e1dfe7b548fb7d5b bug 1119688
 			Assert.assertEquals(identityResult.getStderr().trim(),clienttasks.msg_ConsumerNotRegistered, "stderr");
 		} else {
@@ -585,7 +585,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		
 		// now unsubscribe from the pool number (while not registered)
 		Assert.assertTrue(clienttasks.getCurrentlyConsumedProductSubscriptions().size()>0, "We should be consuming an entitlement (even while not registered)");
-		SSHCommandResult result = clienttasks.unsubscribe_(null,null,pool.poolId,null,null,null);
+		SSHCommandResult result = clienttasks.unsubscribe_(null,null,pool.poolId,null,null,null, null);
 		if (servertasks.statusCapabilities.contains("remove_by_pool_id")) {
 			Integer expectedExitCode = new Integer(0);
 			Assert.assertEquals(result.getExitCode(), expectedExitCode, "Asserting exit code when attempting to unsubscribe from a valid pool (while not registered).");
@@ -615,7 +615,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		if (clienttasks.isPackageVersion("subscription-manager","<","1.16.5-1")) throw new SkipException("The unsubscribe --pool function was not implemented in this version of subscription-manager.  See RFE Bug 1198178");
 		
 		// register and get available pools
-		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null, true, false, null, null, null, null);
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAllAvailableSubscriptionPools();
 		
 		// find available multi-entitlement (Stackable) pools
@@ -625,8 +625,8 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		
 		// attach multiple serials per pool
 		for (SubscriptionPool pool : pools) {
-			clienttasks.subscribe(null,null,pool.poolId,null,null,null,null,null,null,null,null,null);
-			clienttasks.subscribe(null,null,pool.poolId,null,null,null,null,null,null,null,null,null);
+			clienttasks.subscribe(null,null,pool.poolId,null,null,null,null,null,null,null,null,null, null);
+			clienttasks.subscribe(null,null,pool.poolId,null,null,null,null,null,null,null,null,null, null);
 			poolIds.add(pool.poolId);
 		}
 		
@@ -640,7 +640,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		}
 		
 		// unsubscribe from poolId
-		SSHCommandResult result = clienttasks.unsubscribe_(null, null, pool.poolId, null, null, null);
+		SSHCommandResult result = clienttasks.unsubscribe_(null, null, pool.poolId, null, null, null, null);
 		//	201512041602:26.874 - FINE: ssh root@jsefler-6.usersys.redhat.com subscription-manager unsubscribe --pool=8a908790516a011001516a02646b06c3 (com.redhat.qe.tools.SSHCommandRunner.run)
 		//	201512041602:29.304 - FINE: Stdout: 
 		//	Pools successfully removed at the server:
@@ -684,10 +684,10 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		if (clienttasks.isPackageVersion("subscription-manager","<","1.16.5-1")) throw new SkipException("The unsubscribe --pool function was not implemented in this version of subscription-manager.  See RFE Bug 1198178");
 		
 		// register
-		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null, true, false, null, null, null, null);
 		
 		String poolId = "1234567890abcdef1234567890abcdef";
-		SSHCommandResult result = clienttasks.unsubscribe_(null, null, poolId, null, null, null);
+		SSHCommandResult result = clienttasks.unsubscribe_(null, null, poolId, null, null, null, null);
 		//	[root@jsefler-6 ~]# subscription-manager unsubscribe --pool=1234567890abcdef1234567890abcdef
 		//	Pools unsuccessfully removed at the server:
 		//	   1234567890abcdef1234567890abcdef
@@ -725,13 +725,13 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		if (clienttasks.isPackageVersion("subscription-manager","<","1.16.5-1")) throw new SkipException("The unsubscribe --pool function was not implemented in this version of subscription-manager.  See RFE Bug 1198178");
 		if (!servertasks.statusCapabilities.contains("remove_by_pool_id")) throw new SkipException("The registered entitlement server does not support remove --pool");
 		
-		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null, true, false, null, null, null, null);
 		List<SubscriptionPool> pools = clienttasks.subscribeToTheCurrentlyAllAvailableSubscriptionPoolsCollectively();
 		if (pools.isEmpty()) throw new SkipException("This test requires multiple available pools.");
 		List<String> poolIds = new ArrayList<String>(); for (SubscriptionPool pool : pools) poolIds.add(pool.poolId);
 		
 		// add more serials from multi-entitlement pools (ignoring failures)
-		clienttasks.subscribe_(null, null, poolIds, null, null, null, null, null, null, null, null, null);
+		clienttasks.subscribe_(null, null, poolIds, null, null, null, null, null, null, null, null, null, null);
 		
 		// unsubscribe from all pool in one call and assert the feedback
 		List<ProductSubscription> productSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
@@ -828,11 +828,11 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		if (!servertasks.statusCapabilities.contains("remove_by_pool_id")) throw new SkipException("The registered entitlement server does not support remove --pool");
 		
 		// register
-		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null, true, false, null, null, null, null);
 		
 		String unknownPoolId = "1234567890abcdef1234567890abcdef";
 		BigInteger unknownSerial = new BigInteger("1234567890");
-		SSHCommandResult result = clienttasks.unsubscribe_(null, unknownSerial, unknownPoolId, null, null, null);
+		SSHCommandResult result = clienttasks.unsubscribe_(null, unknownSerial, unknownPoolId, null, null, null, null);
 		//	[root@jsefler-6 ~]# subscription-manager unsubscribe --serial=1234567890 --pool=1234567890abcdef1234567890abcdef
 		//	Pools unsuccessfully removed at the server:
 		//	   1234567890abcdef1234567890abcdef
@@ -863,16 +863,16 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		if (!servertasks.statusCapabilities.contains("remove_by_pool_id")) throw new SkipException("The registered entitlement server does not support remove --pool");
 		
 		// register
-		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null, true, false, null, null, null, null);
 		
 		// get any available pool and subscribe
 		List<SubscriptionPool> subscriptionPools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		SubscriptionPool subscriptionPool = getRandomListItem(subscriptionPools);
-		clienttasks.subscribe(null, null, subscriptionPool.poolId, null, null, null, null, null, null, null, null, null);
+		clienttasks.subscribe(null, null, subscriptionPool.poolId, null, null, null, null, null, null, null, null, null, null);
 		
 		// unsubscribe from the pool and its serial (actually the same entitlement)
 		ProductSubscription productSubscription = getRandomListItem(clienttasks.getCurrentlyConsumedProductSubscriptions());
-		SSHCommandResult result = clienttasks.unsubscribe_(null, productSubscription.serialNumber, productSubscription.poolId, null, null, null);
+		SSHCommandResult result = clienttasks.unsubscribe_(null, productSubscription.serialNumber, productSubscription.poolId, null, null, null, null);
 		//	[root@jsefler-6 ~]# subscription-manager unsubscribe --serial=1636129384995885268 --pool=8a90879052610a8b0152610bd4e40587
 		//	Pools successfully removed at the server:
 		//	   8a90879052610a8b0152610bd4e40587
@@ -897,13 +897,13 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		
 		// get two available pools and subscribe
 		List<SubscriptionPool> subscriptionPoolsSubset = getRandomSubsetOfList(subscriptionPools,2);
-		clienttasks.subscribe(null, null, Arrays.asList(subscriptionPoolsSubset.get(0).poolId, subscriptionPoolsSubset.get(1).poolId), null, null, null, null, null, null, null, null, null);
+		clienttasks.subscribe(null, null, Arrays.asList(subscriptionPoolsSubset.get(0).poolId, subscriptionPoolsSubset.get(1).poolId), null, null, null, null, null, null, null, null, null, null);
 		
 		// unsubscribe from one pool and one serial
 		List<ProductSubscription> productSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
 		ProductSubscription productSubscription1 = productSubscriptions.get(0);
 		ProductSubscription productSubscription2 = productSubscriptions.get(1);
-		result = clienttasks.unsubscribe_(null, productSubscription1.serialNumber, productSubscription2.poolId, null, null, null);
+		result = clienttasks.unsubscribe_(null, productSubscription1.serialNumber, productSubscription2.poolId, null, null, null, null);
 		//	[root@jsefler-6 ~]# subscription-manager unsubscribe --serial=1826457911783374718 --pool=8a90879052610a8b0152610be38f074b (com.redhat.qe.tools.SSHCommandRunner.run)
 		//	Pools successfully removed at the server:
 		//	   8a90879052610a8b0152610be38f074b

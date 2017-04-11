@@ -69,7 +69,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 
 		log.info("Before beginning this test, we will stop the rhsmcertd so that it does not interfere with this test and make sure we are not subscribed...");
 		clienttasks.stop_rhsmcertd();
-		clienttasks.unsubscribe_(true,(BigInteger)null,null,null,null, null);
+		clienttasks.unsubscribe_(true,(BigInteger)null,null,null,null, null, null);
 		
 		// Enable rhsm manage_repos configuration
 		clienttasks.config(null, null, true, new String[]{"rhsm","manage_repos","1"});
@@ -195,8 +195,8 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		
 		List<ProductCert> currentProductCerts = clienttasks.getCurrentProductCerts();
 		
-		clienttasks.unregister(null, null, null);
-	    clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, null, false, null, null, null);
+		clienttasks.unregister(null, null, null, null);
+	    clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, null, false, null, null, null, null);
 	    if (clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively().size()<=0)
 	    	throw new SkipException("No available subscriptions were found.  Therefore we cannot perform this test.");
 	    List<EntitlementCert> entitlementCerts = clienttasks.getCurrentEntitlementCerts();
@@ -264,7 +264,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		
 		List<ProductCert> currentProductCerts = clienttasks.getCurrentProductCerts();
 		
-	    clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+	    clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
 	    if (clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively().size()<=0)
 	    	throw new SkipException("No available subscriptions were found.  Therefore we cannot perform this test.");
 	    List<EntitlementCert> entitlementCerts = clienttasks.getCurrentEntitlementCerts();
@@ -370,7 +370,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		// to avoid interference from an already enabled repo from a prior attached subscription that also
 		// contains this same packages (e.g. -htb- repos versus non -htb- repos) it would be best to remove
 		// all previously attached subscriptions.  actually this will speed up the test
-		clienttasks.unsubscribe(true, (BigInteger)null, null, null, null, null);
+		clienttasks.unsubscribe(true, (BigInteger)null, null, null, null, null, null);
 		
 		// subscribe to this pool
 		File entitlementCertFile = clienttasks.subscribeToSubscriptionPool_(pool,quantity);
@@ -425,8 +425,8 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		// avoid throttling RateLimitExceededException from IT-Candlepin
 		if (CandlepinType.hosted.equals(sm_serverType)) {	// strategically  get a new consumer to avoid 60 repeated API calls from the same consumer
 			// re-register as a new consumer
-			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
-		} else clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null, null);
+			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
+		} else clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null, null, null);
 		
 		// subscribe to this pool (and remember it)
 		File entitlementCertFile = clienttasks.subscribeToSubscriptionPool_(pool);
@@ -512,14 +512,14 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		String redhatRepoFileContents = "";
 	    
 	    // check for excessive blank lines after a new register
-	    clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null);
+	    clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null, null);
 	    client.runCommandAndWait("yum -q repolist --disableplugin=rhnplugin"); // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
 		redhatRepoFileContents = client.runCommandAndWait("cat "+clienttasks.redhatRepoFile).getStdout();
 		Assert.assertContainsNoMatch(redhatRepoFileContents,regex,null,"At most '"+N+"' successive blank are acceptable inside "+clienttasks.redhatRepoFile);
 
 		// check for excessive blank lines after subscribing to each pool
 	    for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
-    		clienttasks.subscribe_(null,null,pool.poolId,null,null,null,null,null,null,null, null, null);
+    		clienttasks.subscribe_(null,null,pool.poolId,null,null,null,null,null,null,null, null, null, null);
     		client.runCommandAndWait("yum -q repolist --disableplugin=rhnplugin"); // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError		
 		}
 		redhatRepoFileContents = client.runCommandAndWait("cat "+clienttasks.redhatRepoFile).getStdout();
@@ -529,7 +529,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		List<BigInteger> serialNumbers = new ArrayList<BigInteger>();
 	    for (ProductSubscription productSubscription : clienttasks.getCurrentlyConsumedProductSubscriptions()) {
 	    	if (serialNumbers.contains(productSubscription.serialNumber)) continue;	// save some time by avoiding redundant unsubscribes
-    		clienttasks.unsubscribe_(null, productSubscription.serialNumber, null, null, null, null);
+    		clienttasks.unsubscribe_(null, productSubscription.serialNumber, null, null, null, null, null);
     		serialNumbers.add(productSubscription.serialNumber);
     		client.runCommandAndWait("yum -q repolist --disableplugin=rhnplugin"); // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError		
 		}
@@ -566,7 +566,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		String redhatRepoFileContents = null;
 	    
 		// adding the following call to login and yum repolist to compensate for change of behavior introduced by Bug 781510 - 'subscription-manager clean' should delete redhat.repo
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null,(List<String>)null, null, null, null, null, null, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null,(List<String>)null, null, null, null, null, null, null, null, null, null);
 		clienttasks.subscribeToTheCurrentlyAllAvailableSubscriptionPoolsCollectively();	// TODO subscribing to all is overkill; only one content providing pool is sufficient
 	    if (clienttasks.isPackageVersion("subscription-manager", "<", "1.10.3-1")) {	// yum trigger is automatic after Bug 1008016 - [RFE] The redhat.repo file should be refreshed after a successful subscription
 	    	client.runCommandAndWait("yum --quiet repolist --disableplugin=rhnplugin --disablerepo=*"); // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
@@ -576,7 +576,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		Assert.assertContainsNoMatch(redhatRepoFileContents,regex,null,"At most '"+N+"' successive blank are acceptable inside "+clienttasks.redhatRepoFile);
 	
 	    // check for excessive blank lines after unregister
-	    clienttasks.unregister(null,null,null);
+	    clienttasks.unregister(null,null,null, null);
     	client.runCommandAndWait("yum --quiet repolist --disableplugin=rhnplugin --disablerepo=*"); // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
 	    //Assert.assertTrue(client.getStderr().contains("Unable to read consumer identity"),"Yum repolist should not touch redhat.repo when there is no consumer and state in stderr 'Unable to read consumer identity'.");	// TODO 8/9/2012 FIND OUT WHAT BUG CAUSED THIS CHANGE IN EXPECTED STDERR
 	    //Assert.assertEquals(client.getStderr().trim(),"","Stderr from prior command");	// changed by Bug 901612 - Subscription-manager-s yum plugin prints warning to stdout instead of stderr.
@@ -622,7 +622,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(redhatRepoFileContents2, redhatRepoFileContents,"File "+clienttasks.redhatRepoFile+" remains unchanged when there is no consumer.");
 
 		// trigger the yum plugin for subscription-manager (after registering again)
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null,(List<String>)null, null, null, null, null, null, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null,(List<String>)null, null, null, null, null, null, null, null, null, null);
 	    // inject additional assertion logic after fix for Bug 1035440 - subscription-manager yum plugin makes yum refresh all RHSM repos. on every command.
 	    if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.11.3-5")) {	// Bug 1017354 - yum subscription-manager plugin puts non-error information on stderr; subscription-manager commit 39eadae14eead4bb79978e52d38da2b3e85cba57
 	    	// assert redhatRepoFileContents2 equals redhatRepoFileContents because redhat.repo content should not have changed after implementation of bug 1025440
@@ -654,7 +654,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		String redhatRepoFileContents = "";
 	    
 	    // check for excessive blank lines after unregister
-	    clienttasks.unregister(null,null,null);
+	    clienttasks.unregister(null,null,null, null);
 	    client.runCommandAndWait("yum -q repolist --disableplugin=rhnplugin"); // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
 		redhatRepoFileContents = client.runCommandAndWait("cat "+clienttasks.redhatRepoFile).getStdout();
 		Assert.assertContainsNoMatch(redhatRepoFileContents,regex,null,"At most '"+N+"' successive blank are acceptable inside "+clienttasks.redhatRepoFile);
@@ -693,18 +693,18 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		EntitlementCert entitlementCert;
 		String systemCertificateVersionFactValue;
 		
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
 		SubscriptionPool pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", subscriptionSKUProvidingA185ContentSetProduct, clienttasks.getCurrentlyAvailableSubscriptionPools());
 		Assert.assertNotNull(pool,"Found an available pool to subscribe to productId '"+subscriptionSKUProvidingA185ContentSetProduct+"': "+pool);
 		
 		// test that it IS subscribable when system.certificate_version: None
 		factsMap.put("system.certificate_version", null);
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
-		clienttasks.facts(null, true, null, null, null);
+		clienttasks.facts(null, true, null, null, null, null);
 		Assert.assertEquals(clienttasks.getFactValue("system.certificate_version"), "None", "When the system.certificate_version fact is null, its fact value is reported as 'None'.");
 		//entitlementCertFile = clienttasks.subscribeToProductId(skuTo185ContentSetProduct);
 		//entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
-		clienttasks.subscribe(null, null, pool.poolId, null, null, null, null, null, null, null, null, null);
+		clienttasks.subscribe(null, null, pool.poolId, null, null, null, null, null, null, null, null, null, null);
 		entitlementCert = clienttasks.getEntitlementCertCorrespondingToSubscribedPool(pool);
 		entitlementCertFile = clienttasks.getEntitlementCertFileFromEntitlementCert(entitlementCert);
 		Assert.assertEquals(entitlementCert.version,"1.0","When the system.certificate_version fact is null, the version of the entitlement certificate granted by candlepin is '1.0'.");
@@ -718,11 +718,11 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		// test that it IS subscribable when system.certificate_version: 1.0
 		factsMap.put("system.certificate_version", "1.0");
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
-		clienttasks.facts(null, true, null, null, null);
+		clienttasks.facts(null, true, null, null, null, null);
 		Assert.assertEquals(clienttasks.getFactValue("system.certificate_version"), "1.0", "When the system.certificate_version fact is 1.0, its fact value is reported as '1.0'.");
 		//entitlementCertFile = clienttasks.subscribeToProductId(skuTo185ContentSetProduct);
 		//entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
-		clienttasks.subscribe(null, null, pool.poolId, null, null, null, null, null, null, null, null, null);
+		clienttasks.subscribe(null, null, pool.poolId, null, null, null, null, null, null, null, null, null, null);
 		entitlementCert = clienttasks.getEntitlementCertCorrespondingToSubscribedPool(pool);
 		entitlementCertFile = clienttasks.getEntitlementCertFileFromEntitlementCert(entitlementCert);
 		Assert.assertEquals(entitlementCert.version,"1.0","When the system.certificate_version fact is 1.0, the version of the entitlement certificate granted by candlepin is '1.0'.");
@@ -739,7 +739,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		Assert.assertTrue(Float.valueOf(systemCertificateVersionFactValue)>=3.0, "The actual default system.certificate_version fact '"+systemCertificateVersionFactValue+"' is >= 3.0.");
 		//entitlementCertFile = clienttasks.subscribeToProductId(skuTo185ContentSetProduct);
 		//entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
-		clienttasks.subscribe(null, null, pool.poolId, null, null, null, null, null, null, null, null, null);
+		clienttasks.subscribe(null, null, pool.poolId, null, null, null, null, null, null, null, null, null, null);
 		entitlementCert = clienttasks.getEntitlementCertCorrespondingToSubscribedPool(pool);
 		entitlementCertFile = clienttasks.getEntitlementCertFileFromEntitlementCert(entitlementCert);	
 		// TOO ASSERTIVE  Assert.assertTrue(Float.valueOf(entitlementCert.version)<=Float.valueOf(systemCertificateVersionFactValue),"The version of the entitlement certificate '"+entitlementCert.version+"' granted by candlepin is less than or equal to the system.certificate_version '"+systemCertificateVersionFactValue+"' which indicates the maximum certificate version this system knows how to handle.");	// This assert was too assertive according to https://bugzilla.redhat.com/show_bug.cgi?id=1425236#c2
@@ -781,7 +781,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyYumRepoUiRepoIdVars_Test() throws JSONException, Exception {
 		// register
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
 
 		// subscribe to available subscriptions
 		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
@@ -848,20 +848,20 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 			// avoid throttling RateLimitExceededException from IT-Candlepin
 			if (CandlepinType.hosted.equals(sm_serverType)) {	// strategically get a new consumer to avoid 60 repeated API calls from the same consumer
 				// re-register as a new consumer
-				clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+				clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
 			} else // clienttasks.unsubscribe(true, (BigInteger)null, null, null, null);
 			
 			// return all current entitlements (Note: system is already registered by getAllAvailableSubscriptionPoolsProvidingArchBasedContentDataAsListOfLists())
- 			clienttasks.unsubscribe(true, (BigInteger)null, null, null, null, null);
+ 			clienttasks.unsubscribe(true, (BigInteger)null, null, null, null, null, null);
 			
 			// fake the system's arch and update the facts
 			log.info("Manipulating the system facts into thinking this is a '"+systemArch+"' system...");
 			factsMap.put("uname.machine", String.valueOf(systemArch));
 			clienttasks.createFactsFileWithOverridingValues(factsMap);
-			clienttasks.facts(null, true, null, null, null);
+			clienttasks.facts(null, true, null, null, null, null);
 			
 			// subscribe to all the arch-based content set pools
-			clienttasks.subscribe(false, null, archBasedSubscriptionPoolIds, null, null, null, null, null, null, null, null, null);
+			clienttasks.subscribe(false, null, archBasedSubscriptionPoolIds, null, null, null, null, null, null, null, null, null, null);
 			
 			// iterate over all of the granted entitlements
 			for (EntitlementCert entitlementCert : clienttasks.getCurrentEntitlementCerts()) {
@@ -998,11 +998,11 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		// avoid throttling RateLimitExceededException from IT-Candlepin
 		if (!poolIds.contains(pool.poolId) && CandlepinType.hosted.equals(sm_serverType)) {	// strategically get a new consumer to avoid 60 repeated API calls from the same consumer
 			// re-register as a new consumer
-			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
 		}
 		poolIds.add(pool.poolId);
 		
-		clienttasks.unsubscribe(true,(BigInteger)null,null,null,null, null);
+		clienttasks.unsubscribe(true,(BigInteger)null,null,null,null, null, null);
 		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(clienttasks.subscribeToSubscriptionPool(pool,/*sm_serverAdminUsername*/sm_clientUsername,/*sm_serverAdminPassword*/sm_clientPassword,sm_serverUrl));
 		
 		// adjust the expectedContentNamespaces for modified product ids that are not installed
@@ -1128,12 +1128,12 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		log.info("RHEL product cert installed: "+rhelProductCert);
 		
 		// register and make sure autoheal is off
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null);
-		clienttasks.autoheal(null, null, true, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null, null);
+		clienttasks.autoheal(null, null, true, null, null, null, null);
 		
 		// verify that NO yum content is available since no entitlements have been granted
 		Integer yumRepolistPackageCount = clienttasks.getYumRepolistPackageCount("enabled");
-		if (yumRepolistPackageCount>0) clienttasks.list_(null, null, true, null, null, null, null, null, null, null, null, null, null);	// added only for debugging a failure
+		if (yumRepolistPackageCount>0) clienttasks.list_(null, null, true, null, null, null, null, null, null, null, null, null, null, null);	// added only for debugging a failure
 		Assert.assertEquals(yumRepolistPackageCount,new Integer(0),"Expecting no available packages (actual='"+yumRepolistPackageCount+"') because no RHEL subscription have been explicitly attached.");
 		
 		// loop through the available pools looking for those that provide content for this rhelProductCert
@@ -1161,7 +1161,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 					if (invokeWorkaroundWhileBugIsOpen) {
 						String enablerepo = "rhel-server-for-arm-development-preview-rpms";
 						log.info("Explicitly enabling repo '"+enablerepo+"' to gain access to ARM content.");
-						clienttasks.repos(null, null, null, enablerepo, null, null, null, null);
+						clienttasks.repos(null, null, null, enablerepo, null, null, null, null, null);
 					}
 				}
 				// END OF WORKAROUND
@@ -1176,7 +1176,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 				}
 				
 				// unsubscribe
-				clienttasks.unsubscribe(null, rhelEntitlementCert.serialNumber, null, null, null, null);
+				clienttasks.unsubscribe(null, rhelEntitlementCert.serialNumber, null, null, null, null, null);
 				
 				rhelSubscriptionIsAvailable = true;
 			}
@@ -1195,7 +1195,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		// END OF WORKAROUND
 		
 		if (!rhelSubscriptionIsAvailable) {
-			clienttasks.facts_(true, null, null, null, null);
+			clienttasks.facts_(true, null, null, null, null, null);
 			log.warning("This test is about to fail and may be due to the lack of an available subscription with enough socket/ram/core support to cover this system.  Visually confirm by reviewing the system facts above.");
 		}
 		
@@ -1215,7 +1215,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		// assume a RHEL subscription is available from dependent VerifyRhelSubscriptionContentIsAvailable_Test
 		
 		// register and attach a RHEL subscription via autosubscribe
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, true, null, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, true, null, null, null, null, null);
 		
 		String pkg = "rcs";	// not available on rhel72 Client
 		pkg = "zsh";
@@ -1322,12 +1322,12 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	@AfterGroups(groups={"setup"},value="InstallAndRemovePackageAfterSubscribingToPersonalSubPool_Test", alwaysRun=true)
 	public void unregisterAfterGroupsInstallAndRemovePackageAfterSubscribingToPersonalSubPool_Test() {
 		// first, unregister client1 since it is a personal subpool consumer
-		client1tasks.unregister_(null,null,null);
+		client1tasks.unregister_(null,null,null, null);
 		// second, unregister client2 since it is a personal consumer
 		if (client2tasks!=null) {
-			client2tasks.register_(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, personalConsumerId, null, null, null, (String)null, null, null, null, Boolean.TRUE, null, null, null, null);
-			client2tasks.unsubscribe_(true,(BigInteger)null, null, null, null, null);
-			client2tasks.unregister_(null,null,null);
+			client2tasks.register_(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, personalConsumerId, null, null, null, (String)null, null, null, null, Boolean.TRUE, null, null, null, null, null);
+			client2tasks.unsubscribe_(true,(BigInteger)null, null, null, null, null, null);
+			client2tasks.unregister_(null,null,null, null);
 		}
 	}
 
@@ -1552,16 +1552,16 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 			tooManyContentSetsMsgFormat = "Too many content sets for certificate %s. A newer client may be available to address this problem. See knowledge database https://access.redhat.com/knowledge/node/129003 for more information.";
 		}
 		
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
 		SubscriptionPool pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", sku, clienttasks.getCurrentlyAvailableSubscriptionPools());
 		Assert.assertNotNull(pool,"Found an available pool to subscribe to productId '"+sku+"': "+pool);
 	
 		// test that it is NOT subscribable when system.certificate_version: None
 		factsMap.put("system.certificate_version", null);
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
-		clienttasks.facts(null, true, null, null, null);
+		clienttasks.facts(null, true, null, null, null, null);
 		Assert.assertEquals(clienttasks.getFactValue("system.certificate_version"), "None", "When the system.certificate_version fact is null, its fact value is reported as 'None'.");
-		sshCommandResult = clienttasks.subscribe_(null, null, pool.poolId, null, null, null, null, null, null, null, null, null);
+		sshCommandResult = clienttasks.subscribe_(null, null, pool.poolId, null, null, null, null, null, null, null, null, null, null);
 		Integer expectedExitCode = new Integer(255);
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) expectedExitCode = new Integer(70);	// EX_SOFTWARE	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
 		Assert.assertEquals(sshCommandResult.getStderr().trim(), String.format(tooManyContentSetsMsgFormat, pool.subscriptionName), "Stderr from an attempt to subscribe to '"+pool.subscriptionName+"' that provides product(s) with many content sets (totalling >185) when system.certificate_version is null");
@@ -1572,9 +1572,9 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		// test that it is NOT subscribable when system.certificate_version: 1.0
 		factsMap.put("system.certificate_version", "1.0");
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
-		clienttasks.facts(null, true, null, null, null);
+		clienttasks.facts(null, true, null, null, null, null);
 		Assert.assertEquals(clienttasks.getFactValue("system.certificate_version"), "1.0", "When the system.certificate_version fact is 1.0, its fact value is reported as '1.0'.");
-		sshCommandResult = clienttasks.subscribe_(null, null, pool.poolId, null, null, null, null, null, null, null, null, null);
+		sshCommandResult = clienttasks.subscribe_(null, null, pool.poolId, null, null, null, null, null, null, null, null, null, null);
 		Assert.assertEquals(sshCommandResult.getStderr().trim(), String.format(tooManyContentSetsMsgFormat, pool.subscriptionName), "Stderr from an attempt to subscribe to '"+pool.subscriptionName+"' that provides product(s) with many content sets (totalling >185) when system.certificate_version is 1.0");
 		Assert.assertEquals(sshCommandResult.getStdout().trim(), "", "Stdout from an attempt to subscribe to '"+pool.subscriptionName+"' that provides product(s) with many content sets (totalling >185) when system.certificate_version is 1.0");
 		Assert.assertEquals(sshCommandResult.getExitCode(), expectedExitCode, "Exitcode from an attempt to subscribe to '"+pool.subscriptionName+"' that provides product(s) with many content sets (totalling >185) when system.certificate_version is 1.0");
@@ -1584,7 +1584,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		clienttasks.deleteFactsFileWithOverridingValues();
 		systemCertificateVersionFactValue = clienttasks.getFactValue("system.certificate_version");
 		Assert.assertTrue(Float.valueOf(systemCertificateVersionFactValue)>=3.0, "The actual default system.certificate_version fact '"+systemCertificateVersionFactValue+"' is >= 3.0.");
-		clienttasks.subscribe(null, null, pool.poolId, null, null, null, null, null, null, null, null, null);
+		clienttasks.subscribe(null, null, pool.poolId, null, null, null, null, null, null, null, null, null, null);
 		entitlementCert = clienttasks.getEntitlementCertCorrespondingToSubscribedPool(pool);
 		entitlementCertFile = clienttasks.getEntitlementCertFileFromEntitlementCert(entitlementCert);
 		// TOO ASSERTIVE Assert.assertTrue(Float.valueOf(entitlementCert.version)<=Float.valueOf(systemCertificateVersionFactValue),"The version of the entitlement certificate '"+entitlementCert.version+"' granted by candlepin is less than or equal to the system.certificate_version '"+systemCertificateVersionFactValue+"' which indicates the maximum certificate version this system knows how to handle.");	// This assert was too assertive according to https://bugzilla.redhat.com/show_bug.cgi?id=1425236#c2
@@ -1722,7 +1722,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		List<ProductCert> currentProductCerts = clienttasks.getCurrentProductCerts();
 		
 		// assure we are freshly registered and process all available subscription pools
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, ConsumerType.system, null, null, null, null, null, (String)null, null, null, null, Boolean.TRUE, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, ConsumerType.system, null, null, null, null, null, (String)null, null, null, null, Boolean.TRUE, false, null, null, null, null);
 		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
 			String quantity = null;
 			/*if (clienttasks.isPackageVersion("subscription-manager",">=","1.10.3-1"))*/ if (pool.suggested!=null) if (pool.suggested<1) quantity = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId, "instance_multiplier"); 	// when the Suggested quantity is 0, let's specify a quantity to avoid Stdout: Quantity '1' is not a multiple of instance multiplier '2'
@@ -1768,7 +1768,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		List<ProductCert> currentProductCerts = clienttasks.getCurrentProductCerts();
 		
 		// assure we are freshly registered and process all available subscription pools
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, ConsumerType.system, null, null, null, null, null, (String)null, null, null, null, Boolean.TRUE, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, ConsumerType.system, null, null, null, null, null, (String)null, null, null, null, Boolean.TRUE, false, null, null, null, null);
 		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
 			String quantity = null;
 			/*if (clienttasks.isPackageVersion("subscription-manager",">=","1.10.3-1"))*/ if (pool.suggested!=null) if (pool.suggested<1) quantity = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId, "instance_multiplier"); 	// when the Suggested quantity is 0, let's specify a quantity to avoid Stdout: Quantity '1' is not a multiple of instance multiplier '2'
@@ -1810,13 +1810,13 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		List<ProductCert> currentProductCerts = clienttasks.getCurrentProductCerts();
 		
 		// assure we are freshly registered and process all available subscription pools
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, ConsumerType.system, null, null, null, null, null, (String)null, null, null, null, Boolean.TRUE, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, ConsumerType.system, null, null, null, null, null, (String)null, null, null, null, Boolean.TRUE, false, null, null, null, null);
 		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
 			
 			// avoid throttling RateLimitExceededException from IT-Candlepin
 			if (CandlepinType.hosted.equals(sm_serverType)) {	// strategically get a new consumer to avoid 60 repeated API calls from the same consumer
 				// re-register as a new consumer
-				clienttasks.register_(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, ConsumerType.system, null, null, null, null, null, (String)null, null, null, null, Boolean.TRUE, false, null, null, null);
+				clienttasks.register_(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, ConsumerType.system, null, null, null, null, null, (String)null, null, null, null, Boolean.TRUE, false, null, null, null, null);
 			}
 			
 			File entitlementCertFile = clienttasks.subscribeToSubscriptionPool_(pool);
@@ -1891,10 +1891,10 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		// assure we are registered (as a person on client2 and a system on client1)
 		
 		// register client1 as a system under rhpersonalUsername
-		client1tasks.register(sm_rhpersonalUsername, sm_rhpersonalPassword, sm_rhpersonalOrg, null, ConsumerType.system, null, null, null, null, null, (String)null, null, null, null, Boolean.TRUE, false, null, null, null);
+		client1tasks.register(sm_rhpersonalUsername, sm_rhpersonalPassword, sm_rhpersonalOrg, null, ConsumerType.system, null, null, null, null, null, (String)null, null, null, null, Boolean.TRUE, false, null, null, null, null);
 		
 		// register client2 as a person under rhpersonalUsername
-		client2tasks.register(sm_rhpersonalUsername, sm_rhpersonalPassword, sm_rhpersonalOrg, null, ConsumerType.person, null, null, null, null, null, (String)null, null, null, null, Boolean.TRUE, false, null, null, null);
+		client2tasks.register(sm_rhpersonalUsername, sm_rhpersonalPassword, sm_rhpersonalOrg, null, ConsumerType.person, null, null, null, null, null, (String)null, null, null, null, Boolean.TRUE, false, null, null, null, null);
 		
 		// subscribe to the personal subscription pool to unlock the subpool
 		personalConsumerId = client2tasks.getCurrentConsumerId();

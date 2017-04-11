@@ -335,7 +335,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		//File entitlementCertFile = clienttasks.subscribeToSubscriptionPool(pool);
 		//EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
 		//^ replaced with the following to save logging/assertion time
-		SSHCommandResult result = clienttasks.subscribe_(null, null, pool.poolId, null, null, quantity, null, null, null, null, null, null);
+		SSHCommandResult result = clienttasks.subscribe_(null, null, pool.poolId, null, null, quantity, null, null, null, null, null, null, null);
 		if (result.getStderr().startsWith("Too many content sets")) throw new SkipException("This test is only designed for system.certificate_version=1.0 compatible subscriptions.");
 		//if (result.getStdout().startsWith("Pool is restricted to")) throw new SkipException("This test is not designed for this subscription pool: "+pool);	// Pool is restricted to physical systems: '8a9087e3443db08f01443db1847a142a'.
 		EntitlementCert entitlementCert = clienttasks.getEntitlementCertCorrespondingToSubscribedPool(pool);
@@ -479,7 +479,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyConsumerCertsAreV1Certificates_Test() {
 		
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null, null);
 		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
 		Assert.assertEquals(consumerCert.version, "1.0", "The rct cat-cert tool reports this consumer cert to be a V1 Certificate: "+consumerCert);
 	}
@@ -496,7 +496,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 			throw new SkipException ("This test is not fixed in this version of python-rhsm.  It was first fixed in python-rhsm-1.17.6-1");
 		}
 		
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null, null);
 		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
 		
 		// create a non root user
@@ -553,7 +553,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyIssuerOfConsumerProductAndEntitlementCerts_Test() throws JSONException, Exception {
 		
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
 		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
 		
 		// assert the issuer of the consumer cert
@@ -610,8 +610,8 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	public void VerifyRctCatCertReportsOrdersWithQuantityUnlimited_Test() throws JSONException, Exception {
 		int numberOfUnlimitedPools = 0;
 		boolean isSystemVirtual = Boolean.valueOf(clienttasks.getFactValue("virt.is_guest"));
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null);
-		clienttasks.autoheal(null, null, true, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null, null);
+		clienttasks.autoheal(null, null, true, null, null, null, null);
 		for (SubscriptionPool pool : clienttasks.getCurrentlyAllAvailableSubscriptionPools()) {
 			if (pool.quantity.equalsIgnoreCase("Unlimited")) {
 				
@@ -641,7 +641,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	//@ImplementsNitrateTest(caseId=)
 	public void AssertConsumerCertStatistics_Test() {
 		
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, false, null, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, false, null, null, null, null, null);
 		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
 		Assert.assertEquals(consumerCert.version, "1.0", "The rct cat-cert tool reports this consumer cert to be a V1 Certificate: "+consumerCert);
 		CertStatistics certStatistics = clienttasks.getCertStatisticsFromCertFile(consumerCert.file);
@@ -709,7 +709,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	//@ImplementsNitrateTest(caseId=)
 	public void AssertEntitlementCertStatistics_Test() {
 		
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, false, null, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, false, null, null, null, null, null);
 
 		// get some entitlements!
 		clienttasks.subscribeToTheCurrentlyAllAvailableSubscriptionPoolsCollectively();
@@ -911,7 +911,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		String expectedRelease = release;
 		if (!isFloat(expectedRelease)) {	// happens when release is 6Server
 			// in this case of 6Server, the newset release version should be expected (TODO, not sure this is entirely true)
-			expectedRelease = getNewestReleaseFromReleases(clienttasks.getCurrentlyAvailableReleases(null, null, null));
+			expectedRelease = getNewestReleaseFromReleases(clienttasks.getCurrentlyAvailableReleases(null, null, null, null));
 		}
 		Assert.assertEquals(productIdCert.productNamespace.version, expectedRelease,"Version of the productid on the CDN at '"+rhelRepoUrlToProductId+"' that will be installed by the yum product-id plugin after setting the subscription-manager release to '"+release+"'.");
 	}
@@ -925,14 +925,14 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		if (clienttasks==null) return ll;
 		
 		// unregister
-		clienttasks.unregister(null, null, null);
+		clienttasks.unregister(null, null, null, null);
 		
 		// get the currently installed RHEL product cert
 		ProductCert rhelProductCert=clienttasks.getCurrentRhelProductCert();
 		if (rhelProductCert==null) throw new SkipException("Failed to find an installed RHEL product cert.");	// rhel product cert cannot be subscribed if a rhel product cert is not installed
 		
 		// register with autosubscribe
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, null, null, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, null, null, null, null, null, null);
 		
 		// find the autosubscribed entitlement that provides access to RHEL content 
 		List<EntitlementCert> rhelEntitlementCerts = clienttasks.getEntitlementCertsProvidingProductCert(rhelProductCert);
@@ -983,7 +983,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		//	Enabled:   1
 
 		String rhelRepoUrl = null;
-		for (Repo enabledRepo :  Repo.parse(clienttasks.repos(null, true, false, (String)null,(String)null,null, null, null).getStdout())) {
+		for (Repo enabledRepo :  Repo.parse(clienttasks.repos(null, true, false, (String)null,(String)null,null, null, null, null).getStdout())) {
 			if (enabledRepo.enabled) {
 				if (enabledRepo.repoUrl.endsWith(clienttasks.redhatReleaseX+"/$releasever/$basearch/os")) {
 					// NOTE: I just learned that this will happen when the subscription also provides:  Red Hat Enterprise Linux Server - Extended Update Support
@@ -1011,7 +1011,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		}
 		
 		// add each available release as a row to the dataProvider
-		for (String release : clienttasks.getCurrentlyAvailableReleases(null, null, null)) {
+		for (String release : clienttasks.getCurrentlyAvailableReleases(null, null, null, null)) {
 			List<String> bugIds = new ArrayList<String>();
 			
 			if (release.equals("6.2")) bugIds.add("1214856"); 	// Bug 1214856 - cdn.redhat.com has the wrong productId version for rhel 6.2 and 6.4
@@ -1049,7 +1049,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyBaseRHELProductCertVersionUpdates_Test(Object blockedByBug, String testPackage, String oldProductCertVersion, String oldRelease, String newerRelease) {
-		clienttasks.unregister(null, null, null);
+		clienttasks.unregister(null, null, null, null);
 		restoreOriginalRhsmProductCertDirAndProductIdJsonFile();
 		
 		// Step 0: remove the test package
@@ -1086,15 +1086,15 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		Assert.assertNotNull(clienttasks.getInstalledProductCorrespondingToProductCert(oldProductCert),"The old product cert is installed and recognized by subscription-manager.");
 
 		// Step 4: register with autosubscribe for RHEL content
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, null, null, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, null, null, null, null, null, null);
 		if (!clienttasks.isRhelProductCertSubscribed()) throw new SkipException("Failed to autosubscribe to an available RHEL subscription.");
 		
 		// determine the newest available release
-		List<String> availableReleases = clienttasks.getCurrentlyAvailableReleases(null, null, null);	// Example: [6.1, 6.2, 6.3, 6.4, 6.5, 6.6, 6Server] 6.6 is the newest
+		List<String> availableReleases = clienttasks.getCurrentlyAvailableReleases(null, null, null, null);	// Example: [6.1, 6.2, 6.3, 6.4, 6.5, 6.6, 6Server] 6.6 is the newest
 		String newestRelease = getNewestReleaseFromReleases(availableReleases);
 		
 		// Step 5: set the GA release corresponding to the old product cert version
-		clienttasks.release(null, null, oldRelease, null, null, null, null);
+		clienttasks.release(null, null, oldRelease, null, null, null, null, null);
 		
 		// Note: yum @productid.py:290 - Checking for product id certs to install or update.  THIS ONLY TRIGGERS WHEN THE RPM LIST IS CHANGED BY A REMOVAL, INSTALL, OR UPDATE.
 
@@ -1124,7 +1124,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		
 		
 		// Step 7: set a newer release than the installed product id
-		clienttasks.release(null, null, newerRelease, null, null, null, null);
+		clienttasks.release(null, null, newerRelease, null, null, null, null, null);
 		
 		// Step 8: install the test package and assert the product id has been upgraded.
 		clienttasks.yumInstallPackage(testPackage,"--disablerepo=beaker-*");	// need to disable the beaker repos (actually all repos that contain a productid in the metadata would be best) to prevent the yum product-id plugin from considering it for an update to the installed RHEL product cert 
@@ -1144,7 +1144,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		
 		
 		// Step 9: unset the release thereby giving access to the latest content
-		clienttasks.release(null, null, null, true, null, null, null);
+		clienttasks.release(null, null, null, true, null, null, null, null);
 		
 		// Step 10: yum update the test package to the latest version and assert the product id has been upgraded to the original product cert.
 		if (Float.compare(Float.valueOf(newerRelease)+0.1f,Float.valueOf(clienttasks.redhatReleaseXY))==0) clienttasks.yumDoPackageFromRepo_("update", testPackage, null, "--disablerepo=beaker-*"); else	// do not assert yum transaction when newerRelease is equal to the prior minor release of the current test cycle because there is not enough content yet to update - we'll see:  No packages marked for update
@@ -1167,7 +1167,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		
 		
 		// Step 11: set the rhel release backward to perform downgrade testing
-		clienttasks.release(null, null, newerRelease, null, null, null, null);
+		clienttasks.release(null, null, newerRelease, null, null, null, null, null);
 		
 		// Step 12: downgrade the test package and assert the original product id remains installed.
 		clienttasks.yumClean("metadata");	// to avoid... Not using downloaded repomd.xml because it is older than what we have:
@@ -1313,7 +1313,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyYumUpdateWithDisabledRepoWillNotDeleteJBossProductId_Test() throws JSONException, Exception {
 		// fixed in https://bugzilla.redhat.com/show_bug.cgi?id=1159163#c12  subscription-manager commit 68d210bb9145e7ea65aea979fde694436e3e0373 subscription-manager-1.14.6-1
-		clienttasks.unregister(null, null, null);
+		clienttasks.unregister(null, null, null, null);
 		restoreOriginalRhsmProductCertDirAndProductIdJsonFile();
 		
 		// hard data for this test...
@@ -1355,7 +1355,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		if (productIdJsonFile==null) {productIdJsonFile = client.runCommandAndWait("cat "+clienttasks.productIdJsonFile).getStdout().replaceAll("\\s*\n\\s*",""); Assert.assertTrue(productIdJsonFile!=null && !productIdJsonFile.isEmpty());} // remember the original so it can be restored later
 		
 		// register with autosubscribe for rhel content
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, null, null, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, null, null, null, null, null, null);
 		List <InstalledProduct> currentlyInstalledProducts = clienttasks.getCurrentlyInstalledProducts();
 		InstalledProduct rhelInstalledProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", rhelProductId, currentlyInstalledProducts);
 		Assert.assertNotNull(rhelInstalledProduct, "Expecting the installed RHEL Server product '"+rhelProductId+"' to be installed.");
@@ -1368,11 +1368,11 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		if (jbossSubscriptionPools.isEmpty() && !CandlepinType.standalone.equals(sm_serverType)) Assert.fail("Expected to find an available subscription pool for Red Hat JBoss Enterprise Application Platform.");
 		if (jbossSubscriptionPools.isEmpty()) throw new SkipException("Cannot run this test when there is no available subscription for Red Hat JBoss Enterprise Application Platform.");
 		// too many asserts... clienttasks.subscribeToSubscriptionPool(jbossSubscriptionPools.get(0));
-		clienttasks.subscribe_(null, null, jbossSubscriptionPools.get(0).poolId, null, null, null, null, null, null, null, null, null);
+		clienttasks.subscribe_(null, null, jbossSubscriptionPools.get(0).poolId, null, null, null, null, null, null, null, null, null, null);
 		
 		// enable the jb-eap-6-for-rhel-6-server-rpms repo
 		// Note: This is necessary. If only enabled during yum install --enablerepo=jb-eap-6-for-rhel-6-server-rpms then the jboss product id will install, but it will also be deleted during the yum install of a rhel package.
-		clienttasks.repos(null, null, null, jbossRepo, null, null, null, null);
+		clienttasks.repos(null, null, null, jbossRepo, null, null, null, null, null);
 		
 		// yum install jline-eap6 from repo jb-eap-6-for-rhel-6-server-rpms
 		//clienttasks.yumInstallPackageFromRepo(jbossPackage, jbossRepo, null);

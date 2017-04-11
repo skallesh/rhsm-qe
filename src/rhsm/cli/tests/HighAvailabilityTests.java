@@ -172,7 +172,7 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 		if (sm_haUsername.equals("")) throw new SkipException("Skipping this test when no value was given for the High Availability Username");
 
 		// register the to an account that offers High Availability subscriptions
-		clienttasks.register(sm_haUsername,sm_haPassword,sm_haOrg,null,null,null,null,null,null,null,(String)null,null,null, null, true, null, null, null, null);
+		clienttasks.register(sm_haUsername,sm_haPassword,sm_haOrg,null,null,null,null,null,null,null,(String)null,null,null, null, true, null, null, null, null, null);
 	}
 
 
@@ -262,12 +262,12 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 		// INFO: rhel-ha-for-rhel-7-server-rpms/7Server/x86_64 is enabled by default
 		// NOT ANYMNORE, WE NOW NEED TO ENABLE THE ADDON REPO (A GOOD CHANGE BY REL-ENG DURING THE RHEL7.4 TEST PHASE)
 		if (clienttasks.redhatReleaseX.equals("7") && clienttasks.arch.equals("x86_64")) {
-			clienttasks.repos(null, null, null, "rhel-ha-for-rhel-7-server-rpms", null, null, null, null);
+			clienttasks.repos(null, null, null, "rhel-ha-for-rhel-7-server-rpms", null, null, null, null, null);
 		}
 		
 		// INFO: rhel-ha-for-rhel-7-for-system-z-rpms/7Server/s390x is NOT enabled by default
 		if (clienttasks.redhatReleaseX.equals("7") && clienttasks.arch.equals("s390x")) {
-			clienttasks.repos(null, null, null, "rhel-ha-for-rhel-7-for-system-z-rpms", null, null, null, null);
+			clienttasks.repos(null, null, null, "rhel-ha-for-rhel-7-for-system-z-rpms", null, null, null, null, null);
 		}
 		
 		List<String> availablePackages = clienttasks.getYumListAvailable(null);
@@ -610,7 +610,7 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 	public void unregisterAfterClass() {
 		if (clienttasks==null) return;
 		client.runCommandAndWait("yum remove "+haPackage1+" "+haPackage2+" -y --disableplugin=rhnplugin"); // or remove all sm_haPackages
-		clienttasks.unregister_(null, null, null);
+		clienttasks.unregister_(null, null, null, null);
 	}
 	
 	@AfterClass(groups="setup", dependsOnMethods={"unregisterAfterClass"})

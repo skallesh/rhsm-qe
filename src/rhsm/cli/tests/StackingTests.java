@@ -93,7 +93,7 @@ public class StackingTests extends SubscriptionManagerCLITestScript {
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
 		
 		// register the system which has now been instrumented with facts to test the stack
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null,null,null,null,null,null,null,(List<String>)null,null,null,null,true,false,null,null,null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null,null,null,null,null,null,null,(List<String>)null,null,null,null,true,false,null,null,null, null);
 		
 		// assert installed product status for all the products that the stacked subscriptions will provide for
 		List<InstalledProduct> currentlyInstalledProducts = clienttasks.getCurrentlyInstalledProducts();
@@ -117,7 +117,7 @@ public class StackingTests extends SubscriptionManagerCLITestScript {
 		Integer vcpuValueStackedThusFar = 0;
 		Set<String> productIdsProvidedForThusFar = new HashSet<String>();
 		for (SubscriptionPool pool : stackableAttributeSubscriptionPools) {
-			clienttasks.subscribe(null,null,pool.poolId,null,null,"1",null,null,null,null,null, null);
+			clienttasks.subscribe(null,null,pool.poolId,null,null,"1",null,null,null,null,null, null, null);
 			
 			// add some test coverage for bugs 861993 and 955142
 			EntitlementCert entitlementCert = clienttasks.getEntitlementCertCorrespondingToSubscribedPool(pool);

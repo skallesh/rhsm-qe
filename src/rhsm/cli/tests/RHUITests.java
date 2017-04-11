@@ -81,12 +81,12 @@ public class RHUITests extends SubscriptionManagerCLITestScript {
 	public void RegisterRHUIConsumer_Test() {
 		// register a RHUI consumer type
 		if (sm_serverType.equals(CandlepinType.standalone)) {
-			SSHCommandResult result = clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,ConsumerType.RHUI,null,null,null,null,null,(String)null,null,null, null, true, null, null, null, null);
+			SSHCommandResult result = clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,ConsumerType.RHUI,null,null,null,null,null,(String)null,null,null, null, true, null, null, null, null, null);
 			Assert.assertEquals(result.getStderr().trim(), String.format("Unit type '%s' could not be found.", ConsumerType.RHUI));
 			Assert.assertEquals(result.getExitCode(), Integer.valueOf(70));
 			throw new SkipException("On a candlpin server of type '"+sm_serverType+"': "+result.getStderr().trim());
 		} else
-		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,ConsumerType.RHUI,null,null,null,null,null,(String)null,null,null, null, true, null, null, null, null);
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,ConsumerType.RHUI,null,null,null,null,null,(String)null,null,null, null, true, null, null, null, null, null);
 	}
 
 	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}

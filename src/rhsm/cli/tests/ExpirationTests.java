@@ -80,7 +80,7 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 		}
 		* current behavior is asserted here... */
 		// verify that the expired product subscriptions is still listed among the consumed, but inactive
-		List <ProductSubscription> currentlyConsumedProductSubscriptions = ProductSubscription.parse(clienttasks.list(null,null,true, null, null, null, null, null, null, null, null, null, null).getStdout());
+		List <ProductSubscription> currentlyConsumedProductSubscriptions = ProductSubscription.parse(clienttasks.list(null,null,true, null, null, null, null, null, null, null, null, null, null, null).getStdout());
 		for (ProductSubscription expiringProductSubscription : expiringProductSubscriptions) {
 			ProductSubscription expiredProductSubscription = ProductSubscription.findFirstInstanceWithMatchingFieldFromList("serialNumber", expiringProductSubscription.serialNumber, currentlyConsumedProductSubscriptions);
 			// catch a corner case...
@@ -213,8 +213,8 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 	
 	@BeforeClass(groups="setup", dependsOnMethods="skipIfHosted")
 	public void registerBeforeClass() throws Exception {
-		clienttasks.unregister(null, null, null);
-		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, null, false, null, null, null));
+		clienttasks.unregister(null, null, null, null);
+		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, null, false, null, null, null, null));
 		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerId);
 	}
 	

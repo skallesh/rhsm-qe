@@ -140,7 +140,7 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 		
 		// start by registering the host with autosubscribe to gain some entitlements...
 		log.info("Start fresh by registering the host with autosubscribe and getting the host's yum repolist...");
-		consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,true,null,null,(String)null,null,null, null, true, false, null, null, null));
+		consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,true,null,null,(String)null,null,null, null, true, false, null, null, null, null));
 		
 		// remember the yum repolist and the subscribed YumRepo data on the host
 		List<YumRepo> subscribedYumReposOnHost = clienttasks.getCurrentlySubscribedYumRepos();
@@ -203,10 +203,10 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 		if (consumerId!=null) {
 			//clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,consumerId,null,null,null,(String)null,null,null, null, true, null, null, null, null);
 			//	Error: Can not force registration while attempting to recover registration with consumerid. Please use --force without --consumerid to re-register or use the clean command and try again without --force.
-			clienttasks.clean_(null, null, null);
-			clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,consumerId,null,null,null,(String)null,null,null, null, false, null, null, null, null);
+			clienttasks.clean_();
+			clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,consumerId,null,null,null,(String)null,null,null, null, false, null, null, null, null, null);
 			
-			clienttasks.unregister_(null, null, null);	// which will also return any consumed entitlements
+			clienttasks.unregister_(null, null, null, null);	// which will also return any consumed entitlements
 			consumerId=null;
 		}
 	}
@@ -220,7 +220,7 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyExpectedRegistryHostnamesAreConfigured_Test() {
-		clienttasks.unregister(null, null, null);
+		clienttasks.unregister(null, null, null, null);
 		
 		// get the list of registry_hostnames from /etc/rhsm/pluginconf.d/container_content.ContainerContentPlugin.conf
 		String registry_hostnames = clienttasks.getConfFileParameter(containerContentPluginFile.getPath(), "registry_hostnames");
@@ -288,7 +288,7 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 		
 		// best way of updating docker (from a RHEL subscription) when possible - will give us the latest released version of docker
 		if (!sm_serverType.equals(CandlepinType.standalone)) {
-			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, true, null, null, null, null);
+			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, true, null, null, null, null, null);
 			if (clienttasks.isRhelProductCertSubscribed()) {
 				// valid repos:
 				//	rhel-7-server-extras-rpms/x86_64
@@ -353,7 +353,7 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 	public void PullDockerImage_Test(Object bugzilla, String dockerImage) {
 		// TODO: Once registry.access.redhat.com is protected by certificates, this test will require a valid entitlement for containerimages.
 		// unregister the host
-		clienttasks.unregister(null, null, null);
+		clienttasks.unregister(null, null, null, null);
 		
 		// pull the docker image
 		//	[root@jsefler-7 ~]# docker pull docker-registry.usersys.redhat.com/brew/rhel7:latest
@@ -427,7 +427,7 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyYumRepolistIsEmptyOnRunningDockerImageWhenHostIsUnregistered_Test(Object bugzilla, String dockerImage) {
 		// unregister the host
-		clienttasks.unregister(null, null, null);
+		clienttasks.unregister(null, null, null, null);
 		
 		// verify the host has no redhat.repo content
 		List<YumRepo> yumReposOnHost = clienttasks.getCurrentlySubscribedYumRepos();
@@ -453,7 +453,7 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyYumRepolistOnRunningDockerImageConsumedFromHostEntitlements_Test(Object bugzilla, String dockerImage) {
 		// register the host and autosubscribe
-		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,true,null,null,(String)null,null,null, null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,true,null,null,(String)null,null,null, null, true, false, null, null, null, null);
 		
 		// get a list of the entitled yum repos on the host
 		List<String> enabledYumReposOnHost = clienttasks.getYumRepolist("enabled");
@@ -670,8 +670,8 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 		Assert.assertNotNull(clienttasks.getCurrentConsumerCert(),"This test assumes a consumer has already been registered on '"+clienttasks.hostname+"'.");
 		
 		// make sure we are auto-subscribed to a minimal number of entitlements
-		clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null, null);
-		clienttasks.subscribe(true, null, (String)null, (String)null, null, null, null, null, null, null, null, null);
+		clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null, null, null);
+		clienttasks.subscribe(true, null, (String)null, (String)null, null, null, null, null, null, null, null, null, null);
 		
 		// get the current entitlements on the host
 		//	[root@hp-sl2x170zg6-01 ~]# ls /etc/pki/entitlement | sort
@@ -736,7 +736,7 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 		registryHostnames = Arrays.asList(registry_hostnames.split(" *, *"));
 		
 		// register the host, autosubscribe, and get the granted entitlements
-		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,true,null,null,(String)null,null,null, null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,true,null,null,(String)null,null,null, null, true, false, null, null, null, null);
 		List<EntitlementCert> entitlementCerts = clienttasks.getCurrentEntitlementCerts();
 		
 		// verify that the entitlements which provide containerimage content are copied to registry_hostnames...
@@ -785,8 +785,8 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 		RemoteFileTasks.runCommandAndAssert(client, "getenforce", Integer.valueOf(0), "Enforcing",null);
 		
 		// register the host, auto-heal, and get the granted entitlements
-		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,false,null,null,(String)null,null,null, null, true, null, null, null, null);
-		clienttasks.autoheal(null, true, null, null, null, null);
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,false,null,null,(String)null,null,null, null, true, null, null, null, null, null);
+		clienttasks.autoheal(null, true, null, null, null, null, null);
 		clienttasks.restart_rhsmcertd(null, null, true);
 		List<EntitlementCert> entitlementCerts = clienttasks.getCurrentEntitlementCerts();
 		

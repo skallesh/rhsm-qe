@@ -48,7 +48,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	@ImplementsNitrateTest(caseId=50215)
 	public void AttemptingCommandsWithoutBeingRegistered_Test(String command) {
 		log.info("Testing subscription-manager-cli command without being registered, expecting it to fail: "+ command);
-		clienttasks.unregister(null, null, null);
+		clienttasks.unregister(null, null, null, null);
 		
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
 			RemoteFileTasks.runCommandAndAssert(client,command,1,null,"^"+clienttasks.msg_ConsumerNotRegistered);			
@@ -93,7 +93,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	@Test(	description="assert the exit code from service rhsmcertd status when running and stopped",
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-913118","blockedByBug-912707","blockedByBug-914113","blockedByBug-1241247","blockedByBug-1395794"})
 	protected void verifyRhsmcertdDoesNotThrowDeprecationWarnings_Test() throws JSONException, Exception {
-		clienttasks.unregister(null, null, null);
+		clienttasks.unregister(null, null, null, null);
 		String marker = System.currentTimeMillis()+" Testing verifyRhsmcertdDoesNotThrowDeprecationWarnings_Test...";
 		RemoteFileTasks.markFile(client, clienttasks.messagesLogFile, marker);
 		
@@ -109,7 +109,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		String unexpectedMessage = "DeprecationWarning";
 		Assert.assertTrue(!rhsmcertdLogResult.contains(unexpectedMessage),"Syslog does not contain message '"+unexpectedMessage+"'.");
 		
-		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null,null,null,null,null,null);
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null,null,null,null,null,null, null);
 		/*
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		if (pools.isEmpty()) throw new SkipException("Cannot randomly pick a pool for subscribing when there are no available pools for testing."); 
@@ -136,7 +136,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void VerifyRhsmdForceSignalsToRhsmlogAndSyslog_Test() {
-		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null,null,null,null,null,null);
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null,null,null,null,null,null, null);
 		
 		Map<String,String> signalMap = new HashMap<String,String>();
 		signalMap.put("valid", "");
@@ -218,7 +218,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		String stdoutRegex,stdout;
 		
 		// test /etc/yum/pluginconf.d/subscription-manager.conf enabled=1 and enabled=0 (UNREGISTERED)
-		clienttasks.unregister(null, null, null);
+		clienttasks.unregister(null, null, null, null);
 		clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForSubscriptionManager, "enabled", "1");
 		clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForProductId, "enabled", "1");
 
@@ -871,12 +871,12 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsTCMS(id="")
 	public void VerifyPositiveClockSkewDetection_Test() {
 		client.runCommandAndWait("rm -f "+clienttasks.rhsmLogFile);	// remove it because it occasionally gets backed up to rhsm.log.1 in the midst of a pair of calls to RemoteFileTasks.markFile(...) and RemoteFileTasks.getTailFromMarkedFile(...)
-		clienttasks.unregister(null, null, null);	// do not need to be registered for this test
+		clienttasks.unregister(null, null, null, null);	// do not need to be registered for this test
 		
 		String rhsmLogMarker = System.currentTimeMillis()+" Testing clock skew detection...";
 		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, rhsmLogMarker);
 		log.info("Calling subscription-manager version to trigger communication to the currently configured candlepin server...");
-		clienttasks.version(null, null, null);
+		clienttasks.version(null, null, null, null);
 		String rhsmLogResult = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, rhsmLogMarker, null).trim();
 		Assert.assertTrue(!rhsmLogResult.contains(clienttasks.msg_ClockSkewDetection), "Assuming the rhsm client is less than 60 minutes ahead of the candlepin server, WARNING '"+clienttasks.msg_ClockSkewDetection+"' is NOT logged to '"+clienttasks.rhsmLogFile+"'.");
 
@@ -886,7 +886,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		log.info("Advancing the rhsm client clock ahead by '"+positiveClockSkewMinutes+"' minutes...");
 		client.runCommandAndWait(String.format("date -s +%dminutes", positiveClockSkewMinutes));
 		log.info("Calling subscription-manager version to trigger communication to the currently configured candlepin server...");
-		clienttasks.version(null, null, null);
+		clienttasks.version(null, null, null, null);
 		rhsmLogResult = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, rhsmLogMarker, null).trim();
 		Assert.assertTrue(rhsmLogResult.contains(clienttasks.msg_ClockSkewDetection), "Assuming the rhsm client is greater than 60 minutes ahead of the candlepin server, then WARNING '"+clienttasks.msg_ClockSkewDetection+"' is logged to '"+clienttasks.rhsmLogFile+"'.");
 	}
@@ -910,12 +910,12 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsTCMS(id="")
 	public void VerifyNegativeClockSkewDetection_Test() {
 		client.runCommandAndWait("rm -f "+clienttasks.rhsmLogFile);	// remove it because it occasionally gets backed up to rhsm.log.1 in the midst of a pair of calls to RemoteFileTasks.markFile(...) and RemoteFileTasks.getTailFromMarkedFile(...)
-		clienttasks.unregister(null, null, null);	// do not need to be registered for this test
+		clienttasks.unregister(null, null, null, null);	// do not need to be registered for this test
 		
 		String rhsmLogMarker = System.currentTimeMillis()+" Testing clock skew detection...";
 		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, rhsmLogMarker);
 		log.info("Calling subscription-manager version to trigger communication to the currently configured candlepin server...");
-		clienttasks.version(null, null, null);
+		clienttasks.version(null, null, null, null);
 		String rhsmLogResult = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, rhsmLogMarker, null).trim();
 		Assert.assertTrue(!rhsmLogResult.contains(clienttasks.msg_ClockSkewDetection), "Assuming the rhsm client is less than 60 minutes behind of the candlepin server, WARNING '"+clienttasks.msg_ClockSkewDetection+"' is NOT logged to '"+clienttasks.rhsmLogFile+"'.");
 
@@ -925,7 +925,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		log.info("Retarding the rhsm client clock behind by '"+negativeClockSkewMinutes+"' minutes...");
 		client.runCommandAndWait(String.format("date -s -%dminutes", negativeClockSkewMinutes));
 		log.info("Calling subscription-manager version to trigger communication to the currently configured candlepin server...");
-		clienttasks.version(null, null, null);
+		clienttasks.version(null, null, null, null);
 		rhsmLogResult = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, rhsmLogMarker, null).trim();
 		// NOTE:  If the candlepin server was newly deployed within the last 119 minutes, then a "SSLError: certificate verify failed" will be thrown.  Skip the test if this happens.
 		if (!rhsmLogResult.contains(clienttasks.msg_ClockSkewDetection) && rhsmLogResult.contains("SSLError: certificate verify failed")) throw new SkipException("Assuming the candlepin server was recently deployed within the last hour because an SSLError was thrown instead of clock skew detection.");
@@ -1066,7 +1066,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 				
 		// negative tests that require the system to be unregistered first...
 		// Object blockedByBug, String command, Integer expectedExitCode, String expectedStdout, String expectedStderr
-		clienttasks.unregister(null,null,null);
+		clienttasks.unregister(null,null,null, null);
 		
 		
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
@@ -1079,7 +1079,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 				ll.add(Arrays.asList(new Object[]{null,													clienttasks.command+" unsubscribe --pool=FOO",								new Integer(1),		"",""}));			
 			}
 			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1119688"}),			clienttasks.command+" subscribe",											new Integer(1),		"","This system is not yet registered. Try 'subscription-manager register --help' for more information."}));
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1119688","1162331"}),clienttasks.rhsmDebugSystemCommand(null,null,null,null,null,null,null,null),new Integer(1),		"","This system is not yet registered. Try 'subscription-manager register --help' for more information."}));
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1119688","1162331"}),clienttasks.rhsmDebugSystemCommand(null,null,null,null,null,null,null,null, null),new Integer(1),		"","This system is not yet registered. Try 'subscription-manager register --help' for more information."}));
 			if (clienttasks.isPackageVersion("subscription-manager",">=","1.18.2-1")) {	// post commit ad982c13e79917e082f336255ecc42615e1e7707
 				ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1078091","1119688","1320507"}),	clienttasks.command+" register --serverurl=https://sat6_fqdn/ --insecure",	new Integer(69),	"","Unable to reach the server at sat6_fqdn:"+clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "port")}));
 			} else if (clienttasks.isPackageVersion("subscription-manager",">=","1.17.5-1")) {	// subscription-manager commit ea10b99095ad58df57ed107e13bf19498e003ae8
@@ -1156,9 +1156,9 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1275179"}),			clienttasks.command+" attach --auto --quantity=2",							new Integer(64),	"","Error: --quantity may not be used with an auto-attach"}));	// added by bug 1275179 commit 281c1e5818eefa89bc73ba438c75494e16afc698
 			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1119688"}),			clienttasks.command+" subscribe --file=/missing/poolIds.txt",				new Integer(65),	"","Error: The file \"/missing/poolIds.txt\" does not exist or cannot be read."}));	// added by bug 1159974
 			if (clienttasks.isPackageVersion("subscription-manager",">=","1.15.9-12")) {
-				ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1246680"}),		clienttasks.rhsmDebugSystemCommand(null,null,null,true,true,null,null,null),new Integer(0),	/*"Wrote: /tmp/rhsm-debug-system-\\d+-\\d+.tar.gz"*/null,""}));	// added by bug 1246680 which trumps bug 1194906
+				ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1246680"}),		clienttasks.rhsmDebugSystemCommand(null,null,null,true,true,null,null,null, null),new Integer(0),	/*"Wrote: /tmp/rhsm-debug-system-\\d+-\\d+.tar.gz"*/null,""}));	// added by bug 1246680 which trumps bug 1194906
 			} else if (clienttasks.isPackageVersion("subscription-manager",">=","1.14.1-1")) {
-				ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1194906"}),		clienttasks.rhsmDebugSystemCommand(null,null,null,true,true,null,null,null),new Integer(64),	"","Error: You may not use --subscriptions with --no-subscriptions."}));	// added by bug 1194906
+				ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1194906"}),		clienttasks.rhsmDebugSystemCommand(null,null,null,true,true,null,null,null, null),new Integer(64),	"","Error: You may not use --subscriptions with --no-subscriptions."}));	// added by bug 1194906
 			}
 		} else {	// pre commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
 			ll.add(Arrays.asList(new Object[]{null,							clienttasks.command+" unsubscribe --product=FOO",							new Integer(2),		clienttasks.command+": error: no such option: --product", "Usage: subscription-manager unsubscribe [OPTIONS]"}));
@@ -1169,7 +1169,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("856236"),	clienttasks.command+" register --activationkey=foo --org=foo --env=foo",	new Integer(255),	"Error: Activation keys do not allow environments to be specified.", ""}));
 			ll.add(Arrays.asList(new Object[]{null,							clienttasks.command+" list --installed --servicelevel=foo",					new Integer(255),	"Error: --servicelevel is only applicable with --available or --consumed", ""}));
 			ll.add(Arrays.asList(new Object[]{null,							clienttasks.command+" subscribe",											new Integer(255),	"This system is not yet registered. Try 'subscription-manager register --help' for more information.",	""}));
-			ll.add(Arrays.asList(new Object[]{null,							clienttasks.rhsmDebugSystemCommand(null,null,null,null,null,null,null,null),new Integer(255),	"This system is not yet registered. Try 'subscription-manager register --help' for more information.",	""}));
+			ll.add(Arrays.asList(new Object[]{null,							clienttasks.rhsmDebugSystemCommand(null,null,null,null,null,null,null,null, null),new Integer(255),	"This system is not yet registered. Try 'subscription-manager register --help' for more information.",	""}));
 			if (clienttasks.isPackageVersion("subscription-manager",">=","1.10.3-1")) {
 				ll.add(Arrays.asList(new Object[]{null,						clienttasks.command+" list --no-overlap",									new Integer(255),	"Error: --no-overlap is only applicable with --available", ""}));
 				ll.add(Arrays.asList(new Object[]{null,						clienttasks.command+" list --match-installed",								new Integer(255),	"Error: --match-installed is only applicable with --available", ""}));

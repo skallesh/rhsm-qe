@@ -53,16 +53,16 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
 		attributeName, attributeValue);
 
 	clienttasks.register(sm_clientUsername, sm_clientPassword, org, null, null, null, null, null, null, null,
-		(String) null, null, null, null, true, null, null, null, null);
-	clienttasks.autoheal(null, null, true, null, null, null);
+		(String) null, null, null, null, true, null, null, null, null, null);
+	clienttasks.autoheal(null, null, true, null, null, null, null);
 	String ExpectedRepoMsg = "There were no available repositories matching the specified criteria.";
 
 	// verify the if an extra entitlement is granted upon refresh on subscription-manager version lesser than equal to 1.18.9-1
 
 	if (clienttasks.isPackageVersion("subscription-manager", "<=", "1.18.9-1")) {
-	    SSHCommandResult repoResult = clienttasks.repos(false, false, true, (String) null, null, null, null, null);
+	    SSHCommandResult repoResult = clienttasks.repos(false, false, true, (String) null, null, null, null, null, null);
 	    Assert.assertEquals(repoResult.getStdout().toString().trim(), ExpectedRepoMsg);
-	    clienttasks.refresh(null, null, null);
+	    clienttasks.refresh(null, null, null, null);
 	}
 
 	// verify only the extra entitlement cert granted by or/environment is
@@ -74,22 +74,22 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
 
 	// verify repos --list lists all the repos but none of them are enabled when the system has golden ticket certificate access
 	SSHCommandResult resultListEnabled = clienttasks.repos(false, true, false, (String) null, null, null, null,
-		null);
+		null, null);
 	Assert.assertEquals(resultListEnabled.getStdout().toString().trim(), ExpectedRepoMsg);
 	SSHCommandResult resultListDisabled = clienttasks.repos(false, false, true, (String) null, null, null, null,
-		null);
+		null, null);
 	Assert.assertNotEquals(resultListDisabled.getStdout().toString().trim(), ExpectedRepoMsg);
 
 	// Verify status cmd message on a system that has golden ticket
 	// Todo add assert for golden ticket mode note once fixed
-	SSHCommandResult statusResult = clienttasks.status(null, null, null, null);
+	SSHCommandResult statusResult = clienttasks.status(null, null, null, null, null);
 	String expectedStatus = "Overall Status: Invalid";
 	Assert.assertTrue(statusResult.getStdout().contains(expectedStatus), "Expecting '" + expectedStatus
 		+ "The status of machine is still invalid despite having golden ticket entitlement");
 
 	// verify list --consumed displays the goldenticket entitlement
 	SSHCommandResult listConsumedResult = clienttasks.list(null, null, true, null, null, null, null, null, null,
-		null, null, null, null);
+		null, null, null, null, null);
 	String expectedMessageForListConsumed = "No consumed subscription pools to list";
 
 	// TEMPORARY WORKAROUND FOR BUG
@@ -110,25 +110,25 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
 	clienttasks.removeAllCerts(false, true, false);
 	Assert.assertTrue(clienttasks.getCurrentEntitlementCerts().size() == 0,
 		"Golden ticket cert is successfully removed");
-	clienttasks.refresh(null, null, null);
+	clienttasks.refresh(null, null, null, null);
 	Assert.assertTrue(clienttasks.getCurrentEntitlementCerts().size() == 1,
 		"Golden ticket regenerated successfully");
-	resultListDisabled = clienttasks.repos(false, false, true, (String) null, null, null, null, null);
+	resultListDisabled = clienttasks.repos(false, false, true, (String) null, null, null, null, null, null);
 	Assert.assertNotEquals(resultListDisabled.getStdout().toString().trim(), ExpectedRepoMsg);
 
 	// Verify remove --all command doesnot remove the golden ticket entitlement along with other subscriptions
 
-	clienttasks.subscribe(true, null, null, (String) null, null, null, null, null, null, null, null, null);
+	clienttasks.subscribe(true, null, null, (String) null, null, null, null, null, null, null, null, null, null);
 	Assert.assertTrue(clienttasks.getCurrentEntitlementCerts().size() > 1,
 		"There are more subscriptions attached other than the golden ticket");
 	SSHCommandResult AutoAttachlistConsumedResult = clienttasks.list(null, null, true, null, null, null, null, null,
-		null, null, null, null, null);
+		null, null, null, null, null, null);
 
 	Assert.assertFalse(AutoAttachlistConsumedResult.getStdout().trim().equals(expectedMessageForListConsumed),
 		"Expecting'" + expectedMessageForListConsumed
 		+ "subscription-manager list --consumed lists the subscriptions consumed after auto-attach command is successful");
 
-	clienttasks.unsubscribe_(true, null, (String) null, null, null, null);
+	clienttasks.unsubscribe_(true, null, (String) null, null, null, null, null);
 
 	List<EntitlementCert> entitlementCertsAfterRemoveAll = clienttasks.getCurrentEntitlementCerts();
 	Assert.assertTrue(entitlementCertsAfterRemoveAll.size() == 1,
@@ -141,14 +141,14 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
 	for (EntitlementCert entitlementCert : entitlementCertsToRemove) {
 
 	    SSHCommandResult removeResult = clienttasks.unsubscribe_(null, entitlementCert.serialNumber, null, null,
-		    null, null);
+		    null, null, null);
 	    String ExpectedMessageForRemove = "The entitlement server failed to remove these serial numbers:" + "\n";
 	    ExpectedMessageForRemove += "   " + entitlementCert.serialNumber;
 	    Assert.assertEquals(removeResult.getStdout().trim(), ExpectedMessageForRemove);
 	}
 
-	clienttasks.repos(false, false, false, "*", null, null, null, null);
-	resultListEnabled = clienttasks.repos(false, true, false, (String) null, null, null, null, null);
+	clienttasks.repos(false, false, false, "*", null, null, null, null, null);
+	resultListEnabled = clienttasks.repos(false, true, false, (String) null, null, null, null, null, null);
 	Assert.assertNotEquals(resultListEnabled.getStdout().toString().trim(), ExpectedRepoMsg);
 
     }
@@ -174,7 +174,7 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
 		"/owners/" + org + "/activation_keys", jsonActivationKeyRequest.toString());
 
 	clienttasks.register(null, null, org, null, null, null, null, null, null, null, activationKeyName, null, null,
-		null, true, null, null, null, null);
+		null, true, null, null, null, null, null);
 	// verify only the extra entitlement cert granted by or/environment is
 	// present
 	List<EntitlementCert> entitlementCertsAfterRegisteringToactivationKeyFalse = clienttasks
@@ -194,7 +194,7 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
 		"/owners/" + org + "/activation_keys", jsonActivationKeyTrueRequest.toString());
 
 	clienttasks.register(null, null, org, null, null, null, null, null, null, null, activationKeyNameTrue, null,
-		null, null, true, null, null, null, null);
+		null, null, true, null, null, null, null, null);
 
 	// verify the extra entitlement cert granted by or/environment is present along with other ent certs granted by auto-attach process
 
@@ -219,17 +219,17 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
 	CandlepinTasks.setAttributeForOrg(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, org,
 		attributeName, attributeValue);
 	clienttasks.register(sm_clientUsername, sm_clientPassword, org, null, null, null, null, null, null, null,
-		(String) null, null, null, null, true, null, null, null, null);
-	clienttasks.autoheal(null, null, true, null, null, null);
+		(String) null, null, null, null, true, null, null, null, null, null);
+	clienttasks.autoheal(null, null, true, null, null, null, null);
 	String ExpectedRepoMsg = "There were no available repositories matching the specified criteria.";
 	if (clienttasks.isPackageVersion("subscription-manager", "<=", "1.18.9-1")) {
-	    SSHCommandResult repoResult = clienttasks.repos_(false, false, true, (String) null, null, null, null, null);
+	    SSHCommandResult repoResult = clienttasks.repos_(false, false, true, (String) null, null, null, null, null, null);
 	    Assert.assertEquals(repoResult.getStdout().toString().trim(), ExpectedRepoMsg);
-	    clienttasks.refresh(null, null, null);
+	    clienttasks.refresh(null, null, null, null);
 
 	}
 
-	SSHCommandResult repoResult = clienttasks.repos(false, false, true, (String) null, null, null, null, null);
+	SSHCommandResult repoResult = clienttasks.repos(false, false, true, (String) null, null, null, null, null, null);
 	Assert.assertNotEquals(repoResult.getStdout().toString().trim(), ExpectedRepoMsg);
 	// verify only the extra entitlement cert granted by or/environment is present
 	List<EntitlementCert> entitlementCerts = clienttasks.getCurrentEntitlementCerts();
@@ -238,9 +238,9 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
 	// now revoke the contentAccessMode set on the owner
 	CandlepinTasks.setAttributeForOrg(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, org,
 		attributeName, "");
-	clienttasks.refresh(null, null, null);
+	clienttasks.refresh(null, null, null, null);
 
-	repoResult = clienttasks.repos(false, false, true, (String) null, null, null, null, null);
+	repoResult = clienttasks.repos(false, false, true, (String) null, null, null, null, null, null);
 	String ExpectedRepoMsgAfterRevoke = "This system has no repositories available through subscriptions.";
 	Assert.assertEquals(repoResult.getStdout().toString().trim(), ExpectedRepoMsgAfterRevoke);
 	List<EntitlementCert> entitlementCertsAfterRevoke = clienttasks.getCurrentEntitlementCerts();
@@ -262,7 +262,7 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
 		attributeName, attributeValue);
 	String resourcePath = null;
 	String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null,
-		null, null, (String) null, null, null, null, true, null, null, null, null));
+		null, null, (String) null, null, null, null, true, null, null, null, null, null));
 	String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_clientUsername, sm_clientPassword, sm_serverUrl,
 		consumerId);
 	for (SubscriptionPool availsubscriptions : clienttasks.getAvailableSubscriptionsMatchingInstalledProducts()) {
@@ -270,14 +270,14 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
 	    subscriptionPoolId= availsubscriptions.poolId;
 	    break;
 	}
-	clienttasks.subscribe(null, null,subscriptionPoolId, null, null, null, null, null, null, null, null, null);
+	clienttasks.subscribe(null, null,subscriptionPoolId, null, null, null, null, null, null, null, null, null, null);
 	List<Repo> availableRepos = clienttasks.getCurrentlySubscribedRepos();
 	List<String> repoIdsDisabledByDefault = new ArrayList<String>();
 	Map<String, String> attributesMap = new HashMap<String, String>();
 	String ExpectedRepoMsg = "There were no available repositories matching the specified criteria.";
-	SSHCommandResult repoResult = clienttasks.repos(false, false, true, (String) null, null, null, null, null);
+	SSHCommandResult repoResult = clienttasks.repos(false, false, true, (String) null, null, null, null, null, null);
 	Assert.assertNotEquals(repoResult.getStdout().toString().trim(), ExpectedRepoMsg);
-	SSHCommandResult enabledResult = clienttasks.repos(false, true, false, (String) null, null, null, null, null);
+	SSHCommandResult enabledResult = clienttasks.repos(false, true, false, (String) null, null, null, null, null, null);
 	Assert.assertEquals(enabledResult.getStdout().toString().trim(), ExpectedRepoMsg);
 
 	// remember a list of all the repoIds enable/disabled by default
@@ -314,8 +314,8 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
 	CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,
 		ownerKey);
 	clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
-	clienttasks.subscribe(null, null, subscriptionPoolId, null, null, null, null, null, null, null, null,null);
-	Assert.assertTrue(clienttasks.repos_(null, true, null, (String) null, null, null, null, null).getStdout()
+	clienttasks.subscribe(null, null, subscriptionPoolId, null, null, null, null, null, null, null, null,null, null);
+	Assert.assertTrue(clienttasks.repos_(null, true, null, (String) null, null, null, null, null, null).getStdout()
 		.contains(repoIdToEnable),"After subscribing to SKU '" + subscriptionPoolProductId + "' which contains a content_override_enabled for repoId '" + repoIdToEnable + "' (contentid='"
 			+ contentIdToEnable + "'), it now appears in the list of enabled subscription-manager repos.");
     }

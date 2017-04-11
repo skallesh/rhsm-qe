@@ -406,7 +406,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 			Assert.assertTrue(((JSONObject) jsonActivationKey.getJSONArray("pools").get(0)).isNull("quantity"), "Pool id '"+poolId+"' appears to be successfully added with a null quantity to activation key: "+jsonActivationKey);		
 		}
 		// register with the activation key
-		SSHCommandResult registerResult = clienttasks.register_(null, null, sm_clientOrg, null, null, null, null, null, null, null, jsonActivationKey.getString("name"), null, null, null, true, null, null, null, null);
+		SSHCommandResult registerResult = clienttasks.register_(null, null, sm_clientOrg, null, null, null, null, null, null, null, jsonActivationKey.getString("name"), null, null, null, true, null, null, null, null, null);
 		
 		// handle the case when "Consumers of this type are not allowed to subscribe to the pool with id '"+poolId+"'."
 		ConsumerType type = null;
@@ -425,7 +425,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 
 			// now register with the same activation key using the needed ConsumerType
 			type = ConsumerType.valueOf(CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, poolId, "requires_consumer_type"));
-			registerResult = clienttasks.register_(null, null, sm_clientOrg, null, type, null, null, null, null, null, jsonActivationKey.getString("name"), null, null, null, false /*was already unregistered by force above*/, null, null, null, null);
+			registerResult = clienttasks.register_(null, null, sm_clientOrg, null, type, null, null, null, null, null, jsonActivationKey.getString("name"), null, null, null, false /*was already unregistered by force above*/, null, null, null, null, null);
 		}
 		
 		// handle the case when "A consumer type of 'person' cannot be used with activation keys"
@@ -674,7 +674,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 			for (String differentOrg : orgs) {
 				if (differentOrg.equals(org)) continue;
 				
-				SSHCommandResult registerResult = clienttasks.register_(null,null,differentOrg,null,null,null,null,null,null,null,activationKeyName,null,null, null, true, null, null, null, null);
+				SSHCommandResult registerResult = clienttasks.register_(null,null,differentOrg,null,null,null,null,null,null,null,activationKeyName,null,null, null, true, null, null, null, null, null);
 
 				// assert the sshCommandResult here
 				Integer expectedExitCode = new Integer(255);
@@ -716,16 +716,16 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		// now consume an entitlement from the pool
 		String requires_consumer_type = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, jsonPool.getString("id"), "requires_consumer_type");
 		ConsumerType consumerType = requires_consumer_type==null?null:ConsumerType.valueOf(requires_consumer_type);
-		String consumer1Id = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, consumerType, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null));
+		String consumer1Id = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, consumerType, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null, null));
 		SubscriptionPool subscriptionPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", jsonPool.getString("id"), clienttasks.getCurrentlyAllAvailableSubscriptionPools());
-		clienttasks.subscribe(null, null, jsonPool.getString("id"), null, null, null, null, null, null, null, null, null);
+		clienttasks.subscribe(null, null, jsonPool.getString("id"), null, null, null, null, null, null, null, null, null, null);
 
 		// remember the consuming consumerId
 		// String consumer1Id = clienttasks.getCurrentConsumerId();
 		systemConsumerIds.add(consumer1Id);
 		
 		// clean the system of all data (will not return the consumed entitlement)
-		clienttasks.clean(null, null, null);
+		clienttasks.clean();
 		
 		// assert that the current pool recognizes an increment in consumption
 		JSONObject jsonCurrentPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/pools/"+jsonPool.getString("id")));
@@ -821,7 +821,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(jsonActivationKey.getJSONArray("pools").length(), jsonPoolsAddedToActivationKey.length(),"The number of attempted pools added equals the number of pools retrieved from the activation key: "+jsonActivationKey);
 		
 		// register with the activation key
-		SSHCommandResult registerResult = clienttasks.register(null, null, sm_clientOrg, null, null, null, null, null, null, null, jsonActivationKey.getString("name"), null, null, null, true, null, null, null, null);
+		SSHCommandResult registerResult = clienttasks.register(null, null, sm_clientOrg, null, null, null, null, null, null, null, jsonActivationKey.getString("name"), null, null, null, true, null, null, null, null, null);
 		
 		// assert that all the pools were consumed
 		List<ProductSubscription> consumedProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
@@ -908,7 +908,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		commaSeparatedActivationKeyNames = commaSeparatedActivationKeyNames.replaceFirst(",$", ""); // strip off trailing comma
 		
 		// register with the activation key specified as a single string
-		SSHCommandResult registerResult = clienttasks.register(null, null, sm_clientOrg, null, null, null, null, null, null, null, commaSeparatedActivationKeyNames, null, null, null, true, null, null, null, null);
+		SSHCommandResult registerResult = clienttasks.register(null, null, sm_clientOrg, null, null, null, null, null, null, null, commaSeparatedActivationKeyNames, null, null, null, true, null, null, null, null, null);
 		
 		// assert that all the pools were consumed
 		List<ProductSubscription> consumedProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
@@ -991,7 +991,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		if (addQuantity==null) addQuantity=1;
 		
 		// register with the activation key specified as a single string
-		SSHCommandResult registerResult = clienttasks.register(null, null, sm_clientOrg, null, null, null, null, null, null, null, activationKeyNames, null, null, null, true, null, null, null, null);
+		SSHCommandResult registerResult = clienttasks.register(null, null, sm_clientOrg, null, null, null, null, null, null, null, activationKeyNames, null, null, null, true, null, null, null, null, null);
 		
 		// assert that all the pools were consumed
 		List<ProductSubscription> consumedProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
@@ -1049,7 +1049,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		//	}
 		
 		// register with the activation key
-		clienttasks.register(null, null, sm_clientOrg, null, null, null, null, null, null, null, keyName, null, null, null, true, null, null, null, null);
+		clienttasks.register(null, null, sm_clientOrg, null, null, null, null, null, null, null, keyName, null, null, null, true, null, null, null, null, null);
 		
 		// verify the current release equals the value set in the activation key
 		Assert.assertEquals(clienttasks.getCurrentRelease(), releaseVer, "After registering with an activation key containing a releaseVer, the current release is properly set.");
@@ -1110,14 +1110,14 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		//	}
 		
 		// reregister with the same activation key
-		clienttasks.register(null, null, sm_clientOrg, null, null, null, null, null, null, null, keyName, null, null, null, true, null, null, null, null);
+		clienttasks.register(null, null, sm_clientOrg, null, null, null, null, null, null, null, keyName, null, null, null, true, null, null, null, null, null);
 		
 		// verify the current release equals the new value set in the activation key
 		Assert.assertEquals(clienttasks.getCurrentRelease(), releaseVer, "After registering with an activation key containing an updated releaseVer, the current release is properly set.");
 		
 		// finally, verify that there are no contentOverrides
 		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.10.7-1")) {
-			SSHCommandResult listResult = clienttasks.repo_override(true,null,(String)null,(String)null,null,null,null,null);
+			SSHCommandResult listResult = clienttasks.repo_override(true,null,(String)null,(String)null,null,null,null,null, null);
 			Assert.assertEquals(listResult.getStdout().trim(),"This system does not have any content overrides applied to it.","After registering with an activation key containing a releaseVer, but no contentOverrides, this is the subscription-manager repo-override report.");
 		}
 	}
@@ -1192,10 +1192,10 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		//	}
 		
 		// register with the activation key
-		clienttasks.register(null, null, sm_clientOrg, null, null, null, null, null, null, null, keyName, null, null, null, true, null, null, null, null);
+		clienttasks.register(null, null, sm_clientOrg, null, null, null, null, null, null, null, keyName, null, null, null, true, null, null, null, null, null);
 		
 		// verify the current contentOverrides set in the activation key are listed on the consumer		
-		SSHCommandResult repoOverrideListResult = clienttasks.repo_override(true,null,(String)null,(String)null,null,null,null,null);
+		SSHCommandResult repoOverrideListResult = clienttasks.repo_override(true,null,(String)null,(String)null,null,null,null,null, null);
 		for (int i=0; i<jsonContentOverrides.length(); i++) {
 			JSONObject jsonContentOverride = jsonContentOverrides.getJSONObject(i);
 			String label = jsonContentOverride.getString("contentLabel");
@@ -1241,10 +1241,10 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		jsonContentOverrides.put(contentOverrides);
 		
 		// re-register with the same activation key whose contentOverrides has been added to
-		clienttasks.register(null, null, sm_clientOrg, null, null, null, null, null, null, null, keyName, null, null, null, true, null, null, null, null);
+		clienttasks.register(null, null, sm_clientOrg, null, null, null, null, null, null, null, keyName, null, null, null, true, null, null, null, null, null);
 		
 		// verify the current contentOverrides set in the activation key are listed on the consumer		
-		repoOverrideListResult = clienttasks.repo_override(true,null,(String)null,(String)null,null,null,null,null);
+		repoOverrideListResult = clienttasks.repo_override(true,null,(String)null,(String)null,null,null,null,null, null);
 		for (int i=0; i<jsonContentOverrides.length(); i++) {
 			JSONObject jsonContentOverride = jsonContentOverrides.getJSONObject(i);
 			String label = jsonContentOverride.getString("contentLabel");
@@ -1330,7 +1330,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		//	}
 		
 		// register with the activation key
-		clienttasks.register(null, null, sm_clientOrg, null, null, null, null, null, null, null, keyName, null, null, null, true, null, null, null, null);
+		clienttasks.register(null, null, sm_clientOrg, null, null, null, null, null, null, null, keyName, null, null, null, true, null, null, null, null, null);
 		
 		// verify the current serviceLevel equals the value set in the activation key
 		Assert.assertEquals(clienttasks.getCurrentServiceLevel(), serviceLevel, "After registering with an activation key containing a serviceLevel, the current service level is properly set.");
@@ -1362,7 +1362,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		//	}
 		
 		// reregister with the same activation key
-		clienttasks.register(null, null, sm_clientOrg, null, null, null, null, null, null, null, keyName, null, null, null, true, null, null, null, null);
+		clienttasks.register(null, null, sm_clientOrg, null, null, null, null, null, null, null, keyName, null, null, null, true, null, null, null, null, null);
 		
 		// verify the current serviceLevel equals the new value set in the activation key
 		Assert.assertEquals(clienttasks.getCurrentServiceLevel(), serviceLevel, "After registering with an activation key containing an updated serviceLevel, the current service level is properly set.");
@@ -1392,7 +1392,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		JSONObject jsonActivationKey = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/owners/" + sm_clientOrg + "/activation_keys", jsonActivationKeyRequest.toString()));
 		
 		// register with the activation key
-		clienttasks.register(null, null, sm_clientOrg, null, null, null, null, null, null, null, keyName, null, null, null, true, null, null, null, null);
+		clienttasks.register(null, null, sm_clientOrg, null, null, null, null, null, null, null, keyName, null, null, null, true, null, null, null, null, null);
 		
 		// verify the current serviceLevel equals the value set in the activation key
 		Assert.assertEquals(clienttasks.getCurrentServiceLevel(), futureServiceLevel, "After registering with an activation key containing a serviceLevel, the current service level is properly set.");
@@ -1455,7 +1455,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		JSONObject jsonActivationKey = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/owners/" + sm_clientOrg + "/activation_keys", jsonActivationKeyRequest.toString()));
 		
 		// register with the activation key - should succeed because the expired pool has not yet been refreshed
-		clienttasks.register(null, null, sm_clientOrg, null, null, null, null, null, null, null, keyName, null, null, null, true, null, null, null, null);
+		clienttasks.register(null, null, sm_clientOrg, null, null, null, null, null, null, null, keyName, null, null, null, true, null, null, null, null, null);
 		
 		// verify the current serviceLevel equals the value set in the activation key
 		Assert.assertEquals(clienttasks.getCurrentServiceLevel(), expiredServiceLevel, "After registering with an activation key containing a serviceLevel, the current service level is properly set.");
@@ -1480,7 +1480,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		}
 		
 		// register with the activation key - should fail because the expired pool was the only one that supported the expiredServiceLevel
-		SSHCommandResult result = clienttasks.register_(null, null, sm_clientOrg, null, null, null, null, null, null, null, keyName, null, null, null, true, null, null, null, null);
+		SSHCommandResult result = clienttasks.register_(null, null, sm_clientOrg, null, null, null, null, null, null, null, keyName, null, null, null, true, null, null, null, null, null);
 		Integer expectedExitCode = new Integer(255);
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) expectedExitCode = new Integer(70);	// EX_SOFTWARE	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
 		Assert.assertEquals(result.getExitCode(), expectedExitCode, "The exit code from the register command indicates we could not register with activation key '"+keyName+"'.");
@@ -1534,8 +1534,8 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		if (client2tasks==null) throw new SkipException("This multi-client test requires a second client.");
 		
 		// register two clients
-		String client1ConsumerId = client1tasks.getCurrentConsumerId(client1tasks.register(sm_client1Username, sm_client1Password, sm_client1Org, null, null, null, null, null, null, null, (List<String>)null, null, null, null, true, false, null, null, null));
-		String client2ConsumerId = client2tasks.getCurrentConsumerId(client2tasks.register(sm_client2Username, sm_client2Password, sm_client2Org, null, null, null, null, null, null, null, (List<String>)null, null, null, null, true, false, null, null, null));
+		String client1ConsumerId = client1tasks.getCurrentConsumerId(client1tasks.register(sm_client1Username, sm_client1Password, sm_client1Org, null, null, null, null, null, null, null, (List<String>)null, null, null, null, true, false, null, null, null, null));
+		String client2ConsumerId = client2tasks.getCurrentConsumerId(client2tasks.register(sm_client2Username, sm_client2Password, sm_client2Org, null, null, null, null, null, null, null, (List<String>)null, null, null, null, true, false, null, null, null, null));
 		String client1OwnerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_client1Username, sm_client1Password, sm_serverUrl, client1ConsumerId);
 		String client2OwnerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_client2Username, sm_client2Password, sm_serverUrl, client2ConsumerId);
 		if (!client1OwnerKey.equals(client2OwnerKey)) throw new SkipException("This multi-client test requires that both client registerers belong to the same owner. (client1: username="+sm_client1Username+" ownerkey="+client1OwnerKey+") (client2: username="+sm_client2Username+" ownerkey="+client2OwnerKey+")");
@@ -1608,13 +1608,13 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		
 		// attempt this test more than once
 		for (int attempt=1; attempt<5; attempt++) {
-			client1tasks.unregister(null, null, null);
-			client2tasks.unregister(null, null, null);
+			client1tasks.unregister(null, null, null, null);
+			client2tasks.unregister(null, null, null, null);
 
 			// register each client simultaneously using the activation keys (one in reverse order of the other)
 			log.info("Simultaneously attempting to register with activation keys on '"+client1tasks.hostname+"' and '"+client2tasks.hostname+"'...");
-			client1.runCommand/*AndWait*/(client1tasks.registerCommand(null, null, client1OwnerKey, null, null, null, null, null, null, null, new ArrayList<String>(){{add(activationKeyName1);add(activationKeyName2);}}, null, null, null, null, null, null, null, null), TestRecords.action());
-			client2.runCommand/*AndWait*/(client2tasks.registerCommand(null, null, client2OwnerKey, null, null, null, null, null, null, null, new ArrayList<String>(){{add(activationKeyName2);add(activationKeyName1);}}, null, null, null, null, null, null, null, null), TestRecords.action());
+			client1.runCommand/*AndWait*/(client1tasks.registerCommand(null, null, client1OwnerKey, null, null, null, null, null, null, null, new ArrayList<String>(){{add(activationKeyName1);add(activationKeyName2);}}, null, null, null, null, null, null, null, null, null), TestRecords.action());
+			client2.runCommand/*AndWait*/(client2tasks.registerCommand(null, null, client2OwnerKey, null, null, null, null, null, null, null, new ArrayList<String>(){{add(activationKeyName2);add(activationKeyName1);}}, null, null, null, null, null, null, null, null, null), TestRecords.action());
 			client1.waitForWithTimeout(new Long(10*60*1000)); // timeout after 10 min
 			client2.waitForWithTimeout(new Long(10*60*1000)); // timeout after 10 min
 			SSHCommandResult client1Result = client1.getSSHCommandResult();
@@ -1876,7 +1876,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 	}
 	protected List<List<Object>> getAllMultiEntitlementJSONPoolsDataAsListOfLists() throws Exception {
 		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
-		clienttasks.unregister_(null,null,null);	// so as to return all entitlements consumed by the current consumer
+		clienttasks.unregister_(null,null,null, null);	// so as to return all entitlements consumed by the current consumer
 		for (List<Object> l : getAllJSONPoolsDataAsListOfLists()) {
 			JSONObject jsonPool = (JSONObject)l.get(0);
 			String keyName = String.format("ActivationKey%s_ForPool%s", System.currentTimeMillis(), jsonPool.getString("id"));

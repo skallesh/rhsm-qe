@@ -155,7 +155,7 @@ public class CRLTests extends SubscriptionManagerCLITestScript{
 		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,ownerKey);
 		jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,jobDetail,"FINISHED", 10*1000, 3);
 		log.info("Refresh to make sure the latest entitlement certs are on the client...");
-		clienttasks.refresh(null, null, null); // makes sure the new entitlement is downloaded
+		clienttasks.refresh(null, null, null, null); // makes sure the new entitlement is downloaded
 
 		log.info("The updated certs should now be on the client...");
 

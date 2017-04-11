@@ -45,11 +45,11 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 	public void ListRepoOverridesIsTheDefault_Test() {
 		
 		// register
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
 		
 		// without any subscriptions attached...
-		SSHCommandResult defaultResult = clienttasks.repo_override_(null,null,(String)null,(String)null,null,null,null,null);
-		SSHCommandResult listResult = clienttasks.repo_override_(true,null,(String)null,(String)null,null,null,null,null);
+		SSHCommandResult defaultResult = clienttasks.repo_override_(null,null,(String)null,(String)null,null,null,null,null, null);
+		SSHCommandResult listResult = clienttasks.repo_override_(true,null,(String)null,(String)null,null,null,null,null, null);
 		Assert.assertEquals(listResult.toString().trim(), defaultResult.toString().trim(), "The result from running module repo-override without any options should default to the --list result (with no subscriptions attached and no overrides)");
 		// valid prior to bug 1034396	Assert.assertEquals(listResult.getStdout().trim(), "This system does not have any subscriptions.", "Stdout from repo-override --list without any subscriptions attached and no overrides.");
 		Assert.assertEquals(listResult.getStdout().trim(), "This system does not have any content overrides applied to it.", "Stdout from repo-override --list without any subscriptions attached and no overrides.");
@@ -63,8 +63,8 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 		clienttasks.subscribeToSubscriptionPool(pool);
 		
 		// with a subscription attached...
-		defaultResult = clienttasks.repo_override_(null,null,(String)null,(String)null,null,null,null,null);
-		listResult = clienttasks.repo_override_(true,null,(String)null,(String)null,null,null,null,null);
+		defaultResult = clienttasks.repo_override_(null,null,(String)null,(String)null,null,null,null,null, null);
+		listResult = clienttasks.repo_override_(true,null,(String)null,(String)null,null,null,null,null, null);
 		Assert.assertEquals(listResult.toString().trim(), defaultResult.toString().trim(), "The result from running module repo-override without any options should default to the --list result (with subscriptions attached)");
 		Assert.assertEquals(listResult.getStdout().trim(), "This system does not have any content overrides applied to it.", "Stdout from repo-override --list without any overrides.");
 		Assert.assertEquals(listResult.getStderr().trim(), "", "Stderr from repo-override --list without any overrides.");
@@ -80,7 +80,7 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 	public void AttemptToOverrideBaseurl_Test() {
 		
 		// register
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
 		
 		// subscribe to a random pool (so as to consume an entitlement) and remember the original list of YumRepos read from the redhat.repo file
 		List<YumRepo> yumRepos = attachRandomSubscriptionThatProvidesYumRepos();
@@ -90,7 +90,7 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 		Map<String,String> repoOverrideNameValueMap = new HashMap<String,String>();
 		repoOverrideNameValueMap.put("baseurl", "https://cdn.redhat.com/repo-override-testing/$releasever/$basearch");
 		repoOverrideNameValueMap.put("test", "value");
-		SSHCommandResult result = clienttasks.repo_override_(null, null, Arrays.asList(yumRepo.id, "foo-bar"), null, repoOverrideNameValueMap, null, null, null);
+		SSHCommandResult result = clienttasks.repo_override_(null, null, Arrays.asList(yumRepo.id, "foo-bar"), null, repoOverrideNameValueMap, null, null, null, null);
 		
 		// new standalone candlepin behavior allows baseurl overrides
 		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.10-1") && servertasks.statusStandalone) {	// candlepin commit bbba2dfc1ba44a16fef3d483caf4e7d4eaf63c10
@@ -121,7 +121,7 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 	public void AttemptToOverrideBaseurlInMixedCases_Test() {
 		
 		// register
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
 		
 		// subscribe to a random pool (so as to consume an entitlement) and remember the original list of YumRepos read from the redhat.repo file
 		List<YumRepo> yumRepos = attachRandomSubscriptionThatProvidesYumRepos();
@@ -133,7 +133,7 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 		String baseUrl = "bASeUrL";	// contains mixed case characters
 		//repoOverrideNameValueMap.put(baseUrl, "https://cdn.redhat.com/repo-override-testing/$releasever/$basearch");
 		repoOverrideNameValueMap.put(baseUrl, "https://cdn.redhat.com/repo-override-testing/");	// $releasever/$basearch will get interpreted as bash env vars which are empty strings.
-		SSHCommandResult result = clienttasks.repo_override_(null, null, Arrays.asList(yumRepo.id, "foo-bar"), null, repoOverrideNameValueMap, null, null, null);
+		SSHCommandResult result = clienttasks.repo_override_(null, null, Arrays.asList(yumRepo.id, "foo-bar"), null, repoOverrideNameValueMap, null, null, null, null);
 		// new standalone candlepin behavior allows baseurl overrides
 		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.10-1") && servertasks.statusStandalone) {	// candlepin commit bbba2dfc1ba44a16fef3d483caf4e7d4eaf63c10
 			log.info("Starting in candlepin version 2.0.10-1, the restriction on overriding the baseurl has been lifted against a standalone candlepin server for the benefit of mirror lists in Satellite.  See https://trello.com/c/6IKbKppZ/7-work-with-satellite-team-to-design-out-mirror-lists-for-subscription-manager");
@@ -155,7 +155,7 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 		//repoOverrideNameValueMap.put("baseurl", "https://cdn.redhat.com/repo-override-testing/$releasever/$basearch");
 		repoOverrideNameValueMap.put("baseurl", "https://cdn.redhat.com/repo-override-testing/");	// $releasever/$basearch will get interpreted as bash env vars which are empty strings.
 		repoOverrideNameValueMap.put("mirrorlist_expire", "10");	// include another valid parameter for the fun of it
-		result = clienttasks.repo_override_(null, null, Arrays.asList(yumRepo.id, "foo-bar"), null, repoOverrideNameValueMap, null, null, null);
+		result = clienttasks.repo_override_(null, null, Arrays.asList(yumRepo.id, "foo-bar"), null, repoOverrideNameValueMap, null, null, null, null);
 		// new standalone candlepin behavior allows baseurl overrides
 		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.10-1") && servertasks.statusStandalone) {	// candlepin commit bbba2dfc1ba44a16fef3d483caf4e7d4eaf63c10
 			log.info("Starting in candlepin version 2.0.10-1, the restriction on overriding the baseurl has been lifted against a standalone candlepin server for the benefit of mirror lists in Satellite.  See https://trello.com/c/6IKbKppZ/7-work-with-satellite-team-to-design-out-mirror-lists-for-subscription-manager");
@@ -174,7 +174,7 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 		}
 		
 		// verify that no repo overrides have been added (including the valid parameter for the fun of it)
-		result = clienttasks.repo_override(true,null,(String)null,(String)null,null,null,null,null);
+		result = clienttasks.repo_override(true,null,(String)null,(String)null,null,null,null,null, null);
 		// new standalone candlepin behavior allows baseurl overrides
 		String expectedStdout = "This system does not have any content overrides applied to it.";
 		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.10-1") && servertasks.statusStandalone) {	// candlepin commit bbba2dfc1ba44a16fef3d483caf4e7d4eaf63c10
@@ -207,7 +207,7 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 	public void AttemptToAddOverrideForBaseurlNameAndLabel_Test() {
 		
 		// register
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
 		
 		// attempt to add overrides for name, label, and baseurl to multiple repoids
 		List<String> repoids = Arrays.asList(new String[]{"repo1","repo2","repo3"});
@@ -216,7 +216,7 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 		repoOverrideNameValueMap.put("enabled", "0");	// it is okay to add an override for "enabled"
 		
 		repoOverrideNameValueMap.put("name", "Repo Name");
-		result = clienttasks.repo_override_(null, null, repoids, null, repoOverrideNameValueMap, null, null, null);
+		result = clienttasks.repo_override_(null, null, repoids, null, repoOverrideNameValueMap, null, null, null, null);
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(1), "ExitCode from an attempt to add repo-overrides for baseurl, name, and label for repoids: "+repoids);
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
 			Assert.assertEquals(result.getStdout().trim(), "", "Stdout from an attempt add a repo-overrides for baseurl, name, and label for repoids: "+repoids);
@@ -227,7 +227,7 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 		}
 		
 		repoOverrideNameValueMap.put("label", "repo-label");
-		result = clienttasks.repo_override_(null, null, repoids, null, repoOverrideNameValueMap, null, null, null);
+		result = clienttasks.repo_override_(null, null, repoids, null, repoOverrideNameValueMap, null, null, null, null);
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(1), "ExitCode from an attempt to add repo-overrides for baseurl, name, and label for repoids: "+repoids);
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
 			Assert.assertEquals(result.getStdout().trim(), "", "Stdout from an attempt add a repo-overrides for baseurl, name, and label for repoids: "+repoids);
@@ -238,7 +238,7 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 		}
 		
 		repoOverrideNameValueMap.put("baseurl", "https://cdn.redhat.com/repo-override-baseurl/$releasever/$basearch");
-		result = clienttasks.repo_override_(null, null, repoids, null, repoOverrideNameValueMap, null, null, null);
+		result = clienttasks.repo_override_(null, null, repoids, null, repoOverrideNameValueMap, null, null, null, null);
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(1), "ExitCode from an attempt to add repo-overrides for baseurl, name, and label for repoids: "+repoids);
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
 			Assert.assertEquals(result.getStdout().trim(), "", "Stdout from an attempt add a repo-overrides for baseurl, name, and label for repoids: "+repoids);
@@ -268,7 +268,7 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 	public void AttemptToAddOverridesExceeding255Chars_Test() {
 		
 		// register
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
 		
 		SSHCommandResult result;
 		Map<String,String> repoOverrideNameValueMap = new HashMap<String,String>();
@@ -276,7 +276,7 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 		// attempt to create a very long "value" override
 		repoOverrideNameValueMap.clear();
 		repoOverrideNameValueMap.put("param", "value_7890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456");
-		result = clienttasks.repo_override_(null, null, "label", null, repoOverrideNameValueMap, null, null, null);
+		result = clienttasks.repo_override_(null, null, "label", null, repoOverrideNameValueMap, null, null, null, null);
 		//	[root@jsefler-7 ~]# subscription-manager repo-override --repo=repo1 --add=param_7890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456:value
 		//	Runtime Error Could not execute JDBC batch update at org.postgresql.jdbc2.AbstractJdbc2Statement$BatchResultHandler.handleError:2,598
 		// Bug 1033583 ^
@@ -296,7 +296,7 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 		// attempt to create a very long parameter "name" override
 		repoOverrideNameValueMap.clear();
 		repoOverrideNameValueMap.put("param_7890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456", "value");
-		result = clienttasks.repo_override_(null, null, "label", null, repoOverrideNameValueMap, null, null, null);
+		result = clienttasks.repo_override_(null, null, "label", null, repoOverrideNameValueMap, null, null, null, null);
 		//	[root@jsefler-7 ~]# subscription-manager repo-override --repo=repo1 --add=param:value_7890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456
 		//	Runtime Error Batch entry 0 update cp_consumer_content_override set created='2013-12-09 11:03:23.169000 -05:00:00', updated='2013-12-09 11:04:42.821000 -05:00:00', consumer_id='8a90874042bf59cd0142c9fe0de12d1c', content_label='repo1', name='param', value='value_7890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456' where id='8a90874042bf59cd0142d81941a1401a' was aborted.  Call getNextException to see the cause. at org.postgresql.jdbc2.AbstractJdbc2Statement$BatchResultHandler.handleError:2,598
 		// Bug 1033583 ^
@@ -316,7 +316,7 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 		// attempt to create a very long "label" override
 		repoOverrideNameValueMap.clear();
 		repoOverrideNameValueMap.put("param", "value");
-		result = clienttasks.repo_override_(null, null, "label_7890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456", null, repoOverrideNameValueMap, null, null, null);
+		result = clienttasks.repo_override_(null, null, "label_7890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456", null, repoOverrideNameValueMap, null, null, null, null);
 		//	[root@jsefler-7 ~]# subscription-manager repo-override --repo=repo_67890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456 --add=param:value
 		//	Name, value, and label of the override must not exceed 255 characters.
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(1), "ExitCode from an attempt to add a repo-override with a label exceeding 255 chars.");
@@ -339,13 +339,13 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 	public void AddOverrideWithoutEntitlementsAttached_Test() {
 		
 		// register
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
 		
 		// attempt to add an override to non-existent-repos (without entitlements attached)
 		List<String> repos = Arrays.asList(new String[]{"any-repo-1","Any-Repo-2"});
 		Map<String,String> repoOverrideNameValueMap = new HashMap<String,String>();
 		repoOverrideNameValueMap.put("any_parameter", "value");
-		SSHCommandResult result = clienttasks.repo_override_(null, null, repos, null, repoOverrideNameValueMap, null, null, null);
+		SSHCommandResult result = clienttasks.repo_override_(null, null, repos, null, repoOverrideNameValueMap, null, null, null, null);
 		Assert.assertEquals(result.getStderr().trim(), "", "Stderr from an attempt to add repo-overrides to non-existant repos "+repos);
 		for (String repo : repos) {
 			String expectedStdoutMessage = String.format("Repository '%s' does not currently exist, but the override has been added.",repo);
@@ -355,7 +355,7 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 		
 		// assert the repoOverrideNameValueMap were actually added to the list
 		if (repoOverrideNameValueMap!=null && !repoOverrideNameValueMap.isEmpty()) {
-			SSHCommandResult listResult = clienttasks.repo_override(true,null,(String)null,(String)null,null,null,null,null);
+			SSHCommandResult listResult = clienttasks.repo_override(true,null,(String)null,(String)null,null,null,null,null, null);
 			for (String repoId : repos) {
 				for (String name : repoOverrideNameValueMap.keySet()) {
 					String value = repoOverrideNameValueMap.get(name);
@@ -378,7 +378,7 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 	public void AddOverrideToNonExistantRepo_Test() {
 		
 		// register
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
 		
 		// subscribe to a random pool (so as to consume an entitlement)
 		attachRandomSubscriptionThatProvidesYumRepos();
@@ -387,7 +387,7 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 		List<String> repos = Arrays.asList(new String[]{"non-existant-repo-1","Non-Existant-Repo-2"});
 		Map<String,String> repoOverrideNameValueMap = new HashMap<String,String>();
 		repoOverrideNameValueMap.put("test_parameter", "value");
-		SSHCommandResult result = clienttasks.repo_override_(null, null, repos, null, repoOverrideNameValueMap, null, null, null);
+		SSHCommandResult result = clienttasks.repo_override_(null, null, repos, null, repoOverrideNameValueMap, null, null, null, null);
 		Assert.assertEquals(result.getStderr().trim(), "", "Stderr from an attempt to add repo-overrides to non-existant repos "+repos);
 		for (String repo : repos) {
 			String expectedStdoutMessage = String.format("Repository '%s' does not currently exist, but the override has been added.",repo);
@@ -405,7 +405,7 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 	public void AttemptToAddOverrideInMixedCases_Test() {
 		
 		// register
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
 		
 		// subscribe to a random pool (so as to consume an entitlement)
 		attachRandomSubscriptionThatProvidesYumRepos();
@@ -417,12 +417,12 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 		repoOverrideNameValueMap.put("PARAMETER_1", "1");
 		repoOverrideNameValueMap.put("PARAMETER_2", "2");
 		repoOverrideNameValueMap.put("parameter_2", "2");
-		SSHCommandResult result = clienttasks.repo_override_(null, null, repos, null, repoOverrideNameValueMap, null, null, null);
+		SSHCommandResult result = clienttasks.repo_override_(null, null, repos, null, repoOverrideNameValueMap, null, null, null, null);
 		Assert.assertEquals(result.getStderr().trim(), "", "Stderr from an attempt to add multi-case repo-overrides to repos "+repos);
 		Assert.assertEquals(result.getExitCode(),  Integer.valueOf(0), "ExitCode from an attempt to add multi-case repo-overrides to repos "+repos);
 		
 		String name, value;
-		SSHCommandResult listResult = clienttasks.repo_override(true,null,(String)null,(String)null,null,null,null,null);
+		SSHCommandResult listResult = clienttasks.repo_override(true,null,(String)null,(String)null,null,null,null,null, null);
 		for (String repoId : repos) {
 			value = "1";
 			name = "parameter_1";
@@ -448,7 +448,7 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 	public void AddAndRemoveRepoOverridesOneRepoAtATime_Test() {
 
 		// register
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
 		
 		// subscribe to a random pool (so as to consume an entitlement) and remember the original list of YumRepos read from the redhat.repo file
 		List<YumRepo> originalYumRepos = attachRandomSubscriptionThatProvidesYumRepos();
@@ -471,33 +471,33 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 			repoOverrideNameValueMap.put("sslclientkey", "/overridden/serial-key.pem");
 			repoOverrideNameValueMap.put("sslclientcert", "/overridden/serial.pem");
 			repoOverridesMapOfMaps.put(repoId, repoOverrideNameValueMap);
-			clienttasks.repo_override(null, null, repoId, null, repoOverrideNameValueMap, null, null, null);
+			clienttasks.repo_override(null, null, repoId, null, repoOverrideNameValueMap, null, null, null, null);
 		}
 
 		// verify the current YumRepos read from the redhat.repo file actually contain the overrides
 		verifyCurrentYumReposReflectRepoOverrides(originalYumRepos,repoOverridesMapOfMaps, true);
 		
 		// unsubscribe/resubscribe
-		SSHCommandResult listResultBeforeUnsubscribe = clienttasks.repo_override_(true,null,(String)null,(String)null,null,null,null,null);
+		SSHCommandResult listResultBeforeUnsubscribe = clienttasks.repo_override_(true,null,(String)null,(String)null,null,null,null,null, null);
 		List<String> poolIds = new ArrayList<String>();
 		for (ProductSubscription productSubscription : clienttasks.getCurrentlyConsumedProductSubscriptions()) {
-			clienttasks.unsubscribe(true, productSubscription.serialNumber, null, null, null, null);
+			clienttasks.unsubscribe(true, productSubscription.serialNumber, null, null, null, null, null);
 			poolIds.add(productSubscription.poolId);
 		}
-		SSHCommandResult listResultAfterUnsubscribe = clienttasks.repo_override_(true,null,(String)null,(String)null,null,null,null,null);
+		SSHCommandResult listResultAfterUnsubscribe = clienttasks.repo_override_(true,null,(String)null,(String)null,null,null,null,null, null);
 		// valid prior to bug 1034396	Assert.assertEquals(listResultAfterUnsubscribe.getStdout().trim(), "This system does not have any subscriptions.", "Stdout from repo-override --list without any subscriptions attached (but should still have overrides cached in the consumer).");
 		Assert.assertEquals(listResultAfterUnsubscribe.getStdout(), listResultBeforeUnsubscribe.getStdout(), "Stdout from repo-override --list without any subscriptions attached should be identical to the list when subscriptions were attached.");
 		Assert.assertTrue(clienttasks.getCurrentlySubscribedYumRepos().isEmpty(), "The YumRepos in '"+clienttasks.redhatRepoFile+"' should be empty after unsubscribing from each serial.");
-		clienttasks.subscribe(null, null, poolIds, null, null, null, null, null, null, null, null, null);
+		clienttasks.subscribe(null, null, poolIds, null, null, null, null, null, null, null, null, null, null);
 		
 		// ...and verify the YumRepos read from the redhat.repo file persists the overrides
 		verifyCurrentYumReposReflectRepoOverrides(originalYumRepos,repoOverridesMapOfMaps, false/*because after unsubscribe/resubscribe the current yum repos come from a new entitlement and therefore cannot be equal to the originalYumRepo value for sslclientcert and sslclientkey*/);
 		
 		// remove names from one repo override and verify the list
 		String repoId = (String) repoOverridesMapOfMaps.keySet().toArray()[0];	// choose one repoId
-		clienttasks.repo_override(null,null,Arrays.asList(new String[]{repoId}),Arrays.asList(new String[]{"name"}),null,null,null,null);
+		clienttasks.repo_override(null,null,Arrays.asList(new String[]{repoId}),Arrays.asList(new String[]{"name"}),null,null,null,null, null);
 		repoOverridesMapOfMaps.get(repoId).remove("name");
-		clienttasks.repo_override(null,null,Arrays.asList(new String[]{repoId}),Arrays.asList(new String[]{"name","enabled","ui_repoid_vars"}),null,null,null,null);
+		clienttasks.repo_override(null,null,Arrays.asList(new String[]{repoId}),Arrays.asList(new String[]{"name","enabled","ui_repoid_vars"}),null,null,null,null, null);
 		repoOverridesMapOfMaps.get(repoId).remove("name");
 		repoOverridesMapOfMaps.get(repoId).remove("enabled");
 		repoOverridesMapOfMaps.get(repoId).remove("ui_repoid_vars");
@@ -505,7 +505,7 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 		//repoOverridesMapOfMaps.get(repoId).remove("gpgcheck");
 		//repoOverridesMapOfMaps.get(repoId).remove("exclude");
 		//repoOverridesMapOfMaps.get(repoId).remove("retries");
-		clienttasks.repo_override(null,null,Arrays.asList(new String[]{repoId}),Arrays.asList(new String[]{"sslverify","sslcacert","sslclientkey","sslclientcert"}),null,null,null,null);
+		clienttasks.repo_override(null,null,Arrays.asList(new String[]{repoId}),Arrays.asList(new String[]{"sslverify","sslcacert","sslclientkey","sslclientcert"}),null,null,null,null, null);
 		repoOverridesMapOfMaps.get(repoId).remove("sslverify");
 		repoOverridesMapOfMaps.get(repoId).remove("sslcacert");
 		repoOverridesMapOfMaps.get(repoId).remove("sslclientkey");
@@ -516,7 +516,7 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 		verifyCurrentYumReposReflectRepoOverrides(originalYumRepos,repoOverridesMapOfMaps, false);
 
 		// remove all of the repo overrides
-		clienttasks.repo_override(null,true,(String)null,(String)null,null,null,null,null);	
+		clienttasks.repo_override(null,true,(String)null,(String)null,null,null,null,null, null);	
 		repoOverridesMapOfMaps.clear();
 		
 		// TEMPORARY WORKAROUND
@@ -549,7 +549,7 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 	public void AddAndRemoveRepoOverridesUsingMultipleRepos_Test() {
 		
 		// register
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
 		
 		// subscribe to a random pool (so as to consume an entitlement) and remember the original list of YumRepos read from the redhat.repo file
 		List<YumRepo> originalYumRepos = attachRandomSubscriptionThatProvidesYumRepos();
@@ -571,32 +571,32 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 		repoOverrideNameValueMap.put("sslclientcert", "/overridden/serial.pem");
 		for (YumRepo yumRepo : originalYumReposSubset) repoOverridesMapOfMaps.put(yumRepo.id, repoOverrideNameValueMap);
 		List<String> repoIds = new ArrayList<String>(repoOverridesMapOfMaps.keySet());
-		clienttasks.repo_override(null, null, repoIds, null, repoOverrideNameValueMap, null, null, null);
+		clienttasks.repo_override(null, null, repoIds, null, repoOverrideNameValueMap, null, null, null, null);
 		
 		// verify the current YumRepos read from the redhat.repo file actually contain the overrides
 		verifyCurrentYumReposReflectRepoOverrides(originalYumRepos,repoOverridesMapOfMaps, true);
 		
 		// unsubscribe/resubscribe
-		SSHCommandResult listResultBeforeUnsubscribe = clienttasks.repo_override_(true,null,(String)null,(String)null,null,null,null,null);
+		SSHCommandResult listResultBeforeUnsubscribe = clienttasks.repo_override_(true,null,(String)null,(String)null,null,null,null,null, null);
 		List<String> poolIds = new ArrayList<String>();
 		for (ProductSubscription productSubscription : clienttasks.getCurrentlyConsumedProductSubscriptions()) {
-			clienttasks.unsubscribe(true, productSubscription.serialNumber, null, null, null, null);
+			clienttasks.unsubscribe(true, productSubscription.serialNumber, null, null, null, null, null);
 			poolIds.add(productSubscription.poolId);
 		}
-		SSHCommandResult listResultAfterUnsubscribe = clienttasks.repo_override_(true,null,(String)null,(String)null,null,null,null,null);
+		SSHCommandResult listResultAfterUnsubscribe = clienttasks.repo_override_(true,null,(String)null,(String)null,null,null,null,null, null);
 		// valid prior to bug 1034396	Assert.assertEquals(listResultAfterUnsubscribe.getStdout().trim(), "This system does not have any subscriptions.", "Stdout from repo-override --list without any subscriptions attached (but should still have overrides cached in the consumer).");
 		Assert.assertEquals(listResultAfterUnsubscribe.getStdout(), listResultBeforeUnsubscribe.getStdout(), "Stdout from repo-override --list without any subscriptions attached should be identical to the list when subscriptions were attached.");
 		Assert.assertTrue(clienttasks.getCurrentlySubscribedYumRepos().isEmpty(), "The YumRepos in '"+clienttasks.redhatRepoFile+"' should be empty after unsubscribing from each serial.");
-		clienttasks.subscribe(null, null, poolIds, null, null, null, null, null, null, null, null, null);
+		clienttasks.subscribe(null, null, poolIds, null, null, null, null, null, null, null, null, null, null);
 		
 		// ...and verify the YumRepos read from the redhat.repo file persists the overrides
 		verifyCurrentYumReposReflectRepoOverrides(originalYumRepos,repoOverridesMapOfMaps, false/*because after unsubscribe/resubscribe the current yum repos come from a new entitlement and therefore cannot be equal to the originalYumRepo value for sslclientcert and sslclientkey*/);
 		
 		// remove names from multiple repos using repo-override and verify the list
-		clienttasks.repo_override(null,null,repoIds,Arrays.asList(new String[]{"name"}),null,null,null,null);
-		clienttasks.repo_override(null,null,repoIds,Arrays.asList(new String[]{"name","enabled","ui_repoid_vars"}),null,null,null,null);
+		clienttasks.repo_override(null,null,repoIds,Arrays.asList(new String[]{"name"}),null,null,null,null, null);
+		clienttasks.repo_override(null,null,repoIds,Arrays.asList(new String[]{"name","enabled","ui_repoid_vars"}),null,null,null,null, null);
 		// clienttasks.repo_override(null,null,repoids,Arrays.asList(new String[]{"gpgcheck","exclude","retries"}),null,null,null,null);	// for test variability, let's not delete these
-		clienttasks.repo_override(null,null,repoIds,Arrays.asList(new String[]{"sslverify","sslcacert","sslclientkey","sslclientcert"}),null,null,null,null);
+		clienttasks.repo_override(null,null,repoIds,Arrays.asList(new String[]{"sslverify","sslcacert","sslclientkey","sslclientcert"}),null,null,null,null, null);
 		for (String repoId : repoIds) {
 			repoOverridesMapOfMaps.get(repoId).remove("name");
 			repoOverridesMapOfMaps.get(repoId).remove("enabled");
@@ -614,7 +614,7 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 		verifyCurrentYumReposReflectRepoOverrides(originalYumRepos,repoOverridesMapOfMaps, false);
 
 		// remove all of the repo overrides
-		clienttasks.repo_override(null,true,(List<String>)null,(List<String>)null,null,null,null,null);
+		clienttasks.repo_override(null,true,(List<String>)null,(List<String>)null,null,null,null,null, null);
 		repoOverridesMapOfMaps.clear();
 		
 		// 3/23/2015 ocassional workaround needed to remove stale repos from /etc/yum.repos.d/redhat.repo	// TODO figure out how to remove this
@@ -651,7 +651,7 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(clienttasks.getConfParameter("full_refresh_on_yum"),"0", "The expected default value for configuration parameter rhsm.full_refresh_on_yum.");
 		
 		// register
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null, null);
 		
 		// subscribe to a random pool (so as to consume an entitlement) and remember the original list of YumRepos read from the redhat.repo file
 		List<YumRepo> originalYumRepos = attachRandomSubscriptionThatProvidesYumRepos();
@@ -669,7 +669,7 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 		repoOverrideNameValueMap.put("timeout", "40");
 		repoOverrideNameValueMap.put("enabled", originalYumRepo.enabled? Boolean.FALSE.toString():Boolean.TRUE.toString());	// put the opposite of originalYumRepo.enabled
 		repoOverridesMapOfMaps.put(repoId, repoOverrideNameValueMap);
-		clienttasks.repo_override(null, null, repoId, null, repoOverrideNameValueMap, null, null, null);
+		clienttasks.repo_override(null, null, repoId, null, repoOverrideNameValueMap, null, null, null, null);
 		
 		// verify the current YumRepos read from the redhat.repo file actually contain the overrides
 		clienttasks.getYumRepolist("all");
@@ -724,7 +724,7 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsNitrateTest(caseId=)
 	public void ReposOverridesWhenManageReposIsOff_Test(){
 		// register
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
 		
 		// config rhsm.manage_repos to an off value
 		//clienttasks.config(null, null, true, new String[]{"rhsm", "manage_repos", "0"});
@@ -734,7 +734,7 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 		String expectedMsg = "Repositories disabled by configuration.";
 		
 		// list repo overrides (with manage_repo=0)
-		result = clienttasks.repo_override(true, null, (List<String>)null, (List<String>)null, null, null, null, null);
+		result = clienttasks.repo_override(true, null, (List<String>)null, (List<String>)null, null, null, null, null, null);
 		Assert.assertTrue(result.getStdout().trim().startsWith(expectedMsg), "Stdout when calling repo-override with rhsm.manage_repos configured to 0 starts with expected message '"+expectedMsg+"'");
 		Assert.assertEquals(result.getStderr().trim(), "", "Stderr when calling repo-override with rhsm.manage_repos configured to 0.");
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(0), "ExitCode when calling repo-override with rhsm.manage_repos configured to 0.");
@@ -743,13 +743,13 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 		Map<String,String> repoOverrideNameValueMap = new HashMap<String,String>();
 		repoOverrideNameValueMap.put("enabled", "false");
 		repoOverrideNameValueMap.put("gpgcheck", "false");
-		result = clienttasks.repo_override(null, null, "test-repo", null, repoOverrideNameValueMap, null, null, null);
+		result = clienttasks.repo_override(null, null, "test-repo", null, repoOverrideNameValueMap, null, null, null, null);
 		Assert.assertTrue(result.getStdout().trim().startsWith(expectedMsg), "Stdout when calling repo-override --add with rhsm.manage_repos configured to 0 starts with expected message '"+expectedMsg+"'");
 		Assert.assertEquals(result.getStderr().trim(), "", "Stderr when calling repo-override --add with rhsm.manage_repos configured to 0.");
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(0), "ExitCode when calling repo-override --add with rhsm.manage_repos configured to 0.");
 		
 		// remove a repo override (with manage_repo=0)
-		result = clienttasks.repo_override(null, null, "test-repo", "gpgcheck", null, null, null, null);
+		result = clienttasks.repo_override(null, null, "test-repo", "gpgcheck", null, null, null, null, null);
 		Assert.assertTrue(result.getStdout().trim().startsWith(expectedMsg), "Stdout when calling repo-override --remove with rhsm.manage_repos configured to 0 starts with expected message '"+expectedMsg+"'");
 		Assert.assertEquals(result.getStderr().trim(), "", "Stderr when calling repo-override --remove with rhsm.manage_repos configured to 0.");
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(0), "ExitCode when calling repo-override --remove with rhsm.manage_repos configured to 0.");

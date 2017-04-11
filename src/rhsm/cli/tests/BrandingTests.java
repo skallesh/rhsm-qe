@@ -71,7 +71,7 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	public void AttachSubscriptionsForFlexibleBranding_Test() throws JSONException, Exception {
 		// register
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null,(List<String>)null, null, null, null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null,(List<String>)null, null, null, null, true, false, null, null, null, null);
 		
 		// we will start out by removing the current brand name.
 		sleep(5000); // before echo to avoid tail -f /var/log/messages | grep brandbot...   systemd: brandbot.service start request repeated too quickly, refusing to start.
@@ -93,7 +93,7 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 			String brandNameStatBeforeSubscribing = getCurrentBrandNameFileStat();
 			String prettyNameBeforeSubscribing = getCurrentPrettyName();
 			log.info("Currently, the flexible brand name prior to subscribing to pool '"+pool.subscriptionName+"' is '"+brandNameBeforeSubscribing+"'.");
-			clienttasks.subscribe(null, null, pool.poolId, null, null, null, null, null, null, null, null, null);
+			clienttasks.subscribe(null, null, pool.poolId, null, null, null, null, null, null, null, null, null, null);
 			Boolean verifiedSystemsExpectedBrandedNameAfterEvent = verifySystemsExpectedBrandedNameAfterEvent(brandNameBeforeSubscribing,brandNameStatBeforeSubscribing,prettyNameBeforeSubscribing,"subscribing to pool '"+pool.subscriptionName+"'");
 			if (verifiedSystemsExpectedBrandedNameAfterEvent==null) {
 				// unentitle the system to clear the undefined case of multiple installed OS products
@@ -121,7 +121,7 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 			String brandNameStatBeforeUnsubscribing = getCurrentBrandNameFileStat();
 			String prettyNameBeforeUnsubscribing = getCurrentPrettyName();
 			log.info("The flexible brand name prior to unsubscribing from subscription '"+productSubscription.productName+"' is currently '"+brandNameBeforeUnsubscribing+"'.");
-			clienttasks.unsubscribe_(null,productSubscription.serialNumber, null, null, null, null);
+			clienttasks.unsubscribe_(null,productSubscription.serialNumber, null, null, null, null, null);
 			verifySystemsExpectedBrandedNameAfterEvent(brandNameBeforeUnsubscribing,brandNameStatBeforeUnsubscribing,prettyNameBeforeUnsubscribing,"unsubscribing from '"+productSubscription.productName+"'");
 		}
 	}
@@ -136,7 +136,7 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	public void AutoSubscribeForFlexibleBranding_Test() {
 		// we will start out by unregistering and removing the current brand name.
-		clienttasks.unregister(null, null, null);
+		clienttasks.unregister(null, null, null, null);
 		client.runCommandAndWait("rm -f "+brandingFile);
 		
 		String brandNameBeforeRegisteringWithAutosubscribe = getCurrentBrandName();
@@ -145,7 +145,7 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 		log.info("Currently, the flexible brand name prior to registering with autosubscribe is '"+brandNameBeforeRegisteringWithAutosubscribe+"'.");
 
 		// register with autosubscribe
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null,(List<String>)null, null, null, null, null, null, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null,(List<String>)null, null, null, null, null, null, null, null, null, null);
 		
 		// tests for branding
 		Boolean verifiedSystemsExpectedBrandedNameAfterEvent = verifySystemsExpectedBrandedNameAfterEvent(brandNameBeforeRegisteringWithAutosubscribe,brandNameStatBeforeRegisteringWithAutosubscribe,prettyNameBeforeRegisteringWithAutosubscribe,"registering with autosubscribe");
@@ -192,7 +192,7 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	public void RhsmcertdHealingUpdateForFlexibleBranding_Test() {
 		// we will start out by removing the current brand name and removing the current entitlements.
-		clienttasks.unsubscribe(true, (BigInteger)null, null, null, null, null);
+		clienttasks.unsubscribe(true, (BigInteger)null, null, null, null, null, null);
 		client.runCommandAndWait("rm -f "+brandingFile);
 
 		String brandNameBeforeRunningRhsmcertdHealCheck = getCurrentBrandName();
@@ -201,7 +201,7 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 		log.info("Currently, the flexible brand name prior to an rhsmcertd heal check is '"+brandNameBeforeRunningRhsmcertdHealCheck+"'.");
 		
 		// make sure autoheal is enabled
-		clienttasks.autoheal(null, true, null, null, null, null);
+		clienttasks.autoheal(null, true, null, null, null, null, null);
 		
 		// run rhsmcertd check for healing
 		clienttasks.run_rhsmcertd_worker(true);

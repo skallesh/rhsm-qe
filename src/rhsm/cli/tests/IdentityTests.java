@@ -72,13 +72,13 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 	public void IdentityWhenNotRegistered_Test() {
 		
 		// make sure we are not registered
-		clienttasks.unregister(null, null, null);
+		clienttasks.unregister(null, null, null, null);
 		
 		log.info("Assert that one must be registered to query the identity...");
 		for (String username : new String[]{null,sm_clientUsername}) {
 			for (String password : new String[]{null,sm_clientPassword}) {
 				for (Boolean regenerate : new Boolean[]{null,true,false}) {
-					SSHCommandResult identityResult = clienttasks.identity_(username,password,regenerate, null, null, null, null);
+					SSHCommandResult identityResult = clienttasks.identity_(username,password,regenerate, null, null, null, null, null);
 					if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
 						Assert.assertEquals(identityResult.getStderr().trim(), clienttasks.msg_ConsumerNotRegistered,"One must be registered to have an identity.");
 					} else {
@@ -99,14 +99,14 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 	public void IdentityWhenRegisteredToRHNClassic_Test() {
 
 		// make sure we are not registered (to Candlepin)
-		clienttasks.unregister(null, null, null);
+		clienttasks.unregister(null, null, null, null);
 		
 		// simulate registration to RHN Classic by creating a /etc/sysconfig/rhn/systemid
 		log.info("Simulating registration to RHN Classic by creating an empty systemid file '"+clienttasks.rhnSystemIdFile+"'...");
 		RemoteFileTasks.runCommandAndWait(client, "touch "+clienttasks.rhnSystemIdFile, TestRecords.action());
 		Assert.assertTrue(RemoteFileTasks.testExists(client, clienttasks.rhnSystemIdFile), "RHN Classic systemid file '"+clienttasks.rhnSystemIdFile+"' is in place.");
 
-		SSHCommandResult identityResult = clienttasks.identity(null,null,null,null,null,null,null);
+		SSHCommandResult identityResult = clienttasks.identity(null,null,null,null,null,null,null, null);
 		//Assert.assertEquals(identityResult.getStdout().trim(), "remote entitlement server type: RHN Classic","Stdout when registered to RHN Classic, but not candlepin.");	// changed by bug 846834
 		Assert.assertEquals(identityResult.getStdout().trim(), "server type: RHN Classic","Stdout when registered to RHN Classic, but not candlepin.");
 		Assert.assertEquals(identityResult.getStderr().trim(), "","Stderr when registered to RHN Classic, but not candlepin.");
@@ -129,7 +129,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		RemoteFileTasks.runCommandAndWait(client, "touch "+clienttasks.rhnSystemIdFile, TestRecords.action());
 		Assert.assertTrue(RemoteFileTasks.testExists(client, clienttasks.rhnSystemIdFile), "RHN Classic systemid file '"+clienttasks.rhnSystemIdFile+"' is in place.");
 
-		SSHCommandResult identityResult = clienttasks.identity(null,null,null,null,null,null,null);
+		SSHCommandResult identityResult = clienttasks.identity(null,null,null,null,null,null,null, null);
 		List<String> expectedStdoutRegexs = new ArrayList<String>();
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.10.6-1")) expectedStdoutRegexs.add("^system identity: "+consumerId);	// changed to this by commit 7da29583efa091337be233b9795b0157283aad0f Change wording for identity in CLI command.
 		else expectedStdoutRegexs.add("^Current identity is: "+consumerId);
@@ -152,11 +152,11 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		String identityRegex;
 		
 		// start fresh by unregistering and registering
-		clienttasks.unregister(null, null, null);
+		clienttasks.unregister(null, null, null, null);
 		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg));
 		
 		// get the current identity
-		SSHCommandResult identityResult = clienttasks.identity(null, null, null, null, null, null, null);
+		SSHCommandResult identityResult = clienttasks.identity(null, null, null, null, null, null, null, null);
 		
 		// assert the current identity matches what was returned from register
 		// ALPHA: Assert.assertEquals(result.getStdout().trim(), "Current identity is "+consumerId);
@@ -188,12 +188,12 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		String identityRegex;
 		
 		// start fresh by unregistering and registering
-		clienttasks.unregister(null, null, null);
+		clienttasks.unregister(null, null, null, null);
 		String nickname = "Mr_"+sm_clientUsername;
-		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,nickname,null, null, null, null, (String)null, null, null, null, null, false, null, null, null));
+		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,nickname,null, null, null, null, (String)null, null, null, null, null, false, null, null, null, null));
 		
 		// get the current identity
-		SSHCommandResult identityResult = clienttasks.identity(null, null, null, null, null, null, null);
+		SSHCommandResult identityResult = clienttasks.identity(null, null, null, null, null, null, null, null);
 		
 		// assert the current identity matches what was returned from register
 		// Assert.assertEquals(result.getStdout().trim(), "Current identity is: "+consumerId+" name: "+nickname);	// RHEL61 RHEL57
@@ -214,13 +214,13 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 	public void IdentityRegenerate_Test() {
 		
 		// start fresh by unregistering and registering
-		clienttasks.unregister(null, null, null);
-		SSHCommandResult registerResult = clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null, null, null, null, (String)null, null, null, null, null, false, null, null, null);
+		clienttasks.unregister(null, null, null, null);
+		SSHCommandResult registerResult = clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null, null, null, null, (String)null, null, null, null, null, false, null, null, null, null);
 		ConsumerCert origConsumerCert = clienttasks.getCurrentConsumerCert();
 		
 		// regenerate the identity... and assert
 		log.info("Regenerating identity using the current cert for authentication...");
-		SSHCommandResult identityResult = clienttasks.identity(null,null,Boolean.TRUE, null, null, null, null);
+		SSHCommandResult identityResult = clienttasks.identity(null,null,Boolean.TRUE, null, null, null, null, null);
 		// RHEL57 RHEL61 Assert.assertEquals(identityResult.getStdout().trim(), registerResult.getStdout().trim(),
 		//		"The original registered result is returned from identity regenerate with original authenticator.");
 		
@@ -246,13 +246,13 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 	public void IdentityRegenerateWithUsernameAndPaswordFromTheSameOwner_Test() throws Exception {
 
 		// start fresh by unregistering and registering
-		clienttasks.unregister(null, null, null);
-		SSHCommandResult registerResult = clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null, null, null, null, (String)null, null, null, null, null, false, null, null, null);
+		clienttasks.unregister(null, null, null, null);
+		SSHCommandResult registerResult = clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null, null, null, null, (String)null, null, null, null, null, false, null, null, null, null);
 		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_clientUsername, sm_clientPassword, sm_serverUrl, clienttasks.getCurrentConsumerId(registerResult));
 
 		// regenerate the identity using the same username and password as used during register... and assert
 		log.info("Regenerating identity with the same username and password as used during register...");
-		SSHCommandResult identityResult = clienttasks.identity(sm_clientUsername,sm_clientPassword,Boolean.TRUE, Boolean.TRUE, null, null, null);
+		SSHCommandResult identityResult = clienttasks.identity(sm_clientUsername,sm_clientPassword,Boolean.TRUE, Boolean.TRUE, null, null, null, null);
 //		Assert.assertEquals(identityResult.getStdout().trim(), registerResult.getStdout().trim(),
 //			"The original registered result is returned from identity regenerate with original authenticator.");
 		Assert.assertEquals(clienttasks.getCurrentConsumerId(), clienttasks.getCurrentConsumerId(registerResult),
@@ -268,7 +268,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 			
 			// regenerate the identity using a different username and password as used during register... and assert
 			log.info("Regenerating identity with a different username and password (but belonging to the same owner) than used during register...");
-			identityResult = clienttasks.identity(registrationDatum.username,registrationDatum.password,Boolean.TRUE, Boolean.TRUE, null, null, null);
+			identityResult = clienttasks.identity(registrationDatum.username,registrationDatum.password,Boolean.TRUE, Boolean.TRUE, null, null, null, null);
 //			Assert.assertEquals(result.getStdout().trim(), registerResult.getStdout().trim(),
 //				"The original registered result is returned from identity regenerate using a different authenticator who belongs to the same owner/organization.");
 			Assert.assertEquals(clienttasks.getCurrentConsumerId(), clienttasks.getCurrentConsumerId(registerResult),
@@ -286,8 +286,8 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 	public void IdentityRegenerateWithUsernameAndPaswordFromADifferentOwner_Test() throws Exception {
 
 		// start fresh by unregistering and registering
-		clienttasks.unregister(null, null, null);
-		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null, null, null, null, (String)null, null, null, null, null, false, null, null, null));
+		clienttasks.unregister(null, null, null, null);
+		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null, null, null, null, (String)null, null, null, null, null, false, null, null, null, null));
 		//String ownerKey = CandlepinTasks.getOwnerOfConsumerId(serverHostname, serverPort, serverPrefix, serverAdminUsername, serverAdminPassword, consumerId).getString("key");
 		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerId);
 
@@ -298,7 +298,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		for (RegistrationData registrationDatum : registrationData) {
 			// retrieve the identity using the same username and password as used during register... and assert
 			log.info("Attempting to regenerate identity with an invalid username and password...");
-			SSHCommandResult identityResult = clienttasks.identity_(registrationDatum.username,registrationDatum.password,Boolean.TRUE, Boolean.TRUE, null, null, null);
+			SSHCommandResult identityResult = clienttasks.identity_(registrationDatum.username,registrationDatum.password,Boolean.TRUE, Boolean.TRUE, null, null, null, null);
 			Assert.assertNotSame(identityResult.getExitCode(), Integer.valueOf(0), "The identify command was NOT a success.");
 			//Assert.assertEquals(identityResult.getStderr().trim(),"access denied.");
 			//Assert.assertEquals(identityResult.getStderr().trim(),"Insufficient permissions");	// server response 403 Forbidden
@@ -316,13 +316,13 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 	public void IdentityRegenerateWithInvalidUsernameAndPasword_Test() {
 		
 		// start fresh by unregistering and registering
-		clienttasks.unregister(null, null, null);
-		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null, null, null, null, (String)null, null, null, null, null, false, null, null, null);
+		clienttasks.unregister(null, null, null, null);
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null, null, null, null, (String)null, null, null, null, null, false, null, null, null, null);
 		
 		// retrieve the identity using the same username and password as used during register... and assert
 		log.info("Attempting to regenerate identity with an invalid username and password...");
 		// first attempt without --force
-		SSHCommandResult identityResult = clienttasks.identity_("FOO","BAR",Boolean.TRUE, null, null, null, null);
+		SSHCommandResult identityResult = clienttasks.identity_("FOO","BAR",Boolean.TRUE, null, null, null, null, null);
 		Assert.assertNotSame(identityResult.getExitCode(), Integer.valueOf(0), "The identify command was NOT a success.");
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
 			Assert.assertEquals(identityResult.getStderr().trim(),"--username and --password can only be used with --force");
@@ -330,7 +330,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 			Assert.assertEquals(identityResult.getStdout().trim(),"--username and --password can only be used with --force");
 		}
 		// now attempt with --force
-		identityResult = clienttasks.identity_("FOO","BAR",Boolean.TRUE, Boolean.TRUE, null, null, null);
+		identityResult = clienttasks.identity_("FOO","BAR",Boolean.TRUE, Boolean.TRUE, null, null, null, null);
 		Assert.assertNotSame(identityResult.getExitCode(), Integer.valueOf(0), "The identify command was NOT a success.");
 		Assert.assertContainsMatch(identityResult.getStderr().trim(),servertasks.invalidCredentialsRegexMsg(),"The stderr expresses a message such that authentication credentials are invalid.");
 	}
@@ -357,7 +357,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile,"consumerCertDir",consumerCertDir);
 		
 		// register and remember the original consumer identity
-		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
 		clienttasks.config(null, null, true, new String[]{"rhsmcertd",/*"certFrequency" CHANGED BY BUG 882459 TO*/"certCheckInterval".toLowerCase(),"240"});
 		clienttasks.restart_rhsmcertd(null, null, true);	// make sure that rhsmcertd will not interfere with test
 		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
@@ -385,22 +385,22 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		SSHCommandResult result;
 		Integer expectedExitCode = new Integer(255);
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) expectedExitCode=new Integer(70/*EX_SOFTWARE*/);	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
-		result = clienttasks.identity_(null,null,null,null,null,null,null);
+		result = clienttasks.identity_(null,null,null,null,null,null,null, null);
 		Assert.assertEquals(result.getExitCode(),expectedExitCode,	"Exitcode expected after the consumer has been deleted on the server-side.");
 		Assert.assertEquals(result.getStdout().trim(),"",			"Stdout expected after the consumer has been deleted on the server-side.");
 		Assert.assertEquals(result.getStderr().trim(),expectedMsg,	"Stderr expected after the consumer has been deleted on the server-side.");
 		
-		result = clienttasks.refresh_(null, null, null);
+		result = clienttasks.refresh_(null, null, null, null);
 		Assert.assertEquals(result.getExitCode(),expectedExitCode,	"Exitcode expected after the consumer has been deleted on the server-side.");
 		Assert.assertEquals(result.getStdout().trim(),"",			"Stdout expected after the consumer has been deleted on the server-side.");
 		Assert.assertEquals(result.getStderr().trim(),expectedMsg,	"Stderr expected after the consumer has been deleted on the server-side.");
 		
-		result = clienttasks.service_level_(null,null,null,null,null,null,null,null, null, null, null, null);
+		result = clienttasks.service_level_(null,null,null,null,null,null,null,null, null, null, null, null, null);
 		Assert.assertEquals(result.getExitCode(),expectedExitCode,	"Exitcode expected after the consumer has been deleted on the server-side.");
 		Assert.assertEquals(result.getStdout().trim(),"",			"Stdout expected after the consumer has been deleted on the server-side.");
 		Assert.assertEquals(result.getStderr().trim(),expectedMsg,	"Stderr expected after the consumer has been deleted on the server-side.");
 		
-		result = clienttasks.facts_(null, true, null, null, null);	// Bug 798788:  Error updating system data, see /var/log/rhsm/rhsm.log for more details.
+		result = clienttasks.facts_(null, true, null, null, null, null);	// Bug 798788:  Error updating system data, see /var/log/rhsm/rhsm.log for more details.
 		// TEMPORARY WORKAROUND FOR BUG
 		String bugId = "798788"; boolean invokeWorkaroundWhileBugIsOpen = true;
 		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
@@ -413,13 +413,13 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(result.getStderr().trim(),expectedMsg,	"Stderr expected after the consumer has been deleted on the server-side.");
 		}
 		
-		result = clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null, null);
+		result = clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null, null, null);
 		Assert.assertEquals(result.getExitCode(),expectedExitCode,	"Exitcode expected after the consumer has been deleted on the server-side.");
 		//Assert.assertEquals(result.getStdout().trim(),expectedMsg,"Stdout expected after the consumer has been deleted on the server-side.");
 		//Assert.assertEquals(result.getStderr().trim(),"",			"Stderr expected after the consumer has been deleted on the server-side.");
 		Assert.assertEquals(result.getStdout().trim()+result.getStderr().trim(),expectedMsg, "Feedback expected after the consumer has been deleted on the server-side.");
 		
-		result = clienttasks.list_(null, true, null, null, null, null, null, null, null, null, null, null, null);
+		result = clienttasks.list_(null, true, null, null, null, null, null, null, null, null, null, null, null, null);
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.16.4-1")) expectedExitCode=new Integer(69/*EX_UNAVAILABLE*/);	// post commit 616ecda6db6ae8b054d7bbb8ba278bba242f4fd0 bug 1262989
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.16.3-1")) expectedMsg  = String.format("This consumer's profile has been deleted from the server. You can use command clean or unregister to remove local profile.",consumerCert.consumerid);	// post commit 5c48d059bb07b64b92722f249b38aaee7219ab47 bug 1262989
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.16.5-1")) expectedMsg  = String.format("Consumer profile \"%s\" has been deleted from the server. You can use command clean or unregister to remove local profile.",consumerCert.consumerid);	// post commit 3ad13c20f6ab34cf2621bc48cdd7d15a82791d4f bug 1262989
@@ -432,14 +432,14 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 			Assert.assertEquals(result.getStderr().trim(),"",			"Stderr expected after the consumer has been deleted on the server-side.");
 		}
 		
-		result = clienttasks.subscribe_(null, null, pool.poolId, null, null, null, null, null, null, null, null, null);
+		result = clienttasks.subscribe_(null, null, pool.poolId, null, null, null, null, null, null, null, null, null, null);
 		Assert.assertEquals(result.getExitCode(),expectedExitCode,	"Exitcode expected after the consumer has been deleted on the server-side.");
 		//Assert.assertEquals(result.getStdout().trim(),expectedMsg,"Stdout expected after the consumer has been deleted on the server-side.");
 		//Assert.assertEquals(result.getStderr().trim(),"",			"Stderr expected after the consumer has been deleted on the server-side.");
 		Assert.assertEquals(result.getStdout().trim()+result.getStderr().trim(),expectedMsg, "Feedback expected after the consumer has been deleted on the server-side.");
 		
 		if (clienttasks.isPackageVersion("subscription-manager","<","1.16.3-1")) {	// pre commit 5c48d059bb07b64b92722f249b38aaee7219ab47 bug 1262989 which causes a call to unregister to effectively clean the local consumer cert
-			result = clienttasks.unregister_(null, null, null);
+			result = clienttasks.unregister_(null, null, null, null);
 			Assert.assertEquals(result.getExitCode(),expectedExitCode,	"Exitcode expected after the consumer has been deleted on the server-side.");
 			if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.9-1")) {	// post commit a695ef2d1da882c5f851fde90a24f957b70a63ad
 				Assert.assertEquals(result.getStdout().trim(),"",			"Stdout expected after the consumer has been deleted on the server-side.");
@@ -462,11 +462,11 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(client.runCommandAndWait("md5sum "+consumerCertKeyOld).getStdout().replaceAll(consumerCertKeyOld, "").trim(), consumerKey_md5sum.replaceAll(clienttasks.consumerKeyFile(), "").trim(), "After the deleted consumer key is backed up, its md5sum matches that from the original consumer key.");
 		
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.16.3-1")) {	// post commit 5c48d059bb07b64b92722f249b38aaee7219ab47 bug 1262989 which causes a call to unregister to effectively clean the local consumer cert
-			clienttasks.unregister(null, null, null);	// no longer throws an exception when consumer has been deleted consumer side - no reason to - just cleans the local consumer cert
+			clienttasks.unregister(null, null, null, null);	// no longer throws an exception when consumer has been deleted consumer side - no reason to - just cleans the local consumer cert
 		}
 		
 		// assert that the system is no longer registered and no entitlements remain
-		result = clienttasks.identity_(null,null,null,null,null,null,null);
+		result = clienttasks.identity_(null,null,null,null,null,null,null, null);
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
 			Assert.assertEquals(result.getStderr().trim(),clienttasks.msg_ConsumerNotRegistered,"The system should no longer be registered after rhsmcertd triggers following a server-side consumer deletion.");
 		} else {
@@ -485,8 +485,8 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 	@AfterGroups(groups={"setup"}, value={"VerifyIdentityIsBackedUpWhenConsumerIsDeletedServerSide_Test"})
 	public void afterVerifyIdentityIsBackedUpWhenConsumerIsDeletedServerSide_Test() {
 		if (clienttasks!=null) {
-			clienttasks.unregister_(null,null,null);
-			clienttasks.clean_(null,null,null);
+			clienttasks.unregister_(null,null,null, null);
+			clienttasks.clean_();
 			if (origConsumerCertDir!=null) clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile,"consumerCertDir",origConsumerCertDir);
 		}
 	}
@@ -523,7 +523,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 	public void cleanAfterClass() {
 		// use the following to recover bugs like 814466,813296
 		if (clienttasks!=null) {
-			clienttasks.clean(null,null,null);
+			clienttasks.clean();
 		}
 	}
 	

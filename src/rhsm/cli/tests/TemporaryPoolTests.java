@@ -64,7 +64,7 @@ public class TemporaryPoolTests extends SubscriptionManagerCLITestScript {
 		// system facts were overridden in dataProvider with factsMap to fake this system as a guest
 		
 		// make sure we are freshly registered (to discard a consumer from a former data provided iteration that has mapped guests)
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);	
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);	
 		
 		// verify the unmapped_guests_only pool is available for consumption
 		List<SubscriptionPool> availableSubscriptionPools = clienttasks.getCurrentlyAvailableSubscriptionPools();
@@ -103,7 +103,7 @@ public class TemporaryPoolTests extends SubscriptionManagerCLITestScript {
 		//	201503191231:16.011 - FINE: Stdout: Pool is restricted to unmapped virtual guests: '8a9087e34c2f214a014c2f22a7d11ad0'
 		//	201503191231:16.014 - FINE: Stderr: 
 		//	201503191231:16.016 - FINE: ExitCode: 1
-		SSHCommandResult result = clienttasks.subscribe_(null, null, unmappedGuestsOnlyPool.poolId, null, null, null, null, null, null, null, null, null);
+		SSHCommandResult result = clienttasks.subscribe_(null, null, unmappedGuestsOnlyPool.poolId, null, null, null, null, null, null, null, null, null, null);
 		String expectedStdout = String.format("Pool is restricted to unmapped virtual guests: '%s'", unmappedGuestsOnlyPool.poolId);
 		String expectedStderr = "";
 		Assert.assertEquals(result.getStdout().trim(), expectedStdout, "Stdout from an attempt to attach a temporary pool to a virtual guest that has already been mapped.");
@@ -124,10 +124,10 @@ public class TemporaryPoolTests extends SubscriptionManagerCLITestScript {
 		// system facts were overridden in dataProvider with factsMap to fake this system as a guest
 		
 		// make sure we are freshly registered (to discard a consumer from a former data provided iteration that has mapped guests)
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);	
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);	
 		
 		// subscribe and assert stderr does not report an UnboundLocalError
-		SSHCommandResult result = clienttasks.subscribe(null, null, unmappedGuestsOnlyPool.poolId, null, null, null, null, null, null, null, null, null);
+		SSHCommandResult result = clienttasks.subscribe(null, null, unmappedGuestsOnlyPool.poolId, null, null, null, null, null, null, null, null, null, null);
 		//	201503161528:29.708 - FINE: ssh root@jsefler-os6.usersys.redhat.com subscription-manager subscribe --pool=8a9087e34c097838014c09799c231f02
 		//	201503161528:33.439 - FINE: Stdout: Successfully attached a subscription for: Awesome OS Server Basic (data center)
 		//	201503161528:33.442 - FINE: Stderr: 
@@ -165,13 +165,13 @@ public class TemporaryPoolTests extends SubscriptionManagerCLITestScript {
 		// system facts were overridden in dataProvider with factsMap to fake this system as a guest
 		
 		// make sure we are freshly registered (to discard a consumer from a former data provided iteration that has mapped guests)
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);	
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);	
 		ConsumerCert cert = clienttasks.getCurrentConsumerCert();
 		
 		// attach the unmapped guests only pool
 		//File serialPemFile = clienttasks.subscribeToSubscriptionPool(unmappedGuestsOnlyPool, null, sm_clientUsername, sm_clientPassword, sm_serverUrl);
 		//EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(serialPemFile);
-		clienttasks.subscribe_(null, null, unmappedGuestsOnlyPool.poolId, null, null, null, null, null, null, null, null, null);
+		clienttasks.subscribe_(null, null, unmappedGuestsOnlyPool.poolId, null, null, null, null, null, null, null, null, null, null);
 		//ProductSubscription consumedUnmappedGuestsOnlyProductSubscription = clienttasks.getCurrentlyConsumedProductSubscriptions().get(0);	// assumes only one consumed entitlement
 		ProductSubscription consumedUnmappedGuestsOnlyProductSubscription = ProductSubscription.findFirstInstanceWithMatchingFieldFromList("poolId", unmappedGuestsOnlyPool.poolId, clienttasks.getCurrentlyConsumedProductSubscriptions());
 
@@ -191,7 +191,7 @@ public class TemporaryPoolTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(consumedUnmappedGuestsOnlyProductSubscription.statusDetails, Arrays.asList(new String[]{expectedStatusDetailsForAnUnmappedGuestsOnlyProductSubscription}),"Status Details of a consumed subscription from a temporary pool for unmapped guests only.");
 		
 		// assert that the temporary subscription appears in the status report
-		SSHCommandResult statusResult = clienttasks.status(null, null, null, null);
+		SSHCommandResult statusResult = clienttasks.status(null, null, null, null, null);
 		//	2015-08-13 18:49:28.596  FINE: ssh root@jsefler-7.usersys.redhat.com subscription-manager status
 		//	2015-08-13 18:49:30.956  FINE: Stdout: 
 		//	+-------------------------------------------+
@@ -260,13 +260,13 @@ public class TemporaryPoolTests extends SubscriptionManagerCLITestScript {
 		// system facts were overridden in dataProvider with factsMap to fake this system as a guest
 		
 		// make sure we are freshly registered (to discard a consumer from a former data provided iteration that has mapped guests) and auto-subscribed
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, true, false, null, null, null);	
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, true, false, null, null, null, null);	
 		
 		// attach the unmapped guests only pool
-		clienttasks.subscribe_(null, null, unmappedGuestsOnlyPool.poolId, null, null, null, null, null, null, null, null, null);
+		clienttasks.subscribe_(null, null, unmappedGuestsOnlyPool.poolId, null, null, null, null, null, null, null, null, null, null);
 		
 		// assert that the temporary subscription appears in the status report
-		SSHCommandResult statusResult = clienttasks.status(null, null, null, null);
+		SSHCommandResult statusResult = clienttasks.status(null, null, null, null, null);
 		//	[root@jsefler-os6 ~]# subscription-manager status
 		//	+-------------------------------------------+
 		//	   System Status Details
@@ -287,7 +287,7 @@ public class TemporaryPoolTests extends SubscriptionManagerCLITestScript {
 		List<File> entitlementCertFileAfterSubscribed = clienttasks.getCurrentEntitlementCertFiles();
 		
 		// trigger an auto-heal event
-		clienttasks.autoheal(null, true, null, null, null, null);
+		clienttasks.autoheal(null, true, null, null, null, null, null);
 		clienttasks.run_rhsmcertd_worker(true);
 		
 		// get a list of the entitlements after auto-heal
@@ -298,7 +298,7 @@ public class TemporaryPoolTests extends SubscriptionManagerCLITestScript {
 				"The entitlement certs remained the same after first attempt to auto-heal despite the attached temporary pool. (Assuming that the initial registration with autosubcribe provided as much coverage as possible for the installed products from subscriptions with plenty of available quantity, repeated attempts to auto-heal should not consume more entitlements.)");
 
 		// trigger a second auto-heal event
-		clienttasks.autoheal(null, true, null, null, null, null);
+		clienttasks.autoheal(null, true, null, null, null, null, null);
 		clienttasks.run_rhsmcertd_worker(true);
 		
 		// get a list of the entitlements after second auto-heal event
@@ -322,12 +322,12 @@ public class TemporaryPoolTests extends SubscriptionManagerCLITestScript {
 		// system facts were overridden in dataProvider with factsMap to fake this system as a guest
 		
 		// make sure we are freshly registered (to discard a consumer from a former data provided iteration that has mapped guests)
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null);	
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null, null);	
 		// ensure that auto-healing is off
-		clienttasks.autoheal(null, null, true, null, null, null);
+		clienttasks.autoheal(null, null, true, null, null, null, null);
 		
 		// attach the unmapped guests only pool
-		clienttasks.subscribe_(null, null, unmappedGuestsOnlyPool.poolId, null, null, null, null, null, null, null, null, null);
+		clienttasks.subscribe_(null, null, unmappedGuestsOnlyPool.poolId, null, null, null, null, null, null, null, null, null, null);
 		ProductSubscription consumedUnmappedGuestsOnlyProductSubscription = ProductSubscription.findFirstInstanceWithMatchingFieldFromList("poolId", unmappedGuestsOnlyPool.poolId, clienttasks.getCurrentlyConsumedProductSubscriptions());
 		Assert.assertNotNull(consumedUnmappedGuestsOnlyProductSubscription, "Successfully found the consumed product subscription after attaching temporary pool '"+unmappedGuestsOnlyPool.subscriptionName+"' (poolId='"+unmappedGuestsOnlyPool.poolId+"').");
 		
@@ -345,7 +345,7 @@ public class TemporaryPoolTests extends SubscriptionManagerCLITestScript {
 		} else
 		// END OF WORKAROUND
 		if (getRandomListItem(Arrays.asList(true,false))) 
-			clienttasks.refresh(null, null, null);
+			clienttasks.refresh(null, null, null, null);
 		else
 			clienttasks.run_rhsmcertd_worker(null);	// no need to pass autoheal option because it is already set true on the consumer
 		
@@ -370,12 +370,12 @@ public class TemporaryPoolTests extends SubscriptionManagerCLITestScript {
 		// system facts were overridden in dataProvider with factsMap to fake this system as a guest
 		
 		// make sure we are freshly registered (to discard a consumer from a former data provided iteration that has mapped guests)
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null);	
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null, null);	
 		// ensure that auto-healing is on
-		clienttasks.autoheal(null, true, null, null, null, null);
+		clienttasks.autoheal(null, true, null, null, null, null, null);
 		
 		// attach the unmapped guests only pool
-		clienttasks.subscribe_(null, null, unmappedGuestsOnlyPool.poolId, null, null, null, null, null, null, null, null, null);
+		clienttasks.subscribe_(null, null, unmappedGuestsOnlyPool.poolId, null, null, null, null, null, null, null, null, null, null);
 		ProductSubscription consumedUnmappedGuestsOnlyProductSubscription = ProductSubscription.findFirstInstanceWithMatchingFieldFromList("poolId", unmappedGuestsOnlyPool.poolId, clienttasks.getCurrentlyConsumedProductSubscriptions());
 		Assert.assertNotNull(consumedUnmappedGuestsOnlyProductSubscription, "Successfully found the consumed product subscription after attaching temporary pool '"+unmappedGuestsOnlyPool.subscriptionName+"' (poolId='"+unmappedGuestsOnlyPool.poolId+"').");
 		
@@ -393,7 +393,7 @@ public class TemporaryPoolTests extends SubscriptionManagerCLITestScript {
 		} else
 		// END OF WORKAROUND
 		if (getRandomListItem(Arrays.asList(true,false))) 
-			clienttasks.refresh(null, null, null);
+			clienttasks.refresh(null, null, null, null);
 		else
 			clienttasks.run_rhsmcertd_worker(null);	// no need to pass autoheal option because it is already set true on the consumer
 		
@@ -403,7 +403,7 @@ public class TemporaryPoolTests extends SubscriptionManagerCLITestScript {
 		
 		// assert that we have been autohealed as well as possible
 		List<File> entitlementCertFileAfterMapping = clienttasks.getCurrentEntitlementCertFiles();
-		clienttasks.subscribe(true, null, (String) null, null, null, null, null, null, null, null, null, null);
+		clienttasks.subscribe(true, null, (String) null, null, null, null, null, null, null, null, null, null, null);
 		List<File> entitlementCertFileAfterAutosubscribing = clienttasks.getCurrentEntitlementCertFiles();
 		Assert.assertTrue(entitlementCertFileAfterMapping.containsAll(entitlementCertFileAfterAutosubscribing) && entitlementCertFileAfterAutosubscribing.containsAll(entitlementCertFileAfterMapping),
 			"When the entitlement certs on the system are identical after a guest has been mapped and auto-healed and an explicit auto-subscribe is attempted, then we are confident that the guest was auto-healed at the instant the guest was mapped.)");
@@ -424,10 +424,10 @@ public class TemporaryPoolTests extends SubscriptionManagerCLITestScript {
 		resetDatesAfterVerifyExpirationOfUnmappedGuestsOnlySubpool_Test();
 		
 		// make sure we are freshly registered (to discard a consumer from a former data provided iteration that has mapped guests)
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null/* autoheal defaults to true*/, null, null, null);	
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null/* autoheal defaults to true*/, null, null, null, null);	
 		
 		// attach the unmapped guests only pool
-		clienttasks.subscribe_(null, null, unmappedGuestsOnlyPool.poolId, null, null, null, null, null, null, null, null, null);
+		clienttasks.subscribe_(null, null, unmappedGuestsOnlyPool.poolId, null, null, null, null, null, null, null, null, null, null);
 		ProductSubscription consumedUnmappedGuestsOnlyProductSubscription = ProductSubscription.findFirstInstanceWithMatchingFieldFromList("poolId", unmappedGuestsOnlyPool.poolId, clienttasks.getCurrentlyConsumedProductSubscriptions());
 		Assert.assertNotNull(consumedUnmappedGuestsOnlyProductSubscription, "Successfully found the consumed product subscription after attaching temporary pool '"+unmappedGuestsOnlyPool.subscriptionName+"' (poolId='"+unmappedGuestsOnlyPool.poolId+"').");
 
@@ -464,7 +464,7 @@ public class TemporaryPoolTests extends SubscriptionManagerCLITestScript {
 		//	201503191706:03.965 - FINE: Stdout: Pool is restricted to virtual guests in their first day of existence: '8a9087e34c335894014c3359e22517fa'
 		//	201503191706:03.968 - FINE: Stderr: 
 		//	201503191706:03.970 - FINE: ExitCode: 1
-		SSHCommandResult result = clienttasks.subscribe_(null, null, unmappedGuestsOnlyPool.poolId, null, null, null, null, null, null, null, null, null);
+		SSHCommandResult result = clienttasks.subscribe_(null, null, unmappedGuestsOnlyPool.poolId, null, null, null, null, null, null, null, null, null, null);
 		String expectedStdout = String.format("Pool is restricted to virtual guests in their first day of existence: '%s'", unmappedGuestsOnlyPool.poolId);
 		String expectedStderr = "";
 		Assert.assertEquals(result.getStdout().trim(), expectedStdout, "Stdout from an attempt to attach a temporary pool to a virtual guest 24 hours after the guest registered.");
@@ -521,7 +521,7 @@ public class TemporaryPoolTests extends SubscriptionManagerCLITestScript {
 	@AfterClass(groups={"setup"})
 	public void afterVerifyAvailabilityOfDerivedProductSubpool_Test() {
 //		clienttasks.unsubscribeFromTheCurrentlyConsumedSerialsCollectively();	// will avoid: Runtime Error No row with the given identifier exists: [org.candlepin.model.PoolAttribute#8a99f98a46b4fa990146ba9494032318] at org.hibernate.UnresolvableObjectException.throwIfNull:64
-		clienttasks.unregister(null,null,null);
+		clienttasks.unregister(null,null,null, null);
 		clienttasks.deleteFactsFileWithOverridingValues();
 	}
 

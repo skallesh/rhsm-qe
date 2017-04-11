@@ -114,7 +114,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	public void AttemptLocalizedRegistrationWithInvalidCredentials_Test(Object bugzilla, String lang, String username, String password, Integer exitCode, String stdoutRegex, String stderrRegex) {
 
 		// ensure we are unregistered
-		clienttasks.unregister(null, null, null);
+		clienttasks.unregister(null, null, null, null);
 		
 		log.info("Attempting to register to a candlepin server using invalid credentials and expecting output in language "+(lang==null?"DEFAULT":lang));
 		String command = String.format("%s register --username=%s --password=%s", clienttasks.command, username, password);
@@ -143,7 +143,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 		//	[root@rhsm-compat-rhel61 ~]# 
 		
 		for(String lang: new String[]{"C","us"}) {
-			clienttasks.unregister(null, null, null);
+			clienttasks.unregister(null, null, null, null);
 			String command = String.format("%s register --username %s --password %s", clienttasks.command,sm_clientUsername,sm_clientPassword);
 			if (sm_clientOrg!=null) command += String.format(" --org %s", sm_clientOrg);
 			//SSHCommandResult sshCommandResult = clienttasks.runCommandWithLang(lang,clienttasks.command+" register --username "+sm_clientUsername+" --password "+sm_clientPassword+" "+(sm_clientOrg!=null?"--org "+sm_clientOrg:""));
@@ -161,7 +161,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	//@ImplementsNitrateTest(caseId=)
 	public void AttemptRedeemWithoutEmailUsingLang_Test() {
 		
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
 		//SSHCommandResult redeemResult = clienttasks.redeem_(null,null,null,null,null)
 		String lang = "de_DE";
 		log.info("Attempting to redeem without specifying email expecting output in language "+(lang==null?"DEFAULT":lang));
@@ -757,7 +757,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	public void beforeVerifyYumSearchDoesNotThrowAsciiCodecError_Test() {
 		if (clienttasks==null) return;
 		// register with auto-subscribe
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, true, false, null, null, null, null);
 		// skip the test when we do not have access to RHEL content
 		if (!clienttasks.isRhelProductCertSubscribed()) throw new SkipException("Cannot perform this test until an available RHEL subscription has been attached.");
 		// remove python-simplejson

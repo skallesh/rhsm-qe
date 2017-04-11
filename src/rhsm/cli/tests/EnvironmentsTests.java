@@ -115,13 +115,13 @@ public class EnvironmentsTests extends SubscriptionManagerCLITestScript {
 	//@ImplementsNitrateTest(caseId=)
 	public void AttemptEnvironmentsWithoutOrg_Test() {
 		
-		SSHCommandResult environmentsResult = clienttasks.environments_(sm_clientUsername,sm_clientPassword,null,null,null,null, null, null);
+		SSHCommandResult environmentsResult = clienttasks.environments_(sm_clientUsername,sm_clientPassword,null,null,null,null, null, null, null);
 		Assert.assertEquals(environmentsResult.getStderr().trim(), "", "Stderr from environments without specifying the --org option.");
 		//Assert.assertEquals(environmentsResult.getStdout().trim(), "you must specify an --org", "Stdout from environments without specifying the --org option.");
 		Assert.assertEquals(environmentsResult.getStdout().trim(), "Error: This command requires that you specify an organization with --org", "Stdout from environments without specifying the --org option.");
 		Assert.assertEquals(environmentsResult.getExitCode(), Integer.valueOf(255),"Exit code from environments when executed without an org option.");
 
-		environmentsResult = clienttasks.environments_(null,null,null,null,null,null, null, null);
+		environmentsResult = clienttasks.environments_(null,null,null,null,null,null, null, null, null);
 		Assert.assertEquals(environmentsResult.getStderr().trim(), "", "Stderr from environments without specifying the --org option.");
 		//Assert.assertEquals(environmentsResult.getStdout().trim(), "you must specify an --org", "Stdout from environments without specifying the --org option.");
 		Assert.assertEquals(environmentsResult.getStdout().trim(), "Error: This command requires that you specify an organization with --org", "Stdout from environments without specifying the --org option.");
@@ -157,7 +157,7 @@ public class EnvironmentsTests extends SubscriptionManagerCLITestScript {
 		String prefixBeforeTest		= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "prefix");
 		
 		// environments with a serverurl
-		SSHCommandResult sshCommandResult = clienttasks.environments_(sm_clientUsername,sm_clientPassword,clientOrg,serverurl, null, null, null, null);
+		SSHCommandResult sshCommandResult = clienttasks.environments_(sm_clientUsername,sm_clientPassword,clientOrg,serverurl, null, null, null, null, null);
 		
 		// assert the sshCommandResult here
 		if (expectedExitCode!=null)	Assert.assertEquals(sshCommandResult.getExitCode(), expectedExitCode,"ExitCode after calling environments with --serverurl="+serverurl+" and other options:");
@@ -237,14 +237,14 @@ public class EnvironmentsTests extends SubscriptionManagerCLITestScript {
 		SSHCommandResult sshCommandResult;
 		
 		// calling environments without insecure should pass
-		sshCommandResult = clienttasks.environments(sm_clientUsername,sm_clientPassword,sm_clientOrg, null, false, null, null, null);
+		sshCommandResult = clienttasks.environments(sm_clientUsername,sm_clientPassword,sm_clientOrg, null, false, null, null, null, null);
 		
 		// change the rhsm.ca_cert_dir configuration to simulate a missing candlepin ca cert
 		client.runCommandAndWait("mkdir -p /tmp/emptyDir");
 		sshCommandResult = clienttasks.config(null, null, true, new String[]{"rhsm","ca_cert_dir","/tmp/emptyDir"});
 		
 		// calling environments without insecure should now fail (throwing stderr "certificate verify failed")
-		sshCommandResult = clienttasks.environments_(sm_clientUsername,sm_clientPassword,sm_clientOrg, null, false, null, null, null);
+		sshCommandResult = clienttasks.environments_(sm_clientUsername,sm_clientPassword,sm_clientOrg, null, false, null, null, null, null);
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.9-1")) {	// post commit a695ef2d1da882c5f851fde90a24f957b70a63ad
 			Assert.assertEquals(sshCommandResult.getStderr().trim(), "Unable to verify server's identity: certificate verify failed", "Stderr from the environments command when configuration rhsm.ca_cert_dir has been falsified.");
 			Assert.assertEquals(sshCommandResult.getStdout().trim(), "", "Stdout from the environments command when configuration rhsm.ca_cert_dir has been falsified.");
@@ -264,7 +264,7 @@ public class EnvironmentsTests extends SubscriptionManagerCLITestScript {
 		}
 		
 		// calling environments with insecure should now pass
-		sshCommandResult = clienttasks.environments(sm_clientUsername,sm_clientPassword,sm_clientOrg, null, true, null, null, null);
+		sshCommandResult = clienttasks.environments(sm_clientUsername,sm_clientPassword,sm_clientOrg, null, true, null, null, null, null);
 		
 		// assert that option --insecure did NOT persist to rhsm.conf
 		Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "insecure"), "0", "Expected value of "+clienttasks.rhsmConfFile+" server.insecure configuration.  Use of the --insecure option when calling the environments module should NOT be persisted to rhsm.conf as true.");
@@ -285,7 +285,7 @@ public class EnvironmentsTests extends SubscriptionManagerCLITestScript {
 		log.info("Testing subscription-manager environments module using username="+username+" password="+password+" org="+org+" and expecting environmnets="+expectedEnvironments+" ...");
 		
 		// use subscription-manager to get the organizations for which the user has access
-		SSHCommandResult environmentsResult = clienttasks.environments_(username, password, org, null, null, null, null, null);
+		SSHCommandResult environmentsResult = clienttasks.environments_(username, password, org, null, null, null, null, null, null);
 		
 		// parse the actual Environments from the environmentsResult
 		List<Environment> actualEnvironments = Environment.parse(environmentsResult.getStdout());
@@ -318,13 +318,13 @@ public class EnvironmentsTests extends SubscriptionManagerCLITestScript {
 		//register client to katello server 
 		sshCommandResult=clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg);
 		
-		sshCommandResult=clienttasks.identity(null, null, null, null, null, null, null);
+		sshCommandResult=clienttasks.identity(null, null, null, null, null, null, null, null);
 		List<String> outputlist = new ArrayList<String>();
 		for (String consoleoutput : sshCommandResult.getStdout().split("\\+-+\\+")[sshCommandResult.getStdout().split("\\+-+\\+").length-1].trim().split("\\n")) {
 			outputlist.add(consoleoutput);
 		}
 		Assert.assertContains(outputlist, "environment name: Library");
-		sshCommandResult=clienttasks.unregister(null,null, null);
+		sshCommandResult=clienttasks.unregister(null,null, null, null);
 
 		
 //		Assert.assertEquals(outputlist.get(4).trim(), "environment name: Library", "Library reconize as Environmenet");
@@ -348,7 +348,7 @@ public class EnvironmentsTests extends SubscriptionManagerCLITestScript {
 
 
 		clientOrg=clienttasks.getOrgs(sm_clientUsername, sm_clientPassword).get(0).orgKey;
-		sshCommandResult = clienttasks.environments(sm_clientUsername, sm_clientPassword, clientOrg, null, null, null, null, null);
+		sshCommandResult = clienttasks.environments(sm_clientUsername, sm_clientPassword, clientOrg, null, null, null, null, null, null);
 
 		for (String consoleoutput : sshCommandResult.getStdout().split("\\+-+\\+")[sshCommandResult.getStdout().split("\\+-+\\+").length-1].trim().split("\\n")) 
 		{
@@ -357,9 +357,9 @@ public class EnvironmentsTests extends SubscriptionManagerCLITestScript {
 						{
 						envname = cout[1].trim().replaceAll("\\s", "");
 
-						sshCommandResult=clienttasks.register(sm_clientUsername, sm_clientPassword, clientOrg, envname, null, null, null, null, null, null, (String)null, null, null, null, null, null, null, null, null);
+						sshCommandResult=clienttasks.register(sm_clientUsername, sm_clientPassword, clientOrg, envname, null, null, null, null, null, null, (String)null, null, null, null, null, null, null, null, null, null);
 						//Assert.assertEquals(sshCommandResult.getExitCode(),Integer.valueOf(0),"Client sucessfully registred with "+envname+"environment"); as per jsefler suggestion
-						sshCommandResult=clienttasks.unregister(null, null, null);
+						sshCommandResult=clienttasks.unregister(null, null, null, null);
 						}}
 		}
 	

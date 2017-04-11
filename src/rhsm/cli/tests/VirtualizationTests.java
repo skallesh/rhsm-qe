@@ -931,7 +931,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 			Assert.assertNotNull(hostPool,"A host pool derived from the virtualization-aware subscription id '"+subscriptionId+"' is available on a guest system.  hostPool="+hostPool);
 			// attempt to subscribe to the hostPoolId (should succeed)
 			//clienttasks.subscribeToSubscriptionPool(hostPool);	// too much overhead
-			clienttasks.subscribe(null, null, hostPoolId, null, null, null, null, null, null, null, null, null);
+			clienttasks.subscribe(null, null, hostPoolId, null, null, null, null, null, null, null, null, null, null);
 		} else {
 			// ...but not when the originating subscription is physical_only
 			Assert.assertNull(hostPool,"A host pool derived from the virtualization-aware subscription id '"+subscriptionId+"' that is physical_only is NOT available on a guest system.");	// introduced by Bug 1066120
@@ -943,7 +943,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 			// attempt to subscribe to the hostPoolId (should fail)
 			//	[root@jsefler-7 ~]# subscription-manager attach --pool 8a9087e3443db08f01443db1810c125e
 			//	Pool is restricted to physical systems: '8a9087e3443db08f01443db1810c125e'.
-			SSHCommandResult result = clienttasks.subscribe_(null, null, hostPoolId, null, null, null, null, null, null, null, null, null);
+			SSHCommandResult result = clienttasks.subscribe_(null, null, hostPoolId, null, null, null, null, null, null, null, null, null, null);
 			String expectedMsg = String.format("Pool is restricted to physical systems: '%s'.", hostPoolId);
 			Assert.assertEquals(result.getStdout().trim(), expectedMsg, "Stdout from an attempt to subscribe a virtual system to physical_only pool: "+hostPool);
 			Assert.assertEquals(result.getStderr(), "", "Stderr from an attempt to subscribe a virtual system to physical_only pool: "+hostPool);
@@ -985,7 +985,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 		clienttasks.subscribeToSubscriptionPool(hostPool);
 
 		// attempt to subscribe to the guestPoolId (should be blocked)
-		SSHCommandResult result = clienttasks.subscribe(null,null,guestPoolId,null,null,null,null,null, null, null, null, null);
+		SSHCommandResult result = clienttasks.subscribe(null,null,guestPoolId,null,null,null,null,null, null, null, null, null, null);
 		// Unable to entitle consumer to the pool with id '8a90f8b42e3e7f2e012e3e7fc653013e'.: rulefailed.virt.only
 		//Assert.assertContainsMatch(result.getStdout(), "^Unable to entitle consumer to the pool with id '"+guestPoolId+"'.:");
 		// RHEL58: Pool is restricted to virtual guests: '8a90f85734205a010134205ae8d80403'.
@@ -1056,7 +1056,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 		forceVirtWhatToReturnHost();
 		
 		// create host consumer A
-		String consumerIdOfHostA = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null));
+		String consumerIdOfHostA = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null, null));
 		
 		for (int c=0;c<2;c++) { // run this test twice
 			
@@ -1081,8 +1081,8 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 		
 			
 			// Now let's create a second host consumer B and add its own guestIds to it and assert the same test
-			clienttasks.clean(null, null, null);	// this will keep consumer A registered
-			String consumerIdOfHostB = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, null, null, null, null, null));
+			clienttasks.clean();	// this will keep consumer A registered
+			String consumerIdOfHostB = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, null, null, null, null, null, null));
 
 			// call Candlepin API to PUT some guestIds onto the host consumer B
 			List<String> expectedGuestIdsOnHostB = Arrays.asList(new String[]{"test-guestId"+k++,"test-guestId"+k++,"test-guestId"+k++,"test-guestId"+k++}); 
@@ -1156,7 +1156,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 		forceVirtWhatToReturnGuest("kvm");
 		
 		// create a guest consumer
-		String consumerIdOfGuest = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null));
+		String consumerIdOfGuest = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null, null));
 			
 		// call Candlepin API to PUT some guestIds onto the guest consumer
 		JSONObject jsonData = new JSONObject();
@@ -1194,7 +1194,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 		forceVirtWhatToReturnHost();
 		
 		// create host consumer A
-		String consumerIdOfHostA = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null));
+		String consumerIdOfHostA = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null, null));
 		
 		for (int c=0;c<2;c++) { // run this test twice
 			
@@ -1221,8 +1221,8 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 		
 			
 			// Now let's create a second host consumer B and add its own guestIds to it and assert the same test
-			clienttasks.clean(null, null, null);	// this will keep consumer A registered
-			String consumerIdOfHostB = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, null, null, null, null, null));
+			clienttasks.clean();	// this will keep consumer A registered
+			String consumerIdOfHostB = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, null, null, null, null, null, null));
 
 			// call Candlepin API to PUT some guestIds onto the host consumer B
 			// NOTE: decrementing k will effectively move the last guestId from HostA to HostB
@@ -1318,8 +1318,8 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 	
 	@BeforeClass(groups="setup")
 	public void registerBeforeClass() throws Exception {
-		clienttasks.unregister(null, null, null);
-		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, null, false, null, null, null));
+		clienttasks.unregister(null, null, null, null);
+		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, null, false, null, null, null, null));
 		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerId);
 	}
 	

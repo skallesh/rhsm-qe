@@ -59,13 +59,13 @@ public class RolesTests extends SubscriptionManagerCLITestScript {
 		switch(AccessType.valueOf(access)) {
 			case ALL:
 				// when a user has ALL access to orgKey, then the user should be able to successfully register to that org.
-				sshCommandResult = clienttasks.register_(username, password, orgKey, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null);
+				sshCommandResult = clienttasks.register_(username, password, orgKey, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null, null);
 				Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code indicates that user '"+username+"' with role '"+roleName+"' to org '"+orgKey+"' can successfully register with access '"+access+"'.");
 				//Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "The system has been registered with id: [a-f,0-9,\\-]{36}");	// msgid changed by 878634
 				Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "The system has been registered with ID: [a-f,0-9,\\-]{36}");
 				break;
 			case READ_ONLY:
-				sshCommandResult = clienttasks.register_(username, password, orgKey, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null);
+				sshCommandResult = clienttasks.register_(username, password, orgKey, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null, null);
 				Integer expectedExitCode = new Integer(255);
 				if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) expectedExitCode = new Integer(70);	// EX_SOFTWARE	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
 				Assert.assertEquals(sshCommandResult.getExitCode(), expectedExitCode, "The exit code indicates that user '"+username+"' with role '"+roleName+"' to org '"+orgKey+"' can NOT register with access '"+access+"'.");

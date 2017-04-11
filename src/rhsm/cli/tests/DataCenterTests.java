@@ -96,7 +96,7 @@ public class DataCenterTests extends SubscriptionManagerCLITestScript {
 		// instrument the system facts to behave as a physical host
 		factsMap.put("virt.is_guest",String.valueOf(false));
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
-		clienttasks.facts(null,true,null,null,null);	// update facts
+		clienttasks.facts(null,true,null,null,null, null);	// update facts
 		
 		// reset a few fake guest ids for this host consumer
 		String systemUuid = clienttasks.getCurrentConsumerId();
@@ -143,7 +143,7 @@ public class DataCenterTests extends SubscriptionManagerCLITestScript {
 		// first, let's flip the virt.is_guest to true and assert that the virtual guest subpool is not (yet) available since the virtUuid is not on the host consumer's list of guestIds
 		factsMap.put("virt.is_guest",String.valueOf(true));
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
-		clienttasks.facts(null,true,null,null,null);	// update facts
+		clienttasks.facts(null,true,null,null,null, null);	// update facts
 		availablePoolsForDerivedProductId = SubscriptionPool.findAllInstancesWithMatchingFieldFromList("productId", poolDerivedProductId, clienttasks.getCurrentlyAllAvailableSubscriptionPools());
 		if (clienttasks.isVersion(servertasks.statusVersion, "<", "0.9.45-1")) {
 			// this assertion was valid prior to introduction of Temporary pools for unmapped guests
@@ -161,7 +161,7 @@ public class DataCenterTests extends SubscriptionManagerCLITestScript {
 		// now fake this consumer's facts and guestIds to make it think it is a guest of itself (a trick for testing)
 		factsMap.put("virt.uuid",systemUuid);
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
-		clienttasks.facts(null,true,null,null,null);	// update facts
+		clienttasks.facts(null,true,null,null,null, null);	// update facts
 		//[root@jsefler-5 ~]# curl -k -u testuser1:password --request PUT --data '{"guestIds":["e6f55b91-aae1-44d6-f0db-c8f25ec73ef5","abcd"]}' --header 'accept:application/json' --header 'content-type: application/json' https://jsefler-f14-candlepin.usersys.redhat.com:8443/candlepin/consumers/d2ee0c6e-a57d-4e37-8be3-228a44ca2739 
 		jsonConsumer = CandlepinTasks.setGuestIdsForConsumer(sm_clientUsername,sm_clientPassword, sm_serverUrl, systemUuid,Arrays.asList(new String[]{"abc",systemUuid,"def"}));
 		
@@ -309,7 +309,7 @@ public class DataCenterTests extends SubscriptionManagerCLITestScript {
 	@AfterGroups(value={"VerifyAvailabilityOfDerivedProductSubpools_Test"},groups={"setup"})
 	public void afterVerifyAvailabilityOfDerivedProductSubpools_Test() {
 		clienttasks.unsubscribeFromTheCurrentlyConsumedSerialsCollectively();	// will avoid: Runtime Error No row with the given identifier exists: [org.candlepin.model.PoolAttribute#8a99f98a46b4fa990146ba9494032318] at org.hibernate.UnresolvableObjectException.throwIfNull:64
-		clienttasks.unregister(null,null,null);
+		clienttasks.unregister(null,null,null, null);
 		clienttasks.deleteFactsFileWithOverridingValues();
 	}
 	Map<String,String> factsMap = new HashMap<String,String>();

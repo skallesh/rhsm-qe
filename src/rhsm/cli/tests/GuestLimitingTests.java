@@ -54,13 +54,13 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript {
 	protected void complianceOfHostWithtwoGuestsAndGuestLimitOfFour() throws JSONException, Exception {
 		String consumerId = clienttasks.getCurrentConsumerId(
 				clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null,
-						null, null, (String) null, null, null, null, true, null, null, null, null));
+						null, null, (String) null, null, null, null, true, null, null, null, null, null));
 		if (clienttasks.getFactValue("virt.is_guest").equals("True")) {
 			Map<String, String> factsMap = new HashMap<String, String>();
 			factsMap.put("virt.is_guest", "False");
 			factsMap.put(" virt.uuid", "");
 			clienttasks.createFactsFileWithOverridingValues(factsMap);
-			clienttasks.facts(null, true, null, null, null);
+			clienttasks.facts(null, true, null, null, null, null);
 		}
 		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_clientUsername, sm_clientPassword, sm_serverUrl,
 				consumerId);
@@ -83,7 +83,7 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript {
 				providedProductIds.get(randomGenerator.nextInt(providedProductIds.size())),
 				clienttasks.getCurrentProductCerts());
 		Assert.assertNotNull(installedProductCert, "Found installed product cert needed for this test.");
-		clienttasks.subscribe(null, null, pool, null, null, "1", null, null, null, null, null, null);
+		clienttasks.subscribe(null, null, pool, null, null, "1", null, null, null, null, null, null, null);
 		String compliance = clienttasks.getFactValue(factname);
 		// Assert the system compliance
 		Assert.assertEquals(compliance, factValueForSystemCompliance);
@@ -100,15 +100,15 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript {
 
 		String consumerId = clienttasks.getCurrentConsumerId(
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null,
-						null, null, (String) null, null, null, null, true, null, null, null, null));
-		clienttasks.autoheal(null, null, true, null, null, null);
+						null, null, (String) null, null, null, null, true, null, null, null, null, null));
+		clienttasks.autoheal(null, null, true, null, null, null, null);
 
 		if (clienttasks.getFactValue("virt.is_guest").equals("True")) {
 			Map<String, String> factsMap = new HashMap<String, String>();
 			factsMap.put("virt.is_guest", "False");
 			factsMap.put(" virt.uuid", "");
 			clienttasks.createFactsFileWithOverridingValues(factsMap);
-			clienttasks.facts(null, true, null, null, null);
+			clienttasks.facts(null, true, null, null, null, null);
 		}
 		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_clientUsername, sm_clientPassword, sm_serverUrl,
 				consumerId);
@@ -131,7 +131,7 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript {
 				providedProductIds.get(randomGenerator.nextInt(providedProductIds.size())),
 				clienttasks.getCurrentProductCerts());
 		Assert.assertNotNull(installedProductCert, "Found installed product cert needed for this test.");
-		clienttasks.subscribe(null, null, pool, null, null, "1", null, null, null, null, null, null);
+		clienttasks.subscribe(null, null, pool, null, null, "1", null, null, null, null, null, null, null);
 		String compliance = clienttasks.getFactValue(factname);
 		// Assert the system compliance
 		Assert.assertEquals(compliance, factValueForSystemPartialCompliance);
@@ -147,15 +147,15 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript {
 	protected void VerifyGuestLimitIsGlobal() throws JSONException, Exception {
 		String consumerId = clienttasks.getCurrentConsumerId(
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null,
-						null, null, (String) null, null, null, null, true, null, null, null, null));
-		clienttasks.autoheal(null, null, true, null, null, null);
+						null, null, (String) null, null, null, null, true, null, null, null, null, null));
+		clienttasks.autoheal(null, null, true, null, null, null, null);
 
 		if (clienttasks.getFactValue("virt.is_guest").equals("True")) {
 			Map<String, String> factsMap = new HashMap<String, String>();
 			factsMap.put("virt.is_guest", "False");
 			factsMap.put("virt.uuid", "");
 			clienttasks.createFactsFileWithOverridingValues(factsMap);
-			clienttasks.facts(null, true, null, null, null);
+			clienttasks.facts(null, true, null, null, null, null);
 		}
 		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_clientUsername, sm_clientPassword, sm_serverUrl,
 				consumerId);
@@ -174,7 +174,7 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript {
 		CandlepinTasks.putResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl,
 				"/consumers/" + consumerId, jsonData);
 		String pool = getGuestlimitPool("-1");
-		clienttasks.subscribe(null, null, pool, null, null, "1", null, null, null, null, null, null);
+		clienttasks.subscribe(null, null, pool, null, null, "1", null, null, null, null, null, null, null);
 		String compliance = clienttasks.getFactValue(factname);
 		// Assert the system compliance
 		Assert.assertEquals(compliance, factValueForSystemCompliance);
@@ -190,15 +190,15 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript {
 	protected void complianceOfHostWithOneOftheGuestReportedInactive() throws JSONException, Exception {
 		String consumerId = clienttasks.getCurrentConsumerId(
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null,
-						null, null, (String) null, null, null, null, true, null, null, null, null));
-		clienttasks.autoheal(null, null, true, null, null, null);
-		clienttasks.autoheal(null, null, true, null, null, null);
+						null, null, (String) null, null, null, null, true, null, null, null, null, null));
+		clienttasks.autoheal(null, null, true, null, null, null, null);
+		clienttasks.autoheal(null, null, true, null, null, null, null);
 		if (clienttasks.getFactValue("virt.is_guest").equals("True")) {
 			Map<String, String> factsMap = new HashMap<String, String>();
 			factsMap.put("virt.is_guest", "False");
 			factsMap.put(" virt.uuid", "");
 			clienttasks.createFactsFileWithOverridingValues(factsMap);
-			clienttasks.facts(null, true, null, null, null);
+			clienttasks.facts(null, true, null, null, null, null);
 		}
 		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_clientUsername, sm_clientPassword, sm_serverUrl,
 				consumerId);
@@ -225,7 +225,7 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript {
 				providedProductIds.get(randomGenerator.nextInt(providedProductIds.size())),
 				clienttasks.getCurrentProductCerts());
 		Assert.assertNotNull(installedProductCert, "Found installed product cert needed for this test.");
-		clienttasks.subscribe(null, null, pool, null, null, "1", null, null, null, null, null, null);
+		clienttasks.subscribe(null, null, pool, null, null, "1", null, null, null, null, null, null, null);
 		String compliance = clienttasks.getFactValue(factname);
 		// Assert the system compliance
 		Assert.assertEquals(compliance, factValueForSystemCompliance);

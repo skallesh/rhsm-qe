@@ -41,12 +41,12 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
 	public void StatusIsTheDefault_Test() {
-		clienttasks.unregister(null,null,null);
+		clienttasks.unregister(null,null,null, null);
 		SSHCommandResult helpResult = RemoteFileTasks.runCommandAndAssert(client,clienttasks.command+" --help",Integer.valueOf(0));
 		SSHCommandResult defaultResult = RemoteFileTasks.runCommandAndAssert(client,clienttasks.command,Integer.valueOf(0));
 		Assert.assertTrue(defaultResult.toString().equals(helpResult.toString()), "When not registered, the default output running subscription-manager with no arguments should be identical to output from running subscription-manager with --help.");
 
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
 		defaultResult = RemoteFileTasks.runCommandAndAssert(client,clienttasks.command,Integer.valueOf(0));
 		Assert.assertTrue(defaultResult.toString().equals(helpResult.toString()), "When registered, the default output running subscription-manager with no arguments should be identical to output from running subscription-manager with --help.");
 	}

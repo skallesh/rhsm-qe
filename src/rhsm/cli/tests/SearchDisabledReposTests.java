@@ -87,7 +87,7 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 		log.info("RHEL product cert installed: "+rhelProductCert);
 		
 		// register with auto-subscribe
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, true, null, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, true, null, null, null, null, null);
 		
 		// is rhelProductCert subscribed?
 		InstalledProduct rhelInstalledProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", rhelProductCert.productId, clienttasks.getCurrentlyInstalledProducts());
@@ -358,7 +358,7 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 		if (clienttasks.isPackageInstalled(rhelBasePackage)) clienttasks.yumRemovePackage(rhelBasePackage);
 		
 		// enable rhelBaseRepoId and disable rhelOptionalRepoId
-		clienttasks.repos(null, null, null, rhelBaseRepoId, rhelOptionalRepoId, null, null, null);
+		clienttasks.repos(null, null, null, rhelBaseRepoId, rhelOptionalRepoId, null, null, null, null);
 		
 		// attempt to install a specific package from a disabled repo
 		SSHCommandResult result = clienttasks.yumDoPackageFromRepo_("install", rhelOptionalPackage, null, "--disablerepo=*beta-rpms --disablerepo=*htb-rpms --disablerepo=*eus-rpms --disablerepo=beaker-*");	// disable any other repos that might be enabled to prevent rhelBasePackage from // rhel-7-server-eus-rpms
@@ -372,7 +372,7 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 
 		
 		// enable rhelOptionalRepoId and disable rhelBaseRepoId
-		clienttasks.repos(null, null, null, rhelOptionalRepoId, rhelBaseRepoId, null, null, null);
+		clienttasks.repos(null, null, null, rhelOptionalRepoId, rhelBaseRepoId, null, null, null, null);
 		
 		// attempt to install a specific package from a disabled repo
 		result = clienttasks.yumDoPackageFromRepo_("install", rhelBasePackage, null, "--disablerepo=*beta-rpms --disablerepo=*htb-rpms --disablerepo=*eus-rpms --disablerepo=beaker-*");	// disable any other repos that might be enabled // rhel-7-server-eus-rpms
@@ -410,7 +410,7 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 		*/
 		
 		// enable rhelOptionalRepoId and disable rhelBaseRepoId
-		clienttasks.repos(null, null, null, rhelOptionalRepoId, rhelBaseRepoId, null, null, null);
+		clienttasks.repos(null, null, null, rhelOptionalRepoId, rhelBaseRepoId, null, null, null, null);
 		
 		// attempt to install a package that requires another package from a disabled repo
 		SSHCommandResult result = clienttasks.yumDoPackageFromRepo_("install", rhelOptionalPackage, null, "--disablerepo=*beta-rpms --disablerepo=*htb-rpms --disablerepo=*eus-rpms --disablerepo=beaker-*");	// disable any other repos that might be enabled // rhel-7-server-eus-rpms
@@ -478,7 +478,7 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 		clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForSearchDisabledRepos, "notify_only", "0");
 		
 		// enable rhelOptionalRepoId and disable rhelBaseRepoId
-		clienttasks.repos(null, null, null, rhelOptionalRepoId, rhelBaseRepoId, null, null, null);
+		clienttasks.repos(null, null, null, rhelOptionalRepoId, rhelBaseRepoId, null, null, null, null);
 		
 		// attempt to install a package that requires another package from a disabled repo
 		SSHCommandResult result = clienttasks.yumDoPackageFromRepo_("install", rhelOptionalPackage, null, "--assumeno --disablerepo=*beta-rpms --disablerepo=*htb-rpms --disablerepo=*eus-rpms --disablerepo=beaker-*");	// disable any other repos that might be enabled to prevent  // rhel-7-server-eus-rpms
@@ -570,9 +570,9 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 		// enable rhelOptionalRepoId and disable rhelBaseRepoId,rhelEusRepoId
 		List<String> enableRepos = new ArrayList<String>(); enableRepos.add(rhelOptionalRepoId);
 		List<String> disableRepos = new ArrayList<String>(); disableRepos.add(rhelBaseRepoId);
-		clienttasks.repos(null, null, null, enableRepos, disableRepos, null, null, null);
+		clienttasks.repos(null, null, null, enableRepos, disableRepos, null, null, null, null);
 		disableRepos.clear(); disableRepos.add("*-beta-rpms"); disableRepos.add("*-htb-rpms"); disableRepos.add("*-eus-rpms");
-		clienttasks.repos_(null, null, null, null, disableRepos, null, null, null);
+		clienttasks.repos_(null, null, null, null, disableRepos, null, null, null, null);
 		//	2015-10-29 17:51:58.988  FINE: ssh root@ibm-z10-30.rhts.eng.bos.redhat.com subscription-manager repos --disable=*-beta-rpms --disable=*-htb-rpms --disable=*-eus-rpms
 		//	2015-10-29 17:52:08.882  FINE: Stdout: 
 		//	Error: *-htb-rpms is not a valid repository ID. Use --list option to see valid repositories.
@@ -707,7 +707,7 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 		Assert.assertTrue(rhelActualRepo.enabled, "RHEL repo id '"+rhelActualRepoId+"' was enabled permanently by the search-disabled-repos plugin.");
 		
 		// assert that the persisted enabled repos appear in the repo-override list
-		SSHCommandResult listResult = clienttasks.repo_override(true,null,(String)null,(String)null,null,null,null,null);
+		SSHCommandResult listResult = clienttasks.repo_override(true,null,(String)null,(String)null,null,null,null,null, null);
 		String name= "enabled",value,regex;
 		value = "1";
 		regex = String.format(SubscriptionManagerTasks.repoOverrideListRepositoryNameValueRegexFormat,rhelActualRepoId,name,value.replace("*", "\\*").replace("?", "\\?"));	// notice that we have to escape glob characters from the value so they don't get interpreted as regex chars
@@ -737,9 +737,9 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 		// enable rhelOptionalRepoId and disable rhelBaseRepoId,rhelEusRepoId
 		List<String> enableRepos = new ArrayList<String>(); enableRepos.add(rhelOptionalRepoId);
 		List<String> disableRepos = new ArrayList<String>(); disableRepos.add(rhelBaseRepoId);
-		clienttasks.repos(null, null, null, enableRepos, disableRepos, null, null, null);
+		clienttasks.repos(null, null, null, enableRepos, disableRepos, null, null, null, null);
 		disableRepos.clear(); disableRepos.add("*-beta-rpms"); disableRepos.add("*-htb-rpms"); disableRepos.add("*-eus-rpms");
-		clienttasks.repos_(null, null, null, null, disableRepos, null, null, null);
+		clienttasks.repos_(null, null, null, null, disableRepos, null, null, null, null);
 		
 		// attempt to install a package that requires another package from a disabled repo
 		// responding yes, yes, and then no
@@ -942,7 +942,7 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 		Assert.assertTrue(!rhelActualRepo.enabled, "RHEL repo id '"+rhelActualRepoId+"' was NOT enabled permanently by the search-disabled-repos plugin.");
 		
 		// assert that disabled base repo remains disabled in the repo-override list
-		SSHCommandResult listResult = clienttasks.repo_override(true,null,(String)null,(String)null,null,null,null,null);
+		SSHCommandResult listResult = clienttasks.repo_override(true,null,(String)null,(String)null,null,null,null,null, null);
 		String name= "enabled",value,regex;
 		value = "0";
 		regex = String.format(SubscriptionManagerTasks.repoOverrideListRepositoryNameValueRegexFormat,rhelBaseRepoId,name,value.replace("*", "\\*").replace("?", "\\?"));	// notice that we have to escape glob characters from the value so they don't get interpreted as regex chars
@@ -988,9 +988,9 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 		// enable rhelOptionalRepoId and disable rhelBaseRepoId,rhelEusRepoId
 		List<String> enableRepos = new ArrayList<String>(); enableRepos.add(rhelOptionalRepoId);
 		List<String> disableRepos = new ArrayList<String>(); disableRepos.add(rhelBaseRepoId);
-		clienttasks.repos(null, null, null, enableRepos, disableRepos, null, null, null);
+		clienttasks.repos(null, null, null, enableRepos, disableRepos, null, null, null, null);
 		disableRepos.clear(); disableRepos.add("*-beta-rpms"); disableRepos.add("*-htb-rpms"); disableRepos.add("*-eus-rpms");
-		clienttasks.repos_(null, null, null, null, disableRepos, null, null, null);
+		clienttasks.repos_(null, null, null, null, disableRepos, null, null, null, null);
 		
 		// attempt to install a package that requires another package from a disabled repo
 		// responding yes and then no
@@ -1144,7 +1144,7 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 		Assert.assertTrue(!rhelBaseRepo.enabled, "RHEL repo id '"+rhelBaseRepoId+"' remains disabled.");
 		
 		// assert that disabled base repo remains disabled in the repo-override list
-		SSHCommandResult listResult = clienttasks.repo_override(true,null,(String)null,(String)null,null,null,null,null);
+		SSHCommandResult listResult = clienttasks.repo_override(true,null,(String)null,(String)null,null,null,null,null, null);
 		String name= "enabled",value,regex;
 		value = "0";
 		regex = String.format(SubscriptionManagerTasks.repoOverrideListRepositoryNameValueRegexFormat,rhelBaseRepoId,name,value.replace("*", "\\*").replace("?", "\\?"));	// notice that we have to escape glob characters from the value so they don't get interpreted as regex chars

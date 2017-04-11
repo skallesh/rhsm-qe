@@ -51,13 +51,13 @@ public class InstanceBasedTests extends SubscriptionManagerCLITestScript {
 		Boolean flag = false;
 		clienttasks.register_(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
-				(String) null, null, null, null, true, null, null, null, null);
+				(String) null, null, null, null, true, null, null, null, null, null);
 		if(clienttasks.getFactValue("virt.is_guest").equals("True")){
 			for (SubscriptionPool availList : clienttasks.getCurrentlyAllAvailableSubscriptionPools()) {
 				
 				if(CandlepinTasks.isPoolProductInstanceBased(sm_clientUsername, sm_clientPassword, sm_serverUrl,availList.poolId)){
 					flag=true;
-					SSHCommandResult result=clienttasks.subscribe(null, null, availList.poolId, null, null, "5", null, null, null, null, null, null);
+					SSHCommandResult result=clienttasks.subscribe(null, null, availList.poolId, null, null, "5", null, null, null, null, null, null, null);
 					String expectedMessage="Successfully attached a subscription for: "+availList.subscriptionName;
 					Assert.assertEquals(result.getStdout().trim(), expectedMessage);
 					Assert.assertEquals(result.getExitCode(),  Integer.valueOf(0));
@@ -84,13 +84,13 @@ public class InstanceBasedTests extends SubscriptionManagerCLITestScript {
 		
 		clienttasks.register_(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, true, null, null,
-				(String) null, null, null, null, true, null, null, null, null);
+				(String) null, null, null, null, true, null, null, null, null, null);
 		
 		if(clienttasks.getFactValue("virt.is_guest").equalsIgnoreCase("false")){
 			String socket=clienttasks.getFactValue("cpu.cpu_socket(s)");
 			for (SubscriptionPool availList : clienttasks.getCurrentlyAllAvailableSubscriptionPools()) {
 						if(CandlepinTasks.isPoolProductInstanceBased(sm_clientUsername, sm_clientPassword, sm_serverUrl,availList.poolId)){
-							clienttasks.subscribe(null, null, availList.poolId, null, null, socket, null, null, null, null, null, null);
+							clienttasks.subscribe(null, null, availList.poolId, null, null, socket, null, null, null, null, null, null, null);
 					
 			}
 		
@@ -104,7 +104,7 @@ public class InstanceBasedTests extends SubscriptionManagerCLITestScript {
 	}if(clienttasks.getFactValue("virt.is_guest").equals("True")){
 		for (SubscriptionPool availList : clienttasks.getCurrentlyAllAvailableSubscriptionPools()) {
 			if(CandlepinTasks.isPoolProductInstanceBased(sm_clientUsername, sm_clientPassword, sm_serverUrl,availList.poolId)){
-				clienttasks.subscribe(null, null, availList.poolId, null, null, null, null, null, null, null, null, null);
+				clienttasks.subscribe(null, null, availList.poolId, null, null, null, null, null, null, null, null, null, null);
 		
 }
 
@@ -132,19 +132,19 @@ for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
 		
 		clienttasks.register_(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, false, null, null,
-				(String) null, null, null, null, true, null, null, null, null);
+				(String) null, null, null, null, true, null, null, null, null, null);
 		if (Boolean.valueOf(clienttasks.getFactValue("virt.is_guest"))) clienttasks.mapSystemAsAGuestOfItself();	// to avoid unmapped_guests_only pools
-		clienttasks.subscribe_(true,null,(String)null,null,null,null,null,null,null,null,null,null);
+		clienttasks.subscribe_(true,null,(String)null,null,null,null,null,null,null,null,null,null, null);
 		int healFrequency=2;
 		
 		if(clienttasks.getFactValue("virt.is_guest").equalsIgnoreCase("false")){
 			Integer sockets = 4;
 			factsMap.put("cpu.cpu_socket(s)", String.valueOf(sockets));
 			clienttasks.createFactsFileWithOverridingValues(factsMap);
-			clienttasks.facts(null, true, null, null, null);
+			clienttasks.facts(null, true, null, null, null, null);
 			for (SubscriptionPool availList : clienttasks.getCurrentlyAllAvailableSubscriptionPools()) {
 				if(CandlepinTasks.isPoolProductInstanceBased(sm_clientUsername, sm_clientPassword, sm_serverUrl,availList.poolId)){
-					clienttasks.subscribe(null, null, availList.poolId, null, null, "2", null, null, null, null, null, null);
+					clienttasks.subscribe(null, null, availList.poolId, null, null, "2", null, null, null, null, null, null, null);
 
 				}
 			}
@@ -170,7 +170,7 @@ for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
 			Integer sockets = 4;
 			factsMap.put("cpu.cpu_socket(s)", String.valueOf(sockets));
 			clienttasks.createFactsFileWithOverridingValues(factsMap);
-			clienttasks.facts(null, true, null, null, null);
+			clienttasks.facts(null, true, null, null, null, null);
 /* replacing call to restart_rhsmcertd with a faster call to run_rhsmcertd_worker	
 			clienttasks.restart_rhsmcertd(null, healFrequency, true);
 			SubscriptionManagerCLITestScript.sleep(healFrequency * 60 * 1000);
@@ -202,15 +202,15 @@ for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
 		
 		clienttasks.register_(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, false, null, null,
-				(String) null, null, null, null, true, null, null, null, null);
+				(String) null, null, null, null, true, null, null, null, null, null);
 		if (Boolean.valueOf(clienttasks.getFactValue("virt.is_guest"))) clienttasks.mapSystemAsAGuestOfItself();	// to avoid unmapped_guests_only pools
-		clienttasks.subscribe_(true,null,(String)null,null,null,null,null,null,null,null,null,null);
+		clienttasks.subscribe_(true,null,(String)null,null,null,null,null,null,null,null,null,null, null);
 		if(clienttasks.getFactValue("virt.is_guest").equalsIgnoreCase("false")){
 			Integer sockets = 4;
 			factsMap.put("cpu.cpu_socket(s)", String.valueOf(sockets));
 			clienttasks.createFactsFileWithOverridingValues(factsMap);
-			clienttasks.facts(null, true, null, null, null);
-			clienttasks.subscribe(true, null,(String)null, null, null, null, null, null, null, null, null, null);
+			clienttasks.facts(null, true, null, null, null, null);
+			clienttasks.subscribe(true, null,(String)null, null, null, null, null, null, null, null, null, null, null);
 			for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
 				if(installed.productName.contains("Instance Server")){
 					Assert.assertEquals(installed.status.trim(), "Subscribed");
@@ -230,8 +230,8 @@ for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
 				Integer sockets = 4;
 				factsMap.put("cpu.cpu_socket(s)", String.valueOf(sockets));
 				clienttasks.createFactsFileWithOverridingValues(factsMap);
-				clienttasks.facts(null, true, null, null, null);
-				clienttasks.subscribe(true, null,(String)null, null, null, null, null, null, null, null, null, null);
+				clienttasks.facts(null, true, null, null, null, null);
+				clienttasks.subscribe(true, null,(String)null, null, null, null, null, null, null, null, null, null, null);
 				for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
 				if(installed.productName.contains("Instance Server")){
 					Assert.assertEquals(installed.status.trim(), "Subscribed");
@@ -258,18 +258,18 @@ for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
 		
 		clienttasks.register_(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, true, null, null,
-				(String) null, null, null, null, true, null, null, null, null);
+				(String) null, null, null, null, true, null, null, null, null, null);
 		
 		if(clienttasks.getFactValue("virt.is_guest").equalsIgnoreCase("false")){
 			Integer sockets = 4;
 			String poolId=null;
 			factsMap.put("cpu.cpu_socket(s)", String.valueOf(sockets));
 			clienttasks.createFactsFileWithOverridingValues(factsMap);
-			clienttasks.facts(null, true, null, null, null);
+			clienttasks.facts(null, true, null, null, null, null);
 			for (SubscriptionPool availList : clienttasks.getCurrentlyAllAvailableSubscriptionPools()) {
 						if(availList.subscriptionName.contains("Instance Based")){
 							poolId= availList.poolId;
-							clienttasks.subscribe(null, null, availList.poolId, null, null, "2", null, null, null, null, null, null);
+							clienttasks.subscribe(null, null, availList.poolId, null, null, "2", null, null, null, null, null, null, null);
 					
 			}
 		
@@ -282,7 +282,7 @@ for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
 					Assert.assertEquals(installed.statusDetails, messageDetails);
 				}
 			}
-			clienttasks.subscribe(null, null, poolId, null, null, "2", null, null, null, null, null, null);
+			clienttasks.subscribe(null, null, poolId, null, null, "2", null, null, null, null, null, null, null);
 			for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
 				if(installed.productId.contains("Instance Server")){
 					Assert.assertEquals(installed.status.trim(), "Subscribed");
@@ -293,10 +293,10 @@ for(InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()){
 		Integer sockets = 4;
 		factsMap.put("cpu.cpu_socket(s)", String.valueOf(sockets));
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
-		clienttasks.facts(null, true, null, null, null);
+		clienttasks.facts(null, true, null, null, null, null);
 		for (SubscriptionPool availList : clienttasks.getCurrentlyAllAvailableSubscriptionPools()) {
 					if(availList.subscriptionName.contains("Instance Based")){
-						clienttasks.subscribe(null, null, availList.poolId, null, null, "1", null, null, null, null, null, null);
+						clienttasks.subscribe(null, null, availList.poolId, null, null, "1", null, null, null, null, null, null, null);
 				
 		}
 	

@@ -103,7 +103,7 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, logMarker);
 		
 		// register with auto subscribe and force (to unregister anyone that is already registered)
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, true, null, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, true, null, null, null, null, null);
 		
 		// get the tail of the marked rhsm.log file
 		String logTail = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, logMarker, null).trim();
@@ -292,7 +292,7 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
 		
 		// register with autosubscribe and force (to unregister anyone that is already registered)
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, true, null, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, true, null, null, null, null, null);
 		
 		// get the autosubscribed productSubscription
 		List<ProductSubscription> productSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
@@ -300,15 +300,15 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 		ProductSubscription devSkuProductSubscription1 = productSubscriptions.get(0);
 		
 		// remove it
-		clienttasks.unsubscribe(null, devSkuProductSubscription1.serialNumber, null, null, null, null);
+		clienttasks.unsubscribe(null, devSkuProductSubscription1.serialNumber, null, null, null, null, null);
 		
 		// verify that the pool from which the devSku was entitled is no longer consumable after having removed the devSku entitlement
-		SSHCommandResult result = clienttasks.subscribe_(null, null, devSkuProductSubscription1.poolId, null, null, null, null, null, null, null, null, null);
+		SSHCommandResult result = clienttasks.subscribe_(null, null, devSkuProductSubscription1.poolId, null, null, null, null, null, null, null, null, null, null);
 		String expectedStdout = String.format("Pool with id %s could not be found.",devSkuProductSubscription1.poolId);
 		Assert.assertEquals(result.getStdout().trim(), expectedStdout, "After removing a devSku entitlement, its pool should no longer be consumable.");
 		
 		// re-autosubscribe
-		clienttasks.subscribe(true, null, null, null, (String)null, null, null, null, null, null, null, null);
+		clienttasks.subscribe(true, null, null, null, (String)null, null, null, null, null, null, null, null, null);
 		
 		// get the re-autosubscribed entitlement
 		productSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
@@ -345,7 +345,7 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
 		
 		// register with autosubscribe and force (to unregister anyone that is already registered)
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, true, null, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, true, null, null, null, null, null);
 		
 		// are we fully compliant? complianceStatus=="valid"
 		String complianceStatus;
@@ -358,7 +358,7 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 		ProductSubscription devSkuProductSubscription1 = productSubscriptions.get(0);
 		
 		// re-autosubscribe
-		clienttasks.subscribe(true, null, null, null, (String)null, null, null, null, null, null, null, null);
+		clienttasks.subscribe(true, null, null, null, (String)null, null, null, null, null, null, null, null, null);
 		
 		// get the re-autosubscribed entitlement
 		productSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
@@ -401,7 +401,7 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
 		
 		// register with autosubscribe and force (to unregister anyone that is already registered)
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, true, null, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, true, null, null, null, null, null);
 		
 		// get the autosubscribed productSubscription
 		List<ProductSubscription> productSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
@@ -414,7 +414,7 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 		for (SubscriptionPool subscriptionPool : getRandomSubsetOfList(availableSubscriptionPools,3)) {
 ///*debugTesting*/ subscriptionPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("subscriptionName", "Awesome OS with up to 4 virtual guests", availableSubscriptionPools); // causes: 1 local certificate has been deleted.
 			// manually subscribe to the available cost-based subscription
-			clienttasks.subscribe(null, null, subscriptionPool.poolId, null, null, null, null, null, null, null, null, null);
+			clienttasks.subscribe(null, null, subscriptionPool.poolId, null, null, null, null, null, null, null, null, null, null);
 			
 			// assert that the consumed subscriptions still includes the consumed devSkuProductSubscription
 			productSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
@@ -440,7 +440,7 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 	public void VerifyAutosubscribeAfterChangingDevSkuFacts_Test() throws JSONException, Exception {
 		
 		// register with force to get a fresh consumer
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg,null,null,null,null,false,null,null,(List)null,null,null,null,true,false,null,null,null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg,null,null,null,null,false,null,null,(List)null,null,null,null,true,false,null,null,null, null);
 		
 		// find two value SKUs that can be used as a dev_sku
 		List <SubscriptionPool> subscriptionPools = clienttasks.getCurrentlyAvailableSubscriptionPools();
@@ -457,10 +457,10 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 		factsMap.put("dev_sku",devSku1);
 		factsMap.put("dev_platform","dev_platform_for_"+devSku1);
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
-		clienttasks.facts(null, true, null, null, null);
+		clienttasks.facts(null, true, null, null, null, null);
 		
 		// autosubscribe
-		clienttasks.subscribe(true, null, null, null, (String)null, null, null, null, null, null, null, null);
+		clienttasks.subscribe(true, null, null, null, (String)null, null, null, null, null, null, null, null, null);
 		
 		// get the autosubscribed entitlement
 		List<ProductSubscription> productSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
@@ -472,17 +472,17 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 		factsMap.put("dev_sku",devSku2);
 		factsMap.put("dev_platform","dev_platform_for_"+devSku2);
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
-		clienttasks.facts(null, true, null, null, null);
+		clienttasks.facts(null, true, null, null, null, null);
 		
 		// workaround for "All installed products are covered by valid entitlements. No need to update subscriptions at this time."
 		// which will cause the final assert to fail because the system will have no need to re-autosubscribe to devSku2
 		if (clienttasks.getFactValue("system.entitlements_valid").equalsIgnoreCase("valid")) {
 			// simply remove the devSkuProductSubscription1 subscription
-			clienttasks.unsubscribe_(null, devSkuProductSubscription1.serialNumber, null, null, null, null);
+			clienttasks.unsubscribe_(null, devSkuProductSubscription1.serialNumber, null, null, null, null, null);
 		}
 		
 		// autosubscribe again
-		clienttasks.subscribe(true, null, null, null, (String)null, null, null, null, null, null, null, null);
+		clienttasks.subscribe(true, null, null, null, (String)null, null, null, null, null, null, null, null, null);
 		
 		// get the autosubscribed entitlement
 		productSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
@@ -500,7 +500,7 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyAutosubscribedDevSkuWithAnUnknownProductInstalled_Test() throws JSONException, Exception {
 		// unregister to get rid of current consumer
-		clienttasks.unregister(null, null, null);
+		clienttasks.unregister(null, null, null, null);
 		
 		// verify that an unknown product is installed
 		String productId = "88888888";
@@ -518,7 +518,7 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
 		
 		// register with autosubscribe and force (to unregister anyone that is already registered)
-		SSHCommandResult result = clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, true, null, null, null, null);
+		SSHCommandResult result = clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, true, null, null, null, null, null);
 		String expectedMsg = "Unable to find available subscriptions for all your installed products.";
 		Assert.assertTrue(result.getStdout().trim().endsWith(expectedMsg),"Register with autosubscribe ends with this message when an unknown product is installed '"+expectedMsg+"'.");
 		

@@ -127,7 +127,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		if (sm_serverAdminUsername.equals("")||sm_serverAdminPassword.equals("")) throw new SkipException("This test requires the candlepin server admin username and password credentials.");
 
 		// start fresh by unregistering
-		clienttasks.unregister(null, null, null);
+		clienttasks.unregister(null, null, null, null);
 		
 		// get the owner and consumer feeds before we test the firing of a new event
 		String ownerKey = sm_clientOrg;
@@ -135,7 +135,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
         SyndFeed oldOwnerFeed = CandlepinTasks.getSyndFeedForOwner(ownerKey,sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
  
         // fire a register event
-		clienttasks.register(sm_clientUsername,sm_clientPassword,ownerKey,null,null,null,null, null, null, null, (String)null, null, null, null, null, null, null, null, null);
+		clienttasks.register(sm_clientUsername,sm_clientPassword,ownerKey,null,null,null,null, null, null, null, (String)null, null, null, null, null, null, null, null, null, null);
 		String[] newEventTitles = new String[]{"CONSUMER CREATED"};
 		newEventTitles = new String[]{"COMPLIANCE CREATED","COMPLIANCE CREATED","CONSUMER CREATED"};	// COMPLIANCE CREATED events were added to support gutterball
 		if (clienttasks.isVersion(servertasks.statusVersion, ">=", "0.9.37-1"/*candlepin-common-1.0.17-1*/)) {	// commit bb1d2e6184a6cd9b80ff9c9d3045e9d780116226	// Only send Compliance event when compliance changes
@@ -200,7 +200,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 //testPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("subscriptionType", "Standard (Temporary)", pools);
 
 		//clienttasks.subscribeToSubscriptionPoolUsingPoolId(testPool);	// RHEL59: THIS IS GENERATING EXTRA CONSUMER MODIFIED EVENTS THAT WE DON'T REALLY WANT TO TEST 
-		clienttasks.subscribe(null, null, testPool.poolId, null, null, null, null, null, null, null, null, null);
+		clienttasks.subscribe(null, null, testPool.poolId, null, null, null, null, null, null, null, null, null, null);
 		List<String> newEventTitles = new ArrayList<String>();
 		//newEventTitles.add("COMPLIANCE CREATED");	// COMPLIANCE CREATED events were added to support gutterball
 		newEventTitles.add("ENTITLEMENT CREATED");
@@ -294,7 +294,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
         assertTheNewFeedContains(oldFeed, newEventTitles);
         
 		log.info("Now let's refresh the client's entitlements to expose the ENTITLEMENT MODIFIED event...");
-		clienttasks.refresh(null, null, null);
+		clienttasks.refresh(null, null, null, null);
 		newEventTitles.add("COMPLIANCE CREATED");	// COMPLIANCE CREATED events were added to support gutterball
 		newEventTitles.add("ENTITLEMENT MODIFIED");
 		
@@ -410,7 +410,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		eventFacts.put("events.test.description", "Testing CONSUMER MODIFIED event fires on facts update.");
 		eventFacts.put("events.test.currentTimeMillis", String.valueOf(System.currentTimeMillis()));
 		clienttasks.createFactsFileWithOverridingValues(eventFacts);
-		clienttasks.facts(null,true, null, null, null);
+		clienttasks.facts(null,true, null, null, null, null);
 		// FYI: Another way to fire a consumer modified event is to call CandlepinTasks.setAutohealForConsumer(authenticator, password, url, consumerid, autoheal);
 		String[] newEventTitles = new String[]{"CONSUMER MODIFIED"};
 		newEventTitles = new String[]{"COMPLIANCE CREATED","CONSUMER MODIFIED"};	// COMPLIANCE CREATED events were added to support gutterball
@@ -441,7 +441,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
         SyndFeed oldOwnerFeed = CandlepinTasks.getSyndFeedForOwner(ownerKey,sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
  
         // fire an unregister event
-		clienttasks.unregister(null, null, null);
+		clienttasks.unregister(null, null, null, null);
 		String[] newEventTitles = new String[]{"CONSUMER DELETED"};
 		newEventTitles = new String[]{"COMPLIANCE CREATED","CONSUMER DELETED"};	// COMPLIANCE CREATED events were added to support gutterball
 		if (clienttasks.isVersion(servertasks.statusVersion, ">=", "0.9.37-1"/*candlepin-common-1.0.17-1*/)) {	// commit bb1d2e6184a6cd9b80ff9c9d3045e9d780116226	// Only send Compliance event when compliance changes
@@ -698,14 +698,14 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		if (sm_serverAdminUsername.equals("")||sm_serverAdminPassword.equals("")) throw new SkipException("This test requires the candlepin server admin username and password credentials.");
 
 		// start fresh by unregistering
-		clienttasks.unregister(null, null, null);
+		clienttasks.unregister(null, null, null, null);
 		
 		// register a type=candlepin consumer and subscribe to get an entitlement
 		// NOTE: Without the subscribe, this bugzilla is thrown: 
-		SSHCommandResult result = clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,ConsumerType.candlepin,null,null, null, null, null, (String)null, null, null, null, null, false, null, null, null);
+		SSHCommandResult result = clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,ConsumerType.candlepin,null,null, null, null, null, (String)null, null, null, null, null, false, null, null, null, null);
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		testPool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
-		clienttasks.subscribe(null, null, testPool.poolId, null, null, null, null, null, null, null, null, null);
+		clienttasks.subscribe(null, null, testPool.poolId, null, null, null, null, null, null, null, null, null, null);
 		//String consumerKey = result.getStdout().split(" ")[0];
 		
 		// get the owner and consumer feeds before we test the firing of a new event

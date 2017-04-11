@@ -68,8 +68,8 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=41678)
 	public void EnsureAvailableSubscriptionsListed_Test() {
-		clienttasks.unregister(null, null, null);
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, null, false, null, null, null);
+		clienttasks.unregister(null, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, null, false, null, null, null, null);
 		String availableSubscriptionPools = clienttasks.listAvailableSubscriptionPools().getStdout();
 		Assert.assertContainsMatch(availableSubscriptionPools, "Available Subscriptions","" +
 				"Available Subscriptions are listed for '"+sm_clientUsername+"' to consume.");
@@ -163,8 +163,8 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=41679)
 	public void EnsureConsumedEntitlementsListed_Test() {
-		clienttasks.unregister(null, null, null);
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, null, false, null, null, null);
+		clienttasks.unregister(null, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, null, false, null, null, null, null);
 		String consumedProductSubscription = clienttasks.listConsumedProductSubscriptions().getStdout();
 		Assert.assertContainsMatch(consumedProductSubscription, "No consumed subscription pools to list",
 				"No consumed subscription pools listed for '"+sm_clientUsername+"' after registering (without autosubscribe).");
@@ -180,8 +180,8 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	@ImplementsNitrateTest(caseId=41679)
 	public void EnsureConsumedEntitlementsListed_Test(String productId, JSONArray bundledProductDataAsJSONArray) throws JSONException, Exception {
 //if (!productId.equals("awesomeos-virt-unlmtd-phys")) throw new SkipException("debugTesting productId="+productId);
-		clienttasks.unregister(null, null, null);
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, null, false, null, null, null);
+		clienttasks.unregister(null, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, null, false, null, null, null, null);
 		
 		SubscriptionPool pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", productId, clienttasks.getCurrentlyAllAvailableSubscriptionPools());
 		Assert.assertNotNull(pool, "SubscriptionPool with ProductId '"+productId+"' is available for subscribing.");
@@ -201,8 +201,8 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void EnsureInstalledProductsListed_Test() {
-		clienttasks.unregister(null, null, null);
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, null, false, null, null, null);
+		clienttasks.unregister(null, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, null, false, null, null, null, null);
 
 		List <ProductCert> productCerts = clienttasks.getCurrentProductCerts();
 		Set <String> productCertIds = clienttasks.getCurrentProductIds();
@@ -235,13 +235,13 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void EnsureListAndListInstalledAreTheSame_Test() throws JSONException, Exception {
-		clienttasks.unregister(null, null, null);
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, null, false, null, null, null);
+		clienttasks.unregister(null, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, null, false, null, null, null, null);
 
 		// assert same results when no subscribed to anything...
 		log.info("assert list [--installed] produce same results when not subscribed to anything...");
-		SSHCommandResult listResult = clienttasks.list_(null, null, null, null, null, null, null, null, null, null, null, null, null);
-		SSHCommandResult listInstalledResult = clienttasks.list_(null, null, null, Boolean.TRUE, null, null, null, null, null, null, null, null, null);
+		SSHCommandResult listResult = clienttasks.list_(null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+		SSHCommandResult listInstalledResult = clienttasks.list_(null, null, null, Boolean.TRUE, null, null, null, null, null, null, null, null, null, null);
 		
 		Assert.assertEquals(listResult.getStdout(), listInstalledResult.getStdout(), "'list' and 'list --installed' produce the same stdOut results.");
 		Assert.assertEquals(listResult.getStderr(), listInstalledResult.getStderr(), "'list' and 'list --installed' produce the same stdErr results.");
@@ -253,8 +253,8 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
 		clienttasks.subscribeToSubscriptionPool_(pool);
-		listResult = clienttasks.list_(null, null, null, null, null, null, null, null, null, null, null, null, null);
-		listInstalledResult = clienttasks.list_(null, null, null, Boolean.TRUE, null, null, null, null, null, null, null, null, null);
+		listResult = clienttasks.list_(null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+		listInstalledResult = clienttasks.list_(null, null, null, Boolean.TRUE, null, null, null, null, null, null, null, null, null, null);
 		
 		Assert.assertEquals(listResult.getStdout(), listInstalledResult.getStdout(), "'list' and 'list --installed' produce the same stdOut results.");
 		Assert.assertEquals(listResult.getStderr(), listInstalledResult.getStderr(), "'list' and 'list --installed' produce the same stdErr results.");
@@ -402,12 +402,12 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=, fromPlan=)
 	public void EnsureListConsumedReportsOriginatingPoolId_Test() {
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
 		
 		// subscribe to a randomly available pool
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
-		clienttasks.subscribe(null,null,pool.poolId,null,null,null,null,null,null,null,null, null);
+		clienttasks.subscribe(null,null,pool.poolId,null,null,null,null,null,null,null,null, null, null);
 		
 		// verify the list of consumed subscriptions reports the pool.poolId
 		List<ProductSubscription> consumedProductSubscriptionsFromPool = ProductSubscription.findAllInstancesWithMatchingFieldFromList("poolId", pool.poolId, clienttasks.getCurrentlyConsumedProductSubscriptions());
@@ -424,7 +424,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=, fromPlan=)
 	public void EnsureListAvailableReportsContract_Test() {
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
 		
 		// assert the contract value in all available pools
 		boolean availableSubscriptionPoolsDisplayContract=false;
@@ -458,8 +458,8 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		}
 		
 		// register a person
-		clienttasks.unregister(null, null, null);
-		clienttasks.register(username, password, owner, null, ConsumerType.person, null, null, null, null, null, (String)null, null, null, null, null, false, null, null, null);
+		clienttasks.unregister(null, null, null, null);
+		clienttasks.register(username, password, owner, null, ConsumerType.person, null, null, null, null, null, (String)null, null, null, null, null, false, null, null, null, null);
 
 		if (true) throw new SkipException("Support for RHELPersonal Subscriptions was yanked in favor of new DataCenter SKUs.");
 
@@ -477,7 +477,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	}
 	@AfterGroups(groups={}, value="EnsureOnlyRHELPersonalIsAvailableToRegisteredPerson_Test", alwaysRun=true)
 	public void teardownAfterEnsureOnlyRHELPersonalIsAvailableToRegisteredPerson_Test() {
-		if (clienttasks!=null) clienttasks.unregister_(null, null, null);
+		if (clienttasks!=null) clienttasks.unregister_(null, null, null, null);
 	}
 
 
@@ -488,8 +488,8 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void EnsureRHELPersonalIsNotAvailableToRegisteredSystem_Test() throws JSONException {
-		clienttasks.unregister(null, null, null);
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, ConsumerType.system, null, null, null, null, null, (String)null, null, null, null, null, false, null, null, null);
+		clienttasks.unregister(null, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, ConsumerType.system, null, null, null, null, null, (String)null, null, null, null, null, false, null, null, null, null);
 		SubscriptionPool rhelPersonalPool = null;
 		
 		for (String personProductId : getPersonProductIds()) {
@@ -509,7 +509,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	}
 	@AfterGroups(groups={}, value="EnsureRHELPersonalIsNotAvailableToRegisteredSystem_Test", alwaysRun=true)
 	public void teardownAfterEnsureRHELPersonalIsNotAvailableToRegisteredSystem_Test() {
-		if (clienttasks!=null) clienttasks.unregister_(null, null, null);
+		if (clienttasks!=null) clienttasks.unregister_(null, null, null, null);
 	}
 
 
@@ -522,7 +522,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			//@ImplementsNitrateTest(caseId=)
 	public void AttemptListConsumedWithoutBeingRegistered_Test() {
 		
-		clienttasks.unregister(null,null,null);
+		clienttasks.unregister(null,null,null, null);
 		SSHCommandResult listResult = clienttasks.listConsumedProductSubscriptions();
 		
 		// assert redemption results
@@ -539,7 +539,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			//@ImplementsNitrateTest(caseId=)
 	public void AttemptListInstalledWithoutBeingRegistered_Test() {
 		
-		clienttasks.unregister(null,null,null);
+		clienttasks.unregister(null,null,null, null);
 		SSHCommandResult listResult = clienttasks.listInstalledProducts();
 	}
 
@@ -552,8 +552,8 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			//@ImplementsNitrateTest(caseId=)
 	public void AttemptListWithoutBeingRegistered_Test() {
 		
-		clienttasks.unregister(null,null,null);
-		SSHCommandResult listResult = clienttasks.list_(null,null,null,null,null,null,null, null, null, null, null, null, null);
+		clienttasks.unregister(null,null,null, null);
+		SSHCommandResult listResult = clienttasks.list_(null,null,null,null,null,null,null, null, null, null, null, null, null, null);
 		
 		Assert.assertEquals(listResult.getExitCode(), Integer.valueOf(0), "The exit code from the list command indicates a success.");
 	}
@@ -567,9 +567,9 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			//@ImplementsNitrateTest(caseId=)
 	public void AttemptListAvailableWithoutBeingRegistered_Test() {
 		SSHCommandResult listResult;
-		clienttasks.unregister(null,null,null);
+		clienttasks.unregister(null,null,null, null);
 		
-		listResult = clienttasks.list_(null,true,null,null,null,null,null, null, null, null, null, null, null);
+		listResult = clienttasks.list_(null,true,null,null,null,null,null, null, null, null, null, null, null, null);
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
 			Assert.assertEquals(listResult.getExitCode(), Integer.valueOf(1), "The exit code from the list --available command indicates a problem.");
 			Assert.assertEquals(listResult.getStderr().trim(), clienttasks.msg_ConsumerNotRegistered,"stderr while attempting to list --available subscriptions should indicate registration is required");
@@ -582,7 +582,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			Assert.assertEquals(listResult.getStdout().trim(), clienttasks.msg_ConsumerNotRegistered,"Attempting to list --available subscriptions should require registration.");
 		}
 		
-		listResult = clienttasks.list_(true,true,null,null,null,null,null, null, null, null, null, null, null);
+		listResult = clienttasks.list_(true,true,null,null,null,null,null, null, null, null, null, null, null, null);
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
 			Assert.assertEquals(listResult.getExitCode(), Integer.valueOf(1), "The exit code from the list --all --available command indicates a problem.");
 			Assert.assertEquals(listResult.getStderr().trim(), clienttasks.msg_ConsumerNotRegistered,"stderr while attempting to list --all --available subscriptions should indicate registration is required");
@@ -651,7 +651,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			if (onDatesTested.contains(onDateToTest)) continue;
 			
 			// list all available onDateToTest
-			SSHCommandResult listResult = clienttasks.list_(true,true,null,null,null,onDateToTest,null, null, null, null, null, null, null);
+			SSHCommandResult listResult = clienttasks.list_(true,true,null,null,null,onDateToTest,null, null, null, null, null, null, null, null);
 			Assert.assertEquals(listResult.getExitCode(), Integer.valueOf(0), "The exit code from the list --all --available --ondate command indicates a success.");
 
 			List<SubscriptionPool> subscriptionPools = SubscriptionPool.parse(listResult.getStdout());
@@ -690,16 +690,16 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	public void ListAvailableWithMatchInstalled_Test() throws JSONException, Exception {
 		if (clienttasks.isPackageVersion("subscription-manager","<","1.10.3-1")) throw new SkipException("Installed package '"+clienttasks.installedPackageVersionMap.get("subscription-manager")+"' is blockedByBug https://bugzilla.redhat.com/show_bug.cgi?id=654501 which is fixed in subscription-manager-1.10.3-1.");
 		
- 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, false, null, null, null, null);
-		clienttasks.autoheal(null, null, true, null, null, null);
+ 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, false, null, null, null, null, null);
+		clienttasks.autoheal(null, null, true, null, null, null, null);
 
 		// assemble a list of currently installed product ids
 		List<ProductCert> installedProductCerts = clienttasks.getCurrentProductCerts();
 		List<String> installedProductIds = new ArrayList<String>(); for (ProductCert productCert : installedProductCerts) installedProductIds.add(productCert.productId);
 		
 		// get the available subscription pools
-		List<SubscriptionPool> availableSubscriptionPools = SubscriptionPool.parse(clienttasks.list(null, true, null, null, null, null, false, null, null, null, null, null, null).getStdout());
-		List<SubscriptionPool> availableSubscriptionPoolsMatchingInstalled = SubscriptionPool.parse(clienttasks.list(null, true, null, null, null, null, true, null, null, null, null, null, null).getStdout());
+		List<SubscriptionPool> availableSubscriptionPools = SubscriptionPool.parse(clienttasks.list(null, true, null, null, null, null, false, null, null, null, null, null, null, null).getStdout());
+		List<SubscriptionPool> availableSubscriptionPoolsMatchingInstalled = SubscriptionPool.parse(clienttasks.list(null, true, null, null, null, null, true, null, null, null, null, null, null, null).getStdout());
 		
 		// loop through the list of available subscription pools with match-installed and assert they really do provide at least one product that is installed.
 		for (SubscriptionPool subscriptionPool : availableSubscriptionPoolsMatchingInstalled) {
@@ -732,16 +732,16 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			//@ImplementsNitrateTest(caseId=)
 	public void ListAllAvailableWithMatchInstalled_Test() throws JSONException, Exception {
 		
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, false, null, null, null, null);
-		clienttasks.autoheal(null, null, true, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, false, null, null, null, null, null);
+		clienttasks.autoheal(null, null, true, null, null, null, null);
 
 		// assemble a list of currently installed product ids
 		List<ProductCert> installedProductCerts = clienttasks.getCurrentProductCerts();
 		List<String> installedProductIds = new ArrayList<String>(); for (ProductCert productCert : installedProductCerts) installedProductIds.add(productCert.productId);
 		
 		// get all the available subscription pools
-		List<SubscriptionPool> allAvailableSubscriptionPools = SubscriptionPool.parse(clienttasks.list(true, true, null, null, null, null, false, null, null, null, null, null, null).getStdout());
-		List<SubscriptionPool> allAvailableSubscriptionPoolsMatchingInstalled = SubscriptionPool.parse(clienttasks.list(true, true, null, null, null, null, true, null, null, null, null, null, null).getStdout());
+		List<SubscriptionPool> allAvailableSubscriptionPools = SubscriptionPool.parse(clienttasks.list(true, true, null, null, null, null, false, null, null, null, null, null, null, null).getStdout());
+		List<SubscriptionPool> allAvailableSubscriptionPoolsMatchingInstalled = SubscriptionPool.parse(clienttasks.list(true, true, null, null, null, null, true, null, null, null, null, null, null, null).getStdout());
 		
 		// loop through the list of all available subscription pools with match-installed and assert they really do provide at least one product that is installed.
 		for (SubscriptionPool subscriptionPool : allAvailableSubscriptionPoolsMatchingInstalled) {
@@ -774,15 +774,15 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			//@ImplementsNitrateTest(caseId=)
 	public void ListAvailableWithNoOverlap_Test() throws JSONException, Exception {
 		
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, false, null, null, null, null);
-		clienttasks.autoheal(null, null, true, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, false, null, null, null, null, null);
+		clienttasks.autoheal(null, null, true, null, null, null, null);
 		
 		// assemble a list of currently installed product ids
 		List<ProductCert> installedProductCerts = clienttasks.getCurrentProductCerts();
 		List<String> installedProductIds = new ArrayList<String>(); for (ProductCert productCert : installedProductCerts) installedProductIds.add(productCert.productId);
 		
 		// get the available subscription pools
-		List<SubscriptionPool> availableSubscriptionPools = SubscriptionPool.parse(clienttasks.list(null, true, null, null, null, null, null, false, null, null, null, null, null).getStdout());
+		List<SubscriptionPool> availableSubscriptionPools = SubscriptionPool.parse(clienttasks.list(null, true, null, null, null, null, null, false, null, null, null, null, null, null).getStdout());
 		
 		// randomly attach a positive subset of available subscriptions
 		List<SubscriptionPool> randomAvailableSubscriptionPools = getRandomSubsetOfList(availableSubscriptionPools, randomGenerator.nextInt(availableSubscriptionPools.size()-1)+1);
@@ -799,10 +799,10 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			poolIds.add(SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("subscriptionName","Awesome OS Server Basic (multi-entitlement)",availableSubscriptionPools).poolId);
 			poolIds.add(SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("subscriptionName","Awesome OS Modifier",availableSubscriptionPools).poolId);
 		}
-		clienttasks.subscribe(null, null, poolIds, null, null, "1", null, null, null, null, null, null);
+		clienttasks.subscribe(null, null, poolIds, null, null, "1", null, null, null, null, null, null, null);
 		
-		List<InstalledProduct> installedProducts = InstalledProduct.parse(clienttasks.list(null,null,null,true,null,null,null,null,null,null,null, null, null).getStdout());
-		List<SubscriptionPool> availableSubscriptionPoolsWithoutOverlap = SubscriptionPool.parse(clienttasks.list(null, true, null, null, null, null, null, true, null, null, null, null, null).getStdout());
+		List<InstalledProduct> installedProducts = InstalledProduct.parse(clienttasks.list(null,null,null,true,null,null,null,null,null,null,null, null, null, null).getStdout());
+		List<SubscriptionPool> availableSubscriptionPoolsWithoutOverlap = SubscriptionPool.parse(clienttasks.list(null, true, null, null, null, null, null, true, null, null, null, null, null, null).getStdout());
 		//	[root@jsefler-7 ~]# subscription-manager list --help | grep no-overlap -A1
 		//	  --no-overlap          shows pools which provide products that are not
 		//	                        already covered; only used with --available
@@ -836,7 +836,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		if (clienttasks.isPackageVersion("subscription-manager", "<", "1.12.6-1")) throw new SkipException("The installed version of subscription-manager does not contain the fix for https://bugzilla.redhat.com/show_bug.cgi?id=1022622#c3");
 		
 		// assert that availableSubscriptionPools that are not filtered out of the availableSubscriptionPoolsWithoutOverlap provide products that are all fully Subscribed
-		availableSubscriptionPools = SubscriptionPool.parse(clienttasks.list(null, true, null, null, null, null, null, false, null, null, null, null, null).getStdout());
+		availableSubscriptionPools = SubscriptionPool.parse(clienttasks.list(null, true, null, null, null, null, null, false, null, null, null, null, null, null).getStdout());
 		for (SubscriptionPool availableSubscriptionPool : availableSubscriptionPools) {
 			if (!availableSubscriptionPoolsWithoutOverlap.contains(availableSubscriptionPool)) {
 				for (String providedProductId : CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, availableSubscriptionPool.poolId)) {
@@ -864,14 +864,14 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		List<SubscriptionPool> expectedSubscriptionPools, filteredSubscriptionPools;
 				
 		// list all available (without service level)
-		listResult = clienttasks.list_(true,true,null,null,null,null,null,null,null, null, null, null, null);
+		listResult = clienttasks.list_(true,true,null,null,null,null,null,null,null, null, null, null, null, null);
 		List<SubscriptionPool> allAvailableSubscriptionPools = clienttasks.getCurrentlyAllAvailableSubscriptionPools();
 		
 		// determine the subset of expected pools with a case-insensitive matching servicelevel
 		expectedSubscriptionPools = SubscriptionPool.findAllInstancesWithCaseInsensitiveMatchingFieldFromList("serviceLevel", servicelevel, allAvailableSubscriptionPools);
 
 		// list all available filtered by servicelevel
-		listResult = clienttasks.list_(true,true,null,null,servicelevel,null,null,null,null, null, null, null, null);
+		listResult = clienttasks.list_(true,true,null,null,servicelevel,null,null,null,null, null, null, null, null, null);
 		Assert.assertEquals(listResult.getExitCode(), Integer.valueOf(0), "The exit code from the list --all --available --servicelevel command indicates a success.");
 		
 		// assert results
@@ -885,14 +885,14 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		}
 				
 		// list all available (without service level)
-		listResult = clienttasks.list_(false,true,null,null,null,null,null,null,null, null, null, null, null);
+		listResult = clienttasks.list_(false,true,null,null,null,null,null,null,null, null, null, null, null, null);
 		List<SubscriptionPool> availableSubscriptionPools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		
 		// determine the subset of expected pools with a matching servicelevel
 		expectedSubscriptionPools = SubscriptionPool.findAllInstancesWithCaseInsensitiveMatchingFieldFromList("serviceLevel", servicelevel, availableSubscriptionPools);
 		
 		// list available filtered by servicelevel
-		listResult = clienttasks.list_(false,true,null,null,servicelevel,null,null,null,null, null, null, null, null);
+		listResult = clienttasks.list_(false,true,null,null,servicelevel,null,null,null,null, null, null, null, null, null);
 		Assert.assertEquals(listResult.getExitCode(), Integer.valueOf(0), "The exit code from the list --all --available --servicelevel command indicates a success.");
 		
 		// assert results
@@ -929,12 +929,12 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		
 		// register if necessary
 		if (clienttasks.getCurrentlyRegisteredOwnerKey() == null) {
-			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null);
-			clienttasks.autoheal(null, null, true, null, null, null);
-		} else clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null, null);
+			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null, null);
+			clienttasks.autoheal(null, null, true, null, null, null, null);
+		} else clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null, null, null);
 		
 		// get all the available subscription pools
-		List<SubscriptionPool> availableSubscriptionPools = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, null, null, null, null, null).getStdout());
+		List<SubscriptionPool> availableSubscriptionPools = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, null, null, null, null, null, null).getStdout());
 		
 		// randomly choose an available pool
 		SubscriptionPool randomAvailablePool = getRandomListItem(availableSubscriptionPools);
@@ -946,11 +946,11 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		
 		// Test 1: test exact --matches on Subscription Name:
 		matchesString = randomAvailablePool.subscriptionName;
-		actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, matchesString, null, null, null, null).getStdout());
+		actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, matchesString, null, null, null, null, null).getStdout());
 		assertActualResultOfListAvailableWithMatches(matchesString,actualSubscriptionPoolMatches,availableSubscriptionPools);
 		// also test case insensitivity
 		matchesString = randomizeCaseOfCharactersInString(matchesString);
-		actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, matchesString, null, null, null, null).getStdout());
+		actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, matchesString, null, null, null, null, null).getStdout());
 		assertActualResultOfListAvailableWithMatches(matchesString,actualSubscriptionPoolMatches,availableSubscriptionPools);
 		
 		
@@ -959,11 +959,11 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			matchesString = getRandomListItem(randomAvailablePool.provides);
 ///*debugTesting*/ matchesString="Red Hat Beta";
 ///*debugTesting*/ matchesString="dotNET on RHEL (for RHEL Server)";	// useful to assert matches on derivedProvidedProducts (finding a match on a data center subscription: RH00001  Red Hat Enterprise Linux for Virtual Datacenters, Premium)
-			actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, matchesString, null, null, null, null).getStdout());
+			actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, matchesString, null, null, null, null, null).getStdout());
 			assertActualResultOfListAvailableWithMatches(matchesString,actualSubscriptionPoolMatches,availableSubscriptionPools);
 			// also test case insensitivity
 			matchesString = randomizeCaseOfCharactersInString(matchesString);
-			actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, matchesString, null, null, null, null).getStdout());
+			actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, matchesString, null, null, null, null, null).getStdout());
 			assertActualResultOfListAvailableWithMatches(matchesString,actualSubscriptionPoolMatches,availableSubscriptionPools);
 
 		} else log.warning("Skipping list --available --matches test on a Provides item since the provides list is empty on our random available subscription: "+randomAvailablePool);		
@@ -971,22 +971,22 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		
 		// Test 3: test exact --matches on SKU:
 		matchesString = randomAvailablePool.productId;
-		actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, matchesString, null, null, null, null).getStdout());
+		actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, matchesString, null, null, null, null, null).getStdout());
 		assertActualResultOfListAvailableWithMatches(matchesString,actualSubscriptionPoolMatches,availableSubscriptionPools);
 		// also test case insensitivity
 		matchesString = randomizeCaseOfCharactersInString(matchesString);
-		actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, matchesString, null, null, null, null).getStdout());
+		actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, matchesString, null, null, null, null, null).getStdout());
 		assertActualResultOfListAvailableWithMatches(matchesString,actualSubscriptionPoolMatches,availableSubscriptionPools);
 		
 		
 		// Test 4: test exact --matches on Contract:
 		if (randomAvailablePool.contract!=null && !randomAvailablePool.contract.isEmpty()) {
 			matchesString = randomAvailablePool.contract;
-			actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, matchesString, null, null, null, null).getStdout());
+			actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, matchesString, null, null, null, null, null).getStdout());
 			assertActualResultOfListAvailableWithMatches(matchesString,actualSubscriptionPoolMatches,availableSubscriptionPools);
 			// also test case insensitivity
 			matchesString = randomizeCaseOfCharactersInString(matchesString);
-			actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, matchesString, null, null, null, null).getStdout());
+			actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, matchesString, null, null, null, null, null).getStdout());
 			assertActualResultOfListAvailableWithMatches(matchesString,actualSubscriptionPoolMatches,availableSubscriptionPools);
 		} else log.warning("Skipping list --available --matches test on a Contract item since it is null on our random available subscription: "+randomAvailablePool);
 
@@ -994,11 +994,11 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		// Test 5: test exact --matches on Service Level:
 		if (randomAvailablePool.serviceLevel!=null && !randomAvailablePool.serviceLevel.isEmpty()) {
 			matchesString = randomAvailablePool.serviceLevel;
-			actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, matchesString, null, null, null, null).getStdout());
+			actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, matchesString, null, null, null, null, null).getStdout());
 			assertActualResultOfListAvailableWithMatches(matchesString,actualSubscriptionPoolMatches,availableSubscriptionPools);
 			// also test case insensitivity
 			matchesString = randomizeCaseOfCharactersInString(matchesString);
-			actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, matchesString, null, null, null, null).getStdout());
+			actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, matchesString, null, null, null, null, null).getStdout());
 			assertActualResultOfListAvailableWithMatches(matchesString,actualSubscriptionPoolMatches,availableSubscriptionPools);
 		} else log.warning("Skipping list --available --matches test on a Service Level item since it is null on our random available subscription: "+randomAvailablePool);
 		
@@ -1006,7 +1006,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		// Test 6: test exact --matches on Provided ProductId:
 		if (!randomAvailablePool.provides.isEmpty()) {
 			matchesString = getRandomListItem(CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, randomAvailablePool.poolId));
-			actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, matchesString, null, null, null, null).getStdout());
+			actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, matchesString, null, null, null, null, null).getStdout());
 			assertActualResultOfListAvailableWithMatches(matchesString,actualSubscriptionPoolMatches,availableSubscriptionPools);
 		} else log.warning("Skipping list --available --matches test on a Provides ProductId item since the provides list is empty on our random available subscription: "+randomAvailablePool);		
 		
@@ -1035,7 +1035,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 				JSONObject jsonContent = randomjsonProductContent.getJSONObject("content");
 				matchesString = jsonContent.getString("name");
 ///*debugTesting*/matchesString = "Red Hat Satellite Tools 6.1 (for RHEL Server for ARM Development Preview) (RPMs)";
-				actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, matchesString, null, null, null, null).getStdout());
+				actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, matchesString, null, null, null, null, null).getStdout());
 				assertActualResultOfListAvailableWithMatches(matchesString,actualSubscriptionPoolMatches,availableSubscriptionPools);
 			} else log.warning("Skipping list --available --matches test on a Provides ProductId Content Name since the random provided product id '"+randomProvidedProductId+"' content list is empty on our random available subscription: "+randomAvailablePool);
 		} else log.warning("Skipping list --available --matches test on a Provides ProductId Content Name since the provides list is empty on our random available subscription: "+randomAvailablePool);
@@ -1049,7 +1049,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 				JSONObject randomjsonProductContent = (JSONObject) jsonProductContents.get(randomGenerator.nextInt(jsonProductContents.length()));
 				JSONObject jsonContent = randomjsonProductContent.getJSONObject("content");
 				matchesString = jsonContent.getString("label");
-				actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, matchesString, null, null, null, null).getStdout());
+				actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, matchesString, null, null, null, null, null).getStdout());
 				assertActualResultOfListAvailableWithMatches(matchesString,actualSubscriptionPoolMatches,availableSubscriptionPools);
 			} else log.warning("Skipping list --available --matches test on a Provides ProductId Content Label since the random provided product id '"+randomProvidedProductId+"' content list is empty on our random available subscription: "+randomAvailablePool);
 		} else log.warning("Skipping list --available --matches test on a Provides ProductId Content Label since the provides list is empty on our random available subscription: "+randomAvailablePool);
@@ -1077,12 +1077,12 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		log.info("Testing with noOverlap="+noOverlap);
 		
 		if (clienttasks.getCurrentlyRegisteredOwnerKey() == null) {
-			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null);
-			clienttasks.autoheal(null, null, true, null, null, null);
-		} else clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null, null);
+			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null, null);
+			clienttasks.autoheal(null, null, true, null, null, null, null);
+		} else clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null, null, null);
 		
 		// get all the available subscription pools
-		List<SubscriptionPool> availableSubscriptionPools = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, null, null, null, null, null).getStdout());
+		List<SubscriptionPool> availableSubscriptionPools = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, null, null, null, null, null, null).getStdout());
 		
 		// randomly choose an available pool
 		SubscriptionPool randomAvailablePool = getRandomListItem(availableSubscriptionPools);
@@ -1109,12 +1109,12 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		// Test 1: test wildcard --matches on Subscription Name:
 		matchesString = randomAvailablePool.subscriptionName;
 		matchesString = matchesString.replaceFirst("^\\S+\\s+","*");	// drop first word
-		actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, matchesString, null, null, null, null).getStdout());
+		actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, matchesString, null, null, null, null, null).getStdout());
 		assertActualResultOfListAvailableWithMatches(matchesString,actualSubscriptionPoolMatches,availableSubscriptionPools);
 		// also test case insensitivity
 		matchesString = randomizeCaseOfCharactersInString(matchesString);
 		matchesString = matchesString.replaceFirst("\\s+\\S+$","*");	// and drop last word
-		actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, matchesString, null, null, null, null).getStdout());
+		actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, matchesString, null, null, null, null, null).getStdout());
 		assertActualResultOfListAvailableWithMatches(matchesString,actualSubscriptionPoolMatches,availableSubscriptionPools);
 		
 		
@@ -1122,12 +1122,12 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		if (!randomAvailablePool.provides.isEmpty()) {
 			matchesString = getRandomListItem(randomAvailablePool.provides);
 			matchesString = matchesString.replaceFirst("\\s+\\S+$","*");	// drop last word
-			actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, matchesString, null, null, null, null).getStdout());
+			actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, matchesString, null, null, null, null, null).getStdout());
 			assertActualResultOfListAvailableWithMatches(matchesString,actualSubscriptionPoolMatches,availableSubscriptionPools);
 			// also test case insensitivity
 			matchesString = randomizeCaseOfCharactersInString(matchesString);
 			matchesString = matchesString.replaceFirst("^\\S+\\s+","*");	// and drop first word
-			actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, matchesString, null, null, null, null).getStdout());
+			actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, matchesString, null, null, null, null, null).getStdout());
 			assertActualResultOfListAvailableWithMatches(matchesString,actualSubscriptionPoolMatches,availableSubscriptionPools);
 
 		} else log.warning("Skipping list --available --matches test on a Provides item since the provides list is empty on our random available subscription: "+randomAvailablePool);		
@@ -1135,24 +1135,24 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		// Test 3: test wildcard --matches on SKU:
 		matchesString = randomAvailablePool.productId;
 		matchesString = matchesString.replaceFirst("^.","?");	// drop first char
-		actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, matchesString, null, null, null, null).getStdout());
+		actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, matchesString, null, null, null, null, null).getStdout());
 		assertActualResultOfListAvailableWithMatches(matchesString,actualSubscriptionPoolMatches,availableSubscriptionPools);
 		// also test case insensitivity
 		matchesString = randomizeCaseOfCharactersInString(matchesString);
 		matchesString = matchesString.replaceFirst(".$","?");	// and drop last char
-		actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, matchesString, null, null, null, null).getStdout());
+		actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, matchesString, null, null, null, null, null).getStdout());
 		assertActualResultOfListAvailableWithMatches(matchesString,actualSubscriptionPoolMatches,availableSubscriptionPools);
 		
 		
 		// Test 4: test wildcard --matches on Contract:
 		matchesString = randomAvailablePool.contract;
 		matchesString = matchesString.replaceFirst(".$","?");	// drop last char
-		actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, matchesString, null, null, null, null).getStdout());
+		actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, matchesString, null, null, null, null, null).getStdout());
 		assertActualResultOfListAvailableWithMatches(matchesString,actualSubscriptionPoolMatches,availableSubscriptionPools);
 		// also test case insensitivity
 		matchesString = randomizeCaseOfCharactersInString(matchesString);
 		matchesString = matchesString.replaceFirst("^.","?");	// and drop first char
-		actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, matchesString, null, null, null, null).getStdout());
+		actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, matchesString, null, null, null, null, null).getStdout());
 		assertActualResultOfListAvailableWithMatches(matchesString,actualSubscriptionPoolMatches,availableSubscriptionPools);
 		
 		
@@ -1161,11 +1161,11 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			matchesString = randomAvailablePool.serviceLevel;
 			matchesString = matchesString.replaceFirst("^.","*");	// drop first char
 			matchesString = matchesString.replaceFirst(".$","?");	// drop last char
-			actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, matchesString, null, null, null, null).getStdout());
+			actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, matchesString, null, null, null, null, null).getStdout());
 			assertActualResultOfListAvailableWithMatches(matchesString,actualSubscriptionPoolMatches,availableSubscriptionPools);
 			// also test case insensitivity
 			matchesString = randomizeCaseOfCharactersInString(matchesString);
-			actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, matchesString, null, null, null, null).getStdout());
+			actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, matchesString, null, null, null, null, null).getStdout());
 			assertActualResultOfListAvailableWithMatches(matchesString,actualSubscriptionPoolMatches,availableSubscriptionPools);
 		} else log.warning("Skipping list --available --matches test on a Service Level item since it is null on our random available subscription: "+randomAvailablePool);
 		
@@ -1175,7 +1175,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			matchesString = getRandomListItem(CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, randomAvailablePool.poolId));
 			int i = randomGenerator.nextInt(matchesString.length());
 			matchesString = matchesString.replaceAll(String.valueOf(matchesString.charAt(i)), "?");
-			actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, matchesString, null, null, null, null).getStdout());
+			actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, matchesString, null, null, null, null, null).getStdout());
 			assertActualResultOfListAvailableWithMatches(matchesString,actualSubscriptionPoolMatches,availableSubscriptionPools);
 		} else log.warning("Skipping list --available --matches test on a Provides ProductId item since the provides list is empty on our random available subscription: "+randomAvailablePool);		
 		
@@ -1354,15 +1354,15 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 
 		// register if necessary
 		if (clienttasks.getCurrentlyRegisteredOwnerKey() == null) {
-			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null);
-			clienttasks.autoheal(null, null, true, null, null, null);
-		} else clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null, null);
+			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null, null);
+			clienttasks.autoheal(null, null, true, null, null, null, null);
+		} else clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null, null, null);
 				
 		// attach all the currently available subscriptions
 		clienttasks.subscribeToTheCurrentlyAllAvailableSubscriptionPoolsCollectively();
 		
 		// get all the consumed product subscriptions
-		List<ProductSubscription> consumedProductSubscriptions = ProductSubscription.parse(clienttasks.list(null, null, true, null, null, null, null, null, null, null, null, null, null).getStdout());
+		List<ProductSubscription> consumedProductSubscriptions = ProductSubscription.parse(clienttasks.list(null, null, true, null, null, null, null, null, null, null, null, null, null, null).getStdout());
 		
 		// randomly choose one of the consumed Product Subscriptions
 		ProductSubscription randomConsumedProductSubscription = getRandomListItem(consumedProductSubscriptions);
@@ -1392,39 +1392,39 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		
 		// Test 1: test exact --matches on Subscription Name:
 		matchesString = randomConsumedProductSubscription.productName;
-		actualProductSubscriptionMatches = ProductSubscription.parse(clienttasks.list(null, null, true, null, null, null, null, null, matchesString, null, null, null, null).getStdout());
+		actualProductSubscriptionMatches = ProductSubscription.parse(clienttasks.list(null, null, true, null, null, null, null, null, matchesString, null, null, null, null, null).getStdout());
 		assertActualResultOfListConsumedWithMatches(matchesString,actualProductSubscriptionMatches,consumedProductSubscriptions);
 		// also test case insensitivity
 		matchesString = randomizeCaseOfCharactersInString(matchesString);
-		actualProductSubscriptionMatches = ProductSubscription.parse(clienttasks.list(null, null, true, null, null, null, null, null, matchesString, null, null, null, null).getStdout());
+		actualProductSubscriptionMatches = ProductSubscription.parse(clienttasks.list(null, null, true, null, null, null, null, null, matchesString, null, null, null, null, null).getStdout());
 		assertActualResultOfListConsumedWithMatches(matchesString,actualProductSubscriptionMatches,consumedProductSubscriptions);
 		
 		
 		// Test 2: test exact --matches on Provides:
 		if (!randomConsumedProductSubscription.provides.isEmpty()) {
 			matchesString = getRandomListItem(randomConsumedProductSubscription.provides);
-			actualProductSubscriptionMatches = ProductSubscription.parse(clienttasks.list(null, null, true, null, null, null, null, null, matchesString, null, null, null, null).getStdout());
+			actualProductSubscriptionMatches = ProductSubscription.parse(clienttasks.list(null, null, true, null, null, null, null, null, matchesString, null, null, null, null, null).getStdout());
 			assertActualResultOfListConsumedWithMatches(matchesString,actualProductSubscriptionMatches,consumedProductSubscriptions);
 			// also test case insensitivity
 			matchesString = randomizeCaseOfCharactersInString(matchesString);
-			actualProductSubscriptionMatches = ProductSubscription.parse(clienttasks.list(null, null, true, null, null, null, null, null, matchesString, null, null, null, null).getStdout());
+			actualProductSubscriptionMatches = ProductSubscription.parse(clienttasks.list(null, null, true, null, null, null, null, null, matchesString, null, null, null, null, null).getStdout());
 			assertActualResultOfListConsumedWithMatches(matchesString,actualProductSubscriptionMatches,consumedProductSubscriptions);
 
 		} else log.warning("Skipping list --consumed --matches test on a Provides item since the provides list is empty on our random consumed subscription: "+randomConsumedProductSubscription);		
 		
 		// Test 3: test exact --matches on SKU:
 		matchesString = randomConsumedProductSubscription.productId;
-		actualProductSubscriptionMatches = ProductSubscription.parse(clienttasks.list(null, null, true, null, null, null, null, null, matchesString, null, null, null, null).getStdout());
+		actualProductSubscriptionMatches = ProductSubscription.parse(clienttasks.list(null, null, true, null, null, null, null, null, matchesString, null, null, null, null, null).getStdout());
 		assertActualResultOfListConsumedWithMatches(matchesString,actualProductSubscriptionMatches,consumedProductSubscriptions);
 		// also test case insensitivity
 		matchesString = randomizeCaseOfCharactersInString(matchesString);
-		actualProductSubscriptionMatches = ProductSubscription.parse(clienttasks.list(null, null, true, null, null, null, null, null, matchesString, null, null, null, null).getStdout());
+		actualProductSubscriptionMatches = ProductSubscription.parse(clienttasks.list(null, null, true, null, null, null, null, null, matchesString, null, null, null, null, null).getStdout());
 		assertActualResultOfListConsumedWithMatches(matchesString,actualProductSubscriptionMatches,consumedProductSubscriptions);
 		
 		
 		// Test 4: test exact --matches on Contract:
 		matchesString = String.valueOf(randomConsumedProductSubscription.contractNumber);
-		actualProductSubscriptionMatches = ProductSubscription.parse(clienttasks.list(null, null, true, null, null, null, null, null, matchesString, null, null, null, null).getStdout());
+		actualProductSubscriptionMatches = ProductSubscription.parse(clienttasks.list(null, null, true, null, null, null, null, null, matchesString, null, null, null, null, null).getStdout());
 		assertActualResultOfListConsumedWithMatches(matchesString,actualProductSubscriptionMatches,consumedProductSubscriptions);
 		// also test case insensitivity
 		/* not necessary since contractNumber is an Integer
@@ -1436,11 +1436,11 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		// Test 5: test exact --matches on Service Level:
 		if (randomConsumedProductSubscription.serviceLevel!=null && !randomConsumedProductSubscription.serviceLevel.isEmpty()) {
 			matchesString = randomConsumedProductSubscription.serviceLevel;
-			actualProductSubscriptionMatches = ProductSubscription.parse(clienttasks.list(null, null, true, null, null, null, null, null, matchesString, null, null, null, null).getStdout());
+			actualProductSubscriptionMatches = ProductSubscription.parse(clienttasks.list(null, null, true, null, null, null, null, null, matchesString, null, null, null, null, null).getStdout());
 			assertActualResultOfListConsumedWithMatches(matchesString,actualProductSubscriptionMatches,consumedProductSubscriptions);
 			// also test case insensitivity
 			matchesString = randomizeCaseOfCharactersInString(matchesString);
-			actualProductSubscriptionMatches = ProductSubscription.parse(clienttasks.list(null, null, true, null, null, null, null, null, matchesString, null, null, null, null).getStdout());
+			actualProductSubscriptionMatches = ProductSubscription.parse(clienttasks.list(null, null, true, null, null, null, null, null, matchesString, null, null, null, null, null).getStdout());
 			assertActualResultOfListConsumedWithMatches(matchesString,actualProductSubscriptionMatches,consumedProductSubscriptions);
 		} else log.warning("Skipping list --consumed --matches test on a Service Level item since it is null on our random consumed subscription: "+randomConsumedProductSubscription);
 		
@@ -1448,7 +1448,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		// Test 6: test exact --matches on Provided ProductId:
 		if (!randomConsumedProductSubscription.provides.isEmpty()) {
 			matchesString = getRandomListItem(CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, randomConsumedProductSubscription.poolId));
-			actualProductSubscriptionMatches = ProductSubscription.parse(clienttasks.list(null, null, true, null, null, null, null, null, matchesString, null, null, null, null).getStdout());
+			actualProductSubscriptionMatches = ProductSubscription.parse(clienttasks.list(null, null, true, null, null, null, null, null, matchesString, null, null, null, null, null).getStdout());
 			assertActualResultOfListConsumedWithMatches(matchesString,actualProductSubscriptionMatches,consumedProductSubscriptions);
 		} else log.warning("Skipping list --consumed --matches test on a Provides ProductId item since the provides list is empty on our random consumed subscription: "+randomConsumedProductSubscription);		
 		
@@ -1473,15 +1473,15 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 
 		// register if necessary
 		if (clienttasks.getCurrentlyRegisteredOwnerKey() == null) {
-			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null);
-			clienttasks.autoheal(null, null, true, null, null, null);
-		} else clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null, null);
+			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null, null);
+			clienttasks.autoheal(null, null, true, null, null, null, null);
+		} else clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null, null, null);
 				
 		// attach all the currently available subscriptions
 		clienttasks.subscribeToTheCurrentlyAllAvailableSubscriptionPoolsCollectively();
 		
 		// get all the consumed product subscriptions
-		List<ProductSubscription> consumedProductSubscriptions = ProductSubscription.parse(clienttasks.list(null, null, true, null, null, null, null, null, null, null, null, null, null).getStdout());
+		List<ProductSubscription> consumedProductSubscriptions = ProductSubscription.parse(clienttasks.list(null, null, true, null, null, null, null, null, null, null, null, null, null, null).getStdout());
 		
 		// randomly choose one of the consumed Product Subscriptions
 		ProductSubscription randomConsumedProductSubscription = getRandomListItem(consumedProductSubscriptions);
@@ -1514,12 +1514,12 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		// Test 1: test --matches with a * wild card on Subscription Name:
 		matchesString = randomConsumedProductSubscription.productName;
 		matchesString = matchesString.replaceFirst("^\\S+\\s+","*");	// drop first word
-		actualProductSubscriptionMatches = ProductSubscription.parse(clienttasks.list(null, null, true, null, null, null, null, null, matchesString, null, null, null, null).getStdout());
+		actualProductSubscriptionMatches = ProductSubscription.parse(clienttasks.list(null, null, true, null, null, null, null, null, matchesString, null, null, null, null, null).getStdout());
 		assertActualResultOfListConsumedWithMatches(matchesString,actualProductSubscriptionMatches,consumedProductSubscriptions);
 		// also test case insensitivity
 		matchesString = randomizeCaseOfCharactersInString(matchesString);
 		matchesString = matchesString.replaceFirst("\\s+\\S+$","*");	// and drop last word
-		actualProductSubscriptionMatches = ProductSubscription.parse(clienttasks.list(null, null, true, null, null, null, null, null, matchesString, null, null, null, null).getStdout());
+		actualProductSubscriptionMatches = ProductSubscription.parse(clienttasks.list(null, null, true, null, null, null, null, null, matchesString, null, null, null, null, null).getStdout());
 		assertActualResultOfListConsumedWithMatches(matchesString,actualProductSubscriptionMatches,consumedProductSubscriptions);
 		
 		
@@ -1527,12 +1527,12 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		if (!randomConsumedProductSubscription.provides.isEmpty()) {
 			matchesString = getRandomListItem(randomConsumedProductSubscription.provides);
 			matchesString = matchesString.replaceFirst("\\s+\\S+$","*");	// drop last word
-			actualProductSubscriptionMatches = ProductSubscription.parse(clienttasks.list(null, null, true, null, null, null, null, null, matchesString, null, null, null, null).getStdout());
+			actualProductSubscriptionMatches = ProductSubscription.parse(clienttasks.list(null, null, true, null, null, null, null, null, matchesString, null, null, null, null, null).getStdout());
 			assertActualResultOfListConsumedWithMatches(matchesString,actualProductSubscriptionMatches,consumedProductSubscriptions);
 			// also test case insensitivity
 			matchesString = randomizeCaseOfCharactersInString(matchesString);
 			matchesString = matchesString.replaceFirst("^\\S+\\s+","*");	// and drop first word
-			actualProductSubscriptionMatches = ProductSubscription.parse(clienttasks.list(null, null, true, null, null, null, null, null, matchesString, null, null, null, null).getStdout());
+			actualProductSubscriptionMatches = ProductSubscription.parse(clienttasks.list(null, null, true, null, null, null, null, null, matchesString, null, null, null, null, null).getStdout());
 			assertActualResultOfListConsumedWithMatches(matchesString,actualProductSubscriptionMatches,consumedProductSubscriptions);
 
 		} else log.warning("Skipping list --consumed --matches test on a Provides item since the provides list is empty on our random consumed subscription: "+randomConsumedProductSubscription);		
@@ -1540,19 +1540,19 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		// Test 3: test --matches with a ? wild card on SKU:
 		matchesString = randomConsumedProductSubscription.productId;
 		matchesString = matchesString.replaceFirst("^.","?");	// drop first char
-		actualProductSubscriptionMatches = ProductSubscription.parse(clienttasks.list(null, null, true, null, null, null, null, null, matchesString, null, null, null, null).getStdout());
+		actualProductSubscriptionMatches = ProductSubscription.parse(clienttasks.list(null, null, true, null, null, null, null, null, matchesString, null, null, null, null, null).getStdout());
 		assertActualResultOfListConsumedWithMatches(matchesString,actualProductSubscriptionMatches,consumedProductSubscriptions);
 		// also test case insensitivity
 		matchesString = randomizeCaseOfCharactersInString(matchesString);
 		matchesString = matchesString.replaceFirst(".$","?");	// and drop last char
-		actualProductSubscriptionMatches = ProductSubscription.parse(clienttasks.list(null, null, true, null, null, null, null, null, matchesString, null, null, null, null).getStdout());
+		actualProductSubscriptionMatches = ProductSubscription.parse(clienttasks.list(null, null, true, null, null, null, null, null, matchesString, null, null, null, null, null).getStdout());
 		assertActualResultOfListConsumedWithMatches(matchesString,actualProductSubscriptionMatches,consumedProductSubscriptions);
 		
 		
 		// Test 4: test --matches with a ? wild card on Contract:
 		matchesString = String.valueOf(randomConsumedProductSubscription.contractNumber);
 		matchesString = matchesString.replaceFirst(".$","?");	// drop last char
-		actualProductSubscriptionMatches = ProductSubscription.parse(clienttasks.list(null, null, true, null, null, null, null, null, matchesString, null, null, null, null).getStdout());
+		actualProductSubscriptionMatches = ProductSubscription.parse(clienttasks.list(null, null, true, null, null, null, null, null, matchesString, null, null, null, null, null).getStdout());
 		assertActualResultOfListConsumedWithMatches(matchesString,actualProductSubscriptionMatches,consumedProductSubscriptions);
 		// also test case insensitivity
 		/* not necessary since contractNumber is an Integer
@@ -1567,11 +1567,11 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			matchesString = randomConsumedProductSubscription.serviceLevel;
 			matchesString = matchesString.replaceFirst("^.","*");	// drop first char
 			matchesString = matchesString.replaceFirst(".$","?");	// drop last char
-			actualProductSubscriptionMatches = ProductSubscription.parse(clienttasks.list(null, null, true, null, null, null, null, null, matchesString, null, null, null, null).getStdout());
+			actualProductSubscriptionMatches = ProductSubscription.parse(clienttasks.list(null, null, true, null, null, null, null, null, matchesString, null, null, null, null, null).getStdout());
 			assertActualResultOfListConsumedWithMatches(matchesString,actualProductSubscriptionMatches,consumedProductSubscriptions);
 			// also test case insensitivity
 			matchesString = randomizeCaseOfCharactersInString(matchesString);
-			actualProductSubscriptionMatches = ProductSubscription.parse(clienttasks.list(null, null, true, null, null, null, null, null, matchesString, null, null, null, null).getStdout());
+			actualProductSubscriptionMatches = ProductSubscription.parse(clienttasks.list(null, null, true, null, null, null, null, null, matchesString, null, null, null, null, null).getStdout());
 			assertActualResultOfListConsumedWithMatches(matchesString,actualProductSubscriptionMatches,consumedProductSubscriptions);
 		} else log.warning("Skipping list --consumed --matches test on a Service Level item since it is null on our random consumed subscription: "+randomConsumedProductSubscription);
 		
@@ -1582,7 +1582,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			int i = randomGenerator.nextInt(matchesString.length());
 			matchesString = matchesString.replaceAll(String.valueOf(matchesString.charAt(i)), "?");
 ///*debugTesting 1204311*/matchesString="3?060";		
-			actualProductSubscriptionMatches = ProductSubscription.parse(clienttasks.list(null, null, true, null, null, null, null, null, matchesString, null, null, null, null).getStdout());
+			actualProductSubscriptionMatches = ProductSubscription.parse(clienttasks.list(null, null, true, null, null, null, null, null, matchesString, null, null, null, null, null).getStdout());
 			assertActualResultOfListConsumedWithMatches(matchesString,actualProductSubscriptionMatches,consumedProductSubscriptions);
 		} else log.warning("Skipping list --consumed --matches test on a Provides ProductId item since the provides list is empty on our random consumed subscription: "+randomConsumedProductSubscription);		
 		
@@ -1708,19 +1708,19 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 
 		// register if necessary
 		if (clienttasks.getCurrentlyRegisteredOwnerKey() == null) {
-			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null);
-			clienttasks.autoheal(null, null, true, null, null, null);
-		} else clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null, null);
+			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null, null);
+			clienttasks.autoheal(null, null, true, null, null, null, null);
+		} else clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null, null, null);
 				
 		// attach one of all the currently available subscriptions (attaching only one so that some installed products might remain noncompliant)
 		// assemble a list of all the available SubscriptionPool ids
 		List<String> poolIds = new ArrayList<String>();
 		List<SubscriptionPool> subscriptionPools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		for (SubscriptionPool pool : subscriptionPools) poolIds.add(pool.poolId);
-		if (!poolIds.isEmpty()) clienttasks.subscribe(null,null,poolIds, null, null, "1", null, null,null,null,null, null);
+		if (!poolIds.isEmpty()) clienttasks.subscribe(null,null,poolIds, null, null, "1", null, null,null,null,null, null, null);
 		
 		// get all the installed products
-		List<InstalledProduct> installedProducts = InstalledProduct.parse(clienttasks.list(null, null, null, true, null, null, null, null, null, null, null, null, null).getStdout());
+		List<InstalledProduct> installedProducts = InstalledProduct.parse(clienttasks.list(null, null, null, true, null, null, null, null, null, null, null, null, null, null).getStdout());
 		
 		// randomly choose one of the installed products
 		InstalledProduct randomInstalledProduct = getRandomListItem(installedProducts);
@@ -1738,21 +1738,21 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		
 		// Test 1: test exact --matches on Product Name:
 		matchesString = randomInstalledProduct.productName;
-		actualInstalledProductMatches = InstalledProduct.parse(clienttasks.list(null, null, null, true, null, null, null, null, matchesString, null, null, null, null).getStdout());
+		actualInstalledProductMatches = InstalledProduct.parse(clienttasks.list(null, null, null, true, null, null, null, null, matchesString, null, null, null, null, null).getStdout());
 		assertActualResultOfListInstalledWithMatches(matchesString,actualInstalledProductMatches,installedProducts);
 		// also test case insensitivity
 		matchesString = randomizeCaseOfCharactersInString(matchesString);
-		actualInstalledProductMatches = InstalledProduct.parse(clienttasks.list(null, null, null, true, null, null, null, null, matchesString, null, null, null, null).getStdout());
+		actualInstalledProductMatches = InstalledProduct.parse(clienttasks.list(null, null, null, true, null, null, null, null, matchesString, null, null, null, null, null).getStdout());
 		assertActualResultOfListInstalledWithMatches(matchesString,actualInstalledProductMatches,installedProducts);
 		
 		
 		// Test 2: test exact --matches on Product ID:
 		matchesString = randomInstalledProduct.productId;
-		actualInstalledProductMatches = InstalledProduct.parse(clienttasks.list(null, null, null, true, null, null, null, null, matchesString, null, null, null, null).getStdout());
+		actualInstalledProductMatches = InstalledProduct.parse(clienttasks.list(null, null, null, true, null, null, null, null, matchesString, null, null, null, null, null).getStdout());
 		assertActualResultOfListInstalledWithMatches(matchesString,actualInstalledProductMatches,installedProducts);
 		// also test case insensitivity
 		matchesString = randomizeCaseOfCharactersInString(matchesString);
-		actualInstalledProductMatches = InstalledProduct.parse(clienttasks.list(null, null, null, true, null, null, null, null, matchesString, null, null, null, null).getStdout());
+		actualInstalledProductMatches = InstalledProduct.parse(clienttasks.list(null, null, null, true, null, null, null, null, matchesString, null, null, null, null, null).getStdout());
 		assertActualResultOfListInstalledWithMatches(matchesString,actualInstalledProductMatches,installedProducts);
 
 	}
@@ -1771,19 +1771,19 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 
 		// register if necessary
 		if (clienttasks.getCurrentlyRegisteredOwnerKey() == null) {
-			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null);
-			clienttasks.autoheal(null, null, true, null, null, null);
-		} else clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null, null);
+			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null, null);
+			clienttasks.autoheal(null, null, true, null, null, null, null);
+		} else clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null, null, null);
 				
 		// attach one of all the currently available subscriptions (attaching only one so that some installed products might remain noncompliant)
 		// assemble a list of all the available SubscriptionPool ids
 		List<String> poolIds = new ArrayList<String>();
 		List<SubscriptionPool> subscriptionPools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		for (SubscriptionPool pool : subscriptionPools) poolIds.add(pool.poolId);
-		if (!poolIds.isEmpty()) clienttasks.subscribe(null,null,poolIds, null, null, "1", null, null,null,null,null, null);
+		if (!poolIds.isEmpty()) clienttasks.subscribe(null,null,poolIds, null, null, "1", null, null,null,null,null, null, null);
 		
 		// get all the installed products
-		List<InstalledProduct> installedProducts = InstalledProduct.parse(clienttasks.list(null, null, null, true, null, null, null, null, null, null, null, null, null).getStdout());
+		List<InstalledProduct> installedProducts = InstalledProduct.parse(clienttasks.list(null, null, null, true, null, null, null, null, null, null, null, null, null, null).getStdout());
 		
 		// randomly choose one of the installed products
 		InstalledProduct randomInstalledProduct = getRandomListItem(installedProducts);
@@ -1802,12 +1802,12 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		// Test 1: test wildcard --matches on Product Name:
 		matchesString = randomInstalledProduct.productName;
 		matchesString = matchesString.replaceFirst("^\\S+\\s+","*");	// drop first word
-		actualInstalledProductMatches = InstalledProduct.parse(clienttasks.list(null, null, null, true, null, null, null, null, matchesString, null, null, null, null).getStdout());
+		actualInstalledProductMatches = InstalledProduct.parse(clienttasks.list(null, null, null, true, null, null, null, null, matchesString, null, null, null, null, null).getStdout());
 		assertActualResultOfListInstalledWithMatches(matchesString,actualInstalledProductMatches,installedProducts);
 		// also test case insensitivity
 		matchesString = randomizeCaseOfCharactersInString(matchesString);
 		matchesString = matchesString.replaceFirst("\\s+\\S+$","*");	// and drop last word
-		actualInstalledProductMatches = InstalledProduct.parse(clienttasks.list(null, null, null, true, null, null, null, null, matchesString, null, null, null, null).getStdout());
+		actualInstalledProductMatches = InstalledProduct.parse(clienttasks.list(null, null, null, true, null, null, null, null, matchesString, null, null, null, null, null).getStdout());
 		assertActualResultOfListInstalledWithMatches(matchesString,actualInstalledProductMatches,installedProducts);
 		
 		
@@ -1815,7 +1815,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		matchesString = randomInstalledProduct.productId;
 		int i = randomGenerator.nextInt(matchesString.length());
 		matchesString = matchesString.replaceAll(String.valueOf(matchesString.charAt(i)), "?");
-		actualInstalledProductMatches = InstalledProduct.parse(clienttasks.list(null, null, null, true, null, null, null, null, matchesString, null, null, null, null).getStdout());
+		actualInstalledProductMatches = InstalledProduct.parse(clienttasks.list(null, null, null, true, null, null, null, null, matchesString, null, null, null, null, null).getStdout());
 		assertActualResultOfListInstalledWithMatches(matchesString,actualInstalledProductMatches,installedProducts);
 		// also test case insensitivity
 		/* not necessary since productId is an integer
@@ -1877,12 +1877,12 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		
 		// register if necessary
 		if (clienttasks.getCurrentlyRegisteredOwnerKey() == null) {
-			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null);
-			clienttasks.autoheal(null, null, true, null, null, null);
-		} else clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null, null);
+			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null, null);
+			clienttasks.autoheal(null, null, true, null, null, null, null);
+		} else clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null, null, null);
 		
 		// test
-		SSHCommandResult result = clienttasks.list(null, true, null, null, null, null, null, null, matchesString, null, null, null, null);
+		SSHCommandResult result = clienttasks.list(null, true, null, null, null, null, null, null, matchesString, null, null, null, null, null);
 		String expectedStdout = "No available subscription pools matching the specified criteria were found.";
 		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.12-1")) expectedStdout = String.format("No available subscription pools were found matching the expression \"%s\".",matchesString);	// commit 2884e33acb35ab4e336fe12dc23de7ab26cc0572	// Bug 1159348 - list --matched should show the filter string when warning about empty matches
 		Assert.assertEquals(result.getExitCode(),new Integer(0),		"Exitcode expected from calling list --available --matches with no expected matches.");
@@ -1904,17 +1904,17 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		
 		// register if necessary
 		if (clienttasks.getCurrentlyRegisteredOwnerKey() == null) {
-			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null);
+			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null, null);
 		}
 		
 		// attach any random pool
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		if (pools.isEmpty()) throw new SkipException("Cannot randomly pick a pool for subscribing when there are no available pools for testing."); 
 		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
-		clienttasks.subscribe_(null,null,pool.poolId,null,null,null,null,null,null,null,null, null);
+		clienttasks.subscribe_(null,null,pool.poolId,null,null,null,null,null,null,null,null, null, null);
 		
 		// test
-		SSHCommandResult result = clienttasks.list(null, null, true, null, null, null, null, null, matchesString, null, null, null, null);
+		SSHCommandResult result = clienttasks.list(null, null, true, null, null, null, null, null, matchesString, null, null, null, null, null);
 		String expectedStdout = "No consumed subscription pools matching the specified criteria were found.";
 		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.12-1")) expectedStdout = String.format("No consumed subscription pools were found matching the expression \"%s\".",matchesString);	// commit 2884e33acb35ab4e336fe12dc23de7ab26cc0572	// Bug 1159348 - list --matched should show the filter string when warning about empty matches
 		Assert.assertEquals(result.getExitCode(),new Integer(0),		"Exitcode expected from calling list --consumed --matches with no expected matches.");
@@ -1934,7 +1934,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		
 		String matchesString = "nothing";
 		
-		SSHCommandResult result = clienttasks.list(null, null, null, true, null, null, null, null, matchesString, null, null, null, null);
+		SSHCommandResult result = clienttasks.list(null, null, null, true, null, null, null, null, matchesString, null, null, null, null, null);
 		String expectedStdout = "No installed products matching the specified criteria were found.";
 		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.12-1")) expectedStdout = String.format("No installed products were found matching the expression \"%s\".",matchesString);	// commit 2884e33acb35ab4e336fe12dc23de7ab26cc0572	// Bug 1159348 - list --matched should show the filter string when warning about empty matches
 		Assert.assertEquals(result.getExitCode(),new Integer(0),		"Exitcode expected from calling list --installed --matches with no expected matches.");
@@ -1956,17 +1956,17 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		
 		// register if necessary
 		if (clienttasks.getCurrentlyRegisteredOwnerKey() == null) {
-			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null);
+			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null, null);
 		}
 		
 		// attach any random pool
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		if (pools.isEmpty()) throw new SkipException("Cannot randomly pick a pool for subscribing when there are no available pools for testing."); 
 		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
-		clienttasks.subscribe_(null,null,pool.poolId,null,null,null,null,null,null,null,null, null);
+		clienttasks.subscribe_(null,null,pool.poolId,null,null,null,null,null,null,null,null, null, null);
 		
 		// test
-		SSHCommandResult result = clienttasks.list(null, true, true, true, null, null, null, null, matchesString, null, null, null, null);
+		SSHCommandResult result = clienttasks.list(null, true, true, true, null, null, null, null, matchesString, null, null, null, null, null);
 		String expectedStdout = "No installed products matching the specified criteria were found.\nNo available subscription pools matching the specified criteria were found.\nNo consumed subscription pools matching the specified criteria were found.";
 		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.12-1")) expectedStdout = String.format("No installed products were found matching the expression \"%s\".\nNo available subscription pools were found matching the expression \"%s\".\nNo consumed subscription pools were found matching the expression \"%s\".",matchesString,matchesString,matchesString);	// commit 2884e33acb35ab4e336fe12dc23de7ab26cc0572	// Bug 1159348 - list --matched should show the filter string when warning about empty matches
 		Assert.assertEquals(result.getExitCode(),new Integer(0),		"Exitcode expected from calling list --installed --available --consumed --matches with no expected matches.");
@@ -1989,15 +1989,15 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		Boolean noOverlap = getRandomListItem(Arrays.asList(new Boolean[]{Boolean.TRUE,Boolean.FALSE}));
 		
 		if (clienttasks.getCurrentlyRegisteredOwnerKey() == null) {
-			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null);
-			clienttasks.autoheal(null, null, true, null, null, null);
-		} else clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null, null);
+			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null, null);
+			clienttasks.autoheal(null, null, true, null, null, null, null);
+		} else clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null, null, null);
 		
 		// get available subscription pools
-		List<SubscriptionPool> availableSubscriptionPools = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, null, null, null, null, null).getStdout());
+		List<SubscriptionPool> availableSubscriptionPools = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, null, null, null, null, null, null).getStdout());
 		
 		// make the same call with --pool-only
-		SSHCommandResult poolOnlyResult = clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, null, true, null, null, null);
+		SSHCommandResult poolOnlyResult = clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, null, true, null, null, null, null);
 		//	[root@jsefler-os7 ~]# subscription-manager list --available --pool-only
 		//	2c90af8b4976c7ee014976cb29bf0b02
 		//	2c90af8b4976c7ee014976cb388c1256
@@ -2027,7 +2027,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		List<ProductSubscription> expectedProductSubscriptions, filteredProductSubscriptions;
 				
 		// list consumed (without service level)
-		listResult = clienttasks.list_(false,false,true,null,null,null,null,null,null, null, null, null, null);
+		listResult = clienttasks.list_(false,false,true,null,null,null,null,null,null, null, null, null, null, null);
 		List<ProductSubscription> allConsumedProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
 		
 		// determine the subset of expected pools with a matching servicelevel
@@ -2035,7 +2035,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		expectedProductSubscriptions = ProductSubscription.findAllInstancesWithCaseInsensitiveMatchingFieldFromList("serviceLevel", servicelevel, allConsumedProductSubscriptions);
 
 		// list consumed filtered by servicelevel
-		listResult = clienttasks.list_(false,false,true,null,servicelevel,null,null,null,null, null, null, null, null);
+		listResult = clienttasks.list_(false,false,true,null,servicelevel,null,null,null,null, null, null, null, null, null);
 		Assert.assertEquals(listResult.getExitCode(), Integer.valueOf(0), "The exit code from the list --consumed --servicelevel command indicates a success.");
 		
 		// assert results
@@ -2119,7 +2119,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		*/
 		
 		// register and list --available to find the subscription containing a \u2013 character
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
 		
 		//List<SubscriptionPool> availableSubscriptionPools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		//	9/9/2013 Notes: During the RHEL65 test cycle, it appears that the following PYTHONIOENCODING=ascii workaround is
@@ -2233,7 +2233,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	@AfterClass(groups={"setup"})	// needed since @AfterGroups will skip when some of the tests within the group are skipped even when alwaysRun=true
 	@AfterGroups(groups={"setup"},value="SubscriptionContainingUTF8CharacterTests",alwaysRun=true /* does not seem to have any effect */)
 	public void afterGroupForSubscriptionContainingUTF8CharacterTests() throws JSONException, Exception {
-		clienttasks.unregister_(null, null, null);	// to return any consumed subscriptions containing UTF8 characters
+		clienttasks.unregister_(null, null, null, null);	// to return any consumed subscriptions containing UTF8 characters
 		if (productIdForSubscriptionContainingUTF8Character!=null && !sm_serverType.equals(CandlepinType.hosted)/* we do NOT create/delete subscriptions against hosted */) CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, productIdForSubscriptionContainingUTF8Character);
 	}
 
@@ -2366,7 +2366,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	
 	@BeforeClass(groups="setup")
 	public void registerBeforeClass() {
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, null, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, null, false, null, null, null, null);
 	}
 	
 	// NOTE: This method is not necessary, but adds a little more spice to ListAvailableWithFutureOnDate_Test
@@ -2564,7 +2564,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	@BeforeGroups(groups="setup",value="unsubscribeBeforeGroup")
 	public void unsubscribeBeforeGroup() {
 		//clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
-		clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null, null);
+		clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null, null, null);
 	}
 	
 	
@@ -2585,7 +2585,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		// register with force (so we can find the org to which the sm_clientUsername belongs in case sm_clientOrg is null)
 		String org = sm_clientOrg;
 		if (org==null) {
-			String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, "SubscriptionServicelevelConsumer", null, null, null, null, (String)null, null, null, null, true, false, null, null, null));
+			String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, "SubscriptionServicelevelConsumer", null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null));
 			org = CandlepinTasks.getOwnerKeyOfConsumerId(sm_clientUsername,sm_clientPassword,sm_serverUrl,consumerId);
 		}
 		
@@ -2616,7 +2616,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
 		
 		// register with force and subscribe to all available subscriptions collectively
-		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, "SubscriptionServicelevelConsumer", null, null, null, null, (String)null, null, null, null, true, false, null, null, null));
+		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, "SubscriptionServicelevelConsumer", null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null));
 		String org = CandlepinTasks.getOwnerKeyOfConsumerId(sm_clientUsername,sm_clientPassword,sm_serverUrl,consumerId);
 		clienttasks.subscribeToTheCurrentlyAllAvailableSubscriptionPoolsCollectively();
 		

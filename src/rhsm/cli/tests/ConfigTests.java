@@ -637,7 +637,7 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 		//	sys		0m0.045s
 
 		String serverDefaultTimeout = "180";	// seconds (assumed hard-coded default)
-		command = "time "+clienttasks.versionCommand(null, null, null);
+		command = "time "+clienttasks.versionCommand(null, null, null, null);
 		sshCommandTimeout = new Long(200); // seconds	// default server_timeout is 180 seconds
 		result = client.runCommandAndWait(command, Long.valueOf(sshCommandTimeout *1000));
 		clienttasks.logRuntimeErrors(result);
@@ -652,7 +652,7 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 			listOfSectionNameValues.clear();
 			listOfSectionNameValues.add(new String[] { "server", "server_timeout", server_timeout});
 			clienttasks.config(null, null, true, listOfSectionNameValues);
-			command = "time "+clienttasks.versionCommand(null, null, null);
+			command = "time "+clienttasks.versionCommand(null, null, null, null);
 			sshCommandTimeout = new Long(200); // seconds	// default server_timeout is 180 seconds
 			result = client.runCommandAndWait(command, Long.valueOf(sshCommandTimeout *1000));
 			realTimeList = getSubstringMatches(result.getStderr(), "real\\s+.*");	// extract the matches to: real	3m0.568s
@@ -747,7 +747,7 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 		if (client==null) return;
 		
 		// unregister
-		clienttasks.unregister_(null,null,null);
+		clienttasks.unregister_(null,null,null, null);
 		
 		// backup the current rhsm.conf file
 		log.info("Backing up the current rhsm config file before executing this test class...");

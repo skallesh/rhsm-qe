@@ -1819,7 +1819,7 @@ if (false) {
 	 */
 	public String getCurrentServiceLevel() {
 		
-		SSHCommandResult result = service_level(true, false, null, null, null, null, null, null, null, null, null, null);
+		SSHCommandResult result = service_level(true, false, null, null, null, null, null, null, null, null, null, null, null);
 		
 		// [root@jsefler-r63-server ~]# subscription-manager service-level --show
 		// Current service level: Standard
@@ -1849,7 +1849,7 @@ if (false) {
 	 */
 	public String getCurrentRelease() {
 		
-		SSHCommandResult result = release(null, null, null, null, null, null, null);
+		SSHCommandResult result = release(null, null, null, null, null, null, null, null);
 		
 		//	[root@jsefler-r63-server ~]# subscription-manager release
 		//	Release: foo
@@ -1876,7 +1876,7 @@ if (false) {
 	 */
 	public List<String> getAvailableServiceLevels(String username, String password, String org) {
 		
-		SSHCommandResult result = service_level_(false, true, null, null, username, password, org, null, null, null, null, null);
+		SSHCommandResult result = service_level_(false, true, null, null, username, password, org, null, null, null, null, null, null);
 		
 		List<String> serviceLevels = new ArrayList<String>();
 		if (!result.getExitCode().equals(Integer.valueOf(0))) return serviceLevels;
@@ -1906,11 +1906,12 @@ if (false) {
 	 * @param proxy TODO
 	 * @param proxyusername TODO
 	 * @param proxypassword TODO
+	 * @param noproxy TODO
 	 * @return list of the releases returned by subscription-manager release --list (must already be registered)
 	 */
-	public List<String> getCurrentlyAvailableReleases(String proxy, String proxyusername, String proxypassword) {
+	public List<String> getCurrentlyAvailableReleases(String proxy, String proxyusername, String proxypassword, String noproxy) {
 		
-		SSHCommandResult result = release_(null,true,null,null,proxy, proxyusername, proxypassword);
+		SSHCommandResult result = release_(null,true,null,null,proxy, proxyusername, proxypassword, noproxy);
 		String stdout = result.getStdout().trim();
 		
 		//	[root@jsefler-r63-workstation ~]# subscription-manager release --list
@@ -2065,7 +2066,7 @@ if (false) {
 	 */
 	public  List<SubscriptionPool> getAvailableSubscriptionsMatchingInstalledProducts() {
 		
-		return SubscriptionPool.parse(list_(null, true, null, null, null, null, true, null, null, null, null, null, null).getStdout()); 
+		return SubscriptionPool.parse(list_(null, true, null, null, null, null, true, null, null, null, null, null, null, null).getStdout()); 
 	}
 	
 	/**
@@ -2078,7 +2079,7 @@ if (false) {
 	 * @return list of objects representing the subscription-manager list --avail --ondate
 	 */
 	public List<SubscriptionPool> getAvailableFutureSubscriptionsOndate(String onDateToTest) {
-		return SubscriptionPool.parse(list_(null, true, null, null, null, onDateToTest, null, null, null, null, null, null, null).getStdout());
+		return SubscriptionPool.parse(list_(null, true, null, null, null, onDateToTest, null, null, null, null, null, null, null, null).getStdout());
 	}
 	
 	/**
@@ -2481,7 +2482,7 @@ if (false) {
 //		if (orgs.size()>0) orgs.remove(0); // exclude the first title line of output...  orgs:
 //		return orgs;
 		
-		return Org.parse(orgs(username, password, null, null, null, null, null).getStdout());
+		return Org.parse(orgs(username, password, null, null, null, null, null, null).getStdout());
 	}
 	
 	/**
@@ -2572,7 +2573,7 @@ if (false) {
 		List<String> factNames = new ArrayList<String>();
 		
 		//SSHCommandResult factsList = facts_(true, false, null, null, null);
-		String rhsmCommand = factsCommand(true, null, null, null, null);
+		String rhsmCommand = factsCommand(true, null, null, null, null, null);
 		if (grepFilter!=null) rhsmCommand+=" | grep --text \""+grepFilter+"\"";		// add --text option to avoid "Binary file (standard input) matches"
 		SSHCommandResult factsList = runCommandWithLang(localeVariable, lang, rhsmCommand);
 		String factsListAsString = factsList.getStdout().trim();
@@ -3370,10 +3371,11 @@ if (false) {
 	// register module tasks ************************************************************
 
 	/**
+	 * @param noproxy TODO
 	 * @return the command line syntax for calling this subscription-manager module with these options
 	 */
-	public String registerCommand(String username, String password, String org, String environment, ConsumerType type, String name, String consumerid, Boolean autosubscribe, String servicelevel, String release, List<String> activationkeys, String serverurl, Boolean insecure, String baseurl, Boolean force, Boolean autoheal, String proxy, String proxyuser, String proxypassword) {
-
+	public String registerCommand(String username, String password, String org, String environment, ConsumerType type, String name, String consumerid, Boolean autosubscribe, String servicelevel, String release, List<String> activationkeys, String serverurl, Boolean insecure, String baseurl, Boolean force, Boolean autoheal, String proxy, String proxyuser, String proxypassword, String noproxy) {
+		
 		// assemble the command
 		String command = this.command;											command += " register";
 		if (username!=null)														command += " --username="+String.format(username.contains(" ")? "\"%s\"":"%s", username);	// quote username containing spaces
@@ -3394,42 +3396,24 @@ if (false) {
 		if (proxy!=null)														command += " --proxy="+proxy;
 		if (proxyuser!=null)													command += " --proxyuser="+proxyuser;
 		if (proxypassword!=null)												command += " --proxypassword="+proxypassword;
+		if (noproxy!=null)														command += " --noproxy="+noproxy;
 		
 		return command;
 	}
-	public String registerCommand(String username, String password, String org, String environment, ConsumerType type, String name, String consumerid, Boolean autosubscribe, String servicelevel, String release, String activationkey, String serverurl, Boolean insecure, String baseurl, Boolean force, Boolean autoheal, String proxy, String proxyuser, String proxypassword) {
+	public String registerCommand(String username, String password, String org, String environment, ConsumerType type, String name, String consumerid, Boolean autosubscribe, String servicelevel, String release, String activationkey, String serverurl, Boolean insecure, String baseurl, Boolean force, Boolean autoheal, String proxy, String proxyuser, String proxypassword, String noproxy) {
 		List<String> activationkeys = activationkey==null?null:Arrays.asList(new String[]{activationkey});
-		return registerCommand(username, password, org, environment, type, name, consumerid, autosubscribe, servicelevel, release, activationkeys, serverurl, insecure, baseurl, force, autoheal, proxy, proxyuser, proxypassword);
+		return registerCommand(username, password, org, environment, type, name, consumerid, autosubscribe, servicelevel, release, activationkeys, serverurl, insecure, baseurl, force, autoheal, proxy, proxyuser, proxypassword, noproxy);
 	}
 	
 
 	/**
 	 * register WITHOUT asserting results.
 	 * @param insecure TODO
+	 * @param noproxy TODO
 	 */
-	public SSHCommandResult register_(String username, String password, String org, String environment, ConsumerType type, String name, String consumerid, Boolean autosubscribe, String servicelevel, String release, List<String> activationkeys, String serverurl, Boolean insecure, String baseurl, Boolean force, Boolean autoheal, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult register_(String username, String password, String org, String environment, ConsumerType type, String name, String consumerid, Boolean autosubscribe, String servicelevel, String release, List<String> activationkeys, String serverurl, Boolean insecure, String baseurl, Boolean force, Boolean autoheal, String proxy, String proxyuser, String proxypassword, String noproxy) {
 		
-		// assemble the command
-//		String command = this.command;											command += " register";
-//		if (username!=null)														command += " --username="+String.format(username.contains(" ")? "\"%s\"":"%s", username);	// quote username containing spaces
-//		if (password!=null)														command += " --password="+String.format(password.contains("(")||password.contains(")")? "\"%s\"":"%s", password);	// quote password containing ()
-//		if (org!=null)															command += " --org="+org;
-//		if (environment!=null)													command += " --environment="+environment;
-//		if (type!=null)															command += " --type="+type;
-//		if (name!=null)															command += " --name="+String.format(name.contains("\"")? "'%s'":"\"%s\"", name./*escape backslashes*/replace("\\", "\\\\")./*escape backticks*/replace("`", "\\`"));
-//		if (consumerid!=null)													command += " --consumerid="+consumerid;
-//		if (autosubscribe!=null && autosubscribe)								command += " --autosubscribe";
-//		if (servicelevel!=null)													command += " --servicelevel="+String.format(servicelevel.contains(" ")||servicelevel.isEmpty()? "\"%s\"":"%s", servicelevel);	// quote a value containing spaces or is empty
-//		if (release!=null)														command += " --release="+release;
-//		if (activationkeys!=null)	for (String activationkey : activationkeys)	command += " --activationkey="+String.format(activationkey.contains(" ")? "\"%s\"":"%s", activationkey);	// quote activationkey containing spaces
-//		if (serverurl!=null)													command += " --serverurl="+serverurl;
-//		if (insecure!=null && insecure)											command += " --insecure";
-//		if (baseurl!=null)														command += " --baseurl="+baseurl;
-//		if (force!=null && force)												command += " --force";
-//		if (proxy!=null)														command += " --proxy="+proxy;
-//		if (proxyuser!=null)													command += " --proxyuser="+proxyuser;
-//		if (proxypassword!=null)												command += " --proxypassword="+proxypassword;
-		String command = registerCommand(username, password, org, environment, type, name, consumerid, autosubscribe, servicelevel, release, activationkeys, serverurl, insecure, baseurl, force, autoheal, proxy, proxyuser, proxypassword);	
+		String command = registerCommand(username, password, org, environment, type, name, consumerid, autosubscribe, servicelevel, release, activationkeys, serverurl, insecure, baseurl, force, autoheal, proxy, proxyuser, proxypassword, noproxy);	
 		/* this workaround should no longer be needed after rhel70 fixes by ckozak similar to bugs 1052297 1048325 commit 6fe57f8e6c3c35ac7761b9fa5ac7a6014d69ce20 that employs #!/usr/bin/python -S    sys.setdefaultencoding('utf-8')    import site
 		if (!SubscriptionManagerCLITestScript.isStringSimpleASCII(command)) command = "PYTHONIOENCODING=ascii "+command;	// workaround for bug 800323 after master commit 1bc25596afaf294cd217200c605737a43112a378 to avoid stderr: 'ascii' codec can't decode byte 0xe5 in position 13: ordinal not in range(128)
 		*/
@@ -3517,22 +3501,23 @@ if (false) {
 	/**
 	 * register WITHOUT asserting results.
 	 * @param insecure TODO
+	 * @param noproxy TODO
 	 */
-	public SSHCommandResult register_(String username, String password, String org, String environment, ConsumerType type, String name, String consumerid, Boolean autosubscribe, String servicelevel, String release, String activationkey, String serverurl, Boolean insecure, String baseurl, Boolean force, Boolean autoheal, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult register_(String username, String password, String org, String environment, ConsumerType type, String name, String consumerid, Boolean autosubscribe, String servicelevel, String release, String activationkey, String serverurl, Boolean insecure, String baseurl, Boolean force, Boolean autoheal, String proxy, String proxyuser, String proxypassword, String noproxy) {
 		
 		List<String> activationkeys = activationkey==null?null:Arrays.asList(new String[]{activationkey});
 
-		return register_(username, password, org, environment, type, name, consumerid, autosubscribe, servicelevel, release, activationkeys, serverurl, insecure, baseurl, force, autoheal, proxy, proxyuser, proxypassword);
+		return register_(username, password, org, environment, type, name, consumerid, autosubscribe, servicelevel, release, activationkeys, serverurl, insecure, baseurl, force, autoheal, proxy, proxyuser, proxypassword, noproxy);
 	}
 	
 	
 
 	
-	public SSHCommandResult register(String username, String password, String org, String environment, ConsumerType type, String name, String consumerid, Boolean autosubscribe, String servicelevel, String release, List<String> activationkeys, String serverurl, Boolean insecure, String baseurl, Boolean force, Boolean autoheal, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult register(String username, String password, String org, String environment, ConsumerType type, String name, String consumerid, Boolean autosubscribe, String servicelevel, String release, List<String> activationkeys, String serverurl, Boolean insecure, String baseurl, Boolean force, Boolean autoheal, String proxy, String proxyuser, String proxypassword, String noproxy) {
 		
 		boolean alreadyRegistered = this.currentlyRegisteredUsername==null? false:true;
 		String msg;
-		SSHCommandResult sshCommandResult = register_(username, password, org, environment, type, name, consumerid, autosubscribe, servicelevel, release, activationkeys, serverurl, insecure, baseurl, force, autoheal, proxy, proxyuser, proxypassword);
+		SSHCommandResult sshCommandResult = register_(username, password, org, environment, type, name, consumerid, autosubscribe, servicelevel, release, activationkeys, serverurl, insecure, baseurl, force, autoheal, proxy, proxyuser, proxypassword, noproxy);
 	
 		// assert results when already registered
 		if ((force==null || !force) && alreadyRegistered) {
@@ -3642,14 +3627,14 @@ if (false) {
 		return sshCommandResult; // from the register command
 	}
 	
-	public SSHCommandResult register(String username, String password, String org, String environment, ConsumerType type, String name, String consumerid, Boolean autosubscribe, String servicelevel, String release, String activationkey, String serverurl, Boolean insecure, String baseurl, Boolean force, Boolean autoheal, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult register(String username, String password, String org, String environment, ConsumerType type, String name, String consumerid, Boolean autosubscribe, String servicelevel, String release, String activationkey, String serverurl, Boolean insecure, String baseurl, Boolean force, Boolean autoheal, String proxy, String proxyuser, String proxypassword, String noproxy) {
 		List<String> activationkeys = activationkey==null?null:Arrays.asList(new String[]{activationkey});
 
-		return register(username, password, org, environment, type, name, consumerid, autosubscribe, servicelevel, release, activationkeys, serverurl, insecure, baseurl, force, autoheal, proxy, proxyuser, proxypassword);
+		return register(username, password, org, environment, type, name, consumerid, autosubscribe, servicelevel, release, activationkeys, serverurl, insecure, baseurl, force, autoheal, proxy, proxyuser, proxypassword, noproxy);
 	}
 	
 	public SSHCommandResult register(String username, String password, String org) {
-		return register(username, password, org, null, null, null, null, null, null, null, (String)null, null, null, null, null, null, null, null, null);
+		return register(username, password, org, null, null, null, null, null, null, null, (String)null, null, null, null, null, null, null, null, null, null);
 	}
 	
 	// reregister module tasks ************************************************************
@@ -3721,8 +3706,8 @@ if (false) {
 		log.warning("The subscription-manager-cli reregister module has been eliminated and replaced by register --consumerid (10/4/2010 git hash b3c728183c7259841100eeacb7754c727dc523cd)...");
 		//RemoteFileTasks.runCommandAndWait(sshCommandRunner, "rm -f "+consumerCertFile, TestRecords.action());
 		//removeAllCerts(true, true);
-		clean(null, null, null);
-		return register(username,password,null,null,null,null,consumerId, null, null, null, new ArrayList<String>(), null, null, null, null, null, null, null, null);
+		clean();
+		return register(username,password,null,null,null,null,consumerId, null, null, null, new ArrayList<String>(), null, null, null, null, null, null, null, null, null);
 	}
 	
 	
@@ -3731,17 +3716,11 @@ if (false) {
 
 	/**
 	 * clean without asserting results
-	 * @param proxy TODO
-	 * @param proxyuser TODO
-	 * @param proxypassword TODO
 	 */
-	public SSHCommandResult clean_(String proxy, String proxyuser, String proxypassword) {
-
+	public SSHCommandResult clean_() {
+		
 		// assemble the command
 		String command = this.command;	command += " clean";
-		if (proxy!=null)				command += " --proxy="+proxy;
-		if (proxyuser!=null)			command += " --proxyuser="+proxyuser;
-		if (proxypassword!=null)		command += " --proxypassword="+proxypassword;
 		
 		// run command without asserting results
 		SSHCommandResult sshCommandResult = sshCommandRunner.runCommandAndWait(command);
@@ -3751,13 +3730,10 @@ if (false) {
 	
 	/**
 	 * "subscription-manager-cli clean"
-	 * @param proxy TODO
-	 * @param proxyuser TODO
-	 * @param proxypassword TODO
 	 */
-	public SSHCommandResult clean(String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult clean() {
 		
-		SSHCommandResult sshCommandResult = clean_(proxy, proxyuser, proxypassword);
+		SSHCommandResult sshCommandResult = clean_();
 		
 		// assert results for a successful clean
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the clean command indicates a success.");
@@ -3795,15 +3771,11 @@ if (false) {
 	 * @param certificates - list of paths to certificate files to be imported
 	 * @return
 	 */
-	public SSHCommandResult importCertificate_(List<String> certificates/*, String proxy, String proxyuser, String proxypassword*/) {
-
+	public SSHCommandResult importCertificate_(List<String> certificates) {
+		
 		// assemble the command
 		String command = this.command;									command += " import";
 		if (certificates!=null)	for (String certificate : certificates)	command += " --certificate="+certificate;
-
-//		if (proxy!=null)				command += " --proxy="+proxy;
-//		if (proxyuser!=null)			command += " --proxyuser="+proxyuser;
-//		if (proxypassword!=null)		command += " --proxypassword="+proxypassword;
 		
 		// run command without asserting results
 		SSHCommandResult sshCommandResult = sshCommandRunner.runCommandAndWait(command);
@@ -3814,11 +3786,11 @@ if (false) {
 	/**
 	 * import WITHOUT asserting results.
 	 */
-	public SSHCommandResult importCertificate_(String certificate/*, String proxy, String proxyuser, String proxypassword*/) {
+	public SSHCommandResult importCertificate_(String certificate) {
 		
 		List<String> certificates = certificate==null?null:Arrays.asList(new String[]{certificate});
-
-		return importCertificate_(certificates/*, proxy, proxyuser, proxypassword*/);
+		
+		return importCertificate_(certificates);
 	}
 	
 	/**
@@ -3855,11 +3827,11 @@ if (false) {
 	 * @param certificate - path to certificate file to be imported (file should contain both the entitlement and key)
 	 * @return
 	 */
-	public SSHCommandResult importCertificate(String certificate/*, String proxy, String proxyuser, String proxypassword*/) {
+	public SSHCommandResult importCertificate(String certificate) {
 		
 		List<String> certificates = certificate==null?null:Arrays.asList(new String[]{certificate});
-
-		return importCertificate(certificates/*, proxy, proxyuser, proxypassword*/);
+		
+		return importCertificate(certificates);
 	}
 	
 	// refresh module tasks ************************************************************
@@ -3869,14 +3841,16 @@ if (false) {
 	 * @param proxy TODO
 	 * @param proxyuser TODO
 	 * @param proxypassword TODO
+	 * @param noproxy TODO
 	 */
-	public SSHCommandResult refresh_(String proxy, String proxyuser, String proxypassword) {
-
+	public SSHCommandResult refresh_(String proxy, String proxyuser, String proxypassword, String noproxy) {
+		
 		// assemble the command
 		String command = this.command;	command += " refresh";
 		if (proxy!=null)				command += " --proxy="+proxy;
 		if (proxyuser!=null)			command += " --proxyuser="+proxyuser;
 		if (proxypassword!=null)		command += " --proxypassword="+proxypassword;
+		if (noproxy!=null)				command += " --noproxy="+noproxy;
 		
 		// run command without asserting results
 		SSHCommandResult sshCommandResult = sshCommandRunner.runCommandAndWait(command);
@@ -3889,10 +3863,11 @@ if (false) {
 	 * @param proxy TODO
 	 * @param proxyuser TODO
 	 * @param proxypassword TODO
+	 * @param noproxy TODO
 	 */
-	public SSHCommandResult refresh(String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult refresh(String proxy, String proxyuser, String proxypassword, String noproxy) {
 		
-		SSHCommandResult sshCommandResult = refresh_(proxy, proxyuser, proxypassword);
+		SSHCommandResult sshCommandResult = refresh_(proxy, proxyuser, proxypassword, noproxy);
 		String refreshStdoutMsg = sshCommandResult.getStdout().trim();
 		
 		refreshStdoutMsg = workaroundForBug906550(refreshStdoutMsg);
@@ -3917,10 +3892,11 @@ if (false) {
 	 * @param proxy
 	 * @param proxyuser
 	 * @param proxypassword
+	 * @param noproxy TODO
 	 * @return
 	 */
-	public SSHCommandResult identity_(String username, String password, Boolean regenerate, Boolean force, String proxy, String proxyuser, String proxypassword) {
-
+	public SSHCommandResult identity_(String username, String password, Boolean regenerate, Boolean force, String proxy, String proxyuser, String proxypassword, String noproxy) {
+		
 		// assemble the command
 		String command = this.command;		command += " identity";
 		if (username!=null)					command += " --username="+username;
@@ -3930,6 +3906,7 @@ if (false) {
 		if (proxy!=null)					command += " --proxy="+proxy;
 		if (proxyuser!=null)				command += " --proxyuser="+proxyuser;
 		if (proxypassword!=null)			command += " --proxypassword="+proxypassword;
+		if (noproxy!=null)					command += " --noproxy="+noproxy;
 		
 		// run command without asserting results
 		SSHCommandResult sshCommandResult = sshCommandRunner.runCommandAndWait(command);
@@ -3946,11 +3923,12 @@ if (false) {
 	 * @param proxy
 	 * @param proxyuser
 	 * @param proxypassword
+	 * @param noproxy TODO
 	 * @return
 	 */
-	public SSHCommandResult identity(String username, String password, Boolean regenerate, Boolean force, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult identity(String username, String password, Boolean regenerate, Boolean force, String proxy, String proxyuser, String proxypassword, String noproxy) {
 		
-		SSHCommandResult sshCommandResult = identity_(username, password, regenerate, force, proxy, proxyuser, proxypassword);
+		SSHCommandResult sshCommandResult = identity_(username, password, regenerate, force, proxy, proxyuser, proxypassword, noproxy);
 		regenerate = regenerate==null? false:regenerate;	// the non-null default value for regenerate is false
 
 		// assert results for a successful identify
@@ -3992,10 +3970,11 @@ if (false) {
 	 * @param password
 	 * @param serverurl TODO
 	 * @param insecure TODO
+	 * @param noproxy TODO
 	 * @return
 	 */
-	public SSHCommandResult orgs_(String username, String password, String serverurl, Boolean insecure, String proxy, String proxyuser, String proxypassword) {
-
+	public SSHCommandResult orgs_(String username, String password, String serverurl, Boolean insecure, String proxy, String proxyuser, String proxypassword, String noproxy) {
+		
 		// assemble the command
 		String command = this.command;	command += " orgs";
 		if (username!=null)				command += " --username="+username;
@@ -4005,6 +3984,7 @@ if (false) {
 		if (proxy!=null)				command += " --proxy="+proxy;
 		if (proxyuser!=null)			command += " --proxyuser="+proxyuser;
 		if (proxypassword!=null)		command += " --proxypassword="+proxypassword;
+		if (noproxy!=null)				command += " --noproxy="+noproxy;
 		
 		// run command without asserting results
 		SSHCommandResult sshCommandResult = sshCommandRunner.runCommandAndWait(command);
@@ -4018,11 +3998,12 @@ if (false) {
 	 * @param password
 	 * @param serverurl TODO
 	 * @param insecure TODO
+	 * @param noproxy TODO
 	 * @return
 	 */
-	public SSHCommandResult orgs(String username, String password, String serverurl, Boolean insecure, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult orgs(String username, String password, String serverurl, Boolean insecure, String proxy, String proxyuser, String proxypassword, String noproxy) {
 		
-		SSHCommandResult sshCommandResult = orgs_(username, password, serverurl, insecure, proxy, proxyuser, proxypassword);
+		SSHCommandResult sshCommandResult = orgs_(username, password, serverurl, insecure, proxy, proxyuser, proxypassword, noproxy);
 		
 		// assert results...
 		/*
@@ -4065,10 +4046,11 @@ if (false) {
 	 * @param proxy
 	 * @param proxyuser
 	 * @param proxypassword
+	 * @param noproxy TODO
 	 * @return
 	 */
-	public SSHCommandResult service_level_(Boolean show, Boolean list, String set, Boolean unset, String username, String password, String org, String serverurl, Boolean insecure, String proxy, String proxyuser, String proxypassword) {
-
+	public SSHCommandResult service_level_(Boolean show, Boolean list, String set, Boolean unset, String username, String password, String org, String serverurl, Boolean insecure, String proxy, String proxyuser, String proxypassword, String noproxy) {
+		
 		// assemble the command
 		String command = this.command;	command += " service-level";
 		if (show!=null && show)			command += " --show";
@@ -4083,7 +4065,8 @@ if (false) {
 		if (proxy!=null)				command += " --proxy="+proxy;
 		if (proxyuser!=null)			command += " --proxyuser="+proxyuser;
 		if (proxypassword!=null)		command += " --proxypassword="+proxypassword;
-
+		if (noproxy!=null)				command += " --noproxy="+noproxy;
+		
 		// run command without asserting results
 		SSHCommandResult sshCommandResult = sshCommandRunner.runCommandAndWait(command);
 		logRuntimeErrors(sshCommandResult);
@@ -4104,11 +4087,12 @@ if (false) {
 	 * @param proxy
 	 * @param proxyuser
 	 * @param proxypassword
+	 * @param noproxy TODO
 	 * @return
 	 */
-	public SSHCommandResult service_level(Boolean show, Boolean list, String set, Boolean unset, String username, String password, String org, String serverurl, Boolean insecure, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult service_level(Boolean show, Boolean list, String set, Boolean unset, String username, String password, String org, String serverurl, Boolean insecure, String proxy, String proxyuser, String proxypassword, String noproxy) {
 		
-		SSHCommandResult sshCommandResult = service_level_(show, list, set, unset, username, password, org, serverurl, insecure, proxy, proxyuser, proxypassword);
+		SSHCommandResult sshCommandResult = service_level_(show, list, set, unset, username, password, org, serverurl, insecure, proxy, proxyuser, proxypassword, noproxy);
 		
 		// assert results...
 		/*
@@ -4189,10 +4173,11 @@ if (false) {
 	 * @param proxy
 	 * @param proxyuser
 	 * @param proxypassword
+	 * @param noproxy TODO
 	 * @return SSHCommandResult stdout, stderr, exitCode
 	 */
-	public SSHCommandResult release_(Boolean show, Boolean list, String set, Boolean unset, String proxy, String proxyuser, String proxypassword) {
-
+	public SSHCommandResult release_(Boolean show, Boolean list, String set, Boolean unset, String proxy, String proxyuser, String proxypassword, String noproxy) {
+		
 		// assemble the command
 		String command = this.command;	command += " release";
 		if (show!=null && show)			command += " --show";
@@ -4202,6 +4187,7 @@ if (false) {
 		if (proxy!=null)				command += " --proxy="+proxy;
 		if (proxyuser!=null)			command += " --proxyuser="+proxyuser;
 		if (proxypassword!=null)		command += " --proxypassword="+proxypassword;
+		if (noproxy!=null)				command += " --noproxy="+noproxy;
 		
 		// run command without asserting results
 		SSHCommandResult sshCommandResult = sshCommandRunner.runCommandAndWait(command);
@@ -4218,11 +4204,12 @@ if (false) {
 	 * @param proxy
 	 * @param proxyuser
 	 * @param proxypassword
+	 * @param noproxy TODO
 	 * @return SSHCommandResult stdout, stderr, exitCode
 	 */
-	public SSHCommandResult release(Boolean show, Boolean list, String set, Boolean unset, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult release(Boolean show, Boolean list, String set, Boolean unset, String proxy, String proxyuser, String proxypassword, String noproxy) {
 		
-		SSHCommandResult sshCommandResult = release_(show, list, set, unset, proxy, proxyuser, proxypassword);
+		SSHCommandResult sshCommandResult = release_(show, list, set, unset, proxy, proxyuser, proxypassword, noproxy);
 		
 		// assert results...
 		if (list!=null)
@@ -4249,10 +4236,11 @@ if (false) {
 
 	/**
 	 * SSHCommand subscription-manager auto-heal [parameters] without asserting any results
+	 * @param noproxy TODO
 	 * @return SSHCommandResult stdout, stderr, exitCode
 	 */
-	public SSHCommandResult autoheal_(Boolean show, Boolean enable, Boolean disable, String proxy, String proxyuser, String proxypassword) {
-
+	public SSHCommandResult autoheal_(Boolean show, Boolean enable, Boolean disable, String proxy, String proxyuser, String proxypassword, String noproxy) {
+		
 		// assemble the command
 		String command = this.command;	command += " auto-attach";		// command += " autoheal"; changed by Bug 976867
 		if (show!=null && show)			command += " --show";
@@ -4261,6 +4249,7 @@ if (false) {
 		if (proxy!=null)				command += " --proxy="+proxy;
 		if (proxyuser!=null)			command += " --proxyuser="+proxyuser;
 		if (proxypassword!=null)		command += " --proxypassword="+proxypassword;
+		if (noproxy!=null)				command += " --noproxy="+noproxy;
 		
 		// run command without asserting results
 		SSHCommandResult sshCommandResult = sshCommandRunner.runCommandAndWait(command);
@@ -4270,11 +4259,12 @@ if (false) {
 	
 	/**
 	 * SSHCommand subscription-manager auto-attach [parameters]
+	 * @param noproxy TODO
 	 * @return SSHCommandResult stdout, stderr, exitCode
 	 */
-	public SSHCommandResult autoheal(Boolean show, Boolean enable, Boolean disable, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult autoheal(Boolean show, Boolean enable, Boolean disable, String proxy, String proxyuser, String proxypassword, String noproxy) {
 		
-		SSHCommandResult sshCommandResult = autoheal_(show, enable, disable, proxy, proxyuser, proxypassword);
+		SSHCommandResult sshCommandResult = autoheal_(show, enable, disable, proxy, proxyuser, proxypassword, noproxy);
 		
 		// assert results...
 		
@@ -4642,10 +4632,11 @@ if (false) {
 	 * @param org
 	 * @param serverurl TODO
 	 * @param insecure TODO
+	 * @param noproxy TODO
 	 * @return
 	 */
-	public SSHCommandResult environments_(String username, String password, String org, String serverurl, Boolean insecure, String proxy, String proxyuser, String proxypassword) {
-
+	public SSHCommandResult environments_(String username, String password, String org, String serverurl, Boolean insecure, String proxy, String proxyuser, String proxypassword, String noproxy) {
+		
 		// assemble the command
 		String command = this.command;	command += " environments";
 		if (username!=null)				command += " --username="+username;
@@ -4656,6 +4647,7 @@ if (false) {
 		if (proxy!=null)				command += " --proxy="+proxy;
 		if (proxyuser!=null)			command += " --proxyuser="+proxyuser;
 		if (proxypassword!=null)		command += " --proxypassword="+proxypassword;
+		if (noproxy!=null)				command += " --noproxy="+noproxy;
 		
 		// run command without asserting results
 		SSHCommandResult sshCommandResult = sshCommandRunner.runCommandAndWait(command);
@@ -4670,11 +4662,12 @@ if (false) {
 	 * @param org
 	 * @param serverurl TODO
 	 * @param insecure TODO
+	 * @param noproxy TODO
 	 * @return
 	 */
-	public SSHCommandResult environments(String username, String password, String org, String serverurl, Boolean insecure, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult environments(String username, String password, String org, String serverurl, Boolean insecure, String proxy, String proxyuser, String proxypassword, String noproxy) {
 		
-		SSHCommandResult sshCommandResult = environments_(username, password, org, serverurl, insecure, proxy, proxyuser, proxypassword);
+		SSHCommandResult sshCommandResult = environments_(username, password, org, serverurl, insecure, proxy, proxyuser, proxypassword, noproxy);
 		
 		// TODO assert results...
 		
@@ -4692,14 +4685,16 @@ if (false) {
 	 * @param proxy TODO
 	 * @param proxyuser TODO
 	 * @param proxypassword TODO
+	 * @param noproxy TODO
 	 */
-	public SSHCommandResult unregister_(String proxy, String proxyuser, String proxypassword) {
-
+	public SSHCommandResult unregister_(String proxy, String proxyuser, String proxypassword, String noproxy) {
+		
 		// assemble the command
 		String command = this.command;	command += " unregister";
 		if (proxy!=null)				command += " --proxy="+proxy;
 		if (proxyuser!=null)			command += " --proxyuser="+proxyuser;
 		if (proxypassword!=null)		command += " --proxypassword="+proxypassword;
+		if (noproxy!=null)				command += " --noproxy="+noproxy;
 		
 		workaroundForBug844455();
 		
@@ -4731,9 +4726,10 @@ if (false) {
 	 * @param proxy TODO
 	 * @param proxyuser TODO
 	 * @param proxypassword TODO
+	 * @param noproxy TODO
 	 */
-	public SSHCommandResult unregister(String proxy, String proxyuser, String proxypassword) {
-		SSHCommandResult sshCommandResult = unregister_(proxy, proxyuser, proxypassword);
+	public SSHCommandResult unregister(String proxy, String proxyuser, String proxypassword, String noproxy) {
+		SSHCommandResult sshCommandResult = unregister_(proxy, proxyuser, proxypassword, noproxy);
 		
 		// assert results for a successful registration
 		if (sshCommandResult.getExitCode()==0) {
@@ -4783,8 +4779,8 @@ if (false) {
 	
 	// list module tasks ************************************************************
 	
-	public String listCommand(Boolean all, Boolean available, Boolean consumed, Boolean installed, String servicelevel, String ondate, Boolean matchInstalled, Boolean noOverlap, String matches, Boolean poolOnly, String proxy, String proxyuser, String proxypassword) {
-
+	public String listCommand(Boolean all, Boolean available, Boolean consumed, Boolean installed, String servicelevel, String ondate, Boolean matchInstalled, Boolean noOverlap, String matches, Boolean poolOnly, String proxy, String proxyuser, String proxypassword, String noproxy) {
+		
 		// assemble the command
 		String command = this.command;				command += " list";	
 		if (all!=null && all)						command += " --all";
@@ -4800,6 +4796,7 @@ if (false) {
 		if (proxy!=null)							command += " --proxy="+proxy;
 		if (proxyuser!=null)						command += " --proxyuser="+proxyuser;
 		if (proxypassword!=null)					command += " --proxypassword="+proxypassword;
+		if (noproxy!=null)							command += " --noproxy="+noproxy;
 		
 		return command;
 	}
@@ -4819,25 +4816,11 @@ if (false) {
 	 * @param proxy TODO
 	 * @param proxyuser TODO
 	 * @param proxypassword TODO
+	 * @param noproxy TODO
 	 */
-	public SSHCommandResult list_(Boolean all, Boolean available, Boolean consumed, Boolean installed, String servicelevel, String ondate, Boolean matchInstalled, Boolean noOverlap, String matches, Boolean poolOnly, String proxy, String proxyuser, String proxypassword) {
-
-//		// assemble the command
-//		String command = this.command;				command += " list";	
-//		if (all!=null && all)						command += " --all";
-//		if (available!=null && available)			command += " --available";
-//		if (consumed!=null && consumed)				command += " --consumed";
-//		if (installed!=null && installed)			command += " --installed";
-//		if (ondate!=null)							command += " --ondate="+ondate;
-//		if (servicelevel!=null)						command += " --servicelevel="+String.format(servicelevel.contains(" ")||servicelevel.isEmpty()?"\"%s\"":"%s", servicelevel);	// quote a value containing spaces or is empty
-//		if (matchInstalled!=null && matchInstalled)	command += " --match-installed";
-//		if (noOverlap!=null && noOverlap)			command += " --no-overlap";
-//		if (matches!=null)							command += " --matches="+String.format(matches.contains(" ")||matches.isEmpty()?"\"%s\"":"%s", matches);	// quote a value containing spaces or is empty
-//		if (poolOnly!=null && poolOnly)				command += " --pool-only";
-//		if (proxy!=null)							command += " --proxy="+proxy;
-//		if (proxyuser!=null)						command += " --proxyuser="+proxyuser;
-//		if (proxypassword!=null)					command += " --proxypassword="+proxypassword;
-		String command = listCommand(all, available, consumed, installed, servicelevel, ondate, matchInstalled, noOverlap, matches, poolOnly, proxy, proxyuser, proxypassword);
+	public SSHCommandResult list_(Boolean all, Boolean available, Boolean consumed, Boolean installed, String servicelevel, String ondate, Boolean matchInstalled, Boolean noOverlap, String matches, Boolean poolOnly, String proxy, String proxyuser, String proxypassword, String noproxy) {
+		
+		String command = listCommand(all, available, consumed, installed, servicelevel, ondate, matchInstalled, noOverlap, matches, poolOnly, proxy, proxyuser, proxypassword, noproxy);
 		
 		// run command without asserting results
 		SSHCommandResult sshCommandResult = sshCommandRunner.runCommandAndWait(command);
@@ -4845,9 +4828,9 @@ if (false) {
 		return sshCommandResult;
 	}
 	
-	public SSHCommandResult list(Boolean all, Boolean available, Boolean consumed, Boolean installed, String servicelevel, String ondate, Boolean matchInstalled, Boolean noOverlap, String matches, Boolean poolOnly, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult list(Boolean all, Boolean available, Boolean consumed, Boolean installed, String servicelevel, String ondate, Boolean matchInstalled, Boolean noOverlap, String matches, Boolean poolOnly, String proxy, String proxyuser, String proxypassword, String noproxy) {
 		
-		SSHCommandResult sshCommandResult = list_(all, available, consumed, installed, servicelevel, ondate, matchInstalled, noOverlap, matches, poolOnly, proxy, proxyuser, proxypassword);
+		SSHCommandResult sshCommandResult = list_(all, available, consumed, installed, servicelevel, ondate, matchInstalled, noOverlap, matches, poolOnly, proxy, proxyuser, proxypassword, noproxy);
 		
 		// assert results...
 		
@@ -4862,7 +4845,7 @@ if (false) {
 	 */
 	public SSHCommandResult listInstalledProducts() {
 		
-		SSHCommandResult sshCommandResult = list(null,null,null,Boolean.TRUE, null, null, null, null, null, null, null, null, null);
+		SSHCommandResult sshCommandResult = list(null,null,null,Boolean.TRUE, null, null, null, null, null, null, null, null, null, null);
 		
 		if (getCurrentProductCertFiles().isEmpty() /*&& getCurrentEntitlementCertFiles().isEmpty() NOT NEEDED AFTER DESIGN CHANGE FROM BUG 736424*/) {
 			Assert.assertTrue(sshCommandResult.getStdout().trim().equals("No installed products to list"), "No installed products to list");
@@ -4880,7 +4863,7 @@ if (false) {
 	 */
 	public SSHCommandResult listAvailableSubscriptionPools() {
 
-		SSHCommandResult sshCommandResult = list(null,Boolean.TRUE,null, null, null, null, null, null, null, null, null, null, null);
+		SSHCommandResult sshCommandResult = list(null,Boolean.TRUE,null, null, null, null, null, null, null, null, null, null, null, null);
 
 		//Assert.assertContainsMatch(sshCommandResult.getStdout(), "Available Subscriptions"); // produces too much logging
 
@@ -4897,11 +4880,11 @@ if (false) {
 		String bugId="638266"; 
 		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 		if (invokeWorkaroundWhileBugIsOpen) {
-			return list_(Boolean.FALSE,Boolean.TRUE,null, null, null, null, null, null, null, null, null, null, null);
+			return list_(Boolean.FALSE,Boolean.TRUE,null, null, null, null, null, null, null, null, null, null, null, null);
 		}
 		// END OF WORKAROUND
 		
-		SSHCommandResult sshCommandResult = list(Boolean.TRUE,Boolean.TRUE,null, null, null, null, null, null, null, null, null, null, null);
+		SSHCommandResult sshCommandResult = list(Boolean.TRUE,Boolean.TRUE,null, null, null, null, null, null, null, null, null, null, null, null);
 		
 		//Assert.assertContainsMatch(sshCommandResult.getStdout(), "Available Subscriptions"); // produces too much logging
 
@@ -4914,7 +4897,7 @@ if (false) {
 	 */
 	public SSHCommandResult listConsumedProductSubscriptions() {
 
-		SSHCommandResult sshCommandResult = list(null,null,Boolean.TRUE, null, null, null, null, null, null, null, null, null, null);
+		SSHCommandResult sshCommandResult = list(null,null,Boolean.TRUE, null, null, null, null, null, null, null, null, null, null, null);
 		
 		List<File> entitlementCertFiles = getCurrentEntitlementCertFiles();
 
@@ -4944,15 +4927,17 @@ if (false) {
 	 * @param proxy TODO
 	 * @param proxyuser TODO
 	 * @param proxypassword TODO
+	 * @param noproxy TODO
 	 */
-	public SSHCommandResult status_(String ondate, String proxy, String proxyuser, String proxypassword) {
-
+	public SSHCommandResult status_(String ondate, String proxy, String proxyuser, String proxypassword, String noproxy) {
+		
 		// assemble the command
 		String command = this.command;	command += " status";
 		if (ondate!=null)				command += " --ondate="+ondate;
 		if (proxy!=null)				command += " --proxy="+proxy;
 		if (proxyuser!=null)			command += " --proxyuser="+proxyuser;
 		if (proxypassword!=null)		command += " --proxypassword="+proxypassword;
+		if (noproxy!=null)				command += " --noproxy="+noproxy;
 		
 		// run command without asserting results
 		SSHCommandResult sshCommandResult = sshCommandRunner.runCommandAndWait(command);
@@ -4966,10 +4951,11 @@ if (false) {
 	 * @param proxy TODO
 	 * @param proxyuser TODO
 	 * @param proxypassword TODO
+	 * @param noproxy TODO
 	 */
-	public SSHCommandResult status(String ondate, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult status(String ondate, String proxy, String proxyuser, String proxypassword, String noproxy) {
 		
-		SSHCommandResult sshCommandResult = status_(ondate, proxy, proxyuser, proxypassword);
+		SSHCommandResult sshCommandResult = status_(ondate, proxy, proxyuser, proxypassword, noproxy);
 		
 		// assert results for a successful call to plugins
 		if (isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit 7957b8df95c575e6e8713c2f1a0f8f754e32aed3 bug 1119688
@@ -5002,8 +4988,9 @@ if (false) {
 	 * @param proxy TODO
 	 * @param proxyuser TODO
 	 * @param proxypassword TODO
+	 * @param noproxy TODO
 	 */
-	public SSHCommandResult redeem_(String email, String locale, String serverurl, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult redeem_(String email, String locale, String serverurl, String proxy, String proxyuser, String proxypassword, String noproxy) {
 		
 		// assemble the command
 		String command = this.command;	command += " redeem";
@@ -5013,6 +5000,7 @@ if (false) {
 		if (proxy!=null)				command += " --proxy="+proxy;
 		if (proxyuser!=null)			command += " --proxyuser="+proxyuser;
 		if (proxypassword!=null)		command += " --proxypassword="+proxypassword;
+		if (noproxy!=null)				command += " --noproxy="+noproxy;
 		
 		// run command without asserting results
 		SSHCommandResult sshCommandResult = sshCommandRunner.runCommandAndWait(command);
@@ -5020,9 +5008,9 @@ if (false) {
 		return sshCommandResult;
 	}
 
-	public SSHCommandResult redeem(String email, String locale, String serverurl, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult redeem(String email, String locale, String serverurl, String proxy, String proxyuser, String proxypassword, String noproxy) {
 
-		SSHCommandResult sshCommandResult = redeem_(email, locale, serverurl, proxy, proxyuser, proxypassword);
+		SSHCommandResult sshCommandResult = redeem_(email, locale, serverurl, proxy, proxyuser, proxypassword, noproxy);
 		
 		// TODO assert results...
 		
@@ -5036,9 +5024,11 @@ if (false) {
 	/**
 	 * @param listEnabled TODO
 	 * @param listDisabled TODO
+	 * @param noproxy TODO
 	 * @return the command line syntax for calling this subscription-manager module with these options
 	 */
-	public String reposCommand(Boolean list, Boolean listEnabled, Boolean listDisabled, List<String> enableRepos,List<String> disableRepos,String proxy, String proxyuser, String proxypassword) {
+	public String reposCommand(Boolean list, Boolean listEnabled, Boolean listDisabled, List<String> enableRepos,List<String> disableRepos,String proxy, String proxyuser, String proxypassword, String noproxy) {
+		
 		// assemble the command
 		String command = this.command;									command += " repos";
 		if (list!=null && list)											command += " --list";
@@ -5049,6 +5039,7 @@ if (false) {
 		if (proxy!=null)												command += " --proxy="+proxy;
 		if (proxyuser!=null)											command += " --proxyuser="+proxyuser;
 		if (proxypassword!=null)										command += " --proxypassword="+proxypassword;
+		if (noproxy!=null)												command += " --noproxy="+noproxy;
 		
 		return command;
 	}
@@ -5056,39 +5047,33 @@ if (false) {
 	/**
 	 * @param listEnabled TODO
 	 * @param listDisabled TODO
+	 * @param noproxy TODO
 	 * @return SSHCommandResult from subscription-manager repos [parameters] without asserting any results
 	 */
-	public SSHCommandResult repos_(Boolean list, Boolean listEnabled, Boolean listDisabled, List<String> enableRepos,List<String> disableRepos,String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult repos_(Boolean list, Boolean listEnabled, Boolean listDisabled, List<String> enableRepos,List<String> disableRepos,String proxy, String proxyuser, String proxypassword, String noproxy) {
 		
-//		// assemble the command
-//		String command = this.command;									command += " repos";
-//		if (list!=null && list)											command += " --list";
-//		if (enableRepos!=null)	for (String enableRepo : enableRepos)	command += " --enable="+enableRepo;
-//		if (disableRepos!=null)	for (String disableRepo : disableRepos)	command += " --disable="+disableRepo;
-//		if (proxy!=null)												command += " --proxy="+proxy;
-//		if (proxyuser!=null)											command += " --proxyuser="+proxyuser;
-//		if (proxypassword!=null)										command += " --proxypassword="+proxypassword;
-		String command = reposCommand(list, listEnabled, listDisabled,  enableRepos, disableRepos, proxy, proxyuser, proxypassword);
+		String command = reposCommand(list, listEnabled, listDisabled,  enableRepos, disableRepos, proxy, proxyuser, proxypassword, noproxy);
 		
 		// run command without asserting results
 		SSHCommandResult sshCommandResult = sshCommandRunner.runCommandAndWait(command);
 		logRuntimeErrors(sshCommandResult);
 		return sshCommandResult;
 	}
-	public SSHCommandResult repos_(Boolean list, Boolean listEnabled, Boolean listDisabled, String enableRepo,String disableRepo,String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult repos_(Boolean list, Boolean listEnabled, Boolean listDisabled, String enableRepo,String disableRepo,String proxy, String proxyuser, String proxypassword, String noproxy) {
 		List<String> enableRepos = enableRepo==null?null:Arrays.asList(new String[]{enableRepo});
 		List<String> disableRepos = disableRepo==null?null:Arrays.asList(new String[]{disableRepo});
-		return repos_(list, listEnabled, listDisabled, enableRepos, disableRepos, proxy, proxyuser, proxypassword);
+		return repos_(list, listEnabled, listDisabled, enableRepos, disableRepos, proxy, proxyuser, proxypassword, noproxy);
 	}
 
 	/**
 	 * @param listEnabled TODO
 	 * @param listDisabled TODO
+	 * @param noproxy TODO
 	 * @return SSHCommandResult from subscription-manager repos [parameters]
 	 */
-	public SSHCommandResult repos(Boolean list, Boolean listEnabled, Boolean listDisabled, List<String> enableRepos,List<String> disableRepos,String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult repos(Boolean list, Boolean listEnabled, Boolean listDisabled, List<String> enableRepos,List<String> disableRepos,String proxy, String proxyuser, String proxypassword, String noproxy) {
 
-		SSHCommandResult sshCommandResult = repos_(list, listEnabled, listDisabled, enableRepos,disableRepos,proxy, proxyuser, proxypassword);
+		SSHCommandResult sshCommandResult = repos_(list, listEnabled, listDisabled, enableRepos,disableRepos,proxy, proxyuser, proxypassword, noproxy);
 		
 		// assert results...
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the repos command indicates a success.");
@@ -5137,10 +5122,10 @@ if (false) {
 		
 		return sshCommandResult;
 	}
-	public SSHCommandResult repos(Boolean list, Boolean listEnabled, Boolean listDisabled, String enableRepo,String disableRepo,String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult repos(Boolean list, Boolean listEnabled, Boolean listDisabled, String enableRepo,String disableRepo,String proxy, String proxyuser, String proxypassword, String noproxy) {
 		List<String> enableRepos = enableRepo==null?null:Arrays.asList(new String[]{enableRepo});
 		List<String> disableRepos = disableRepo==null?null:Arrays.asList(new String[]{disableRepo});
-		return repos(list, listEnabled, listDisabled, enableRepos, disableRepos, proxy, proxyuser, proxypassword);
+		return repos(list, listEnabled, listDisabled, enableRepos, disableRepos, proxy, proxyuser, proxypassword, noproxy);
 	}
 	
 	
@@ -5152,7 +5137,7 @@ if (false) {
 		Calendar now = new GregorianCalendar();
 		now.setTimeInMillis(System.currentTimeMillis());
 		
-		SSHCommandResult sshCommandResult = repos(true, null, null, (String)null,(String)null,null, null, null);
+		SSHCommandResult sshCommandResult = repos(true, null, null, (String)null,(String)null,null, null, null, null);
 		//Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the repos --list command indicates a success.");
 		
 		//List<File> entitlementCertFiles = getCurrentEntitlementCertFiles();
@@ -5200,9 +5185,10 @@ if (false) {
 	// repo-override module tasks ************************************************************
 
 	/**
+	 * @param noproxy TODO
 	 * @return SSHCommandResult from subscription-manager repo-override [parameters] without asserting any results
 	 */
-	public SSHCommandResult repo_override_(Boolean list, Boolean removeAll, List<String> repoIds, List<String> removeNames, Map<String,String> addNameValueMap, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult repo_override_(Boolean list, Boolean removeAll, List<String> repoIds, List<String> removeNames, Map<String,String> addNameValueMap, String proxy, String proxyuser, String proxypassword, String noproxy) {
 		
 		// assemble the command
 		String command = this.command;											command += " repo-override";
@@ -5214,6 +5200,7 @@ if (false) {
 		if (proxy!=null)														command += " --proxy="+proxy;
 		if (proxyuser!=null)													command += " --proxyuser="+proxyuser;
 		if (proxypassword!=null)												command += " --proxypassword="+proxypassword;
+		if (noproxy!=null)														command += " --noproxy="+noproxy;
 		
 		// run command without asserting results
 		SSHCommandResult sshCommandResult = sshCommandRunner.runCommandAndWait(command);
@@ -5221,21 +5208,23 @@ if (false) {
 		return sshCommandResult;
 	}
 	/**
+	 * @param noproxy TODO
 	 * @return SSHCommandResult from subscription-manager repo-override [parameters] without asserting any results
 	 */
-	public SSHCommandResult repo_override_(Boolean list, Boolean removeAll, String repoId, String removeName, Map<String,String> addNameValueMap, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult repo_override_(Boolean list, Boolean removeAll, String repoId, String removeName, Map<String,String> addNameValueMap, String proxy, String proxyuser, String proxypassword, String noproxy) {
 		List<String> repoIds = repoId==null?null:Arrays.asList(new String[]{repoId});
 		List<String> removeNames = removeName==null?null:Arrays.asList(new String[]{removeName});
-		return repo_override_(list, removeAll, repoIds, removeNames, addNameValueMap, proxy, proxyuser, proxypassword);
+		return repo_override_(list, removeAll, repoIds, removeNames, addNameValueMap, proxy, proxyuser, proxypassword, noproxy);
 	}
 	
 	
 	/**
+	 * @param noproxy TODO
 	 * @return SSHCommandResult from subscription-manager repo-override [parameters]
 	 */
-	public SSHCommandResult repo_override(Boolean list, Boolean removeAll, List<String> repoIds, List<String> removeNames, Map<String,String> addNameValueMap, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult repo_override(Boolean list, Boolean removeAll, List<String> repoIds, List<String> removeNames, Map<String,String> addNameValueMap, String proxy, String proxyuser, String proxypassword, String noproxy) {
 
-		SSHCommandResult sshCommandResult = repo_override_(list, removeAll, repoIds, removeNames, addNameValueMap, proxy, proxyuser, proxypassword);
+		SSHCommandResult sshCommandResult = repo_override_(list, removeAll, repoIds, removeNames, addNameValueMap, proxy, proxyuser, proxypassword, noproxy);
 		
 		// assert results...
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the repo-override command indicates a success.");
@@ -5259,7 +5248,7 @@ if (false) {
 		
 		// assert the removeNames are actually removed from the list
 		if (removeNames!=null && !removeNames.isEmpty()) {
-			SSHCommandResult listResult = repo_override(true,null,(String)null,(String)null,null,null,null,null);
+			SSHCommandResult listResult = repo_override(true,null,(String)null,(String)null,null,null,null,null, null);
 			for (String repoId : repoIds) {
 				for (String name : removeNames) {
 					Assert.assertTrue(!SubscriptionManagerCLITestScript.doesStringContainMatches(listResult.getStdout(), String.format(repoOverrideListRepositoryNameValueRegexFormat,repoId,name,"")),"After a repo-override removal, the subscription-manager repo-override list no longer reports repo override repo='"+repoId+"' name='"+name+"'.");
@@ -5269,7 +5258,7 @@ if (false) {
 		
 		// assert the addNameValueMap are actually added to the list
 		if (addNameValueMap!=null && !addNameValueMap.isEmpty()) {
-			SSHCommandResult listResult = repo_override(true,null,(String)null,(String)null,null,null,null,null);
+			SSHCommandResult listResult = repo_override(true,null,(String)null,(String)null,null,null,null,null, null);
 			for (String repoId : repoIds) {
 				for (String name : addNameValueMap.keySet()) {
 					String value = addNameValueMap.get(name);
@@ -5280,16 +5269,16 @@ if (false) {
 		}
 		
 		if (removeAll!=null && removeAll) {
-			SSHCommandResult listResult = repo_override(true,null,(String)null,(String)null,null,null,null,null);
+			SSHCommandResult listResult = repo_override(true,null,(String)null,(String)null,null,null,null,null, null);
 			Assert.assertEquals(listResult.getStdout().trim(),"This system does not have any content overrides applied to it.","After removing all repo-overrides, this is the subscription-manager repo-override report.");
 		}
 		
 		return sshCommandResult;
 	}
-	public SSHCommandResult repo_override(Boolean list, Boolean removeAll, String repoId, String removeName, Map<String,String> addNameValueMap, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult repo_override(Boolean list, Boolean removeAll, String repoId, String removeName, Map<String,String> addNameValueMap, String proxy, String proxyuser, String proxypassword, String noproxy) {
 		List<String> repoIds = repoId==null?null:Arrays.asList(new String[]{repoId});
 		List<String> removeNames = removeName==null?null:Arrays.asList(new String[]{removeName});
-		return repo_override(list, removeAll, repoIds, removeNames, addNameValueMap, proxy, proxyuser, proxypassword);
+		return repo_override(list, removeAll, repoIds, removeNames, addNameValueMap, proxy, proxyuser, proxypassword, noproxy);
 	}
 	public static final String repoOverrideListRepositoryNameValueRegexFormat = "Repository: %s(\\n.+)+%s:(\\s)*%s";
 	
@@ -5333,9 +5322,10 @@ if (false) {
 	// subscribe module tasks ************************************************************
 	
 	/**
+	 * @param noproxy TODO
 	 * @return the command line syntax for calling this subscription-manager module with these options
 	 */
-	public String subscribeCommand(Boolean auto, String servicelevel, List<String> poolIds, List<String> productIds, List<String> regtokens, String quantity, String email, String locale, String file, String proxy, String proxyuser, String proxypassword) {
+	public String subscribeCommand(Boolean auto, String servicelevel, List<String> poolIds, List<String> productIds, List<String> regtokens, String quantity, String email, String locale, String file, String proxy, String proxyuser, String proxypassword, String noproxy) {
 		// assemble the command
 		String command = this.command;									command += " subscribe";
 		if (auto!=null && auto)											command += " --auto";
@@ -5350,17 +5340,19 @@ if (false) {
 		if (proxy!=null)												command += " --proxy="+proxy;
 		if (proxyuser!=null)											command += " --proxyuser="+proxyuser;
 		if (proxypassword!=null)										command += " --proxypassword="+proxypassword;
+		if (noproxy!=null)												command += " --noproxy="+noproxy;
 		
 		return command;
 	}
 	
 	/**
 	 * subscribe WITHOUT asserting results
+	 * @param noproxy TODO
 	 */
-	public SSHCommandResult subscribe_(Boolean auto, String servicelevel, List<String> poolIds, List<String> productIds, List<String> regtokens, String quantity, String email, String locale, String file, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult subscribe_(Boolean auto, String servicelevel, List<String> poolIds, List<String> productIds, List<String> regtokens, String quantity, String email, String locale, String file, String proxy, String proxyuser, String proxypassword, String noproxy) {
 		
 		// assemble the command
-		String command = subscribeCommand(auto, servicelevel, poolIds, productIds, regtokens, quantity, email, locale, file, proxy, proxyuser, proxypassword);
+		String command = subscribeCommand(auto, servicelevel, poolIds, productIds, regtokens, quantity, email, locale, file, proxy, proxyuser, proxypassword, noproxy);
 		
 		// run command without asserting results
 		SSHCommandResult sshCommandResult = sshCommandRunner.runCommandAndWait(command);
@@ -5383,24 +5375,26 @@ if (false) {
 
 	/**
 	 * subscribe WITHOUT asserting results.
+	 * @param noproxy TODO
 	 */
-	public SSHCommandResult subscribe_(Boolean auto, String servicelevel, String poolId, String productId, String regtoken, String quantity, String email, String locale, String file, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult subscribe_(Boolean auto, String servicelevel, String poolId, String productId, String regtoken, String quantity, String email, String locale, String file, String proxy, String proxyuser, String proxypassword, String noproxy) {
 		
 		List<String> poolIds	= poolId==null?null:Arrays.asList(new String[]{poolId});
 		List<String> productIds	= productId==null?null:Arrays.asList(new String[]{productId});
 		List<String> regtokens	= regtoken==null?null:Arrays.asList(new String[]{regtoken});
 
-		return subscribe_(auto, servicelevel, poolIds, productIds, regtokens, quantity, email, locale, file, proxy, proxyuser, proxypassword);
+		return subscribe_(auto, servicelevel, poolIds, productIds, regtokens, quantity, email, locale, file, proxy, proxyuser, proxypassword, noproxy);
 	}
 
 
 	
 	/**
 	 * subscribe and assert all results are successful
+	 * @param noproxy TODO
 	 */
-	public SSHCommandResult subscribe(Boolean auto, String servicelevel, List<String> poolIds, List<String> productIds, List<String> regtokens, String quantity, String email, String locale, String file, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult subscribe(Boolean auto, String servicelevel, List<String> poolIds, List<String> productIds, List<String> regtokens, String quantity, String email, String locale, String file, String proxy, String proxyuser, String proxypassword, String noproxy) {
 
-		SSHCommandResult sshCommandResult = subscribe_(auto, servicelevel, poolIds, productIds, regtokens, quantity, email, locale, file, proxy, proxyuser, proxypassword);
+		SSHCommandResult sshCommandResult = subscribe_(auto, servicelevel, poolIds, productIds, regtokens, quantity, email, locale, file, proxy, proxyuser, proxypassword, noproxy);
 		auto = auto==null? false:auto;	// the non-null default value for auto is false
 
 		// assert results...
@@ -5481,14 +5475,15 @@ if (false) {
 	
 	/**
 	 * subscribe and assert all results are successful
+	 * @param noproxy TODO
 	 */
-	public SSHCommandResult subscribe(Boolean auto, String servicelevel, String poolId, String productId, String regtoken, String quantity, String email, String locale, String file, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult subscribe(Boolean auto, String servicelevel, String poolId, String productId, String regtoken, String quantity, String email, String locale, String file, String proxy, String proxyuser, String proxypassword, String noproxy) {
 
 		List<String> poolIds	= poolId==null?null:Arrays.asList(new String[]{poolId});
 		List<String> productIds	= productId==null?null:Arrays.asList(new String[]{productId});
 		List<String> regtokens	= regtoken==null?null:Arrays.asList(new String[]{regtoken});
 
-		return subscribe(auto, servicelevel, poolIds, productIds, regtokens, quantity, email, locale, file, proxy, proxyuser, proxypassword);
+		return subscribe(auto, servicelevel, poolIds, productIds, regtokens, quantity, email, locale, file, proxy, proxyuser, proxypassword, noproxy);
 	}
 	
 	
@@ -5522,7 +5517,7 @@ if (false) {
 		List<ProductSubscription> beforeProductSubscriptions = getCurrentlyConsumedProductSubscriptions();
 		List<File> beforeEntitlementCertFiles = getCurrentEntitlementCertFiles();
 		log.info("Subscribing to subscription pool: "+pool);
-		SSHCommandResult sshCommandResult = subscribe(null, null, pool.poolId, null, null, quantity, null, null, null, null, null, null);
+		SSHCommandResult sshCommandResult = subscribe(null, null, pool.poolId, null, null, quantity, null, null, null, null, null, null, null);
 
 		// is this pool multi-entitleable?
 		/* This information is now in the SubscriptionPool itself
@@ -5802,7 +5797,7 @@ if (false) {
 //		String prefix = getConfFileParameter(rhsmConfFile, "prefix");
 		
 		log.info("Subscribing to subscription pool: "+pool);
-		SSHCommandResult sshCommandResult = subscribe(null, null, pool.poolId, null, null, quantity, null, null, null, null, null, null);
+		SSHCommandResult sshCommandResult = subscribe(null, null, pool.poolId, null, null, quantity, null, null, null, null, null, null, null);
 
 		// get the serial of the entitlement that was granted from this pool
 		//BigInteger serialNumber = CandlepinTasks.getOwnersNewestEntitlementSerialCorrespondingToSubscribedPoolId(this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,SubscriptionManagerBaseTestScript.sm_serverUrl,getCurrentlyRegisteredOwnerKey(),pool.poolId);
@@ -5901,7 +5896,7 @@ if (false) {
 		for (SubscriptionPool pool : poolsBeforeSubscribe) {
 			poolIds.add(pool.poolId);
 		}
-		if (!poolIds.isEmpty()) subscribe(null,null, poolIds, null, null, null, null, null, null, null, null, null);
+		if (!poolIds.isEmpty()) subscribe(null,null, poolIds, null, null, null, null, null, null, null, null, null, null);
 		
 		// assert results when assumingRegisterType="system"
 		if (currentlyRegisteredType==null || currentlyRegisteredType.equals(ConsumerType.system)) {
@@ -5950,7 +5945,7 @@ if (false) {
 		List<SubscriptionPool> subscriptionPools = getCurrentlyAllAvailableSubscriptionPools();
 		for (SubscriptionPool pool : subscriptionPools) poolIds.add(pool.poolId);
 
-		if (!poolIds.isEmpty()) subscribe(null,null,poolIds, null, null, null, null, null,null,null,null, null);
+		if (!poolIds.isEmpty()) subscribe(null,null,poolIds, null, null, null, null, null,null,null,null, null, null);
 		
 		// assert
 		assertNoAvailableSubscriptionPoolsToList(true,"Asserting that no available subscription pools remain after simultaneously subscribing to all available.");
@@ -6022,9 +6017,10 @@ if (false) {
 	// unsubscribe module tasks ************************************************************
 	/**
 	 * @param poolIds TODO
+	 * @param noproxy TODO
 	 * @return the command line syntax for calling this subscription-manager module with these options
 	 */
-	public String unsubscribeCommand(Boolean all, List<BigInteger> serials, List<String> poolIds, String proxy, String proxyuser, String proxypassword) {
+	public String unsubscribeCommand(Boolean all, List<BigInteger> serials, List<String> poolIds, String proxy, String proxyuser, String proxypassword, String noproxy) {
 		
 		// assemble the command
 		String command = this.command;							command += " unsubscribe";
@@ -6034,6 +6030,7 @@ if (false) {
 		if (proxy!=null)										command += " --proxy="+proxy;
 		if (proxyuser!=null)									command += " --proxyuser="+proxyuser;
 		if (proxypassword!=null)								command += " --proxypassword="+proxypassword;
+		if (noproxy!=null)										command += " --noproxy="+noproxy;
 		
 		return command;
 	}
@@ -6041,11 +6038,12 @@ if (false) {
 	/**
 	 * unsubscribe without asserting results
 	 * @param poolIds TODO
+	 * @param noproxy TODO
 	 */
-	public SSHCommandResult unsubscribe_(Boolean all, List<BigInteger> serials, List<String> poolIds, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult unsubscribe_(Boolean all, List<BigInteger> serials, List<String> poolIds, String proxy, String proxyuser, String proxypassword, String noproxy) {
 
 		// assemble the command
-		String command = unsubscribeCommand(all, serials, poolIds, proxy, proxyuser, proxypassword);	
+		String command = unsubscribeCommand(all, serials, poolIds, proxy, proxyuser, proxypassword, noproxy);	
 
 		if (all!=null && all && serials==null) workaroundForBug844455();
 		
@@ -6057,22 +6055,24 @@ if (false) {
 	/**
 	 * unsubscribe without asserting results
 	 * @param poolId TODO
+	 * @param noproxy TODO
 	 */
-	public SSHCommandResult unsubscribe_(Boolean all, BigInteger serial, String poolId, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult unsubscribe_(Boolean all, BigInteger serial, String poolId, String proxy, String proxyuser, String proxypassword, String noproxy) {
 		
 		List<BigInteger> serials = serial==null?null:Arrays.asList(new BigInteger[]{serial});
 		List<String> poolIds = poolId==null?null:Arrays.asList(new String[]{poolId});
 
-		return unsubscribe_(all, serials, poolIds, proxy, proxyuser, proxypassword);
+		return unsubscribe_(all, serials, poolIds, proxy, proxyuser, proxypassword, noproxy);
 	}
 	
 	/**
 	 * unsubscribe and assert all results are successful
 	 * @param poolIds TODO
+	 * @param noproxy TODO
 	 */
-	public SSHCommandResult unsubscribe(Boolean all, List<BigInteger> serials, List<String> poolIds, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult unsubscribe(Boolean all, List<BigInteger> serials, List<String> poolIds, String proxy, String proxyuser, String proxypassword, String noproxy) {
 
-		SSHCommandResult sshCommandResult = unsubscribe_(all, serials, poolIds, proxy, proxyuser, proxypassword);
+		SSHCommandResult sshCommandResult = unsubscribe_(all, serials, poolIds, proxy, proxyuser, proxypassword, noproxy);
 		
 		// assert results
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the unsubscribe command indicates a success.");
@@ -6091,13 +6091,14 @@ if (false) {
 	/**
 	 * unsubscribe and assert all results are successful
 	 * @param poolId TODO
+	 * @param noproxy TODO
 	 */
-	public SSHCommandResult unsubscribe(Boolean all, BigInteger serial, String poolId, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult unsubscribe(Boolean all, BigInteger serial, String poolId, String proxy, String proxyuser, String proxypassword, String noproxy) {
 		
 		List<BigInteger> serials = serial==null?null:Arrays.asList(new BigInteger[]{serial});
 		List<String> poolIds = poolId==null?null:Arrays.asList(new String[]{poolId});
 		
-		return unsubscribe(all, serials, poolIds, proxy, proxyuser, proxypassword);
+		return unsubscribe(all, serials, poolIds, proxy, proxyuser, proxypassword, noproxy);
 	}
 	
 	/**
@@ -6115,7 +6116,7 @@ if (false) {
 		List<File> beforeEntitlementCertFiles = getCurrentEntitlementCertFiles();
 
 		log.info("Attempting to unsubscribe from certificate serial: "+ serialNumber);
-		SSHCommandResult result = unsubscribe_(false, serialNumber, null, null, null, null);
+		SSHCommandResult result = unsubscribe_(false, serialNumber, null, null, null, null, null);
 		
 		// assert the results
 		String expectedStdoutMsg;
@@ -6235,7 +6236,7 @@ if (false) {
 	 */
 	public void unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions() {
 
-		unsubscribe(true, (BigInteger)null, null, null, null, null);
+		unsubscribe(true, (BigInteger)null, null, null, null, null, null);
 
 		// assert that there are no product subscriptions consumed
 		Assert.assertEquals(listConsumedProductSubscriptions().getStdout().trim(),
@@ -6294,7 +6295,7 @@ if (false) {
 		}
 		
 		// unsubscribe from all serials collectively
-		SSHCommandResult result = unsubscribe(false,serials,null,null,null, null);
+		SSHCommandResult result = unsubscribe(false,serials,null,null,null, null, null);
 		Assert.assertTrue(getCurrentlyConsumedProductSubscriptions().size()==0,
 				"Currently no product subscriptions are consumed.");
 		Assert.assertTrue(getCurrentEntitlementCertFiles().size()==0,
@@ -6323,10 +6324,10 @@ if (false) {
 		}
 		
 		// return unsubscribe --all when no serials are currently consumed
-		if (serials.isEmpty()) return unsubscribe(true,serials,null,null,null, null); 
+		if (serials.isEmpty()) return unsubscribe(true,serials,null,null,null, null, null); 
 		
 		// unsubscribe from all serials collectively
-		SSHCommandResult result = unsubscribe(false,serials,null,null,null, null);
+		SSHCommandResult result = unsubscribe(false,serials,null,null,null, null, null);
 		Assert.assertTrue(getCurrentlyConsumedProductSubscriptions().size()==0,
 				"Currently no product subscriptions are consumed.");
 		Assert.assertTrue(getCurrentEntitlementCertFiles().size()==0,
@@ -6366,7 +6367,7 @@ if (false) {
 		}
 		
 		// unsubscribe from all poolIds collectively
-		SSHCommandResult result = unsubscribe(false,null,poolIds,null,null, null);
+		SSHCommandResult result = unsubscribe(false,null,poolIds,null,null, null, null);
 		Assert.assertTrue(getCurrentlyConsumedProductSubscriptions().size()==0,
 				"Currently no product subscriptions are consumed.");
 		Assert.assertTrue(getCurrentEntitlementCertFiles().size()==0,
@@ -6376,10 +6377,11 @@ if (false) {
 	
 	// facts module tasks ************************************************************
 	/**
+	 * @param noproxy TODO
 	 * @return the command line syntax for calling this subscription-manager module with these options
 	 */
-	public String factsCommand(Boolean list, Boolean update, String proxy, String proxyuser, String proxypassword) {
-
+	public String factsCommand(Boolean list, Boolean update, String proxy, String proxyuser, String proxypassword, String noproxy) {
+		
 		// assemble the command
 		String command = this.command;	command += " facts";	
 		if (list!=null && list)			command += " --list";
@@ -6387,6 +6389,7 @@ if (false) {
 		if (proxy!=null)				command += " --proxy="+proxy;
 		if (proxyuser!=null)			command += " --proxyuser="+proxyuser;
 		if (proxypassword!=null)		command += " --proxypassword="+proxypassword;
+		if (noproxy!=null)				command += " --noproxy="+noproxy;
 		
 		return command;
 	}
@@ -6397,18 +6400,12 @@ if (false) {
 	 * @param proxy TODO
 	 * @param proxyuser TODO
 	 * @param proxypassword TODO
+	 * @param noproxy TODO
 	 */
-	public SSHCommandResult facts_(Boolean list, Boolean update, String proxy, String proxyuser, String proxypassword) {
-
-		// assemble the command
-//		String command = this.command;	command += " facts";	
-//		if (list!=null && list)			command += " --list";
-//		if (update!=null && update)		command += " --update";
-//		if (proxy!=null)				command += " --proxy="+proxy;
-//		if (proxyuser!=null)			command += " --proxyuser="+proxyuser;
-//		if (proxypassword!=null)		command += " --proxypassword="+proxypassword;
-		String command =factsCommand(list, update, proxy, proxyuser, proxypassword);
-				
+	public SSHCommandResult facts_(Boolean list, Boolean update, String proxy, String proxyuser, String proxypassword, String noproxy) {
+		
+		String command =factsCommand(list, update, proxy, proxyuser, proxypassword, noproxy);
+		
 		// run command without asserting results
 		SSHCommandResult sshCommandResult = sshCommandRunner.runCommandAndWait(command);
 		logRuntimeErrors(sshCommandResult);
@@ -6421,11 +6418,12 @@ if (false) {
 	 * @param proxy TODO
 	 * @param proxyuser TODO
 	 * @param proxypassword TODO
+	 * @param noproxy TODO
 	 * @return
 	 */
-	public SSHCommandResult facts(Boolean list, Boolean update, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult facts(Boolean list, Boolean update, String proxy, String proxyuser, String proxypassword, String noproxy) {
 		
-		SSHCommandResult sshCommandResult = facts_(list, update, proxy, proxyuser, proxypassword);
+		SSHCommandResult sshCommandResult = facts_(list, update, proxy, proxyuser, proxypassword, noproxy);
 
 		// assert results for a successful facts
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the facts command indicates a success.");
@@ -6449,15 +6447,17 @@ if (false) {
 	// version module tasks ************************************************************
 	
 	/**
+	 * @param noproxy TODO
 	 * @return the command line syntax for calling this subscription-manager module with these options
 	 */
-	public String versionCommand(String proxy, String proxyuser, String proxypassword) {
+	public String versionCommand(String proxy, String proxyuser, String proxypassword, String noproxy) {
 
 		// assemble the command
 		String command = this.command;	command += " version";	
 		if (proxy!=null)				command += " --proxy="+proxy;
 		if (proxyuser!=null)			command += " --proxyuser="+proxyuser;
 		if (proxypassword!=null)		command += " --proxypassword="+proxypassword;
+		if (noproxy!=null)				command += " --noproxy="+noproxy;
 		
 		return command;
 	}
@@ -6467,16 +6467,12 @@ if (false) {
 	 * @param proxy TODO
 	 * @param proxyuser TODO
 	 * @param proxypassword TODO
+	 * @param noproxy TODO
 	 * @return result of the command line call to subscription-manager version
 	 */
-	public SSHCommandResult version_(String proxy, String proxyuser, String proxypassword) {
-
-		// assemble the command
-//		String command = this.command;	command += " version";	
-//		if (proxy!=null)				command += " --proxy="+proxy;
-//		if (proxyuser!=null)			command += " --proxyuser="+proxyuser;
-//		if (proxypassword!=null)		command += " --proxypassword="+proxypassword;
-		String command = versionCommand(proxy,proxyuser,proxypassword);
+	public SSHCommandResult version_(String proxy, String proxyuser, String proxypassword, String noproxy) {
+		
+		String command = versionCommand(proxy,proxyuser,proxypassword, noproxy);
 		
 		// run command without asserting results
 		SSHCommandResult sshCommandResult = sshCommandRunner.runCommandAndWait(command);
@@ -6489,11 +6485,12 @@ if (false) {
 	 * @param proxy TODO
 	 * @param proxyuser TODO
 	 * @param proxypassword TODO
+	 * @param noproxy TODO
 	 * @return result of the command line call to subscription-manager version
 	 */
-	public SSHCommandResult version(String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult version(String proxy, String proxyuser, String proxypassword, String noproxy) {
 		
-		SSHCommandResult sshCommandResult = version_(proxy, proxyuser, proxypassword);
+		SSHCommandResult sshCommandResult = version_(proxy, proxyuser, proxypassword, noproxy);
 
 		// assert results for a successful version
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the version command indicates a success.");
@@ -8039,9 +8036,10 @@ if (false) {
 	 * @param sos TODO
 	 * @param noSubscriptions TODO
 	 * @param subscriptions TODO
+	 * @param noproxy TODO
 	 * @return the command line syntax for calling rhsm-debug system with these options
 	 */
-	public String rhsmDebugSystemCommand(String destination, Boolean noArchive, Boolean sos, Boolean noSubscriptions, Boolean subscriptions, String proxy, String proxyuser, String proxypassword) {
+	public String rhsmDebugSystemCommand(String destination, Boolean noArchive, Boolean sos, Boolean noSubscriptions, Boolean subscriptions, String proxy, String proxyuser, String proxypassword, String noproxy) {
 
 		// assemble the command
 		String command = "rhsm-debug";					command += " system";
@@ -8053,6 +8051,7 @@ if (false) {
 		if (proxy!=null)								command += " --proxy="+proxy;
 		if (proxyuser!=null)							command += " --proxyuser="+proxyuser;
 		if (proxypassword!=null)						command += " --proxypassword="+proxypassword;
+		if (noproxy!=null)								command += " --noproxy="+noproxy;
 		
 		return command;
 	}
@@ -8212,7 +8211,7 @@ if (false) {
 			if (invokeWorkaroundWhileBugIsOpen) {
 				log.warning("The workaround to avoid an SSLTimeoutError during an unregister or unsubscribe --all is to incrementally unsubscribe reducing the current entitlements to approximately "+tooManyEntitlements+".  Then resume the unregister or unsubscribe --all.");
 				for (int i=entitlementFiles.size()-1; i>=tooManyEntitlements; i--) {
-					unsubscribe_(null, getSerialNumberFromEntitlementCertFile(entitlementFiles.get(i)), null,null,null, null);
+					unsubscribe_(null, getSerialNumberFromEntitlementCertFile(entitlementFiles.get(i)), null,null,null, null, null);
 				}
 			}
 		}
@@ -8235,7 +8234,7 @@ if (false) {
 						//serials.add(getEntitlementCertFromEntitlementCertFile(entitlementFiles.get(e)).serialNumber);
 						serials.add(getSerialNumberFromEntitlementCertFile(entitlementFiles.get(e)));
 					}
-					unsubscribe_(null, serials, null, null, null, null);
+					unsubscribe_(null, serials, null, null, null, null, null);
 					entitlementFiles = getCurrentEntitlementCertFiles();
 					if (avoidInfiniteLoopSize==entitlementFiles.size()) {break; /* because unsubscribe is failing */} else {avoidInfiniteLoopSize=entitlementFiles.size();}
 				} while (entitlementFiles.size()>tooManyEntitlements);

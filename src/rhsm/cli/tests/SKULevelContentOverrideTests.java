@@ -50,11 +50,11 @@ public class SKULevelContentOverrideTests extends SubscriptionManagerCLITestScri
 		String requestBody = null;
 		String consumerId = clienttasks.getCurrentConsumerId(
 				clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null,
-						null, null, (String) null, null, null, null, true, null, null, null, null));
+						null, null, (String) null, null, null, null, true, null, null, null, null, null));
 		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_clientUsername, sm_clientPassword, sm_serverUrl,
 				consumerId);
 		clienttasks.subscribe(null, null, subscriptionpool.poolId, null, null, null, null, null, null, null, null,
-				null);
+				null, null);
 
 		List<Repo> availableRepos = clienttasks.getCurrentlySubscribedRepos();
 		List<String> repoIdsDisabledByDefault = new ArrayList<String>();
@@ -95,7 +95,7 @@ public class SKULevelContentOverrideTests extends SubscriptionManagerCLITestScri
 
 			clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 			clienttasks.subscribe(null, null, subscriptionpool.poolId, null, null, null, null, null, null, null, null,
-					null);
+					null, null);
 			availableRepos = clienttasks.getCurrentlySubscribedRepos();
 			for (Repo repo : availableRepos) {
 				if (!(repo.enabled)) {
@@ -131,9 +131,9 @@ public class SKULevelContentOverrideTests extends SubscriptionManagerCLITestScri
 				ownerKey);
 		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		clienttasks.subscribe(null, null, subscriptionpool.poolId, null, null, null, null, null, null, null, null,
-				null);
+				null, null);
 		Assert.assertTrue(
-				clienttasks.repos_(null, true, null, (String) null, null, null, null, null).getStdout()
+				clienttasks.repos_(null, true, null, (String) null, null, null, null, null, null).getStdout()
 						.contains(repoIdToEnable),
 				"After subscribing to SKU '" + subscriptionpool.productId + "' pool '" + subscriptionpool.poolId
 						+ "' which contains a content_override_enabled for repoId '" + repoIdToEnable + "' (contentid='"
@@ -145,9 +145,9 @@ public class SKULevelContentOverrideTests extends SubscriptionManagerCLITestScri
 		 * verify repo overridden at sku level can be overridden with
 		 * subscription-manager repos --disable command
 		 */
-		clienttasks.repos(null, null, null, null, repoIdToEnable, null, null, null);
+		clienttasks.repos(null, null, null, null, repoIdToEnable, null, null, null, null);
 		Assert.assertTrue(
-				clienttasks.repos_(null, null, true, (String) null, null, null, null, null).getStdout()
+				clienttasks.repos_(null, null, true, (String) null, null, null, null, null, null).getStdout()
 						.contains(repoIdToEnable),
 				"After subscribing to SKU '" + subscriptionpool.productId + "' pool '" + subscriptionpool.poolId
 						+ "' which contains a content_override_enabled for repoId '" + repoIdToEnable + "' (contentid='"
@@ -176,7 +176,7 @@ public class SKULevelContentOverrideTests extends SubscriptionManagerCLITestScri
 					resourcePath, requestBody);
 			clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 			clienttasks.subscribe(null, null, subscriptionpool.poolId, null, null, null, null, null, null, null, null,
-					null);
+					null, null);
 			availableRepos = clienttasks.getCurrentlySubscribedRepos();
 			for (Repo repo : availableRepos) {
 				if (repo.enabled) {
@@ -215,9 +215,9 @@ public class SKULevelContentOverrideTests extends SubscriptionManagerCLITestScri
 				ownerKey);
 		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		clienttasks.subscribe(null, null, subscriptionpool.poolId, null, null, null, null, null, null, null, null,
-				null);
+				null, null);
 		Assert.assertTrue(
-				clienttasks.repos_(null, null, true, (String) null, null, null, null, null).getStdout()
+				clienttasks.repos_(null, null, true, (String) null, null, null, null, null, null).getStdout()
 						.contains(repoIdToDisable),
 				"After subscribing to SKU '" + subscriptionpool.productId + "' pool '" + subscriptionpool.poolId
 						+ "' which contains a content_override_disabled for repoId '" + repoIdToDisable
@@ -230,9 +230,9 @@ public class SKULevelContentOverrideTests extends SubscriptionManagerCLITestScri
 		 * verify repo overridden at sku level can be overridden with
 		 * subscription-manager repos --enable command
 		 */
-		clienttasks.repos(null, null, null, repoIdToDisable, null, null, null, null);
+		clienttasks.repos(null, null, null, repoIdToDisable, null, null, null, null, null);
 		Assert.assertTrue(
-				clienttasks.repos_(null, true, null, (String) null, null, null, null, null).getStdout()
+				clienttasks.repos_(null, true, null, (String) null, null, null, null, null, null).getStdout()
 						.contains(repoIdToDisable),
 				"After subscribing to SKU '" + subscriptionpool.productId + "' pool '" + subscriptionpool.poolId
 						+ "' which contains a content_override_disabled for repoId '" + repoIdToDisable
@@ -242,14 +242,14 @@ public class SKULevelContentOverrideTests extends SubscriptionManagerCLITestScri
 
 		// at this point we have two consumer level repo overrides - get rid of
 		// them before proceeding to the next verification...
-		clienttasks.repo_override(null, true, (String) null, (String) null, null, null, null, null);
+		clienttasks.repo_override(null, true, (String) null, (String) null, null, null, null, null, null);
 
 		// VERIFICATION 5: Verify that when the same content id exists on both
 		// the SKU level content_override_enabled and content_override_disabled
 		// list, the enabled value takes precedence
 		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		clienttasks.subscribe(null, null, subscriptionpool.poolId, null, null, null, null, null, null, null, null,
-				null);
+				null, null);
 		attributesMap.clear();
 		attributesMap.put("name", "content_override_disabled");
 		attributesMap.put("value", contentIdToDisable);
@@ -269,9 +269,9 @@ public class SKULevelContentOverrideTests extends SubscriptionManagerCLITestScri
 				ownerKey);
 		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		clienttasks.subscribe(null, null, subscriptionpool.poolId, null, null, null, null, null, null, null, null,
-				null);
+				null, null);
 		Assert.assertTrue(
-				clienttasks.repos_(null, null, true, (String) null, null, null, null, null).getStdout()
+				clienttasks.repos_(null, null, true, (String) null, null, null, null, null, null).getStdout()
 						.contains(repoIdToDisable),
 				"After subscribing to SKU '" + subscriptionpool.productId + "' pool '" + subscriptionpool.poolId
 						+ "' which contains a content_override_disabled for repoId '" + repoIdToDisable
@@ -292,9 +292,9 @@ public class SKULevelContentOverrideTests extends SubscriptionManagerCLITestScri
 				ownerKey);
 		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		clienttasks.subscribe(null, null, subscriptionpool.poolId, null, null, null, null, null, null, null, null,
-				null);
+				null, null);
 		Assert.assertTrue(
-				clienttasks.repos_(null, true, null, (String) null, null, null, null, null).getStdout()
+				clienttasks.repos_(null, true, null, (String) null, null, null, null, null, null).getStdout()
 						.contains(repoIdToDisable),
 				"After subscribing to SKU '" + subscriptionpool.productId + "' pool '" + subscriptionpool.poolId
 						+ "' which contains a content_override_enabed for repoId '" + repoIdToDisable + "' (contentid='"
@@ -338,7 +338,7 @@ public class SKULevelContentOverrideTests extends SubscriptionManagerCLITestScri
 					resourcePath, requestBody);
 			clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 			clienttasks.subscribe(null, null, subscriptionpool.poolId, null, null, null, null, null, null, null, null,
-					null);
+					null, null);
 			availableRepos = clienttasks.getCurrentlySubscribedRepos();
 			for (Repo repo : availableRepos) {
 				if (!(repo.enabled)) {
@@ -461,7 +461,7 @@ public class SKULevelContentOverrideTests extends SubscriptionManagerCLITestScri
 		clienttasks.removeAllCerts(true, true, false);
 		clienttasks.register(sm_client1Username, sm_client1Password, sm_client1Org);
 		for (SubscriptionPool availableSubscriptionPoolsMatchingInstalled : SubscriptionPool.parse(clienttasks
-				.list(null, true, null, null, null, null, true, null, null, null, null, null, null).getStdout())) {
+				.list(null, true, null, null, null, null, true, null, null, null, null, null, null, null).getStdout())) {
 
 			SubscriptionPool pool = availableSubscriptionPoolsMatchingInstalled;
 
