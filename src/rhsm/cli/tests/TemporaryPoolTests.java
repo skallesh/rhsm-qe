@@ -19,6 +19,7 @@ import org.testng.SkipException;
 import rhsm.base.CandlepinType;
 import rhsm.base.SubscriptionManagerCLITestScript;
 import rhsm.cli.tasks.CandlepinTasks;
+import rhsm.cli.tasks.SubscriptionManagerTasks;
 import rhsm.data.ConsumerCert;
 import rhsm.data.EntitlementCert;
 import rhsm.data.InstalledProduct;
@@ -75,7 +76,7 @@ public class TemporaryPoolTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(unmappedGuestsOnlyPool.machineType, "Virtual","Temporary pools intended for unmapped guests only should indicate that it is for machine type Virtual.");
 		
 		// verify that the Subscription Type indicates it is temporary
-		if (clienttasks.isVersion(servertasks.statusVersion, ">=", "0.9.47-1")) {	// commit dfd7e68ae83642f77c80590439353a0d66fe2961	// Bug 1201520 - [RFE] Usability suggestions to better identify a temporary (aka 24 hour) entitlement
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "0.9.47-1")) {	// commit dfd7e68ae83642f77c80590439353a0d66fe2961	// Bug 1201520 - [RFE] Usability suggestions to better identify a temporary (aka 24 hour) entitlement
 			String temporarySuffix = " (Temporary)";
 			Assert.assertTrue(unmappedGuestsOnlyPool.subscriptionType.endsWith(temporarySuffix), "The Subscription Type for a temporary pool intended for unmapped guests only should end in suffix '"+temporarySuffix+"' (actual='"+unmappedGuestsOnlyPool.subscriptionType+"').");
 		}
@@ -155,7 +156,7 @@ public class TemporaryPoolTests extends SubscriptionManagerCLITestScript {
 
 	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
 			       , testCaseID = {"RHEL6-20095", "RHEL7-51737"})
-	@Test(	description="given an available unmapped_guests_only pool, attach it and verify the status details of the consumed subscription, installed product, and system status.",	// TODO
+	@Test(	description="given an available unmapped_guests_only pool, attach it and verify the granted entitlement (validityNotAfter date is 24 hours after consumer's registration), installed product (Subscribed), and system status (Insufficient - Guest has not been reported on any host and is using a temporary unmapped guest subscription.)",
 			groups={"blockedByBug-1362701"},
 			dataProvider="getAvailableUnmappedGuestsOnlySubscriptionPoolsData",
 			enabled=true)
@@ -178,13 +179,18 @@ public class TemporaryPoolTests extends SubscriptionManagerCLITestScript {
 		EntitlementCert entitlementCert = clienttasks.getEntitlementCertCorrespondingToProductSubscription(consumedUnmappedGuestsOnlyProductSubscription);
 
 		// assert the expiration is 24 hours post the consumer's registration
+		int hours = 24;
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.30-1")) {	// commit 9302c8f57f37dd5ec3c4020770ac1675a87d99ba 1419576: Pre-date certs to ease clock skew issues
+			hours+=1;
+			log.info("Due to Candlepin RFE Bug 1419576, we need to increment the expected entitlement validity for the temporary pool by one hour to '"+hours+"' hours after the consumer identity's validityNotBefore date.");
+		}
 		Calendar expectedEntitlementCertEndDate = (Calendar) cert.validityNotBefore.clone();
-		expectedEntitlementCertEndDate.add(Calendar.HOUR, 24);
+		expectedEntitlementCertEndDate.add(Calendar.HOUR, hours);
 		//Assert.assertEquals(ConsumerCert.formatDateString(entitlementCert.validityNotAfter), ConsumerCert.formatDateString(expectedEntitlementCertEndDate), "The End Date of the entitlement from a temporary pool should be exactly 24 hours after the registration date of the current consumer '"+ConsumerCert.formatDateString(cert.validityNotBefore)+"'.");
 		// allow for a few seconds of tolerance
 		Calendar expectedEntitlementCertEndDateUpperTolerance = (Calendar) expectedEntitlementCertEndDate.clone(); expectedEntitlementCertEndDateUpperTolerance.add(Calendar.SECOND, +25);
 		Calendar expectedEntitlementCertEndDateLowerTolerance = (Calendar) expectedEntitlementCertEndDate.clone(); expectedEntitlementCertEndDateLowerTolerance.add(Calendar.SECOND, -25);
-		Assert.assertTrue(entitlementCert.validityNotAfter.before(expectedEntitlementCertEndDateUpperTolerance) && entitlementCert.validityNotAfter.after(expectedEntitlementCertEndDateLowerTolerance), "The End Date of the entitlement from a temporary pool '"+ConsumerCert.formatDateString(entitlementCert.validityNotAfter)+"' should be 24 hours (within several seconds) after the registration date of the current consumer '"+ConsumerCert.formatDateString(cert.validityNotBefore)+"'.");
+		Assert.assertTrue(entitlementCert.validityNotAfter.before(expectedEntitlementCertEndDateUpperTolerance) && entitlementCert.validityNotAfter.after(expectedEntitlementCertEndDateLowerTolerance), "The End Date of the entitlement from a temporary pool '"+ConsumerCert.formatDateString(entitlementCert.validityNotAfter)+"' should be '"+hours+"' hours (within several seconds) after the registration date of the current consumer '"+ConsumerCert.formatDateString(cert.validityNotBefore)+"'.");
 		
 		// assert the Status Details of the attached subscription
 		String expectedStatusDetailsForAnUnmappedGuestsOnlyProductSubscription = "Guest has not been reported on any host and is using a temporary unmapped guest subscription.";
@@ -450,7 +456,7 @@ public class TemporaryPoolTests extends SubscriptionManagerCLITestScript {
 		clienttasks.run_rhsmcertd_worker(true);	// must pass autoheal=true
 		
 		// assert the expired entitlement is immediately removed when autohealing is run	// Bug 1199078 - expired guest 24 hour subscription not removed on auto-attach
-		if (clienttasks.isVersion(servertasks.statusVersion, ">=", "0.9.46-1")) {	// commit d24a59b3640aef1acb2b6067100d653fc76636f5	1199078: Remove expired unmapped guest pools on autoheal
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "0.9.46-1")) {	// commit d24a59b3640aef1acb2b6067100d653fc76636f5	1199078: Remove expired unmapped guest pools on autoheal
 			Assert.assertNull(ProductSubscription.findFirstInstanceWithMatchingFieldFromList("poolId", unmappedGuestsOnlyPool.poolId, clienttasks.getCurrentlyConsumedProductSubscriptions()),
 				"After an autohealing rhsmcertd checkin, the expired temporary product subscription should be immediately removed from the system.");
 		}
