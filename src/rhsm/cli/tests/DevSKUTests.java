@@ -216,6 +216,10 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 		// assert that the entitled expires_after defaults to 90 days after the registered consumer data when not explicitly set by the dev_sku product
 		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
 		Calendar expectedEndDate = Calendar.getInstance(); expectedEndDate.setTimeInMillis(consumerCert.validityNotBefore.getTimeInMillis());
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.30-1")) {	// commit 9302c8f57f37dd5ec3c4020770ac1675a87d99ba 1419576: Pre-date certs to ease clock skew issues
+			expectedEndDate.add(Calendar.HOUR, Integer.valueOf(1));
+			log.info("Due to Candlepin RFE Bug 1419576, we need to increment the expected expires_after by one hour to account for pre-dating the consumer identity's validityNotBefore date by one hour.");
+		}
 		String devSkuExpiresAfter = CandlepinTasks.getResourceAttributeValue(jsonDevSkuProduct, "expires_after");
 		if (devSkuExpiresAfter==null) {
 			String defaultExpiresAfter = "90"; // days
@@ -603,7 +607,7 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 	@SuppressWarnings("unused")
 	@BeforeClass(groups={"setup"}, dependsOnMethods={"verifyCandlepinVersionBeforeClass"})
 	public void setupBeforeClass() throws Exception {
-if (false) { // keep for historical reference but never execute
+if (/*!debugTest*/false) { // keep for historical reference but never execute
 		// restart candlepin in hosted mode (candlepin.standalone=false)
 		if (CandlepinType.standalone.equals(sm_serverType)) {	// indicates that we are testing a standalone candlepin server
 			servertasks.updateConfFileParameter("candlepin.standalone", "false");
@@ -612,7 +616,7 @@ if (false) { // keep for historical reference but never execute
 			servertasks.initialize(clienttasks.candlepinAdminUsername,clienttasks.candlepinAdminPassword,clienttasks.candlepinUrl);
 		}
 		// BEWARE: DO NOT RUN servertasks.refreshPoolsUsingRESTfulAPI(user, password, url, owner) OR IT WILL DELETE ALL SUBSCRIPTIONS AND POOLS IN CANDLEPIN 2.0+
-} // Replacing code block above with the following redeployment of candlepin to avoid the BEWARE issue
+} else // Replacing code block above with the following redeployment of candlepin to avoid the BEWARE issue
 
 		// re-deploy candlepin in hosted mode (candlepin.standalone=false)
 		if (CandlepinType.standalone.equals(sm_serverType)) {	// indicates that we are testing a standalone candlepin server
@@ -636,7 +640,7 @@ if (false) { // keep for historical reference but never execute
 	@SuppressWarnings("unused")
 	@AfterClass(groups={"setup"}, alwaysRun=true)	// dependsOnMethods={"verifyCandlepinVersionBeforeClass"} WILL THROW A TESTNG DEPENDENCY ERROR
 	public void teardownAfterClass() throws Exception {
-if (false) { // keep for historical reference but never execute
+if (/*!debugTest*/false) { // keep for historical reference but never execute
 		if (CandlepinType.standalone.equals(sm_serverType)) {	// indicates that we are testing a standalone candlepin server
 			servertasks.updateConfFileParameter("candlepin.standalone", "true");
 			servertasks.commentConfFileParameter("module.config.hosted.configuration.module");
@@ -653,7 +657,7 @@ if (false) { // keep for historical reference but never execute
 			// C. most reliable workaround is to update the locked columns for all of the cp2_products and cp2_content tables
 			updateProductAndContentLockStateOnDatabase(0); // unlock all product and content after toggling out of hosted mode
 		}
-} // Replacing code block above with the following redeployment of candlepin (workaround B) to avoid the BEWARE issue
+} else // Replacing code block above with the following redeployment of candlepin (workaround B) to avoid the BEWARE issue
 		
 		if (CandlepinType.standalone.equals(sm_serverType) && setupBeforeClassRedeployedCandlepin) {	// indicates that we are testing a standalone candlepin server
 			// avoid post re-deploy problems like: "System certificates corrupted. Please reregister." and "Unable to verify server's identity: [SSL: SSLV3_ALERT_CERTIFICATE_UNKNOWN] sslv3 alert certificate unknown (_ssl.c:579)"
