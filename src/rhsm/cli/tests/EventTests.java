@@ -138,7 +138,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		clienttasks.register(sm_clientUsername,sm_clientPassword,ownerKey,null,null,null,null, null, null, null, (String)null, null, null, null, null, null, null, null, null, null);
 		String[] newEventTitles = new String[]{"CONSUMER CREATED"};
 		newEventTitles = new String[]{"COMPLIANCE CREATED","COMPLIANCE CREATED","CONSUMER CREATED"};	// COMPLIANCE CREATED events were added to support gutterball
-		if (clienttasks.isVersion(servertasks.statusVersion, ">=", "0.9.37-1"/*candlepin-common-1.0.17-1*/)) {	// commit bb1d2e6184a6cd9b80ff9c9d3045e9d780116226	// Only send Compliance event when compliance changes
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "0.9.37-1"/*candlepin-common-1.0.17-1*/)) {	// commit bb1d2e6184a6cd9b80ff9c9d3045e9d780116226	// Only send Compliance event when compliance changes
 			newEventTitles = new String[]{"COMPLIANCE CREATED","CONSUMER CREATED"};
 		}
 		
@@ -350,11 +350,11 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		String[] newEventTitles = new String[]{"ENTITLEMENT DELETED"};
 		newEventTitles = new String[]{"COMPLIANCE CREATED","COMPLIANCE CREATED","ENTITLEMENT DELETED"};	// COMPLIANCE CREATED events were added to support gutterball
-		if (clienttasks.isVersion(servertasks.statusVersion, ">=", "0.9.37-1"/*candlepin-common-1.0.17-1*/)) {	// commit bb1d2e6184a6cd9b80ff9c9d3045e9d780116226	// Only send Compliance event when compliance changes
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "0.9.37-1"/*candlepin-common-1.0.17-1*/)) {	// commit bb1d2e6184a6cd9b80ff9c9d3045e9d780116226	// Only send Compliance event when compliance changes
 			newEventTitles = new String[]{"COMPLIANCE CREATED","ENTITLEMENT DELETED"};
 		}
 // TODO FIXME 7/21/2016 assertTheNewConsumerFeedIgnoringEventTitles() call below started failing because the actual newEventTitles occur in reverse order from expected
-		if (clienttasks.isVersion(servertasks.statusVersion, ">=", "2.0.16-1")) {	// probably candlepin commit 6beae873733174df24178a552b116fcb8c8876ef Dont trigger async compliance during batch revoke
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.16-1")) {	// probably candlepin commit 6beae873733174df24178a552b116fcb8c8876ef Dont trigger async compliance during batch revoke
 			// attempting to reversing the order
 			// if this does not help, then we might try to alter the assertTheNew*() methods to IgnoreOrder of just call the assertTheNew**Contains() methods .. 
 			newEventTitles = new String[]{"ENTITLEMENT DELETED","COMPLIANCE CREATED"};	// switched the expected order; after discussions with vritant and crog who said the order of the expected new event titles may not be a guaranteed and apparently that's okay
@@ -375,7 +375,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 
         // adjust the expected events when the candlepin server is standalone and the pool has a non-zero virt_limit
         String virt_limit = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, testPool.poolId, "virt_limit");
-        if (clienttasks.isVersion(servertasks.statusVersion, "<", "2.0.16-1"))	// DO NOT INTERFERE WITH THE "switched the expected order" FROM ABOVE
+        if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, "<", "2.0.16-1"))	// DO NOT INTERFERE WITH THE "switched the expected order" FROM ABOVE
         if (servertasks.statusStandalone && virt_limit!=null && !virt_limit.equals("0")) {
 			newEventTitles = new String[]{"COMPLIANCE CREATED","ENTITLEMENT DELETED"};
 		}
@@ -444,7 +444,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		clienttasks.unregister(null, null, null, null);
 		String[] newEventTitles = new String[]{"CONSUMER DELETED"};
 		newEventTitles = new String[]{"COMPLIANCE CREATED","CONSUMER DELETED"};	// COMPLIANCE CREATED events were added to support gutterball
-		if (clienttasks.isVersion(servertasks.statusVersion, ">=", "0.9.37-1"/*candlepin-common-1.0.17-1*/)) {	// commit bb1d2e6184a6cd9b80ff9c9d3045e9d780116226	// Only send Compliance event when compliance changes
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "0.9.37-1"/*candlepin-common-1.0.17-1*/)) {	// commit bb1d2e6184a6cd9b80ff9c9d3045e9d780116226	// Only send Compliance event when compliance changes
 			newEventTitles = new String[]{"CONSUMER DELETED"};
 		}
 		

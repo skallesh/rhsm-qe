@@ -484,7 +484,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		for (EntitlementCert entitlementCert : clienttasks.getCurrentEntitlementCerts()) {
 			
 			// tolerate entitlements granted from pools with null/"" support_level regardless of the specified service level
-			if (clienttasks.isVersion(servertasks.statusVersion, ">="/*TODO ">" is technically correct*/, "2.0.2-1")) {	// commit 9cefb6e23baefcc4ee2e14423f205edd37eecf22	// Bug 1223560 - Service levels on an activation key prevent custom products from attaching at registration if auto-attach enabled
+			if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">="/*TODO ">" is technically correct*/, "2.0.2-1")) {	// commit 9cefb6e23baefcc4ee2e14423f205edd37eecf22	// Bug 1223560 - Service levels on an activation key prevent custom products from attaching at registration if auto-attach enabled
 				if (entitlementCert.orderNamespace.supportLevel==null || entitlementCert.orderNamespace.supportLevel.isEmpty()) {
 					log.warning("Regardless of the consumer's service-level preference '"+jsonConsumer.get("serviceLevel")+"' or the requested service-level '"+serviceLevel+"', this EntitlementCert provides a support_level of '"+entitlementCert.orderNamespace.supportLevel+"'. (New behavior modification from Bug 1223560)");
 					continue;
@@ -538,7 +538,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		for (ProductSubscription productSubscription : consumedProductSubscriptions) {
 			
 			// tolerate ProductSubscriptions with a null/"" serviceLevel. (result of candlepin Bug 1223560)
-			if (clienttasks.isVersion(servertasks.statusVersion, ">="/*TODO ">" is technically correct*/, "2.0.2-1")) {	// commit 9cefb6e23baefcc4ee2e14423f205edd37eecf22	// Bug 1223560 - Service levels on an activation key prevent custom products from attaching at registration if auto-attach enabled
+			if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">="/*TODO ">" is technically correct*/, "2.0.2-1")) {	// commit 9cefb6e23baefcc4ee2e14423f205edd37eecf22	// Bug 1223560 - Service levels on an activation key prevent custom products from attaching at registration if auto-attach enabled
 				if (productSubscription.serviceLevel==null || productSubscription.serviceLevel.isEmpty()) {
 					log.warning("After autosubscribed registration with service level '"+mixedCaseServiceLevel+"', this consumed ProductSubscription provides no service level '"+productSubscription.serviceLevel+"'.  (New behavior modification from Bug 1223560)");
 					continue;
@@ -626,7 +626,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		for (EntitlementCert entitlementCert : entitlementCerts) {
 			
 			// tolerate entitlements granted from pools with null/no support_level regardless of the specified service level
-			if (clienttasks.isVersion(servertasks.statusVersion, ">="/*TODO ">" is technically correct*/, "2.0.2-1")) {	// commit 9cefb6e23baefcc4ee2e14423f205edd37eecf22	// Bug 1223560 - Service levels on an activation key prevent custom products from attaching at registration if auto-attach enabled
+			if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">="/*TODO ">" is technically correct*/, "2.0.2-1")) {	// commit 9cefb6e23baefcc4ee2e14423f205edd37eecf22	// Bug 1223560 - Service levels on an activation key prevent custom products from attaching at registration if auto-attach enabled
 				if (entitlementCert.orderNamespace.supportLevel==null || entitlementCert.orderNamespace.supportLevel.isEmpty()) {
 					log.warning("Regardless of the consumer's service-level preference '"+initialConsumerServiceLevel+"' or the requested service-level '"+serviceLevel+"', this EntitlementCert provides a support_level of '"+entitlementCert.orderNamespace.supportLevel+"'. (New behavior modification from Bug 1223560)");
 					continue;
@@ -680,7 +680,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		for (EntitlementCert entitlementCert : clienttasks.getCurrentEntitlementCerts()) {
 			
 			// tolerate entitlements granted from pools with null/no support_level regardless of the specified service level
-			if (clienttasks.isVersion(servertasks.statusVersion, ">="/*TODO ">" is technically correct*/, "2.0.2-1")) {	// commit 9cefb6e23baefcc4ee2e14423f205edd37eecf22	// Bug 1223560 - Service levels on an activation key prevent custom products from attaching at registration if auto-attach enabled
+			if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">="/*TODO ">" is technically correct*/, "2.0.2-1")) {	// commit 9cefb6e23baefcc4ee2e14423f205edd37eecf22	// Bug 1223560 - Service levels on an activation key prevent custom products from attaching at registration if auto-attach enabled
 				if (entitlementCert.orderNamespace.supportLevel==null || entitlementCert.orderNamespace.supportLevel.isEmpty()) {
 					log.warning("Regardless of the consumer's original service level '"+serviceLevel+"', this EntitlementCert provides a support_level of '"+entitlementCert.orderNamespace.supportLevel+"'. (New behavior modification from Bug 1223560)");
 					continue;
@@ -781,7 +781,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		for (ProductSubscription productSubscription : consumedProductSubscriptions) {
 			
 			// tolerate ProductSubscriptions with a null/"" serviceLevel. (result of candlepin Bug 1223560)
-			if (clienttasks.isVersion(servertasks.statusVersion, ">="/*TODO ">" is technically correct*/, "2.0.2-1")) {	// commit 9cefb6e23baefcc4ee2e14423f205edd37eecf22	// Bug 1223560 - Service levels on an activation key prevent custom products from attaching at registration if auto-attach enabled
+			if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">="/*TODO ">" is technically correct*/, "2.0.2-1")) {	// commit 9cefb6e23baefcc4ee2e14423f205edd37eecf22	// Bug 1223560 - Service levels on an activation key prevent custom products from attaching at registration if auto-attach enabled
 				if (productSubscription.serviceLevel==null || productSubscription.serviceLevel.isEmpty()) {
 					log.warning("After autosubscribe with service level '"+mixedCaseServiceLevel+"', this consumed ProductSubscription provides no service level '"+productSubscription.serviceLevel+"'.  (New behavior modification from Bug 1223560)");
 					continue;

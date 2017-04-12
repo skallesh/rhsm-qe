@@ -33,6 +33,7 @@ import com.redhat.qe.tools.SSHCommandResult;
 
 import rhsm.base.CandlepinType;
 import rhsm.base.SubscriptionManagerCLITestScript;
+import rhsm.cli.tasks.SubscriptionManagerTasks;
 import rhsm.data.ContentNamespace;
 import rhsm.data.EntitlementCert;
 import rhsm.data.ProductCert;
@@ -414,7 +415,7 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(versionResult.getExitCode(), Integer.valueOf(0), "Exit code from docker run command.");
 		
 		String subscriptionManagerVersionInDockerImage = versionResult.getStdout().trim().replace("subscription-manager"+"-", "");
-		Assert.assertTrue(clienttasks.isVersion(subscriptionManagerVersionInDockerImage, ">=", "1.12.4-1"), "Expecting the version of subscription-manager baked inside image '"+dockerImage+"' to be >= 1.12.4-1 (first docker compatible version of subscription-manager)");
+		Assert.assertTrue(SubscriptionManagerTasks.isVersion(subscriptionManagerVersionInDockerImage, ">=", "1.12.4-1"), "Expecting the version of subscription-manager baked inside image '"+dockerImage+"' to be >= 1.12.4-1 (first docker compatible version of subscription-manager)");
 	}
 
 	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}

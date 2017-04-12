@@ -915,7 +915,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			//@ImplementsNitrateTest(caseId=)
 	public void ListAvailableWithExactMatches_Test() throws JSONException, Exception {
 		if (clienttasks.isPackageVersion("subscription-manager", "<", "1.13.6-1")) throw new SkipException("The list --matches function was not implemented in this version of subscription-manager.");
-		if (clienttasks.isVersion(servertasks.statusVersion, "<", "0.9.33-1")) throw new SkipException("Candlepin support for list --available --matches function was not implemented in server version '"+servertasks.statusVersion+"'.");// candlepin commit e5b6c24f2322b79a7ea8bb1e8c85a8cb86733471
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, "<", "0.9.33-1")) throw new SkipException("Candlepin support for list --available --matches function was not implemented in server version '"+servertasks.statusVersion+"'.");// candlepin commit e5b6c24f2322b79a7ea8bb1e8c85a8cb86733471
 		
 		String matchesString;
 		List<SubscriptionPool> expectedPools,actualSubscriptionPoolMatches;
@@ -1064,7 +1064,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			//@ImplementsNitrateTest(caseId=)
 	public void ListAvailableWithWildcardMatches_Test() throws JSONException, Exception {
 		if (clienttasks.isPackageVersion("subscription-manager", "<", "1.13.6-1")) throw new SkipException("The list --matches function was not implemented in this version of subscription-manager.");
-		if (clienttasks.isVersion(servertasks.statusVersion, "<", "0.9.33-1")) throw new SkipException("Candlepin support for list --available --matches function was not implemented in server version '"+servertasks.statusVersion+"'.");// candlepin commit e5b6c24f2322b79a7ea8bb1e8c85a8cb86733471
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, "<", "0.9.33-1")) throw new SkipException("Candlepin support for list --available --matches function was not implemented in server version '"+servertasks.statusVersion+"'.");// candlepin commit e5b6c24f2322b79a7ea8bb1e8c85a8cb86733471
 		
 		String matchesString;
 		List<SubscriptionPool> expectedPools,actualSubscriptionPoolMatches;

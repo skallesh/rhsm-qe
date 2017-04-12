@@ -72,7 +72,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		FIXME UPDATE: THE CRAPPY WORKAROUND ABOVE APPEARS TO HAVE BEEN FIXED (BY BUG 800323 ?), REVERTING BACK TO ORIGINAL ASSERT... */
 		
 		String expectedStderr = String.format("Activation key '%s' not found for organization '%s'.",unknownActivationKeyName, org);
-		if (clienttasks.isVersion(servertasks.statusVersion, ">", "0.9.30-1")) expectedStderr = String.format("None of the activation keys specified exist for this org.");	// Follows: candlepin-0.9.30-1	// https://github.com/candlepin/candlepin/commit/bcb4b8fd8ee009e86fc9a1a20b25f19b3dbe6b2a
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">", "0.9.30-1")) expectedStderr = String.format("None of the activation keys specified exist for this org.");	// Follows: candlepin-0.9.30-1	// https://github.com/candlepin/candlepin/commit/bcb4b8fd8ee009e86fc9a1a20b25f19b3dbe6b2a
 		Integer expectedExitCode = new Integer(255);
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) expectedExitCode = new Integer(70);	// EX_SOFTWARE	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
 		Assert.assertEquals(sshCommandResult.getStderr().trim(), expectedStderr, "Stderr message from an attempt to register with an unknown activation key '"+unknownActivationKeyName+"' to org '"+org+"'.");
@@ -172,7 +172,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		if (jsonActivationKey.has("displayMessage")) {
 			String displayMessage = jsonActivationKey.getString("displayMessage");
 			String expectedMessage = "The activation key name '"+badName+"' must be alphanumeric or include the characters - or _";
-			if (clienttasks.isVersion(servertasks.statusVersion, ">=", "0.9.37-1"/*candlepin-common-1.0.17-1*/)) {	// commit f51d8f98869f5ab6f519b665f97653f8608a6ca6	// Bug 1167856 - candlepin msgids with unescaped single quotes will not print the single quotes
+			if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "0.9.37-1"/*candlepin-common-1.0.17-1*/)) {	// commit f51d8f98869f5ab6f519b665f97653f8608a6ca6	// Bug 1167856 - candlepin msgids with unescaped single quotes will not print the single quotes
 				expectedMessage = "The activation key name '"+badName+"' must be alphanumeric or include the characters '-' or '_'";
 			}
 			Assert.assertEquals(displayMessage, expectedMessage, "Expected the creation of this activation key named '"+badName+"' to fail.");
@@ -303,7 +303,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		if (addQuantity!=null && addQuantity>jsonPool.getInt("quantity") && addQuantity>1) {
 			String expectedDisplayMessage = "The quantity must not be greater than the total allowed for the pool";
 			
-			if (clienttasks.isVersion(servertasks.statusVersion, ">=", "0.9.37-1"/*candlepin-common-1.0.17-1*/)) {	// commit 3cdb39430c86de141405e815a2a428ad64b1c220	// Removed rules for activation key creation. Relaxation of activation key rules at register time means the keys can have many more differing pools at create time
+			if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "0.9.37-1"/*candlepin-common-1.0.17-1*/)) {	// commit 3cdb39430c86de141405e815a2a428ad64b1c220	// Removed rules for activation key creation. Relaxation of activation key rules at register time means the keys can have many more differing pools at create time
 				// new relaxed behavior
 				log.warning("Prior to candlepin commit 3cdb39430c86de141405e815a2a428ad64b1c220, this test asserted that candlepin attempts to create an activation key that attached a pool quantity exceeding its total pool size would be blocked.  This is now relaxed.  QE believes that this will cause usability issues.");
 				Assert.assertFalse(jsonResult.has("displayMessage"), "After candlepin-common-1.0.17-1, attempts to create an activation key that attached a pool quantity exceeding its total pool size are permitted.  QE believes that this will cause usability issues.");
@@ -413,7 +413,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		if (!CandlepinTasks.isPoolProductConsumableByConsumerType(sm_clientUsername, sm_clientPassword, sm_serverUrl, poolId, ConsumerType.system)) {
 			String expectedStderr = String.format("Consumers of this type are not allowed to subscribe to the pool with id '%s'.", poolId);
 			if (!clienttasks.workaroundForBug876764(sm_serverType)) expectedStderr = String.format("Units of this type are not allowed to attach the pool with ID '%s'.", poolId);
-			if (clienttasks.isVersion(servertasks.statusVersion, ">", "0.9.30-1")) {
+			if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">", "0.9.30-1")) {
 				log.info("Prior to candlepin version 0.9.30-1, the expected feedback was: "+expectedStderr);
 				expectedStderr =  "No activation key was applied successfully.";	// Follows: candlepin-0.9.30-1	// https://github.com/candlepin/candlepin/commit/bcb4b8fd8ee009e86fc9a1a20b25f19b3dbe6b2a
 			}
@@ -443,7 +443,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 			//Assert.assertEquals(registerResult.getStderr().trim(), String.format("No entitlements are available from the pool with id '%s'.",poolId), "Registering with an activationKey containing a pool for which not enough entitlements remain should fail.");	// expected string changed by bug 876758
 			String expectedStderr = String.format("No subscriptions are available from the pool with id '%s'.",poolId);
 			if (!clienttasks.workaroundForBug876764(sm_serverType)) expectedStderr = String.format("No subscriptions are available from the pool with ID '%s'.",poolId);
-			if (clienttasks.isVersion(servertasks.statusVersion, ">", "0.9.30-1")) {
+			if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">", "0.9.30-1")) {
 				log.info("Prior to candlepin version 0.9.30-1, the expected feedback was: "+expectedStderr);
 				expectedStderr =  "No activation key was applied successfully.";	// Follows: candlepin-0.9.30-1	// https://github.com/candlepin/candlepin/commit/bcb4b8fd8ee009e86fc9a1a20b25f19b3dbe6b2a
 			}
@@ -481,7 +481,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 				//201112021710:31.298 - FINE: Stdout: The system with UUID fc463d3d-dacb-4581-a2c6-2f4d69c7c457 has been unregistered
 				//201112021710:31.299 - FINE: Stderr: Guest's host does not match owner of pool: '8a90f85733fc4df80133fc6f6bf50e29'.
 				//201112021710:31.299 - FINE: ExitCode: 255
-				if (clienttasks.isVersion(servertasks.statusVersion, "<", "0.9.45-1")) {	// valid prior to the pools of "type": "UNMAPPED_GUEST"
+				if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, "<", "0.9.45-1")) {	// valid prior to the pools of "type": "UNMAPPED_GUEST"
 					Assert.assertEquals(registerResult.getStderr().trim(),"Guest's host does not match owner of pool: '"+poolId+"'.");
 					Assert.assertEquals(registerResult.getExitCode(), Integer.valueOf(255), "The exitCode from registering with an activationKey containing a virt_only derived_pool on a standalone candlepin server for which our system's host is not registered.");
 					Assert.assertNull(clienttasks.getCurrentConsumerCert(), "There should be no consumer cert on the system when register with activation key fails.");	// make sure there is no consumer cert - register with activation key should be 100% successful - if any one part fails, the whole operation fails
@@ -518,7 +518,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		boolean isSystemVirtual = Boolean.valueOf(clienttasks.getFactValue("virt.is_guest"));
 		if (isSystemVirtual && CandlepinTasks.isPoolRestrictedToPhysicalSystems(sm_clientUsername, sm_clientPassword, sm_serverUrl, poolId)) {
 			String expectedStderr = "Pool is restricted to physical systems: '"+poolId+"'.";
-			if (clienttasks.isVersion(servertasks.statusVersion, ">", "0.9.30-1")) {
+			if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">", "0.9.30-1")) {
 				log.info("Prior to candlepin version 0.9.30-1, the expected feedback was: "+expectedStderr);
 				expectedStderr =  "No activation key was applied successfully.";	// Follows: candlepin-0.9.30-1	// https://github.com/candlepin/candlepin/commit/bcb4b8fd8ee009e86fc9a1a20b25f19b3dbe6b2a
 			}
@@ -530,7 +530,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		}
 		if (!isSystemVirtual && CandlepinTasks.isPoolRestrictedToVirtualSystems(sm_clientUsername, sm_clientPassword, sm_serverUrl, poolId)) {
 			String expectedStderr = "Pool is restricted to virtual guests: '"+poolId+"'.";
-			if (clienttasks.isVersion(servertasks.statusVersion, ">", "0.9.30-1")) {
+			if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">", "0.9.30-1")) {
 				log.info("Prior to candlepin version 0.9.30-1, the expected feedback was: "+expectedStderr);
 				expectedStderr =  "No activation key was applied successfully.";	// Follows: candlepin-0.9.30-1	// https://github.com/candlepin/candlepin/commit/bcb4b8fd8ee009e86fc9a1a20b25f19b3dbe6b2a
 			}
@@ -682,7 +682,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 				Assert.assertEquals(registerResult.getExitCode(), expectedExitCode, "The expected exit code from the register attempt with activationKey using the wrong org.");
 				//Assert.assertEquals(registerResult.getStdout().trim(), "", "The expected stdout result the register attempt with activationKey using the wrong org.");
 				String expectedStderr = "Activation key '"+activationKeyName+"' not found for organization '"+differentOrg+"'.";
-				if (clienttasks.isVersion(servertasks.statusVersion, ">", "0.9.30-1")) expectedStderr = String.format("None of the activation keys specified exist for this org.");	// Follows: candlepin-0.9.30-1	// https://github.com/candlepin/candlepin/commit/bcb4b8fd8ee009e86fc9a1a20b25f19b3dbe6b2a
+				if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">", "0.9.30-1")) expectedStderr = String.format("None of the activation keys specified exist for this org.");	// Follows: candlepin-0.9.30-1	// https://github.com/candlepin/candlepin/commit/bcb4b8fd8ee009e86fc9a1a20b25f19b3dbe6b2a
 				Assert.assertEquals(registerResult.getStderr().trim(), expectedStderr, "The expected stderr result from the register attempt with activationKey '"+activationKeyName+"' using the wrong org '"+differentOrg+"'.");
 				Assert.assertNull(clienttasks.getCurrentConsumerCert(), "There should be no consumer cert on the system when register with activation key fails.");	// make sure there is no consumer cert - register with activation key should be 100% successful - if any one part fails, the whole operation fails
 
@@ -740,7 +740,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		String expectedStderr = String.format("No entitlements are available from the pool with id '%s'.", jsonCurrentPool.getString("id"));
 		expectedStderr = String.format("No subscriptions are available from the pool with id '%s'.", jsonCurrentPool.getString("id"));	// string changed by bug 876758
 		if (!clienttasks.workaroundForBug876764(sm_serverType)) expectedStderr = String.format("No subscriptions are available from the pool with ID '%s'.", jsonCurrentPool.getString("id"));
-		if (clienttasks.isVersion(servertasks.statusVersion, ">", "0.9.30-1")) {
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">", "0.9.30-1")) {
 			log.info("Prior to candlepin version 0.9.30-1, the expected feedback was: "+expectedStderr);
 			expectedStderr =  "No activation key was applied successfully.";	// Follows: candlepin-0.9.30-1	// https://github.com/candlepin/candlepin/commit/bcb4b8fd8ee009e86fc9a1a20b25f19b3dbe6b2a
 		}
@@ -1466,7 +1466,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		sleep(1*60*1000);
 		log.info("Waiting 1 minute for available pool with service level '"+expiredServiceLevel+"' to expire.");
 		
-		if (clienttasks.isVersion(servertasks.statusVersion, "<", "2.0.0-1")) {
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, "<", "2.0.0-1")) {
 			// refresh the candlepin pools which will remove the availability of the expired pool
 			JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg);
 			jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, jobDetail,"FINISHED", 5*1000, 1);
@@ -1485,7 +1485,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) expectedExitCode = new Integer(70);	// EX_SOFTWARE	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
 		Assert.assertEquals(result.getExitCode(), expectedExitCode, "The exit code from the register command indicates we could not register with activation key '"+keyName+"'.");
 		String expectedStderr = String.format("Service level '%s' is not available to units of organization admin.",expiredServiceLevel);
-		if (clienttasks.isVersion(servertasks.statusVersion, ">", "0.9.30-1")) {
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">", "0.9.30-1")) {
 			log.info("Prior to candlepin version 0.9.30-1, the expected feedback was: "+expectedStderr);
 			expectedStderr =  "No activation key was applied successfully.";	// Follows: candlepin-0.9.30-1	// https://github.com/candlepin/candlepin/commit/bcb4b8fd8ee009e86fc9a1a20b25f19b3dbe6b2a
 		}

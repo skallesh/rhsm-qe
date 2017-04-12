@@ -35,6 +35,7 @@ import com.redhat.qe.auto.testng.TestNGUtils;
 import rhsm.base.CandlepinType;
 import rhsm.base.SubscriptionManagerCLITestScript;
 import rhsm.cli.tasks.CandlepinTasks;
+import rhsm.cli.tasks.SubscriptionManagerTasks;
 import rhsm.data.ProductCert;
 import rhsm.data.ProductSubscription;
 import rhsm.data.SubscriptionPool;
@@ -1327,7 +1328,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		
 		// assert the result
 		String expectedFailureMessage = String.format("Activation key '%s' not found for organization '%s'.",activationKeyName, clientOrgKey);
-		if (clienttasks.isVersion(servertasks.statusVersion, ">", "0.9.30-1")) expectedFailureMessage = String.format("None of the activation keys specified exist for this org.");	// Follows: candlepin-0.9.30-1	// https://github.com/candlepin/candlepin/commit/bcb4b8fd8ee009e86fc9a1a20b25f19b3dbe6b2a
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">", "0.9.30-1")) expectedFailureMessage = String.format("None of the activation keys specified exist for this org.");	// Follows: candlepin-0.9.30-1	// https://github.com/candlepin/candlepin/commit/bcb4b8fd8ee009e86fc9a1a20b25f19b3dbe6b2a
 		expectedFailureMessage += "\n\nUnable to register.\nFor further assistance, please contact Red Hat Global Support Services.";
 		Assert.assertTrue(executeRhnMigrateClassicToRhsmResult.getStdout().contains(expectedFailureMessage),"The result from an attempt to migrate from RHN Classic to RHSM with a bad activation key reported this expected messge: \n"+expectedFailureMessage);
 		

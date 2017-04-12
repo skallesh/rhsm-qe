@@ -20,6 +20,7 @@ import org.testng.annotations.Test;
 import rhsm.base.CandlepinType;
 import rhsm.base.SubscriptionManagerCLITestScript;
 import rhsm.cli.tasks.CandlepinTasks;
+import rhsm.cli.tasks.SubscriptionManagerTasks;
 import rhsm.data.EntitlementCert;
 import rhsm.data.ProductNamespace;
 import rhsm.data.SubscriptionPool;
@@ -145,13 +146,13 @@ public class DataCenterTests extends SubscriptionManagerCLITestScript {
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
 		clienttasks.facts(null,true,null,null,null, null);	// update facts
 		availablePoolsForDerivedProductId = SubscriptionPool.findAllInstancesWithMatchingFieldFromList("productId", poolDerivedProductId, clienttasks.getCurrentlyAllAvailableSubscriptionPools());
-		if (clienttasks.isVersion(servertasks.statusVersion, "<", "0.9.45-1")) {
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, "<", "0.9.45-1")) {
 			// this assertion was valid prior to introduction of Temporary pools for unmapped guests
 			Assert.assertTrue(availablePoolsForDerivedProductId.isEmpty(),"A subpool for the derivedProductId '"+poolDerivedProductId+"' should NOT be available to a guest system when its virt_uuid is not on the host's list of guestIds.");
 		} else {
 			// this assertion is valid after the introduction of Temporary pools for unmapped guests
 			Assert.assertTrue(!availablePoolsForDerivedProductId.isEmpty(),"Starting with candlepin version 0.9.45-1, a temporary subpool for the derivedProductId '"+poolDerivedProductId+"' should NOW be available to a guest system when its virt_uuid is not on the host's list of guestIds.");
-			if (clienttasks.isVersion(servertasks.statusVersion, ">=", "0.9.47-1")) {	// commit dfd7e68ae83642f77c80590439353a0d66fe2961	// Bug 1201520 - [RFE] Usability suggestions to better identify a temporary (aka 24 hour) entitlement
+			if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "0.9.47-1")) {	// commit dfd7e68ae83642f77c80590439353a0d66fe2961	// Bug 1201520 - [RFE] Usability suggestions to better identify a temporary (aka 24 hour) entitlement
 				for (SubscriptionPool subscriptionPool : availablePoolsForDerivedProductId) {
 					Assert.assertTrue(subscriptionPool.subscriptionType.endsWith(expectedTemporaryPoolIndicator),"Starting with candlepin version 0.9.47-1, a temporary subpool (indicated by subscription type ending in '"+expectedTemporaryPoolIndicator+"') for the derivedProductId '"+poolDerivedProductId+"' should NOW be available to a guest system when its virt_uuid is not on the host's list of guestIds: "+subscriptionPool);
 				}
