@@ -237,6 +237,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 			       , testCaseID = {"RHEL6-25823", "RHEL7-68145"})
 	@Test(	description="verify that only the expected rhsm.mo tranlation files are installed for each of the supported locales",
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1057532",
+					"blockedByBug-1441739",	// Zanata translations for subscription-manager 1.19 are not 100%
 					"blockedByBug-1391681",	// Zanata translations for subscription-manager 1.18 are not 100%
 					"blockedByBug-1340135",	// Zanata translations for subscription-manager 1.17 are not 100%
 					"blockedByBug-1303768",	// Zanata 1.16.X NOT 100%		// see Skip on Known Issue
