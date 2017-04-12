@@ -335,6 +335,7 @@ public class BashCompletionTests extends SubscriptionManagerCLITestScript{
 			if (bashCommand.startsWith("subscription-manager redeem ")) bugIds.add("1441397");
 			if (bashCommand.startsWith("subscription-manager version ")) bugIds.add("1441397");
 			if (bashCommand.startsWith("subscription-manager repos ")) bugIds.add("1441397");
+			if (bashCommand.startsWith("subscription-manager repo-override ")) bugIds.add("1441397");
 			if (bashCommand.startsWith("subscription-manager facts ")) bugIds.add("1441397");
 			if (bashCommand.startsWith("subscription-manager identity ")) bugIds.add("1441397");
 			if (bashCommand.startsWith("subscription-manager refresh ")) bugIds.add("1441397");
