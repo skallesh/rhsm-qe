@@ -2501,6 +2501,9 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, name+" BITS", providedProductIds.get(0), 1, attributes, null);
 		} catch (java.lang.AssertionError ae) {
 			String expectedProductCreationErrorMsg = "The attribute 'sockets' must be an integer value.";
+			if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.24-1")) {	// candlepin commit 92957a3f9eabb699832541031a5ebd15334886ca	// 1416825: Abstracted out property validation to new validator framework
+				expectedProductCreationErrorMsg="The attribute \"sockets\" must be a positive, integer value";
+			}
 			Assert.assertTrue(ae.getMessage().contains(expectedProductCreationErrorMsg), ae.getMessage()+" contains expected product creation failure message '"+expectedProductCreationErrorMsg+"'.");
 			break BUG_858286; 
 		}
