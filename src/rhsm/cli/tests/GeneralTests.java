@@ -491,7 +491,8 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 				expectedRequiresList.add("manual: yum >= 3.2.29-73");
 			}
 			
-			if		(clienttasks.isPackageVersion("subscription-manager",">=","1.19.4-1"))	expectedRequiresList.add("manual: python-rhsm >= 1.19.2");		// RHEL7.4	// commit a40f97e7cc5c5a660e5a25cca417e534d75f0edd
+			if		(clienttasks.isPackageVersion("subscription-manager",">=","1.19.6-1"))	expectedRequiresList.add("manual: python-rhsm >= 1.19.4");		// RHEL7.4	// commit 5164b07d478aa2349b57cbad884f4b18d0203c32
+			else if	(clienttasks.isPackageVersion("subscription-manager",">=","1.19.4-1"))	expectedRequiresList.add("manual: python-rhsm >= 1.19.2");		// RHEL7.4	// commit a40f97e7cc5c5a660e5a25cca417e534d75f0edd
 			else if	(clienttasks.isPackageVersion("subscription-manager",">=","1.19.0-1"))	expectedRequiresList.add("manual: python-rhsm >= 1.19.0");		// RHEL7.4	// commit 3cffd6948f939966774f39c9e79fb3c6b09df61a
 			else if	(clienttasks.isPackageVersion("subscription-manager",">=","1.17.1-1"))	expectedRequiresList.add("manual: python-rhsm >= 1.17.0");		// RHEL7.3	// commit 18d6aa6889b701288f66c14b2f313f04069aa753
 			else if	(clienttasks.isPackageVersion("subscription-manager",">=","1.15.1-1"))	expectedRequiresList.add("manual: python-rhsm >= 1.15.0");		// RHEL7.2	// commit a2a4794d9eb7b8d74b0eb4bd27d0b6974b87d716
