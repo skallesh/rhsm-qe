@@ -428,7 +428,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
 	               , testCaseID = {"RHEL6-21970", "RHEL7-51832"})
 	@Test(description = "verify End date and start date of the subscription is appropriate one when you attach a future subscription and then  heal after 1 min", groups = {
-			"VerifyStartEndDateOfSubscription", "blockedByBug-994853" }, enabled = true)
+			"VerifyStartEndDateOfSubscription", "blockedByBug-994853","blockedByBug-1440934" }, enabled = true)
 	public void VerifyStartEndDateOfSubscription() throws Exception {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null,
 				null, (String) null, null, null, null, true, null, null, null, null, null);
@@ -3155,7 +3155,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
 			       , testCaseID = {"RHEL6-21962", "RHEL7-51824"})
 	@Test(description = "verify  rhsmcertd is logging update failed (255)", groups = { "VerifyRHSMCertdLogging",
-			"blockedByBug-708512" }, enabled = true)
+			"blockedByBug-708512","blockedByBug-1440934" }, enabled = true)
 	public void VerifyRHSMCertdLogging() throws JSONException, Exception {
 		int autoAttachInterval = 1;
 
