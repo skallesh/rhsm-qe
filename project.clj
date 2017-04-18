@@ -31,6 +31,7 @@
                   :exclusions [org.testng/testng]]
                  [postgresql/postgresql "8.4-701.jdbc4"]
                  [slingshot "0.8.0"]
+                 [cheshire "5.7.0"]
                  ;[test_clj.testng "1.0.1-SNAPSHOT"]
                  [test-clj.testng "1.1.0-SNAPSHOT"]
                  [levand/immuconf "0.1.0"]
