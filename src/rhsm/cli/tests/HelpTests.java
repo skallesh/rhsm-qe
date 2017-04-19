@@ -1247,6 +1247,9 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		options.add("--heal-interval=MINUTES");					// added by bug 876753 as a deprecated, see --auto-attach-interval
 		options.add("-n, --now");
 		options.add("-d, --debug");
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.19.8-1")) {	// commit e9f8421285fc6541166065a8b55ee89b9a425246	RFE Bug 1435013: Add splay option to rhsmcertd, randomize over interval
+			options.add("-s, --no-splay");	// do not add an offset to the initial checks.
+		}
 		for (String helpOption : options.get(0).split(" *, *")) {	// "-?, --help"
 			String commandHelp = command+" "+helpOption;
 			List <String> usages = new ArrayList<String>();
