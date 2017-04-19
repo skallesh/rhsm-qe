@@ -1,0 +1,30 @@
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
+
+<!-- Running on the command line:  java -cp `lein classpath` org.testng.TestNG [testng options] [suitefile] -->
+<suite name="REST Tier1 TestSuite">
+
+	<listeners>
+		<listener class-name="com.redhat.qe.auto.testng.TestNGListener" />
+		<listener class-name="com.redhat.qe.auto.bugzilla.BugzillaTestNGListener" />
+		<listener class-name="org.uncommons.reportng.HTMLReporter" />
+		<listener class-name="org.testng.reporters.XMLReporter" />
+	</listeners>
+
+  <!-- REST TIER 1 TESTS -->
+
+  <test name="REST: Activation Key">
+    <classes>
+      <class name="rhsm.base.SubscriptionManagerBaseTestScript"/>
+      <class name="rhsm.rest.tests.activation_key_tests" />
+      <class name="rhsm.gui.tests.base" />
+    </classes>
+    <groups>
+      <run>
+        <include name="setup" />
+        <include name="tier1"/>
+        <include name="cleanup" />
+      </run>
+    </groups>
+  </test>
+
+</suite>
