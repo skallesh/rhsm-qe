@@ -378,6 +378,13 @@
   [username password owner-key keyname]
   (rest/post
    (str (server-url) "/owners/" owner-key "/activation_keys" )
-   (@config :username)
-   (@config :password)
+   username
+   password
    {:name keyname}))
+
+(defn list-activation-keys
+  [username password]
+  (rest/get
+   (str (server-url) "/activation_keys" )
+   username
+   password))
