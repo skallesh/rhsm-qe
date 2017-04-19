@@ -299,7 +299,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
 			       , testCaseID = {"RHEL6-20029", "RHEL7-51904"})
 	@Test(	description="Make sure the entitlement cert contains all expected OIDs",
-			groups={"VerifyEntitlementCertContainsExpectedOIDs_Test","AcceptanceTests","Tier1Tests","blockedByBug-744259","blockedByBug-754426","blockedByBug-962520","blockedByBug-997970","blockedByBug-1021581"},
+			groups={"VerifyEntitlementCertContainsExpectedOIDs_Test","AcceptanceTests","Tier1Tests","blockedByBug-744259","blockedByBug-754426","blockedByBug-962520","blockedByBug-997970","blockedByBug-1021581","blockedByBug-1443693"},
 			dataProvider="getAllAvailableSubscriptionPoolsData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
