@@ -4656,6 +4656,7 @@ if (false) {
 			defaultNames.add("proxy_port");
 			defaultNames.add("proxy_user");
 			defaultNames.add("proxy_password");
+			if (isPackageVersion("python-rhsm",">=","1.19.4-1")) defaultNames.add("no_proxy");	// subscription-manager/python-rhsm commit bd8b0538d7b0be7ee1e666ad5a66df80962c67d9 1420533: Add no_proxy option to API, config, UI
 			if (isPackageVersion("python-rhsm",">=","1.17.3-1")) defaultNames.add("server_timeout");	// python-rhsm commit 5780140650a59d45a03372a0390f92fd7c3301eb Allow users to set socket timeout.	// Bug 1346417 - Allow users to set socket timeout.
 
 		}
