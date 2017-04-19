@@ -45,7 +45,7 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
 			       , testCaseID = {"RHEL6-20027", "RHEL7-51043"})
 	@Test(	description="subscription-manager: import a valid version 1.0 entitlement cert/key bundle and verify subscriptions are consumed",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-962520"},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-962520","blockedByBug-1443693"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void ImportAnEntitlementVersion1CertAndKeyFromFile_Test() {
@@ -294,7 +294,7 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
 			       , testCaseID = {"RHEL6-36632", "RHEL7-51442"})
 	@Test(	description="subscription-manager: import a certificate for a future entitlement",
-			groups={"blockedByBug-860344"},
+			groups={"blockedByBug-860344","blockedByBug-1440180"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
 	public void ImportACertificateForAFutureEntitlement_Test() throws Exception {
@@ -697,8 +697,18 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 			EntitlementCert futureEntitlementCert = clienttasks.getEntitlementCertCorrespondingToSubscribedPool(futurePool);		
 			
 			Assert.assertNotNull(futureEntitlementCert,"Found the newly granted EntitlementCert on the client after subscribing to future subscription pool '"+futurePool.poolId+"'.");
+			
+			// TEMPORARY WORKAROUND
+			Boolean invokeWorkaroundWhileBugIsOpen = true;
+			String bugId="1440180";	// Bug 1440180 - Attaching a future pool that will start one year from today changes the supposedly inactive subscription to current subscription
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			if (invokeWorkaroundWhileBugIsOpen) {
+				log.warning("Skipping validity and startDate assertions on future entitlement while bug "+bugId+" is open.");
+			} else {
+			// END OF WORKAROUND
 			Assert.assertTrue(futureEntitlementCert.validityNotBefore.after(now), "The newly granted EntitlementCert is not valid until the future.  EntitlementCert: "+futureEntitlementCert);
 			Assert.assertTrue(futureEntitlementCert.orderNamespace.startDate.after(now), "The newly granted EntitlementCert's OrderNamespace starts in the future.  OrderNamespace: "+futureEntitlementCert.orderNamespace);	
+			}
 			
 			// remember the futureEntitlementCertFile
 			futureEntitlementCertFile = clienttasks.getEntitlementCertFileFromEntitlementCert(futureEntitlementCert);
