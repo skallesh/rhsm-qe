@@ -17,7 +17,7 @@
 
 ;; initialization of our testware
 (deftest register-with-creds-test
-  (is (contains? #{"Snow White" "Admin Owner"} (ct/get-owner-display-name (:username @c/config) (:password @c/config) (:owner-key @c/config)))))
+  (is (contains? #{"Snow White" "Admin Owner"} (ctasks/get-owner-display-name (:username @config) (:password @config) (:owner-key @config)))))
 
 (deftest create-activation-key-test
   (ctasks/create-activation-key (@config :username)
