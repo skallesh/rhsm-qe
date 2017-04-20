@@ -65,7 +65,7 @@ public class SubscriptionManagerTasks {
 	public final String rhsmConfFile		= "/etc/rhsm/rhsm.conf";
 	public final String rhsmLoggingConfFile	= "/etc/rhsm/logging.conf";	// NO LONGER EXISTS in subscription-manager-1.17.10-1	// RHEL7.3 commit d84b15f42c2e4521e130b939039960c0846b849c 1334916: Move logging configuration to rhsm.conf
 	public final String factsDir			= "/etc/rhsm/facts";
-	public final String rhsmUpdateFile		= "/var/run/rhsm/update";
+	public final String rhsmUpdateFile		= "/var/run/rhsm/update"; // during RHEL74: replaced by two files /var/run/rhsm/next_auto_attach_update and /var/run/rhsm/next_cert_check_update by commit e9f8421285fc6541166065a8b55ee89b9a425246 1435013: Add splay option to rhsmcertd, randomize over interval
 	public final String yumPluginConfFileForSubscriptionManager	= "/etc/yum/pluginconf.d/subscription-manager.conf"; // "/etc/yum/pluginconf.d/rhsmplugin.conf"; renamed by dev on 11/24/2010
 	public final String yumPluginConfFileForProductId			= "/etc/yum/pluginconf.d/product-id.conf";
 	public final String yumPluginConfFileForRhn					= "/etc/yum/pluginconf.d/rhnplugin.conf";
