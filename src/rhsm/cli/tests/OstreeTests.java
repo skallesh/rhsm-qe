@@ -101,7 +101,7 @@ import com.github.redhatqe.polarize.metadata.TestDefinition;
  *   (running code from the 'ostree' and 'rpm-ostree' rpms to do that)
  *   
  *  7. Does some name matching to see if content is the right one for currently running system.
- *     Currently, thats matching content label to 'b' from orgin and any existing 'remote' in /ostree/repo/config  <== Not sure what alikins is referring to here
+ *     Currently, thats matching content label to 'b' from origin and any existing 'remote' in /ostree/repo/config  <== Not sure what alikins is referring to here
  *
  *
  *  8. /ostree/repo/config is updated with new "remotes" that map to each content of type 'ostree'
@@ -144,7 +144,8 @@ public class OstreeTests extends SubscriptionManagerCLITestScript {
 		List<OstreeRepo> ostreeReposBefore = getCurrentlyConfiguredOstreeRepos(ostreeRepoConfigFile);
 		
 		// get the ostree origin refspec before attaching an ostree subscription
-		String ostreeOriginRefspecBefore = clienttasks.getConfFileParameter(ostreeOriginFile.getPath(),"origin","refspec");
+		// UPDATE: After subscription-manager-plugin-ostree-1.18.5-1 RFE Bug 1378495, the ostree origin refspec file is no longer touched
+		String ostreeOriginRefspecBefore = ostreeOriginFile==null?null:clienttasks.getConfFileParameter(ostreeOriginFile.getPath(),"origin","refspec");
 		
 		// also setup an old /ostree/repo/config file to test the migration clean up scenario described in https://bugzilla.redhat.com/show_bug.cgi?id=1152734#c5 
 		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.9-1")) {	// post committ 11b377f78dcb06d8dbff5645750791b729e20a0e
@@ -162,7 +163,8 @@ public class OstreeTests extends SubscriptionManagerCLITestScript {
 		List<OstreeRepo> ostreeReposAfter = getCurrentlyConfiguredOstreeRepos(ostreeRepoConfigFile);
 		
 		// get the ostree origin refspec after attaching an ostree subscription
-		String ostreeOriginRefspecAfter = clienttasks.getConfFileParameter(ostreeOriginFile.getPath(),"origin","refspec");
+		// UPDATE: After subscription-manager-plugin-ostree-1.18.5-1 RFE Bug 1378495, the ostree origin refspec file is no longer touched
+		String ostreeOriginRefspecAfter = ostreeOriginFile==null?null:clienttasks.getConfFileParameter(ostreeOriginFile.getPath(),"origin","refspec");
 		
 		// also assert the clean up of remotes from the old /ostree/repo/config file 
 		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.9-1")) {	// post committ 11b377f78dcb06d8dbff5645750791b729e20a0e
@@ -264,7 +266,7 @@ public class OstreeTests extends SubscriptionManagerCLITestScript {
 		ContentNamespace osTreeContentNamespaceMatchingInstalledProducts = null;
 		if (osTreeContentNamespacesMatchingInstalledProducts.isEmpty()) {
 			log.warning("This is probably NOT an atomic system.");
-			Assert.assertEquals(ostreeOriginRefspecAfter, ostreeOriginRefspecBefore, "When there are no installed products whose tags match the ostree ContentNamespace tags, then the ostree origin refspec in file '"+ostreeOriginFile+"' should remain unchanged after attaching subscription '"+osTreeSubscriptionPool.subscriptionName+"'.");
+			if (ostreeOriginRefspecBefore!=null) Assert.assertEquals(ostreeOriginRefspecAfter, ostreeOriginRefspecBefore, "When there are no installed products whose tags match the ostree ContentNamespace tags, then the ostree origin refspec in file '"+ostreeOriginFile+"' should remain unchanged after attaching subscription '"+osTreeSubscriptionPool.subscriptionName+"'.");
 		} else {
 			Assert.assertEquals(osTreeContentNamespacesMatchingInstalledProducts.size(), 1, "At most there should only be one entitled ostree ContentNamespace that matches the installed product certs.");
 			osTreeContentNamespaceMatchingInstalledProducts = osTreeContentNamespacesMatchingInstalledProducts.get(0);
@@ -275,8 +277,9 @@ public class OstreeTests extends SubscriptionManagerCLITestScript {
 			//	-bash-4.2# cat /ostree/deploy/rhel-atomic-host/deploy/7ea291ddcec9e2451616f77808386794a62befb274642e07e932bc4f817dd6a1.0.origin
 			//	[origin]
 			//	refspec=rhel-atomic-preview-ostree:rhel-atomic-host/7/x86_64/standard
-			Assert.assertEquals(ostreeOriginRefspecAfter.split(":")[1], ostreeOriginRefspecBefore.split(":")[1],"The remote path portion of the refspec in the ostree origin file '"+ostreeOriginFile+"' should remain unchanged after attaching atomic subscription '"+osTreeSubscriptionPool.subscriptionName+"'.");
-			Assert.assertEquals(ostreeOriginRefspecAfter.split(":")[0], osTreeContentNamespaceMatchingInstalledProducts.label,"The remote label portion of the refspec in the ostree origin file '"+ostreeOriginFile+"' should be updated to the newly entitled ostree content label after attaching atomic subscription '"+osTreeSubscriptionPool.subscriptionName+"'.");
+			// UPDATE: After subscription-manager-plugin-ostree-1.18.5-1 RFE Bug 1378495, the ostree origin refspec file is no longer touched
+			if (ostreeOriginRefspecAfter!=null) Assert.assertEquals(ostreeOriginRefspecAfter.split(":")[1], ostreeOriginRefspecBefore.split(":")[1],"The remote path portion of the refspec in the ostree origin file '"+ostreeOriginFile+"' should remain unchanged after attaching atomic subscription '"+osTreeSubscriptionPool.subscriptionName+"'.");
+			if (ostreeOriginRefspecAfter!=null) Assert.assertEquals(ostreeOriginRefspecAfter.split(":")[0], osTreeContentNamespaceMatchingInstalledProducts.label,"The remote label portion of the refspec in the ostree origin file '"+ostreeOriginFile+"' should be updated to the newly entitled ostree content label after attaching atomic subscription '"+osTreeSubscriptionPool.subscriptionName+"'.");
 		}
 		
 		// attempt to do an atomic upgrade
@@ -333,7 +336,7 @@ public class OstreeTests extends SubscriptionManagerCLITestScript {
 			
 			// when removing the entitlement, assert the ostree origin refspec remains unchanged
 			// TODO: This assertion may be changed by Bug 1193208 - 'atomic host upgrade' gives incorrect error after unregistering with subscription-manager
-			Assert.assertEquals(clienttasks.getConfFileParameter(ostreeOriginFile.getPath(),"origin","refspec"), ostreeOriginRefspecAfter, "The OSTree origin refspec in '"+ostreeOriginFile+"' should remain unchanged after removing subscription '"+osTreeSubscriptionPool.subscriptionName+"'.");
+			if (ostreeOriginFile!=null) Assert.assertEquals(clienttasks.getConfFileParameter(ostreeOriginFile.getPath(),"origin","refspec"), ostreeOriginRefspecAfter, "The OSTree origin refspec in '"+ostreeOriginFile+"' should remain unchanged after removing subscription '"+osTreeSubscriptionPool.subscriptionName+"'.");
 			
 			
 			// when removing the entitlement, assert that other ostree repos remain configured
@@ -357,6 +360,7 @@ public class OstreeTests extends SubscriptionManagerCLITestScript {
 				}
 			}
 //		}
+//MOVED BACK
 		
 		
 		// attempt to run the atomic upgrade without an entitlement
@@ -370,7 +374,7 @@ public class OstreeTests extends SubscriptionManagerCLITestScript {
 			//
 			//	error: No remote 'remote "rhel-atomic-host-beta-ostree"' found in /etc/ostree/remotes.d
 			//	-bash-4.2# 
-			String stdoutStartsWith = "Updating from: "+ostreeOriginRefspecAfter;
+			String stdoutStartsWith = "Updating from: "+ostreeOriginRefspecAfter;	// TODO: need to be run on Atomic and updated to make a better assert after the changes from subscription-manager-1.18.5-1 Bug 1378495 - [RFE] Do not change OStree origin refspec
 			Assert.assertEquals(atomicUpgradeResultAfterUnsubscribe.getExitCode(), new Integer(1) ,"Exitcode after attempting to do an atomic upgrade after removing the atomic subscription.");
 			Assert.assertTrue(atomicUpgradeResultAfterUnsubscribe.getStdout().trim().startsWith(stdoutStartsWith), "Stdout starts with '"+stdoutStartsWith+"' after attempting to do an atomic upgrade after removing the atomic subscription.");
 			Assert.assertEquals(atomicUpgradeResultAfterUnsubscribe.getStderr().trim(), "error: No remote 'remote \""+osTreeContentNamespaceMatchingInstalledProducts.label+"\"' found in /etc/ostree/remotes.d" ,"Exitcode after attempting to do an atomic upgrade after removing the atomic subscription.");
@@ -543,22 +547,31 @@ public class OstreeTests extends SubscriptionManagerCLITestScript {
 	
 	@BeforeGroups(groups={"setup"}, value={"subscribeAndUnsubscribeTests"})
 	protected void setupGiWrapperTool() {
-		if (clienttasks!=null) {
-			
-			// determine the path to giWrapperFilename (because it changed by commit 655b81b5271cba98143b36aaa33938b0abaf1820 )
-			String giWrapperFilename = "gi_wrapper.py";	// provided by subscription-manager-plugin-ostree
-			giWrapperFile = new File(client.runCommandAndWait("rpm -ql subscription-manager-plugin-ostree | grep -e "+giWrapperFilename+"$").getStdout().trim());
-			Assert.assertTrue(!giWrapperFile.getPath().isEmpty(),"Determined full path to source code filename '"+giWrapperFilename+"' (determined value '"+giWrapperFile.getPath()+"')");
+		if (clienttasks==null) return;
+		
+		// determine the path to giWrapperFilename (because it changed by commit 655b81b5271cba98143b36aaa33938b0abaf1820 )
+		String giWrapperFilename = "gi_wrapper.py";	// provided by subscription-manager-plugin-ostree
+		giWrapperFile = new File(client.runCommandAndWait("rpm -ql subscription-manager-plugin-ostree | grep -e "+giWrapperFilename+"$").getStdout().trim());
+		
+		// UPDATE: As of RFE Bug 1378495, subscription-manager will no longer touch the ostree origin file after attaching a subscription that provides content of type "ostree"
+		if (clienttasks.isPackageVersion("subscription-manager-plugin-ostree", ">=", "1.18.5-1")) {	//commit 689a7a8d8c0ee2f59781273e49fa6d9942bea5e9 1378495: Do not touch OSTree Origin files.	// Bug 1378495 - [RFE] Do not change OStree origin refspec
+			log.warning("Due to RFE Bug 1378495, this version of subscription-manager-plugin-ostree will no longer make any modifications to the ostree origin file.");
+			Assert.assertTrue(giWrapperFile.getName().isEmpty(),"Asserting that subscription-manager-plugin-ostree no longer provides the '"+giWrapperFilename+"' tool formerly used to find the path to the true ostreeOriginFile.");
+			giWrapperFile=null;	// was used to find the path to the true ostreeOriginFile
+			return;
+		}
+		
+		// assert that the giWrapperFilename (provided by subscription-manager-plugin-ostree) was determined
+		Assert.assertTrue(!giWrapperFile.getPath().isEmpty(),"Determined full path to source code filename '"+giWrapperFilename+"' (determined value '"+giWrapperFile.getPath()+"')");
 
-			if (!clienttasks.isPackageInstalled("ostree")) {	// create a fake /usr/share/rhsm/subscription_manager/plugin/ostree/gi_wrapper.py
-				// backup gi_wrapper.py
-				if (!RemoteFileTasks.testExists(client, giWrapperFile+".bak")) {
-					client.runCommandAndWait("cp -n "+giWrapperFile+" "+giWrapperFile+".bak");
-				}
-				// create a fake gi_wrapper.py tool that simply prints the path to an ostree origin file
-				client.runCommandAndWait("echo -e '#!/usr/bin/python\n# Print the path to the current deployed FAKE OSTree origin file.\nprint \""+ostreeOriginFile+"\"' > "+giWrapperFile);
-				
+		if (!clienttasks.isPackageInstalled("ostree")) {	// create a fake /usr/share/rhsm/subscription_manager/plugin/ostree/gi_wrapper.py
+			// backup gi_wrapper.py
+			if (!RemoteFileTasks.testExists(client, giWrapperFile+".bak")) {
+				client.runCommandAndWait("cp -n "+giWrapperFile+" "+giWrapperFile+".bak");
 			}
+			// create a fake gi_wrapper.py tool that simply prints the path to an ostree origin file
+			client.runCommandAndWait("echo -e '#!/usr/bin/python\n# Print the path to the current deployed FAKE OSTree origin file.\nprint \""+ostreeOriginFile+"\"' > "+giWrapperFile);
+			
 		}
 		
 		// get the real location of the ostreeOriginFile and save it
@@ -577,18 +590,26 @@ public class OstreeTests extends SubscriptionManagerCLITestScript {
 			
 	@BeforeGroups(groups={"setup"}, value={"subscribeAndUnsubscribeTests"}, dependsOnMethods={"setupGiWrapperTool"})
 	protected void setupOstreeOriginFile() {
-		if (clienttasks!=null) {
-			if (!clienttasks.isPackageInstalled("ostree")) {
-				if (!RemoteFileTasks.testExists(client, ostreeOriginFile.getPath())) {
-					client.runCommandAndWait("mkdir -p "+ostreeOriginFile.getParent());
-					client.runCommandAndWait("echo -e '[origin]\nrefspec=REMOTE:OSNAME/7/x86_64/standard' > "+ostreeOriginFile);
-				}
-			}
-			//	-bash-4.2# cat /ostree/deploy/rhel-atomic-host/deploy/7ea291ddcec9e2451616f77808386794a62befb274642e07e932bc4f817dd6a1.0.origin
-			//	[origin]
-			//	refspec=rhel-atomic-preview-ostree:rhel-atomic-host/7/x86_64/standard
-			
+		if (clienttasks==null) return;
+		
+		// UPDATE: As of RFE Bug 1378495, subscription-manager will no longer touch the ostree origin file after attaching a subscription that provides content of type "ostree"
+		if (clienttasks.isPackageVersion("subscription-manager-plugin-ostree", ">=", "1.18.5-1")) {	//commit 689a7a8d8c0ee2f59781273e49fa6d9942bea5e9 1378495: Do not touch OSTree Origin files.	// Bug 1378495 - [RFE] Do not change OStree origin refspec
+			log.warning("Due to RFE Bug 1378495, this version of subscription-manager-plugin-ostree will no longer make any modifications to the ostree origin file.");
+			ostreeOriginFile=null;	// set to null since this will no longer be touched by subscription-manager-plugin-ostree
+			return;
 		}
+		
+		// setup a faux ostree origin file to test subscription-manager-plugin-ostree functionality even when ostree is not installed.
+		if (!clienttasks.isPackageInstalled("ostree")) {
+			if (!RemoteFileTasks.testExists(client, ostreeOriginFile.getPath())) {
+				client.runCommandAndWait("mkdir -p "+ostreeOriginFile.getParent());
+				client.runCommandAndWait("echo -e '[origin]\nrefspec=REMOTE:OSNAME/7/x86_64/standard' > "+ostreeOriginFile);
+			}
+		}
+		//	-bash-4.2# cat /ostree/deploy/rhel-atomic-host/deploy/7ea291ddcec9e2451616f77808386794a62befb274642e07e932bc4f817dd6a1.0.origin
+		//	[origin]
+		//	refspec=rhel-atomic-preview-ostree:rhel-atomic-host/7/x86_64/standard
+			
 		// assert the ostreeOriginFile exists
 		Assert.assertTrue(RemoteFileTasks.testExists(client, ostreeOriginFile.getPath()), "Current deployed OSTree origin file '"+ostreeOriginFile+"' exists.");
 
@@ -635,7 +656,7 @@ public class OstreeTests extends SubscriptionManagerCLITestScript {
 	protected final File oldOstreeRepoConfigFile = new File("/ostree/repo/config");
 	protected File ostreeRepoConfigFile = null;
 	protected File giWrapperFile = null;
-	protected File ostreeOriginFile = new File("/ostree/deploy/OSNAME/deploy/CHECKSUM.0.origin");
+	protected File ostreeOriginFile = new File("/ostree/deploy/OSNAME/deploy/CHECKSUM.0.origin");	// OSNAME and CHECKSUM are placeholders
 	protected final File ostreeContentPluginFile = new File("/etc/rhsm/pluginconf.d/ostree_content.OstreeContentPlugin.conf");
 	
 	
