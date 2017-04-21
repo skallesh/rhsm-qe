@@ -491,7 +491,8 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 				expectedRequiresList.add("manual: yum >= 3.2.29-73");
 			}
 			
-			if		(clienttasks.isPackageVersion("subscription-manager",">=","1.19.6-1"))	expectedRequiresList.add("manual: python-rhsm >= 1.19.4");		// RHEL7.4	// commit 5164b07d478aa2349b57cbad884f4b18d0203c32
+			if		(clienttasks.isPackageVersion("subscription-manager",">=","1.19.8-1"))	expectedRequiresList.add("manual: python-rhsm >= 1.19.5");		// RHEL7.4	// commit 17108bd2e207358d2f7970d0924b51a0c5bb2dc5
+			else if	(clienttasks.isPackageVersion("subscription-manager",">=","1.19.6-1"))	expectedRequiresList.add("manual: python-rhsm >= 1.19.4");		// RHEL7.4	// commit 5164b07d478aa2349b57cbad884f4b18d0203c32
 			else if	(clienttasks.isPackageVersion("subscription-manager",">=","1.19.4-1"))	expectedRequiresList.add("manual: python-rhsm >= 1.19.2");		// RHEL7.4	// commit a40f97e7cc5c5a660e5a25cca417e534d75f0edd
 			else if	(clienttasks.isPackageVersion("subscription-manager",">=","1.19.0-1"))	expectedRequiresList.add("manual: python-rhsm >= 1.19.0");		// RHEL7.4	// commit 3cffd6948f939966774f39c9e79fb3c6b09df61a
 			else if	(clienttasks.isPackageVersion("subscription-manager",">=","1.17.1-1"))	expectedRequiresList.add("manual: python-rhsm >= 1.17.0");		// RHEL7.3	// commit 18d6aa6889b701288f66c14b2f313f04069aa753
@@ -580,6 +581,9 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 					"postun: scrollkeeper",
 					"manual: usermode-gtk"
 			}));
+			if (clienttasks.isPackageVersion("subscription-manager-gui",">=","1.19.9-1")) {	// commit 971bb300b1e07d0284c23b1b292a70c674b0037a 1441698: Install missing rpm package with fonts.
+				expectedRequiresList.add("manual: dejavu-sans-fonts");	// when gtk3 is NOT installed (yet gtk2 is installed)
+			}
 		}
 		if (clienttasks.redhatReleaseX.equals("7")) {
 			expectedRequiresList.addAll(Arrays.asList(new String[]{
@@ -603,6 +607,9 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 				expectedRequiresList.remove("manual: pygtk2-libglade");
 				expectedRequiresList.add("manual: gtk3");
 				expectedRequiresList.add("manual: pygobject3");
+			}
+			if (clienttasks.isPackageVersion("subscription-manager-gui",">=","1.19.9-1")) {	// commit 971bb300b1e07d0284c23b1b292a70c674b0037a 1441698: Install missing rpm package with fonts.
+				expectedRequiresList.add("manual: abattis-cantarell-fonts");	// when gtk3 is installed
 			}
 		}
 		if (clienttasks.isPackageVersion("subscription-manager-gui",">=","1.14.8-1")) {		// commit dc727c4adef8cdc49e319f2d90738e848061da78  Adrian says that these imports were never used
