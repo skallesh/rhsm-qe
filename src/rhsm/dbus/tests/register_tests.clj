@@ -36,7 +36,7 @@ When I
   register
   [_ socket]
   (run-command "subscription-manager unregister")
-  (let [response   (-> #spy/d (format "busctl --address=unix:abstract=%s call com.redhat.RHSM1 /com/redhat/RHSM1/Register com.redhat.RHSM1.Register Register 'sssa{sv}' %s %s %s 0"
+  (let [response   (-> (format "busctl --address=unix:abstract=%s call com.redhat.RHSM1 /com/redhat/RHSM1/Register com.redhat.RHSM1.Register Register 'sssa{sv}' %s %s %s 0"
                                       socket (@config :owner-key) (@config :username) (@config :password))
                        run-command
                        :stdout
