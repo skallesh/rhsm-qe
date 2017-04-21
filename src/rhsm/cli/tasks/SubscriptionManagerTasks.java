@@ -1702,11 +1702,19 @@ if (false) {
 
 		String rhsmcertdLogResult = RemoteFileTasks.getTailFromMarkedFile(sshCommandRunner, rhsmcertdLogFile, rhsmcertdLogMarker, null).trim();
 		Integer waitSecondsForFirstUpdateCheck = 120; // this is a dev hard coded wait (seconds) before the first check for updates is attempted  REFERENCE BUG 818978#c2
-		String rhsmcertdLogResultExpected;
-		rhsmcertdLogResultExpected = String.format(" Starting rhsmcertd...");																										Assert.assertTrue(rhsmcertdLogResult.contains(rhsmcertdLogResultExpected),"Tail of rhsmcertd log contains the expected restart message '"+rhsmcertdLogResultExpected+"'.");
-		//rhsmcertdLogResultExpected = String.format(" Healing interval: %.1f minute(s) [%d second(s)]",healFrequency*1.0,healFrequency*60);/* msg was changed by bug 882459*/		Assert.assertTrue(rhsmcertdLogResult.contains(rhsmcertdLogResultExpected),"Tail of rhsmcertd log contains the expected restart message '"+rhsmcertdLogResultExpected+"'.");
-		rhsmcertdLogResultExpected = String.format(" Auto-attach interval: %.1f minute(s) [%d second(s)]",healFrequency*1.0,healFrequency*60);										Assert.assertTrue(rhsmcertdLogResult.contains(rhsmcertdLogResultExpected),"Tail of rhsmcertd log contains the expected restart message '"+rhsmcertdLogResultExpected+"'.");
-		rhsmcertdLogResultExpected = String.format(" Cert check interval: %.1f minute(s) [%d second(s)]",certFrequency*1.0,certFrequency*60);										Assert.assertTrue(rhsmcertdLogResult.contains(rhsmcertdLogResultExpected),"Tail of rhsmcertd log contains the expected restart message '"+rhsmcertdLogResultExpected+"'.");
+		String rhsmcertdLogExpectedStartingRhsmMsg = String.format(" Starting rhsmcertd...");
+		String rhsmcertdLogExpectedHealIntervalMsg = String.format(" Healing interval: %.1f minute(s) [%d second(s)]",healFrequency*1.0,healFrequency*60);/* msg was changed by bug 882459*/
+		rhsmcertdLogExpectedHealIntervalMsg = String.format(" Auto-attach interval: %.1f minute(s) [%d second(s)]",healFrequency*1.0,healFrequency*60);
+		if (isPackageVersion("subscription-manager",">=","1.19.9-1")) {	// commit e0e1a6b3e80c33e04fe79eaa696a821881f95f35 1443205: Simplify rhsmcertd log message plurality
+			rhsmcertdLogExpectedHealIntervalMsg = String.format(" Auto-attach interval: %.1f minutes [%d seconds]",healFrequency*1.0,healFrequency*60);
+		}
+		String rhsmcertdLogExpectedCertIntervalMsg = String.format(" Cert check interval: %.1f minute(s) [%d second(s)]",certFrequency*1.0,certFrequency*60);
+		if (isPackageVersion("subscription-manager",">=","1.19.9-1")) {	// commit e0e1a6b3e80c33e04fe79eaa696a821881f95f35 1443205: Simplify rhsmcertd log message plurality
+			rhsmcertdLogExpectedCertIntervalMsg = String.format(" Cert check interval: %.1f minutes [%d seconds]",certFrequency*1.0,certFrequency*60);
+		}
+		Assert.assertTrue(rhsmcertdLogResult.contains(rhsmcertdLogExpectedStartingRhsmMsg),"Tail of rhsmcertd log contains the expected restart message '"+rhsmcertdLogExpectedStartingRhsmMsg+"'.");
+		Assert.assertTrue(rhsmcertdLogResult.contains(rhsmcertdLogExpectedHealIntervalMsg),"Tail of rhsmcertd log contains the expected restart message '"+rhsmcertdLogExpectedHealIntervalMsg+"'.");
+		Assert.assertTrue(rhsmcertdLogResult.contains(rhsmcertdLogExpectedCertIntervalMsg),"Tail of rhsmcertd log contains the expected restart message '"+rhsmcertdLogExpectedCertIntervalMsg+"'.");
 
 		if (isPackageVersion("subscription-manager",">=","1.19.8-1")) {	// commit e9f8421285fc6541166065a8b55ee89b9a425246 RFE Bug 1435013: Add splay option to rhsmcertd, randomize over interval
 			// The new splay algorithm from RFE Bug 1435013 will wait a hard coded 2 minutes...
@@ -1730,27 +1738,33 @@ if (false) {
 			
 			// assert the wait time for auto-attach
 			String rhsmcertdLogResultExpectedRegex = String.format(" Waiting %.1f minute\\(s\\) plus (\\d+) splay second\\(s\\) \\[(\\d+) seconds\\(s\\) totals\\] before performing first auto-attach\\.",waitSecondsForFirstUpdateCheck/60.0);
+			if (isPackageVersion("subscription-manager",">=","1.19.9-1")) {	// commit e0e1a6b3e80c33e04fe79eaa696a821881f95f35 1443205: Simplify rhsmcertd log message plurality
+				rhsmcertdLogResultExpectedRegex = String.format(" Waiting %.1f minutes plus (\\d+) splay seconds \\[(\\d+) seconds total\\] before performing first auto-attach\\.",waitSecondsForFirstUpdateCheck/60.0);
+			}
 			Assert.assertTrue(SubscriptionManagerCLITestScript.doesStringContainMatches(rhsmcertdLogResult, rhsmcertdLogResultExpectedRegex),"Tail of rhsmcertd log contains the expected restart regex message '"+rhsmcertdLogResultExpectedRegex+"'.");
 			int splayHealSeconds = Integer.valueOf(SubscriptionManagerCLITestScript.getSubstringMatches(SubscriptionManagerCLITestScript.getSubstringMatches(rhsmcertdLogResult, rhsmcertdLogResultExpectedRegex).get(0), "(\\d+) splay").get(0).split(" ")[0]);	// 129 splay second(s)
 			int totalHealSeconds = Integer.valueOf(SubscriptionManagerCLITestScript.getSubstringMatches(SubscriptionManagerCLITestScript.getSubstringMatches(rhsmcertdLogResult, rhsmcertdLogResultExpectedRegex).get(0), "(\\d+) seconds").get(0).split(" ")[0]);	// 249 seconds(s) totals
-			Assert.assertTrue(0<=splayHealSeconds && splayHealSeconds<=certFrequency*60/*seconds*/, "The splay ("+splayHealSeconds+") seconds is greater than or equal to zero and less than or equal to the auto-attach interval ("+healFrequency*60+" seconds) ");
+			Assert.assertTrue(0<=splayHealSeconds && splayHealSeconds<=healFrequency*60/*seconds*/, "The splay ("+splayHealSeconds+") seconds is greater than or equal to zero and less than or equal to the auto-attach interval ("+healFrequency*60+" seconds) ");
 			Assert.assertEquals(totalHealSeconds, waitSecondsForFirstUpdateCheck+splayHealSeconds, "The total wait time in seconds for the first auto-attach after restarting rhsmcertd.");
-			if (Boolean.valueOf(splayConfig).equals(false)) Assert.assertEquals(splayHealSeconds,0,"When the rhsmcertd.splay configuration in '"+rhsmConfFile+"' is off, the splay seconds for auto-attach should be zero.");
+			if (splayConfig.equals("0")||splayConfig.toLowerCase().equals("false")) Assert.assertEquals(splayHealSeconds,0,"When the rhsmcertd.splay configuration in '"+rhsmConfFile+"' is off, the splay seconds for auto-attach should be zero.");
 				
 			// assert the wait time for cert check
 			rhsmcertdLogResultExpectedRegex = String.format(" Waiting %.1f minute\\(s\\) plus (\\d+) splay second\\(s\\) \\[(\\d+) seconds\\(s\\) totals\\] before performing first cert check\\.",waitSecondsForFirstUpdateCheck/60.0);
+			if (isPackageVersion("subscription-manager",">=","1.19.9-1")) {	// commit e0e1a6b3e80c33e04fe79eaa696a821881f95f35 1443205: Simplify rhsmcertd log message plurality
+				rhsmcertdLogResultExpectedRegex = String.format(" Waiting %.1f minutes plus (\\d+) splay seconds \\[(\\d+) seconds total\\] before performing first cert check\\.",waitSecondsForFirstUpdateCheck/60.0);
+			}
 			Assert.assertTrue(SubscriptionManagerCLITestScript.doesStringContainMatches(rhsmcertdLogResult, rhsmcertdLogResultExpectedRegex),"Tail of rhsmcertd log contains the expected restart regex message '"+rhsmcertdLogResultExpectedRegex+"'.");
 			int splayCertSeconds = Integer.valueOf(SubscriptionManagerCLITestScript.getSubstringMatches(SubscriptionManagerCLITestScript.getSubstringMatches(rhsmcertdLogResult, rhsmcertdLogResultExpectedRegex).get(0), "(\\d+) splay").get(0).split(" ")[0]);	// 86 splay second(s)
 			int totalCertSeconds = Integer.valueOf(SubscriptionManagerCLITestScript.getSubstringMatches(SubscriptionManagerCLITestScript.getSubstringMatches(rhsmcertdLogResult, rhsmcertdLogResultExpectedRegex).get(0), "(\\d+) seconds").get(0).split(" ")[0]);	// 206 seconds(s) totals
 			Assert.assertTrue(0<=splayCertSeconds && splayCertSeconds<=certFrequency*60/*seconds*/, "The splay ("+splayCertSeconds+") seconds is greater than or equal to zero and less than or equal to the cert check interval ("+certFrequency*60+" seconds) ");
 			Assert.assertEquals(totalCertSeconds, waitSecondsForFirstUpdateCheck+splayCertSeconds, "The total wait time in seconds for the first cert check after restarting rhsmcertd.");
-			if (Boolean.valueOf(splayConfig).equals(false)) Assert.assertEquals(splayCertSeconds,0,"When the rhsmcertd.splay configuration in '"+rhsmConfFile+"' is off, the splay seconds for cert check should be zero.");
+			if (splayConfig.equals("0")||splayConfig.toLowerCase().equals("false")) Assert.assertEquals(splayCertSeconds,0,"When the rhsmcertd.splay configuration in '"+rhsmConfFile+"' is off, the splay seconds for cert check should be zero.");
 	
-			// Waiting 120 second(s) [2.0 minute(s)] PLUS THE SPLAY DELAYS before running updates.
+			// Waiting 120 second(s) [2.0 minute(s)] PLUS THE MAXIMUM SPLAY DELAYS before asserting updates.
 			SubscriptionManagerCLITestScript.sleep(Math.max(totalHealSeconds, totalCertSeconds)*1000/*milliseconds*/);
 		} else {
-			rhsmcertdLogResultExpected = String.format(" Waiting %d second(s) [%.1f minute(s)] before running updates.",waitSecondsForFirstUpdateCheck,waitSecondsForFirstUpdateCheck/60.0 );
-			Assert.assertTrue(rhsmcertdLogResult.contains(rhsmcertdLogResultExpected),"Tail of rhsmcertd log contains the expected restart message '"+rhsmcertdLogResultExpected+"'.");
+			String rhsmcertdLogExpectedWaitMsg = String.format(" Waiting %d second(s) [%.1f minute(s)] before running updates.",waitSecondsForFirstUpdateCheck,waitSecondsForFirstUpdateCheck/60.0 );
+			Assert.assertTrue(rhsmcertdLogResult.contains(rhsmcertdLogExpectedWaitMsg),"Tail of rhsmcertd log contains the expected restart message '"+rhsmcertdLogExpectedWaitMsg+"'.");
 			
 			// Waiting 120 second(s) [2.0 minute(s)] before running updates.
 			SubscriptionManagerCLITestScript.sleep(waitSecondsForFirstUpdateCheck*1000/*milliseconds*/);
