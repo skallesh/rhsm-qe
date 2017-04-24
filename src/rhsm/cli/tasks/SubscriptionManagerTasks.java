@@ -7938,6 +7938,24 @@ if (false) {
 		}
 		// END OF WORKAROUND
 		
+		// TEMPORARY WORKAROUND FOR BUG
+		//	201704051554:27.985 - FINE: ssh root@bkr-hv01-guest16.dsal.lab.eng.bos.redhat.com rhnreg_ks --serverUrl=https://rhsm-sat5.usersys.redhat.com/XMLRPC --username=rhsm-client --password=REDACTED --profilename=rhsm-automation.bkr-hv01-guest16.dsal.lab.eng.bos.redhat.com --force --norhnsd --nohardware --nopackages --novirtinfo
+		//	201704051554:32.552 - FINE: Stdout: 
+		//	201704051554:32.552 - FINE: Stderr: 
+		//	Traceback (most recent call last):
+		//	  File "/usr/sbin/rhn_check", line 54, in <module>
+		//	    from rhn.tb import raise_with_tb
+		//	ImportError: No module named tb
+		if (result.getStderr().contains("ImportError: No module named tb")) {
+			String bugId = "1439139"; // Bug 1439139 - [RHEL7.4] rhn_check - ImportError: No module named i18n 
+			boolean invokeWorkaroundWhileBugIsOpen = true;
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			if (invokeWorkaroundWhileBugIsOpen) {
+				throw new SkipException("The remainder of this test is blocked by bug "+bugId+".  There is no workaround.");
+			}
+		}
+		// END OF WORKAROUND
+		
 		return result;
 	}
 	
