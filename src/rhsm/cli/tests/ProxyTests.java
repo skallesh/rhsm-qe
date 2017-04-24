@@ -1619,6 +1619,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 
 
 
+	@SuppressWarnings("unused")
 	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
 			       , testCaseID = {"RHEL6-22311", "RHEL7-51636"})
 	@Test(	description="subscription-manager : register when no_proxy environment variable matches our hostname regardless of proxy configurations and environment variable (Positive and Negative Variations)",
@@ -1812,7 +1813,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 			proxyLogMarker = System.currentTimeMillis()+" Testing 2 "+moduleTask+" AttemptsToVerifyHonoringNoProxyEnvironmentVariable_Test from "+clienttasks.hostname+"...";
 			RemoteFileTasks.markFile(proxyRunner, proxyLog, proxyLogMarker);
 			
-			// attempt to register while a no_proxy environment variable has been defined with a list of proxy servers to ignore
+			// attempt to register while a no_proxy environment variable that has been defined with a list of proxy servers to ignore
 			attemptResult = client.runCommandAndWait(noProxyEnvVar+" "+httpProxyEnvVar+" "+clienttasks.registerCommand(username, password, org, null, null, null, null, null, null, null, (List<String>)null, null, null, null, true, null, proxy, proxyuser, proxypassword, null));
 			if (exitCode==Integer.valueOf(69)) {	// EX_UNAVAILABLE	// indicative of a bad proxy
 				// when the proxy is unavailable, subscription-manager now aborts before making any decisions about no_proxy environment variables... Bug 1176219: Error out if bad proxy settings detected
@@ -1832,6 +1833,11 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
 				if (invokeWorkaroundWhileBugIsOpen) {
 					log.warning("Skipping assertion that tail of proxy server log '"+proxyLog+"' contains no attempts from "+ipv4_address+" to the candlepin server while bug '"+bugId+"' is open.");
+				} else
+				// END OF WORKAROUND
+				// PERAMANENT WORKAROUND
+				if (true) {
+					log.warning("Permanently skipping assertion that tail of proxy server log '"+proxyLog+"' contains no attempts from "+ipv4_address+" to the candlepin server when the NO_PROXY environment variable matches the server.hostname because the solution for bug '"+bugId+"' was to introduce a new server.no_proxy configuration that could be read by the rhsmd process which runs outside the shell that the NO_PROXY environment variable was defined.");
 				} else
 				// END OF WORKAROUND
 				Assert.assertTrue(proxyLogResult.isEmpty(), "The tail of proxy server log '"+proxyLog+"' following marker '"+proxyLogMarker+"' contains no attempts from "+ipv4_address+" to the candlepin server.");
