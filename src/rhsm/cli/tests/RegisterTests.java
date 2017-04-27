@@ -1766,7 +1766,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager: register with LC_ALL=C should succeed.",
-			groups={"blockedByBug-1445387"},
+			groups={"blockedByBug-1445387","Tier1Tests"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void RegisterWithLC_ALL_C_Test() {
