@@ -1765,6 +1765,29 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
+	@Test(	description="subscription-manager: register with LC_ALL=C should succeed.",
+			groups={"blockedByBug-1445387"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void RegisterWithLC_ALL_C_Test() {
+		
+		// make sure we are not registered
+		clienttasks.unregister(null, null, null, null);
+		
+		// register normally without specifying LC_ALL=C
+		SSHCommandResult sshCommandResultWithoutLC_ALL_C = clienttasks.register_(sm_clientUsername,sm_clientPassword, sm_clientOrg, null,null,null,null,null,null,null,(String)null,null,null,null,null,null,null,null,null, null);
+		String consumeridWithoutLC_ALL_C = clienttasks.getCurrentConsumerId(sshCommandResultWithoutLC_ALL_C);
+		clienttasks.unregister_(null, null, null, null);
+		
+		// register while specifying LC_ALL=C
+		SSHCommandResult sshCommandResultWithLC_ALL_C = client.runCommandAndWait("LC_ALL=C "+clienttasks.registerCommand(sm_clientUsername,sm_clientPassword, sm_clientOrg, null,null,null,null,null,null,null,(String)null,null,null,null,null,null,null,null,null, null));
+		String consumeridWithLC_ALL_C = clienttasks.getCurrentConsumerId(sshCommandResultWithLC_ALL_C);
+		clienttasks.unregister_(null, null, null, null);
+		
+		// compared register results should be identical regardless of LC_ALL=C
+		Assert.assertEquals(sshCommandResultWithLC_ALL_C.toString().replace(consumeridWithLC_ALL_C, "{UUID}"), sshCommandResultWithoutLC_ALL_C.toString().toString().replace(consumeridWithoutLC_ALL_C, "{UUID}"), "Ignoring the actual consumerid, the results from register with and without LC_ALL=C are identical.");
+	}
+	
 	
 	// Candidates for an automated Test:
 	// TODO Bug 627685 - subscription-manager-cli reregister without specifying consumerid may unintentionally remove entitlements https://github.com/RedHatQE/rhsm-qe/issues/181
