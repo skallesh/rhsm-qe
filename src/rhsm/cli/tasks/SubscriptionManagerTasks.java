@@ -8162,7 +8162,7 @@ if (false) {
 	 * It is also very useful to run an rhsm cli command in the native local (with lang=null)
 	 * when the normal sshCommandRunner encounters:<br>
 	 * Stderr: 'ascii' codec can't decode byte 0xe2 in position 55: ordinal not in range(128)
-	 * @param localeVariable - either "LANG" or "LC_ALL" or somethinf else.  run locale on a command line to see variables; passing null will default to LANG
+	 * @param localeVariable - either "LANG" or "LC_ALL" or something else.  run locale on a command line to see variables; passing null will default to LANG
 	 * @param lang - "as_IN","bn_IN","de_DE", etc  See TranslationTests.supportedLangs
 	 * @param rhsmCommand
 	 * @return
