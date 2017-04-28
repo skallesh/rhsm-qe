@@ -34,7 +34,13 @@
                    :keepalive 30000})
 
 (defn ^{Test {:groups ["activation-key"
-                       "tier1"]}
+                       "tier1"]
+              :description "Given the candlepin knows an owner {owner}
+When a rest client sends POST to '/owners/{user}/activation_keys'
+   with a json data {'name': '{owner}'}
+Then the candlepin replies a status 200
+  and the answer is the same as the candlepin returns
+  for an ask GET to '/activation_keys/{returned-activation-key id}'"}
         TestDefinition {:projectID [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]}}
   create_activation_key
   [ts]
