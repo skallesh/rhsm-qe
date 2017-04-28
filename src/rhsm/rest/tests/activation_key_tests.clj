@@ -36,7 +36,7 @@
 (defn ^{Test {:groups ["activation-key"
                        "tier1"]
               :description "Given the candlepin knows an owner {owner}
-When a rest client sends POST to '/owners/{user}/activation_keys'
+When a rest client sends POST to '/owners/{owner key}/activation_keys'
    with a json data {'name': '{owner}'}
 Then the candlepin replies a status 200
   and the answer is the same as the candlepin returns
@@ -63,6 +63,11 @@ Then the candlepin replies a status 200
 
 (defn ^{Test {:groups ["activation-key"
                        "tier1"]
+              :description "Given the candlepin knows and owner {owner}
+   and his activation key {activation-key}
+When a rest client sends DELETE to '/activation_keys/{activation-key id}'
+Then the candlepin replises a status 204
+  and the answer contains of '' as body."
               :dataProvider "new-activation-key"}
         TestDefinition {:projectID [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]}}
   delete_activation_key
@@ -75,7 +80,13 @@ Then the candlepin replies a status 200
       (verify (= (-> response :status) 204)))))
 
 (defn ^{Test {:groups ["activation-key"
-                       "tier2"]}
+                       "tier2"]
+              :description "Given the candlepin knows an owner {owner}
+When a rest client creates an activation key {activation-key}
+  and the client deletes the activation key
+  and the client sends an ask GET '/owners/{owner key}/activation_keys/{activation-key id}
+Then the candlepin replies a status 404
+  and the response body is 'ActivationKey with id {activation-key id} could not be found.'"}
         TestDefinition {:projectID [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]}}
   create_activation_key_and_delete_it
   [ts]
