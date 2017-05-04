@@ -3597,21 +3597,40 @@ if (false) {
 	public SSHCommandResult register(String username, String password, String org, String environment, ConsumerType type, String name, String consumerid, Boolean autosubscribe, String servicelevel, String release, List<String> activationkeys, String serverurl, Boolean insecure, String baseurl, Boolean force, Boolean autoheal, String proxy, String proxyuser, String proxypassword, String noproxy) {
 		
 		boolean alreadyRegistered = this.currentlyRegisteredUsername==null? false:true;
+		String currentConsumerId = alreadyRegistered? getCurrentConsumerId():null;
 		String msg;
 		SSHCommandResult sshCommandResult = register_(username, password, org, environment, type, name, consumerid, autosubscribe, servicelevel, release, activationkeys, serverurl, insecure, baseurl, force, autoheal, proxy, proxyuser, proxypassword, noproxy);
 	
 		// assert results when already registered
-		if ((force==null || !force) && alreadyRegistered) {
-			if (isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
-				Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(64), "The exit code from the register command indicates we are already registered.");
-				Assert.assertEquals(sshCommandResult.getStderr().trim(), "This system is already registered. Use --force to override");	
-				Assert.assertEquals(sshCommandResult.getStdout().trim(), "");	
-			} else {
-				Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(1), "The exit code from the register command indicates we are already registered.");
-				Assert.assertEquals(sshCommandResult.getStdout().trim(), "This system is already registered. Use --force to override");	
-				Assert.assertEquals(sshCommandResult.getStderr().trim(), "");	
+		if (alreadyRegistered) {
+			if (force==null || !force) { // already registered while attempting to register without using force
+				if (isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+					Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(64), "The exit code from the register command indicates we are already registered.");
+					Assert.assertEquals(sshCommandResult.getStderr().trim(), "This system is already registered. Use --force to override");	
+					Assert.assertEquals(sshCommandResult.getStdout().trim(), "");	
+				} else {
+					Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(1), "The exit code from the register command indicates we are already registered.");
+					Assert.assertEquals(sshCommandResult.getStdout().trim(), "This system is already registered. Use --force to override");	
+					Assert.assertEquals(sshCommandResult.getStderr().trim(), "");	
+				}
+				return sshCommandResult;
 			}
-			return sshCommandResult;
+			if (force!=null && force) { // already registered while attempting to register with force
+				//	201705041325:40.743 - FINE: ssh root@jsefler-rhel7.usersys.redhat.com subscription-manager register --username=testuser1 --password=REDACTED --org=admin --force
+				//	201705041325:42.367 - FINE: Stdout: 
+				//	Unregistering from: jsefler-candlepin.usersys.redhat.com:8443/candlepin
+				//	The system with UUID 855e98bb-e44e-4acc-92b8-e772e3364411 has been unregistered
+				//	All local data removed
+				//	Registering to: jsefler-candlepin.usersys.redhat.com:8443/candlepin
+				//	The system has been registered with ID: ba4d8ea1-8be2-40d0-b77e-f0c9ed2c0ce8 
+				//	201705041325:42.374 - FINE: Stderr: 
+				//	201705041325:42.376 - FINE: ExitCode: 0
+				if (isPackageVersion("subscription-manager",">=","1.19.11-1")) {	// commit 217c3863448478d06c5008694e327e048cc54f54 Bug 1443101: Provide feedback for force register
+					String unregisterFromServer = getConfFileParameter(rhsmConfFile, "server", "hostname")+":"+ getConfFileParameter(rhsmConfFile, "server", "port")+ getConfFileParameter(rhsmConfFile, "server", "prefix");
+					String unregisterFromMsg = String.format("Unregistering from: %s\nThe system with UUID %s has been unregistered\nAll local data removed",unregisterFromServer, currentConsumerId);	// introduced by commit 217c3863448478d06c5008694e327e048cc54f54 Bug 1443101: Provide feedback for force register 
+					Assert.assertTrue(sshCommandResult.getStdout().trim().startsWith(unregisterFromMsg), "Stdout from an attempt to register with force while already being registered starts with message '"+unregisterFromMsg+"'.");
+				}
+			}
 		}
 
 		// assert results for a successful registration exit code
@@ -4813,9 +4832,10 @@ if (false) {
 	public SSHCommandResult unregister(String proxy, String proxyuser, String proxypassword, String noproxy) {
 		SSHCommandResult sshCommandResult = unregister_(proxy, proxyuser, proxypassword, noproxy);
 		
-		// assert results for a successful registration
+		// assert results for a successful de-registration
 		if (sshCommandResult.getExitCode()==0) {
 			String unregisterSuccessMsg = "System has been unregistered.";
+			String unregisterFromMsg = "Unregistering from: "/*hostname:port/prefix*/;	// introduced by commit 217c3863448478d06c5008694e327e048cc54f54 Bug 1443101: Provide feedback for force register 
 			
 			// TEMPORARY WORKAROUND FOR BUG
 			boolean invokeWorkaroundWhileBugIsOpen = false;	// Status: 	VERIFIED
@@ -4831,7 +4851,12 @@ if (false) {
 				Assert.assertTrue(sshCommandResult.getStdout().trim().contains(unregisterSuccessMsg), "The unregister command was a success.");
 			} else
 			// END OF WORKAROUND
-			Assert.assertTrue(sshCommandResult.getStdout().trim().equals(unregisterSuccessMsg), "Stdout from an attempt to unregister contains successful message '"+unregisterSuccessMsg+"'.");
+			if (isPackageVersion("subscription-manager",">=","1.19.11-1")) {	// commit 217c3863448478d06c5008694e327e048cc54f54 Bug 1443101: Provide feedback for force register
+				Assert.assertTrue(sshCommandResult.getStdout().trim().startsWith(unregisterFromMsg), "Stdout from an attempt to unregister starts with message '"+unregisterFromMsg+"'.");
+				Assert.assertTrue(sshCommandResult.getStdout().trim().endsWith(unregisterSuccessMsg), "Stdout from an attempt to unregister ends with successful message '"+unregisterSuccessMsg+"'.");
+			} else {
+				Assert.assertTrue(sshCommandResult.getStdout().trim().equals(unregisterSuccessMsg), "Stdout from an attempt to unregister contains successful message '"+unregisterSuccessMsg+"'.");
+			}
 			Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "Exit code from an attempt to unregister");
 		} else if (sshCommandResult.getExitCode()==1) {
 			if (isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
