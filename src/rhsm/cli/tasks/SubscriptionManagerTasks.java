@@ -4855,7 +4855,7 @@ if (false) {
 				Assert.assertTrue(sshCommandResult.getStdout().trim().startsWith(unregisterFromMsg), "Stdout from an attempt to unregister starts with message '"+unregisterFromMsg+"'.");
 				Assert.assertTrue(sshCommandResult.getStdout().trim().endsWith(unregisterSuccessMsg), "Stdout from an attempt to unregister ends with successful message '"+unregisterSuccessMsg+"'.");
 			} else {
-				Assert.assertTrue(sshCommandResult.getStdout().trim().equals(unregisterSuccessMsg), "Stdout from an attempt to unregister contains successful message '"+unregisterSuccessMsg+"'.");
+				Assert.assertTrue(sshCommandResult.getStdout().trim().equals(unregisterSuccessMsg), "Stdout from an attempt to unregister equals successful message '"+unregisterSuccessMsg+"'.");
 			}
 			Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "Exit code from an attempt to unregister");
 		} else if (sshCommandResult.getExitCode()==1) {
