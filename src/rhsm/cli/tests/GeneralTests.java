@@ -491,7 +491,8 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 				expectedRequiresList.add("manual: yum >= 3.2.29-73");
 			}
 			
-			if		(clienttasks.isPackageVersion("subscription-manager",">=","1.19.8-1"))	expectedRequiresList.add("manual: python-rhsm >= 1.19.5");		// RHEL7.4	// commit 17108bd2e207358d2f7970d0924b51a0c5bb2dc5
+			if		(clienttasks.isPackageVersion("subscription-manager",">=","1.19.12-1"))	expectedRequiresList.add("manual: python-rhsm >= 1.19.6");		// RHEL7.4	// commit bc41af9a25ee39075f3100577ebd2f9cff487048
+			else if	(clienttasks.isPackageVersion("subscription-manager",">=","1.19.8-1"))	expectedRequiresList.add("manual: python-rhsm >= 1.19.5");		// RHEL7.4	// commit 17108bd2e207358d2f7970d0924b51a0c5bb2dc5
 			else if	(clienttasks.isPackageVersion("subscription-manager",">=","1.19.6-1"))	expectedRequiresList.add("manual: python-rhsm >= 1.19.4");		// RHEL7.4	// commit 5164b07d478aa2349b57cbad884f4b18d0203c32
 			else if	(clienttasks.isPackageVersion("subscription-manager",">=","1.19.4-1"))	expectedRequiresList.add("manual: python-rhsm >= 1.19.2");		// RHEL7.4	// commit a40f97e7cc5c5a660e5a25cca417e534d75f0edd
 			else if	(clienttasks.isPackageVersion("subscription-manager",">=","1.19.0-1"))	expectedRequiresList.add("manual: python-rhsm >= 1.19.0");		// RHEL7.4	// commit 3cffd6948f939966774f39c9e79fb3c6b09df61a
@@ -514,6 +515,10 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.19.2-1")) {	// commit f5eab0e3492469ff4fc01ba19db9e61acfe0bad4	Add missing Requires and BuildRequires needed by F25.
 			expectedRequiresList.add("manual: dbus-glib");
+		}
+		
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.19.11-1")) {	// commit 88e3fdde1417e24c07d0c0b5a56b34ba6f904166  Bug 1446638: Remove dbus-x11 dependency
+			expectedRequiresList.remove("manual: dbus-x11");
 		}
 		
 		for (String expectedRequires : expectedRequiresList) if (!actualRequiresList.contains(expectedRequires)) log.warning("The actual requires list is missing expected requires '"+expectedRequires+"'.");
@@ -617,6 +622,9 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 			expectedRequiresList.remove("manual: gnome-python2-canvas");
 			expectedRequiresList.remove("gnome-python2");
 			expectedRequiresList.remove("gnome-python2-canvas");
+		}
+		if (clienttasks.isPackageVersion("subscription-manager-gui",">=","1.19.11-1")) {	// commit 88e3fdde1417e24c07d0c0b5a56b34ba6f904166  Bug 1446638: Remove dbus-x11 dependency
+			expectedRequiresList.remove("manual: dbus-x11");
 		}
 		
 		for (String expectedRequires : expectedRequiresList) if (!actualRequiresList.contains(expectedRequires)) log.warning("The actual requires list is missing expected requires '"+expectedRequires+"'.");
