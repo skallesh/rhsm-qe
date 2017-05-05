@@ -702,10 +702,13 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		String secondConsumerId = clienttasks.getCurrentConsumerId();
 		
 		// assert the stdout reflects a new consumer
-		Assert.assertTrue(sshCommandResult.getStdout().startsWith("The system with UUID "+firstConsumerId+" has been unregistered"),
-				"The system with UUID "+firstConsumerId+" has been unregistered");
-		Assert.assertTrue(!secondConsumerId.equals(firstConsumerId),
-				"After registering with force, a newly registered consumerid was returned.");
+		String msg= "The system with UUID "+firstConsumerId+" has been unregistered";
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.19.11-1")) {	// commit 217c3863448478d06c5008694e327e048cc54f54 Bug 1443101: Provide unregistering feedback when force registering
+			Assert.assertTrue(sshCommandResult.getStdout().contains(msg),"Stdout contains '"+msg+"'");
+		} else {
+			Assert.assertTrue(sshCommandResult.getStdout().startsWith(msg),"Stdout starts with '"+msg+"'");
+		}
+		Assert.assertTrue(!secondConsumerId.equals(firstConsumerId),"After registering with force, a newly registered consumerid was returned.");
 
 		// assert that the new consumer is not consuming any entitlements
 		List<ProductSubscription> productSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
