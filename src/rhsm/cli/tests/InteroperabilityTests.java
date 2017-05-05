@@ -39,7 +39,9 @@ public class InteroperabilityTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	@ImplementsNitrateTest(caseId=75972)	
 	public void InteroperabilityRegister_Test() {
-		SSHCommandResult result;
+		
+		// ensure we begin in an unregistered rhsm state
+		clienttasks.unregister_(null, null, null, null);
 		
 		// interoperabilityWarningMessage is defined in /usr/share/rhsm/subscription_manager/branding/__init__.py self.REGISTERED_TO_OTHER_WARNING
 		String interoperabilityWarningMessage = clienttasks.msg_InteroperabilityWarning;
@@ -53,6 +55,7 @@ public class InteroperabilityTests extends SubscriptionManagerCLITestScript {
 		String interoperabilityWarningMessageRegex = "^"+interoperabilityWarningMessage.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)").replaceAll("\\.", "\\\\.");
 		Assert.assertTrue(interoperabilityWarningMessage.startsWith("WARNING"), "The expected interoperability message starts with \"WARNING\".");
 		
+		SSHCommandResult result;
 		if (!isRhnClientToolsInstalled) {
 			log.warning("Skipping some RHN Classic interoperability test assertions when the '"+rhnClientTools+"' package is not installed.");
 		} else {
@@ -63,9 +66,9 @@ public class InteroperabilityTests extends SubscriptionManagerCLITestScript {
 			
 			log.info("Attempt to register while already registered via RHN Classic...");
 			result = clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
-			//Assert.assertTrue(result.getStdout().startsWith(interoperabilityWarningMessage), "subscription-manager warns the registerer when the system is already registered via RHN Classic with this expected message:\n"+interoperabilityWarningMessage);
+			Assert.assertTrue(result.getStdout().startsWith(interoperabilityWarningMessage), "subscription-manager warns the registerer when the system is already registered via RHN Classic with this expected message:\n"+interoperabilityWarningMessage+"\n");
 			//Assert.assertContainsMatch(result.getStdout(),interoperabilityWarningMessageRegex, "subscription-manager warns the registerer when the system is already registered via RHN Classic with the expected message.");
-			Assert.assertTrue(result.getStdout().contains(interoperabilityWarningMessage), "subscription-manager warns the registerer when the system is already registered via RHN Classic with this expected message:\n"+interoperabilityWarningMessage+"\n");
+			//Assert.assertTrue(result.getStdout().contains(interoperabilityWarningMessage), "subscription-manager warns the registerer when the system is already registered via RHN Classic with this expected message:\n"+interoperabilityWarningMessage+"\n");
 		}
 		
 		log.info("Now let's make sure we are NOT warned when we are NOT already registered via RHN Classic...");
