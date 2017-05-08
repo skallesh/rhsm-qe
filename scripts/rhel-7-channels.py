@@ -80,6 +80,21 @@ channel_trees['rhel-x86_64-workstation-7'] = [
 'rhel-x86_64-workstation-supplementary-7',
 'rhel-x86_64-workstation-supplementary-7-debuginfo']
 
+
+# avoid: Unexpected error: [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed (_ssl.c:579)
+# reference: https://dnaeon.github.io/disable-python-ssl-verification/
+import ssl
+try:
+    _create_unverified_https_context = ssl._create_unverified_context
+except AttributeError:
+    # Legacy Python that doesn't verify HTTPS certificates by default
+    pass
+else:
+    # Handle target environment that doesn't support HTTPS verification
+    ssl._create_default_https_context = _create_unverified_https_context
+
+
+
 from xmlrpclib import Server
 #s = Server('https://sat-56-server.usersys.redhat.com/rpc/api')
 s = Server('https://rhsm-sat5.usersys.redhat.com/rpc/api')
