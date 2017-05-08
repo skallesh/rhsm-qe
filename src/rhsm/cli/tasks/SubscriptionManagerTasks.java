@@ -1129,7 +1129,7 @@ if (false) {
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "git clone "+gitRepository+" "+rhnDefinitionsDir, new Integer(0));
 		*/
 		sshCommandRunner.runCommandAndWait("rm -rf "+rhnDefinitionsDir+" && mkdir "+rhnDefinitionsDir);
-		sshCommandRunner.runCommandAndWait("git clone -q "+gitRepository+" "+rhnDefinitionsDir);
+		sshCommandRunner.runCommandAndWait("git clone --quiet --depth=1 "+gitRepository+" "+rhnDefinitionsDir);
 		if (sshCommandRunner.getExitCode()!=0) log.warning("Encountered problems while cloning "+gitRepository+"; dependent tests will likely fail or skip.");
 		
 	}
@@ -1171,7 +1171,7 @@ if (false) {
 		sshCommandRunner.runCommandAndWaitWithoutLogging("cd "+translateToolkitDir+" && ./setup.py install --force");
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "which pofilter", new Integer(0));
 		*/
-		sshCommandRunner.runCommandAndWait("git clone -q "+gitRepository+" "+translateToolkitDir);
+		sshCommandRunner.runCommandAndWait("git clone --quiet --depth=1 "+gitRepository+" "+translateToolkitDir);
 		sshCommandRunner.runCommandAndWait("cd "+translateToolkitDir+" && ./setup.py install --force");
 		sshCommandRunner.runCommandAndWait("rm -rf ~/.local");	// 9/27/2013 Fix for the following... Don't know why I started getting Traceback ImportError: cannot import name pofilter
 		sshCommandRunner.runCommandAndWait("which pofilter");
