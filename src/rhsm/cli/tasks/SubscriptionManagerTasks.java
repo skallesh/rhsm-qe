@@ -3825,6 +3825,16 @@ if (false) {
 		// run command without asserting results
 		SSHCommandResult sshCommandResult = sshCommandRunner.runCommandAndWait(command);
 		logRuntimeErrors(sshCommandResult);
+		
+		// keep the currentlyRegistered class variables accurate
+		// when clean is successful (exitCode==0), the system is no longer registered
+		if (sshCommandResult.getExitCode().equals(Integer.valueOf(0))) {
+			this.currentlyRegisteredUsername = null;
+			this.currentlyRegisteredPassword = null;
+			this.currentlyRegisteredOrg = null;
+			this.currentlyRegisteredType = null;
+		}
+		
 		return sshCommandResult;
 	}
 	
@@ -3847,10 +3857,6 @@ if (false) {
 		}
 		Assert.assertFalse(RemoteFileTasks.testExists(sshCommandRunner,consumerCertDir+"/cert.pem"), consumerCertDir+"/cert.pem"+" does NOT exist after clean.");
 		Assert.assertFalse(RemoteFileTasks.testExists(sshCommandRunner,consumerCertDir+"/key.pem"), consumerCertDir+"/key.pem"+" does NOT exist after clean.");
-		this.currentlyRegisteredUsername = null;
-		this.currentlyRegisteredPassword = null;
-		this.currentlyRegisteredOrg = null;
-		this.currentlyRegisteredType = null;
 		
 		// assert that the entitlement cert directory is gone
 		//Assert.assertFalse(RemoteFileTasks.testFileExists(sshCommandRunner,entitlementCertDir)==1, entitlementCertDir+" does NOT exist after clean.");
