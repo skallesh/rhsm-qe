@@ -1557,22 +1557,23 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
 			       , testCaseID = {"RHEL6-21939", "RHEL7-51801"})
-	@Test(description = "verify if CLI auto-subscribe tries to re-use basic auth credentials.", groups = {
-			"VerifyAutosubscribeReuseBasicAuthCredntials", "blockedByBug-707641",
-			"blockedByBug-919700" }, enabled = true)
+	@Test(	description = "verify if CLI auto-subscribe tries to re-use basic auth credentials.",
+			groups = {"VerifyAutosubscribeReuseBasicAuthCredntials", "blockedByBug-707641","blockedByBug-919700" },
+			enabled = true)
 	public void VerifyAutosubscribeReuseBasicAuthCredntials() throws JSONException, Exception {
+		File tomcatLogFile = servertasks.getTomcatLogFile();
+		String LogMarker = System.currentTimeMillis()
+				+ " Testing VerifyAutosubscribeReuseBasicAuthCredntials ********************************";
+		RemoteFileTasks.markFile(server, tomcatLogFile.getPath(), LogMarker);
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null,
 				null, (String) null, null, null, null, true, null, null, null, null, null);
-		String LogMarker = System.currentTimeMillis()
-				+ " Testing ***************************************************************";
-		// don't think this line does anything client.runCommandAndWait("ssh
-		// root@"+sm_serverHostname);
-		RemoteFileTasks.markFile(server, servertasks.tomcat6LogFile, LogMarker);
-		String logMessage = " Authentication check for /consumers/" + clienttasks.getCurrentConsumerId()
-				+ "/entitlements";
+		String logMessage = " Authentication check for /consumers/" + clienttasks.getCurrentConsumerId() + "/entitlements";
 		Assert.assertTrue(RemoteFileTasks
-				.getTailFromMarkedFile(server, servertasks.tomcat6LogFile, LogMarker, logMessage).trim().equals(""));
-
+				.getTailFromMarkedFile(server, tomcatLogFile.getPath(), LogMarker, logMessage).trim().equals(""));
+		// TODO: This test depends on the candlepin logging level to be set to DEBUG; otherwise we will get false test passes.
+		//	[root@jsefler-candlepin ~]# cat /etc/candlepin/candlepin.conf | grep log4j.logger.org.candlepin
+		//	log4j.logger.org.candlepin.policy.js.compliance=INFO
+		//	log4j.logger.org.candlepin=INFO
 	}
 
 	/**
@@ -1723,8 +1724,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	// TODO correct the pasted description
 	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
 			       , testCaseID = {"RHEL6-26775", "RHEL7-55318"})
-	@Test(description = "verify if Entitlement certs are downloaded if subscribed to expired pool", groups = {
-			"ServerURLInRHSMFile", "blockedByBug-916353" }, enabled = true)
+	@Test(	description = "verify if Entitlement certs are downloaded if subscribed to expired pool",
+			groups = {"ServerURLInRHSMFile", "blockedByBug-916353" },
+			enabled = true)
 	public void ServerURLInRHSMFile() throws JSONException, Exception {
 		String defaultHostname = "rhel7.com";
 		String defaultPort = "8443";
@@ -2895,8 +2897,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
 			       , testCaseID = {"RHEL6-21925", "RHEL7-51786"})
-	@Test(description = "verify if you can register using consumer id of a deleted owner", groups = {
-			"RegisterWithConsumeridOfDeletedOwner" }, enabled = true)
+	@Test(	description = "verify if you can register using consumer id of a deleted owner",
+			groups = {"RegisterWithConsumeridOfDeletedOwner" },
+			enabled = true)
 	@ImplementsNitrateTest(caseId = 148216)
 	public void RegisterWithConsumeridOfDeletedOwner() throws JSONException, Exception {
 		String orgname = "testOwner1";
@@ -3968,8 +3971,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
 			       , testCaseID = {"RHEL6-21926", "RHEL7-51787"})
-	@Test(description = "subscription-manager: service-level --org (without --list option)", groups = {
-			"ServicelevelTest", "blockedByBug-826856" }, enabled = true)
+	@Test(	description = "subscription-manager: service-level --org (without --list option)",
+			groups = {"ServicelevelTest", "blockedByBug-826856" },
+			enabled = true)
 	public void ServiceLevelWithOrgWithoutList_Test() {
 
 		SSHCommandResult result;

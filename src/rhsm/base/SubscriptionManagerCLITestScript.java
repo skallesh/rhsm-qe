@@ -148,7 +148,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			servertasks.cleanOutCRL();
 			servertasks.deploy();
 			server.runCommandAndWait("df -h");
-			server.runCommandAndWait("sudo "+"ls -Slh "+new File(servertasks.tomcat6LogFile).getParent()+" | head");	// log candlepin's starting disk usage (for debugging information only)
+			server.runCommandAndWait("sudo "+"ls -Slh "+servertasks.getTomcatLogFile().getParent()+" | head");	// log candlepin's starting disk usage (for debugging information only)
 			servertasks.setupTranslateToolkitFromTarUrl(sm_translateToolkitTarUrl);
 			servertasks.reportAPI();
 			

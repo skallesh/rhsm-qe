@@ -85,7 +85,6 @@ public class CandlepinTasks {
 	protected /*NOT static*/ String serverInstallDir = null;
 	protected /*NOT static*/ String serverImportDir = null;
 	public static final String candlepinCRLFile	= "/var/lib/candlepin/candlepin-crl.crl";
-	public /*NOT static final*/ String tomcat6LogFile	= null;
 	public static final String defaultConfigFile	= "/etc/candlepin/candlepin.conf";
 	public static String rubyClientDir	= "/server/client/ruby";	// "/client/ruby"; was valid prior to candlepin commit cddba55bda2cc1b89821a80e6ff23694296f2079
 	public static File candlepinCACertFile = new File("/etc/candlepin/certs/candlepin-ca.crt");
@@ -167,13 +166,6 @@ public class CandlepinTasks {
 			if (redhatRelease.startsWith("Red Hat")) redhatReleaseX = Integer.valueOf(matcher.group());
 			Assert.assertTrue(fedoraReleaseX+redhatReleaseX>0,"Determined the OS release running candlepin.");
 		}
-		
-		// where is catalina.out?
-		if (sshCommandRunner!=null) {
-			// "/var/log/tomcat6/catalina.out" or "/var/log/tomcat/catalina.out"
-			if (RemoteFileTasks.testExists(sshCommandRunner, "/var/log/tomcat6/")) this.tomcat6LogFile = "/var/log/tomcat6/catalina.out";
-			if (RemoteFileTasks.testExists(sshCommandRunner, "/var/log/tomcat/")) this.tomcat6LogFile = "/var/log/tomcat/catalina.out";
-		}
 	}
 	
 	
@@ -229,7 +221,8 @@ public class CandlepinTasks {
 		}
 		
 		// clear out the tomcat6 log file (catalina.out)
-		if (RemoteFileTasks.testExists(sshCommandRunner, tomcat6LogFile)) {
+		File tomcatLogFile = getTomcatLogFile();
+		if (tomcatLogFile!=null) {
 
 			//	[root@jsefler-f14-7candlepin ~]# ls -hl  /var/log/tomcat6/catalina.out*
 			//	-rw-r--r--. 1 tomcat tomcat 3.6G May 15 11:56 /var/log/tomcat6/catalina.out
@@ -238,8 +231,8 @@ public class CandlepinTasks {
 			//	[root@jsefler-f14-5candlepin ~]# ls -l  /var/log/tomcat6/catalina.out*
 			//	-rw-r--r--. 1 tomcat tomcat     102646 May 15 11:56 /var/log/tomcat6/catalina.out
 			//	-rw-r--r--. 1 tomcat tomcat 1813770240 May 12 03:10 /var/log/tomcat6/catalina.out-20130512
-			RemoteFileTasks.runCommandAndWait(sshCommandRunner, "truncate --size=0 --no-create "+tomcat6LogFile, TestRecords.action());	//  "echo \"\" > "+tomcat6LogFile
-			RemoteFileTasks.runCommandAndWait(sshCommandRunner, "rm -f "+tomcat6LogFile+"-*", TestRecords.action());
+			RemoteFileTasks.runCommandAndWait(sshCommandRunner, "truncate --size=0 --no-create "+tomcatLogFile.getPath(), TestRecords.action());	//  "echo \"\" > "+tomcat6LogFile
+			//NOT REALLY NEEDED RemoteFileTasks.runCommandAndWait(sshCommandRunner, "rm -f "+tomcatLogFile.getPath()+"-*", TestRecords.action());
 		}
 		
 		// clear out the candlepin/hornetq to prevent the following:
@@ -691,6 +684,34 @@ schema generation failed
 	public void cleanOutCRL() {
 		log.info("Cleaning out the certificate revocation list (CRL) "+candlepinCRLFile+"...");
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "sudo "+"rm -f "+candlepinCRLFile, 0);
+	}
+	
+	public File getTomcatLogFile() {
+		File tomcatLogFile=null;
+		
+		// Reference: https://unix.stackexchange.com/a/279759
+		// catalina.out -> catalina.YYYY-MM-DD.log started in tomcat-7.0.56
+		
+		//	[root@jsefler-candlepin ~]# ls -t -1  /var/log/tomcat/* | head -n 1
+		//	/var/log/tomcat/catalina.2017-05-09.log
+		
+		//	[root@jsefler-candlepin ~]# ls -t -1 /var/log/tomcat6/* | head -n 1
+		//	/var/log/tomcat6/catalina.out
+				
+		// what version of tomcat is installed?
+		if (RemoteFileTasks.testExists(sshCommandRunner, "/var/log/tomcat/")) {// tomcat
+			
+			// was catalina.out prior to tomcat-7.0.56
+			SSHCommandResult r = sshCommandRunner.runCommandAndWait("ls -t -1 /var/log/tomcat/* | head -n 1");
+			if (RemoteFileTasks.testExists(sshCommandRunner, r.getStdout().trim())) {
+				tomcatLogFile = new File(r.getStdout().trim());
+			}
+		} else
+		if (RemoteFileTasks.testExists(sshCommandRunner, "/var/log/tomcat6/")) {// tomcat6
+			tomcatLogFile = new File("/var/log/tomcat6/catalina.out");
+		}
+		
+		return tomcatLogFile;
 	}
 	
 	/**
