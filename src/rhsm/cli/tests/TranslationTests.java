@@ -124,16 +124,17 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(!RemoteFileTasks.testExists(client,clienttasks.consumerKeyFile()), "Consumer key file '"+clienttasks.consumerKeyFile()+"' does NOT exist after an attempt to register with invalid credentials.");
 		Assert.assertTrue(!RemoteFileTasks.testExists(client,clienttasks.consumerCertFile()), "Consumer cert file '"+clienttasks.consumerCertFile()+" does NOT exist after an attempt to register with invalid credentials.");
 	}
-
-
+	
+	
 	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
 			       , testCaseID = {"RHEL6-21765", "RHEL7-32170"})
-	@Test(	description="attempt LANG=C subscription-manager register",
+	@Test(	description="verify subscription-manager register will succeed with fallback locale LANG=C; also verify the system.default_locale fact",
 			groups={"blockedByBug-729988"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void RegisterWithFallbackCLocale_Test() {
-
+		
+		// Bug 729988
 		//	[root@rhsm-compat-rhel61 ~]# LANG=C subscription-manager register --username stage_test_12 --password redhat 1>/tmp/stdout 2>/tmp/stderr
 		//	[root@rhsm-compat-rhel61 ~]# echo $?
 		//	255
@@ -142,15 +143,42 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 		//	'NoneType' object has no attribute 'lower'
 		//	[root@rhsm-compat-rhel61 ~]# 
 		
-		for(String lang: new String[]{"C","us"}) {
-			clienttasks.unregister(null, null, null, null);
-			String command = String.format("%s register --username %s --password %s", clienttasks.command,sm_clientUsername,sm_clientPassword);
-			if (sm_clientOrg!=null) command += String.format(" --org %s", sm_clientOrg);
-			//SSHCommandResult sshCommandResult = clienttasks.runCommandWithLang(lang,clienttasks.command+" register --username "+sm_clientUsername+" --password "+sm_clientPassword+" "+(sm_clientOrg!=null?"--org "+sm_clientOrg:""));
-			SSHCommandResult sshCommandResult = client.runCommandAndWait("LANG="+lang+" "+clienttasks.command+" register --username "+sm_clientUsername+" --password "+sm_clientPassword+" "+(sm_clientOrg!=null?"--org "+sm_clientOrg:""));
-			Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0),"ExitCode after register with LANG="+lang+" fallback locale.");
-			//Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), expectedStdoutRegex,"Stdout after register with LANG="+lang+" fallback locale.");
-			//Assert.assertContainsMatch(sshCommandResult.getStderr().trim(), expectedStderrRegex,"Stderr after register with LANG="+lang+" fallback locale.");
+		String lang="C";
+		clienttasks.unregister(null, null, null, null);
+		String command = String.format("%s register --username %s --password %s", clienttasks.command,sm_clientUsername,sm_clientPassword);
+		if (sm_clientOrg!=null) command += String.format(" --org %s", sm_clientOrg);
+		//SSHCommandResult sshCommandResult = clienttasks.runCommandWithLang(lang,clienttasks.command+" register --username "+sm_clientUsername+" --password "+sm_clientPassword+" "+(sm_clientOrg!=null?"--org "+sm_clientOrg:""));
+		SSHCommandResult sshCommandResult = client.runCommandAndWait("LANG="+lang+" "+clienttasks.command+" register --username "+sm_clientUsername+" --password "+sm_clientPassword+" "+(sm_clientOrg!=null?"--org "+sm_clientOrg:""));
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0),"ExitCode after register with LANG="+lang+" fallback locale.");
+		
+		// also test the system.default_locale fact for an unknown locale
+		if (clienttasks.isPackageVersion("python-rhsm", ">=", "1.19.3-1")) {	// commit 0670d70540a24a8e173d347e2240dcfb7535608a Bug 1425922: System locale in facts
+			String systemDefaultLocaleFact = "system.default_locale";
+			String systemDefaultLocale = client.runCommandAndWait("locale | grep LANG").getStdout().trim().split("=")[1];
+			Assert.assertEquals(clienttasks.getFactValue(systemDefaultLocaleFact), systemDefaultLocale, "The system's value for fact '"+systemDefaultLocaleFact+"'.");
+		}
+	}
+	
+	
+	@Test(	description="verify subscription-manager register will succeed with an unknown locale LANG=foo; also verify the system.default_locale fact reports Unknown",
+			groups={"blockedByBug-729988","blockedByBug-1449824"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void RegisterWithUnknownLocale_Test() {
+		
+		String lang="foo";
+		clienttasks.unregister(null, null, null, null);
+		String command = String.format("%s register --username %s --password %s", clienttasks.command,sm_clientUsername,sm_clientPassword);
+		if (sm_clientOrg!=null) command += String.format(" --org %s", sm_clientOrg);
+		//SSHCommandResult sshCommandResult = clienttasks.runCommandWithLang(lang,clienttasks.command+" register --username "+sm_clientUsername+" --password "+sm_clientPassword+" "+(sm_clientOrg!=null?"--org "+sm_clientOrg:""));
+		SSHCommandResult sshCommandResult = client.runCommandAndWait("LANG="+lang+" "+clienttasks.command+" register --username "+sm_clientUsername+" --password "+sm_clientPassword+" "+(sm_clientOrg!=null?"--org "+sm_clientOrg:""));
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0),"ExitCode after register with LANG="+lang+" fallback locale.");
+		
+		// also test the system.default_locale fact for an unknown locale
+		if (clienttasks.isPackageVersion("python-rhsm", ">=", "1.19.3-1")) {	// commit 0670d70540a24a8e173d347e2240dcfb7535608a Bug 1425922: System locale in facts
+			String systemDefaultLocaleFact = "system.default_locale";
+			String systemDefaultLocale = "Unknown";
+			Assert.assertEquals(clienttasks.getFactValue(systemDefaultLocaleFact), systemDefaultLocale, "The system's value for fact '"+systemDefaultLocaleFact+"'.");
 		}
 	}
 	
