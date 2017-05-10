@@ -604,7 +604,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		
 		Assert.assertEquals(factValue,fqdn,"System fact '"+fact+"' matches the system value from command '"+command+"'.");
 	}
-
+	
 	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
 			       , testCaseID = {"RHEL6-20019", "RHEL7-51036"})
 	@Test(	description="subscription-manager: assert presence of the new fact cpu.topology_source use to tell us what algorithm subscription-manager employed",
@@ -1351,8 +1351,40 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		}
 		Assert.assertTrue(allBaseFactKeyAreLangIndependent, "All the fact keys are independent of lang.  If this fails, see the warnings logged above.");
 	}
-
-
+	
+	
+	@Test(	description = "Verify the system.default_locale is included in facts list and resolves to the actual LANG of the shell",
+			groups = {"blockedByBug-1425922" },
+			enabled = true)
+	public void VerifySystemDefaultLocaleInFacts_Test() {
+		if (clienttasks.isPackageVersion("python-rhsm", "<", "1.19.3-1")) {	// commit 0670d70540a24a8e173d347e2240dcfb7535608a Bug 1425922: System locale in facts
+			throw new SkipException("This test applies a newer version of subscription manager that includes an implementation for RFE Bug 1425922.");
+		}
+		
+		String systemDefaultLocaleFact = "system.default_locale";
+		String systemDefaultLocaleFactValue= clienttasks.getFactValue(systemDefaultLocaleFact);
+		
+		// TEST 1
+		// assert that a fact is collected for the system default locale
+		//	[root@jsefler-rhel7 ~]# locale | grep LANG
+		//	LANG=en_US.UTF-8
+		String systemDefaultLocale = client.runCommandAndWait("locale | grep LANG").getStdout().trim().split("=")[1];
+		Assert.assertEquals(systemDefaultLocaleFactValue, systemDefaultLocale, "The system's value for fact '"+systemDefaultLocaleFact+"'.");
+		
+		// TEST 2
+		// loop through all the supported LANGS and assert that the fact is collected and the value is expected when the shell is run in each LANG
+		for (String lang : TranslationTests.supportedLangs) {
+			lang += ".UTF-8";	// append -UTF-8
+			
+			// get the facts for lang using the locale variable "LC_ALL"
+			Map<String,String> langFacts = clienttasks.getFacts("LC_ALL",lang,systemDefaultLocaleFact);
+			
+			// assert that the collected value for fact "system.default_locale" matches the LANG of the shell
+			Assert.assertEquals(langFacts.get(systemDefaultLocaleFact), lang, "The system's value for fact '"+systemDefaultLocaleFact+"' when run in a shell where LC_ALL='"+lang+"'.");
+		}
+	}
+	
+	
 	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
 			       , testCaseID = {"RHEL6-22221", "RHEL7-51427"})
 	@Test(	description="Verify proc_cpuinfo facts are now collected on subscription-manager-1.16.8-2+.  On ppc64 systems, also verify that a virt.uuid is collected on a pSeries platform.",
