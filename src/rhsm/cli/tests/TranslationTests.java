@@ -183,6 +183,20 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
+	@Test(	description="Verify that registering with a LANG (without specifying a UTF-8 encoding) will succeed.  For example: LANG=fr_FR subscription-manager register",
+			groups={},
+			dataProvider="getSupportedLangsData",
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void RegisterWithDefaultEncoding_Test(Object bugzilla, String lang) {
+		lang = lang.replaceAll("\\.UTF-8", "");	// make sure lang does not have any encoding (no ".UTF-8" suffix)
+		clienttasks.unregister(null, null, null, null);
+		String registerCommandWithLang = String.format("%s %s","LANG="+lang, clienttasks.registerCommand(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (List<String>)null, null, null, null, null, null, null, null, null, null));
+		SSHCommandResult sshCommandResult = client.runCommandAndWait(registerCommandWithLang);
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0),"ExitCode after register with LANG='"+lang+"' where no encoding was specified.");
+	}
+	
+	
 	@Test(	description="subscription-manager: attempt redeem without --email option using LANG",
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-766577"},
 			enabled=false)	// TODO PASSES ON THE COMMAND LINE BUT FAILS WHEN RUN THROUGH AUTOMATION - NOTE STDOUT DISPLAYS DOUBLE BYTE BUT NOT STDERR
@@ -923,6 +937,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	static final List<String> supportedLocales = Arrays.asList(	"as",	"bn_IN","de_DE","es_ES","fr",	"gu",	"hi",	"it",	"ja",	"kn",	"ko",	"ml",	"mr",	"or",	"pa",	"pt_BR","ru",	"ta_IN","te",	"zh_CN","zh_TW"); 
 	static final List<String> unsupportedLocales = Arrays.asList(	"as",	"bn_IN",	/*"de_DE",*/	/*"es_ES",*/	/*"fr",*/	"gu",	"hi",	/*"it",*/	/*"ja",*/	"kn",	/*"ko",*/	"ml",	"mr",	"or",	"pa",	/*"pt_BR",*/	/*"ru",*/	"ta_IN",	"te"	/*"zh_CN",*/	/*"zh_TW"*/);	// comes from https://bugzilla.redhat.com/show_bug.cgi?id=1195824#c2
 	static final List<String> supportedLangs = Arrays.asList(	"as_IN","bn_IN","de_DE","es_ES","fr_FR","gu_IN","hi_IN","it_IT","ja_JP","kn_IN","ko_KR","ml_IN","mr_IN","or_IN","pa_IN","pt_BR","ru_RU","ta_IN","te_IN","zh_CN","zh_TW"); 
+	static final List<String> unsupportedLangs = Arrays.asList(	"as_IN","bn_IN",/*"de_DE","es_ES","fr_FR",*/"gu_IN","hi_IN",/*"it_IT","ja_JP",*/"kn_IN",/*"ko_KR",*/"ml_IN","mr_IN","or_IN","pa_IN",/*"pt_BR","ru_RU",*/"ta_IN","te_IN"/*,"zh_CN","zh_TW"*/); 
 
 	
 	protected List<String> newList(String item) {
@@ -981,9 +996,13 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	protected List<List<Object>> getSupportedLangsDataAsListOfLists() {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		for (String lang : supportedLangs) {
+			// skip the unsupportedLangs
+			if (unsupportedLangs.contains(lang)) continue;
 			
 			// bugzillas
 			Object bugzilla = null;
+			if (lang.equals("fr_FR")) bugzilla = new BlockedByBzBug("1449839");
+			if (lang.equals("ja_JP")) bugzilla = new BlockedByBzBug("1449839");
 			
 			// Object bugzilla, String locale
 			ll.add(Arrays.asList(new Object[] {bugzilla,	lang}));
