@@ -886,7 +886,8 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void VerifyPositiveClockSkewDetection_Test() {
-		client.runCommandAndWait("rm -f "+clienttasks.rhsmLogFile);	// remove it because it occasionally gets backed up to rhsm.log.1 in the midst of a pair of calls to RemoteFileTasks.markFile(...) and RemoteFileTasks.getTailFromMarkedFile(...)
+		//client.runCommandAndWait("rm -f "+clienttasks.rhsmLogFile);	// remove it because it occasionally gets backed up to rhsm.log.1 in the midst of a pair of calls to RemoteFileTasks.markFile(...) and RemoteFileTasks.getTailFromMarkedFile(...)
+		client.runCommandAndWait("truncate --size=0 --no-create "+clienttasks.rhsmLogFile);	// truncate it to avoid getting backed up to rhsm.log.1 in the midst of a pair of calls to RemoteFileTasks.markFile(...) and RemoteFileTasks.getTailFromMarkedFile(...)
 		clienttasks.unregister(null, null, null, null);	// do not need to be registered for this test
 		
 		String rhsmLogMarker = System.currentTimeMillis()+" Testing clock skew detection...";
@@ -925,7 +926,8 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void VerifyNegativeClockSkewDetection_Test() {
-		client.runCommandAndWait("rm -f "+clienttasks.rhsmLogFile);	// remove it because it occasionally gets backed up to rhsm.log.1 in the midst of a pair of calls to RemoteFileTasks.markFile(...) and RemoteFileTasks.getTailFromMarkedFile(...)
+		//client.runCommandAndWait("rm -f "+clienttasks.rhsmLogFile);	// remove it because it occasionally gets backed up to rhsm.log.1 in the midst of a pair of calls to RemoteFileTasks.markFile(...) and RemoteFileTasks.getTailFromMarkedFile(...)
+		client.runCommandAndWait("truncate --size=0 --no-create "+clienttasks.rhsmLogFile);	// truncate it to avoid getting backed up to rhsm.log.1 in the midst of a pair of calls to RemoteFileTasks.markFile(...) and RemoteFileTasks.getTailFromMarkedFile(...)
 		clienttasks.unregister(null, null, null, null);	// do not need to be registered for this test
 		
 		String rhsmLogMarker = System.currentTimeMillis()+" Testing clock skew detection...";
@@ -944,7 +946,8 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		clienttasks.version(null, null, null, null);
 		rhsmLogResult = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, rhsmLogMarker, null).trim();
 		// NOTE:  If the candlepin server was newly deployed within the last 119 minutes, then a "SSLError: certificate verify failed" will be thrown.  Skip the test if this happens.
-		if (!rhsmLogResult.contains(clienttasks.msg_ClockSkewDetection) && rhsmLogResult.contains("SSLError: certificate verify failed")) throw new SkipException("Assuming the candlepin server was recently deployed within the last hour because an SSLError was thrown instead of clock skew detection.");
+		// NOTE:  If the candlepin server was newly deployed within the last 119 minutes, then a "Error while checking server version: [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed" will be thrown.  Skip the test if this happens.
+		if (!rhsmLogResult.contains(clienttasks.msg_ClockSkewDetection) && rhsmLogResult.contains("certificate verify failed")) throw new SkipException("Assuming the candlepin server was recently deployed within the last hour because an SSLError was thrown instead of clock skew detection.");
 		Assert.assertTrue(rhsmLogResult.contains(clienttasks.msg_ClockSkewDetection), "Assuming the rhsm client is greater than 60 minutes behind of the candlepin server, then WARNING '"+clienttasks.msg_ClockSkewDetection+"' is logged to '"+clienttasks.rhsmLogFile+"'.");
 	}
 	@AfterGroups(groups={"setup"}, value={"VerifyNegativeClockSkewDetection_Test"})
