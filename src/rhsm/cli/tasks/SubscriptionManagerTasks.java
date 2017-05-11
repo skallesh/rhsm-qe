@@ -4720,6 +4720,7 @@ if (false) {
 		if (section.equalsIgnoreCase("rhsmcertd")) {
 			defaultNames.add(/*"certFrequency" CHANGED BY BUG 882459 TO*/"certCheckInterval");
 			defaultNames.add(/*"healFrequency" CHANGED BY BUG 882459 TO*/"autoAttachInterval");
+			if (isPackageVersion("subscription-manager",">=","1.19.8-1")) defaultNames.add("splay");	// commit e9f8421285fc6541166065a8b55ee89b9a425246 1435013: Add splay option to rhsmcertd, randomize over interval
 		}
 		if (section.equalsIgnoreCase("logging")) {
 			defaultNames.add("default_log_level");
