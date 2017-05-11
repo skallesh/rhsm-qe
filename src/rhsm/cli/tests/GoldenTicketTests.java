@@ -213,7 +213,7 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
 
 
     @Test(description = "Verify revoking contentAccessMode set on the owner removes extra entitlement", groups = {
-    "revokingcontentAccessModeOnOwnerRemovesEntitlement" }, enabled = true)
+    "revokingcontentAccessModeOnOwnerRemovesEntitlement","blockedByBug-1448855" }, enabled = true)
     public void revokingcontentAccessModeOnOwnerRemovesEntitlement() throws Exception {
 
 	CandlepinTasks.setAttributeForOrg(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, org,
