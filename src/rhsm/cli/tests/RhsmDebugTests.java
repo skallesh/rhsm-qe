@@ -263,6 +263,8 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
 	public void RhsmDebugSystemWithNonDefaultCertDirs1_Test() {
+		clienttasks.unregister_(null, null, null, null);	// to ensure a prior consumer is cleaned before we change the rhsm configuration 
+		
 		List<File> originalProductCertFiles = getRandomSubsetOfList(clienttasks.getCurrentProductCertFiles(),2);	// 2 is sufficient
 		
 		// remember the original configurations
