@@ -1335,7 +1335,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
 			       , testCaseID = {"RHEL6-36616", "RHEL7-51426"})
 	@Test(	description="verify that the facts --list of name keys is independent of LANG/LC_ALL...  For example when LC_ALL=fr_FR.UTF-8 subscription-manager facts --list, EXPECTED: lscpu.virtualization_type: full  ACTUAL(failed): lscpu.type_de_virtualisation: complet",
-			groups={"blockedByBug-1225435"},
+			groups={"blockedByBug-1225435","blockedByBug-1450210"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyFactKeyNamesListedIsLangIndependent_Test() {
