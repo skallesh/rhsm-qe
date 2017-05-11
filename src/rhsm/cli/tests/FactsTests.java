@@ -1234,7 +1234,6 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		File malformedFactsFile = new File(clienttasks.factsDir+File.separatorChar+malformedFactsFilename);
 		
 		// mark the rhsm.log file
-//		client.runCommandAndWait("rm -f "+clienttasks.rhsmLogFile);	// remove it because it occasionally gets backed up to rhsm.log.1 in the midst of a pair of calls to RemoteFileTasks.markFile(...) and RemoteFileTasks.getTailFromMarkedFile(...)
 		String logMarker = System.currentTimeMillis()+" Testing MalformedCustomFacts_Test...";
 		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, logMarker);
 
@@ -1248,23 +1247,27 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		// attempt to register
 		SSHCommandResult result = clienttasks.register/*_*/(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, Boolean.TRUE, null, null, null, null, null);
 		
-		/* ORIGINAL FAILURE
-		//	[root@jsefler-5 ~]# subscription-manager register --username=testuser1 --password=password --org=admin --force
-		//	Expecting , delimiter: line 1 column 26 (char 26)
-		
+		/* No need to assert results because the register task will assert that the results are successful despite the malformed facts
 		// assert results
 		Assert.assertEquals(result.getExitCode(),Integer.valueOf(0),"Exitcode from an attempt to register with malformed facts file '"+malformedFactsFile+"'.");
 		Assert.assertEquals(result.getStdout(),"FIXME Need expected stdout message after bug 966747 is fixed","Stdout from an attempt to register with malformed facts file '"+malformedFactsFile+"'.");
 		Assert.assertEquals(result.getStderr(),"FIXME Need expected stderr message after bug 966747 is fixed","Stdout from an attempt to register with malformed facts file '"+malformedFactsFile+"'.");
 		*/
 		
-		/* FIXED BEHAVIOR */
-		// 2013-06-07 13:31:08,916 [WARNING]  @facts.py:125 - Unable to load custom facts file: /etc/rhsm/facts/malformed.facts
-		// get the tail of the marked rhsm.log file and assert
-		String logTail = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, logMarker, "WARNING").trim();
+		// get the tail of the marked rhsm.log file
+		String logTail = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, logMarker, null).trim();
+		
+		// assert a failure to load custom facts is logged
+		//	2013-06-07 13:31:08,916 [WARNING]  @facts.py:125 - Unable to load custom facts file: /etc/rhsm/facts/malformed.facts
 		String expectedLogMessage = "Unable to load custom facts file: "+malformedFactsFile;
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.19.3-1")) {	// commit 4b7a8d39888de09bbd98ad44807485635eece14d Bug 1435771: Fix UnboundLocalError during custom facts collection
+			//	2017-05-11 13:06:20,836 [INFO] subscription-manager:24583:MainThread @custom.py:85 - Loading custom facts from: /etc/rhsm/facts/malformed.facts
+			//	2017-05-11 13:06:20,837 [WARNING] subscription-manager:24583:MainThread @custom.py:40 - Unable to load custom facts file.
+			expectedLogMessage = "Loading custom facts from: "+malformedFactsFile;
+			Assert.assertTrue(logTail.contains(expectedLogMessage), "The '"+clienttasks.rhsmLogFile+"' reports expected log message '"+expectedLogMessage+"'.");
+			expectedLogMessage = "Unable to load custom facts file.";
+		}
 		Assert.assertTrue(logTail.contains(expectedLogMessage), "The '"+clienttasks.rhsmLogFile+"' reports expected log message '"+expectedLogMessage+"'.");
-
 	}
 	@AfterGroups(value={"MalformedCustomFacts_Test"},groups={"setup"})
 	public void afterMalformedCustomFacts_Test() {
@@ -1288,28 +1291,36 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		Assert.assertTrue(RemoteFileTasks.testExists(client, emptyFactsFile.getPath()), "The empty facts file should exist.");
 		
 		// mark the rhsm.log file
-//		client.runCommandAndWait("rm -f "+clienttasks.rhsmLogFile);	// remove it because it occasionally gets backed up to rhsm.log.1 in the midst of a pair of calls to RemoteFileTasks.markFile(...) and RemoteFileTasks.getTailFromMarkedFile(...)
 		String logMarker = System.currentTimeMillis()+" Testing EmptyCustomFacts_Test...";
 		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, logMarker);
 		
 		// attempt to register
 		SSHCommandResult result = clienttasks.register/*_*/(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, Boolean.TRUE, null, null, null, null, null);
 		
-		/* ORIGINAL FAILURE
-		//	[root@jsefler-5 ~]# subscription-manager register --username=testuser1 --password=password --org=admin --force
-		//	No JSON object could be decoded
-		
+		/* No need to assert results because the register task above will assert that the results are successful despite the empty facts
 		// assert results
 		Assert.assertEquals(result.getExitCode(),Integer.valueOf(0),"Exitcode from an attempt to register with an empty facts file '"+emptyFactsFile+"'.");
 		Assert.assertEquals(result.getStdout(),"FIXME Need expected stdout message after bug 966747 is fixed","Stdout from an attempt to register with an empty facts file '"+emptyFactsFile+"'.");
 		Assert.assertEquals(result.getStderr(),"FIXME Need expected stderr message after bug 966747 is fixed","Stdout from an attempt to register with an empty facts file '"+emptyFactsFile+"'.");
 		*/
 		
-		/* FIXED BEHAVIOR */
-		// 2013-06-07 13:31:08,916 [WARNING]  @facts.py:125 - Unable to load custom facts file: /etc/rhsm/facts/empty.facts
-		// get the tail of the marked rhsm.log file and assert
-		String logTail = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, logMarker, "WARNING").trim();
+		// get the tail of the marked rhsm.log file
+		String logTail = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, logMarker, null).trim();
+		
+		// assert a failure to load custom facts is logged
+		//	2013-06-07 13:31:08,916 [WARNING]  @facts.py:125 - Unable to load custom facts file: /etc/rhsm/facts/empty.facts
 		String expectedLogMessage = "Unable to load custom facts file: "+emptyFactsFile;
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.19.3-1")) {	// commit 4b7a8d39888de09bbd98ad44807485635eece14d Bug 1435771: Fix UnboundLocalError during custom facts collection
+			// There is no longer any logging when the custom facts file is empty, therefore we'll
+			// assert that the expected log messages are NOT logged.
+			// This is not a great assertion, but the built-in assertions for a successful register
+			// is what really matters.
+			Assert.assertTrue(!logTail.contains(expectedLogMessage), "The '"+clienttasks.rhsmLogFile+"' NO LONGER reports log message '"+expectedLogMessage+"' when the custom facts file is empty.");
+			expectedLogMessage = "Loading custom facts from: "+emptyFactsFile;
+			Assert.assertTrue(!logTail.contains(expectedLogMessage), "The '"+clienttasks.rhsmLogFile+"' DOES NOT report log message '"+expectedLogMessage+"' when the custom facts file is empty.");
+			expectedLogMessage = "Unable to load custom facts file.";
+			Assert.assertTrue(!logTail.contains(expectedLogMessage), "The '"+clienttasks.rhsmLogFile+"' DOES NOT report log message '"+expectedLogMessage+"' when the custom facts file is empty.");
+		} else
 		Assert.assertTrue(logTail.contains(expectedLogMessage), "The '"+clienttasks.rhsmLogFile+"' reports expected log message '"+expectedLogMessage+"'.");
 
 	}
