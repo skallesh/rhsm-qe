@@ -503,7 +503,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			expectedMsg = "Unable to continue migration!"; // TODO Improve the expectedMsg to better assert the list of conflicting channels
 			Assert.assertTrue(sshCommandResult.getStdout().contains(expectedMsg), "Stdout from call to '"+rhnMigrateTool+" "+options+"' contains message: "+expectedMsg);	
 			Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(1), "ExitCode from call to '"+rhnMigrateTool+" "+options+"' when currently consumed RHN Classic channels map to multiple productCerts sharing the same productId.");
-			Assert.assertTrue(RemoteFileTasks.testExists(client, clienttasks.rhnSystemIdFile),"The system id file '"+clienttasks.rhnSystemIdFile+"' exists.  This indicates this system is still registered using RHN Classicwhen currently consumed RHN Classic channels map to multiple productCerts sharing the same productId.");
+			Assert.assertTrue(clienttasks.isRhnSystemRegistered(),"This system is still registered using RHN Classic when currently consumed RHN Classic channels map to multiple productCerts sharing the same productId.");
 			
 			// assert that no product certs have been copied yet
 //OLD		Assert.assertEquals(clienttasks.getCurrentlyInstalledProducts().size(), 0, "No productCerts have been migrated when "+rhnMigrateTool+" aborts because the currently consumed RHN Classic channels map to multiple productCerts sharing the same productId.");
@@ -531,11 +531,11 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			expectedMsg = "Use --force to ignore these channels and continue the migration.";
 			Assert.assertTrue(sshCommandResult.getStdout().contains(expectedMsg), "Stdout from call to '"+rhnMigrateTool+" "+options+"' contains message: "+expectedMsg);	
 			Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(1), "ExitCode from call to '"+rhnMigrateTool+" "+options+"' when any of the channels are not mapped to a productCert.");
-			Assert.assertTrue(RemoteFileTasks.testExists(client, clienttasks.rhnSystemIdFile),"The system id file '"+clienttasks.rhnSystemIdFile+"' exists.  This indicates this system is still registered using RHN Classic when rhn-migrate-classic-to-rhsm requires --force to continue.");
+			Assert.assertTrue(clienttasks.isRhnSystemRegistered(),"This system is still registered using RHN Classic when rhn-migrate-classic-to-rhsm requires --force to continue.");
 			
 			// assert that no product certs have been copied yet
 			Assert.assertEquals(clienttasks.getCurrentlyInstalledProducts().size(), 0, "No productCerts have been migrated when "+rhnMigrateTool+" requires --force to continue.");
-
+			
 			// assert that we are not yet registered to RHSM
 			Assert.assertNull(clienttasks.getCurrentConsumerCert(),"We should NOT be registered to RHSM when "+rhnMigrateTool+" requires --force to continue.");
 			
@@ -678,7 +678,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			//		System successfully unregistered from RHN Classic.
 			Assert.assertTrue(sshCommandResult.getStdout().contains(successfulUnregisterMsg), "Stdout from call to '"+rhnMigrateTool+" "+options+"' contains message: "+successfulUnregisterMsg);
 			Assert.assertTrue(!sshCommandResult.getStdout().contains(unsuccessfulUnregisterMsg), "Stdout from call to '"+rhnMigrateTool+" "+options+"' does NOT contain message: "+unsuccessfulUnregisterMsg);
-			Assert.assertTrue(!RemoteFileTasks.testExists(client, clienttasks.rhnSystemIdFile),"The system id file '"+clienttasks.rhnSystemIdFile+"' is absent.  Therefore this system will no longer communicate with RHN Classic.");
+			Assert.assertTrue(!clienttasks.isRhnSystemRegistered(),"This system is NOT registered using RHN Classic. Therefore this system will no longer communicate with RHN Classic.");
 			Assert.assertTrue(!clienttasks.isRhnSystemIdRegistered(rhnreg_ksUsername, rhnreg_ksPassword, rhnHostname, rhnSystemId), "Confirmed that rhn systemId '"+rhnSystemId+"' is no longer registered on the RHN Classic server.");
 		} else {
 			// Case 2: number of subscribed channels is high and communication fails in a timely fashion (see bug 881952).  Here is a snippet from stdout:	
@@ -687,7 +687,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			//		Please investigate on the Customer Portal at https://access.redhat.com.
 			log.warning("Did not detect expected message '"+successfulUnregisterMsg+"' from "+rhnMigrateTool+" stdout.  Nevertheless, the tool should inform us and continue the migration process.");
 			Assert.assertTrue(sshCommandResult.getStdout().contains(unsuccessfulUnregisterMsg), "Stdout from call to '"+rhnMigrateTool+" "+options+"' contains message: "+unsuccessfulUnregisterMsg);
-			Assert.assertTrue(!RemoteFileTasks.testExists(client, clienttasks.rhnSystemIdFile),"The system id file '"+clienttasks.rhnSystemIdFile+"' is absent.  Therefore this system will no longer communicate with RHN Classic.");
+			Assert.assertTrue(!clienttasks.isRhnSystemRegistered(),"This system is NOT registered using RHN Classic. Therefore this system will no longer communicate with RHN Classic.");
 			if (!clienttasks.isRhnSystemIdRegistered(rhnreg_ksUsername, rhnreg_ksPassword, rhnHostname, rhnSystemId)) {
 				Assert.assertFalse(false, "Confirmed that rhn systemId '"+rhnSystemId+"' is no longer registered on the RHN Classic server.");
 			} else {
@@ -1116,7 +1116,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		if (sshCommandResult.getStdout().contains(conflictingProductCertsMsg)) {	// when "You are subscribed to channels that have conflicting product certificates." migration aborts.
 			log.warning("You are subscribed to channels that have conflicting product certificates.  Therefore, the "+rhnMigrateTool+" command should have exited with code 1.");
 			Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(1), "ExitCode from call to '"+rhnMigrateTool+" "+options+"' when the RHN channels map to conflicting product certs that share the same product ID");
-			Assert.assertTrue(RemoteFileTasks.testExists(client, clienttasks.rhnSystemIdFile),"The system id file '"+clienttasks.rhnSystemIdFile+"' indicates this system is still registered using RHN Classic when the RHN channels map to conflicting product certs that share the same product ID");	
+			Assert.assertTrue(clienttasks.isRhnSystemRegistered(),"This system is registered using RHN Classic when the RHN channels map to conflicting product certs that share the same product ID");
 			
 			// assert that we are not yet registered to RHSM
 			Assert.assertNull(clienttasks.getCurrentConsumerCert(),"We should NOT be registered to RHSM when "+rhnMigrateTool+" detects that the RHN channels map to conflicting product certs that share the same product ID");
@@ -1132,7 +1132,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			expectedMsg = "Use --force to ignore these channels and continue the migration.";
 			Assert.assertTrue(sshCommandResult.getStdout().contains(expectedMsg), "Stdout from call to '"+rhnMigrateTool+" "+options+"' contains message: "+expectedMsg);	
 			Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(1), "ExitCode from call to '"+rhnMigrateTool+" "+options+"' when any of the channels are not mapped to a productCert.");
-			Assert.assertTrue(RemoteFileTasks.testExists(client, clienttasks.rhnSystemIdFile),"The system id file '"+clienttasks.rhnSystemIdFile+"' indicates this system is still registered using RHN Classic when rhn-migrate-classic-to-rhsm requires --force to continue.");
+			Assert.assertTrue(clienttasks.isRhnSystemRegistered(),"This system is registered using RHN Classic when rhn-migrate-classic-to-rhsm requires --force to continue.");
 			
 			// assert that we are not yet registered to RHSM
 			Assert.assertNull(clienttasks.getCurrentConsumerCert(),"We should NOT be registered to RHSM when "+rhnMigrateTool+" requires --force to continue.");
@@ -1174,7 +1174,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			//		System successfully unregistered from RHN Classic.
 			Assert.assertTrue(sshCommandResult.getStdout().contains(successfulUnregisterMsg), "Stdout from call to '"+rhnMigrateTool+" "+options+"' contains message: "+successfulUnregisterMsg);
 			Assert.assertTrue(!sshCommandResult.getStdout().contains(unsuccessfulUnregisterMsg), "Stdout from call to '"+rhnMigrateTool+" "+options+"' does NOT contain message: "+unsuccessfulUnregisterMsg);
-			Assert.assertTrue(!RemoteFileTasks.testExists(client, clienttasks.rhnSystemIdFile),"The system id file '"+clienttasks.rhnSystemIdFile+"' is absent.  Therefore this system will no longer communicate with RHN Classic.");
+			Assert.assertTrue(!clienttasks.isRhnSystemRegistered(),"This system is NOT registered using RHN Classic. Therefore this system will no longer communicate with RHN Classic.");
 			iptablesAcceptPort(candlepinServerPort);	// without this, isRhnSystemIdRegistered(...) fails with Unexpected error: [Errno 111] Connection refused
 			Assert.assertTrue(!clienttasks.isRhnSystemIdRegistered(rhnreg_ksUsername, rhnreg_ksPassword, rhnHostname, rhnSystemId), "Confirmed that rhn systemId '"+rhnSystemId+"' is no longer registered on the RHN Classic server.");
 		} else {
@@ -1184,7 +1184,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			//		Please investigate on the Customer Portal at https://access.redhat.com.
 			log.warning("Did not detect expected message '"+successfulUnregisterMsg+"' from "+rhnMigrateTool+" stdout.  Nevertheless, the tool should inform us and continue the migration process.");
 			Assert.assertTrue(sshCommandResult.getStdout().contains(unsuccessfulUnregisterMsg), "Stdout from call to '"+rhnMigrateTool+" "+options+"' contains message: "+unsuccessfulUnregisterMsg);
-			Assert.assertTrue(!RemoteFileTasks.testExists(client, clienttasks.rhnSystemIdFile),"The system id file '"+clienttasks.rhnSystemIdFile+"' is absent.  Therefore this system will no longer communicate with RHN Classic.");
+			Assert.assertTrue(!clienttasks.isRhnSystemRegistered(),"This system is NOT registered using RHN Classic. Therefore this system will no longer communicate with RHN Classic.");
 			iptablesAcceptPort(candlepinServerPort);	// without this, isRhnSystemIdRegistered(...) fails with Unexpected error: [Errno 111] Connection refused
 			if (!clienttasks.isRhnSystemIdRegistered(rhnreg_ksUsername, rhnreg_ksPassword, rhnHostname, rhnSystemId)) {
 				Assert.assertFalse(false, "Confirmed that rhn systemId '"+rhnSystemId+"' is no longer registered on the RHN Classic server.");
@@ -1733,7 +1733,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		
 		// assert that we are still registered to RHN
 		Assert.assertTrue(clienttasks.isRhnSystemIdRegistered(sm_rhnUsername, sm_rhnPassword, sm_rhnHostname, rhnSystemId),"Confirmed that rhn systemId '"+rhnSystemId+"' is still registered when '"+rhnMigrateTool+" was aborted.");
-		Assert.assertTrue(RemoteFileTasks.testExists(client, clienttasks.rhnSystemIdFile),"The system id file '"+clienttasks.rhnSystemIdFile+"' exists.  This indicates this system is still registered using RHN Classic.");
+		Assert.assertTrue(clienttasks.isRhnSystemRegistered(),"This system is registered using RHN Classic.");
 	}
 
 
@@ -1850,7 +1850,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		}
 	    clienttasks.unregister(null,null,null, null);
 	    clienttasks.removeRhnSystemIdFile();
-		Assert.assertTrue(!RemoteFileTasks.testExists(client, clienttasks.rhnSystemIdFile),"This system is not registered using RHN Classic.");
+		Assert.assertTrue(!clienttasks.isRhnSystemRegistered(),"This system is NOT registered using RHN Classic.");
 		
 		// execute rhn-migrate-classic-to-rhsm
 		String rhsmServerUrlOption = "--serverurl="+"https://"+originalServerHostname+":"+originalServerPort+originalServerPrefix;	// passing the --serverurl forces prompting for rhsm credentials

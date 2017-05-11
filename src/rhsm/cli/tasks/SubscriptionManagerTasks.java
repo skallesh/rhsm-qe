@@ -8097,8 +8097,8 @@ if (false) {
 		// END OF WORKAROUND
 		Assert.assertEquals(stdout.trim(), "","Stdout from attempt to register to RHN Classic.");
 		
-		// assert existance of system id file
-		Assert.assertTrue(RemoteFileTasks.testExists(sshCommandRunner, rhnSystemIdFile),"The system id file '"+rhnSystemIdFile+"' exists.  This indicates this system is registered using RHN Classic.");
+		// assert this system is registered using RHN Classic
+		Assert.assertTrue(isRhnSystemRegistered(),"This system is registered using RHN Classic.");
 		
 		// get the value of the systemid
 		// [root@jsefler-onprem-5server rhn]# grep ID- /etc/sysconfig/rhn/systemid
