@@ -3628,7 +3628,12 @@ if (false) {
 				if (isPackageVersion("subscription-manager",">=","1.19.11-1")) {	// commit 217c3863448478d06c5008694e327e048cc54f54 Bug 1443101: Provide feedback for force register
 					String unregisterFromServer = getConfFileParameter(rhsmConfFile, "server", "hostname")+":"+ getConfFileParameter(rhsmConfFile, "server", "port")+ getConfFileParameter(rhsmConfFile, "server", "prefix");
 					String unregisterFromMsg = String.format("Unregistering from: %s\nThe system with UUID %s has been unregistered\nAll local data removed",unregisterFromServer, currentConsumerId);	// introduced by commit 217c3863448478d06c5008694e327e048cc54f54 Bug 1443101: Provide feedback for force register 
-					Assert.assertTrue(sshCommandResult.getStdout().trim().startsWith(unregisterFromMsg), "Stdout from an attempt to register with force while already being registered starts with message '"+unregisterFromMsg+"'.");
+					if (isRhnSystemRegistered()) {
+						String unregisterFromMsgWithInteroperabilityWarning = msg_InteroperabilityWarning+"\n"+unregisterFromMsg;
+						Assert.assertTrue(sshCommandResult.getStdout().trim().startsWith(unregisterFromMsgWithInteroperabilityWarning), "Stdout from an attempt to register with force while already being registered (to both RHN Classic and RHSM) starts with message '"+unregisterFromMsgWithInteroperabilityWarning+"'.");
+					} else {
+						Assert.assertTrue(sshCommandResult.getStdout().trim().startsWith(unregisterFromMsg), "Stdout from an attempt to register with force while already being registered starts with message '"+unregisterFromMsg+"'.");
+					}
 				}
 			}
 		}
@@ -8146,6 +8151,12 @@ if (false) {
 		String command = String.format("rhn-is-registered.py --username=%s --password=%s --serverurl=%s  %s", rhnUsername, rhnPassword, serverUrl, systemId);
 		SSHCommandResult result = sshCommandRunner.runCommandAndWait(command);
 		return Boolean.valueOf(result.getStdout().trim());
+	}
+	
+	public boolean isRhnSystemRegistered() {
+		Boolean rhnSystemIdFileExists = RemoteFileTasks.testExists(sshCommandRunner, rhnSystemIdFile);
+		log.info("The existance of rhn system id file '"+rhnSystemIdFile+"' indicates this system is still registered using RHN Classic.");
+		return rhnSystemIdFileExists;
 	}
 	
 	public void deleteRhnSystemsRegisteredByName(String rhnUsername, String rhnPassword,String rhnHostname, String systemName) {
