@@ -3511,6 +3511,19 @@ if (false) {
 		}
 		
 		// reset this.currentlyRegistered values
+		if (isPackageVersion("subscription-manager",">=","1.19.11-1")) {	// commit 217c3863448478d06c5008694e327e048cc54f54 Bug 1443101: Provide feedback for force register
+			if (sshCommandResult.getStdout().contains("All local data removed")) {
+				//	Unregistering from: jsefler-candlepin.usersys.redhat.com:8443/candlepin
+				//	The system with UUID 2618dc5e-8407-4933-a945-da2a3fa1ccd6 has been unregistered
+				//	All local data removed
+				//	Registering to: jsefler-candlepin.usersys.redhat.com:8443/candlepin
+				//	The system has been registered with ID: 2618dc5e-8407-4933-a945-da2a3fa1ccd6 
+				this.currentlyRegisteredUsername = null;
+				this.currentlyRegisteredPassword = null;
+				this.currentlyRegisteredOrg = null;
+				this.currentlyRegisteredType = null;
+			}
+		}
 		if (sshCommandResult.getExitCode().equals(Integer.valueOf(0))) {
 			// The system has been registered with id: 660faf39-a8f2-4311-acf2-5c1bb3c141ef
 			this.currentlyRegisteredUsername = username;
@@ -3598,9 +3611,17 @@ if (false) {
 		
 		boolean alreadyRegistered = this.currentlyRegisteredUsername==null? false:true;
 		String currentConsumerId = alreadyRegistered? getCurrentConsumerId():null;
+		if (alreadyRegistered && currentConsumerId==null) {
+			log.warning("AUTOMATION ERROR: Detected a bad state of the SubscriptionManagerTasks.  Conflicting variables: alreadyRegistered='"+alreadyRegistered+"' && currentConsumerId='"+currentConsumerId+"'.  Instruct the automator of this testware to troubleshoot the cause.  Proceeding with the assumption that currentConsumerId is correct.");
+			alreadyRegistered=false;
+			this.currentlyRegisteredType=null;
+			this.currentlyRegisteredUsername=null;
+			this.currentlyRegisteredPassword=null;
+			this.currentlyRegisteredOrg=null;
+		}
 		String msg;
 		SSHCommandResult sshCommandResult = register_(username, password, org, environment, type, name, consumerid, autosubscribe, servicelevel, release, activationkeys, serverurl, insecure, baseurl, force, autoheal, proxy, proxyuser, proxypassword, noproxy);
-	
+		
 		// assert results when already registered
 		if (alreadyRegistered) {
 			if (force==null || !force) { // already registered while attempting to register without using force
