@@ -1311,15 +1311,11 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		//	2013-06-07 13:31:08,916 [WARNING]  @facts.py:125 - Unable to load custom facts file: /etc/rhsm/facts/empty.facts
 		String expectedLogMessage = "Unable to load custom facts file: "+emptyFactsFile;
 		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.19.3-1")) {	// commit 4b7a8d39888de09bbd98ad44807485635eece14d Bug 1435771: Fix UnboundLocalError during custom facts collection
-			// There is no longer any logging when the custom facts file is empty, therefore we'll
-			// assert that the expected log messages are NOT logged.
-			// This is not a great assertion, but the built-in assertions for a successful register
-			// is what really matters.
-			Assert.assertTrue(!logTail.contains(expectedLogMessage), "The '"+clienttasks.rhsmLogFile+"' NO LONGER reports log message '"+expectedLogMessage+"' when the custom facts file is empty.");
+			//	2017-05-11 13:06:20,836 [INFO] subscription-manager:24583:MainThread @custom.py:85 - Loading custom facts from: /etc/rhsm/facts/empty.facts
+			//	2017-05-11 13:06:20,837 [WARNING] subscription-manager:24583:MainThread @custom.py:40 - Unable to load custom facts file.
 			expectedLogMessage = "Loading custom facts from: "+emptyFactsFile;
-			Assert.assertTrue(!logTail.contains(expectedLogMessage), "The '"+clienttasks.rhsmLogFile+"' DOES NOT report log message '"+expectedLogMessage+"' when the custom facts file is empty.");
+			Assert.assertTrue(logTail.contains(expectedLogMessage), "The '"+clienttasks.rhsmLogFile+"' reports expected log message '"+expectedLogMessage+"'.");
 			expectedLogMessage = "Unable to load custom facts file.";
-			Assert.assertTrue(!logTail.contains(expectedLogMessage), "The '"+clienttasks.rhsmLogFile+"' DOES NOT report log message '"+expectedLogMessage+"' when the custom facts file is empty.");
 		} else
 		Assert.assertTrue(logTail.contains(expectedLogMessage), "The '"+clienttasks.rhsmLogFile+"' reports expected log message '"+expectedLogMessage+"'.");
 
@@ -1552,13 +1548,13 @@ if (false) { // DO NOT RUN, BUT NOT READY TO DELETE CODE
 	
 	// Configuration Methods ***********************************************************************
 	@BeforeClass(groups={"setup"})
-	protected void removeRhsmLogBeforeClass() {
+	protected void truncateRhsmLogBeforeClass() {
 		if (client==null) return;
 		
-		// remove the rhsm.log before this class to effectively reduce its size because it
+		// truncate the rhsm.log before this class to reduce its size because it
 		// occasionally gets backed up to rhsm.log.1 in the midst of a pair of calls to
 		// RemoteFileTasks.markFile(...) and RemoteFileTasks.getTailFromMarkedFile(...)
-		client.runCommandAndWait("rm -f "+clienttasks.rhsmLogFile);
+		client.runCommandAndWait("truncate --size=0 --no-create "+clienttasks.rhsmLogFile);
 	}
 	
 	
