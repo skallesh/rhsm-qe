@@ -127,6 +127,16 @@ import com.github.redhatqe.polarize.metadata.TestDefinition;
  *      https://engineering.redhat.com/rt/Ticket/Display.html?id=
  *      https://bugzilla.redhat.com/show_bug.cgi?id=1340135
  *      
+ *       Subscription Manger 1.17.X Translation Request
+ *      https://translate.zanata.org/zanata/iteration/view/subscription-manager/1.18.X
+ *      https://engineering.redhat.com/rt/Ticket/Display.html?id=
+ *      https://bugzilla.redhat.com/show_bug.cgi?id=1391681
+ *      
+ *      Subscription Manger 1.17.X Translation Request
+ *      https://translate.zanata.org/zanata/iteration/view/subscription-manager/1.19.X
+ *      https://engineering.redhat.com/rt/Ticket/Display.html?id=447283
+ *      https://bugzilla.redhat.com/show_bug.cgi?id=1441739
+ *      
  *      Candlepin IT Service Adapters
  *      https://translate.engineering.redhat.com/project/view/candlepin-it-adapters
  *      
