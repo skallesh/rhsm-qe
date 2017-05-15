@@ -843,6 +843,14 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		Assert.assertNotNull(clienttasks.getCurrentConsumerId(),"The existance of a consumer cert indicates that the system is currently registered using RHSM.");
 		expectedMsg = String.format("System '%s' successfully registered to Red Hat Subscription Management.",	clienttasks.hostname);
 		if (clienttasks.isPackageVersion("subscription-manager-migration", ">=", "1.13.1")) expectedMsg = String.format("System '%s' successfully registered.",	clienttasks.hostname); // changed by commit fad3de89
+		// TEMPORARY WORKAROUND FOR BUG
+		String bugId = "1451003"; // Bug 1451003 - subscription-manager identity reports redundant UUID info in the name field
+		boolean invokeWorkaroundWhileBugIsOpen = true;
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
+		if (invokeWorkaroundWhileBugIsOpen) {
+			log.warning("Skipping assertion that Stdout from call to '"+rhnMigrateTool+" "+options+"' contains message: "+expectedMsg);
+		} else
+		// END OF WORKAROUND
 		Assert.assertTrue(sshCommandResult.getStdout().contains(expectedMsg), "Stdout from call to '"+rhnMigrateTool+" "+options+"' contains message: "+expectedMsg);
 
 		// assert the the expected service level was set as a preference on the registered consumer
