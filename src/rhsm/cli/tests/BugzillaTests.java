@@ -1510,7 +1510,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
 			       , testCaseID = {"RHEL6-21942", "RHEL7-51804"})
 	@Test(description = "verify if CLI lets you set consumer nameto empty string and defaults to sm_clientUsername", groups = {
-			"VerifyConsumerNameTest", "blockedByBug-669395" }, enabled = true)
+			"VerifyConsumerNameTest", "blockedByBug-669395", "blockedByBug-1451003" }, enabled = true)
 	public void VerifyConsumerNameTest() throws JSONException, Exception {
 		String consumerName = "tester";
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
