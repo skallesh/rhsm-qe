@@ -145,7 +145,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
 			       , testCaseID = {"RHEL6-36547", "RHEL7-51322"})
 	@Test(	description="subscription-manager-cli: identity",
-			groups={"blockedByBug-852001","blockedByBug-1101522"},
+			groups={"blockedByBug-852001","blockedByBug-1101522","blockedByBug-1451003"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void Identity_Test() throws JSONException, Exception {
@@ -181,7 +181,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
 			       , testCaseID = {"RHEL6-36546", "RHEL7-51321"})
 	@Test(	description="subscription-manager-cli: identity (when the client registered with --name)",
-			groups={"blockedByBug-647891","blockedByBug-1101522"},
+			groups={"blockedByBug-647891","blockedByBug-1101522","blockedByBug-1451003"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void IdentityWithName_Test() {
@@ -511,7 +511,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 	
 	// Configuration Methods ***********************************************************************
 	
-	@BeforeClass(groups="setup")
+//debugTest	@BeforeClass(groups="setup")
 	public void setupBeforeClass() throws Exception {
 		// alternative to dependsOnGroups={"RegisterWithCredentials_Test"}
 		// This allows us to satisfy a dependency on registrationDataList making TestNG add unwanted Test results.
