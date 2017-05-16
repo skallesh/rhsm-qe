@@ -180,6 +180,10 @@ public class TemporaryPoolTests extends SubscriptionManagerCLITestScript {
 
 		// assert the expiration is 24 hours post the consumer's registration
 		int hours = 24;
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.1.1-1")) {	// commit 0704a73dc0d3bf753351e87ca0b65d85a71acfbe 1450079: virt-who temporary subscription should be 7 days
+			hours=7/*days*/ * 24/*hours per day*/;
+			log.info("Due to Candlepin RFE Bug 1450079, the vailidity period for temporary subscription pools has increased from one day to one week.");
+		}
 		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.30-1")) {	// commit 9302c8f57f37dd5ec3c4020770ac1675a87d99ba 1419576: Pre-date certs to ease clock skew issues
 			hours+=1;
 			log.info("Due to Candlepin RFE Bug 1419576, we need to increment the expected entitlement validity for the temporary pool by one hour to '"+hours+"' hours after the consumer identity's validityNotBefore date.");
