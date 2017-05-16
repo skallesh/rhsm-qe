@@ -1166,6 +1166,20 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 			Assert.assertTrue(!channelsToProductCertFilenamesMap.containsKey(classicRhnChannel), "Special case RHN Classic channel '"+classicRhnChannel+"' is NOT accounted for in subscription-manager-migration-data file '"+channelCertMappingFilename+"'.");
 			return;
 		}
+		if (classicRhnChannel.equals("rhel-x86_64-rhev-mgmt-agent-7-beta") ||
+			classicRhnChannel.equals("rhel-x86_64-rhev-mgmt-agent-7-beta-debuginfo")) {
+			// Bug 1435245 - RHN channels to product cert maps for "rhel-x86_64-rhev-mgmt-agent-7-beta*" disappeared
+			log.warning("(khowell 05/15/2017) We don't necessarily commit to supporting beta migration.  https://bugzilla.redhat.com/show_bug.cgi?id=1435245#c5");
+			Assert.assertTrue(!channelsToProductCertFilenamesMap.containsKey(classicRhnChannel), "Special case RHN Classic channel '"+classicRhnChannel+"' is NOT accounted for in subscription-manager-migration-data file '"+channelCertMappingFilename+"'.");
+			return;
+		}
+		if (classicRhnChannel.equals("rhel-x86_64-server-7-rhevh-beta") ||
+			classicRhnChannel.equals("rhel-x86_64-server-7-rhevh-beta-debuginfo")) {
+			// Bug 1435255 - RHN channels to product cert maps for "rhel-x86_64-server-7-rhevh-beta*" disappeared
+			log.warning("(khowell 05/15/2017) We don't necessarily commit to supporting beta migration.  https://bugzilla.redhat.com/show_bug.cgi?id=1435255#c4");
+			Assert.assertTrue(!channelsToProductCertFilenamesMap.containsKey(classicRhnChannel), "Special case RHN Classic channel '"+classicRhnChannel+"' is NOT accounted for in subscription-manager-migration-data file '"+channelCertMappingFilename+"'.");
+			return;
+		}
 		
 		Assert.assertTrue(channelsToProductCertFilenamesMap.containsKey(classicRhnChannel), "RHN Classic channel '"+classicRhnChannel+"' is accounted for in subscription-manager-migration-data file '"+channelCertMappingFilename+"'.");
 	}
