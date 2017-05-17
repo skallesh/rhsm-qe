@@ -1,4 +1,4 @@
-(ns rhsm.dbus.tests.register-tests
+(ns rhsm.dbus.tests.register_tests
   (:use [test-clj.testng :only (gen-class-testng)]
         [rhsm.gui.tasks.test-config :only (config
                                            clientcmd
