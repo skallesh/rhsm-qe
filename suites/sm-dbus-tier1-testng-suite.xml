@@ -12,7 +12,7 @@
 
   <!-- DBus TIER 1 TESTS -->
 
-  <test name="DBus: Registration">
+  <test name="DBus: Register">
     <classes>
       <class name="rhsm.base.SubscriptionManagerBaseTestScript"/>
       <class name="rhsm.dbus.tests.register_tests" />
