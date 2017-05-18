@@ -62,9 +62,7 @@ When I
        (nth 1)
        vector
        vector
-       to-array-2d
-   )
-  )
+       to-array-2d))
 
 (defn ^{DataProvider {:name "register-socket"}}
   register_socket
