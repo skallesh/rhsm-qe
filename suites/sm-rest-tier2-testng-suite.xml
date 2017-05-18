@@ -12,16 +12,16 @@
 
   <!-- REST TIER 1 TESTS -->
 
-  <test name="REST: Register">
+  <test name="REST: Activation Key">
     <classes>
       <class name="rhsm.base.SubscriptionManagerBaseTestScript"/>
-      <class name="rhsm.rest.tests.register_tests" />
+      <class name="rhsm.rest.tests.activation_key_tests" />
       <class name="rhsm.gui.tests.base" />
     </classes>
     <groups>
       <run>
         <include name="setup" />
-        <include name="tier1"/>
+        <include name="tier2"/>
         <include name="cleanup" />
       </run>
     </groups>
