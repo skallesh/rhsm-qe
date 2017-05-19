@@ -1,7 +1,7 @@
 <!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
 
 <!-- Running on the command line:  java -cp `lein classpath` org.testng.TestNG [testng options] [suitefile] -->
-<suite name="DBus Tier2 TestSuite">
+<suite name="API Tier1 TestSuite">
 
 	<listeners>
 		<listener class-name="com.redhat.qe.auto.testng.TestNGListener" />
@@ -10,18 +10,18 @@
 		<listener class-name="org.testng.reporters.XMLReporter" />
 	</listeners>
 
-  <!-- DBus TIER 2 TESTS -->
+  <!-- API (DBus,REST) TIER 1 TESTS -->
 
-  <test name="DBus: Activation Key">
+  <test name="API: Register">
     <classes>
       <class name="rhsm.base.SubscriptionManagerBaseTestScript"/>
-      <class name="rhsm.dbus.tests.activation_key_tests" />
+      <class name="rhsm.api.tests.register_tests" />
       <class name="rhsm.gui.tests.base" />
     </classes>
     <groups>
       <run>
         <include name="setup" />
-        <include name="tier2"/>
+        <include name="tier1"/>
         <include name="cleanup" />
       </run>
     </groups>

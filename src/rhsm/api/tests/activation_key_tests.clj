@@ -1,4 +1,4 @@
-(ns rhsm.rest.tests.activation_key_tests
+(ns rhsm.api.tests.activation_key_tests
   (:use [test-clj.testng :only (gen-class-testng)]
         [rhsm.gui.tasks.test-config :only (config
                                            clientcmd
@@ -13,6 +13,7 @@
             [rhsm.gui.tasks.tasks :as tasks]
             [org.httpkit.client :as http]
             [clojure.data.json :as json]
+            [rhsm.dbus.parser :as dbus]
             [rhsm.gui.tasks.candlepin-tasks :as ctasks]
             [rhsm.gui.tests.activation-key-tests :as atests]
             [clojure.string :as str])
@@ -34,6 +35,8 @@
                    :keepalive 30000})
 
 (defn ^{Test {:groups ["activation-key"
+                       "REST"
+                       "API"
                        "tier1"]
               :description "Given the candlepin knows an owner {owner}
 When a rest client sends POST to '/owners/{owner key}/activation_keys'
@@ -42,7 +45,7 @@ Then the candlepin replies a status 200
   and the answer is the same as the candlepin returns
   for an ask GET to '/activation_keys/{returned-activation-key id}'"}
         TestDefinition {:projectID [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]}}
-  create_activation_key
+  create_activation_key_using_rest
   [ts]
   (let [timestamp (System/currentTimeMillis)
         base-url (ctasks/server-url)
@@ -62,6 +65,8 @@ Then the candlepin replies a status 200
                      (-> response-01 :body json/read-json))))))))
 
 (defn ^{Test {:groups ["activation-key"
+                       "REST"
+                       "API"
                        "tier1"]
               :description "Given the candlepin knows and owner {owner}
    and his activation key {activation-key}
@@ -70,7 +75,7 @@ Then the candlepin replises a status 204
   and the answer contains of '' as body."
               :dataProvider "new-activation-key"}
         TestDefinition {:projectID [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]}}
-  delete_activation_key
+  delete_activation_key_using_rest
   [ts activation-key]
   (let [base-url (ctasks/server-url)
         options (assoc http-options :basic-auth [(@config :username) (@config :password)])
@@ -80,6 +85,8 @@ Then the candlepin replises a status 204
       (verify (= (-> response :status) 204)))))
 
 (defn ^{Test {:groups ["activation-key"
+                       "REST"
+                       "API"
                        "tier2"]
               :description "Given the candlepin knows an owner {owner}
 When a rest client creates an activation key {activation-key}
@@ -88,7 +95,7 @@ When a rest client creates an activation key {activation-key}
 Then the candlepin replies a status 404
   and the response body is 'ActivationKey with id {activation-key id} could not be found.'"}
         TestDefinition {:projectID [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]}}
-  create_activation_key_and_delete_it
+  create_activation_key_and_delete_it_using_rest
   [ts]
   (let [timestamp (System/currentTimeMillis)
         base-url (ctasks/server-url)
@@ -134,6 +141,28 @@ Then the candlepin replies a status 404
           (verify (= (-> response-delete-nonexisting :body json/read-json :displayMessage)
                      (format "ActivationKey with id %s could not be found." (-> activation-key :id)))))))))
 
+(defn ^{Test {:groups ["activation-key"
+                       "DBUS"
+                       "API"
+                       "tier2"]
+              :description "Given a system is unregistered
+   and there is a simple activation key for my account
+When I 
+"
+              :dataProvider "new-activation-key"}
+        TestDefinition {:projectID [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]}}
+  register_with_activation_key_using_dbus
+  [ts activation-key]
+  (run-command "subscription-manager unregister")
+  (let [socket (register-socket ts)]
+    (let [response (-> (format "busctl --address=unix:abstract=%s call com.redhat.RHSM1 /com/redhat/RHSM1/Register com.redhat.RHSM1.Register RegisterWithActivationKeys 'sa(s)a{ss}' %s 1 %s 0" socket (@config :owner-key) (-> activation-key :name))
+                       run-command)]
+      (verify (=  (:stderr response) ""))
+      (let [[parsed-response rest-string] (-> response :stdout (.trim) dbus/parse)]
+        (verify (->> rest-string (= "")))
+        (verify (->> parsed-response keys (= ["content" "status" "headers"])))
+        (verify (-> parsed-response (get "status") (= 200)))))))
+
 ;; (defn ^{Test {:groups ["activation-key"
 ;;                        "tier2"]}
 ;;         TestDefinition {:projectID [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]}}
@@ -172,7 +201,7 @@ Then the candlepin replies a status 404
                   (ctasks/server-url) (@config :owner-key))
           (assoc http-options
                  :basic-auth [(@config :username) (@config :password)]
-                 :body (-> {:name (format "rhsm-rest-tests-%d" (System/currentTimeMillis))}
+                 :body (-> {:name (format "rhsm-api-tests-%d" (System/currentTimeMillis))}
                            json/json-str)))]
     (let [activation-key (-> response :body json/read-json)]
       (log/info "new activation key has been created" activation-key)
@@ -181,5 +210,16 @@ Then the candlepin replies a status 404
           vector
           vector
           to-array-2d))))
+
+(defn register-socket
+  "provides a socket that is used by DBus RHSM Register service"
+  [ts]
+  "response:   s \"unix:abstract=/var/run/dbus-XP0szXbntD,guid=e234053b12b7e78b2c48cac758a60d17\""
+  (-> (->> "busctl call com.redhat.RHSM1 /com/redhat/RHSM1/RegisterServer com.redhat.RHSM1.RegisterServer Start"
+           run-command
+           :stdout
+           (re-seq #"abstract=([^,]+)"))
+      (nth 0)
+      (nth 1)))
 
 (gen-class-testng)

@@ -73,3 +73,6 @@
                  (format "ActivationKey with id %s could not be found." (-> activation-key :id)))))))))
 
 
+(deftest register-using-activation-key-by-dbus-test
+  (let [activation-key (tests/new_activation_key nil)]
+    (tests/register_with_activation_key_using_dbus nil (-> activation-key first first))))

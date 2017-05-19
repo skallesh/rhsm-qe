@@ -1,4 +1,4 @@
-(ns rhsm.dbus.tests.register_tests
+(ns rhsm.api.tests.register_tests
   (:use [test-clj.testng :only (gen-class-testng)]
         [rhsm.gui.tasks.test-config :only (config
                                            clientcmd
@@ -27,6 +27,8 @@
            [com.github.redhatqe.polarize.metadata DefTypes$Project]))
 
 (defn ^{Test {:groups ["registration"
+                       "DBUS"
+                       "API"
                        "tier1"]
               :description "Given a system is unregistered
    and there is a simple activation key for my account
@@ -34,7 +36,7 @@ When I
 "
               :dataProvider "register-socket"}
         TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]}}
-  register
+  register_using_dbus
   [_ socket]
   (run-command "subscription-manager unregister")
   (let [response (-> (format "busctl --address=unix:abstract=%s call com.redhat.RHSM1 /com/redhat/RHSM1/Register com.redhat.RHSM1.Register Register 'sssa{sv}' %s %s %s 0"
