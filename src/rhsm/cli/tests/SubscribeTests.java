@@ -25,6 +25,7 @@ import rhsm.base.CandlepinType;
 import rhsm.base.ConsumerType;
 import rhsm.base.SubscriptionManagerCLITestScript;
 import rhsm.cli.tasks.CandlepinTasks;
+import rhsm.cli.tasks.SubscriptionManagerTasks;
 import rhsm.data.ConsumerCert;
 import rhsm.data.EntitlementCert;
 import rhsm.data.InstalledProduct;
@@ -71,6 +72,8 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 ///*debugTesting*/ if (!productId.equals("2cores-2ram-multiattr")) throw new SkipException("debugTesting - Automator should comment out this line."); 		
 ///*debugTesting*/ if (!productId.equals("RH0380468")) throw new SkipException("debugTesting - Automator should comment out this line."); 		
 ///*debugTesting*/ if (!productId.equals("RH00284")) throw new SkipException("debugTesting - Automator should comment out this line."); 		
+///*debugTesting*/ if (!productId.equals("awesomeos-super-hypervisor")) throw new SkipException("debugTesting - Automator should comment out this line.");
+///*debugTesting*/ if (!productId.equals("awesomeos-instancebased")) throw new SkipException("debugTesting - Automator should comment out this line.");
 		// is this system a virtual guest system or a physical system
 		boolean systemIsGuest = Boolean.valueOf(clienttasks.getFactValue("virt.is_guest"));
 		
@@ -82,7 +85,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		SubscriptionPool pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", productId, clienttasks.getCurrentlyAllAvailableSubscriptionPools());	// clienttasks.getCurrentlyAvailableSubscriptionPools() is tested at the conclusion of this test
 ///*debugTesting*/pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", "8a9087e34c6b0d69014c6b0ede641f42", clienttasks.getCurrentlyAllAvailableSubscriptionPools());	// awesomeos-onesocketib; Instance Based (Temporary)
 		boolean isPoolRestrictedToUnmappedVirtualSystems = CandlepinTasks.isPoolRestrictedToUnmappedVirtualSystems(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId);
-		
+///*debugTesting*/ if (!isPoolRestrictedToUnmappedVirtualSystems) throw new SkipException("debugTesting - Automator should comment out this line.");
 		// special case...
 		if (pool==null) {	// when pool is null, another likely cause is that all of the available subscriptions from the pools are being consumed, let's check...
 			for (String poolId: CandlepinTasks.getPoolIdsForProductId(sm_clientUsername, sm_clientPassword, sm_serverUrl, clienttasks.getCurrentlyRegisteredOwnerKey(), productId)) {
@@ -208,9 +211,19 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		if (isPoolRestrictedToUnmappedVirtualSystems) {
 			// ... assert endDate is 24 hours after the date of registration
 			ConsumerCert cert = clienttasks.getCurrentConsumerCert();
-			Calendar consumerCertStartDate = cert.validityNotBefore; consumerCertStartDate.add(Calendar.HOUR, 24);
+			Calendar consumerCertStartDate = cert.validityNotBefore;
+			int hours = 24;
+			if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.1.1-1")) {	// commit 0704a73dc0d3bf753351e87ca0b65d85a71acfbe 1450079: virt-who temporary subscription should be 7 days
+				hours = 7/*days*/ * 24/*hours per day*/;
+				log.info("Due to Candlepin RFE Bug 1450079, the vailidity period for temporary subscription pools has increased from one day to one week.");
+			}
+			if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.30-1")) {	// commit 9302c8f57f37dd5ec3c4020770ac1675a87d99ba 1419576: Pre-date certs to ease clock skew issues
+				hours+=1;
+				log.info("Due to Candlepin RFE Bug 1419576, we need to increment the expected expires_after by one hour to account for pre-dating the consumer identity's validityNotBefore date by one hour.");
+			}
+			consumerCertStartDate.add(Calendar.HOUR, hours);
 			Assert.assertEquals(ProductSubscription.formatDateString(consumedProductSubscription.endDate),ProductSubscription.formatDateString(consumerCertStartDate),
-				"Consumed productSubscription (from a unmapped_guests_only pool '"+pool.poolId+"') expires 24 hours after the time of consumer registration ("+ConsumerCert.formatDateString(clienttasks.getCurrentConsumerCert().validityNotBefore)+").");
+				"Consumed productSubscription (from a unmapped_guests_only pool '"+pool.poolId+"') expires '"+hours+"' hours after the time of consumer registration ("+ConsumerCert.formatDateString(clienttasks.getCurrentConsumerCert().validityNotBefore)+").");
 			//TODO Assert the start date after bug 1199670 is resolved
 		} else {
 			// ... assert endDate matches the originating subscription pool
