@@ -30,6 +30,7 @@ import com.redhat.qe.jul.TestRecords;
 import rhsm.base.CandlepinType;
 import rhsm.base.SubscriptionManagerCLITestScript;
 import rhsm.cli.tasks.CandlepinTasks;
+import rhsm.cli.tasks.SubscriptionManagerTasks;
 import rhsm.data.SubscriptionPool;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
@@ -1067,12 +1068,17 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 			CandlepinTasks.putResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/consumers/"+consumerIdOfHostA, jsonData);
 			
 			// get the host consumer and assert that it has all the guestIds just PUT
-			jsonConsumer = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/consumers/"+consumerIdOfHostA));
-			// actual guestIds
-			//DEBUGGING jsonConsumer.put("guestIds", new JSONArray(expectedGuestIdsOnHostA));
-			actualGuestIds.clear();
-			for (int g=0; g<jsonConsumer.getJSONArray("guestIds").length(); g++) {
-				actualGuestIds.add(jsonConsumer.getJSONArray("guestIds").getJSONObject(g).getString("guestId"));
+			if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.29-1")) {	// candlepin commit 9eb578122851bdd3d5bb67f205d29996fc91e0ec Remove guestIds from the consumer json output
+				// actual guestIds
+				actualGuestIds = CandlepinTasks.getConsumerGuestIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerIdOfHostA);
+			} else {
+				jsonConsumer = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/consumers/"+consumerIdOfHostA));
+				// actual guestIds
+				//DEBUGGING jsonConsumer.put("guestIds", new JSONArray(expectedGuestIdsOnHostA));
+				actualGuestIds.clear();
+				for (int g=0; g<jsonConsumer.getJSONArray("guestIds").length(); g++) {
+					actualGuestIds.add(jsonConsumer.getJSONArray("guestIds").getJSONObject(g).getString("guestId"));
+				}
 			}
 			// assert expected guestIds
 			for (String guestId : expectedGuestIdsOnHostA) Assert.assertContains(actualGuestIds, guestId);
@@ -1090,36 +1096,41 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 			CandlepinTasks.putResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/consumers/"+consumerIdOfHostB, jsonData);
 
 			// get the host consumer and assert that it has all the guestIds just PUT
-			jsonConsumer = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/consumers/"+consumerIdOfHostB));
-			// actual guestIds
-			//DEBUGGING jsonConsumer.put("guestIds", new JSONArray(expectedGuestIdsOnHostB));
-			actualGuestIds.clear();
-			//[root@jsefler-stage-6server ~]# curl --insecure --user testuser1:password --request GET https://jsefler-f14-5candlepin.usersys.redhat.com:8443/candlepin/consumers/8b7fe5e5-7178-4bad-b686-2ff8c6c19112 | python -msimplejson/tool
-			//  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
-			//                                 Dload  Upload   Total   Spent    Left  Speed
-			//100 14242    0 14242    0     0  76993      0 --:--:-- --:--:-- --:--:--  135k
-			//{
-			//<cut>
-			//    "guestIds": [
-			//        {
-			//            "created": "2011-11-23T18:01:15.325+0000", 
-			//            "guestId": "test-guestId2", 
-			//            "id": "8a90f85733cefc4c0133d196b73d6d26", 
-			//            "updated": "2011-11-23T18:01:15.325+0000"
-			//        }, 
-			//        {
-			//            "created": "2011-11-23T18:01:15.293+0000", 
-			//            "guestId": "test-guestId1", 
-			//            "id": "8a90f85733cefc4c0133d196b71d6d23", 
-			//            "updated": "2011-11-23T18:01:15.293+0000"
-			//        }
-			//    ], 
-			//<cut>
-			//    "username": "testuser1", 
-			//    "uuid": "8b7fe5e5-7178-4bad-b686-2ff8c6c19112"
-			//}
-			for (int g=0; g<jsonConsumer.getJSONArray("guestIds").length(); g++) {
-				actualGuestIds.add(jsonConsumer.getJSONArray("guestIds").getJSONObject(g).getString("guestId"));
+			if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.29-1")) {	// candlepin commit 9eb578122851bdd3d5bb67f205d29996fc91e0ec Remove guestIds from the consumer json output
+				// actual guestIds
+				actualGuestIds = CandlepinTasks.getConsumerGuestIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerIdOfHostB);
+			} else {
+				jsonConsumer = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/consumers/"+consumerIdOfHostB));
+				// actual guestIds
+				//DEBUGGING jsonConsumer.put("guestIds", new JSONArray(expectedGuestIdsOnHostB));
+				actualGuestIds.clear();
+				//[root@jsefler-stage-6server ~]# curl --insecure --user testuser1:password --request GET https://jsefler-f14-5candlepin.usersys.redhat.com:8443/candlepin/consumers/8b7fe5e5-7178-4bad-b686-2ff8c6c19112 | python -msimplejson/tool
+				//  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+				//                                 Dload  Upload   Total   Spent    Left  Speed
+				//100 14242    0 14242    0     0  76993      0 --:--:-- --:--:-- --:--:--  135k
+				//{
+				//<cut>
+				//    "guestIds": [
+				//        {
+				//            "created": "2011-11-23T18:01:15.325+0000", 
+				//            "guestId": "test-guestId2", 
+				//            "id": "8a90f85733cefc4c0133d196b73d6d26", 
+				//            "updated": "2011-11-23T18:01:15.325+0000"
+				//        }, 
+				//        {
+				//            "created": "2011-11-23T18:01:15.293+0000", 
+				//            "guestId": "test-guestId1", 
+				//            "id": "8a90f85733cefc4c0133d196b71d6d23", 
+				//            "updated": "2011-11-23T18:01:15.293+0000"
+				//        }
+				//    ], 
+				//<cut>
+				//    "username": "testuser1", 
+				//    "uuid": "8b7fe5e5-7178-4bad-b686-2ff8c6c19112"
+				//}
+				for (int g=0; g<jsonConsumer.getJSONArray("guestIds").length(); g++) {
+					actualGuestIds.add(jsonConsumer.getJSONArray("guestIds").getJSONObject(g).getString("guestId"));
+				}
 			}
 			// assert expected guestIds
 			for (String guestId : expectedGuestIdsOnHostB) Assert.assertContains(actualGuestIds, guestId);
@@ -1129,12 +1140,17 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 			
 			// Now let's re-verify that the guestIds of host consumer A have not changed
 			// get the host consumer and assert that it has all the guestIds just PUT
-			jsonConsumer = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/consumers/"+consumerIdOfHostA));
-			// actual guestIds
-			//DEBUGGING jsonConsumer.put("guestIds", new JSONArray(expectedGuestIdsOnHostA));
-			actualGuestIds.clear();
-			for (int g=0; g<jsonConsumer.getJSONArray("guestIds").length(); g++) {
-				actualGuestIds.add(jsonConsumer.getJSONArray("guestIds").getJSONObject(g).getString("guestId"));
+			if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.29-1")) {	// candlepin commit 9eb578122851bdd3d5bb67f205d29996fc91e0ec Remove guestIds from the consumer json output
+				// actual guestIds
+				actualGuestIds = CandlepinTasks.getConsumerGuestIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerIdOfHostA);
+			} else {
+				jsonConsumer = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/consumers/"+consumerIdOfHostA));
+				// actual guestIds
+				//DEBUGGING jsonConsumer.put("guestIds", new JSONArray(expectedGuestIdsOnHostA));
+				actualGuestIds.clear();
+				for (int g=0; g<jsonConsumer.getJSONArray("guestIds").length(); g++) {
+					actualGuestIds.add(jsonConsumer.getJSONArray("guestIds").getJSONObject(g).getString("guestId"));
+				}
 			}
 			// assert expected guestIds
 			for (String guestId : expectedGuestIdsOnHostA) Assert.assertContains(actualGuestIds, guestId);
@@ -1168,12 +1184,17 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 		// TODO assert the result
 		
 		// get the consumer and assert that it has None of the guestIds just PUT
-		jsonConsumer = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/consumers/"+consumerIdOfGuest));
-		// actual guestIds
-		//DEBUGGING jsonConsumer.put("guestIds", new JSONArray(expectedGuestIds));
-		actualGuestIds.clear();
-		for (int g=0; g<jsonConsumer.getJSONArray("guestIds").length(); g++) {
-			actualGuestIds.add(jsonConsumer.getJSONArray("guestIds").getJSONObject(g).getString("guestId"));
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.29-1")) {	// candlepin commit 9eb578122851bdd3d5bb67f205d29996fc91e0ec Remove guestIds from the consumer json output
+			// actual guestIds
+			actualGuestIds = CandlepinTasks.getConsumerGuestIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerIdOfGuest);
+		} else {
+			jsonConsumer = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/consumers/"+consumerIdOfGuest));
+			// actual guestIds
+			//DEBUGGING jsonConsumer.put("guestIds", new JSONArray(expectedGuestIds));
+			actualGuestIds.clear();
+			for (int g=0; g<jsonConsumer.getJSONArray("guestIds").length(); g++) {
+				actualGuestIds.add(jsonConsumer.getJSONArray("guestIds").getJSONObject(g).getString("guestId"));
+			}
 		}
 		log.info("Consumer '"+consumerIdOfGuest+"' guestIds: "+actualGuestIds);
 		// assert expected guestIds are empty (TODO or NULL?)
@@ -1207,12 +1228,17 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 			CandlepinTasks.putResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/consumers/"+consumerIdOfHostA, jsonData);
 			
 			// get the host consumer and assert that it has all the guestIds just PUT
-			jsonConsumer = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/consumers/"+consumerIdOfHostA));
-			// actual guestIds
-			//DEBUGGING jsonConsumer.put("guestIds", new JSONArray(expectedGuestIdsOnHostA));
-			actualGuestIds.clear();
-			for (int g=0; g<jsonConsumer.getJSONArray("guestIds").length(); g++) {
-				actualGuestIds.add(jsonConsumer.getJSONArray("guestIds").getJSONObject(g).getString("guestId"));
+			if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.29-1")) {	// candlepin commit 9eb578122851bdd3d5bb67f205d29996fc91e0ec Remove guestIds from the consumer json output
+				// actual guestIds
+				actualGuestIds = CandlepinTasks.getConsumerGuestIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerIdOfHostA);
+			} else {
+				jsonConsumer = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/consumers/"+consumerIdOfHostA));
+				// actual guestIds
+				//DEBUGGING jsonConsumer.put("guestIds", new JSONArray(expectedGuestIdsOnHostA));
+				actualGuestIds.clear();
+				for (int g=0; g<jsonConsumer.getJSONArray("guestIds").length(); g++) {
+					actualGuestIds.add(jsonConsumer.getJSONArray("guestIds").getJSONObject(g).getString("guestId"));
+				}
 			}
 			// assert expected guestIds
 			for (String guestId : expectedGuestIdsOnHostA) Assert.assertContains(actualGuestIds, guestId);
@@ -1233,12 +1259,17 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 			CandlepinTasks.putResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/consumers/"+consumerIdOfHostB, jsonData);
 
 			// get the host consumer and assert that it has all the guestIds just PUT
-			jsonConsumer = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/consumers/"+consumerIdOfHostB));
-			// actual guestIds
-			//DEBUGGING jsonConsumer.put("guestIds", new JSONArray(expectedGuestIdsOnHostB));
-			actualGuestIds.clear();
-			for (int g=0; g<jsonConsumer.getJSONArray("guestIds").length(); g++) {
-				actualGuestIds.add(jsonConsumer.getJSONArray("guestIds").getJSONObject(g).getString("guestId"));
+			if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.29-1")) {	// candlepin commit 9eb578122851bdd3d5bb67f205d29996fc91e0ec Remove guestIds from the consumer json output
+				// actual guestIds
+				actualGuestIds = CandlepinTasks.getConsumerGuestIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerIdOfHostB);
+			} else {
+				jsonConsumer = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/consumers/"+consumerIdOfHostB));
+				// actual guestIds
+				//DEBUGGING jsonConsumer.put("guestIds", new JSONArray(expectedGuestIdsOnHostB));
+				actualGuestIds.clear();
+				for (int g=0; g<jsonConsumer.getJSONArray("guestIds").length(); g++) {
+					actualGuestIds.add(jsonConsumer.getJSONArray("guestIds").getJSONObject(g).getString("guestId"));
+				}
 			}
 			// assert expected guestIds
 			for (String guestId : expectedGuestIdsOnHostB) Assert.assertContains(actualGuestIds, guestId);
@@ -1252,12 +1283,17 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 			expectedGuestIdsOnHostA.remove(expectedGuestIdsOnHostA.size()-1);
 
 			// get the host consumer and assert that it has all the guestIds just PUT
-			jsonConsumer = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/consumers/"+consumerIdOfHostA));
-			// actual guestIds
-			//DEBUGGING jsonConsumer.put("guestIds", new JSONArray(expectedGuestIdsOnHostA));
-			actualGuestIds.clear();
-			for (int g=0; g<jsonConsumer.getJSONArray("guestIds").length(); g++) {
-				actualGuestIds.add(jsonConsumer.getJSONArray("guestIds").getJSONObject(g).getString("guestId"));
+			if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.29-1")) {	// candlepin commit 9eb578122851bdd3d5bb67f205d29996fc91e0ec Remove guestIds from the consumer json output
+				// actual guestIds
+				actualGuestIds = CandlepinTasks.getConsumerGuestIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerIdOfHostA);
+			} else {
+				jsonConsumer = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/consumers/"+consumerIdOfHostA));
+				// actual guestIds
+				//DEBUGGING jsonConsumer.put("guestIds", new JSONArray(expectedGuestIdsOnHostA));
+				actualGuestIds.clear();
+				for (int g=0; g<jsonConsumer.getJSONArray("guestIds").length(); g++) {
+					actualGuestIds.add(jsonConsumer.getJSONArray("guestIds").getJSONObject(g).getString("guestId"));
+				}
 			}
 			// assert expected guestIds
 			for (String guestId : expectedGuestIdsOnHostA) Assert.assertContains(actualGuestIds, guestId);
