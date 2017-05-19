@@ -1001,8 +1001,8 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 			
 			// bugzillas
 			Object bugzilla = null;
-			if (lang.equals("fr_FR")) bugzilla = new BlockedByBzBug("1449839");
-			if (lang.equals("ja_JP")) bugzilla = new BlockedByBzBug("1449839");
+			if (lang.equals("fr_FR")) bugzilla = new BlockedByBzBug(new String[]{"1449839","1450210"});
+			if (lang.equals("ja_JP")) bugzilla = new BlockedByBzBug(new String[]{"1449839","1450210"});
 			
 			// Object bugzilla, String locale
 			ll.add(Arrays.asList(new Object[] {bugzilla,	lang}));
