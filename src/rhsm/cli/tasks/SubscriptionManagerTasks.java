@@ -2644,8 +2644,8 @@ if (false) {
 	}
 
 	/**
-	 * @param localeVariable
-	 * @param lang
+	 * @param localeVariable - either "LANG" or "LC_ALL" or something else.  run locale on a command line to see variables; passing null will default to LANG
+	 * @param lang - "as_IN","bn_IN","de_DE", etc  See TranslationTests.supportedLangs
 	 * @param grepFilter
 	 * @return Map of the system's facts filtered by grepping for specific values
 	 */
