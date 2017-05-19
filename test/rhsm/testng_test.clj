@@ -17,13 +17,13 @@
 (deftest tier1-all-suites
   (TestNG/main (into-array String ["suites/sm-cli-tier1-testng-suite.xml" "suites/sm-gui-tier1-testng-suite.xml"])))
 
-(deftest tier1-all-cli-suites
+(deftest tier1-cli-suite
   (TestNG/main (into-array String ["suites/sm-cli-tier1-testng-suite.xml"])))
 
-(deftest tier1-one-cli-suite
+(deftest tier1-cli-one-suite
   (TestNG/main (into-array String ["suites/sm-cli-one-testng-suite.xml"])))
 
-(deftest tier1-api-suites
+(deftest tier1-api-suite
   (TestNG/main (into-array String ["suites/sm-api-tier1-testng-suite.xml"])))
 
 (deftest tier2-api-suite

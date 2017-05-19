@@ -11,11 +11,9 @@
         gnome.ldtp)
   (:require [clojure.tools.logging :as log]
             [rhsm.gui.tasks.tasks :as tasks]
-            [rhsm.gui.tasks.candlepin-tasks :as ctasks]
             [clojure.string :as str]
             [clojure.data.json :as json]
-            [rhsm.dbus.parser :as dbus]
-            [cheshire.core :as ch])
+            [rhsm.dbus.parser :as dbus])
   (:import [org.testng.annotations
             Test
             BeforeClass
@@ -52,19 +50,9 @@ When I
                                               "transfer-encoding"
                                               "x-candlepin-request-uuid"
                                               "content-type"
-                                              "server"])))
-        )
+                                              "server"]))))
       ;;(let [content (-> parsed-response (get "content"))])
       )))
-
-(comment
-  (def aa "s \"unix:abstract=/var/run/dbus-XP0szXbntD,guid=e234053b12b7e78b2c48cac758a60d17\"")
-  (->  (->> aa (re-seq #"abstract=([^,]+)"))
-       (nth 0)
-       (nth 1)
-       vector
-       vector
-       to-array-2d))
 
 (defn ^{DataProvider {:name "register-socket"}}
   register_socket

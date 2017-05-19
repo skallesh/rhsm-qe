@@ -10,6 +10,21 @@
 		<listener class-name="org.testng.reporters.XMLReporter" />
 	</listeners>
 
+  <test name="API: Register">
+    <classes>
+      <class name="rhsm.base.SubscriptionManagerBaseTestScript"/>
+      <class name="rhsm.api.tests.register_tests" />
+      <class name="rhsm.gui.tests.base" />
+    </classes>
+    <groups>
+      <run>
+        <include name="setup" />
+        <include name="tier2"/>
+        <include name="cleanup" />
+      </run>
+    </groups>
+  </test>
+
   <test name="API: Activation Key">
     <classes>
       <class name="rhsm.base.SubscriptionManagerBaseTestScript"/>

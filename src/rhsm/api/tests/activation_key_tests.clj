@@ -37,7 +37,7 @@
 (defn ^{Test {:groups ["activation-key"
                        "REST"
                        "API"
-                       "tier1"]
+                       "tier2"]
               :description "Given the candlepin knows an owner {owner}
 When a rest client sends POST to '/owners/{owner key}/activation_keys'
    with a json data {'name': '{owner}'}
@@ -67,7 +67,7 @@ Then the candlepin replies a status 200
 (defn ^{Test {:groups ["activation-key"
                        "REST"
                        "API"
-                       "tier1"]
+                       "tier2"]
               :description "Given the candlepin knows and owner {owner}
    and his activation key {activation-key}
 When a rest client sends DELETE to '/activation_keys/{activation-key id}'
@@ -141,12 +141,13 @@ Then the candlepin replies a status 404
           (verify (= (-> response-delete-nonexisting :body json/read-json :displayMessage)
                      (format "ActivationKey with id %s could not be found." (-> activation-key :id)))))))))
 
+(declare register-socket)
 (defn ^{Test {:groups ["activation-key"
                        "DBUS"
                        "API"
                        "tier2"]
               :description "Given a system is unregistered
-   and there is a simple activation key for my account
+   and a simple activation key exists for my account
 When I 
 "
               :dataProvider "new-activation-key"}
