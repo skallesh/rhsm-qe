@@ -2607,6 +2607,32 @@ schema generation failed
 		return jsonCompliance.getString("status");
 	}
 	
+	public static List<String> getConsumerGuestIds(String authenticator, String password, String url, String consumerId) throws JSONException, Exception {
+		
+		List<String> guestIds = new ArrayList<String>();
+		JSONArray jsonConsumerGuestIds = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(authenticator, password, url, "/consumers/"+consumerId+"/guestids"));
+		//	[root@jsefler-rhel7 ~]# curl --stderr /dev/null --insecure --user testuser1:REDACTED --request GET 'https://jsefler-candlepin.usersys.redhat.com:8443/candlepin/consumers/b1e78101-0b26-4c62-9cee-959d89e5c211/guestids' | python -m json/tool
+		//	[
+		//	    {
+		//	        "created": "2017-05-19T17:58:14+0000",
+		//	        "guestId": "test-guestId2",
+		//	        "id": "8a90860f5c21469c015c21dc262c16a1",
+		//	        "updated": "2017-05-19T17:58:14+0000"
+		//	    },
+		//	    {
+		//	        "created": "2017-05-19T17:58:14+0000",
+		//	        "guestId": "test-guestId1",
+		//	        "id": "8a90860f5c21469c015c21dc262c16a0",
+		//	        "updated": "2017-05-19T17:58:14+0000"
+		//	    }
+		//	]
+		for (int j = 0; j < jsonConsumerGuestIds.length(); j++) {
+			JSONObject jsonConsumerGuestId = (JSONObject) jsonConsumerGuestIds.get(j);
+			guestIds.add(jsonConsumerGuestId.getString("guestId"));
+		}
+		return guestIds;
+	}
+	
 	public static boolean isEnvironmentsSupported (String authenticator, String password, String url) throws JSONException, Exception {
 		
 		// ask the candlepin server for all of its resources and search for a match to "environments"
