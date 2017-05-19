@@ -170,15 +170,16 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 		clienttasks.unregister(null, null, null, null);
 		String command = String.format("%s register --username %s --password %s", clienttasks.command,sm_clientUsername,sm_clientPassword);
 		if (sm_clientOrg!=null) command += String.format(" --org %s", sm_clientOrg);
-		//SSHCommandResult sshCommandResult = clienttasks.runCommandWithLang(lang,clienttasks.command+" register --username "+sm_clientUsername+" --password "+sm_clientPassword+" "+(sm_clientOrg!=null?"--org "+sm_clientOrg:""));
-		SSHCommandResult sshCommandResult = client.runCommandAndWait("LANG="+lang+" "+clienttasks.command+" register --username "+sm_clientUsername+" --password "+sm_clientPassword+" "+(sm_clientOrg!=null?"--org "+sm_clientOrg:""));
+		SSHCommandResult sshCommandResult = client.runCommandAndWait("LANG="+lang+" "+clienttasks.registerCommand(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, null, null, null, null, null, null));
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0),"ExitCode after register with LANG="+lang+" fallback locale.");
+		Assert.assertEquals(clienttasks.getCurrentConsumerId(sshCommandResult),clienttasks.getCurrentConsumerId(),"The registered consumer's identity should be interpreted correctly from the stdout when registering with LANG="+lang+" fallback locale.");
 		
 		// also test the system.default_locale fact for an unknown locale
 		if (clienttasks.isPackageVersion("python-rhsm", ">=", "1.19.3-1")) {	// commit 0670d70540a24a8e173d347e2240dcfb7535608a Bug 1425922: System locale in facts
 			String systemDefaultLocaleFact = "system.default_locale";
 			String systemDefaultLocale = "Unknown";
-			Assert.assertEquals(clienttasks.getFactValue(systemDefaultLocaleFact), systemDefaultLocale, "The system's value for fact '"+systemDefaultLocaleFact+"'.");
+			sshCommandResult = client.runCommandAndWait("LANG="+lang+" "+clienttasks.factsCommand(true, null, null, null, null, null)+" | grep "+systemDefaultLocaleFact);
+			Assert.assertEquals(sshCommandResult.getStdout().trim(), String.format("%s: %s", systemDefaultLocaleFact,systemDefaultLocale), "The system's fact for the default locale when run with locale LANG="+lang+".");
 		}
 	}
 	
