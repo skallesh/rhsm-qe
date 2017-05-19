@@ -213,7 +213,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			ConsumerCert cert = clienttasks.getCurrentConsumerCert();
 			Calendar consumerCertStartDate = cert.validityNotBefore;
 			int hours = 24;
-			if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.1.1-1")) {	// commit 0704a73dc0d3bf753351e87ca0b65d85a71acfbe 1450079: virt-who temporary subscription should be 7 days
+			if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.1.0-1"/*FIXME CHANGE TO "2.1.1-1" ONCE TAG EXISTS*/)) {	// commit 0704a73dc0d3bf753351e87ca0b65d85a71acfbe 1450079: virt-who temporary subscription should be 7 days
 				hours = 7/*days*/ * 24/*hours per day*/;
 				log.info("Due to Candlepin RFE Bug 1450079, the vailidity period for temporary subscription pools has increased from one day to one week.");
 			}
