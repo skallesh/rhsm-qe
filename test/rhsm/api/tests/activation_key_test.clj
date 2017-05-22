@@ -1,7 +1,9 @@
-(ns rhsm.rest.tests.activation-key-test
+(ns rhsm.api.tests.activation-key-test
   (:require  [clojure.test :refer :all]
-             [rhsm.rest.tests.activation_key_tests :as tests]
+             [rhsm.api.tests.activation_key_tests :as tests]
+             [rhsm.gui.tasks.test-config :refer [config]]
              [org.httpkit.client :as http]
+             [rhsm.api.rest :as rest]
              [rhsm.gui.tests.base :as base]
              [clojure.data.json :as json]))
 
@@ -18,9 +20,6 @@
 
 (deftest create-activation-key-test
   (tests/create_activation_key nil))
-
-;; (deftest list-activation-keys-test
-;;   (tests/list_activation_keys nil))
 
 (deftest delete-activation-key-test
   (let [activation-key (tests/new_activation_key nil)]
@@ -74,5 +73,6 @@
 
 
 (deftest register-using-activation-key-by-dbus-test
-  (let [activation-key (tests/new_activation_key nil)]
-    (tests/register_with_activation_key_using_dbus nil (-> activation-key first first))))
+  (let [activation-key (-> (tests/new_activation_key nil) first first)]
+    (rest/activation-key-exists (-> activation-key :id))
+    (tests/register_with_activation_key_using_dbus nil activation-key)))
