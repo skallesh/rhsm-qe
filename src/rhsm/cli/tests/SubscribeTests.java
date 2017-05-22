@@ -1761,7 +1761,8 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		String tmpFile = "/tmp/poolIds.txt";
 		RemoteFileTasks.runCommandAndAssert(client, poolOnlyListCommand+" > "+tmpFile, 0);
 		SSHCommandResult poolOnlyListResult = client.runCommandAndWait("cat "+tmpFile);
-		
+
+//NOT NECESSARY
 //		// convert the result to a list
 //		List<String> poolIdsFromFile = new ArrayList<String>();
 //		if (!poolOnlyListResult.getStdout().trim().isEmpty()) poolIdsFromFile = Arrays.asList(poolOnlyListResult.getStdout().trim().split("\n"));
@@ -1774,7 +1775,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		
 		// now let's run the same poolOnlyListCommand and pipe the results to subscription-manager attach --file - (the hyphen indicates stdin)
 		String stdinFileSubscribeCommand = clienttasks.subscribeCommand(null, null, (List<String>) null, (List<String>) null, null, null, null, null, "-", null, null, null, null);
-		SSHCommandResult stdinFileSubscribeCommandResult = client.runCommandAndWait(poolOnlyListCommand+" | "+stdinFileSubscribeCommand, (long) (3/*min*/*60*1000/*timeout*/));
+		SSHCommandResult stdinFileSubscribeCommandResult = client.runCommandAndWait("cat "+tmpFile+" | "+stdinFileSubscribeCommand, (long) (3/*min*/*60*1000/*timeout*/));
 				
 		// assert the two subscribe results are identical
 		Assert.assertEquals(stdinFileSubscribeCommandResult.getExitCode(), subscribeWithFileResult.getExitCode(), "Exit Code comparison between the expected result of subscribing with a file of poolIds and subscribing with the poolIds piped to stdin.");
