@@ -1,6 +1,6 @@
-(ns rhsm.dbus.tests.register-test
+(ns rhsm.api.tests.register-test
   (:require  [clojure.test :refer :all]
-             [rhsm.dbus.tests.register_tests :as tests]
+             [rhsm.api.tests.register_tests :as tests]
              [rhsm.gui.tests.base :as base]
              [clojure.data.json :as json]))
 
@@ -26,9 +26,9 @@
 ;;     )
 ;;   )
 
-(deftest register-test
-  (let [socket (tests/register_socket nil)]
-    (tests/register nil (-> socket first first))))
+;; (deftest register-test
+;;   (let [socket (tests/register_socket nil)]
+;;     (tests/register nil (-> socket first first))))
 
 ;; (deftest attach-subscriptions-even-wrong-org-was-used-before-test
 ;;   (tests/attach_subscriptions_even_wrong_org_was_used_before nil))
