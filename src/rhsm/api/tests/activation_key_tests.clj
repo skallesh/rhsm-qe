@@ -14,6 +14,7 @@
             [org.httpkit.client :as http]
             [clojure.data.json :as json]
             [rhsm.dbus.parser :as dbus]
+            [rhsm.api.rest :as rest]
             [rhsm.gui.tasks.candlepin-tasks :as ctasks]
             [rhsm.gui.tests.activation-key-tests :as atests]
             [clojure.string :as str])
@@ -155,14 +156,17 @@ When I
   register_with_activation_key_using_dbus
   [ts activation-key]
   (run-command "subscription-manager unregister")
+  (rest/activation-key-exists (-> activation-key :id))
   (let [socket (register-socket ts)]
-    (let [response (-> (format "busctl --address=unix:abstract=%s call com.redhat.RHSM1 /com/redhat/RHSM1/Register com.redhat.RHSM1.Register RegisterWithActivationKeys 'sa(s)a{ss}' %s 1 %s 0" socket (@config :owner-key) (-> activation-key :name))
+    (let [response (-> (format "busctl --address=unix:abstract=%s call com.redhat.RHSM1 /com/redhat/RHSM1/Register com.redhat.RHSM1.Register RegisterWithActivationKeys 'sasa{sv}' %s 1 %s 0" socket (@config :owner-key) (-> activation-key :name))
                        run-command)]
       (verify (=  (:stderr response) ""))
-      (let [[parsed-response rest-string] (-> response :stdout (.trim) dbus/parse)]
-        (verify (->> rest-string (= "")))
-        (verify (->> parsed-response keys (= ["content" "status" "headers"])))
-        (verify (-> parsed-response (get "status") (= 200)))))))
+      (let [[parsed-response rest-of-the-string] (-> response :stdout (.trim) dbus/parse)
+            keys-of-the-parsed-response (-> parsed-response keys)
+            status-of-the-response (-> parsed-response (get "status"))]
+        (verify (->> rest-of-the-string (= "")))
+        (verify (->> keys-of-the-parsed-response (= ["content" "status" "headers"])))
+        (verify (-> status-of-the-response (= 200)))))))
 
 ;; (defn ^{Test {:groups ["activation-key"
 ;;                        "tier2"]}
@@ -203,7 +207,9 @@ When I
           (assoc http-options
                  :basic-auth [(@config :username) (@config :password)]
                  :body (-> {:name (format "rhsm-api-tests-%d" (System/currentTimeMillis))}
-                           json/json-str)))]
+                           json/json-str)))
+        status-of-the-response (-> response :status)]
+    (verify (->> status-of-the-response (= 200)))
     (let [activation-key (-> response :body json/read-json)]
       (log/info "new activation key has been created" activation-key)
       (swap! created-activation-keys conj activation-key)
