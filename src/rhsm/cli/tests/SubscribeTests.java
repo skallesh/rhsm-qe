@@ -1378,7 +1378,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
 			       , testCaseID = {"RHEL6-27122", "RHEL7-51945"})
 	@Test(	description="subscription-manager: subscribe to future subscription pool",
-			groups={"blockedByBug-979492"},
+			groups={"blockedByBug-979492","blockedByBug-1440180"},
 			//dataProvider="getAllFutureSystemSubscriptionPoolsData",	// 06/04/2014 takes too long; rarely reveals a bug
 			dataProvider="getRandomSubsetOfFutureSystemSubscriptionPoolsData",
 			enabled=true)
