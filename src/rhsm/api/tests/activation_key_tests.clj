@@ -15,6 +15,7 @@
             [clojure.data.json :as json]
             [rhsm.dbus.parser :as dbus]
             [rhsm.api.rest :as rest]
+            [clojure.core.match :refer [match]]
             [rhsm.gui.tasks.candlepin-tasks :as ctasks]
             [rhsm.gui.tests.activation-key-tests :as atests]
             [clojure.string :as str])
@@ -25,6 +26,7 @@
             BeforeGroups
             AfterGroups
             DataProvider]
+           org.testng.SkipException
            [com.github.redhatqe.polarize.metadata TestDefinition]
            [com.github.redhatqe.polarize.metadata DefTypes$Project]))
 
@@ -155,9 +157,13 @@ Then the response contains of keys ['content','headers','status']
   and a value of 'status' is 200
 "
               :dataProvider "new-activation-key"}
-        TestDefinition {:projectID [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]}}
+        TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]}}
   register_with_activation_key_using_dbus
   [ts activation-key]
+  (let [[_ major minor] (re-find #"(\d)\.(\d)" (-> :true get-release :version))]
+    (match major
+           (a :guard #(< (Integer. %) 7 )) (throw (SkipException. "busctl is not available in RHEL6"))
+           :else nil))
   (run-command "subscription-manager unregister")
   (rest/activation-key-exists (-> activation-key :id))
   (let [socket (register-socket ts)]

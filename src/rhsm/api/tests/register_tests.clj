@@ -13,6 +13,7 @@
             [rhsm.gui.tasks.tasks :as tasks]
             [clojure.string :as str]
             [clojure.data.json :as json]
+            [clojure.core.match :refer [match]]
             [rhsm.dbus.parser :as dbus])
   (:import [org.testng.annotations
             Test
@@ -21,6 +22,7 @@
             BeforeGroups
             AfterGroups
             DataProvider]
+           org.testng.SkipException
            [com.github.redhatqe.polarize.metadata TestDefinition]
            [com.github.redhatqe.polarize.metadata DefTypes$Project]))
 
@@ -36,6 +38,10 @@ When I
         TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]}}
   register_using_dbus
   [_ socket]
+  (let [[_ major minor] (re-find #"(\d)\.(\d)" (-> :true get-release :version))]
+    (match major
+           (a :guard #(< (Integer. %) 7 )) (throw (SkipException. "busctl is not available in RHEL6"))
+           :else nil))
   (run-command "subscription-manager unregister")
   (let [response (-> (format "busctl --address=unix:abstract=%s call com.redhat.RHSM1 /com/redhat/RHSM1/Register com.redhat.RHSM1.Register Register 'sssa{sv}' %s %s %s 0"
                              socket (@config :owner-key) (@config :username) (@config :password))
