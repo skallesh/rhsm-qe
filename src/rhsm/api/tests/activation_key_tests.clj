@@ -149,7 +149,10 @@ Then the candlepin replies a status 404
                        "tier2"]
               :description "Given a system is unregistered
    and a simple activation key exists for my account
-When I 
+When I call 'RegisterWithActivationKeys' using busctl
+  with the key
+Then the response contains of keys ['content','headers','status']
+  and a value of 'status' is 200
 "
               :dataProvider "new-activation-key"}
         TestDefinition {:projectID [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]}}
