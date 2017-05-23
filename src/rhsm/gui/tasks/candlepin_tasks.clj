@@ -363,3 +363,28 @@
         type-val-map (map (fn [i] (into {} (map get-type-value i))) product-attr)
         mapify (zipmap product-names type-val-map)]
     mapify))
+
+(defn determine-available-subscriptions
+  [client-tasks username password org]
+  (.register client-tasks username password org)
+  (let [org-key (.getCurrentlyRegisteredOwnerkey client-tasks)
+        available-subscription-pools (.getCurrentlyAvailableSubscriptionPools client-tasks)
+        client-org-key (.getCurrentlyRegisteredOwnerkey client-tasks)]
+    (.unregister client-tasks)
+    {:client-org-key client-org-key
+     :available-subscription-pools  available-subscription-pools}))
+
+(defn create-activation-key
+  [username password owner-key keyname]
+  (rest/post
+   (str (server-url) "/owners/" owner-key "/activation_keys" )
+   username
+   password
+   {:name keyname}))
+
+(defn list-activation-keys
+  [username password]
+  (rest/get
+   (str (server-url) "/activation_keys" )
+   username
+   password))

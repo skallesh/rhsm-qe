@@ -3,7 +3,7 @@
   :java-source-path "src" ;lein1
   :java-source-paths ["src"]
   :main rhsm.runtestng
-  :aot [#"^rhsm.gui.tests" rhsm.runtestng] ;regex to find tests that testng will run
+  :aot [#"^rhsm.gui.tests" #"^rhsm.api.tests" rhsm.runtestng] ;regex to find tests that testng will run
   :keep-non-project-classes true
   :dependencies [[clj-http "2.0.0"]
                  [com.google.code.guice/guice "1.0"]        ;; required for new testng
@@ -17,12 +17,13 @@
                  [com.redhat.qe/testng-listeners "1.0.0" 
                   :exclusions [com.redhat.qe/bugzilla-testng]]
                  [com.redhat.qe/verify-testng "1.0.0-SNAPSHOT"]
+                 [com.redhat.qe/rhsm-dbus "0.9.0-SNAPSHOT"]
                  [gnome.ldtp "1.2.1-SNAPSHOT"]
                  [matchure "0.10.1"]
                  [org.clojure/core.match "0.3.0-alpha4"]
                  [net.java.dev.rome/rome "1.0.0"]
                  [org.clojure/clojure "1.8.0"]
-                 [org.clojure/data.json "0.1.2"]
+                 [org.clojure/data.json "0.2.6"]
                  [org.clojure/tools.cli "0.2.4"]
                  [org.clojure/tools.logging "0.2.3"]
                  [org.jdom/jdom "1.1"]
@@ -31,11 +32,13 @@
                   :exclusions [org.testng/testng]]
                  [postgresql/postgresql "8.4-701.jdbc4"]
                  [slingshot "0.8.0"]
+                 [cheshire "5.7.0"]
                  ;[test_clj.testng "1.0.1-SNAPSHOT"]
                  [test-clj.testng "1.1.0-SNAPSHOT"]
                  [levand/immuconf "0.1.0"]
                  [com.github.redhatqe.polarize/polarize "0.6.0-SNAPSHOT"]
                  [org.json/json "20160810"]
+                 [http-kit "2.2.0"]
                  [mount "0.1.10"]]
   ;lein1
   :dev-dependencies [[fn.trace "1.3.2.0-SNAPSHOT"]

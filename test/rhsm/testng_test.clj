@@ -1,4 +1,4 @@
-(ns rhsm.gui.tests.setup-test
+(ns rhsm.testng-test
   (:require  [clojure.test :refer :all])
   (:import [org.testng TestNG]))
 
@@ -13,12 +13,18 @@
 ;;
 ;; this test is to run the whole testng machinery with our tests
 ;;
-;;
-(deftest tier1-all-suites-test
+;
+(deftest tier1-all-suites
   (TestNG/main (into-array String ["suites/sm-cli-tier1-testng-suite.xml" "suites/sm-gui-tier1-testng-suite.xml"])))
 
-(deftest tier1-all-cli-suites-test
+(deftest tier1-cli-suite
   (TestNG/main (into-array String ["suites/sm-cli-tier1-testng-suite.xml"])))
 
-(deftest tier1-one-cli-suite-test
+(deftest tier1-cli-one-suite
   (TestNG/main (into-array String ["suites/sm-cli-one-testng-suite.xml"])))
+
+(deftest tier1-api-suite
+  (TestNG/main (into-array String ["suites/sm-api-tier1-testng-suite.xml"])))
+
+(deftest tier2-api-suite
+  (TestNG/main (into-array String ["suites/sm-api-tier2-testng-suite.xml"])))
