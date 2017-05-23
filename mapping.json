@@ -3732,11 +3732,11 @@
   "rhsm.cli.tests.ListTests.EnsureConsumedEntitlementsListed_Test" : {
     "RHEL6" : {
       "id" : "RHEL6-27118",
-      "parameters" : [ ]
+      "parameters" : [ "productId", "bundledProductDataAsJSONArray" ]
     },
     "RedHatEnterpriseLinux7" : {
       "id" : "RHEL7-51350",
-      "parameters" : [ ]
+      "parameters" : [ "productId", "bundledProductDataAsJSONArray" ]
     }
   },
   "rhsm.cli.tests.ListTests.EnsureHardwareMatchingSubscriptionsAreListedAsAvailable_Test" : {
@@ -3796,6 +3796,16 @@
     },
     "RedHatEnterpriseLinux7" : {
       "id" : "RHEL7-51328",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.cli.tests.ListTests.EnsureNoConsumedEntitlementsListed_Test" : {
+    "RHEL6" : {
+      "id" : "RHEL6-47866",
+      "parameters" : [ ]
+    },
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-93038",
       "parameters" : [ ]
     }
   },

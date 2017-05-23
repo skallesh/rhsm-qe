@@ -156,13 +156,14 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-27118", "RHEL7-51350"})
+	@TestDefinition( update = false, 
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-47866", "RHEL7-93038"})
 	@Test(	description="subscription-manager-cli: list consumed entitlements (when not consuming)",
 			groups={},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=41679)
-	public void EnsureConsumedEntitlementsListed_Test() {
+	public void EnsureNoConsumedEntitlementsListed_Test() {
 		clienttasks.unregister(null, null, null, null);
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, null, false, null, null, null, null);
 		String consumedProductSubscription = clienttasks.listConsumedProductSubscriptions().getStdout();
@@ -171,8 +172,9 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-27118", "RHEL7-51350"})
+	@TestDefinition( update = false, 
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-27118", "RHEL7-51350"})
 	@Test(	description="subscription-manager-cli: list consumed entitlements",
 			groups={},
 			dataProvider="getAllSystemSubscriptionPoolProductData",
