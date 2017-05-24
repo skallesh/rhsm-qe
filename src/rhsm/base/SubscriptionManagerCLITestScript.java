@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
+import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -1283,6 +1284,23 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		return !getSubstringMatches(string, subStringRegex).isEmpty();
 	}
 	
+	
+	/**
+	 * @param runner1
+	 * @param runner2
+	 * @return the millisecond time difference between the system clocks (runner2 - runner1) (Note: if positive then runner 2 is ahead of runner1)
+	 * @throws ParseException
+	 */
+	static public long getTimeDifferenceBetweenCommandRunners(SSHCommandRunner runner1, SSHCommandRunner runner2) throws ParseException {
+		SimpleDateFormat unixFormat = new SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy");
+		String runner1DateStr = runner1.runCommandAndWait("date \"+%a %b %d %T %Z %Y\"").getStdout();
+		String runner2DateStr = runner2.runCommandAndWait("date \"+%a %b %d %T %Z %Y\"").getStdout();
+		Date runner1Date = unixFormat.parse(runner1DateStr);
+		Date runner2Date = unixFormat.parse(runner2DateStr);
+		//long msTimeDiff = Math.abs(runner2Date.getTime() - runner1Date.getTime());
+		long msTimeDiff = runner2Date.getTime() - runner1Date.getTime();
+		return msTimeDiff;
+	}
 	
 	// Protected Inner Data Class ***********************************************************************
 	
