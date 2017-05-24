@@ -2,6 +2,7 @@ package rhsm.cli.tests;
 
 import java.io.File;
 import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -212,6 +213,18 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	@BeforeClass(groups="setup", dependsOnMethods="skipIfHosted")
+	public void assertTimeDifferenceWithServerBeforeClass() throws ParseException{
+		// Assert that the difference in the system clocks on runners is less that the specified milliseconds.
+		long msTimeDiffAllowed = 60000L;
+		if (client1!=null) {
+			Assert.assertLess(Math.abs(getTimeDifferenceBetweenCommandRunners(client1, server)), msTimeDiffAllowed, "Time difference between '"+client1.getConnection().getHostname()+"' and '"+server.getConnection().getHostname()+"' is less than '"+msTimeDiffAllowed+"' milliseconds");
+		}
+		if (client2!=null) {
+			Assert.assertLess(Math.abs(getTimeDifferenceBetweenCommandRunners(client2, server)), msTimeDiffAllowed, "Time difference between '"+client2.getConnection().getHostname()+"' and '"+server.getConnection().getHostname()+"' is less than '"+msTimeDiffAllowed+"' milliseconds");
+		}
+	}
+	
+	@BeforeClass(groups="setup", dependsOnMethods="skipIfHosted")
 	public void registerBeforeClass() throws Exception {
 		clienttasks.unregister(null, null, null, null);
 		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, null, false, null, null, null, null));
@@ -231,10 +244,8 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 		randomAvailableProductId = pool.productId;
 	}
 	
-	@BeforeClass(groups="setup", dependsOnMethods="registerBeforeClass")
-	public void checkTimeBeforeClass() throws Exception{
-		checkTime("candlepin server", server);
-		checkTime("client", client);
+	@BeforeClass(groups="setup")
+		public void storeCertFrequencyBeforeClass() throws Exception{
 		originalCertFrequency = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsmcertd", /*"certFrequency" CHANGED BY BUG 882459 TO*/"certCheckInterval");
 	}
 	@AfterClass(groups="setup")
@@ -284,7 +295,7 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 		long timeDiffms = Math.abs(localTime.getTime() - remoteTime.getTime());
 		Assert.assertLess(timeDiffms, 60000L, "Time difference with " + host + " is less than 1 minute");
 	}
-
+	
 	/**
 	 * @param startingMinutesFromNow
 	 * @param endingMinutesFromNow
