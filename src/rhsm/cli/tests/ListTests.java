@@ -936,7 +936,13 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		} else clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null, null, null);
 		
 		// get all the available subscription pools
-		List<SubscriptionPool> availableSubscriptionPools = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, null, null, null, null, null, null).getStdout());
+		SSHCommandResult listResult = clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, null, null, null, null, null, null);
+		if (matchInstalled && clienttasks.getCurrentlyInstalledProducts().isEmpty()) {
+			String skipCase = "No available subscription pools to list";
+			Assert.assertEquals(listResult.getStdout().trim(), skipCase);
+			throw new SkipException("Skipping this test when: "+skipCase);
+		}
+		List<SubscriptionPool> availableSubscriptionPools = SubscriptionPool.parse(listResult.getStdout());
 		
 		// randomly choose an available pool
 		SubscriptionPool randomAvailablePool = getRandomListItem(availableSubscriptionPools);
@@ -1084,7 +1090,13 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		} else clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null, null, null);
 		
 		// get all the available subscription pools
-		List<SubscriptionPool> availableSubscriptionPools = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, null, null, null, null, null, null).getStdout());
+		SSHCommandResult listResult = clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, null, null, null, null, null, null);
+		if (matchInstalled && clienttasks.getCurrentlyInstalledProducts().isEmpty()) {
+			String skipCase = "No available subscription pools to list";
+			Assert.assertEquals(listResult.getStdout().trim(), skipCase);
+			throw new SkipException("Skipping this test when: "+skipCase);
+		}
+		List<SubscriptionPool> availableSubscriptionPools = SubscriptionPool.parse(listResult.getStdout());
 		
 		// randomly choose an available pool
 		SubscriptionPool randomAvailablePool = getRandomListItem(availableSubscriptionPools);
