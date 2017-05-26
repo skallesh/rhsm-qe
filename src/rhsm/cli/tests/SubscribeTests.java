@@ -1245,12 +1245,15 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		int consumer1Quantity=0;
 		int totalPoolQuantity=0;
 		for (List<Object> row : getSubscribeWithQuantityDataAsListOfLists()) {
-			if (((String)(row.get(2))).equals("2") && ((String)(row.get(4))).startsWith("^Successful")) {	// find the row where quantity.equals("2")
-				consumer1Pool = (SubscriptionPool) row.get(1);
-				totalPoolQuantity = Integer.valueOf(consumer1Pool.quantity);
-				consumer1Quantity = Integer.valueOf((String) row.get(2));
-				SubscribeWithQuantity_Test(row.get(0), (SubscriptionPool)row.get(1), (String)row.get(2), (Integer)row.get(3), (String)row.get(4), (String)row.get(5));
-				break;
+			// find the row where quantity.equals("2")
+			if (((String)(row.get(2))!=null) && ((String)(row.get(4))!=null)) {
+				if (((String)(row.get(2))).equals("2") && ((String)(row.get(4))).startsWith("^Successful")) {
+					consumer1Pool = (SubscriptionPool) row.get(1);
+					totalPoolQuantity = Integer.valueOf(consumer1Pool.quantity);
+					consumer1Quantity = Integer.valueOf((String) row.get(2));
+					SubscribeWithQuantity_Test(row.get(0), (SubscriptionPool)row.get(1), (String)row.get(2), (Integer)row.get(3), (String)row.get(4), (String)row.get(5));
+					break;
+				}
 			}
 		}
 		if (consumer1Pool==null) Assert.fail("Failed to initiate the first consumer for this test.");
