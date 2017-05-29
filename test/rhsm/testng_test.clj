@@ -20,6 +20,9 @@
 (deftest tier1-cli-suite
   (TestNG/main (into-array String ["suites/sm-cli-tier1-testng-suite.xml"])))
 
+(deftest tier1-gui-suite
+  (TestNG/main (into-array String ["suites/sm-gui-tier1-testng-suite.xml"])))
+
 (deftest tier1-cli-one-suite
   (TestNG/main (into-array String ["suites/sm-cli-one-testng-suite.xml"])))
 

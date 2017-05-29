@@ -10,6 +10,7 @@
                                split-lines
                                split
                                trim)]
+        [slingshot.slingshot :only (try+ throw+)]
         rhsm.gui.tasks.tools
         clojure.pprint
         gnome.ldtp)
@@ -18,7 +19,8 @@
             [rhsm.gui.tasks.candlepin-tasks :as ctasks]
             rhsm.gui.tasks.ui
             [clojure.core.match :refer [match]]
-            [clojure.tools.logging :as log])
+            [clojure.tools.logging :as log]
+            [clojure.java.io :as io])
   (:import [org.testng.annotations
             BeforeClass
             BeforeGroups
@@ -139,7 +141,7 @@
           cli-val (trim (last (split cli-raw #":")))
           gui-raw (tasks/ui gettextvalue :facts-org)
           ;gui-val (re-find #"\w+" (last (split gui-raw #" ")))
-]
+          ]
       ;(verify (= gui-val cli-val))
       (verify (substring? cli-val gui-raw)))
     (finally (tasks/ui click :close-facts))))
@@ -363,6 +365,7 @@
   "Verifies if update facts grabs updated facts value"
   [_]
   (try
+    (tasks/restart-app)
     (tasks/unsubscribe_all)
     (if (tasks/ui showing? :register-system)
       (tasks/register-with-creds))
@@ -389,9 +392,12 @@
                     (tasks/ui doubleclickrow :facts-view "cpu")
                     (sleep 500)
                     (last (for [x (range row-num 100)
-                                :let [y (tasks/ui getcellvalue :facts-view x 0)]
+                                :let [y (try+ (tasks/ui getcellvalue :facts-view x 0)
+                                              (catch Object _ ""))]
                                 :while (not (= "cpu.cpu_socket(s)" y))]
-                            (tasks/ui getcellvalue :facts-view (+ x 1) 1))))]
+                            (try+ (tasks/ui getcellvalue :facts-view (+ x 1) 1)
+                                  (catch Object o nil)))))]
+      (verify (= new-val "20"))
       (verify (not (= old-val new-val))))
     (finally
       (tasks/ui click :close-facts)
