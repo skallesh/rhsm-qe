@@ -6,10 +6,10 @@
 ;;
 ;; this test is run this way:
 ;;
-;;       lein test rhsm.gui.tests.setup-test
+;;       lein test rhsm.testng-test
 ;; or
 ;;
-;;     lein test :only rhsm.gui.tests.setup-test/tier1-all-suites-test
+;;     lein test :only rhsm.testng-test/tier1-all-suites
 ;;
 ;; this test is to run the whole testng machinery with our tests
 ;;
