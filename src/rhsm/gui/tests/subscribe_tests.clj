@@ -62,6 +62,7 @@
   (try
     ;;(if (= "RHEL7" (get-release)) (base/startup nil))
     (tasks/unsubscribe_all)
+    (run-command "subscription-manager unregister")
     (tasks/register-with-creds)
     (reset! servicelist (ctasks/build-service-map :all? true))
     (reset! subs-contractlist (ctasks/build-subscription-product-map :all? true))
