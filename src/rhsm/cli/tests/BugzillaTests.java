@@ -704,10 +704,12 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				consumerId);
 		Calendar endCalendar = new GregorianCalendar();
 		String expiringPoolId = createTestPool(-60 * 24, endingMinutesFromNow,false);
+		Calendar c1 = new GregorianCalendar();
 		endCalendar.add(Calendar.MINUTE, endingMinutesFromNow);
 		DateFormat yyyy_MM_dd_DateFormat = new SimpleDateFormat("M/d/yy h:mm aaa");
 		String EndingDate = yyyy_MM_dd_DateFormat.format(endCalendar.getTime());
-		sleep(endingMinutesFromNow * 59 * 1000);
+		Calendar c2 = new GregorianCalendar();
+		sleep(1 * 59 * 1000 - (c2.getTimeInMillis() - c1.getTimeInMillis()));
 		new JSONObject(
 				CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername,
 						sm_clientPassword, sm_serverUrl, "/activation_keys/" + jsonActivationKey.getString("id")
@@ -1818,8 +1820,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		// sleep(endingMinutesFromNow*60*1000);
 		// trying to reduce the wait time for the expiration by subtracting off
 		// some expensive test time
-		sleep(endingMinutesFromNow * 60 * 1000 - (c2.getTimeInMillis() - c1.getTimeInMillis()));
-
+		sleep(1 * 58 * 1000 - (c2.getTimeInMillis() - c1.getTimeInMillis()));
 		// attempt to attach an entitlement from the same pool which is now
 		// expired
 		String result = clienttasks
@@ -1862,7 +1863,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,
 				consumerId);
 		String expiringPoolId = createTestPool(-60 * 24, endingMinutesFromNow,false);
-		sleep(endingMinutesFromNow * 60 * 1000);
+		sleep(1 * 59 * 1000);
 		clienttasks.subscribe_(null, null, expiringPoolId, null, null, null, null, null, null, null, null, null, null);
 		Assert.assertTrue(clienttasks.getCurrentlyConsumedProductSubscriptions().isEmpty());
 		Assert.assertTrue(clienttasks.getCurrentEntitlementCertFiles().isEmpty());
@@ -3662,7 +3663,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		// sleep(endingMinutesFromNow*60*1000);
 		// trying to reduce the wait time for the expiration by subtracting off
 		// some expensive test time
-		sleep(1 * 60 * 1000 - (c2.getTimeInMillis() - c1.getTimeInMillis()));
+		sleep(1 * 59 * 1000 - (c2.getTimeInMillis() - c1.getTimeInMillis()));
 		List<ProductSubscription> consumedProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
 		List<ProductSubscription> activeProductSubscriptions = ProductSubscription
 				.findAllInstancesWithMatchingFieldFromList("isActive", Boolean.TRUE, consumedProductSubscriptions);
@@ -4234,8 +4235,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				consumerId);
 
 		String expiringPoolId = createTestPool(-60 * 24, 1,false);
-		clienttasks.subscribe(null, null, expiringPoolId, null, null, null, null, null, null, null, null, null, null);
 		Calendar c1 = new GregorianCalendar();
+		clienttasks.subscribe(null, null, expiringPoolId, null, null, null, null, null, null, null, null, null, null);		
 		Calendar c2 = new GregorianCalendar();
 		// wait for the pool to expire
 		// sleep(endingMinutesFromNow*60*1000);
