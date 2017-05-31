@@ -1563,6 +1563,11 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			groups = {"VerifyAutosubscribeReuseBasicAuthCredntials", "blockedByBug-707641","blockedByBug-919700" },
 			enabled = true)
 	public void VerifyAutosubscribeReuseBasicAuthCredntials() throws JSONException, Exception {
+	    	if((servertasks.getConfFileParameter(servertasks.defaultConfigFile, "log4j.logger.org.candlepin.policy.js.compliance").equalsIgnoreCase("INFO")) 
+	    		&&(servertasks.getConfFileParameter(servertasks.defaultConfigFile, "log4j.logger.org.candlepin").equalsIgnoreCase("INFO"))){
+	    	    servertasks.updateConfFileParameter("log4j.logger.org.candlepin.policy.js.compliance", "DEBUG");
+	    	    servertasks.updateConfFileParameter("log4j.logger.org.candlepin", "DEBUG");
+	    	}
 		File tomcatLogFile = servertasks.getTomcatLogFile();
 		String LogMarker = System.currentTimeMillis()
 				+ " Testing VerifyAutosubscribeReuseBasicAuthCredntials ********************************";
@@ -1572,10 +1577,22 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		String logMessage = " Authentication check for /consumers/" + clienttasks.getCurrentConsumerId() + "/entitlements";
 		Assert.assertTrue(RemoteFileTasks
 				.getTailFromMarkedFile(server, tomcatLogFile.getPath(), LogMarker, logMessage).trim().equals(""));
+		 servertasks.updateConfFileParameter("log4j.logger.org.candlepin.policy.js.compliance", "INFO");
+	    	 servertasks.updateConfFileParameter("log4j.logger.org.candlepin", "INFO");
 		// TODO: This test depends on the candlepin logging level to be set to DEBUG; otherwise we will get false test passes.
 		//	[root@jsefler-candlepin ~]# cat /etc/candlepin/candlepin.conf | grep log4j.logger.org.candlepin
 		//	log4j.logger.org.candlepin.policy.js.compliance=INFO
 		//	log4j.logger.org.candlepin=INFO
+	}
+	
+	@AfterGroups(groups = { "setup" }, value = { "VerifyAutosubscribeReuseBasicAuthCredntials" })
+	@AfterClass(groups = "setup") // called after class for insurance
+	public void restoreCandlepinConfFileParameters() {
+	    if((servertasks.getConfFileParameter(servertasks.defaultConfigFile, "log4j.logger.org.candlepin.policy.js.compliance").equalsIgnoreCase("DEBUG")) 
+	    		&&(servertasks.getConfFileParameter(servertasks.defaultConfigFile, "log4j.logger.org.candlepin").equalsIgnoreCase("DEBUG"))){
+	    	    servertasks.updateConfFileParameter("log4j.logger.org.candlepin.policy.js.compliance", "INFO");
+	    	    servertasks.updateConfFileParameter("log4j.logger.org.candlepin", "INFO");
+	    	}
 	}
 
 	/**
@@ -5242,11 +5259,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		}
 	}
 
-// TODO: jsefler commented out this BeforeGroups; I don't think this is a good idea.  It breaks the original purpose of backupProductDefaultCerts()/restoreProductDefaultCerts(); TODO discuss with Shwetha
-//	@BeforeGroups(groups = "setup", value = { "VerifyEUSRHELProductCertVersionFromEachCDNReleaseVersion_Test",
-//			"InstalledProductMultipliesAfterSubscription" }, enabled = true)
-// TODO: jsefler commented out this AfterGroups; I don't think this is a good idea.  It breaks the original purpose of backupProductDefaultCerts()/restoreProductDefaultCerts(); TODO discuss with Shwetha
-//	@AfterGroups(groups = "setup", value = { "UpdateWithNoInstalledProducts" })
+
 	@AfterClass(groups = "setup")
 	public void restoreProductDefaultCerts() {
 		client.runCommandAndWait("ls -1 " + clienttasks.productCertDefaultDir + "/*.bak");
