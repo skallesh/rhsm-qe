@@ -6,11 +6,15 @@ import java.util.List;
 import java.util.Map;
 
 import org.json.JSONException;
+import org.junit.BeforeClass;
 import org.testng.SkipException;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.Test;
 
+import rhsm.base.CandlepinType;
 import rhsm.base.SubscriptionManagerCLITestScript;
+import rhsm.cli.tasks.CandlepinTasks;
+import rhsm.cli.tasks.SubscriptionManagerTasks;
 import rhsm.data.EntitlementCert;
 import rhsm.data.InstalledProduct;
 import rhsm.data.SubscriptionPool;
@@ -29,8 +33,9 @@ import com.github.redhatqe.polarize.metadata.TestDefinition;
 @Test(groups={ "RAMTests","Tier2Tests"})
 public class RAMTests extends SubscriptionManagerCLITestScript {
 	Map<String, String> factsMap = new HashMap<String, String>();
-
-
+	protected String productId = "RamTest-product";
+	protected List<String> providedProduct = new ArrayList<String>();
+	protected String ownerKey = "";
 	// Test methods ***********************************************************************
 	
 	
@@ -53,6 +58,9 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null, null);
+		String consumerId = clienttasks.getCurrentConsumerId();
+		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,
+			consumerId);
 		clienttasks.autoheal(null, null, true, null, null, null, null);
 		
 		List<String> ramSubscriptionNames = new ArrayList<String>();
@@ -269,20 +277,86 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 		return result;
 	}
 	
-	 public List<SubscriptionPool> getRamBasedSubscriptions() {
+	
+//	@BeforeClass(groups = "setup")
+	 public List<SubscriptionPool> getRamBasedSubscriptions() throws JSONException, Exception {
 		 List<SubscriptionPool> RAMBasedPools= new ArrayList<SubscriptionPool>();
-		 for(SubscriptionPool pool:clienttasks.getCurrentlyAvailableSubscriptionPools()){
+		/* for(SubscriptionPool pool:clienttasks.getCurrentlyAvailableSubscriptionPools()){
 		     List<String> provides=pool.provides;
-		     for(String providedproduct:provides){
-			 if(providedproduct.contains("RAM")){
+		     for(String providedproducts:provides){
+			 if(providedproducts.contains("RAM")){
 				 RAMBasedPools.add(pool) ;
-				 System.out.println(RAMBasedPools.size());
 			 }}
 		 }
-		 if (RAMBasedPools.isEmpty()) throw new SkipException("Could not find any RAM-based subscription pools/SKUs.");
+		 if (RAMBasedPools.isEmpty()) {*/
+			createTestPool(-60 * 24, 60*24*3);
+			for(SubscriptionPool pool:clienttasks.getCurrentlyAvailableSubscriptionPools()){
+			     for(String providedproducts:pool.provides){
+				 if(providedproducts.contains("RAM")){
+				     System.out.println(pool);
+					 RAMBasedPools.add(pool) ;
+					 System.out.println(RAMBasedPools.size());
+				 }}
+			 }
+		// }
 		 
 		return RAMBasedPools;
 	}
+	 
+	 /**
+		 * @param startingMinutesFromNow
+		 * @param endingMinutesFromNow
+		 * @return poolId to the newly available SubscriptionPool
+		 * @throws JSONException
+		 * @throws Exception
+		 */
+		protected String createTestPool(int startingMinutesFromNow, int endingMinutesFromNow)
+				throws JSONException, Exception {
+		    	String name = "RAMTestSubscription";
+		    	Map
+		    	<String, String> attributes = new HashMap<String, String>();
+			attributes.clear();
+			attributes.put("version", "1.0");
+			attributes.put("variant", "ALL");
+			attributes.put("arch", "ALL");
+			attributes.put("type", "MKT");
+			attributes.put("multi-entitlement", "yes");
+			attributes.put("ram", "10");
+			attributes.put("stacking_id", "ram-stackable");
+			System.out.println(attributes.isEmpty());
+			System.out.println(productId + "  "+ name);
+
+			providedProduct.add("801");
+			String resourcePath = "/products/" + productId;
+			if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0"))
+				resourcePath = "/owners/" + sm_clientOrg + resourcePath;
+			CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword,
+				sm_serverUrl, sm_clientOrg, productId);
+			CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,
+				resourcePath);
+			CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,
+				sm_clientOrg, name + " BITS", productId, 1, attributes, null);
+			return CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername,
+				sm_serverAdminPassword, sm_serverUrl, ownerKey, 10, startingMinutesFromNow, endingMinutesFromNow,
+				getRandInt(), getRandInt(), productId, providedProduct, null).getString("id");
+		}
+
+		@AfterClass(groups = { "setup" })
+		protected void DeleteTestPool() throws Exception {
+			if (CandlepinType.hosted.equals(sm_serverType))
+				return; // make sure we don't run this against stage/prod
+			// environment
+			if (sm_clientOrg == null)
+				return; // must have an owner when calling candlepin APIs to delete
+			// resources
+			CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword,
+					sm_serverUrl, sm_clientOrg, productId);
+			String resourcePath = "/products/" + productId;
+			if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0"))
+				resourcePath = "/owners/" + sm_clientOrg + resourcePath;
+			CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,
+					resourcePath);
+		}
 	 
 	public List<InstalledProduct> getRamBasedProducts() {
 		String ramProductName = "RAM";	// "RAM Limiting Product"
