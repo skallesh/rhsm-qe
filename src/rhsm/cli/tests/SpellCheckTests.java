@@ -113,6 +113,7 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 			msgId = msgId.replace("up2date", "up to date");
 			msgId = msgId.replace("firstboot", "first boot");
 			msgId = msgId.replace("hostname", "host name");
+			msgId = msgId.replace("Hostname", "Host name");
 			msgId = msgId.replace("redhat", "red hat");
 			msgId = msgId.replace("\\tManifest", "Manifest");
 			msgId = msgId.replace("jbappplatform", "java boss application platform");
