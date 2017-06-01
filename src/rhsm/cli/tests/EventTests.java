@@ -704,6 +704,8 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		// NOTE: Without the subscribe, this bugzilla is thrown: 
 		SSHCommandResult result = clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,ConsumerType.candlepin,null,null, null, null, null, (String)null, null, null, null, null, false, null, null, null, null);
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
+		pools.remove( SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", "mktProductId-93x2", pools));	// avoid "Too many content sets..." from Issue/Bug 1455361 - strange pool availability and bind behavior for consumer of type candlepin
+		pools.remove( SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", "mktProductId-186", pools));	// avoid "Too many content sets..." from Issue/Bug 1455361 - strange pool availability and bind behavior for consumer of type candlepin
 		testPool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
 		clienttasks.subscribe(null, null, testPool.poolId, null, null, null, null, null, null, null, null, null, null);
 		//String consumerKey = result.getStdout().split(" ")[0];
