@@ -1563,12 +1563,10 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			groups = {"VerifyAutosubscribeReuseBasicAuthCredntials", "blockedByBug-707641","blockedByBug-919700" },
 			enabled = true)
 	public void VerifyAutosubscribeReuseBasicAuthCredntials() throws JSONException, Exception {
-	    	if((servertasks.getConfFileParameter(servertasks.defaultConfigFile, "log4j.logger.org.candlepin.policy.js.compliance").equalsIgnoreCase("INFO")) 
-	    		&&(servertasks.getConfFileParameter(servertasks.defaultConfigFile, "log4j.logger.org.candlepin").equalsIgnoreCase("INFO"))){
-	    	    servertasks.updateConfFileParameter("log4j.logger.org.candlepin.policy.js.compliance", "DEBUG");
-	    	    servertasks.updateConfFileParameter("log4j.logger.org.candlepin", "DEBUG");
-	    	}
-		File tomcatLogFile = servertasks.getTomcatLogFile();
+	    	servertasks.updateConfFileParameter("log4j.logger.org.candlepin.policy.js.compliance", "DEBUG");
+	    	servertasks.updateConfFileParameter("log4j.logger.org.candlepin", "DEBUG");
+	    	servertasks.restartTomcat();
+	   	File tomcatLogFile = servertasks.getTomcatLogFile();
 		String LogMarker = System.currentTimeMillis()
 				+ " Testing VerifyAutosubscribeReuseBasicAuthCredntials ********************************";
 		RemoteFileTasks.markFile(server, tomcatLogFile.getPath(), LogMarker);
@@ -1588,11 +1586,10 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	@AfterGroups(groups = { "setup" }, value = { "VerifyAutosubscribeReuseBasicAuthCredntials" })
 	@AfterClass(groups = "setup") // called after class for insurance
 	public void restoreCandlepinConfFileParameters() {
-	    if((servertasks.getConfFileParameter(servertasks.defaultConfigFile, "log4j.logger.org.candlepin.policy.js.compliance").equalsIgnoreCase("DEBUG")) 
-	    		&&(servertasks.getConfFileParameter(servertasks.defaultConfigFile, "log4j.logger.org.candlepin").equalsIgnoreCase("DEBUG"))){
-	    	    servertasks.updateConfFileParameter("log4j.logger.org.candlepin.policy.js.compliance", "INFO");
+	       	    servertasks.updateConfFileParameter("log4j.logger.org.candlepin.policy.js.compliance", "INFO");
 	    	    servertasks.updateConfFileParameter("log4j.logger.org.candlepin", "INFO");
-	    	}
+		    servertasks.restartTomcat();
+
 	}
 
 	/**
