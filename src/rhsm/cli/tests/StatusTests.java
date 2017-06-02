@@ -356,8 +356,10 @@ public class StatusTests extends SubscriptionManagerCLITestScript{
 		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
 		
 		// make sure at least one installed product was subscribed, otherwise this test is not applicable
+		List <InstalledProduct> installedProducts = clienttasks.getCurrentlyInstalledProducts();
+		boolean noInstalledProducts = installedProducts.isEmpty();
 		boolean areAnyInstalledProductsSubscribable = false;
-		for (InstalledProduct installedProduct : clienttasks.getCurrentlyInstalledProducts()) {
+		for (InstalledProduct installedProduct : installedProducts) {
 			if (installedProduct.status.equals("Subscribed") || installedProduct.status.equals("Partially Subscribed")) {
 				areAnyInstalledProductsSubscribable = true; break;
 			}
@@ -387,15 +389,22 @@ public class StatusTests extends SubscriptionManagerCLITestScript{
 		Map<String,String> statusMapFuture = getProductStatusMapFromStatusResult(statusResultFuture);
 		
 		// assert future status is NOT identical to today's (assumes entitlements have expired)
-		if (areAnyInstalledProductsSubscribable) {
+		log.info("Status Map ondate=today: "+statusMapToday);
+		log.info("Status Map ondate=future: "+statusMapFuture);
+		if (areAnyInstalledProductsSubscribable || noInstalledProducts) {
 			Assert.assertTrue(!statusMapFuture.equals(statusMapToday),"Asserting that the status --ondate=future (the day after an entitlement expires) will NOT be identical to the status ondate=today (default).");
 		} else {
 			Assert.assertTrue(statusMapFuture.equals(statusMapToday),"Asserting that the status --ondate=future (the day after an entitlement expires) will be identical to the status ondate=today (default) because none of the subscriptions applied today provide coverage for the products installed today.");			
 		}
-		// assert future status is Invalid
-		String expectedStatus = "Overall Status: Invalid";
-		Assert.assertTrue(statusResultFuture.getStdout().contains(expectedStatus), "Expecting '"+expectedStatus+"' onDate '"+onDateFuture+"' which is one day beyond the most future endDate of the currently consumed subscriptions.");
-
+		
+		// assert future status
+		if (noInstalledProducts) {
+			String expectedStatus = "Overall Status: Current";
+			Assert.assertTrue(statusResultFuture.getStdout().contains(expectedStatus), "Expecting '"+expectedStatus+"' onDate '"+onDateFuture+"' which is one day beyond the most future endDate of the currently consumed subscriptions - when there are no installed products.");
+		} else {
+			String expectedStatus = "Overall Status: Invalid";
+			Assert.assertTrue(statusResultFuture.getStdout().contains(expectedStatus), "Expecting '"+expectedStatus+"' onDate '"+onDateFuture+"' which is one day beyond the most future endDate of the currently consumed subscriptions.");
+		}
 	}
 
 
