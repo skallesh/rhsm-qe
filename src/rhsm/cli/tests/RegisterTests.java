@@ -263,7 +263,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
 			       , testCaseID = {"RHEL6-19948", "RHEL7-55160"})
 	@Test(	description="subscription-manager-cli: attempt to register a user who has not yet accepted the Red Hat Terms and Conditions",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1089034","blockedByBug-1068766"},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1089034","blockedByBug-1068766","blockedByBug-1458423"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=48502)
 	public void AttemptRegistrationWithUnacceptedTermsAndConditions_Test() {
