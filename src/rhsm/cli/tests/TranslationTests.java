@@ -364,6 +364,13 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 		}
 		// END OF WORKAROUND
 		
+		// Skip on Known Issue: https://bugzilla.redhat.com/show_bug.cgi?id=1441739#c1
+		if (!translationFile.getPath().contains("/ja/") && clienttasks.isPackageVersion("subscription-manager","==", "1.19")) {
+			if (!translationFilePassed) {
+				throw new SkipException("Missing translations from "+translationFile+" is a Known Issue for subscription-manager-1.19.  New translations for RHEL7.4 are Japanese only.  See https://bugzilla.redhat.com/show_bug.cgi?id=1441739#c1 and https://bugzilla.redhat.com/show_bug.cgi?id=1449667");
+			}
+		}
+		
 		Assert.assertTrue(translationFilePassed,"Exactly 1 occurance of all the expected translation msgids ("+translationMsgidSetForSubscriptionManager.size()+") were found in translation file '"+translationFile+"'.");
 	}
 	
@@ -917,7 +924,16 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 		//       the currently extracted message ids from the source code is probably incorrect.
 		//       There could be extra msgids in the translation files that were left over from the last round
 		//       of translations and are no longer applicable (should be excluded from this union algorithm).
+		// UPDATE: The block below that skips the unsupportedLocales should alleviate the TODO concern above.
 		for (File translationFile : translationFileMapForSubscriptionManager.keySet()) {
+			
+			// does this translationFile provide translations to an unsupportedLocale?
+			boolean isTranslationFileSupported = true;
+			for (String unsupportedLocale : unsupportedLocales) {
+				if (translationFile.getPath().contains(String.format("/%s/",unsupportedLocale))) isTranslationFileSupported=false;
+			}
+			if (!isTranslationFileSupported) continue; // skip the unsupportedLocales (so that the msgids from abandoned translations of prior releases do not interfere with expected msgids of this release)
+			
 			List<Translation> translationList = translationFileMapForSubscriptionManager.get(translationFile);
 			for (Translation translation : translationList) {
 				translationMsgidSetForSubscriptionManager.add(translation.msgid);
