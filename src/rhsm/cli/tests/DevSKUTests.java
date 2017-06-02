@@ -468,6 +468,10 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 		
 		// get the autosubscribed entitlement
 		List<ProductSubscription> productSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
+		if (clienttasks.getCurrentProductCertFiles().isEmpty()) {	// handle case when no products are installed
+			Assert.assertEquals(productSubscriptions.size(), 0, "After autosubscribing a system with dev_sku fact '"+devSku1+"' that has no installed products, no product subscription should be consumed.");
+			throw new SkipException("This test requires at least one installed product, otherwise there is no need for a dev SKU entitlement.");
+		}
 		Assert.assertEquals(productSubscriptions.size(), 1, "After autosubscribing a system with dev_sku fact '"+devSku1+"', only one product subscription should be consumed.");
 		ProductSubscription devSkuProductSubscription1 = productSubscriptions.get(0);
 		Assert.assertEquals(devSkuProductSubscription1.productId, devSku1, "The consumed entitlement SKU after autosubscribing a system with dev_sku fact '"+devSku1+"'.");
