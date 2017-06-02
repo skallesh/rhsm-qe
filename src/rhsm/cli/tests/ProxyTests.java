@@ -1888,9 +1888,12 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 
 			blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 			
+			
+			bugIds.add("1457197");	// Bug 1457197 - --noproxy option no longer match "*" for host names
 			noProxyEnvVar = "*"; hostnameMatchesNoProxyEnvVar=true;	// * matches subscription.rhn.redhat.com
-			ll.add(Arrays.asList(new Object[]{	blockedByBzBug,	l.get(1),	l.get(2),	l.get(3),	l.get(4),	l.get(5),	l.get(6),	l.get(7),	l.get(8),	l.get(9),	l.get(10),	l.get(11),	l.get(12),	l.get(13),	l.get(14),	l.get(15),	l.get(16), noProxyEnvVar, hostnameMatchesNoProxyEnvVar}));
-
+			ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug(bugIds.toArray(new String[]{})),	l.get(1),	l.get(2),	l.get(3),	l.get(4),	l.get(5),	l.get(6),	l.get(7),	l.get(8),	l.get(9),	l.get(10),	l.get(11),	l.get(12),	l.get(13),	l.get(14),	l.get(15),	l.get(16), noProxyEnvVar, hostnameMatchesNoProxyEnvVar}));
+			bugIds.remove("1457197");
+			
 			noProxyEnvVar = sm_serverHostname; hostnameMatchesNoProxyEnvVar=true;	// subscription.rhn.redhat.com matches subscription.rhn.redhat.com
 			ll.add(Arrays.asList(new Object[]{	blockedByBzBug,	l.get(1),	l.get(2),	l.get(3),	l.get(4),	l.get(5),	l.get(6),	l.get(7),	l.get(8),	l.get(9),	l.get(10),	l.get(11),	l.get(12),	l.get(13),	l.get(14),	l.get(15),	l.get(16), noProxyEnvVar, hostnameMatchesNoProxyEnvVar}));
 
@@ -1909,7 +1912,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 			bugIds.add("1443164");	// Bug 1443164 	no_proxy does not match the host name when *.redhat.com is used	// This case does not work on RHEL since the the only wildcard supported by the library is no_proxy=* which is likely an RFE bug against component X?
 			noProxyEnvVar = sm_serverHostname.replaceFirst("[^\\.]+", "*"); hostnameMatchesNoProxyEnvVar=true;	// *.rhn.redhat.com matches subscription.rhn.redhat.com
 			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(bugIds.toArray(new String[]{})),	l.get(1),	l.get(2),	l.get(3),	l.get(4),	l.get(5),	l.get(6),	l.get(7),	l.get(8),	l.get(9),	l.get(10),	l.get(11),	l.get(12),	l.get(13),	l.get(14),	l.get(15),	l.get(16), noProxyEnvVar, hostnameMatchesNoProxyEnvVar}));
-
+			bugIds.remove("1443164");
 		}
 		return ll;
 	}
@@ -2100,9 +2103,11 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 			
 			// Object blockedByBug (0), String username (1), String password (2), Sring org (3), String proxy (4), String proxyuser (5), String proxypassword (6), String proxy_hostnameConfig (7), String proxy_portConfig (8), String proxy_userConfig (9), String proxy_passwordConfig (10), Integer exitCode (11), String stdout (12), String stderr (13), SSHCommandRunner proxyRunner (14), String proxyLog (15), String proxyLogGrepPattern (16)
 			
+			bugIds.add("1457197");	// Bug 1457197 - --noproxy option no longer match "*" for host names
 			noProxy = "*"; hostnameMatchesNoProxy=true;	// * matches subscription.rhn.redhat.com
-			ll.add(Arrays.asList(new Object[]{	blockedByBzBug,	l.get(1),	l.get(2),	l.get(3),	l.get(4),	l.get(5),	l.get(6),	l.get(7),	l.get(8),	l.get(9),	l.get(10),	l.get(11),	l.get(12),	l.get(13),	l.get(14),	l.get(15),	l.get(16), noProxy, hostnameMatchesNoProxy}));
-
+			ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug(bugIds.toArray(new String[]{})),	l.get(1),	l.get(2),	l.get(3),	l.get(4),	l.get(5),	l.get(6),	l.get(7),	l.get(8),	l.get(9),	l.get(10),	l.get(11),	l.get(12),	l.get(13),	l.get(14),	l.get(15),	l.get(16), noProxy, hostnameMatchesNoProxy}));
+			bugIds.remove("1457197");
+			
 			noProxy = sm_serverHostname; hostnameMatchesNoProxy=true;	// subscription.rhn.redhat.com matches subscription.rhn.redhat.com
 			ll.add(Arrays.asList(new Object[]{	blockedByBzBug,	l.get(1),	l.get(2),	l.get(3),	l.get(4),	l.get(5),	l.get(6),	l.get(7),	l.get(8),	l.get(9),	l.get(10),	l.get(11),	l.get(12),	l.get(13),	l.get(14),	l.get(15),	l.get(16), noProxy, hostnameMatchesNoProxy}));
 
@@ -2121,7 +2126,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 			bugIds.add("1443164");	// Bug 1443164 	no_proxy does not match the host name when *.redhat.com is used	// This case does not work on RHEL since the the only wildcard supported by the library is no_proxy=* which is likely an RFE bug against component X?
 			noProxy = sm_serverHostname.replaceFirst("[^\\.]+", "*"); hostnameMatchesNoProxy=true;	// *.rhn.redhat.com matches subscription.rhn.redhat.com
 			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(bugIds.toArray(new String[]{})),	l.get(1),	l.get(2),	l.get(3),	l.get(4),	l.get(5),	l.get(6),	l.get(7),	l.get(8),	l.get(9),	l.get(10),	l.get(11),	l.get(12),	l.get(13),	l.get(14),	l.get(15),	l.get(16), noProxy, hostnameMatchesNoProxy}));
-
+			bugIds.remove("1443164");
 		}
 		return ll;
 	}
