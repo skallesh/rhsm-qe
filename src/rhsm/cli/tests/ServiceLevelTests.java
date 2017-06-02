@@ -602,6 +602,9 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		// ensure system is registered
 		if (clienttasks.getCurrentConsumerId()==null) clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, "AutoSubscribeWithServiceLevelConsumer", null, null, null, null, (String)null, null, null, null, null, false, null, null, null, null);
 		
+		// are any products installed?
+		boolean noInstalledProducts = clienttasks.getCurrentlyInstalledProducts().isEmpty();
+		
 		// remember this initial service level preference for this consumer
 		String initialConsumerServiceLevel = clienttasks.getCurrentServiceLevel();
 		
@@ -616,6 +619,8 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		JSONObject jsonConsumer = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/consumers/"+clienttasks.getCurrentConsumerId()));
 		if (serviceLevel==null) {
 			Assert.assertEquals(jsonConsumer.get("serviceLevel"), initialConsumerServiceLevel, "The consumer's serviceLevel preference should remain unchanged when calling subscribe with auto and a servicelevel of null.");
+		} else if (noInstalledProducts) {
+			Assert.assertEquals(jsonConsumer.get("serviceLevel"), initialConsumerServiceLevel, "The consumer's serviceLevel preference should remain unchanged when calling subscribe with auto when no products are installed because the autosubscribe process should abort thereby not attenpting a service level change.");
 		} else {
 			Assert.assertEquals(jsonConsumer.get("serviceLevel"), serviceLevel, "The call to subscribe with auto and a servicelevel of '"+serviceLevel+"' persisted the servicelevel setting on the current consumer object.");			
 		}
