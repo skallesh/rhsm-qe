@@ -804,19 +804,6 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	
-	@BeforeGroups(groups="setup",value={"VerifyYumSearchDoesNotThrowAsciiCodecError_Test"})
-	public void beforeVerifyYumSearchDoesNotThrowAsciiCodecError_Test() {
-		if (clienttasks==null) return;
-		// register with auto-subscribe
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, true, false, null, null, null, null);
-		// skip the test when we do not have access to RHEL content
-		if (!clienttasks.isRhelProductCertSubscribed()) throw new SkipException("Cannot perform this test until an available RHEL subscription has been attached.");
-		// remove python-simplejson
-		String pkg="python-simplejson";
-		if (clienttasks.isPackageInstalled(pkg)) clienttasks.yumRemovePackage(pkg);
-	}
-
-
 	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
 			       , testCaseID = {"RHEL6-19946", "RHEL7-55158"})
 	@Test(	description="verify that \"'ascii' codec can't decode byte\" errors do not occur with yum search",
@@ -825,7 +812,9 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyYumSearchDoesNotThrowAsciiCodecError_Test(Object bugzilla, String lang) {
-		
+		// skip the test when we do not have access to RHEL content
+		if (!isRhelProductCertSubscribedForVerifyYumSearchDoesNotThrowAsciiCodecError) throw new SkipException("Cannot perform this test until an available RHEL subscription has been attached.");
+
 		// attempt to search for the zsh package using the lang
 		String command = "yum search zsh";
 		SSHCommandResult result = clienttasks.runCommandWithLang(lang, command);
@@ -868,7 +857,19 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(!result.getStdout().toLowerCase().contains(errorMsg.toLowerCase()), "Stdout from running '"+command+"' in locale '"+lang+"' does not contain error '"+errorMsg+"'.");
 		Assert.assertTrue(!result.getStderr().toLowerCase().contains(errorMsg.toLowerCase()), "Stderr from running '"+command+"' in locale '"+lang+"' does not contain error '"+errorMsg+"'.");
 	}
-	
+	@BeforeGroups(groups="setup",value={"VerifyYumSearchDoesNotThrowAsciiCodecError_Test"})
+	public void beforeVerifyYumSearchDoesNotThrowAsciiCodecError_Test() {
+		if (clienttasks==null) return;
+		// register with auto-subscribe
+		SSHCommandResult result = clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, true, false, null, null, null, null);
+		if (result.getStdout().contains("No products installed.")) return;	// this will cause VerifyYumSearchDoesNotThrowAsciiCodecError_Test to skip because isRhelProductCertSubscribedForVerifyYumSearchDoesNotThrowAsciiCodecError is false
+		isRhelProductCertSubscribedForVerifyYumSearchDoesNotThrowAsciiCodecError = clienttasks.isRhelProductCertSubscribed();
+		
+		// remove python-simplejson
+		String pkg="python-simplejson";
+		if (clienttasks.isPackageInstalled(pkg)) clienttasks.yumRemovePackage(pkg);
+	}
+	protected boolean isRhelProductCertSubscribedForVerifyYumSearchDoesNotThrowAsciiCodecError = false;
 	
 	
 	
