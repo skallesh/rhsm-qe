@@ -1563,9 +1563,10 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			groups = {"VerifyAutosubscribeReuseBasicAuthCredntials", "blockedByBug-707641","blockedByBug-919700" },
 			enabled = true)
 	public void VerifyAutosubscribeReuseBasicAuthCredntials() throws JSONException, Exception {
-	    	servertasks.updateConfFileParameter("log4j.logger.org.candlepin.policy.js.compliance", "DEBUG");
-	    	servertasks.updateConfFileParameter("log4j.logger.org.candlepin", "DEBUG");
-	    	servertasks.restartTomcat();
+		if (!sm_serverType.equals(CandlepinType.standalone)) throw new SkipException("This test was designed for execution against an opremise candlepin server.");
+		servertasks.updateConfFileParameter("log4j.logger.org.candlepin.policy.js.compliance", "DEBUG");
+		servertasks.updateConfFileParameter("log4j.logger.org.candlepin", "DEBUG");
+		servertasks.restartTomcat();
 	   	File tomcatLogFile = servertasks.getTomcatLogFile();
 		String LogMarker = System.currentTimeMillis()
 				+ " Testing VerifyAutosubscribeReuseBasicAuthCredntials ********************************";
@@ -1582,11 +1583,11 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	@AfterGroups(groups = { "setup" }, value = { "VerifyAutosubscribeReuseBasicAuthCredntials" })
 	@AfterClass(groups = "setup") // called after class for insurance
 	public void restoreCandlepinConfFileParameters() {
-	       	    servertasks.updateConfFileParameter("log4j.logger.org.candlepin.policy.js.compliance", "INFO");
-	    	    servertasks.updateConfFileParameter("log4j.logger.org.candlepin", "INFO");
-		    servertasks.restartTomcat();
-		    
-
+		if (sm_serverType.equals(CandlepinType.standalone)) {
+			servertasks.updateConfFileParameter("log4j.logger.org.candlepin.policy.js.compliance", "INFO");
+			servertasks.updateConfFileParameter("log4j.logger.org.candlepin", "INFO");
+			servertasks.restartTomcat();
+		}
 	}
 
 	/**
