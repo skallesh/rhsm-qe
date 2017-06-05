@@ -913,6 +913,16 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 			Assert.assertEquals(migrationProductCert.productNamespace.id, rhnDefinitionsProductCert.productNamespace.id, "Comparing productNamespace.id between '"+rhnDefinitionsProductCert.file+"' and '"+migrationProductCert.file+"'");
 			Assert.assertEquals(migrationProductCert.productNamespace.arch, rhnDefinitionsProductCert.productNamespace.arch, "Comparing productNamespace.arch between '"+rhnDefinitionsProductCert.file+"' and '"+migrationProductCert.file+"'");
 			Assert.assertEquals(migrationProductCert.productNamespace.providedTags, rhnDefinitionsProductCert.productNamespace.providedTags, "Comparing productNamespace.providedTags between '"+rhnDefinitionsProductCert.file+"' and '"+migrationProductCert.file+"'");
+			// TEMPORARY WORKAROUND
+			if (clienttasks.redhatReleaseXY.equals("7.4") && rhnDefinitionsProductCert.productNamespace.version.startsWith(clienttasks.redhatReleaseXY) && !migrationProductCert.productNamespace.version.equals(rhnDefinitionsProductCert.productNamespace.version)) {
+				boolean invokeWorkaroundWhileBugIsOpen = true;
+				String bugId="1436441";	// Bug 1436441 - subscription-manager-migration-data for RHEL7.4 needs RHEL7.4 product certs (not RHEL7.3 certs)
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
+				if (invokeWorkaroundWhileBugIsOpen) {
+					throw new SkipException("Skipping assertion that the product cert version provided by subscription-manager-migration-data mapped to RHN channel "+productCertsRhnChannel+" matches the upstream mapping from product-certs.json while bug "+bugId+" is open.");
+				}
+			}
+			// END OF WORKAROUND
 			Assert.assertEquals(migrationProductCert.productNamespace.version, rhnDefinitionsProductCert.productNamespace.version, "Comparing productNamespace.version between '"+rhnDefinitionsProductCert.file+"' and '"+migrationProductCert.file+"'");
 		} else {
 		
