@@ -709,7 +709,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		DateFormat yyyy_MM_dd_DateFormat = new SimpleDateFormat("M/d/yy h:mm aaa");
 		String EndingDate = yyyy_MM_dd_DateFormat.format(endCalendar.getTime());
 		Calendar c2 = new GregorianCalendar();
-		sleep(1 * 59 * 1000 - (c2.getTimeInMillis() - c1.getTimeInMillis()));
+		sleep(1 * 57 * 1000 - (c2.getTimeInMillis() - c1.getTimeInMillis()));
 		new JSONObject(
 				CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername,
 						sm_clientPassword, sm_serverUrl, "/activation_keys/" + jsonActivationKey.getString("id")
@@ -1577,10 +1577,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				.getTailFromMarkedFile(server, tomcatLogFile.getPath(), LogMarker, logMessage).trim().equals(""));
 		 servertasks.updateConfFileParameter("log4j.logger.org.candlepin.policy.js.compliance", "INFO");
 	    	 servertasks.updateConfFileParameter("log4j.logger.org.candlepin", "INFO");
-		// TODO: This test depends on the candlepin logging level to be set to DEBUG; otherwise we will get false test passes.
-		//	[root@jsefler-candlepin ~]# cat /etc/candlepin/candlepin.conf | grep log4j.logger.org.candlepin
-		//	log4j.logger.org.candlepin.policy.js.compliance=INFO
-		//	log4j.logger.org.candlepin=INFO
 	}
 	
 	@AfterGroups(groups = { "setup" }, value = { "VerifyAutosubscribeReuseBasicAuthCredntials" })
@@ -1589,6 +1585,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	       	    servertasks.updateConfFileParameter("log4j.logger.org.candlepin.policy.js.compliance", "INFO");
 	    	    servertasks.updateConfFileParameter("log4j.logger.org.candlepin", "INFO");
 		    servertasks.restartTomcat();
+		    
 
 	}
 
@@ -1834,7 +1831,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		// sleep(endingMinutesFromNow*60*1000);
 		// trying to reduce the wait time for the expiration by subtracting off
 		// some expensive test time
-		sleep(1 * 58 * 1000 - (c2.getTimeInMillis() - c1.getTimeInMillis()));
+		sleep(1 * 60 * 1000 - (c2.getTimeInMillis() - c1.getTimeInMillis()));
 		// attempt to attach an entitlement from the same pool which is now
 		// expired
 		String result = clienttasks
@@ -3677,7 +3674,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		// sleep(endingMinutesFromNow*60*1000);
 		// trying to reduce the wait time for the expiration by subtracting off
 		// some expensive test time
-		sleep(1 * 59 * 1000 - (c2.getTimeInMillis() - c1.getTimeInMillis()));
+		sleep(1 * 57 * 1000 - (c2.getTimeInMillis() - c1.getTimeInMillis()));
 		List<ProductSubscription> consumedProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
 		List<ProductSubscription> activeProductSubscriptions = ProductSubscription
 				.findAllInstancesWithMatchingFieldFromList("isActive", Boolean.TRUE, consumedProductSubscriptions);
@@ -4256,7 +4253,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		// sleep(endingMinutesFromNow*60*1000);
 		// trying to reduce the wait time for the expiration by subtracting off
 		// some expensive test time
-		sleep(1 * 58 * 1000 - (c2.getTimeInMillis() - c1.getTimeInMillis()));
+		sleep(1 * 57 * 1000 - (c2.getTimeInMillis() - c1.getTimeInMillis()));
 
 		InstalledProduct productCertBeforeHealing = ProductCert.findFirstInstanceWithMatchingFieldFromList("status",
 				"Expired", clienttasks.getCurrentlyInstalledProducts());
