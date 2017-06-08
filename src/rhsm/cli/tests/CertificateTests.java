@@ -195,7 +195,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		}
 		
 		// make sure we attempted the test
-		Assert.assertTrue(productDefaultCertTested, "Successfully attempted to test the epected version of the '"+clienttasks.productCertDefaultDir+"' cert(s)");	
+		Assert.assertTrue(productDefaultCertTested, "Found and successfully attempted to test the expected version of the '"+clienttasks.productCertDefaultDir+"' cert(s)");	
 	}
 
 
