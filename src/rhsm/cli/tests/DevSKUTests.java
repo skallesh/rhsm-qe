@@ -86,7 +86,9 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 		
 		// get the JSON product representation of the devSku 
 		String resourcePath = "/products/"+devSku;
-		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) resourcePath = "/owners/"+sm_clientOrg+resourcePath;
+		String ownerKey = sm_clientOrg;
+		if (sm_clientOrg==null) ownerKey = clienttasks.getCurrentlyRegisteredOwnerKey();
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) resourcePath = "/owners/"+ownerKey+resourcePath;
 		JSONObject jsonDevSkuProduct = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, resourcePath));
 		if (jsonDevSkuProduct.has("displayMessage")) {
 			// indicative that: // Product with ID 'dev-mkt-product' could not be found.
@@ -169,7 +171,7 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 		for (InstalledProduct installedProduct : installedProducts) {
 			// ignore installed products that are unknown to the candlepin product layer
 			resourcePath = "/products/"+installedProduct.productId;
-			if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) resourcePath = "/owners/"+sm_clientOrg+resourcePath;
+			if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) resourcePath = "/owners/"+ownerKey+resourcePath;
 			JSONObject jsonProduct = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, resourcePath));
 			if (jsonProduct.has("displayMessage")) {
 				// indicative that: // Product with ID '69' could not be found.
@@ -181,7 +183,7 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 				installedProductIds.add(installedProduct.productId);
 			}
 		}
-		Set entitledProductIds = new HashSet<String>();
+		Set<String> entitledProductIds = new HashSet<String>();
 		for (ProductNamespace productNamespace : devSkuEntitlement.productNamespaces) entitledProductIds.add(productNamespace.id);
 		Assert.assertTrue(entitledProductIds.containsAll(installedProductIds) && entitledProductIds.size()==installedProductIds.size(), "All (and only) of the currently installed products known by the candlepin product layer are entitled by the devSku entitlement.  (Actual entitled product ids "+entitledProductIds+")");
 
