@@ -643,6 +643,22 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 						log.info("rhnDefnitionProductCert: "+rhnDefnitionProductCert);
 					}
 				}
+				
+				// skip a known issue that is irrelevant on RHEL7.  This is failing because rcm updated product cert product_ids/rhel-6.7-eus/EUS-Server-s390x-1a3bca323339-73.pem to product_ids/rhel-6.7-eus/EUS-Server-s390x-e9eb3d196edc-73.pem, but this is irrelevant on rhel7
+				if (migrationProductCert.file.getPath().equals("/usr/share/rhsm/product/RHEL-7/EUS-Server-s390x-1a3bca323339-73.pem")) {
+					//	[root@jsefler-rhel7 rhnDefinitionsDir]# rct cat-cert /usr/share/rhsm/product/RHEL-7/EUS-Server-s390x-1a3bca323339-73.pem | grep -A7 "Product:"
+					//	Product:
+					//		ID: 73
+					//		Name: Red Hat Enterprise Linux for IBM System z - Extended Update Support
+					//		Version: 6.7
+					//		Arch: s390x
+					//		Tags: rhel-6-ibm-system-z
+					//		Brand Type: 
+					//		Brand Name: 
+					log.info("Ignoring the the WARNING for migration product cert '"+migrationProductCert.file+"' because it is irrelevant on RHEL7.  It applies to RHEL6: "+ migrationProductCert.productNamespace);
+					continue;
+				}
+				
 				if (!foundNewerVersionOfMigrationProductCert) verifiedMatchForAllMigrationProductCertFiles = false;
 			}
 		}
@@ -2791,6 +2807,15 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				bugIds.add("1264470");
 			}
 			
+			if (//https://bugzilla.redhat.com/show_bug.cgi?id=1462980#c1
+				rhnAvailableChildChannel.equals("rhel-ppc64-server-hts-7-debuginfo") ||
+				rhnAvailableChildChannel.equals("rhel-s390x-server-hts-7-debuginfo") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-hts-7-debuginfo") ||
+				rhnAvailableChildChannel.equals("") ){
+				// Bug 1462980 - various RHEL7 channel maps to product certs are missing in subscription-manager-migration-data
+				bugIds.add("1462980");
+			}
+			
 			if (rhnAvailableChildChannel.equals("rhel-x86_64-server-6-rh-gluster-3-samba-debuginfo")) {
 				// Bug 1286842 - 'rhel-x86_64-server-6-rh-gluster-3-samba-debuginfo' channel map is missing from channel-cert-mapping.txt
 				bugIds.add("1286842");
@@ -2866,6 +2891,14 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				bugIds.add("1333545");
 			}
 			
+			if (rhnAvailableChildChannel.equals("rhel-x86_64-server-7-rhevh") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-7-rhevh-debuginfo") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-7-rhevh-beta") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-7-rhevh-beta-debuginfo")) {
+				// Bug 1462994 - rhel-x86_64-server-7-rhevh channel maps are absent from channel-cert-mapping.txt
+				bugIds.add("1462994");
+			}
+			
 			if (rhnAvailableChildChannel.equals("rhel-x86_64-server-7-ost-8") ||
 				rhnAvailableChildChannel.equals("rhel-x86_64-server-7-ost-8-debuginfo") ||
 				rhnAvailableChildChannel.equals("rhel-x86_64-server-7-ost-8-director") ||
@@ -2874,6 +2907,16 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				rhnAvailableChildChannel.equals("rhel-x86_64-server-7-ost-8-optools-debuginfo")) {
 				// Bug 1349533 - rhel-x86_64-server-7-ost-8 channel maps are absent from channel-cert-mapping.txt
 				bugIds.add("1349533");
+			}
+			
+			if (rhnAvailableChildChannel.equals("rhel-x86_64-server-7-ost-8") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-7-ost-8-debuginfo") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-7-ost-8-director") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-7-ost-8-director-debuginfo") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-7-ost-8-optools") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-7-ost-8-optools-debuginfo")) {
+				// Bug 1462984 - rhel-x86_64-server-7-ost-8 channel maps are absent from channel-cert-mapping.txt
+				bugIds.add("1462984");
 			}
 			
 			if (rhnAvailableChildChannel.equals("rhel-s390x-server-ha-7-beta") ||
@@ -2892,6 +2935,12 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				rhnAvailableChildChannel.equals("rhel-x86_64-server-7-rh-gluster-3-client-debuginfo")) {
 				// Bug 1349538 - rhel-x86_64-server-7-rh-gluster-3-client channel maps are absent from channel-cert-mapping.txt
 				bugIds.add("1349538");
+			}
+			
+			if (rhnAvailableChildChannel.equals("rhel-x86_64-server-7-rh-gluster-3-client") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-7-rh-gluster-3-client-debuginfo")) {
+				// Bug 1462989 - rhel-x86_64-server-7-rh-gluster-3-client channel maps are absent from channel-cert-mapping.txt
+				bugIds.add("1462989");
 			}
 			
 			if (rhnAvailableChildChannel.equals("rhel-x86_64-server-6-rh-gluster-3-nfs") ||
