@@ -365,6 +365,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 		// END OF WORKAROUND
 		
 		// Skip on Known Issue: https://bugzilla.redhat.com/show_bug.cgi?id=1441739#c1
+		if (false) // skip this SkipException due to https://bugzilla.redhat.com/show_bug.cgi?id=1441739#c2
 		if (!translationFile.getPath().contains("/ja/") && clienttasks.isPackageVersion("subscription-manager","==", "1.19")) {
 			if (!translationFilePassed) {
 				throw new SkipException("Missing translations from "+translationFile+" is a Known Issue for subscription-manager-1.19.  New translations for RHEL7.4 are Japanese only.  See https://bugzilla.redhat.com/show_bug.cgi?id=1441739#c1 and https://bugzilla.redhat.com/show_bug.cgi?id=1449667");
