@@ -1407,7 +1407,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		
 		// log info about virt-what
 		client.runCommandAndWait("rpm -q virt-what");
-		client.runCommandAndWait("virt-what");
+		SSHCommandResult virtWhatResult = client.runCommandAndWait("virt-what");
 		
 		// this is the list of base facts in English
 		Map<String,String> procCpuInfoFacts = clienttasks.getFacts("proc_cpuinfo.common");
@@ -1462,9 +1462,12 @@ if (false) { // DO NOT RUN, BUT NOT READY TO DELETE CODE
 			String virtUuid = clienttasks.getFactValue("virt.uuid");
 			if (RemoteFileTasks.testExists(client, procDeviceTreeVmUuidFile)) {
 				String expectedVirtUuid = client.runCommandAndWait("cat "+procDeviceTreeVmUuidFile).getStdout().trim();
-				Assert.assertNotNull(virtUuid, "The virt.uuid fact is set on a '"+clienttasks.arch+"' platform when "+procDeviceTreeVmUuidFile+" is defined.");
-				Assert.assertEquals(virtUuid, expectedVirtUuid, "The virt.uuid fact on a '"+clienttasks.arch+"' '"+procCpuInfoFacts.get("proc_cpuinfo.common.model")+"' '"+procCpuInfoFacts.get("proc_cpuinfo.common.platform")+"' platform should match the contents of "+procDeviceTreeVmUuidFile);
-								
+				if (virtWhatResult.getStdout().isEmpty()) {	// when virt-what reports nothing, then this system is physical!
+					Assert.assertNull(virtUuid, "The virt.uuid fact is NOT set on a '"+clienttasks.arch+"' platform when virt-what reports nothing despite the fact that "+procDeviceTreeVmUuidFile+" is defined.");
+				} else {
+					Assert.assertNotNull(virtUuid, "The virt.uuid fact is set on a '"+clienttasks.arch+"' platform when "+procDeviceTreeVmUuidFile+" is defined.");
+					Assert.assertEquals(virtUuid, expectedVirtUuid, "The virt.uuid fact on a '"+clienttasks.arch+"' '"+procCpuInfoFacts.get("proc_cpuinfo.common.model")+"' '"+procCpuInfoFacts.get("proc_cpuinfo.common.platform")+"' platform should match the contents of "+procDeviceTreeVmUuidFile);
+				}
 				// assert virt.is_guest is True
 //				// TEMPORARY WORKAROUND FOR BUG
 //				// Bug 1072524 has been VERIFIED
