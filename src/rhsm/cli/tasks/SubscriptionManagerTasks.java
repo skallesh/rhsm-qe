@@ -704,7 +704,9 @@ if (false) {
 		// FIRST: prepare a repo for the updatePackages and then yum update
 		
 		// make sure installOptions begins with --disablerepo=* to make sure the updates ONLY come from the rhel-latest-extras repo we are about to define
+		if (false) {	// stop disabling the auto-subscribed base rhel repos because docker 2:1.12.6-38.1 now requires atomic-registries which depends on libyaml which comes from rhel-7-server-rpms or rhel-7-server-htb-rpms 
 		if (!installOptions.contains("--disablerepo=*")) installOptions = "--disablerepo=* "+installOptions;
+		}
 		
 		// avoid ERROR: can not find RHNS CA file: /usr/share/rhn/RHN-ORG-TRUSTED-SSL-CERT
 		installOptions += " --disableplugin=rhnplugin";
