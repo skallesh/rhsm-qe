@@ -548,6 +548,8 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 			if(/*sub-man*/(translationFile.getPath().contains("/fr/"))) ignorableMsgIds.addAll(Arrays.asList("The Subscription Management Service you register with will provide your system with updates and allow additional management.","The subscription management service you register with will provide your system with updates and allow additional management."));	// msgstr "Le service de gestion des abonnements « Subscription Management » avec lequel vous vous enregistrez fournira à votre système des mises à jour et permettra une gestion supplémentaire."	//	# (pofilter) doublewords: The word 'vous' is repeated
 			if(/*sub-man*/(translationFile.getPath().contains("/or/"))) ignorableMsgIds.addAll(Arrays.asList("Run the initial checks immediately, with no delay.","Run the initial checks immediatly, with no delay.","run the initial checks immediately, with no delay"));
 			if(/*sub-man*/(translationFile.getPath().contains("/fr/"))) ignorableMsgIds.addAll(Arrays.asList("Registering to: %s:%s%s"));	// msgstr "Enregistrement sur : %s:%s%s"	//	# (pofilter) doublewords: The word ':' is repeated
+			if(/*sub-man*/(translationFile.getPath().contains("/fr/"))) ignorableMsgIds.addAll(Arrays.asList("The subscription management service you register with will provide your system with updates and allow additional management.s"));	// msgstr "Le service de gestion des abonnements avec lequel vous vous enregistrez fournira à votre système des mises à jour et permettra une gestion supplémentaire."	//	# (pofilter) doublewords: The word 'vous' is repeated
+			if(/*sub-man*/(translationFile.getPath().contains("/fr/"))) ignorableMsgIds.addAll(Arrays.asList("Unregistering from: %s:%s%s"));	// msgstr "Annulation de l’inscription de : %s : %s %s"	//	# (pofilter) doublewords: The word ':' is repeated
 			if(/*candlepin*/(translationFile.getPath().endsWith("/de.po"))) ignorableMsgIds.addAll(Arrays.asList("Invalid time zone string. Time zones must be recognized time zone names or offsets specified in the form of \"GMT[+-]HH:?MM\".".replaceAll("\\\"", "\\\\\"")));	// msgstr "Ungültige Zeichenkette für Zeitzonen. Zeitzonen müssen erkannte Zeitzonennamen oder Offsets sein, die in folgender Form angegeben sind \"GMT[+-]HH:?MM\"."	//	# (pofilter) doublewords: The word 'zeitzonen' is repeated
 		}
 		
@@ -574,7 +576,7 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 			if (doesStringContainMatches(translationFile.getPath(),"/bn_IN/|/bn_IN\\.po$"))	ignorableMsgIds.addAll(Arrays.asList("Subscription Validity Applet","Auto-attach"));
 			if (doesStringContainMatches(translationFile.getPath(),"/ta_IN/|/ta_IN\\.po$"))	ignorableMsgIds.addAll(Arrays.asList("Org: ","org id: %s","org ID: %s","Repo Id:              \\t%s","Repo Url:             \\t%s"/*,"Auto-attach" Bug 1140644*/));
 			if (doesStringContainMatches(translationFile.getPath(),"/pt_BR/|/pt_BR\\.po$"))	ignorableMsgIds.addAll(Arrays.asList("Org: ","org id: %s","org ID: %s","<b>subscription management service version:</b> %s","Status","Status:               \\t%s","<b>Status:</b>","Login:","Virtual","_Help","virtual", "Repo Id:              \\t%s", "Arch:                 \\t%s"/* omaciel says "Arquitetura:" is better */, "Pool Id:              \\t%s"/* omaciel says "ID do pool:" is better */, "<b>Base URL:</b>","_Ok","_Login:"));
-			if (doesStringContainMatches(translationFile.getPath(),"/de_DE/|/de_DE\\.po$|/de\\.po$"))	ignorableMsgIds.addAll(Arrays.asList("Subscription Manager","Red Hat account: ","Account","<b>Account:</b>","Account:              \\t%s","<b>Subscription Management Service Version:</b> %s","<b>subscription management service version:</b> %s","subscription management server: %s","Login:","Arch","Arch:","Name","Name:                 \\t%s","Name:","<b>Name:</b>","Status","<b>Status:</b>","Status:               \\t%s","Status:","<b>Status Details:</b>","Status Details","Status Details:","Status Details Text","System Status Details","Version: %s","Version","Version:              \\t%s","Version:","<b>%s version:</b> %s","_System","long integer","name: %s","label","Label","Name: %s","Release: %s","integer","Tags","Org: ","org ID: %s","\\tManifest","<b>Account:</b>","Account","Account:","Red Hat account: ","Server","Standard","Repository: %s","_Ok","<b>Support:</b>","<b>Downloads &amp; Upgrades:</b>"));
+			if (doesStringContainMatches(translationFile.getPath(),"/de_DE/|/de_DE\\.po$|/de\\.po$"))	ignorableMsgIds.addAll(Arrays.asList("Subscription Manager","Red Hat account: ","Account","<b>Account:</b>","Account:              \\t%s","<b>Subscription Management Service Version:</b> %s","<b>subscription management service version:</b> %s","subscription management server: %s","Login:","Arch","Arch:","Name","Name:                 \\t%s","Name:","<b>Name:</b>","Status","<b>Status:</b>","Status:               \\t%s","Status:","<b>Status Details:</b>","Status Details","Status Details:","Status Details Text","System Status Details","Version: %s","Version","Version:              \\t%s","Version:","<b>%s version:</b> %s","_System","long integer","name: %s","label","Label","Name: %s","Release: %s","integer","Tags","Org: ","org ID: %s","\\tManifest","<b>Account:</b>","Account","Account:","Red Hat account: ","Server","Standard","Repository: %s","_Ok","<b>Support:</b>","<b>Downloads &amp; Upgrades:</b>","Bypass Proxy Checkbox","Hostname/Domain Bypass Text"));
 			if (doesStringContainMatches(translationFile.getPath(),"/es_ES/|/es_ES\\.po$|/es\\.po$"))	ignorableMsgIds.addAll(Arrays.asList("Org: ","Serial","Serial:","No","%s: error: %s","General:","_Login:"));
 			if (doesStringContainMatches(translationFile.getPath(),"/te/|/te\\.po$"))		ignorableMsgIds.addAll(Arrays.asList("page 2"));
 			if (doesStringContainMatches(translationFile.getPath(),"/pa/|/pa\\.po$"))		ignorableMsgIds.addAll(Arrays.asList("<b>python-rhsm version:</b> %s"));
@@ -821,6 +823,11 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 				// Bug 1117515 - [ta_IN][zh_CN] bad translation for "%s is already running" causes a traceback
 				if (pofilterTest.equals("printf") && translationFile.getPath().contains("/ta_IN/")) bugIds.add("1117515");
 				if (pofilterTest.equals("printf") && translationFile.getPath().contains("/zh_CN/")) bugIds.add("1117515");
+				// Bug 1463765 - fixes needed for a few pofilter test failures after pulling in new translations for rhel7.4
+				if (pofilterTest.equals("printf") && translationFile.getPath().contains("/it/")) bugIds.add("1463765");
+				if (pofilterTest.equals("printf") && translationFile.getPath().contains("/pt_BR/")) bugIds.add("1463765");
+				if (pofilterTest.equals("printf") && translationFile.getPath().contains("/es_ES/")) bugIds.add("1463765");
+				if (pofilterTest.equals("printf") && translationFile.getPath().contains("/ru/")) bugIds.add("1463765");
 				
 //				// Bug 827113 	Many Translated languages fail the pofilter tabs test
 //				if (pofilterTest.equals("tabs") && !(translationFile.getPath().contains("/pa/")||translationFile.getPath().contains("/mr/")||translationFile.getPath().contains("/de_DE/")||translationFile.getPath().contains("/bn_IN/"))) bugIds.add("825397");
@@ -899,6 +906,11 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 				// Bug 1117515 - [ta_IN][zh_CN] bad translation for "%s is already running" causes a traceback
 				if (pofilterTest.equals("variables") && translationFile.getPath().contains("/ta_IN/")) bugIds.add("1117515");
 				if (pofilterTest.equals("variables") && translationFile.getPath().contains("/zh_CN/")) bugIds.add("1117515");
+				// Bug 1463765 - fixes needed for a few pofilter test failures after pulling in new translations for rhel7.4
+				if (pofilterTest.equals("variables") && translationFile.getPath().contains("/it/")) bugIds.add("1463765");
+				if (pofilterTest.equals("variables") && translationFile.getPath().contains("/pt_BR/")) bugIds.add("1463765");
+				if (pofilterTest.equals("variables") && translationFile.getPath().contains("/es_ES/")) bugIds.add("1463765");
+				if (pofilterTest.equals("variables") && translationFile.getPath().contains("/ru/")) bugIds.add("1463765");
 				
 				// Bug 828903 - [bn_IN] failed pofilter options tests for subscription-manager translations 
 				if (pofilterTest.equals("options") && translationFile.getPath().contains("/bn_IN/")) bugIds.add("828903");
@@ -1110,6 +1122,8 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 				// Bug 1417731 - [ko][pt_BR] pofilter endwhitespace test fails for subscription-manager 1.18.X
 				if (pofilterTest.equals("endwhitespace") && translationFile.getPath().contains("/ko/")) bugIds.add("1417731");
 				if (pofilterTest.equals("endwhitespace") && translationFile.getPath().contains("/pt_BR/")) bugIds.add("1417731");
+				// Bug 1463765 - fixes needed for a few pofilter test failures after pulling in new translations for rhel7.4
+				if (pofilterTest.equals("endwhitespace") && translationFile.getPath().contains("/ko/")) bugIds.add("1463765");
 				
 				// Bug 1417736 - [pt_BR][fr][ja] pofilter accelerators test fails for subscription-manager 1.18.X
 				if (pofilterTest.equals("accelerators") && translationFile.getPath().contains("/pt_BR/")) bugIds.add("1417736");

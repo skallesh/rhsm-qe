@@ -642,6 +642,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 		doNotTranslateSubStrings.addAll(Arrays.asList(new String[]{"&#x2022;"}));	// Unicode bullet character	// msgid "&#x2022; A network connection"	// msgid "&#x2022; The address of a subscription management service (optional)"	// msgid "&#x2022; Your account login"
 		doNotTranslateSubStrings.addAll(Arrays.asList(new String[]{"subscription-manager register --help"}));	// msgid "This system is not yet registered. Try 'subscription-manager register --help' for more information."
 		doNotTranslateSubStrings.addAll(Arrays.asList(new String[]{"subscription-manager plugins"}));	// msgid "View and configure subscription-manager plugins"
+		doNotTranslateSubStrings.add("%s:%s%s");	// msgid "Unregistering from: %s:%s%s"	// msgid "Registering to: %s:%s%s"
 		
 		List<String> ignoreTheseExceptionalCases = new ArrayList<String>();
 		//ignoreTheseExceptionalCases.add("View and configure subscription-manager plugins");	// 12/8/2015 stop ignoring... will be changed by bug 1061407 in https://github.com/candlepin/subscription-manager/pull/1343/
@@ -796,6 +797,28 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 			
 			// Bug 1189950 - [ko_KR] bad translation for "{dateexample}" prevents error message from rendering
 			if (translationFile.getPath().contains("/ko/")) bugIds.add("1189950");
+			
+			// Bug 1463765 - fixes needed for a few pofilter test failures after pulling in new translations for rhel7.4	// this bug covers the unwanted translation of substring "%s:%s%s"
+			if (translationFile.getPath().contains("/as/")) bugIds.add("1463765");
+			if (translationFile.getPath().contains("/bn/")) bugIds.add("1463765");
+			if (translationFile.getPath().contains("/de_DE/")) bugIds.add("1463765");
+			if (translationFile.getPath().contains("/fr/")) bugIds.add("1463765");
+			if (translationFile.getPath().contains("/gu/")) bugIds.add("1463765");
+			if (translationFile.getPath().contains("/as/")) bugIds.add("1463765");
+			if (translationFile.getPath().contains("/hi/")) bugIds.add("1463765");
+			if (translationFile.getPath().contains("/ja/")) bugIds.add("1463765");
+			if (translationFile.getPath().contains("/kn/")) bugIds.add("1463765");
+			if (translationFile.getPath().contains("/ko/")) bugIds.add("1463765");
+			if (translationFile.getPath().contains("/pa/")) bugIds.add("1463765");
+			if (translationFile.getPath().contains("/ta_IN/")) bugIds.add("1463765");
+			if (translationFile.getPath().contains("/te/")) bugIds.add("1463765");
+			if (translationFile.getPath().contains("/as/")) bugIds.add("1463765");
+			if (translationFile.getPath().contains("/zh_CN/")) bugIds.add("1463765");
+			if (translationFile.getPath().contains("/zh_TW/")) bugIds.add("1463765");
+			if (translationFile.getPath().contains("/it/")) bugIds.add("1463765");
+			if (translationFile.getPath().contains("/pt_BR/")) bugIds.add("1463765");
+			if (translationFile.getPath().contains("/ru/")) bugIds.add("1463765");
+			if (translationFile.getPath().contains("/es_ES/")) bugIds.add("1463765");
 			
 			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 			ll.add(Arrays.asList(new Object[] {blockedByBzBug, translationFile}));
