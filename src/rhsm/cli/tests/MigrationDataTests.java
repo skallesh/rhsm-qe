@@ -1207,6 +1207,13 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 			return;
 		}
 		
+		// skip all missing beta channels and ignore their absence from the migration data (as generally agreed upon by dev/qe/pm team)
+		if (!channelsToProductCertFilenamesMap.containsKey(classicRhnChannel) && 
+			(classicRhnChannel.contains("-beta-")||classicRhnChannel.endsWith("-beta"))) {
+			log.warning("Available RHN Classic beta channel '"+classicRhnChannel+"' is NOT accounted for in subscription-manager-migration-data file '"+channelCertMappingFilename+"'.");
+			throw new SkipException("Skipping this failed test instance in favor of RFE Bug https://bugzilla.redhat.com/show_bug.cgi?id=1437233 that will intensionally exclude beta channels to product cert mappings.  Also referencing precedence bugs that have been CLOSED WONTFIX on missing beta channels: https://bugzilla.redhat.com/buglist.cgi?bug_id=1437233,1299623,1299621,1299620,1127880");
+		}
+		
 		Assert.assertTrue(channelsToProductCertFilenamesMap.containsKey(classicRhnChannel), "RHN Classic channel '"+classicRhnChannel+"' is accounted for in subscription-manager-migration-data file '"+channelCertMappingFilename+"'.");
 	}
 
