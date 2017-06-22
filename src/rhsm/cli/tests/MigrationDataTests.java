@@ -1345,7 +1345,12 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(!channelsToProductCertFilenamesMap.get(rhnRhelChannel).equalsIgnoreCase("none"), "RHN RHEL Channel '"+rhnRhelChannel+"' does not map to None.");
 		ProductCert rhnRhelProductCert = clienttasks.getProductCertFromProductCertFile(new File(baseProductsDir+"/"+channelsToProductCertFilenamesMap.get(rhnRhelChannel)));
 		if (rhnRhelChannel.contains(/*clienttasks.redhatReleaseX+*/"-beta-") || rhnRhelChannel.endsWith(/*clienttasks.redhatReleaseX+*/"-beta")) {
-			Assert.assertEquals(rhnRhelProductCert.productNamespace.version, clienttasks.redhatReleaseXY+" Beta", "RHN RHEL Beta Channel '"+rhnRhelChannel+"' maps to the following product cert that corresponds to this RHEL minor release '"+clienttasks.redhatReleaseXY+"': "+rhnRhelProductCert.productNamespace);			
+			String expectedProductNamespaceVersion = clienttasks.redhatReleaseXY+" Beta";
+			if (!rhnRhelProductCert.productNamespace.version.equals(expectedProductNamespaceVersion)) {
+				log.warning("RHN RHEL Beta Channel '"+rhnRhelChannel+"' maps to the following product cert that should correspond to this RHEL minor release (expected='"+expectedProductNamespaceVersion+"' actual='"+rhnRhelProductCert.productNamespace.version+"'): "+rhnRhelProductCert.productNamespace);
+				throw new SkipException("Skipping this failed test instance in favor of RFE Bug https://bugzilla.redhat.com/show_bug.cgi?id=1437233 that will intensionally exclude beta channels to product cert mappings.  Also referencing precedence bugs that have been CLOSED WONTFIX on beta channels: 1435255 1435245");
+			}
+			Assert.assertEquals(rhnRhelProductCert.productNamespace.version, expectedProductNamespaceVersion, "RHN RHEL Beta Channel '"+rhnRhelChannel+"' maps to the following product cert that corresponds to this RHEL minor release '"+clienttasks.redhatReleaseXY+"': "+rhnRhelProductCert.productNamespace);			
 		} else {
 			Assert.assertEquals(rhnRhelProductCert.productNamespace.version, clienttasks.redhatReleaseXY, "RHN RHEL Channel '"+rhnRhelChannel+"' maps to the following product cert that corresponds to this RHEL minor release '"+clienttasks.redhatReleaseXY+"': "+rhnRhelProductCert.productNamespace);
 		}
@@ -1576,6 +1581,14 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				rhnChannel.equals("rhel-x86_64-server-7-thirdparty-oracle-java-beta") ||
 				rhnChannel.equals("rhel-x86_64-workstation-7-thirdparty-oracle-java-beta")) {
 				bugIds.add("1349592");
+			}
+			
+			// Bug 1464236 - RHN RHEL Channels 'rhel-x86_64-<VARIANT>-7-thirdparty-oracle-java' map to a '7.3' version cert; should be '7.4'
+			if (rhnChannel.equals("rhel-x86_64-client-7-thirdparty-oracle-java") ||
+				rhnChannel.equals("rhel-x86_64-hpc-node-7-thirdparty-oracle-java") ||
+				rhnChannel.equals("rhel-x86_64-server-7-thirdparty-oracle-java") ||
+				rhnChannel.equals("rhel-x86_64-workstation-7-thirdparty-oracle-java")) {
+				bugIds.add("1464236");
 			}
 			
 			// Object bugzilla, String productBaselineRhnChannel, String productBaselineProductId
