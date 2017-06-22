@@ -466,6 +466,11 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 				}
 			}
 			// END OF WORKAROUND
+			// avoid "Unable to attach subscription for the product 'RH00003': rulefailed.quantity.mismatch." since Bug 1463320 was CLOSED NOTABUG
+			if (!subscriptionPool.suggested.equals(Integer.valueOf(1))) {
+				log.info("Excluding subscription '"+subscriptionPool.productId+"' as a dev_sku candidate because its suggested quantity '"+subscriptionPool.suggested+"' is not 1 which is NOT indicative of a realistic dev_sku subscription.  Reference https://bugzilla.redhat.com/show_bug.cgi?id=1463320#c1");
+				continue;
+			}
 			if (devSku1==null) devSku1=subscriptionPool.productId;
 			if (devSku2==null && devSku1!=null && devSku1!=subscriptionPool.productId) devSku2=subscriptionPool.productId;
 			if (devSku2!=null && devSku1!=null) break;
