@@ -1,10 +1,13 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <testcase id="RHEL6-27118">
-    <title>rhsm.cli.tests.ListTests.EnsureConsumedEntitlementsListed_Test</title>
-    <description>subscription-manager-cli: list consumed entitlements (when not consuming)</description>
+    <title>RHSM-TC : rhsm.cli.tests.ListTests.EnsureConsumedEntitlementsListed_Test</title>
+    <description>subscription-manager-cli: list consumed entitlements</description>
     <test-steps>
         <test-step>
-            <test-step-column id="step"/>
+            <test-step-column id="step">
+                <parameter name="productId" scope="local"/>
+                <parameter name="bundledProductDataAsJSONArray" scope="local"/>
+            </test-step-column>
         </test-step>
     </test-steps>
     <custom-fields>
@@ -13,7 +16,7 @@
         <custom-field id="caselevel" content="component"></custom-field>
         <custom-field id="caseposneg" content="positive"></custom-field>
         <custom-field id="testtype" content="functional"></custom-field>
-        <custom-field id="subtype1" content="-"></custom-field>
+        <custom-field id="subtype1" content="reliability"></custom-field>
         <custom-field id="subtype2" content="-"></custom-field>
     </custom-fields>
 </testcase>

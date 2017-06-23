@@ -159,7 +159,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
 			       , testCaseID = {"RHEL6-20295", "RHEL7-51691"})
 	@Test(	description="subscription-manager: subscribe to a future pool and verify that NO content namespaces are represented in the repos list",
-			groups={"blockedByBug-768983","unsubscribeAllBeforeThisTest"},
+			groups={"blockedByBug-768983","blockedByBug-1440180","unsubscribeAllBeforeThisTest"},
 			dataProvider="getAllFutureSystemSubscriptionPoolsData",
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
@@ -167,7 +167,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 //if (!pool.productId.equals("awesomeos-virt-unlmtd-phys")) throw new SkipException("debugTesting productId="+pool.productId);
 		
 		// subscribe to the future SubscriptionPool
-		SSHCommandResult subscribeResult = clienttasks.subscribe(null,null,pool.poolId,null,null,null,null,null,null,null, null, null);
+		SSHCommandResult subscribeResult = clienttasks.subscribe(null,null,pool.poolId,null,null,null,null,null,null,null, null, null, null);
 		// Pool is restricted to virtual guests: '8a90f85734205a010134205ae8d80403'.
 		// Pool is restricted to physical systems: '8a9086d3443c043501443c052aec1298'.
 		if (subscribeResult.getStdout().startsWith("Pool is restricted")) {
@@ -208,7 +208,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	//@ImplementsNitrateTest(caseId=)
 	public void ManualEditsToEnablementOfRedhatReposIsForbidden_Test(){	// replacement for ReposListPreservesManualEditsToEnablementOfRedhatRepos_Test
 		// register
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null, null);
 		clienttasks.yumClean("all");	// to trip the subscription-manager yum plugin
 		
 		SSHCommandResult result = client.runCommandAndWaitWithoutLogging("cat "+clienttasks.redhatRepoFile);
@@ -254,7 +254,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	public void ReposListPreservesSimultaneousEnablementOfRedhatRepos_Test(){
 		
 		// register
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
 		
 		// subscribe to all available subscription so as to populate the redhat.repo file
 		clienttasks.subscribeToTheCurrentlyAllAvailableSubscriptionPoolsCollectively();
@@ -280,7 +280,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		}
 		
 		// collectively toggle the enablement of the current repos
-		clienttasks.repos(null, null, null, enableRepoIds, disableRepoIds, null, null, null);
+		clienttasks.repos(null, null, null, enableRepoIds, disableRepoIds, null, null, null, null);
 		
 		// verify that the change is preserved by subscription-manager repos --list
 		List<Repo> toggledRepos = clienttasks.getCurrentlySubscribedRepos();	// determined by calling subscription-manager repos --list
@@ -296,7 +296,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		// now remove and refresh entitlement certificates and again assert the toggled enablement is preserved
 		log.info("Remove and refresh entitlement certs...");
 		clienttasks.removeAllCerts(false,true, false);
-		clienttasks.refresh(null, null, null);
+		clienttasks.refresh(null, null, null, null);
 		
 		// verify that the change is preserved by subscription-manager repos --list
 		toggledRepos = clienttasks.getCurrentlySubscribedRepos();	// determined by calling subscription-manager repos --list
@@ -318,7 +318,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void ReposListIsEmptyWhenNotRegistered_Test(){
-		clienttasks.unregister(null,null,null);		
+		clienttasks.unregister(null,null,null, null);		
 		Assert.assertEquals(clienttasks.getCurrentlySubscribedRepos().size(),0, "No repos are reported by subscription-manager repos --list when not registered.");
 	}
 
@@ -330,8 +330,8 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void ReposListWhenNotRegistered_Test(){
-		clienttasks.unregister(null,null,null);
-		SSHCommandResult result = clienttasks.repos(true, null, null, (String)null, (String)null, null, null, null);
+		clienttasks.unregister(null,null,null, null);
+		SSHCommandResult result = clienttasks.repos(true, null, null, (String)null, (String)null, null, null, null, null);
 		//Assert.assertEquals(result.getStdout().trim(), "The system is not entitled to use any repositories.");
 		Assert.assertEquals(result.getStdout().trim(), "This system has no repositories available through subscriptions.");
 	}
@@ -345,13 +345,13 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	//@ImplementsNitrateTest(caseId=)
 	public void ReposListWhenManageReposIsBlank_Test(){
 		// register
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
 		
 		// config rhsm.manage_repos to a blank value
 		//clienttasks.config(null, null, true, new String[]{"rhsm", "manage_repos", ""});
 		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "manage_repos", "");
 		
-		SSHCommandResult result = clienttasks.repos(true, null, null, (String)null, (String)null, null, null, null);
+		SSHCommandResult result = clienttasks.repos(true, null, null, (String)null, (String)null, null, null, null, null);
 		
 		// as discussed in https://bugzilla.redhat.com/show_bug.cgi?id=1251853#c12
 		// when rhsm.manage_repos is blank, behavior should assume the default value [1] which means repos will be managed
@@ -374,13 +374,13 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	//@ImplementsNitrateTest(caseId=)
 	public void ReposListWhenManageReposIsOff_Test(){
 		// register
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
 		
 		// config rhsm.manage_repos to an off value
 		//clienttasks.config(null, null, true, new String[]{"rhsm", "manage_repos", "0"});
 		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "manage_repos", "0");
 		
-		SSHCommandResult result = clienttasks.repos(true, null, null, (String)null, (String)null, null, null, null);
+		SSHCommandResult result = clienttasks.repos(true, null, null, (String)null, (String)null, null, null, null, null);
 		Assert.assertEquals(result.getStdout().trim(), "Repositories disabled by configuration.", "Stdout when calling repos with rhsm.manage_repos configured to 0.");
 		Assert.assertEquals(result.getStderr().trim(), "", "Stderr when calling repos with rhsm.manage_repos configured to 0.");
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(0), "ExitCode when calling repos with rhsm.manage_repos configured to 0.");
@@ -394,8 +394,8 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void ReposWhenNotRegistered_Test(){
-		clienttasks.unregister(null,null,null);
-		SSHCommandResult result = clienttasks.repos(null, null, null, (String)null, (String)null, null, null, null); // defaults to --list behavior starting in rhel59
+		clienttasks.unregister(null,null,null, null);
+		SSHCommandResult result = clienttasks.repos(null, null, null, (String)null, (String)null, null, null, null, null); // defaults to --list behavior starting in rhel59
 		//Assert.assertEquals(result.getStdout().trim(), "The system is not entitled to use any repositories.");
 		Assert.assertEquals(result.getStdout().trim(), "This system has no repositories available through subscriptions.");
 	}
@@ -413,11 +413,11 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "manage_repos", "1");
 		
 		// register
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
 		
 		// assert that the repos list is enabled.
 		//Assert.assertTrue(clienttasks.repos(true,(String)null,(String)null,null,null,null).getStdout().trim().equals("The system is not entitled to use any repositories."), "The system is not entitled to use any repositories while the rhsm.manage_repos configuration value is 1.");
-		Assert.assertEquals(clienttasks.repos(true,null,null,(String)null,(String)null,null, null, null).getStdout().trim(),"This system has no repositories available through subscriptions.", "This system has no repositories available through subscriptions while the rhsm.manage_repos configuration value is 1.");
+		Assert.assertEquals(clienttasks.repos(true,null,null,(String)null,(String)null,null, null, null, null).getStdout().trim(),"This system has no repositories available through subscriptions.", "This system has no repositories available through subscriptions while the rhsm.manage_repos configuration value is 1.");
 
 		// assert that the redhat.repo exists before and after a yum transaction
 		//Assert.assertEquals(RemoteFileTasks.testFileExists(client, clienttasks.redhatRepoFile),1,"When rhsm.manage_repos is configured on, the redhat.repo should exist after registration.");
@@ -426,13 +426,13 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 
 		// assert that the repos list is not entitled to use any repositories, but is enabled by configuration!
 		//Assert.assertTrue(clienttasks.repos(true,(String)null,(String)null,null,null,null).getStdout().trim().equals("The system is not entitled to use any repositories."), "The system is not entitled to use any repositories while the rhsm.manage_repos configuration value is 1.");
-		Assert.assertEquals(clienttasks.repos(true,null,null,(String)null,(String)null,null, null, null).getStdout().trim(),"This system has no repositories available through subscriptions.", "This system has no repositories available through subscriptions while the rhsm.manage_repos configuration value is 1.");
+		Assert.assertEquals(clienttasks.repos(true,null,null,(String)null,(String)null,null, null, null, null).getStdout().trim(),"This system has no repositories available through subscriptions.", "This system has no repositories available through subscriptions while the rhsm.manage_repos configuration value is 1.");
 
 		// NOW DISABLE THE rhsm.manage_repos CONFIGURATION FILE PARAMETER
 		clienttasks.config(null, null, true, new String[]{"rhsm","manage_repos","0"});
 		
 		// assert that the repos list is disabled by configuration!
-		SSHCommandResult reposListResult = clienttasks.repos(true,null,null,(String)null,(String)null,null, null, null);
+		SSHCommandResult reposListResult = clienttasks.repos(true,null,null,(String)null,(String)null,null, null, null, null);
 		//Assert.assertTrue(reposListResult.getStdout().contains("Repositories disabled by configuration."), "Repositories disabled by configuration since the rhsm.manage_repos configuration value is 0.");
 		Assert.assertEquals(reposListResult.getStdout().trim(),"Repositories disabled by configuration.", "Repositories disabled by configuration since the rhsm.manage_repos configuration value is 0.");
 		//Assert.assertTrue(reposListResult.getStdout().contains("The system is not entitled to use any repositories."), "The system is not entitled to use any repositories since the rhsm.manage_repos configuration value is 0.");
@@ -444,7 +444,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		
 		// subscribe to all subscriptions and re-assert that the repos list remains disabled.
 		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
-		reposListResult = clienttasks.repos(true,null,null,(String)null,(String)null,null, null, null);
+		reposListResult = clienttasks.repos(true,null,null,(String)null,(String)null,null, null, null, null);
 		//Assert.assertTrue(reposListResult.getStdout().contains("Repositories disabled by configuration."), "Repositories disabled by configuration even after subscribing to all pools while the rhsm.manage_repos configuration value is 0.");
 		Assert.assertEquals(reposListResult.getStdout().trim(),"Repositories disabled by configuration.", "Repositories disabled by configuration even after subscribing to all pools while the rhsm.manage_repos configuration value is 0.");
 		//Assert.assertTrue(reposListResult.getStdout().contains("The system is not entitled to use any repositories."), "The system is not entitled to use any repositories even after subscribing to all pools while the rhsm.manage_repos configuration value is 0.");
@@ -465,10 +465,10 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "manage_repos", "0");
 		
 		// register
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
 
 		// assert that the repos list is disabled.
-		SSHCommandResult reposListResult = clienttasks.repos(true,null,null,(String)null,(String)null,null, null, null);
+		SSHCommandResult reposListResult = clienttasks.repos(true,null,null,(String)null,(String)null,null, null, null, null);
 		//Assert.assertTrue(reposListResult.getStdout().contains("Repositories disabled by configuration."), "Repositories disabled by configuration remains even after subscribing to all pools while the rhsm.manage_repos configuration value is 0.");
 		Assert.assertEquals(reposListResult.getStdout().trim(),"Repositories disabled by configuration.", "Repositories disabled by configuration remains even after subscribing to all pools while the rhsm.manage_repos configuration value is 0.");
 		//Assert.assertTrue(reposListResult.getStdout().contains("The system is not entitled to use any repositories."), "The system is not entitled to use any repositories even after subscribing to all pools while the rhsm.manage_repos configuration value is 0.");
@@ -481,7 +481,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 
 		// subscribe to all subscriptions and re-assert that the repos list remains disabled.
 		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
-		reposListResult = clienttasks.repos(true,null,null,(String)null,(String)null,null, null, null);
+		reposListResult = clienttasks.repos(true,null,null,(String)null,(String)null,null, null, null, null);
 		//Assert.assertTrue(reposListResult.getStdout().contains("Repositories disabled by configuration."), "Repositories disabled by configuration remains even after subscribing to all pools while the rhsm.manage_repos configuration value is 0.");
 		Assert.assertEquals(reposListResult.getStdout().trim(),"Repositories disabled by configuration.", "Repositories disabled by configuration remains even after subscribing to all pools while the rhsm.manage_repos configuration value is 0.");
 		//Assert.assertTrue(reposListResult.getStdout().contains("The system is not entitled to use any repositories."), "The system is not entitled to use any repositories even after subscribing to all pools while the rhsm.manage_repos configuration value is 0.");
@@ -508,7 +508,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	//@ImplementsNitrateTest(caseId=)
 	public void ReposEnableInvalidRepo_Test(){
 		String invalidRepo = "invalid-repo-id";
-		SSHCommandResult result = clienttasks.repos_(null, null, null, invalidRepo, null, null, null, null);
+		SSHCommandResult result = clienttasks.repos_(null, null, null, invalidRepo, null, null, null, null, null);
 		//Assert.assertEquals(result.getExitCode(), new Integer(0), "ExitCode from an attempt to enable an invalid-repo-id.");	// valid in RHEL59
 		//Assert.assertEquals(result.getStdout().trim(), "Error: A valid repo id is required. Use --list option to see valid repos.", "Stdout from an attempt to enable an invalid-repo-id.");	// valid in RHEL59
 		Assert.assertEquals(result.getExitCode(), new Integer(1), "ExitCode from an attempt to enable an invalid-repo-id.");
@@ -529,7 +529,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	//@ImplementsNitrateTest(caseId=)
 	public void ReposDisableInvalidRepo_Test(){
 		String invalidRepo = "invalid-repo-id";
-		SSHCommandResult result = clienttasks.repos_(null, null, null, null, invalidRepo, null, null, null);
+		SSHCommandResult result = clienttasks.repos_(null, null, null, null, invalidRepo, null, null, null, null);
 		//Assert.assertEquals(result.getExitCode(), new Integer(0), "ExitCode from an attempt to disable an invalid-repo-id.");	// valid in RHEL59
 		//Assert.assertEquals(result.getStdout().trim(), "Error: A valid repo id is required. Use --list option to see valid repos.", "Stdout from an attempt to disable an invalid-repo-id.");	// valid in RHEL59
 		Assert.assertEquals(result.getExitCode(), new Integer(1), "ExitCode from an attempt to disable an invalid-repo-id.");
@@ -560,7 +560,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		List<String> enableRepos = Arrays.asList(new String[]{"invalid-repo-A","invalid-repo-B"});
 		List<String> disableRepos = Arrays.asList(new String[]{"invalid-repo-C","invalid-repo-D"});
 		List<String> invalidRepos = new ArrayList<String>(); invalidRepos.addAll(enableRepos); invalidRepos.addAll(disableRepos);
-		SSHCommandResult result = clienttasks.repos_(null, null, null, enableRepos, disableRepos, null, null, null);
+		SSHCommandResult result = clienttasks.repos_(null, null, null, enableRepos, disableRepos, null, null, null, null);
 		Assert.assertEquals(result.getExitCode(), new Integer(1), "ExitCode from an attempt to disable an invalid-repo-id.");
 		Assert.assertEquals(result.getStderr().trim(), "", "Stderr from an attempt to disable an invalid-repo-id.");
 		String expectedStdoutMsgFormat = "Error: %s is not a valid repo ID. Use --list option to see valid repos.";
@@ -622,7 +622,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		//	[root@jsefler-6 ~]# echo $?
 		//	0
 
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
 		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
 		List<Repo> subscribedRepos = clienttasks.getCurrentlySubscribedRepos();
 		
@@ -631,7 +631,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.6-1")) expectedStdoutMsgFormat = "Repository '%s' is %s for this system.";	// bug 1122530 commit add5a9b746f9f2af147a7e4622b897a46b5ef132
 		
 		// test: subscription-manager repos --enablerepo=* --disablerepo=*
-		SSHCommandResult result = clienttasks.repos_(null, null, null, "*", "*", null, null, null);
+		SSHCommandResult result = clienttasks.repos_(null, null, null, "*", "*", null, null, null, null);
 		Assert.assertEquals(result.getExitCode(), new Integer(0), "ExitCode from an attempt to enable/disable all repos (using wildcard *).");
 		// verify the feedback
 		for (Repo subscribedRepo : subscribedRepos) {
@@ -651,7 +651,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		}
 		
 		// test: subscription-manager repos --enablerepo=*
-		result = clienttasks.repos_(null, null, null, "*", null, null, null, null);
+		result = clienttasks.repos_(null, null, null, "*", null, null, null, null, null);
 		Assert.assertEquals(result.getExitCode(), new Integer(0), "ExitCode from an attempt to enable all repos (using wildcard *).");
 		// verify the feedback
 		for (Repo subscribedRepo : subscribedRepos) {
@@ -681,7 +681,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		//	[root@jsefler-6 ~]# echo $?
 		//	0
 
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
 		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
 		List<Repo> subscribedRepos = clienttasks.getCurrentlySubscribedRepos();
 		
@@ -696,8 +696,8 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		String regexRepo = wildcardedRepo.replaceAll("\\?",".");
 		
 		// test: subscription-manager repos --disablerepo=awes?me?s-s390x
-		clienttasks.repos_(null, null, null, "*", null, null, null, null);
-		SSHCommandResult result = clienttasks.repos_(null, null, null, null, wildcardedRepo, null, null, null);
+		clienttasks.repos_(null, null, null, "*", null, null, null, null, null);
+		SSHCommandResult result = clienttasks.repos_(null, null, null, null, wildcardedRepo, null, null, null, null);
 		Assert.assertEquals(result.getExitCode(), new Integer(0), "ExitCode from an attempt to enable/disable some repos (using wildcard ?).");
 		// verify the feedback
 		for (Repo subscribedRepo : subscribedRepos) {
@@ -720,8 +720,8 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		}
 		
 		// test: subscription-manager repos --enablerepo=*
-		clienttasks.repos_(null, null, null, null, "*", null, null, null);
-		result = clienttasks.repos_(null, null, null, wildcardedRepo, null, null, null, null);
+		clienttasks.repos_(null, null, null, null, "*", null, null, null, null);
+		result = clienttasks.repos_(null, null, null, wildcardedRepo, null, null, null, null, null);
 		Assert.assertEquals(result.getExitCode(), new Integer(0), "ExitCode from an attempt to enable/disable some repos (using wildcard ?).");
 		// verify the feedback
 		for (Repo subscribedRepo : subscribedRepos) {
@@ -758,7 +758,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		//	Repo 'awesomeos-ia64' is enabled for this system.
 
 		if (clienttasks.isPackageVersion("subscription-manager", "<", "1.12.8-1")) throw new SkipException("Bugzilla 1115499 was not implemented in this version of subscription-manager.");
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
 		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
 		//List<Repo> subscribedRepos = clienttasks.getCurrentlySubscribedRepos();
 		List<Repo> subscribedRepos = getRandomSubsetOfList(clienttasks.getCurrentlySubscribedRepos(),5);
@@ -766,7 +766,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		String expectedStdoutMsgFormat = "Repo %s is %s for this system.";
 		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.10.7-1")) expectedStdoutMsgFormat = "Repo '%s' is %sd for this system.";
 		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.6-1")) expectedStdoutMsgFormat = "Repository '%s' is %sd for this system.";	// bug 1122530 commit add5a9b746f9f2af147a7e4622b897a46b5ef132
-		String command = clienttasks.reposCommand(null, null, null, null, null, null, null, null);
+		String command = clienttasks.reposCommand(null, null, null, null, null, null, null, null, null);
 		Map<String,String> repoEnablements = new HashMap<String,String>();
 		List<String> enablements = Arrays.asList("enable","disable");
 		for (Repo subscribedRepo : subscribedRepos) {
@@ -808,14 +808,14 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	public void ReposEnable_Test() throws JSONException, Exception {
 		
 		// register
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
 		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
 		List<Repo> subscribedRepos = clienttasks.getCurrentlySubscribedRepos();
 		subscribedRepos = getRandomSubsetOfList(subscribedRepos, 5);	// reduce the runtime of this test by randomly reducing the subscribedRepos tested
 		if (subscribedRepos.isEmpty()) throw new SkipException("There are no entitled repos available for this test.");
 				
 		for(Repo repo:subscribedRepos) {
-			SSHCommandResult result = clienttasks.repos_(false,null,null,repo.repoId,null,null, null, null);
+			SSHCommandResult result = clienttasks.repos_(false,null,null,repo.repoId,null,null, null, null, null);
 			String expectedStdout = String.format("Repo %s is enabled for this system.",repo.repoId);
 			if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.10.7-1")) expectedStdout = String.format("Repo '%s' is enabled for this system.",repo.repoId);	// subscription-manager commit b9e7f7abb949bc007f2db02662e2abba76528082
 			if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.6-1")) expectedStdout = String.format("Repository '%s' is enabled for this system.",repo.repoId);	// bug 1122530 commit add5a9b746f9f2af147a7e4622b897a46b5ef132
@@ -833,14 +833,14 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	public void ReposDisable_Test() throws JSONException, Exception {
 		
 		// register
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
 		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
 		List<Repo> subscribedRepos = clienttasks.getCurrentlySubscribedRepos();
 		subscribedRepos = getRandomSubsetOfList(subscribedRepos, 5);	// reduce the runtime of this test by randomly reducing the subscribedRepos tested
 		if (subscribedRepos.isEmpty()) throw new SkipException("There are no entitled repos available for this test.");
 		
 		for(Repo repo:subscribedRepos) {
-			SSHCommandResult result = clienttasks.repos_(false,null,null,null,repo.repoId,null, null, null);
+			SSHCommandResult result = clienttasks.repos_(false,null,null,null,repo.repoId,null, null, null, null);
 			String expectedStdout = String.format("Repo %s is disabled for this system.",repo.repoId);
 			if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.10.7-1")) expectedStdout = String.format("Repo '%s' is disabled for this system.",repo.repoId);	// subscription-manager commit b9e7f7abb949bc007f2db02662e2abba76528082
 			if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.6-1")) expectedStdout = String.format("Repository '%s' is disabled for this system.",repo.repoId);	// bug 1122530 commit add5a9b746f9f2af147a7e4622b897a46b5ef132
@@ -858,7 +858,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	public void YumRepoListPreservesAdditionalOptionsToRedhatReposUsingManualEdits_Test() throws JSONException, Exception {
 		
 		// register
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
 		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
 		List<YumRepo> subscribedYumRepos = clienttasks.getCurrentlySubscribedYumRepos();
 		if (subscribedYumRepos.isEmpty()) throw new SkipException("There are no entitled yum repos available for this test.");
@@ -881,7 +881,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		
 		// also assert that the repository values persist even after refresh
 		clienttasks.removeAllCerts(false,true,false);
-		clienttasks.refresh(null,null,null);
+		clienttasks.refresh(null,null,null, null);
 		yumRepoAfterUpdate = YumRepo.findFirstInstanceWithMatchingFieldFromList("id", yumRepo.id, clienttasks.getCurrentlySubscribedYumRepos());
 		
 		/* temporary idea to figure how why an sslclientcert would change; did not prove to be true; keeping for future
@@ -904,9 +904,9 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(yumRepoAfterUpdate, yumRepo, "Discounting changes to the sslclientcert and sslclientkey, yum repo ["+yumRepo.id+"] still persists all of its repository option values after running refresh and a yum transaction.");
 		
 		// also assert (when possible) that the repository values persist even after setting a release preference
-		List<String> releases = clienttasks.getCurrentlyAvailableReleases(null,null,null);
+		List<String> releases = clienttasks.getCurrentlyAvailableReleases(null,null,null, null);
 		if (!releases.isEmpty()) {
-			clienttasks.release(null, null, releases.get(randomGenerator.nextInt(releases.size())), null, null, null, null);
+			clienttasks.release(null, null, releases.get(randomGenerator.nextInt(releases.size())), null, null, null, null, null);
 			yumRepoAfterUpdate = YumRepo.findFirstInstanceWithMatchingFieldFromList("id", yumRepo.id, clienttasks.getCurrentlySubscribedYumRepos());
 			Assert.assertNotNull(yumRepoAfterUpdate, "Found yum repo ["+yumRepo.id+"] after we manually altered it, set a release, and issued a yum transaction.");
 			Assert.assertEquals(yumRepoAfterUpdate.exclude, yumRepo.exclude, "Yum repo ["+yumRepo.id+"] has persisted the manually added \"exclude\" option and its value even after setting a release and issuing a yum transaction.");
@@ -925,7 +925,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	public void YumRepoListPreservesAdditionalOptionsToRedhatReposUsingRepoOverride_Test() throws JSONException, Exception {
 		
 		// register
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
 		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
 		List<YumRepo> subscribedYumRepos = clienttasks.getCurrentlySubscribedYumRepos();
 		if (subscribedYumRepos.isEmpty()) throw new SkipException("There are no entitled yum repos available for this test.");
@@ -944,7 +944,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 			Map<String,String> addNameValueMap = new HashMap<String,String>();
 			addNameValueMap.put("exclude",  "my-test-pkg my-test-pkg-* my-test-pkgversion-?");
 			addNameValueMap.put("priority",  "10");
-			clienttasks.repo_override(null, null, yumRepo.id, null, addNameValueMap, null, null, null);			
+			clienttasks.repo_override(null, null, yumRepo.id, null, addNameValueMap, null, null, null, null);			
 		}
 		
 		// assert that the manually added repository options do not get clobbered by a new yum transaction
@@ -957,7 +957,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		
 		// also assert that the repository values persist even after refresh
 		clienttasks.removeAllCerts(false,true,false);
-		clienttasks.refresh(null,null,null);
+		clienttasks.refresh(null,null,null, null);
 		yumRepoAfterUpdate = YumRepo.findFirstInstanceWithMatchingFieldFromList("id", yumRepo.id, clienttasks.getCurrentlySubscribedYumRepos());
 		
 		/* temporary idea to figure how why an sslclientcert would change; did not prove to be true; keeping for future
@@ -980,9 +980,9 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(yumRepoAfterUpdate, yumRepo, "Discounting changes to the sslclientcert and sslclientkey, yum repo ["+yumRepo.id+"] still persists all of its repository option values after running refresh and a yum transaction.");
 		
 		// also assert (when possible) that the repository values persist even after setting a release preference
-		List<String> releases = clienttasks.getCurrentlyAvailableReleases(null,null,null);
+		List<String> releases = clienttasks.getCurrentlyAvailableReleases(null,null,null, null);
 		if (!releases.isEmpty()) {
-			clienttasks.release(null, null, releases.get(randomGenerator.nextInt(releases.size())), null, null, null, null);
+			clienttasks.release(null, null, releases.get(randomGenerator.nextInt(releases.size())), null, null, null, null, null);
 			yumRepoAfterUpdate = YumRepo.findFirstInstanceWithMatchingFieldFromList("id", yumRepo.id, clienttasks.getCurrentlySubscribedYumRepos());
 			Assert.assertNotNull(yumRepoAfterUpdate, "Found yum repo ["+yumRepo.id+"] after we manually altered it, set a release, and issued a yum transaction.");
 			Assert.assertEquals(yumRepoAfterUpdate.exclude, yumRepo.exclude, "Yum repo ["+yumRepo.id+"] has persisted the manually added \"exclude\" option and its value even after setting a release and issuing a yum transaction.");
@@ -1001,7 +1001,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	public void YumRepoListPreservesAdditionalOptionsToRedhatReposUsingManualEditsButRepoOverridesTakePrecedence_Test() throws JSONException, Exception {
 		
 		// register
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
 		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
 		List<YumRepo> subscribedYumRepos = clienttasks.getCurrentlySubscribedYumRepos();
 		if (subscribedYumRepos.isEmpty()) throw new SkipException("There are no entitled yum repos available for this test.");
@@ -1020,13 +1020,13 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(yumRepoAfterUpdate.enabled, "Yum repo ["+yumRepo.id+"] has persisted the manual enablement.");
 		
 		// use subscription-manager repos to disable the repo
-		clienttasks.repos(null, null, null, null, yumRepo.id, null, null, null);
+		clienttasks.repos(null, null, null, null, yumRepo.id, null, null, null, null);
 		// assert that the yum repo was disabled and a repo-override was created that takes precedence over the manually enabled yum repo
 		client.runCommandAndWait("yum -q repolist --disableplugin=rhnplugin");	// issue a new yum transaction
 		yumRepoAfterUpdate = YumRepo.findFirstInstanceWithMatchingFieldFromList("id", yumRepo.id, clienttasks.getCurrentlySubscribedYumRepos());	// getCurrentlySubscribedYumRepos() includes a yum transaction: "yum -q repolist --disableplugin=rhnplugin"	(NOT ANYMORE after bug 1008016)
 		Assert.assertNotNull(yumRepoAfterUpdate, "Found yum repo ["+yumRepo.id+"] in '"+clienttasks.redhatRepoFile+"'.");
 		Assert.assertFalse(yumRepoAfterUpdate.enabled, "Yum repo ["+yumRepo.id+"] has persisted the disablement by subscription-manager.");
-		Assert.assertTrue(SubscriptionManagerCLITestScript.doesStringContainMatches(clienttasks.repo_override(true,null,(String)null,(String)null,null,null,null,null).getStdout(), String.format(SubscriptionManagerTasks.repoOverrideListRepositoryNameValueRegexFormat,yumRepo.id,"enabled","0")),"After a calling subscription-manager repos --enable, the subscription-manager repo-override list includes an override for repo='"+yumRepo.id+"' name='"+"enabled"+"' value='"+"0"+"'.");
+		Assert.assertTrue(SubscriptionManagerCLITestScript.doesStringContainMatches(clienttasks.repo_override(true,null,(String)null,(String)null,null,null,null,null, null).getStdout(), String.format(SubscriptionManagerTasks.repoOverrideListRepositoryNameValueRegexFormat,yumRepo.id,"enabled","0")),"After a calling subscription-manager repos --enable, the subscription-manager repo-override list includes an override for repo='"+yumRepo.id+"' name='"+"enabled"+"' value='"+"0"+"'.");
 		
 		// now attempt to manually re-enable yum repo
 		clienttasks.updateYumRepo(clienttasks.redhatRepoFile, yumRepo);
@@ -1047,8 +1047,8 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	public void VerifyYumTransactionsAreNoLongerRequiredToTriggerUpdatesToRedhatRepo_Test() {
 		
 		// register
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null);
-		clienttasks.autoheal(null, null, true, null, null, null);	// shut off auto-healing
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null, null);
+		clienttasks.autoheal(null, null, true, null, null, null, null);	// shut off auto-healing
 		List<ProductCert> productCerts = clienttasks.getCurrentProductCerts();
 
 		// Subscribe to a randomly available pool...
@@ -1058,22 +1058,22 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
 
 		// testing the subscribe case...
-		clienttasks.subscribe_(null, null, pool.poolId, null, null, null, null, null, null, null, null, null);
+		clienttasks.subscribe_(null, null, pool.poolId, null, null, null, null, null, null, null, null, null, null);
 		log.info("Immediately after attaching a subscription, we will now assert that all of the content repos from the currently attached entitlements are currently present in the redhat.repo without having triggered a yum transaction...");
 		verifyCurrentEntitlementCertsAreReflectedInCurrentlySubscribedYumRepos(productCerts);
 		
 		// testing the unsubscribe case...
-		clienttasks.unsubscribe_(true,(BigInteger)null,null,null,null, null);
+		clienttasks.unsubscribe_(true,(BigInteger)null,null,null,null, null, null);
 		log.info("Immediately after removing a subscription, we will now assert that the redhat.repo is empty without having triggered a yum transaction...");
 		verifyCurrentEntitlementCertsAreReflectedInCurrentlySubscribedYumRepos(productCerts);
 		
 		// testing the autosubscribe case...
-		clienttasks.subscribe_(true, null, (String)null, null, null, null, null, null, null, null, null, null);
+		clienttasks.subscribe_(true, null, (String)null, null, null, null, null, null, null, null, null, null, null);
 		log.info("Immediately after autoattaching subscription(s), we will now assert that all of the content repos from the currently attached entitlements are currently present in the redhat.repo without having triggered a yum transaction...");
 		verifyCurrentEntitlementCertsAreReflectedInCurrentlySubscribedYumRepos(productCerts);
 		
 		// testing the unregister case...
-		clienttasks.unregister_(null, null, null);
+		clienttasks.unregister_(null, null, null, null);
 		log.info("Immediately after unregistering, we will now assert that the redhat.repo is empty without having triggered a yum transaction...");
 		verifyCurrentEntitlementCertsAreReflectedInCurrentlySubscribedYumRepos(productCerts);
 	}
@@ -1086,8 +1086,8 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyYumTransactionsDoNotCauseUnnessarilyRewritesOfRedHatRepoFile_Test() {
-		clienttasks.register_(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, true, null, null, null, null);
-		clienttasks.autoheal_(null, null, true, null, null, null);
+		clienttasks.register_(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, true, null, null, null, null, null);
+		clienttasks.autoheal_(null, null, true, null, null, null, null);
 		List<Repo> repos = clienttasks.getCurrentlySubscribedRepos();
 		//if (repos.isEmpty()) clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
 		if (repos.isEmpty()) Assert.fail("Expected subscription-manager registration with autosubscribe to grant access to at least one repository.  If failed, check installed product certs and available subscriptions.");
@@ -1105,7 +1105,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(client.runCommandAndWait("stat -c %y "+clienttasks.redhatRepoFile).getStdout().trim(), initialModTime, "The modification time of '"+clienttasks.redhatRepoFile+"' before and after a yum transaction.");
 		
 		// toggle the enablement of repos which should force an immediate modification to redhat.repo
-		clienttasks.repos(null, null, null, defaultDisabledRepos, defaultEnabledRepos, null, null, null);
+		clienttasks.repos(null, null, null, defaultDisabledRepos, defaultEnabledRepos, null, null, null, null);
 		String finalModTime = client.runCommandAndWait("stat -c %y "+clienttasks.redhatRepoFile).getStdout().trim();
 		Assert.assertTrue(!finalModTime.equals(initialModTime), "The modification time of '"+clienttasks.redhatRepoFile+"' before and after repos enablement should be different.");
 		
@@ -1127,14 +1127,14 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		if (clienttasks.isPackageVersion("subscription-manager", "<", "1.13.4-1")) throw new SkipException("The repos --list-enabled function was not implemented until version subscription-manager-1.13.4-1");
 		
 		// register
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
 		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
 		List<YumRepo> subscribedYumRepos = clienttasks.getCurrentlySubscribedYumRepos();
 		if (subscribedYumRepos.isEmpty()) throw new SkipException("There are no entitled yum repos available for this test.");
 		List<YumRepo> enabledYumRepos = YumRepo.findAllInstancesWithMatchingFieldFromList("enabled", Boolean.TRUE, subscribedYumRepos);
 		
 		// get the list of currently enabled repos
-		SSHCommandResult sshCommandResult = clienttasks.repos(null, true, null, (String)null,(String)null,null, null, null);
+		SSHCommandResult sshCommandResult = clienttasks.repos(null, true, null, (String)null,(String)null,null, null, null, null);
 		List<Repo> listEnabledRepos = Repo.parse(sshCommandResult.getStdout());
 		
 		// verify that the enabledYumRepos are all present in the listEnabledRepos
@@ -1156,14 +1156,14 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		if (clienttasks.isPackageVersion("subscription-manager", "<", "1.13.4-1")) throw new SkipException("The repos --list-disabled function was not implemented until version subscription-manager-1.13.4-1");
 		
 		// register
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
 		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
 		List<YumRepo> subscribedYumRepos = clienttasks.getCurrentlySubscribedYumRepos();
 		if (subscribedYumRepos.isEmpty()) throw new SkipException("There are no entitled yum repos available for this test.");
 		List<YumRepo> disabledYumRepos = YumRepo.findAllInstancesWithMatchingFieldFromList("enabled", Boolean.FALSE, subscribedYumRepos);
 		
 		// get the list of currently disabled repos
-		SSHCommandResult sshCommandResult = clienttasks.repos(null, null, true, (String)null,(String)null,null, null, null);
+		SSHCommandResult sshCommandResult = clienttasks.repos(null, null, true, (String)null,(String)null,null, null, null, null);
 		List<Repo> listDisabledRepos = Repo.parse(sshCommandResult.getStdout());
 		
 		// verify that the disabledYumRepos are all present in the listDisabledRepos
@@ -1185,16 +1185,16 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		if (clienttasks.isPackageVersion("subscription-manager", "<", "1.13.4-1")) throw new SkipException("The repos --list-disabled function was not implemented until version subscription-manager-1.13.4-1");
 		
 		// register
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
 		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
 		List<YumRepo> subscribedYumRepos = clienttasks.getCurrentlySubscribedYumRepos();
 		if (subscribedYumRepos.isEmpty()) throw new SkipException("There are no entitled yum repos available for this test.");
 		
 		// use a wildcard to enable all the repos
-		clienttasks.repos(null, null, null, "*", null, null, null, null);
+		clienttasks.repos(null, null, null, "*", null, null, null, null, null);
 				
 		// get the list of currently disabled repos (list should be empty)
-		SSHCommandResult sshCommandResult = clienttasks.repos(null, false, true, (String)null,(String)null,null, null, null);
+		SSHCommandResult sshCommandResult = clienttasks.repos(null, false, true, (String)null,(String)null,null, null, null, null);
 		List<Repo> listDisabledRepos = Repo.parse(sshCommandResult.getStdout());
 		Assert.assertTrue(listDisabledRepos.isEmpty(),"After using a wildcard to enable all repos, the repos --list-disabled should be empty.");
 		
@@ -1214,16 +1214,16 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		if (clienttasks.isPackageVersion("subscription-manager", "<", "1.13.4-1")) throw new SkipException("The repos --list-enabled function was not implemented until version subscription-manager-1.13.4-1");
 		
 		// register
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
 		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
 		List<YumRepo> subscribedYumRepos = clienttasks.getCurrentlySubscribedYumRepos();
 		if (subscribedYumRepos.isEmpty()) throw new SkipException("There are no entitled yum repos available for this test.");
 		
 		// use a wildcard to disable all the repos
-		clienttasks.repos(null, null, null, null, "*", null, null, null);
+		clienttasks.repos(null, null, null, null, "*", null, null, null, null);
 				
 		// get the list of currently disabled repos (list should be empty)
-		SSHCommandResult sshCommandResult = clienttasks.repos(null, true, false, (String)null,(String)null,null, null, null);
+		SSHCommandResult sshCommandResult = clienttasks.repos(null, true, false, (String)null,(String)null,null, null, null, null);
 		List<Repo> listDisabledRepos = Repo.parse(sshCommandResult.getStdout());
 		Assert.assertTrue(listDisabledRepos.isEmpty(),"After using a wildcard to disable all repos, the repos --list-enabled should be empty.");
 		
@@ -1250,7 +1250,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		RemoteFileTasks.runCommandAndAssert(client, "ismanagedtest.py some_repo", 0, "False", null);
 		
 		// while registered and subscribed to a repo (either enabled or disabled), call ismanagedtest.py repo should be true
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, true, false, null, null, null, null);
 		List<Repo> repos = clienttasks.getCurrentlySubscribedRepos();
 		//for (Repo repo : repos) {
 		for (Repo repo : getRandomSubsetOfList(repos,5)) {
@@ -1273,7 +1273,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	@BeforeClass(groups={"setup"})
 	public void setupBeforeClass() throws JSONException, Exception {
 		currentProductCerts = clienttasks.getCurrentProductCerts();
-		if (clienttasks.getCurrentConsumerId()==null) clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, false, null, null, (String)null, null, null, null, true, false, null, null, null);
+		if (clienttasks.getCurrentConsumerId()==null) clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, false, null, null, (String)null, null, null, null, true, false, null, null, null, null);
 		modifierSubscriptionData = getModifierSubscriptionDataAsListOfLists(null);
 	}
 	
@@ -1290,7 +1290,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	
 	@AfterClass(groups="setup")
 	public void unregisterAfterClass() {
-		clienttasks.unregister(null, null, null);
+		clienttasks.unregister(null, null, null, null);
 	}
 	
 	
@@ -1319,9 +1319,9 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		if (manually) {	// toggle the enabled flag manually
 			clienttasks.updateYumRepoParameter(clienttasks.redhatRepoFile,yumRepo.id,"enabled",newEnabledValue.toString());
 		} else if (newEnabledValue) {	// toggle the enabled flag using subscription-manager repos --enable
-			clienttasks.repos(null, null, null, yumRepo.id, null, null, null, null);
+			clienttasks.repos(null, null, null, yumRepo.id, null, null, null, null, null);
 		} else {	// toggle the enabled flag using subscription-manager repos --disable
-			clienttasks.repos(null, null, null, null, yumRepo.id, null, null, null);
+			clienttasks.repos(null, null, null, null, yumRepo.id, null, null, null, null);
 		}
 		Repo newRepo = new Repo(yumRepo.name,yumRepo.id,yumRepo.baseurl,newEnabledValue);
 
@@ -1337,7 +1337,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		// now remove and refresh entitlement certificates and again assert the manual edits are preserved
 		log.info("Remove and refresh entitlement certs...");
 		clienttasks.removeAllCerts(false,true, false);
-		clienttasks.refresh(null, null, null);
+		clienttasks.refresh(null, null, null, null);
 		
 		// verify that the change is preserved by subscription-manager repos --list (even after deleting and refreshing entitlement certs)
 		currentlySubscribedRepos = clienttasks.getCurrentlySubscribedRepos();
@@ -1360,7 +1360,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
 		
 		// register
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
 		
 		// subscribe to all available subscription so as to populate the redhat.repo file
 		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();

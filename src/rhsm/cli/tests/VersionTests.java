@@ -49,7 +49,7 @@ public class VersionTests extends SubscriptionManagerCLITestScript {
 		String expectedReport = client.runCommandAndWait("rpm -q subscription-manager --queryformat '%{NAME}: %{VERSION}-%{RELEASE}'").getStdout().trim();
 		
 		// get the actual version results from subscription-manager
-		SSHCommandResult actualResult = clienttasks.version(null, null, null);
+		SSHCommandResult actualResult = clienttasks.version(null, null, null, null);
 		
 		// assert results
 		Assert.assertTrue(actualResult.getStdout().contains(expectedReport),"The version report contains the expected string '"+expectedReport+"'");
@@ -68,7 +68,7 @@ public class VersionTests extends SubscriptionManagerCLITestScript {
 		String expectedReport = client.runCommandAndWait("rpm -q python-rhsm --queryformat '%{NAME}: %{VERSION}-%{RELEASE}'").getStdout().trim();
 		
 		// get the actual version results from subscription-manager
-		SSHCommandResult actualResult = clienttasks.version(null, null, null);
+		SSHCommandResult actualResult = clienttasks.version(null, null, null, null);
 
 		// assert results
 		Assert.assertTrue(actualResult.getStdout().contains(expectedReport),"The version report contains the expected string '"+expectedReport+"'");
@@ -82,7 +82,7 @@ public class VersionTests extends SubscriptionManagerCLITestScript {
 	public void VersionOfCandlepinWhenUnregistered_Test() {
 
 		// make sure we are not registered
-		clienttasks.unregister(null, null, null);
+		clienttasks.unregister(null, null, null, null);
 		
 		String expectedType = "Red Hat Subscription Management";
 		// override where needed
@@ -106,7 +106,7 @@ public class VersionTests extends SubscriptionManagerCLITestScript {
 	public void VersionOfCandlepinWhenUnregisteredAndHostnameIsUnknown_Test() {
 
 		// make sure we are not registered
-		clienttasks.unregister(null, null, null);
+		clienttasks.unregister(null, null, null, null);
 		
 		// invalidate the server hostname
 		server_hostname	= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "hostname");
@@ -126,7 +126,7 @@ public class VersionTests extends SubscriptionManagerCLITestScript {
 	public void VersionOfCandlepinWhenUsingRHNClassicAndHostnameIsUnknown_Test() {
 
 		// make sure we are not registered
-		clienttasks.unregister(null, null, null);
+		clienttasks.unregister(null, null, null, null);
 		
 		// invalidate the server hostname
 		server_hostname	= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "hostname");
@@ -159,7 +159,7 @@ public class VersionTests extends SubscriptionManagerCLITestScript {
 		// END OF WORKAROUND
 		
 		// make sure we are registered
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (List<String>)null, null, null, null, true, null, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (List<String>)null, null, null, null, true, null, null, null, null, null);
 		
 		String expectedType = "Red Hat Subscription Management";	// default	// "subscription management service"; changed by bug 852328
 		// override where needed
@@ -186,7 +186,7 @@ public class VersionTests extends SubscriptionManagerCLITestScript {
 		}
 
 		// make sure we are registered
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (List<String>)null, null, null, null, null, null, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (List<String>)null, null, null, null, null, null, null, null, null, null);
 		
 		// simulate registration to RHN Classic by creating a /etc/sysconfig/rhn/systemid
 		log.info("Simulating registration to RHN Classic by creating an empty systemid file '"+clienttasks.rhnSystemIdFile+"'...");
@@ -207,7 +207,7 @@ public class VersionTests extends SubscriptionManagerCLITestScript {
 	public void VersionOfServerWhenUnregisteredAndUsingRHNClassic_Test() {
 
 		// make sure we are unregistered
-		clienttasks.unregister(null,null,null);
+		clienttasks.unregister(null,null,null, null);
 		
 		// simulate registration to RHN Classic by creating a /etc/sysconfig/rhn/systemid
 		log.info("Simulating registration to RHN Classic by creating an empty systemid file '"+clienttasks.rhnSystemIdFile+"'...");
@@ -241,14 +241,14 @@ public class VersionTests extends SubscriptionManagerCLITestScript {
 
 		// assert results from version do not contain an error (while unregistered)
 		String error = "Error";
-		clienttasks.unregister(null,null,null);
-		SSHCommandResult versionResult = clienttasks.version(null, null, null);
+		clienttasks.unregister(null,null,null, null);
+		SSHCommandResult versionResult = clienttasks.version(null, null, null, null);
 		Assert.assertTrue(!versionResult.getStdout().contains(error),"Stdout from the version report does NOT contain an '"+error+"' message (while unregistered).");
 		Assert.assertTrue(!versionResult.getStderr().contains(error),"Stderr from the version report does NOT contain an '"+error+"' message (while unregistered).");
 		
 		// assert results from version do not contain an error (while registered)
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (List<String>)null, null, null, null, null, null, null, null, null);
-		versionResult = clienttasks.version(null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (List<String>)null, null, null, null, null, null, null, null, null, null);
+		versionResult = clienttasks.version(null, null, null, null);
 		Assert.assertTrue(!versionResult.getStdout().contains(error),"Stdout from the version report does NOT contain an '"+error+"' message (while registered).");
 		Assert.assertTrue(!versionResult.getStderr().contains(error),"Stderr from the version report does NOT contain an '"+error+"' message (while registered).");
 	
@@ -282,7 +282,7 @@ public class VersionTests extends SubscriptionManagerCLITestScript {
 		expectedType = "server type: "+serverType;
 		
 		// get the actual version results from subscription-manager
-		SSHCommandResult actualResult = clienttasks.version(null, null, null);
+		SSHCommandResult actualResult = clienttasks.version(null, null, null, null);
 		
 		// assert results
 		Assert.assertTrue(actualResult.getStdout().contains(expectedVersion),"The version report contains the expected string '"+expectedVersion+"'");

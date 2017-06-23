@@ -643,6 +643,22 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 						log.info("rhnDefnitionProductCert: "+rhnDefnitionProductCert);
 					}
 				}
+				
+				// skip a known issue that is irrelevant on RHEL7.  This is failing because rcm updated product cert product_ids/rhel-6.7-eus/EUS-Server-s390x-1a3bca323339-73.pem to product_ids/rhel-6.7-eus/EUS-Server-s390x-e9eb3d196edc-73.pem, but this is irrelevant on rhel7
+				if (migrationProductCert.file.getPath().equals("/usr/share/rhsm/product/RHEL-7/EUS-Server-s390x-1a3bca323339-73.pem")) {
+					//	[root@jsefler-rhel7 rhnDefinitionsDir]# rct cat-cert /usr/share/rhsm/product/RHEL-7/EUS-Server-s390x-1a3bca323339-73.pem | grep -A7 "Product:"
+					//	Product:
+					//		ID: 73
+					//		Name: Red Hat Enterprise Linux for IBM System z - Extended Update Support
+					//		Version: 6.7
+					//		Arch: s390x
+					//		Tags: rhel-6-ibm-system-z
+					//		Brand Type: 
+					//		Brand Name: 
+					log.info("Ignoring the the WARNING for migration product cert '"+migrationProductCert.file+"' because it is irrelevant on RHEL7.  It applies to RHEL6: "+ migrationProductCert.productNamespace);
+					continue;
+				}
+				
 				if (!foundNewerVersionOfMigrationProductCert) verifiedMatchForAllMigrationProductCertFiles = false;
 			}
 		}
@@ -913,6 +929,16 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 			Assert.assertEquals(migrationProductCert.productNamespace.id, rhnDefinitionsProductCert.productNamespace.id, "Comparing productNamespace.id between '"+rhnDefinitionsProductCert.file+"' and '"+migrationProductCert.file+"'");
 			Assert.assertEquals(migrationProductCert.productNamespace.arch, rhnDefinitionsProductCert.productNamespace.arch, "Comparing productNamespace.arch between '"+rhnDefinitionsProductCert.file+"' and '"+migrationProductCert.file+"'");
 			Assert.assertEquals(migrationProductCert.productNamespace.providedTags, rhnDefinitionsProductCert.productNamespace.providedTags, "Comparing productNamespace.providedTags between '"+rhnDefinitionsProductCert.file+"' and '"+migrationProductCert.file+"'");
+			// TEMPORARY WORKAROUND
+			if (clienttasks.redhatReleaseXY.equals("7.4") && rhnDefinitionsProductCert.productNamespace.version.startsWith(clienttasks.redhatReleaseXY) && !migrationProductCert.productNamespace.version.equals(rhnDefinitionsProductCert.productNamespace.version)) {
+				boolean invokeWorkaroundWhileBugIsOpen = true;
+				String bugId="1436441";	// Bug 1436441 - subscription-manager-migration-data for RHEL7.4 needs RHEL7.4 product certs (not RHEL7.3 certs)
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
+				if (invokeWorkaroundWhileBugIsOpen) {
+					throw new SkipException("Skipping assertion that the product cert version provided by subscription-manager-migration-data mapped to RHN channel "+productCertsRhnChannel+" matches the upstream mapping from product-certs.json while bug "+bugId+" is open.");
+				}
+			}
+			// END OF WORKAROUND
 			Assert.assertEquals(migrationProductCert.productNamespace.version, rhnDefinitionsProductCert.productNamespace.version, "Comparing productNamespace.version between '"+rhnDefinitionsProductCert.file+"' and '"+migrationProductCert.file+"'");
 		} else {
 		
@@ -1166,6 +1192,27 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 			Assert.assertTrue(!channelsToProductCertFilenamesMap.containsKey(classicRhnChannel), "Special case RHN Classic channel '"+classicRhnChannel+"' is NOT accounted for in subscription-manager-migration-data file '"+channelCertMappingFilename+"'.");
 			return;
 		}
+		if (classicRhnChannel.equals("rhel-x86_64-rhev-mgmt-agent-7-beta") ||
+			classicRhnChannel.equals("rhel-x86_64-rhev-mgmt-agent-7-beta-debuginfo")) {
+			// Bug 1435245 - RHN channels to product cert maps for "rhel-x86_64-rhev-mgmt-agent-7-beta*" disappeared
+			log.warning("(khowell 05/15/2017) We don't necessarily commit to supporting beta migration.  https://bugzilla.redhat.com/show_bug.cgi?id=1435245#c5");
+			Assert.assertTrue(!channelsToProductCertFilenamesMap.containsKey(classicRhnChannel), "Special case RHN Classic channel '"+classicRhnChannel+"' is NOT accounted for in subscription-manager-migration-data file '"+channelCertMappingFilename+"'.");
+			return;
+		}
+		if (classicRhnChannel.equals("rhel-x86_64-server-7-rhevh-beta") ||
+			classicRhnChannel.equals("rhel-x86_64-server-7-rhevh-beta-debuginfo")) {
+			// Bug 1435255 - RHN channels to product cert maps for "rhel-x86_64-server-7-rhevh-beta*" disappeared
+			log.warning("(khowell 05/15/2017) We don't necessarily commit to supporting beta migration.  https://bugzilla.redhat.com/show_bug.cgi?id=1435255#c4");
+			Assert.assertTrue(!channelsToProductCertFilenamesMap.containsKey(classicRhnChannel), "Special case RHN Classic channel '"+classicRhnChannel+"' is NOT accounted for in subscription-manager-migration-data file '"+channelCertMappingFilename+"'.");
+			return;
+		}
+		
+		// skip all missing beta channels and ignore their absence from the migration data (as generally agreed upon by dev/qe/pm team)
+		if (!channelsToProductCertFilenamesMap.containsKey(classicRhnChannel) && 
+			(classicRhnChannel.contains("-beta-")||classicRhnChannel.endsWith("-beta"))) {
+			log.warning("Available RHN Classic beta channel '"+classicRhnChannel+"' is NOT accounted for in subscription-manager-migration-data file '"+channelCertMappingFilename+"'.");
+			throw new SkipException("Skipping this failed test instance in favor of RFE Bug https://bugzilla.redhat.com/show_bug.cgi?id=1437233 that will intensionally exclude beta channels to product cert mappings.  Also referencing precedence bugs that have been CLOSED WONTFIX on missing beta channels: https://bugzilla.redhat.com/buglist.cgi?bug_id=1437233,1299623,1299621,1299620,1127880");
+		}
 		
 		Assert.assertTrue(channelsToProductCertFilenamesMap.containsKey(classicRhnChannel), "RHN Classic channel '"+classicRhnChannel+"' is accounted for in subscription-manager-migration-data file '"+channelCertMappingFilename+"'.");
 	}
@@ -1305,7 +1352,12 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(!channelsToProductCertFilenamesMap.get(rhnRhelChannel).equalsIgnoreCase("none"), "RHN RHEL Channel '"+rhnRhelChannel+"' does not map to None.");
 		ProductCert rhnRhelProductCert = clienttasks.getProductCertFromProductCertFile(new File(baseProductsDir+"/"+channelsToProductCertFilenamesMap.get(rhnRhelChannel)));
 		if (rhnRhelChannel.contains(/*clienttasks.redhatReleaseX+*/"-beta-") || rhnRhelChannel.endsWith(/*clienttasks.redhatReleaseX+*/"-beta")) {
-			Assert.assertEquals(rhnRhelProductCert.productNamespace.version, clienttasks.redhatReleaseXY+" Beta", "RHN RHEL Beta Channel '"+rhnRhelChannel+"' maps to the following product cert that corresponds to this RHEL minor release '"+clienttasks.redhatReleaseXY+"': "+rhnRhelProductCert.productNamespace);			
+			String expectedProductNamespaceVersion = clienttasks.redhatReleaseXY+" Beta";
+			if (!rhnRhelProductCert.productNamespace.version.equals(expectedProductNamespaceVersion)) {
+				log.warning("RHN RHEL Beta Channel '"+rhnRhelChannel+"' maps to the following product cert that should correspond to this RHEL minor release (expected='"+expectedProductNamespaceVersion+"' actual='"+rhnRhelProductCert.productNamespace.version+"'): "+rhnRhelProductCert.productNamespace);
+				throw new SkipException("Skipping this failed test instance in favor of RFE Bug https://bugzilla.redhat.com/show_bug.cgi?id=1437233 that will intensionally exclude beta channels to product cert mappings.  Also referencing precedence bugs that have been CLOSED WONTFIX on beta channels: 1435255 1435245");
+			}
+			Assert.assertEquals(rhnRhelProductCert.productNamespace.version, expectedProductNamespaceVersion, "RHN RHEL Beta Channel '"+rhnRhelChannel+"' maps to the following product cert that corresponds to this RHEL minor release '"+clienttasks.redhatReleaseXY+"': "+rhnRhelProductCert.productNamespace);			
 		} else {
 			Assert.assertEquals(rhnRhelProductCert.productNamespace.version, clienttasks.redhatReleaseXY, "RHN RHEL Channel '"+rhnRhelChannel+"' maps to the following product cert that corresponds to this RHEL minor release '"+clienttasks.redhatReleaseXY+"': "+rhnRhelProductCert.productNamespace);
 		}
@@ -1536,6 +1588,14 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				rhnChannel.equals("rhel-x86_64-server-7-thirdparty-oracle-java-beta") ||
 				rhnChannel.equals("rhel-x86_64-workstation-7-thirdparty-oracle-java-beta")) {
 				bugIds.add("1349592");
+			}
+			
+			// Bug 1464236 - RHN RHEL Channels 'rhel-x86_64-<VARIANT>-7-thirdparty-oracle-java' map to a '7.3' version cert; should be '7.4'
+			if (rhnChannel.equals("rhel-x86_64-client-7-thirdparty-oracle-java") ||
+				rhnChannel.equals("rhel-x86_64-hpc-node-7-thirdparty-oracle-java") ||
+				rhnChannel.equals("rhel-x86_64-server-7-thirdparty-oracle-java") ||
+				rhnChannel.equals("rhel-x86_64-workstation-7-thirdparty-oracle-java")) {
+				bugIds.add("1464236");
 			}
 			
 			// Object bugzilla, String productBaselineRhnChannel, String productBaselineProductId
@@ -2767,6 +2827,15 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				bugIds.add("1264470");
 			}
 			
+			if (//https://bugzilla.redhat.com/show_bug.cgi?id=1462980#c1
+				rhnAvailableChildChannel.equals("rhel-ppc64-server-hts-7-debuginfo") ||
+				rhnAvailableChildChannel.equals("rhel-s390x-server-hts-7-debuginfo") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-hts-7-debuginfo") ||
+				rhnAvailableChildChannel.equals("") ){
+				// Bug 1462980 - various RHEL7 channel maps to product certs are missing in subscription-manager-migration-data
+				bugIds.add("1462980");
+			}
+			
 			if (rhnAvailableChildChannel.equals("rhel-x86_64-server-6-rh-gluster-3-samba-debuginfo")) {
 				// Bug 1286842 - 'rhel-x86_64-server-6-rh-gluster-3-samba-debuginfo' channel map is missing from channel-cert-mapping.txt
 				bugIds.add("1286842");
@@ -2842,6 +2911,14 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				bugIds.add("1333545");
 			}
 			
+			if (rhnAvailableChildChannel.equals("rhel-x86_64-server-7-rhevh") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-7-rhevh-debuginfo") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-7-rhevh-beta") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-7-rhevh-beta-debuginfo")) {
+				// Bug 1462994 - rhel-x86_64-server-7-rhevh channel maps are absent from channel-cert-mapping.txt
+				bugIds.add("1462994");
+			}
+			
 			if (rhnAvailableChildChannel.equals("rhel-x86_64-server-7-ost-8") ||
 				rhnAvailableChildChannel.equals("rhel-x86_64-server-7-ost-8-debuginfo") ||
 				rhnAvailableChildChannel.equals("rhel-x86_64-server-7-ost-8-director") ||
@@ -2850,6 +2927,16 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				rhnAvailableChildChannel.equals("rhel-x86_64-server-7-ost-8-optools-debuginfo")) {
 				// Bug 1349533 - rhel-x86_64-server-7-ost-8 channel maps are absent from channel-cert-mapping.txt
 				bugIds.add("1349533");
+			}
+			
+			if (rhnAvailableChildChannel.equals("rhel-x86_64-server-7-ost-8") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-7-ost-8-debuginfo") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-7-ost-8-director") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-7-ost-8-director-debuginfo") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-7-ost-8-optools") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-7-ost-8-optools-debuginfo")) {
+				// Bug 1462984 - rhel-x86_64-server-7-ost-8 channel maps are absent from channel-cert-mapping.txt
+				bugIds.add("1462984");
 			}
 			
 			if (rhnAvailableChildChannel.equals("rhel-s390x-server-ha-7-beta") ||
@@ -2868,6 +2955,12 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				rhnAvailableChildChannel.equals("rhel-x86_64-server-7-rh-gluster-3-client-debuginfo")) {
 				// Bug 1349538 - rhel-x86_64-server-7-rh-gluster-3-client channel maps are absent from channel-cert-mapping.txt
 				bugIds.add("1349538");
+			}
+			
+			if (rhnAvailableChildChannel.equals("rhel-x86_64-server-7-rh-gluster-3-client") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-7-rh-gluster-3-client-debuginfo")) {
+				// Bug 1462989 - rhel-x86_64-server-7-rh-gluster-3-client channel maps are absent from channel-cert-mapping.txt
+				bugIds.add("1462989");
 			}
 			
 			if (rhnAvailableChildChannel.equals("rhel-x86_64-server-6-rh-gluster-3-nfs") ||

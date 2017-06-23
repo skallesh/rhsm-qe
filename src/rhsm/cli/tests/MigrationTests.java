@@ -35,6 +35,7 @@ import com.redhat.qe.auto.testng.TestNGUtils;
 import rhsm.base.CandlepinType;
 import rhsm.base.SubscriptionManagerCLITestScript;
 import rhsm.cli.tasks.CandlepinTasks;
+import rhsm.cli.tasks.SubscriptionManagerTasks;
 import rhsm.data.ProductCert;
 import rhsm.data.ProductSubscription;
 import rhsm.data.SubscriptionPool;
@@ -399,7 +400,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		restoreOriginallyConfiguredServerUrl();
 		
 		// make sure we are NOT registered to RHSM
-		clienttasks.unregister(null,null,null);
+		clienttasks.unregister(null,null,null, null);
 
 		// deleting the currently installed product certs
 		clienttasks.removeAllCerts(false, false, true);
@@ -410,7 +411,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		//	Stdout: Runtime Error Row was updated or deleted by another transaction (or unsaved-value mapping was incorrect): [org.candlepin.model.Pool#8a99f9823fc4919b013fc49408a302b7] at org.hibernate.persister.entity.AbstractEntityPersister.check:1,782
 		//	Stderr:
 		//	ExitCode: 255
-		clienttasks.unregister_(null,null,null);
+		clienttasks.unregister_(null,null,null, null);
 		clienttasks.removeAllCerts(true,true,true);
 		clienttasks.removeAllFacts();
 		restoreOriginallyConfiguredServerUrl();
@@ -502,7 +503,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			expectedMsg = "Unable to continue migration!"; // TODO Improve the expectedMsg to better assert the list of conflicting channels
 			Assert.assertTrue(sshCommandResult.getStdout().contains(expectedMsg), "Stdout from call to '"+rhnMigrateTool+" "+options+"' contains message: "+expectedMsg);	
 			Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(1), "ExitCode from call to '"+rhnMigrateTool+" "+options+"' when currently consumed RHN Classic channels map to multiple productCerts sharing the same productId.");
-			Assert.assertTrue(RemoteFileTasks.testExists(client, clienttasks.rhnSystemIdFile),"The system id file '"+clienttasks.rhnSystemIdFile+"' exists.  This indicates this system is still registered using RHN Classicwhen currently consumed RHN Classic channels map to multiple productCerts sharing the same productId.");
+			Assert.assertTrue(clienttasks.isRhnSystemRegistered(),"This system is still registered using RHN Classic when currently consumed RHN Classic channels map to multiple productCerts sharing the same productId.");
 			
 			// assert that no product certs have been copied yet
 //OLD		Assert.assertEquals(clienttasks.getCurrentlyInstalledProducts().size(), 0, "No productCerts have been migrated when "+rhnMigrateTool+" aborts because the currently consumed RHN Classic channels map to multiple productCerts sharing the same productId.");
@@ -530,11 +531,11 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			expectedMsg = "Use --force to ignore these channels and continue the migration.";
 			Assert.assertTrue(sshCommandResult.getStdout().contains(expectedMsg), "Stdout from call to '"+rhnMigrateTool+" "+options+"' contains message: "+expectedMsg);	
 			Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(1), "ExitCode from call to '"+rhnMigrateTool+" "+options+"' when any of the channels are not mapped to a productCert.");
-			Assert.assertTrue(RemoteFileTasks.testExists(client, clienttasks.rhnSystemIdFile),"The system id file '"+clienttasks.rhnSystemIdFile+"' exists.  This indicates this system is still registered using RHN Classic when rhn-migrate-classic-to-rhsm requires --force to continue.");
+			Assert.assertTrue(clienttasks.isRhnSystemRegistered(),"This system is still registered using RHN Classic when rhn-migrate-classic-to-rhsm requires --force to continue.");
 			
 			// assert that no product certs have been copied yet
 			Assert.assertEquals(clienttasks.getCurrentlyInstalledProducts().size(), 0, "No productCerts have been migrated when "+rhnMigrateTool+" requires --force to continue.");
-
+			
 			// assert that we are not yet registered to RHSM
 			Assert.assertNull(clienttasks.getCurrentConsumerCert(),"We should NOT be registered to RHSM when "+rhnMigrateTool+" requires --force to continue.");
 			
@@ -677,7 +678,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			//		System successfully unregistered from RHN Classic.
 			Assert.assertTrue(sshCommandResult.getStdout().contains(successfulUnregisterMsg), "Stdout from call to '"+rhnMigrateTool+" "+options+"' contains message: "+successfulUnregisterMsg);
 			Assert.assertTrue(!sshCommandResult.getStdout().contains(unsuccessfulUnregisterMsg), "Stdout from call to '"+rhnMigrateTool+" "+options+"' does NOT contain message: "+unsuccessfulUnregisterMsg);
-			Assert.assertTrue(!RemoteFileTasks.testExists(client, clienttasks.rhnSystemIdFile),"The system id file '"+clienttasks.rhnSystemIdFile+"' is absent.  Therefore this system will no longer communicate with RHN Classic.");
+			Assert.assertTrue(!clienttasks.isRhnSystemRegistered(),"This system is NOT registered using RHN Classic. Therefore this system will no longer communicate with RHN Classic.");
 			Assert.assertTrue(!clienttasks.isRhnSystemIdRegistered(rhnreg_ksUsername, rhnreg_ksPassword, rhnHostname, rhnSystemId), "Confirmed that rhn systemId '"+rhnSystemId+"' is no longer registered on the RHN Classic server.");
 		} else {
 			// Case 2: number of subscribed channels is high and communication fails in a timely fashion (see bug 881952).  Here is a snippet from stdout:	
@@ -686,7 +687,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			//		Please investigate on the Customer Portal at https://access.redhat.com.
 			log.warning("Did not detect expected message '"+successfulUnregisterMsg+"' from "+rhnMigrateTool+" stdout.  Nevertheless, the tool should inform us and continue the migration process.");
 			Assert.assertTrue(sshCommandResult.getStdout().contains(unsuccessfulUnregisterMsg), "Stdout from call to '"+rhnMigrateTool+" "+options+"' contains message: "+unsuccessfulUnregisterMsg);
-			Assert.assertTrue(!RemoteFileTasks.testExists(client, clienttasks.rhnSystemIdFile),"The system id file '"+clienttasks.rhnSystemIdFile+"' is absent.  Therefore this system will no longer communicate with RHN Classic.");
+			Assert.assertTrue(!clienttasks.isRhnSystemRegistered(),"This system is NOT registered using RHN Classic. Therefore this system will no longer communicate with RHN Classic.");
 			if (!clienttasks.isRhnSystemIdRegistered(rhnreg_ksUsername, rhnreg_ksPassword, rhnHostname, rhnSystemId)) {
 				Assert.assertFalse(false, "Confirmed that rhn systemId '"+rhnSystemId+"' is no longer registered on the RHN Classic server.");
 			} else {
@@ -838,10 +839,18 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		}
 		
 		// assert that we are newly registered using rhsm
-		clienttasks.identity(null, null, null, null, null, null, null);
+		clienttasks.identity(null, null, null, null, null, null, null, null);
 		Assert.assertNotNull(clienttasks.getCurrentConsumerId(),"The existance of a consumer cert indicates that the system is currently registered using RHSM.");
 		expectedMsg = String.format("System '%s' successfully registered to Red Hat Subscription Management.",	clienttasks.hostname);
 		if (clienttasks.isPackageVersion("subscription-manager-migration", ">=", "1.13.1")) expectedMsg = String.format("System '%s' successfully registered.",	clienttasks.hostname); // changed by commit fad3de89
+		// TEMPORARY WORKAROUND FOR BUG
+		String bugId = "1451003"; // Bug 1451003 - subscription-manager identity reports redundant UUID info in the name field
+		boolean invokeWorkaroundWhileBugIsOpen = true;
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
+		if (invokeWorkaroundWhileBugIsOpen) {
+			log.warning("Skipping assertion that Stdout from call to '"+rhnMigrateTool+" "+options+"' contains message: "+expectedMsg);
+		} else
+		// END OF WORKAROUND
 		Assert.assertTrue(sshCommandResult.getStdout().contains(expectedMsg), "Stdout from call to '"+rhnMigrateTool+" "+options+"' contains message: "+expectedMsg);
 
 		// assert the the expected service level was set as a preference on the registered consumer
@@ -896,7 +905,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 				Assert.assertTrue(!sshCommandResult.getStdout().contains(autosubscribeFailedMsg), "When autosubscribe is successful and entitlements have been granted, stdout from call to '"+rhnMigrateTool+" "+options+"' does NOT contain message: "+autosubscribeFailedMsg);				
 			} */
 			if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit 7957b8df95c575e6e8713c2f1a0f8f754e32aed3 bug 1119688
-				if (clienttasks.status(null, null, null, null).getExitCode().equals(1)) {	// exit code of 0 indicates valid compliance, otherwise exit code is 1
+				if (clienttasks.status(null, null, null, null, null).getExitCode().equals(1)) {	// exit code of 0 indicates valid compliance, otherwise exit code is 1
 					Assert.assertTrue(sshCommandResult.getStdout().contains(autosubscribeFailedMsg), "Since the subscription-manager status does not indicate a fully green compliance, the most likely reason is because at least one of the migrated products could not be auto-subscribed.  Therefore stdout from call to '"+rhnMigrateTool+" "+options+"' contains message: "+autosubscribeFailedMsg);
 				} else {
 					Assert.assertTrue(!sshCommandResult.getStdout().contains(autosubscribeFailedMsg), "Since the subscription-manager status does not indicate a fully green compliance, all of the migrated products should have been auto-subscribed.  Therefore stdout from call to '"+rhnMigrateTool+" "+options+"' does NOT contain message: "+autosubscribeFailedMsg);						
@@ -991,7 +1000,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		if (Integer.valueOf(clienttasks.redhatReleaseX)>=7 && clienttasks.arch.equals("aarch64")) throw new SkipException("Use of rhn-migrate-classic-to-rhsm is not necessary on RHEL '"+client1tasks.redhatReleaseX+"' arch '"+clienttasks.arch+"' since this product was not released on RHN Classic.");
 		
 		// make sure we are NOT registered to RHSM
-		clienttasks.unregister_(null,null,null);
+		clienttasks.unregister_(null,null,null, null);
 		clienttasks.removeAllCerts(true, true, true);
 		clienttasks.removeAllFacts();
 		String candlepinServerPort = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "port");
@@ -1089,6 +1098,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			if (proxyLogRegex.equals("TCP_MISS") && !proxyLogResult.trim().isEmpty()) {
 				Assert.assertTrue(proxyLogResult.contains(rhnHostname.replaceFirst("https?://", "")) && proxyLogResult.contains(candlepinServerHostname), "Running rhn-migrate-classic-to-rhsm while RHN up2date is configured with a proxy should log proxy attempts to '"+rhnHostname.replaceFirst("https?://", "")+"' and '"+candlepinServerHostname+"' from subscription-manager client ip '"+ipv4_address+"'.");
 				for (String proxyLogEntry : proxyLogResult.trim().split("\n")) Assert.assertTrue(proxyLogEntry.contains(rhnHostname.replaceFirst("https?://", ""))||proxyLogEntry.contains(candlepinServerHostname), "Running rhn-migrate-classic-to-rhsm while RHN up2date is configured with a proxy should only log proxy attempts to '"+rhnHostname.replaceFirst("https?://", "")+"' or '"+candlepinServerHostname+"' from subscription-manager client ip '"+ipv4_address+"'.");
+				// NOTE: The following assert assumes the default "logformat squid" is being used - see http://www.squid-cache.org/Doc/config/logformat/
 				Assert.assertEquals(getSubstringMatches(proxyLogResult,rhnHostname.replaceFirst("https?://", "")).size(), numberOfConnectionAttempts, "It was determined during manual testing that running rhn-migrate-classic-to-rhsm while RHN up2date is configured with a proxy will yield exactly this number of connection attempts through the proxy to RHN hostname '"+rhnHostname.replaceFirst("https?://", "")+"'.");
 			}
 			// /var/log/tinyproxy.log
@@ -1115,7 +1125,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		if (sshCommandResult.getStdout().contains(conflictingProductCertsMsg)) {	// when "You are subscribed to channels that have conflicting product certificates." migration aborts.
 			log.warning("You are subscribed to channels that have conflicting product certificates.  Therefore, the "+rhnMigrateTool+" command should have exited with code 1.");
 			Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(1), "ExitCode from call to '"+rhnMigrateTool+" "+options+"' when the RHN channels map to conflicting product certs that share the same product ID");
-			Assert.assertTrue(RemoteFileTasks.testExists(client, clienttasks.rhnSystemIdFile),"The system id file '"+clienttasks.rhnSystemIdFile+"' indicates this system is still registered using RHN Classic when the RHN channels map to conflicting product certs that share the same product ID");	
+			Assert.assertTrue(clienttasks.isRhnSystemRegistered(),"This system is registered using RHN Classic when the RHN channels map to conflicting product certs that share the same product ID");
 			
 			// assert that we are not yet registered to RHSM
 			Assert.assertNull(clienttasks.getCurrentConsumerCert(),"We should NOT be registered to RHSM when "+rhnMigrateTool+" detects that the RHN channels map to conflicting product certs that share the same product ID");
@@ -1131,7 +1141,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			expectedMsg = "Use --force to ignore these channels and continue the migration.";
 			Assert.assertTrue(sshCommandResult.getStdout().contains(expectedMsg), "Stdout from call to '"+rhnMigrateTool+" "+options+"' contains message: "+expectedMsg);	
 			Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(1), "ExitCode from call to '"+rhnMigrateTool+" "+options+"' when any of the channels are not mapped to a productCert.");
-			Assert.assertTrue(RemoteFileTasks.testExists(client, clienttasks.rhnSystemIdFile),"The system id file '"+clienttasks.rhnSystemIdFile+"' indicates this system is still registered using RHN Classic when rhn-migrate-classic-to-rhsm requires --force to continue.");
+			Assert.assertTrue(clienttasks.isRhnSystemRegistered(),"This system is registered using RHN Classic when rhn-migrate-classic-to-rhsm requires --force to continue.");
 			
 			// assert that we are not yet registered to RHSM
 			Assert.assertNull(clienttasks.getCurrentConsumerCert(),"We should NOT be registered to RHSM when "+rhnMigrateTool+" requires --force to continue.");
@@ -1173,7 +1183,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			//		System successfully unregistered from RHN Classic.
 			Assert.assertTrue(sshCommandResult.getStdout().contains(successfulUnregisterMsg), "Stdout from call to '"+rhnMigrateTool+" "+options+"' contains message: "+successfulUnregisterMsg);
 			Assert.assertTrue(!sshCommandResult.getStdout().contains(unsuccessfulUnregisterMsg), "Stdout from call to '"+rhnMigrateTool+" "+options+"' does NOT contain message: "+unsuccessfulUnregisterMsg);
-			Assert.assertTrue(!RemoteFileTasks.testExists(client, clienttasks.rhnSystemIdFile),"The system id file '"+clienttasks.rhnSystemIdFile+"' is absent.  Therefore this system will no longer communicate with RHN Classic.");
+			Assert.assertTrue(!clienttasks.isRhnSystemRegistered(),"This system is NOT registered using RHN Classic. Therefore this system will no longer communicate with RHN Classic.");
 			iptablesAcceptPort(candlepinServerPort);	// without this, isRhnSystemIdRegistered(...) fails with Unexpected error: [Errno 111] Connection refused
 			Assert.assertTrue(!clienttasks.isRhnSystemIdRegistered(rhnreg_ksUsername, rhnreg_ksPassword, rhnHostname, rhnSystemId), "Confirmed that rhn systemId '"+rhnSystemId+"' is no longer registered on the RHN Classic server.");
 		} else {
@@ -1183,7 +1193,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			//		Please investigate on the Customer Portal at https://access.redhat.com.
 			log.warning("Did not detect expected message '"+successfulUnregisterMsg+"' from "+rhnMigrateTool+" stdout.  Nevertheless, the tool should inform us and continue the migration process.");
 			Assert.assertTrue(sshCommandResult.getStdout().contains(unsuccessfulUnregisterMsg), "Stdout from call to '"+rhnMigrateTool+" "+options+"' contains message: "+unsuccessfulUnregisterMsg);
-			Assert.assertTrue(!RemoteFileTasks.testExists(client, clienttasks.rhnSystemIdFile),"The system id file '"+clienttasks.rhnSystemIdFile+"' is absent.  Therefore this system will no longer communicate with RHN Classic.");
+			Assert.assertTrue(!clienttasks.isRhnSystemRegistered(),"This system is NOT registered using RHN Classic. Therefore this system will no longer communicate with RHN Classic.");
 			iptablesAcceptPort(candlepinServerPort);	// without this, isRhnSystemIdRegistered(...) fails with Unexpected error: [Errno 111] Connection refused
 			if (!clienttasks.isRhnSystemIdRegistered(rhnreg_ksUsername, rhnreg_ksPassword, rhnHostname, rhnSystemId)) {
 				Assert.assertFalse(false, "Confirmed that rhn systemId '"+rhnSystemId+"' is no longer registered on the RHN Classic server.");
@@ -1193,10 +1203,18 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		}
 		
 		// assert that we are newly registered using rhsm
-		clienttasks.identity(null, null, null, null, null, null, null);
+		clienttasks.identity(null, null, null, null, null, null, null, null);
 		Assert.assertNotNull(clienttasks.getCurrentConsumerId(),"The existance of a consumer cert indicates that the system is currently registered using RHSM.");
 		expectedMsg = String.format("System '%s' successfully registered to Red Hat Subscription Management.",	clienttasks.hostname);
 		if (clienttasks.isPackageVersion("subscription-manager-migration", ">=", "1.13.1")) expectedMsg = String.format("System '%s' successfully registered.",	clienttasks.hostname); // changed by commit fad3de89
+		// TEMPORARY WORKAROUND FOR BUG
+		String bugId = "1451003"; // Bug 1451003 - subscription-manager identity reports redundant UUID info in the name field
+		boolean invokeWorkaroundWhileBugIsOpen = true;
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
+		if (invokeWorkaroundWhileBugIsOpen) {
+			log.warning("Skipping assertion that Stdout from call to '"+rhnMigrateTool+" "+options+"' contains message: "+expectedMsg);
+		} else
+		// END OF WORKAROUND
 		Assert.assertTrue(sshCommandResult.getStdout().contains(expectedMsg), "Stdout from call to '"+rhnMigrateTool+" "+options+"' contains message: "+expectedMsg);
 		
 		log.info("No need to assert any more details of the migration since they are covered in the non-proxy test.");
@@ -1233,8 +1251,8 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		
 		// register with the activation key
 		if (false) { // debugTesting
-			clienttasks.register_(null, null, clientOrgKey, null, null, null, null, null, null, null, activationKeyName, null, null, null, true, null, null, null, null);
-			clienttasks.unregister_(null, null, null);
+			clienttasks.register_(null, null, clientOrgKey, null, null, null, null, null, null, null, activationKeyName, null, null, null, true, null, null, null, null, null);
+			clienttasks.unregister_(null, null, null, null);
 		}
 		
 		// TEMPORARY WORKAROUND FOR BUG
@@ -1269,7 +1287,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		if (Integer.valueOf(clienttasks.redhatReleaseX)>=7 && clienttasks.arch.equals("ppc64le")) throw new SkipException("Use of rhn-migrate-classic-to-rhsm is not necessary on RHEL '"+client1tasks.redhatReleaseX+"' arch '"+clienttasks.arch+"' since this product was not released on RHN Classic.");
 		if (Integer.valueOf(clienttasks.redhatReleaseX)>=7 && clienttasks.arch.equals("aarch64")) throw new SkipException("Use of rhn-migrate-classic-to-rhsm is not necessary on RHEL '"+client1tasks.redhatReleaseX+"' arch '"+clienttasks.arch+"' since this product was not released on RHN Classic.");
 		
-		clienttasks.unregister_(null,null,null);
+		clienttasks.unregister_(null,null,null, null);
 		clienttasks.removeAllCerts(true,true,true);
 		clienttasks.removeAllFacts();
 		restoreOriginallyConfiguredServerUrl();
@@ -1327,7 +1345,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		
 		// assert the result
 		String expectedFailureMessage = String.format("Activation key '%s' not found for organization '%s'.",activationKeyName, clientOrgKey);
-		if (clienttasks.isVersion(servertasks.statusVersion, ">", "0.9.30-1")) expectedFailureMessage = String.format("None of the activation keys specified exist for this org.");	// Follows: candlepin-0.9.30-1	// https://github.com/candlepin/candlepin/commit/bcb4b8fd8ee009e86fc9a1a20b25f19b3dbe6b2a
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">", "0.9.30-1")) expectedFailureMessage = String.format("None of the activation keys specified exist for this org.");	// Follows: candlepin-0.9.30-1	// https://github.com/candlepin/candlepin/commit/bcb4b8fd8ee009e86fc9a1a20b25f19b3dbe6b2a
 		expectedFailureMessage += "\n\nUnable to register.\nFor further assistance, please contact Red Hat Global Support Services.";
 		Assert.assertTrue(executeRhnMigrateClassicToRhsmResult.getStdout().contains(expectedFailureMessage),"The result from an attempt to migrate from RHN Classic to RHSM with a bad activation key reported this expected messge: \n"+expectedFailureMessage);
 		
@@ -1356,8 +1374,8 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		
 		// register with the activation key
 		if (false) { // debugTesting
-			clienttasks.register_(null, null, clientOrgKey, null, null, null, null, null, null, null, name, null, null, null, true, null, null, null, null);
-			clienttasks.unregister_(null, null, null);
+			clienttasks.register_(null, null, clientOrgKey, null, null, null, null, null, null, null, name, null, null, null, true, null, null, null, null, null);
+			clienttasks.unregister_(null, null, null, null);
 		}
 		
 		// TEMPORARY WORKAROUND FOR BUG
@@ -1401,8 +1419,8 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		
 		// register with the activation keys
 		if (false) { // debugTesting
-			clienttasks.register_(null, null, clientOrgKey, null, null, null, null, null, null, null, Arrays.asList(name1,name2), null, null, null, true, null, null, null, null);
-			clienttasks.unregister_(null, null, null);
+			clienttasks.register_(null, null, clientOrgKey, null, null, null, null, null, null, null, Arrays.asList(name1,name2), null, null, null, true, null, null, null, null, null);
+			clienttasks.unregister_(null, null, null, null);
 		}
 		
 		// migrate from RHN Classic to RHSM using the activation key 
@@ -1703,7 +1721,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		}
 			
 		// make sure we are NOT registered to RHSM
-		clienttasks.unregister(null,null,null);
+		clienttasks.unregister(null,null,null, null);
 		clienttasks.removeAllCerts(false, false, true);
 		clienttasks.removeAllFacts();
 		
@@ -1732,7 +1750,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		
 		// assert that we are still registered to RHN
 		Assert.assertTrue(clienttasks.isRhnSystemIdRegistered(sm_rhnUsername, sm_rhnPassword, sm_rhnHostname, rhnSystemId),"Confirmed that rhn systemId '"+rhnSystemId+"' is still registered when '"+rhnMigrateTool+" was aborted.");
-		Assert.assertTrue(RemoteFileTasks.testExists(client, clienttasks.rhnSystemIdFile),"The system id file '"+clienttasks.rhnSystemIdFile+"' exists.  This indicates this system is still registered using RHN Classic.");
+		Assert.assertTrue(clienttasks.isRhnSystemRegistered(),"This system is registered using RHN Classic.");
 	}
 
 
@@ -1746,7 +1764,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	public void RhnMigrateClassicToRhsmWithInvalidCredentials_Test() {
 		if (clienttasks.isPackageVersion("subscription-manager-migration", ">=", "1.14.3-1")) throw new SkipException("This test was implemented for subscription-manager-migration < 1.14.3-1.  See replacement RhnMigrateClassicToRhsmWithInvalidRhsmCredentials_Test.");
 
-		clienttasks.unregister(null,null,null);
+		clienttasks.unregister(null,null,null, null);
 		String rhsmUsername=null, rhsmPassword=null, rhsmOrg=null;
 		if (!sm_serverType.equals(CandlepinType.hosted)) {rhsmUsername="foo"; rhsmPassword="bar";}
 		SSHCommandResult sshCommandResult = executeRhnMigrateClassicToRhsm(null,"foo","bar",rhsmUsername,rhsmPassword,rhsmOrg,null, null);
@@ -1766,7 +1784,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	public void RhnMigrateClassicToRhsmWithInvalidRhsmCredentials_Test() {
 		if (clienttasks.isPackageVersion("subscription-manager-migration", "<", "1.14.3-1")) throw new SkipException("This test is implemented for subscription-manager-migration >= 1.14.3-1.  See former RhnMigrateClassicToRhsmWithInvalidCredentials_Test.");
 	
-		clienttasks.unregister(null,null,null);
+		clienttasks.unregister(null,null,null, null);
 		// register to RHN Classic
 		String rhnSystemId = clienttasks.registerToRhnClassic(sm_rhnUsername, sm_rhnPassword, sm_rhnHostname);
 		Assert.assertTrue(clienttasks.isRhnSystemIdRegistered(sm_rhnUsername, sm_rhnPassword, sm_rhnHostname, rhnSystemId),"Confirmed that rhn systemId '"+rhnSystemId+"' is currently registered.");
@@ -1791,7 +1809,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	public void RhnMigrateClassicToRhsmWithInvalidRhnCredentials_Test() {
 		if (sm_serverType.equals(CandlepinType.hosted)) throw new SkipException("This test requires that your candlepin server NOT be a hosted RHN Classic system.");
 
-		clienttasks.unregister(null,null,null);
+		clienttasks.unregister(null,null,null, null);
 		// register to RHN Classic
 		String rhnSystemId = clienttasks.registerToRhnClassic(sm_rhnUsername, sm_rhnPassword, sm_rhnHostname);
 		Assert.assertTrue(clienttasks.isRhnSystemIdRegistered(sm_rhnUsername, sm_rhnPassword, sm_rhnHostname, rhnSystemId),"Confirmed that rhn systemId '"+rhnSystemId+"' is currently registered.");
@@ -1844,12 +1862,12 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		
 		// when we are migrating away from RHN Classic to a non-hosted candlepin server, determine good credentials for rhsm registration
 		String rhsmUsername=sm_clientUsername, rhsmPassword=sm_clientPassword, rhsmOrg=sm_clientOrg;	// default
-		if (clienttasks.register_(sm_rhnUsername, sm_rhnPassword, null, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null).getExitCode().equals(new Integer(0))) { // try sm_rhnUsername sm_rhnPassword...
+		if (clienttasks.register_(sm_rhnUsername, sm_rhnPassword, null, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null, null).getExitCode().equals(new Integer(0))) { // try sm_rhnUsername sm_rhnPassword...
 			rhsmUsername=sm_rhnUsername; rhsmPassword=sm_rhnPassword; rhsmOrg = null;
 		}
-	    clienttasks.unregister(null,null,null);
+	    clienttasks.unregister(null,null,null, null);
 	    clienttasks.removeRhnSystemIdFile();
-		Assert.assertTrue(!RemoteFileTasks.testExists(client, clienttasks.rhnSystemIdFile),"This system is not registered using RHN Classic.");
+		Assert.assertTrue(!clienttasks.isRhnSystemRegistered(),"This system is NOT registered using RHN Classic.");
 		
 		// execute rhn-migrate-classic-to-rhsm
 		String rhsmServerUrlOption = "--serverurl="+"https://"+originalServerHostname+":"+originalServerPort+originalServerPrefix;	// passing the --serverurl forces prompting for rhsm credentials
@@ -1883,7 +1901,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void RhnMigrateClassicToRhsmWithNoAutoAndServiceLevel_Test() {
-		clienttasks.unregister(null,null,null);
+		clienttasks.unregister(null,null,null, null);
 		
 		SSHCommandResult sshCommandResult = executeRhnMigrateClassicToRhsm("--no-auto --servicelevel=foo", sm_rhnUsername, sm_rhnPassword,null,null,null,null, null);
 		String expectedStdout = "The --servicelevel and --no-auto options cannot be used together.";
@@ -1908,7 +1926,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		if (clienttasks.isPackageVersion("subscription-manager-migration", "<", "1.14.7-1")) clienttasks.removeRhnSystemIdFile();
 		
 		// register to RHSM
-		String consumerid = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (List<String>)null, null, null, null, true, null, null, null, null));
+		String consumerid = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (List<String>)null, null, null, null, true, null, null, null, null, null));
 		
 		// attempt to migrate
 		SSHCommandResult sshCommandResult;
@@ -1950,12 +1968,12 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	public void RhnMigrateClassicToRhsmCertificateVerification_Test() {
 		if (sm_rhnHostname.equals("")) throw new SkipException("This test requires access to RHN Classic or Satellite 5.");
-		clienttasks.unregister(null, null, null);
+		clienttasks.unregister(null, null, null, null);
 		// Steps: are outlined in https://bugzilla.redhat.com/show_bug.cgi?id=918967#c1 EMBARGOED CVE-2012-6137 subscription-manager (rhn-migrate-classic-to-rhsm): Absent certificate verification
 		
 		// Step 0: register to rhn classic
 		String rhnSystemId = clienttasks.registerToRhnClassic(sm_rhnUsername, sm_rhnPassword, sm_rhnHostname);
-		Assert.assertEquals(clienttasks.identity(null, null, null, null, null, null, null).getStdout().trim(),"server type: RHN Classic","Subscription Manager recognizes that we are registered classically.");
+		Assert.assertEquals(clienttasks.identity(null, null, null, null, null, null, null, null).getStdout().trim(),"server type: RHN Classic","Subscription Manager recognizes that we are registered classically.");
 
 		// Step 1: determine ip addresses of our desired address (rhn) and the man-in-the-middle (bugzilla)
 		rhnHostnameIPAddress = client.runCommandAndWait("dig +short xmlrpc."+sm_rhnHostname).getStdout().trim();
@@ -2027,7 +2045,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	public void RhnMigrateClassicToRhsmWithoutDataInstalled_Test() {
 		if (sm_rhnHostname.equals("")) throw new SkipException("This test requires access to RHN Classic or Satellite 5.");
-		clienttasks.unregister(null, null, null);
+		clienttasks.unregister(null, null, null, null);
 		
 		// move the mapping file (to make it appear that subscription-manager-migration-data is not installed)
 		log.info("Instead of destructively uninstalling subscription-manager-migration-data, we will simply move the mapping file...");
@@ -2036,7 +2054,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		
 		// register to rhn classic
 		String rhnSystemId = clienttasks.registerToRhnClassic(sm_rhnUsername, sm_rhnPassword, sm_rhnHostname);
-		Assert.assertEquals(clienttasks.identity(null, null, null, null, null, null, null).getStdout().trim(),"server type: RHN Classic","Subscription Manager recognizes that we are registered classically.");
+		Assert.assertEquals(clienttasks.identity(null, null, null, null, null, null, null, null).getStdout().trim(),"server type: RHN Classic","Subscription Manager recognizes that we are registered classically.");
 		
 		// attempt to run rhn-migrate-classic-to-rhsm should fail
 		SSHCommandResult sshCommandResult;
@@ -2076,11 +2094,11 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		if (clienttasks.isPackageVersion("subscription-manager-migration", ">=", "1.14.6")) options = "--keep";	// commit 6eded942a7d184ef7ed92bbd94225120ee2f2f20
 		
 		if (sm_rhnHostname.equals("")) throw new SkipException("This test requires access to RHN Classic or Satellite 5.");
-		clienttasks.unregister(null, null, null);
+		clienttasks.unregister(null, null, null, null);
 		
 		// register to rhn classic
 		String rhnSystemId = clienttasks.registerToRhnClassic(sm_rhnUsername, sm_rhnPassword, sm_rhnHostname);
-		Assert.assertEquals(clienttasks.identity(null, null, null, null, null, null, null).getStdout().trim(),"server type: RHN Classic","Subscription Manager recognizes that we are registered classically.");
+		Assert.assertEquals(clienttasks.identity(null, null, null, null, null, null, null, null).getStdout().trim(),"server type: RHN Classic","Subscription Manager recognizes that we are registered classically.");
 
 		// subscribe to more RHN Classic channels (just to add a little unnecessary fun)
 		List<String> filteredRhnAvailableChildChannels = new ArrayList<String>(rhnAvailableChildChannels);
@@ -2171,7 +2189,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		
 		
 		// Now attempt the same migration while supplying the destination credentials on the command line instead of being prompted...
-		clienttasks.unregister(null, null, null);
+		clienttasks.unregister(null, null, null, null);
 		sshCommandResult = executeRhnMigrateClassicToRhsm(options+" "+"--destination-url="+originalServerHostname+":"+originalServerPort+originalServerPrefix+" "+"--destination-user="+sm_clientUsername+" "+"--destination-password="+sm_clientPassword+" "+(sm_clientOrg!=null?"--org="+sm_clientOrg:""), null, null, null, null, null, null, null);
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "ExitCode from call to '"+rhnMigrateTool+"' after attempting to use the option to keep the classic registration");
 		Assert.assertNotNull(clienttasks.getCurrentConsumerCert(),"Confirmed that the system is newly registered with Subscription Manager after migrating from RHN Classic using '"+rhnMigrateTool+"'.");
@@ -2193,11 +2211,11 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		if (clienttasks.isPackageVersion("subscription-manager-migration", ">=", "1.14.6")) options = "--keep";	// commit 6eded942a7d184ef7ed92bbd94225120ee2f2f20
 		
 		if (sm_rhnHostname.equals("")) throw new SkipException("This test requires access to RHN Classic or Satellite 5.");
-		clienttasks.unregister(null, null, null);
+		clienttasks.unregister(null, null, null, null);
 		
 		// register to rhn classic
 		String rhnSystemId = clienttasks.registerToRhnClassic(sm_rhnUsername, sm_rhnPassword, sm_rhnHostname);
-		Assert.assertEquals(clienttasks.identity(null, null, null, null, null, null, null).getStdout().trim(),"server type: RHN Classic","Subscription Manager recognizes that we are registered classically.");
+		Assert.assertEquals(clienttasks.identity(null, null, null, null, null, null, null, null).getStdout().trim(),"server type: RHN Classic","Subscription Manager recognizes that we are registered classically.");
 
 		// subscribe to more RHN Classic channels (just to add a little unnecessary fun)
 		List<String> filteredRhnAvailableChildChannels = new ArrayList<String>(rhnAvailableChildChannels);
@@ -2257,7 +2275,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		
 		
 		// Now attempt the same migration while supplying the destination credentials on the command line instead of being prompted...
-		clienttasks.unregister(null, null, null);
+		clienttasks.unregister(null, null, null, null);
 //TODO not sure how valid this test is.  Maybe I should explicitly call subscription-manager config on the server hostname port prefix
 		sshCommandResult = executeRhnMigrateClassicToRhsm(options+" "+/*"--destination-url="+originalServerHostname+":"+originalServerPort+originalServerPrefix+" "+*/"--legacy-user="+sm_rhnUsername+" "+"--legacy-password="+sm_rhnPassword+" "+"--destination-user="+sm_clientUsername+" "+"--destination-password="+sm_clientPassword+" "+(sm_clientOrg!=null?"--org="+sm_clientOrg:""), /*sm_rhnUsername*/null, /*sm_rhnPassword*/null, null, null, null, null, null);
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "ExitCode from call to '"+rhnMigrateTool+"' after attempting to use the option to keep the classic registration");
@@ -2281,11 +2299,11 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		String options = "--remove-rhn-packages";
 		
 		if (sm_rhnHostname.equals("")) throw new SkipException("This test requires access to RHN Classic or Satellite 5.");
-		clienttasks.unregister(null, null, null);
+		clienttasks.unregister(null, null, null, null);
 		
 		// register to rhn classic
 		String rhnSystemId = clienttasks.registerToRhnClassic(sm_rhnUsername, sm_rhnPassword, sm_rhnHostname);
-		Assert.assertEquals(clienttasks.identity(null, null, null, null, null, null, null).getStdout().trim(),"server type: RHN Classic","Subscription Manager recognizes that we are registered classically.");
+		Assert.assertEquals(clienttasks.identity(null, null, null, null, null, null, null, null).getStdout().trim(),"server type: RHN Classic","Subscription Manager recognizes that we are registered classically.");
 		
 		// randomly remove a benign rhn classic package (just to add a little unnecessary fun)
 		if (randomGenerator.nextBoolean() && clienttasks.isPackageInstalled("osad")) clienttasks.yumRemovePackage("osad");
@@ -2613,10 +2631,10 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	protected String clientOrgKey = null;
 	@BeforeClass(groups="setup")
 	public void determineAvailableSubscriptions() throws JSONException, Exception {
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg,null,null,null,null,false,null,null,(String)null,null,null,null,true,false,null,null,null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg,null,null,null,null,false,null,null,(String)null,null,null,null,true,false,null,null,null, null);
 		clientOrgKey = clienttasks.getCurrentlyRegisteredOwnerKey();
 		availableSubscriptionPools = clienttasks.getCurrentlyAvailableSubscriptionPools();
-		clienttasks.unregister(null, null, null);
+		clienttasks.unregister(null, null, null, null);
 	}
 	
 	@BeforeGroups(groups="setup",value={"InstallNumMigrateToRhsmWithNonDefaultProductCertDir_Test","RhnMigrateClassicToRhsmWithNonDefaultProductCertDir_Test"})
@@ -3305,15 +3323,15 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 
 		// when we are migrating away from RHN Classic to a non-hosted candlepin server, determine good credentials for rhsm registration
 		String rhsmUsername=sm_clientUsername, rhsmPassword=sm_clientPassword, rhsmOrg=sm_clientOrg;	// default
-		if (clienttasks.register_(sm_rhnUsername, sm_rhnPassword, null, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null).getExitCode().equals(new Integer(0))) { // try sm_rhnUsername sm_rhnPassword...
+		if (clienttasks.register_(sm_rhnUsername, sm_rhnPassword, null, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null, null).getExitCode().equals(new Integer(0))) { // try sm_rhnUsername sm_rhnPassword...
 			rhsmUsername=sm_rhnUsername; rhsmPassword=sm_rhnPassword; rhsmOrg = null;
 		}
 		
 		// predict the valid service levels that will be available to the migrated consumer
-		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(rhsmUsername, rhsmPassword, rhsmOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null));
+		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(rhsmUsername, rhsmPassword, rhsmOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null, null));
 		String orgKey = CandlepinTasks.getOwnerKeyOfConsumerId(rhsmUsername, rhsmPassword, sm_serverUrl, consumerId);
 		List<String> rhsmServiceLevels = CandlepinTasks.getServiceLevelsForOrgKey(rhsmUsername, rhsmPassword, sm_serverUrl, orgKey);	
-		clienttasks.unregister(null, null, null);
+		clienttasks.unregister(null, null, null, null);
 		
 		// predict the expected service level from the defaultServiceLevel on the Org
 		JSONObject jsonOrg = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(rhsmUsername, rhsmPassword, sm_serverUrl, "/owners/"+orgKey));
@@ -3517,7 +3535,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		
 		// when we are migrating away from RHN Classic to a non-hosted candlepin server, determine good credentials for rhsm registration
 		String rhsmUsername=sm_clientUsername, rhsmPassword=sm_clientPassword, rhsmOrg=sm_clientOrg;	// default
-		if (clienttasks.register_(sm_rhnUsername, sm_rhnPassword, null, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null).getExitCode().equals(new Integer(0))) { // try sm_rhnUsername sm_rhnPassword...
+		if (clienttasks.register_(sm_rhnUsername, sm_rhnPassword, null, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null, null).getExitCode().equals(new Integer(0))) { // try sm_rhnUsername sm_rhnPassword...
 			rhsmUsername=sm_rhnUsername; rhsmPassword=sm_rhnPassword; rhsmOrg = null;
 		}
 		

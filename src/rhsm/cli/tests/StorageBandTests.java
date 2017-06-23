@@ -52,8 +52,8 @@ public class StorageBandTests extends SubscriptionManagerCLITestScript{
 	public void PartiallySubscribeStorageBandSubscription(Object Bugzilla,SubscriptionPool storagebandpool) throws JSONException, Exception{
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
-				(String) null, null, null, null, true, null, null, null, null);
-		clienttasks.subscribe(null, null, storagebandpool.poolId, null, null, "1", null, null, null, null, null, null);
+				(String) null, null, null, null, true, null, null, null, null, null);
+		clienttasks.subscribe(null, null, storagebandpool.poolId, null, null, "1", null, null, null, null, null, null, null);
 		
 		List<String> providedProductIds = CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, storagebandpool.poolId);
 		List<InstalledProduct> installedProducts = clienttasks.getCurrentlyInstalledProducts();
@@ -79,8 +79,8 @@ public class StorageBandTests extends SubscriptionManagerCLITestScript{
 	public void SubscribeStorageBandSubscription(Object Bugzilla,SubscriptionPool storagebandpool) throws JSONException, Exception{
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
-				(String) null, null, null, null, true, null, null, null, null);
-		clienttasks.subscribe(null, null, storagebandpool.poolId, null, null, null, null, null, null, null, null, null);
+				(String) null, null, null, null, true, null, null, null, null, null);
+		clienttasks.subscribe(null, null, storagebandpool.poolId, null, null, null, null, null, null, null, null, null, null);
 		
 		List<String> providedProductIds = CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, storagebandpool.poolId);
 		List<InstalledProduct> installedProducts = clienttasks.getCurrentlyInstalledProducts();
@@ -106,8 +106,8 @@ public class StorageBandTests extends SubscriptionManagerCLITestScript{
 	public void AutoAttachStorageBandSubscription(Object Bugzilla,SubscriptionPool storagebandpool) throws JSONException, Exception{
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
-				(String) null, null, null, null, true, null, null, null, null);
-		clienttasks.subscribe(true, null, (String)null, null, null, null, null, null, null, null, null, null);	
+				(String) null, null, null, null, true, null, null, null, null, null);
+		clienttasks.subscribe(true, null, (String)null, null, null, null, null, null, null, null, null, null, null);	
 		List<String> providedProductIds = CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, storagebandpool.poolId);
 		List<InstalledProduct> installedProducts = clienttasks.getCurrentlyInstalledProducts();
 		for (String providedProductId : providedProductIds) {
@@ -129,8 +129,8 @@ public class StorageBandTests extends SubscriptionManagerCLITestScript{
 	public void AutoHealStorageBandSubscription(Object Bugzilla,SubscriptionPool storagebandpool) throws JSONException, Exception{
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
-				(String) null, null, null, null, true, null, null, null, null);
-		clienttasks.autoheal(null, true, null, null, null, null);
+				(String) null, null, null, null, true, null, null, null, null, null);
+		clienttasks.autoheal(null, true, null, null, null, null, null);
 		clienttasks.run_rhsmcertd_worker(true);
 		List<String> providedProductIds = CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, storagebandpool.poolId);
 		List<InstalledProduct> installedProducts = clienttasks.getCurrentlyInstalledProducts();

@@ -86,7 +86,9 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 		
 		// get the JSON product representation of the devSku 
 		String resourcePath = "/products/"+devSku;
-		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) resourcePath = "/owners/"+sm_clientOrg+resourcePath;
+		String ownerKey = sm_clientOrg;
+		if (sm_clientOrg==null) ownerKey = clienttasks.getCurrentlyRegisteredOwnerKey();
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) resourcePath = "/owners/"+ownerKey+resourcePath;
 		JSONObject jsonDevSkuProduct = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, resourcePath));
 		if (jsonDevSkuProduct.has("displayMessage")) {
 			// indicative that: // Product with ID 'dev-mkt-product' could not be found.
@@ -103,7 +105,7 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, logMarker);
 		
 		// register with auto subscribe and force (to unregister anyone that is already registered)
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, true, null, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, true, null, null, null, null, null);
 		
 		// get the tail of the marked rhsm.log file
 		String logTail = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, logMarker, null).trim();
@@ -169,7 +171,7 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 		for (InstalledProduct installedProduct : installedProducts) {
 			// ignore installed products that are unknown to the candlepin product layer
 			resourcePath = "/products/"+installedProduct.productId;
-			if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) resourcePath = "/owners/"+sm_clientOrg+resourcePath;
+			if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) resourcePath = "/owners/"+ownerKey+resourcePath;
 			JSONObject jsonProduct = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, resourcePath));
 			if (jsonProduct.has("displayMessage")) {
 				// indicative that: // Product with ID '69' could not be found.
@@ -181,7 +183,7 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 				installedProductIds.add(installedProduct.productId);
 			}
 		}
-		Set entitledProductIds = new HashSet<String>();
+		Set<String> entitledProductIds = new HashSet<String>();
 		for (ProductNamespace productNamespace : devSkuEntitlement.productNamespaces) entitledProductIds.add(productNamespace.id);
 		Assert.assertTrue(entitledProductIds.containsAll(installedProductIds) && entitledProductIds.size()==installedProductIds.size(), "All (and only) of the currently installed products known by the candlepin product layer are entitled by the devSku entitlement.  (Actual entitled product ids "+entitledProductIds+")");
 
@@ -216,6 +218,10 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 		// assert that the entitled expires_after defaults to 90 days after the registered consumer data when not explicitly set by the dev_sku product
 		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
 		Calendar expectedEndDate = Calendar.getInstance(); expectedEndDate.setTimeInMillis(consumerCert.validityNotBefore.getTimeInMillis());
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.30-1")) {	// commit 9302c8f57f37dd5ec3c4020770ac1675a87d99ba 1419576: Pre-date certs to ease clock skew issues
+			expectedEndDate.add(Calendar.HOUR, Integer.valueOf(1));
+			log.info("Due to Candlepin RFE Bug 1419576, we need to increment the expected expires_after by one hour to account for pre-dating the consumer identity's validityNotBefore date by one hour.");
+		}
 		String devSkuExpiresAfter = CandlepinTasks.getResourceAttributeValue(jsonDevSkuProduct, "expires_after");
 		if (devSkuExpiresAfter==null) {
 			String defaultExpiresAfter = "90"; // days
@@ -292,7 +298,7 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
 		
 		// register with autosubscribe and force (to unregister anyone that is already registered)
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, true, null, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, true, null, null, null, null, null);
 		
 		// get the autosubscribed productSubscription
 		List<ProductSubscription> productSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
@@ -300,15 +306,15 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 		ProductSubscription devSkuProductSubscription1 = productSubscriptions.get(0);
 		
 		// remove it
-		clienttasks.unsubscribe(null, devSkuProductSubscription1.serialNumber, null, null, null, null);
+		clienttasks.unsubscribe(null, devSkuProductSubscription1.serialNumber, null, null, null, null, null);
 		
 		// verify that the pool from which the devSku was entitled is no longer consumable after having removed the devSku entitlement
-		SSHCommandResult result = clienttasks.subscribe_(null, null, devSkuProductSubscription1.poolId, null, null, null, null, null, null, null, null, null);
+		SSHCommandResult result = clienttasks.subscribe_(null, null, devSkuProductSubscription1.poolId, null, null, null, null, null, null, null, null, null, null);
 		String expectedStdout = String.format("Pool with id %s could not be found.",devSkuProductSubscription1.poolId);
 		Assert.assertEquals(result.getStdout().trim(), expectedStdout, "After removing a devSku entitlement, its pool should no longer be consumable.");
 		
 		// re-autosubscribe
-		clienttasks.subscribe(true, null, null, null, (String)null, null, null, null, null, null, null, null);
+		clienttasks.subscribe(true, null, null, null, (String)null, null, null, null, null, null, null, null, null);
 		
 		// get the re-autosubscribed entitlement
 		productSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
@@ -345,7 +351,7 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
 		
 		// register with autosubscribe and force (to unregister anyone that is already registered)
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, true, null, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, true, null, null, null, null, null);
 		
 		// are we fully compliant? complianceStatus=="valid"
 		String complianceStatus;
@@ -358,7 +364,7 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 		ProductSubscription devSkuProductSubscription1 = productSubscriptions.get(0);
 		
 		// re-autosubscribe
-		clienttasks.subscribe(true, null, null, null, (String)null, null, null, null, null, null, null, null);
+		clienttasks.subscribe(true, null, null, null, (String)null, null, null, null, null, null, null, null, null);
 		
 		// get the re-autosubscribed entitlement
 		productSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
@@ -401,7 +407,7 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
 		
 		// register with autosubscribe and force (to unregister anyone that is already registered)
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, true, null, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, true, null, null, null, null, null);
 		
 		// get the autosubscribed productSubscription
 		List<ProductSubscription> productSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
@@ -414,7 +420,7 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 		for (SubscriptionPool subscriptionPool : getRandomSubsetOfList(availableSubscriptionPools,3)) {
 ///*debugTesting*/ subscriptionPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("subscriptionName", "Awesome OS with up to 4 virtual guests", availableSubscriptionPools); // causes: 1 local certificate has been deleted.
 			// manually subscribe to the available cost-based subscription
-			clienttasks.subscribe(null, null, subscriptionPool.poolId, null, null, null, null, null, null, null, null, null);
+			clienttasks.subscribe(null, null, subscriptionPool.poolId, null, null, null, null, null, null, null, null, null, null);
 			
 			// assert that the consumed subscriptions still includes the consumed devSkuProductSubscription
 			productSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
@@ -440,12 +446,31 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 	public void VerifyAutosubscribeAfterChangingDevSkuFacts_Test() throws JSONException, Exception {
 		
 		// register with force to get a fresh consumer
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg,null,null,null,null,false,null,null,(List)null,null,null,null,true,false,null,null,null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg,null,null,null,null,false,null,null,(List)null,null,null,null,true,false,null,null,null, null);
 		
 		// find two value SKUs that can be used as a dev_sku
 		List <SubscriptionPool> subscriptionPools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		String devSku1=null, devSku2=null;
 		for (SubscriptionPool subscriptionPool : getRandomList(subscriptionPools)) {
+			// TEMPORARY WORKAROUND
+			// avoid...
+			// # subscription-manager attach --auto
+			// Unable to attach subscription for the product 'RH00003': rulefailed.quantity.mismatch.
+			if (!subscriptionPool.suggested.equals(Integer.valueOf(1))) {
+				boolean invokeWorkaroundWhileBugIsOpen = true;
+				String bugId="1463320";	// Bug 1463320 - choosing a dev_sku that requires a quantity>1 will fail to auto-attach with error: rulefailed.quantity.mismatch.
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				if (invokeWorkaroundWhileBugIsOpen) {
+					log.info("Excluding subscription '"+subscriptionPool.productId+"' as a dev_sku candidate because its suggested quantity '"+subscriptionPool.suggested+"' is not 1 while bug '"+bugId+"' is open.");
+					continue;
+				}
+			}
+			// END OF WORKAROUND
+			// avoid "Unable to attach subscription for the product 'RH00003': rulefailed.quantity.mismatch." since Bug 1463320 was CLOSED NOTABUG
+			if (!subscriptionPool.suggested.equals(Integer.valueOf(1))) {
+				log.info("Excluding subscription '"+subscriptionPool.productId+"' as a dev_sku candidate because its suggested quantity '"+subscriptionPool.suggested+"' is not 1 which is NOT indicative of a realistic dev_sku subscription.  Reference https://bugzilla.redhat.com/show_bug.cgi?id=1463320#c1");
+				continue;
+			}
 			if (devSku1==null) devSku1=subscriptionPool.productId;
 			if (devSku2==null && devSku1!=null && devSku1!=subscriptionPool.productId) devSku2=subscriptionPool.productId;
 			if (devSku2!=null && devSku1!=null) break;
@@ -457,13 +482,17 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 		factsMap.put("dev_sku",devSku1);
 		factsMap.put("dev_platform","dev_platform_for_"+devSku1);
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
-		clienttasks.facts(null, true, null, null, null);
+		clienttasks.facts(null, true, null, null, null, null);
 		
 		// autosubscribe
-		clienttasks.subscribe(true, null, null, null, (String)null, null, null, null, null, null, null, null);
+		clienttasks.subscribe(true, null, null, null, (String)null, null, null, null, null, null, null, null, null);
 		
 		// get the autosubscribed entitlement
 		List<ProductSubscription> productSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
+		if (clienttasks.getCurrentProductCertFiles().isEmpty()) {	// handle case when no products are installed
+			Assert.assertEquals(productSubscriptions.size(), 0, "After autosubscribing a system with dev_sku fact '"+devSku1+"' that has no installed products, no product subscription should be consumed.");
+			throw new SkipException("This test requires at least one installed product, otherwise there is no need for a dev SKU entitlement.");
+		}
 		Assert.assertEquals(productSubscriptions.size(), 1, "After autosubscribing a system with dev_sku fact '"+devSku1+"', only one product subscription should be consumed.");
 		ProductSubscription devSkuProductSubscription1 = productSubscriptions.get(0);
 		Assert.assertEquals(devSkuProductSubscription1.productId, devSku1, "The consumed entitlement SKU after autosubscribing a system with dev_sku fact '"+devSku1+"'.");
@@ -472,17 +501,17 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 		factsMap.put("dev_sku",devSku2);
 		factsMap.put("dev_platform","dev_platform_for_"+devSku2);
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
-		clienttasks.facts(null, true, null, null, null);
+		clienttasks.facts(null, true, null, null, null, null);
 		
 		// workaround for "All installed products are covered by valid entitlements. No need to update subscriptions at this time."
 		// which will cause the final assert to fail because the system will have no need to re-autosubscribe to devSku2
 		if (clienttasks.getFactValue("system.entitlements_valid").equalsIgnoreCase("valid")) {
 			// simply remove the devSkuProductSubscription1 subscription
-			clienttasks.unsubscribe_(null, devSkuProductSubscription1.serialNumber, null, null, null, null);
+			clienttasks.unsubscribe_(null, devSkuProductSubscription1.serialNumber, null, null, null, null, null);
 		}
 		
 		// autosubscribe again
-		clienttasks.subscribe(true, null, null, null, (String)null, null, null, null, null, null, null, null);
+		clienttasks.subscribe(true, null, null, null, (String)null, null, null, null, null, null, null, null, null);
 		
 		// get the autosubscribed entitlement
 		productSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
@@ -500,7 +529,7 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyAutosubscribedDevSkuWithAnUnknownProductInstalled_Test() throws JSONException, Exception {
 		// unregister to get rid of current consumer
-		clienttasks.unregister(null, null, null);
+		clienttasks.unregister(null, null, null, null);
 		
 		// verify that an unknown product is installed
 		String productId = "88888888";
@@ -518,7 +547,7 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
 		
 		// register with autosubscribe and force (to unregister anyone that is already registered)
-		SSHCommandResult result = clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, true, null, null, null, null);
+		SSHCommandResult result = clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, true, null, null, null, null, null);
 		String expectedMsg = "Unable to find available subscriptions for all your installed products.";
 		Assert.assertTrue(result.getStdout().trim().endsWith(expectedMsg),"Register with autosubscribe ends with this message when an unknown product is installed '"+expectedMsg+"'.");
 		
@@ -603,7 +632,7 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 	@SuppressWarnings("unused")
 	@BeforeClass(groups={"setup"}, dependsOnMethods={"verifyCandlepinVersionBeforeClass"})
 	public void setupBeforeClass() throws Exception {
-if (false) { // keep for historical reference but never execute
+if (/*!debugTest*/false) { // keep for historical reference but never execute
 		// restart candlepin in hosted mode (candlepin.standalone=false)
 		if (CandlepinType.standalone.equals(sm_serverType)) {	// indicates that we are testing a standalone candlepin server
 			servertasks.updateConfFileParameter("candlepin.standalone", "false");
@@ -612,7 +641,7 @@ if (false) { // keep for historical reference but never execute
 			servertasks.initialize(clienttasks.candlepinAdminUsername,clienttasks.candlepinAdminPassword,clienttasks.candlepinUrl);
 		}
 		// BEWARE: DO NOT RUN servertasks.refreshPoolsUsingRESTfulAPI(user, password, url, owner) OR IT WILL DELETE ALL SUBSCRIPTIONS AND POOLS IN CANDLEPIN 2.0+
-} // Replacing code block above with the following redeployment of candlepin to avoid the BEWARE issue
+} else // Replacing code block above with the following redeployment of candlepin to avoid the BEWARE issue
 
 		// re-deploy candlepin in hosted mode (candlepin.standalone=false)
 		if (CandlepinType.standalone.equals(sm_serverType)) {	// indicates that we are testing a standalone candlepin server
@@ -636,7 +665,7 @@ if (false) { // keep for historical reference but never execute
 	@SuppressWarnings("unused")
 	@AfterClass(groups={"setup"}, alwaysRun=true)	// dependsOnMethods={"verifyCandlepinVersionBeforeClass"} WILL THROW A TESTNG DEPENDENCY ERROR
 	public void teardownAfterClass() throws Exception {
-if (false) { // keep for historical reference but never execute
+if (/*!debugTest*/false) { // keep for historical reference but never execute
 		if (CandlepinType.standalone.equals(sm_serverType)) {	// indicates that we are testing a standalone candlepin server
 			servertasks.updateConfFileParameter("candlepin.standalone", "true");
 			servertasks.commentConfFileParameter("module.config.hosted.configuration.module");
@@ -653,7 +682,7 @@ if (false) { // keep for historical reference but never execute
 			// C. most reliable workaround is to update the locked columns for all of the cp2_products and cp2_content tables
 			updateProductAndContentLockStateOnDatabase(0); // unlock all product and content after toggling out of hosted mode
 		}
-} // Replacing code block above with the following redeployment of candlepin (workaround B) to avoid the BEWARE issue
+} else // Replacing code block above with the following redeployment of candlepin (workaround B) to avoid the BEWARE issue
 		
 		if (CandlepinType.standalone.equals(sm_serverType) && setupBeforeClassRedeployedCandlepin) {	// indicates that we are testing a standalone candlepin server
 			// avoid post re-deploy problems like: "System certificates corrupted. Please reregister." and "Unable to verify server's identity: [SSL: SSLV3_ALERT_CERTIFICATE_UNKNOWN] sslv3 alert certificate unknown (_ssl.c:579)"

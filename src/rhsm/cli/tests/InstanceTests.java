@@ -53,7 +53,7 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 		// avoid throttling RateLimitExceededException from IT-Candlepin
 		if (systemSockets.equals(new Integer(1)) && CandlepinType.hosted.equals(sm_serverType)) {	// strategically get a new consumer to avoid 60 repeated API calls from the same consumer
 			// re-register as a new consumer
-			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
 		}
 		
 		// This dataProvided test was inspired by the following table of scenarios
@@ -90,7 +90,7 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 		*/
 		
 		// make sure we are unsubscribed from all subscriptions
-		clienttasks.unsubscribe(true, (BigInteger)null, null, null, null, null);
+		clienttasks.unsubscribe(true, (BigInteger)null, null, null, null, null, null);
 		// NOTE: can throw a Runtime Error No row with the given identifier exists: [org.candlepin.model.PoolAttribute#8a908790535c4e7201535ce8eb4e18fa] at org.hibernate.UnresolvableObjectException.throwIfNull:64
 		// when prior dataProvided test fails thereby skipping the last unsubscribe subProductSubscription.serialNumber in this test
 		
@@ -131,7 +131,7 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
 		
 		// update the facts on the system
-		clienttasks.facts(null, true, null, null, null);
+		clienttasks.facts(null, true, null, null, null, null);
 		
 		// predict the quantity needed to achieve compliance
 		// think of this using the old 2010 pricing model and then multiply the answer by the poolInstanceMultiplier
@@ -162,7 +162,7 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 			// regardless of sockets (this effectively satisfies the "either-or" behavior when a virtual system
 			// consumes from the instance based pool - the quantity consumed decrements by one)
 
-			clienttasks.subscribe(false,null,pool.poolId,null,null,"1",null,null,null,null,null, null);
+			clienttasks.subscribe(false,null,pool.poolId,null,null,"1",null,null,null,null,null, null, null);
 			
 			// assert the installed provided products are compliant
 			currentlyInstalledProducts = clienttasks.getCurrentlyInstalledProducts();
@@ -175,12 +175,12 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 			}
 			
 			// now let's unsubscribe from all entitlements and attempt auto-subscribing
-			clienttasks.unsubscribe(true, (BigInteger)null, null, null, null, null);
+			clienttasks.unsubscribe(true, (BigInteger)null, null, null, null, null, null);
 			
 			// but first, let's pretend that this virtual system is mapped so that we can avoid unmapped_guests_only pools during auto-subscribe
 			factsMap.put("virt.uuid","avoid-unmapped-guests-only");
 			clienttasks.createFactsFileWithOverridingValues(factsMap);
-			clienttasks.facts(null,true,null,null,null);
+			clienttasks.facts(null,true,null,null,null, null);
 			clienttasks.mapSystemAsAGuestOfItself();
 			
 			// TEMPORARY WORKAROUND FOR BUG
@@ -188,12 +188,12 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
 			if (invokeWorkaroundWhileBugIsOpen) {
 				// issue a sacrificial autosubscribe call to get most of the entitlements attached.  If it times out, the post_auto_attach hooks will not get called
-				clienttasks.subscribe_(true,null,(String)null,null,null,null,null,null,null,null,null, null);
+				clienttasks.subscribe_(true,null,(String)null,null,null,null,null,null,null,null,null, null, null);
 			}
 			// END OF WORKAROUND
 			
 			// attempt auto-subscribing
-			clienttasks.subscribe(true,null,(String)null,null,null,null,null,null,null,null,null, null);
+			clienttasks.subscribe(true,null,(String)null,null,null,null,null,null,null,null,null, null, null);
 			
 			// assert the quantity of consumption
 			if (!providedProductIdsActuallyInstalled.isEmpty()) {
@@ -226,7 +226,7 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 			// start by attempting to subscribe in quantities that are NOT evenly divisible by the instance_multiplier
 			int quantityAttached=0;
 			for (int quantityAttempted=0; quantityAttempted<=poolInstanceMultiplier+1; quantityAttempted++) {
-				SSHCommandResult sshCommandResult = clienttasks.subscribe_(false,null,pool.poolId,null,null,String.valueOf(quantityAttempted),null,null,null,null,null, null);
+				SSHCommandResult sshCommandResult = clienttasks.subscribe_(false,null,pool.poolId,null,null,String.valueOf(quantityAttempted),null,null,null,null,null, null, null);
 				
 				// TEMPORARY WORKAROUND FOR BUG: 1183122 - rhsmd/subman dbus traceback on 'attach --pool'
 				if (sshCommandResult.getStderr().contains("KeyError: 'product_id'")) {
@@ -298,7 +298,7 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 			
 			// now let's attempt autosubscribing which should complete the stack
 			// CAUTION: attempting to autosubscribe to fill a stack of this instance-based pool will work ONLY when this instance-based subscription pool is the ONLY one available that provides for all of the providedProductIdsActuallyInstalled (Not guarantee-able).  However if a second pool with the same stacking_id is consumed, then this assert may work.
-			clienttasks.subscribe(true,null,(String)null,null,null,null,null,null,null,null,null, null);
+			clienttasks.subscribe(true,null,(String)null,null,null,null,null,null,null,null,null, null, null);
 			
 			// assert the total quantity of consumption
 			if (!providedProductIdsActuallyInstalled.isEmpty()) {
@@ -387,7 +387,7 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 				// factsMap.clear(); // do not clear since it will already contain cpu.cpu_socket(s)
 				factsMap.put("virt.is_guest",String.valueOf(true));
 				clienttasks.createFactsFileWithOverridingValues(factsMap);
-				clienttasks.facts(null,true,null,null,null);
+				clienttasks.facts(null,true,null,null,null, null);
 				List<SubscriptionPool> availableInstanceBasedSubscriptionPools = SubscriptionPool.findAllInstancesWithMatchingFieldFromList("productId", pool.productId, clienttasks.getCurrentlyAllAvailableSubscriptionPools());
 				for (SubscriptionPool availableInstanceBasedSubscriptionPool : availableInstanceBasedSubscriptionPools) {
 					if (!CandlepinTasks.isPoolRestrictedToUnmappedVirtualSystems(sm_clientUsername,sm_clientPassword, sm_serverUrl, availableInstanceBasedSubscriptionPool.poolId)) {
@@ -400,7 +400,7 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 				// now fake this consumer's facts and guestIds to make it think it is a guest of itself (a trick for testing)
 				factsMap.put("virt.uuid","fake-virt-uuid");
 				clienttasks.createFactsFileWithOverridingValues(factsMap);
-				clienttasks.facts(null,true,null,null,null);
+				clienttasks.facts(null,true,null,null,null, null);
 				clienttasks.mapSystemAsAGuestOfItself();
 				
 				// now the host_limited subpool for this virtual system should be available
@@ -413,7 +413,7 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 				// consume an entitlement from the subPool so that we can test Bug 1000444
 				SubscriptionPool subSubscriptionPool = availableInstanceBasedSubscriptionPools.get(0);
 				//clienttasks.subscribeToSubscriptionPool(subSubscriptionPool);
-				clienttasks.subscribe_(false,null,subSubscriptionPool.poolId,null,null,"1",null,null,null,null,null, null);
+				clienttasks.subscribe_(false,null,subSubscriptionPool.poolId,null,null,"1",null,null,null,null,null, null, null);
 				ProductSubscription subProductSubscription = ProductSubscription.findFirstInstanceWithMatchingFieldFromList("poolId", subSubscriptionPool.poolId, clienttasks.getCurrentlyConsumedProductSubscriptions());
 				// assert Bug 1000444 - Instance based subscription on the guest gets merged with other subscription when a future instance based subscription is added on the host
 				// TEMPORARY WORKAROUND
@@ -425,7 +425,7 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 				} else
 				// END OF WORKAROUND
 				Assert.assertTrue(subProductSubscription.provides.containsAll(pool.provides)/*DELETEME && pool.provides.containsAll(subProductSubscription.provides)*/, "The list of provided products from the consumed subpool '"+subProductSubscription.poolId+"' "+subProductSubscription.provides+" should be a superset of the provided products from the consumed hostpool '"+pool.poolId+"' "+pool.provides+".  (Superset because a another pool with the same stacking_id could have been auto consumed earlier in this test that provides additional products that were added to the one-sub-pool-per-stack subpool '"+subProductSubscription.poolId+"'.)");
-				clienttasks.unsubscribe_(false, subProductSubscription.serialNumber, null, null, null, null);
+				clienttasks.unsubscribe_(false, subProductSubscription.serialNumber, null, null, null, null, null);
 			}
 		}
 	}

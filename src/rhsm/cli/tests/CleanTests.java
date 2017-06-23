@@ -38,8 +38,8 @@ public class CleanTests extends SubscriptionManagerCLITestScript {
 		
 		// Start fresh by unregistering and registering...
 		log.info("Start fresh by unregistering and registering...");
-		clienttasks.unregister(null, null, null);
-		consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null,null, null, null, false, null, null, null));
+		clienttasks.unregister(null, null, null, null);
+		consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null,null, null, null, false, null, null, null, null));
 		
 		// Subscribe to a randomly available pool...
 		log.info("Subscribe to a randomly available pool...");
@@ -50,14 +50,14 @@ public class CleanTests extends SubscriptionManagerCLITestScript {
 
 		// Clean
 		log.info("Clean...");
-		clienttasks.clean(null, null, null);
+		clienttasks.clean();
 		
 		// Assert the entitlements are removed
 		// this was already tested within clienttasks.clean() method
 		
 		// Assert that because we have run clean, rhsm no longer has an identity and therefore requires us to register to run commands 
 		log.info("After running clean, assert that the identity is unknown thereby requiring that we be registered...");
-		SSHCommandResult result = clienttasks.identity_(null,null,null, null, null, null, null);
+		SSHCommandResult result = clienttasks.identity_(null,null,null, null, null, null, null, null);
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
 			Assert.assertEquals(result.getStderr().trim(), clienttasks.msg_ConsumerNotRegistered, "Consumer identity has been removed after clean, therefore we must register to restore our identity.");
 		} else {
@@ -78,8 +78,8 @@ public class CleanTests extends SubscriptionManagerCLITestScript {
 			rhsmManageRepo.clear();
 			rhsmManageRepo.add(new String[]{"rhsm", "manage_repos", value});
 			clienttasks.config(null, null, true, rhsmManageRepo);
-			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
-			clienttasks.clean(null, null, null);
+			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
+			clienttasks.clean();
 		}
 		
 	}
@@ -95,10 +95,10 @@ public class CleanTests extends SubscriptionManagerCLITestScript {
 		
 		// Start fresh by registering...
 		log.info("Start fresh by registering...");
-		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null,null, null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null,null, null, true, false, null, null, null, null);
 		client.runCommandAndWait("yum -q repolist --disableplugin=rhnplugin"); // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError			
 	    Assert.assertTrue(RemoteFileTasks.testExists(client, clienttasks.redhatRepoFile),"Expecting the redhat repo file '"+clienttasks.redhatRepoFile+"' to exist after registering and triggering a yum transacton.");
-		clienttasks.clean(null, null, null);
+		clienttasks.clean();
 	    Assert.assertTrue(!RemoteFileTasks.testExists(client, clienttasks.redhatRepoFile),"Expecting the redhat repo file '"+clienttasks.redhatRepoFile+"' to NOT exist after running clean.");
 	}
 
@@ -114,7 +114,7 @@ public class CleanTests extends SubscriptionManagerCLITestScript {
 		
 		// Start fresh by registering...
 		log.info("Start fresh by registering...");
-		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null,null, null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null,null, null, true, false, null, null, null, null);
 
 		// fake a splice consumer cert/key pair
 		String consumerCertFile = clienttasks.consumerCertFile();
@@ -127,7 +127,7 @@ public class CleanTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(RemoteFileTasks.testExists(client, consumerSplicetKeyFile), "Successfully created a fake '"+consumerSplicetKeyFile+"'.");
 		
 		// clean
-		clienttasks.clean(null, null, null);
+		clienttasks.clean();
 		
 		// assert the fake splice consumer cert/key pair was NOT deleted
 		Assert.assertTrue(RemoteFileTasks.testExists(client, consumerSpliceCertFile), "After running clean, '"+consumerSpliceCertFile+"' should still exist.");
@@ -149,10 +149,10 @@ public class CleanTests extends SubscriptionManagerCLITestScript {
 	@AfterClass(groups={"setup"})
 	public void teardownAfterClass() {
 		if (clienttasks!=null) {
-			clienttasks.unregister_(null, null, null);
+			clienttasks.unregister_(null, null, null, null);
 			if (consumerId!=null) {
-				clienttasks.register_(sm_clientUsername, sm_clientPassword, null, null, null, null, consumerId, null, null, null, (String)null, null, null, null, Boolean.TRUE, false, null, null, null);
-				clienttasks.unregister_(null, null, null);
+				clienttasks.register_(sm_clientUsername, sm_clientPassword, null, null, null, null, consumerId, null, null, null, (String)null, null, null, null, Boolean.TRUE, false, null, null, null, null);
+				clienttasks.unregister_(null, null, null, null);
 				consumerId = null;
 			}
 		}

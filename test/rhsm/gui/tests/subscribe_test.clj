@@ -24,10 +24,10 @@
 
 (deftest check_contract_selection_dates-test
   (let [subscriptions (tests/get_multi_contract_subscriptions nil :debug true)]
-    (tests/check_contract_selection_dates nil #spy/d (-> subscriptions first first))))
+    (tests/check_contract_selection_dates nil (-> subscriptions first first))))
 
 (deftest check_multiplier_logic-test
-  (let [subscriptions #spy/d (tests/get_subscriptions nil)]
+  (let [subscriptions (tests/get_subscriptions nil)]
     (tests/check_multiplier_logic nil (-> subscriptions first))))
 
 (deftest subscribe_each-test
@@ -43,11 +43,11 @@
       (tests/unsubscribe_each nil subscription))))
 
 (deftest check_contracts_and_virt_type-test
-  (let [subscriptions #spy/d (tests/get_multi_contract_subscriptions nil)]
+  (let [subscriptions (tests/get_multi_contract_subscriptions nil)]
     (tests/check_contracts_and_virt_type nil (-> subscriptions first first))))
 
 (deftest check_contracts_and_virt_type-test
-  (let [subscriptions #spy/d (tests/get_subscriptions nil)]
+  (let [subscriptions (tests/get_subscriptions nil)]
     (for [subscription subscriptions]
       (tests/check_contracts_and_virt_type nil subscription))))
 
@@ -110,3 +110,8 @@
 
 (deftest changes_when_consumer_is_purged-test
   (tests/changes_when_consumer_is_purged nil))
+
+(deftest check_unlimited_quantities-test
+  (let [pools #spy/d (tests/get_unlimited_pools nil :debug true)]
+    (doseq [pool pools]
+      (tests/check_unlimited_quantities nil (first pool) (second pool)))))

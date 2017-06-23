@@ -605,60 +605,103 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 		Long sshCommandTimeout;
 		SSHCommandResult result;
 		List<String> realTimeList;
-		String expectedStderr = "Unable to verify server's identity: timed out";
-		if (clienttasks.redhatReleaseX.equals("6")) expectedStderr = "Unable to verify server's identity:";
-		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.18.4-1")) { // post commit b0e877cfb099184f9bab1b681a41df9bdd2fb790 side affect from m2crypto changes
-			expectedStderr = "System certificates corrupted. Please reregister.";	
-			// Note: This new stderr is not the greatest message; however if you follow the instructions and try to reregister, you will eventually hit the original stderr....
-			//	[root@jsefler-rhel6 ~]# subscription-manager version 
-			//	System certificates corrupted. Please reregister.
-			//	[root@jsefler-rhel6 ~]# subscription-manager register --force
-			//	Registering to: auto-services.usersys.redhat.com:8883/candlepin
-			//	Username: testuser1
-			//	Password: 
-			//	Unable to verify server's identity: 
-			//	[root@jsefler-rhel6 ~]# 
-		}
+		String expectedStdout = "UNKNOWN STDOUT";
+		String expectedStderr = "UNKNOWN STDERR";
+		String expectedLogMessage = "UNKNOWN LOG ERROR";
+		String marker = System.currentTimeMillis()+" Testing VerifyConfigServerTimeouts_Test...";
+		String logResult;
 		
 		// test the default server_time value of 180 seconds
+		if (clienttasks.redhatReleaseX.equals("7")) {
+			//	2017-05-12 17:51:10,209 [ERROR] subscription-manager:23673:MainThread @utils.py:274 - Error while checking server version: ('The read operation timed out',)
+			//	2017-05-12 17:51:10,209 [ERROR] subscription-manager:23673:MainThread @utils.py:276 - ('The read operation timed out',)
+			expectedLogMessage = "Error while checking server version: ('The read operation timed out',)";
+			
+			//	[root@jsefler-rhel7 ~]# time subscription-manager version 
+			//	Unable to verify server's identity: timed out
+			//
+			//	real	3m0.568s
+			//	user	0m0.226s
+			//	sys		0m0.036s
+			expectedStderr = "Unable to verify server's identity: timed out";
+			expectedStdout = "";
+			if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.18.4-1")) { // post commit b0e877cfb099184f9bab1b681a41df9bdd2fb790 m2crypto dependency removal on RHEL7
+				//	[root@jsefler-rhel7 ~]# time subscription-manager version
+				//	server type: This system is currently not registered.
+				//	subscription management server: Unknown
+				//	subscription management rules: Unknown
+				//	subscription-manager: 1.19.12-1.el7
+				//	python-rhsm: 1.19.6-1.el7
+				//
+				//	real	3m0.482s
+				//	user	0m0.215s
+				//	sys	0m0.057s
+				expectedStderr = "";
+				expectedStdout = "server type: This system is currently not registered.\nsubscription management server: Unknown\nsubscription management rules: Unknown";
+			}
+		}
+		if (clienttasks.redhatReleaseX.equals("6")) {
+			//	2017-05-12 18:39:05,350 [ERROR] subscription-manager:14672:MainThread @utils.py:259 - Timeout error while checking server version
+			//	2017-05-12 18:39:05,351 [ERROR] subscription-manager:14672:MainThread @utils.py:260 -
+			expectedLogMessage = "Timeout error while checking server version";
+			
+			//	[root@jsefler-rhel6 ~]# time subscription-manager version
+			//	Unable to verify server's identity: 
+			//
+			//	real	3m0.555s
+			//	user	0m0.287s
+			//	sys		0m0.045s
+			expectedStderr = "Unable to verify server's identity:";
+			expectedStdout = "";
+			if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.18.4-1")) { // post commit b0e877cfb099184f9bab1b681a41df9bdd2fb790 side affect from m2crypto dependency removal on RHEL7
+				//	[root@jsefler-rhel6 ~]# subscription-manager version 
+				//	System certificates corrupted. Please reregister.
+				expectedStderr = "System certificates corrupted. Please reregister.";	
+				// Note: This ^ new stderr is not the greatest message; however if you follow the instructions and try to reregister, you will eventually hit the original stderr....
+				//	[root@jsefler-rhel6 ~]# subscription-manager register --force
+				//	Registering to: auto-services.usersys.redhat.com:8883/candlepin
+				//	Username: testuser1
+				//	Password: 
+				//	Unable to verify server's identity: 
+				//	[root@jsefler-rhel6 ~]# 
+			}
+		}
 		
-		//	[root@jsefler-rhel7 ~]# time subscription-manager version 
-		//	Unable to verify server's identity: timed out
-		//
-		//	real	3m0.568s
-		//	user	0m0.226s
-		//	sys		0m0.036s
-		
-		//	[root@jsefler-rhel6 ~]# time subscription-manager version
-		//	Unable to verify server's identity: 
-		//
-		//	real	3m0.555s
-		//	user	0m0.287s
-		//	sys		0m0.045s
-
 		String serverDefaultTimeout = "180";	// seconds (assumed hard-coded default)
-		command = "time "+clienttasks.versionCommand(null, null, null);
+		command = "time "+clienttasks.versionCommand(null, null, null, null);
 		sshCommandTimeout = new Long(200); // seconds	// default server_timeout is 180 seconds
+		
+		marker = System.currentTimeMillis()+" Testing VerifyConfigServerTimeouts_Test...";
+		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, marker);
 		result = client.runCommandAndWait(command, Long.valueOf(sshCommandTimeout *1000));
 		clienttasks.logRuntimeErrors(result);
+		logResult = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, marker, "ERROR").trim();
+		Assert.assertTrue(logResult.contains(expectedLogMessage),"Log file '"+clienttasks.rhsmLogFile+"' contains expected message '"+expectedLogMessage+"'.");
 		realTimeList = getSubstringMatches(result.getStderr(), "real\\s+.*");	// extract the matches to: real	3m0.568s
 		if (realTimeList.size()!=1) Assert.fail("Failed to find the real time it took to run command '"+command+"'.  (The automated test gave up waiting for the server to reply after '"+sshCommandTimeout+"' seconds.  Is the server hung?)");
-		Assert.assertTrue(realTimeList.get(0).replaceFirst("real\\s+", "").startsWith("3m0."),"Testing server_timeout="+serverDefaultTimeout+" seconds");	// using startsWith() to tolerate fractional seconds
-		Assert.assertTrue(result.getStderr().startsWith(expectedStderr),"When a server_timeout occurs, subscription-manager should report '"+expectedStderr+"'.");
-
-
-		// test a server_time value of N seconds
+		Assert.assertTrue(realTimeList.get(0).replaceFirst("real\\s+", "").startsWith("3m0."),"Testing server_timeout="+serverDefaultTimeout+" seconds actually times out at this time.");	// using startsWith() to tolerate fractional seconds
+		Assert.assertTrue(result.getStderr().startsWith(expectedStderr),"When a server_timeout occurs, subscription-manager stderr starts with '"+expectedStderr+"'.");
+		Assert.assertTrue(result.getStdout().startsWith(expectedStdout),"When a server_timeout occurs, subscription-manager stdout starts with '"+expectedStdout+"'.");
+		
+		
+		// also test a server_time value of N seconds
 		for (String server_timeout : Arrays.asList("4","10")) {	// seconds
 			listOfSectionNameValues.clear();
 			listOfSectionNameValues.add(new String[] { "server", "server_timeout", server_timeout});
 			clienttasks.config(null, null, true, listOfSectionNameValues);
-			command = "time "+clienttasks.versionCommand(null, null, null);
+			command = "time "+clienttasks.versionCommand(null, null, null, null);
 			sshCommandTimeout = new Long(200); // seconds	// default server_timeout is 180 seconds
+			marker = System.currentTimeMillis()+" Testing VerifyConfigServerTimeouts_Test...";
+			RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, marker);
 			result = client.runCommandAndWait(command, Long.valueOf(sshCommandTimeout *1000));
+			clienttasks.logRuntimeErrors(result);
+			logResult = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, marker, "ERROR").trim();
+			Assert.assertTrue(logResult.contains(expectedLogMessage),"Log file '"+clienttasks.rhsmLogFile+"' contains expected message '"+expectedLogMessage+"'.");
 			realTimeList = getSubstringMatches(result.getStderr(), "real\\s+.*");	// extract the matches to: real	3m0.568s
 			if (realTimeList.size()!=1) Assert.fail("Failed to find the real time it took to run command '"+command+"'.  (The automated test gave up waiting for the server to reply after '"+sshCommandTimeout+"' seconds.  Is the server hung?)");
-			Assert.assertTrue(realTimeList.get(0).replaceFirst("real\\s+", "").startsWith("0m"+server_timeout+"."),"Testing server_timeout="+server_timeout+" seconds");	// using startsWith() to tolerate fractional seconds
-			Assert.assertTrue(result.getStderr().startsWith(expectedStderr),"When a server_timeout occurs, subscription-manager should report '"+expectedStderr+"'.");
+			Assert.assertTrue(realTimeList.get(0).replaceFirst("real\\s+", "").startsWith("0m"+server_timeout+"."),"Testing server_timeout="+server_timeout+" seconds actually times out at this time");	// using startsWith() to tolerate fractional seconds
+			Assert.assertTrue(result.getStderr().startsWith(expectedStderr),"When a server_timeout occurs, subscription-manager stderr starts with '"+expectedStderr+"'.");
+			Assert.assertTrue(result.getStdout().startsWith(expectedStdout),"When a server_timeout occurs, subscription-manager stdout starts with '"+expectedStdout+"'.");
 		}
 	}
 	@AfterGroups(value={"VerifyConfigServerTimeouts_Test"},groups={"setup"})
@@ -747,7 +790,7 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 		if (client==null) return;
 		
 		// unregister
-		clienttasks.unregister_(null,null,null);
+		clienttasks.unregister_(null,null,null, null);
 		
 		// backup the current rhsm.conf file
 		log.info("Backing up the current rhsm config file before executing this test class...");

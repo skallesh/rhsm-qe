@@ -32,6 +32,7 @@ import com.redhat.qe.jul.TestRecords;
 
 import rhsm.base.SubscriptionManagerCLITestScript;
 import rhsm.cli.tasks.CandlepinTasks;
+import rhsm.cli.tasks.SubscriptionManagerTasks;
 import rhsm.data.EntitlementCert;
 import rhsm.data.InstalledProduct;
 import rhsm.data.ProductCert;
@@ -74,10 +75,10 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsTCMS(id="")
 	public void VerifyComplianceConsidersSystemArch_Test(Object bugzilla, SubscriptionPool pool, String providingProductId, String poolArch) {
 		clienttasks.deleteFactsFileWithOverridingValues(fakeArchFactsFilename);
-		clienttasks.unsubscribe(true, (BigInteger)null, null, null, null, null);
+		clienttasks.unsubscribe(true, (BigInteger)null, null, null, null, null, null);
 		//OVERKILL InstalledProduct installedProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", providingProductId, clienttasks.getCurrentlyInstalledProducts());
 		//OVERKILL Assert.assertEquals(installedProduct.status, "Not Subscribed");
-		clienttasks.subscribe(null, null, pool.poolId, null, null, null, null, null, null, null, null, null);
+		clienttasks.subscribe(null, null, pool.poolId, null, null, null, null, null, null, null, null, null, null);
 		ProductSubscription productSubscription = ProductSubscription.findFirstInstanceWithMatchingFieldFromList("poolId", pool.poolId, clienttasks.getCurrentlyConsumedProductSubscriptions());
 		InstalledProduct installedProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", providingProductId, clienttasks.getCurrentlyInstalledProducts());
 		
@@ -142,7 +143,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 			Map<String,String> factsMap = new HashMap<String,String>();
 			factsMap.put("uname.machine",fakeArch);
 			clienttasks.createFactsFileWithOverridingValues(fakeArchFactsFilename,factsMap);
-			clienttasks.facts(null, true, null, null, null);
+			clienttasks.facts(null, true, null, null, null, null);
 			productSubscription = ProductSubscription.findFirstInstanceWithMatchingFieldFromList("poolId", pool.poolId, clienttasks.getCurrentlyConsumedProductSubscriptions());
 			if (productSubscription.statusDetails.isEmpty()) log.warning("Status Details appears empty.  Is your candlepin server older than 0.8.6?");
 			Assert.assertEquals(productSubscription.statusDetails.get(0)/*assumes only one detail*/, String.format("Supports architecture %s but the system is %s.", poolArch.trim(), fakeArch), "The statusDetails from the consumed product subscription when the system's arch '"+fakeArch+"' is NOT covered by the product subscription arches '"+poolArch.trim()+"'."); // Message changed by candlepin commit 43a17952c724374c3fee735642bce52811a1e386 covers -> supports
@@ -214,17 +215,17 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	public void VerifySystemCompliantFactWhenAllProductsSubscribableByMoreThanOneCommonServiceLevel_Test(Object bugzilla, String servicelevel) {
 		
 		// test register with service level
-		clienttasks.unregister_(null,null,null);
+		clienttasks.unregister_(null,null,null, null);
 		//Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance), factValueForSystemNonCompliance,	// THIS ASSERTION IS NO LONGER VALID NOW THAT COMPLIANCE IS CALCULATED ON THE SERVER.  INSTEAD, THE LOCAL COMPLIANCE SHOULD BE TAKEN FROM THE SYSTEM CACHE.  THIS WORK IS CURRENTLY UNDER DEVELOPMENT 3/13/2013.
 		//		"Before attempting to register with autosubscribe and a common servicelevel to become compliant for all the currently installed products, the system should be non-compliant (see value for fact '"+factNameForSystemCompliance+"').");
-		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,/*true*/null,/*servicelevel*/null,null,(String)null, null, null, null, Boolean.TRUE, false, null, null, null);
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,/*true*/null,/*servicelevel*/null,null,(String)null, null, null, null, Boolean.TRUE, false, null, null, null, null);
 		if (Boolean.valueOf(clienttasks.getFactValue("virt.is_guest"))) clienttasks.mapSystemAsAGuestOfItself();	// to avoid unmapped_guests_only pools
-		clienttasks.subscribe(true, servicelevel, (List<String>)null, null, null, null, null, null, null, null, null, null);
+		clienttasks.subscribe(true, servicelevel, (List<String>)null, null, null, null, null, null, null, null, null, null, null);
 		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance), factValueForSystemCompliance,
 				"When a system has products installed for which ALL are covered by available subscription pools with a common service level, the system should become compliant (see value for fact '"+factNameForSystemCompliance+"')");
 		for (ProductSubscription productSubscription : clienttasks.getCurrentlyConsumedProductSubscriptions()) {
 			// catch the special case when autosubscribe grants a subscription with an empty service level in support of 1335371
-			if (!servicelevel.equalsIgnoreCase(productSubscription.serviceLevel) && productSubscription.serviceLevel.isEmpty() && clienttasks.isVersion(servertasks.statusVersion, ">", "2.0.2-1")) {	// commit 9cefb6e23baefcc4ee2e14423f205edd37eecf22	// Bug 1223560 - Service levels on an activation key prevent custom products from attaching at registration if auto-attach enabled (reported by Christine Fouant)
+			if (!servicelevel.equalsIgnoreCase(productSubscription.serviceLevel) && productSubscription.serviceLevel.isEmpty() && SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">", "2.0.2-1")) {	// commit 9cefb6e23baefcc4ee2e14423f205edd37eecf22	// Bug 1223560 - Service levels on an activation key prevent custom products from attaching at registration if auto-attach enabled (reported by Christine Fouant)
 				Assert.assertTrue(productSubscription.serviceLevel.isEmpty(),"After the implementation of Bug 1223560, autosubscribe can potentially grant a product subscription with an empty service level despite specifying a service level preference '"+servicelevel+"'.  In this case, product subscription ("+productSubscription+") with an empty service level was granted for coverage of the installed product(s).  For justification, review https://bugzilla.redhat.com/show_bug.cgi?id=1335371.");
 			} else
 			//CASE SENSITIVE ASSERTION Assert.assertEquals(productSubscription.serviceLevel, servicelevel, "When a system has been registered with autosubscribe specifying a common service level, then all consumed product subscriptions must provide that service level.");
@@ -235,14 +236,14 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 				"When a system has been registered with autosubscribe specifying a common service level, then the consumer's service level prefernce should be set to that value.");
 	
 		// test autosubscribe (without service level) and assert that the consumed subscriptions provide the same service level as persisted during register
-		clienttasks.unsubscribe(true, (BigInteger)null, null, null, null, null);
+		clienttasks.unsubscribe(true, (BigInteger)null, null, null, null, null, null);
 		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance), factValueForSystemNonCompliance,
 				"Before attempting to autosubscribe with a common servicelevel to become compliant for all the currently installed products, the system should be non-compliant (see value for fact '"+factNameForSystemCompliance+"').");
-		clienttasks.subscribe(true, null, (List<String>)null, null, null, null, null, null, null, null, null, null);
+		clienttasks.subscribe(true, null, (List<String>)null, null, null, null, null, null, null, null, null, null, null);
 		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance), factValueForSystemCompliance,
 				"When a system has products installed for which ALL are covered by available subscription pools with a common service level, the system should become compliant (see value for fact '"+factNameForSystemCompliance+"')");
 		for (ProductSubscription productSubscription : clienttasks.getCurrentlyConsumedProductSubscriptions()) {
-			if (!servicelevel.equalsIgnoreCase(productSubscription.serviceLevel) && productSubscription.serviceLevel.isEmpty() && clienttasks.isVersion(servertasks.statusVersion, ">", "2.0.2-1")) {	// commit 9cefb6e23baefcc4ee2e14423f205edd37eecf22	// Bug 1223560 - Service levels on an activation key prevent custom products from attaching at registration if auto-attach enabled (reported by Christine Fouant)
+			if (!servicelevel.equalsIgnoreCase(productSubscription.serviceLevel) && productSubscription.serviceLevel.isEmpty() && SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">", "2.0.2-1")) {	// commit 9cefb6e23baefcc4ee2e14423f205edd37eecf22	// Bug 1223560 - Service levels on an activation key prevent custom products from attaching at registration if auto-attach enabled (reported by Christine Fouant)
 				Assert.assertTrue(productSubscription.serviceLevel.isEmpty(),"After the implementation of Bug 1223560, autosubscribe can potentially grant a product subscription with an empty service level despite specifying a service level preference '"+servicelevel+"'.  In this case, product subscription ("+productSubscription+") with an empty service level was granted for coverage of the installed product(s).  For justification, review https://bugzilla.redhat.com/show_bug.cgi?id=1335371.");
 			} else
 			//CASE SENSITIVE ASSERTION Assert.assertEquals(productSubscription.serviceLevel, servicelevel, "When a system has been registered with autosubscribe without specifying a common service level, then all consumed product subscriptions must provide the consumer's service level preference.");
@@ -274,7 +275,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	public void VerifyAutoSubscribeAbortsWhenCompliantAndAllProductsSubscribableByMoreThanOneCommonServiceLevel_Test() throws JSONException, Exception {
 		if (!configureProductCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevelCompleted) throw new SkipException("Unsatisfied dependency configureProductCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevelCompleted="+configureProductCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevelCompleted);
 		if (clienttasks.getCurrentlyRegisteredOwnerKey()==null) throw new SkipException("Unsatisfied dependency - expected system to already have been registered during a preceding testcase.");
-		SSHCommandResult result = clienttasks.subscribe(true, null, (List<String>)null, null, null, null, null, null, null, null, null, null);
+		SSHCommandResult result = clienttasks.subscribe(true, null, (List<String>)null, null, null, null, null, null, null, null, null, null, null);
 		Assert.assertTrue(result.getStdout().trim().startsWith(autosubscribeCompliantMessage), "When the system is already compliant, an attempt to auto-subscribe should inform us with exactly this message: "+autosubscribeCompliantMessage);
 	}
 
@@ -331,7 +332,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	public void VerifyAutoSubscribeAbortsWhenCompliantAndAllProductsSubscribableByOneCommonServiceLevel_Test() throws JSONException, Exception {
 		if (!configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevelCompleted) throw new SkipException("Unsatisfied dependency configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevelCompleted="+configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevelCompleted);
 		if (clienttasks.getCurrentlyRegisteredOwnerKey()==null) throw new SkipException("Unsatisfied dependency - expected system to already have been registered during a preceding testcase.");
-		SSHCommandResult result = clienttasks.subscribe(true, null, (List<String>)null, null, null, null, null, null, null, null, null, null);
+		SSHCommandResult result = clienttasks.subscribe(true, null, (List<String>)null, null, null, null, null, null, null, null, null, null, null);
 		Assert.assertTrue(result.getStdout().trim().startsWith(autosubscribeCompliantMessage), "When the system is already compliant, an attempt to auto-subscribe should inform us with exactly this message: "+autosubscribeCompliantMessage);
 	}
 
@@ -362,7 +363,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void VerifySystemCompliantFactWhenSomeProductsAreSubscribable_Test() throws JSONException, Exception {
-		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null, null, null, null, Boolean.TRUE, false, null, null, null);
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null, null, null, null, Boolean.TRUE, false, null, null, null, null);
 		if (Boolean.valueOf(clienttasks.getFactValue("virt.is_guest"))) clienttasks.mapSystemAsAGuestOfItself();	// to avoid unmapped_guests_only pools
 		Assert.assertFalse(clienttasks.getCurrentlyInstalledProducts().isEmpty(),
 				"Products are currently installed for which the compliance of only SOME are covered by currently available subscription pools.");
@@ -373,7 +374,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance), factValueForSystemNonCompliance,
 				"When a system has products installed for which only SOME are covered by available subscription pools, the system should NOT become compliant (see value for fact '"+factNameForSystemCompliance+"') even after having subscribed to every available subscription pool.");
 		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.10-1")) {	// commit 13fe8ffd8f876d27079b961fb6675424e65b9a10	Bug 1171602 - subscription-manager status always exits 1
-			Assert.assertEquals(clienttasks.status_(null, null, null, null).getExitCode(), new Integer(1), "Expected exitCode from a call to status when the system is '"+factValueForSystemNonCompliance+"'.");
+			Assert.assertEquals(clienttasks.status_(null, null, null, null, null).getExitCode(), new Integer(1), "Expected exitCode from a call to status when the system is '"+factValueForSystemNonCompliance+"'.");
 		}
 	}
 
@@ -418,7 +419,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		if (!configureProductCertDirForSomeProductsSubscribableCompleted) throw new SkipException("Unsatisfied dependency configureProductCertDirForSomeProductsSubscribableCompleted="+configureProductCertDirForSomeProductsSubscribableCompleted);
 		if (clienttasks.getCurrentlyRegisteredOwnerKey()==null) throw new SkipException("Unsatisfied dependency - expected system to already have been registered during a preceding testcase.");
 		List <EntitlementCert> entitlementCertsBefore = clienttasks.getCurrentEntitlementCerts();
-		SSHCommandResult result = clienttasks.subscribe(true, null, (List<String>)null, null, null, null, null, null, null, null, null, null);
+		SSHCommandResult result = clienttasks.subscribe(true, null, (List<String>)null, null, null, null, null, null, null, null, null, null, null);
 		Assert.assertTrue(!result.getStdout().trim().startsWith(autosubscribeCompliantMessage), "When the system is not compliant, an attempt to auto-subscribe should NOT inform us with this message: "+autosubscribeCompliantMessage);
 		List <EntitlementCert> entitlementCertsAfter = clienttasks.getCurrentEntitlementCerts();
 		Assert.assertTrue(entitlementCertsBefore.containsAll(entitlementCertsAfter)&&entitlementCertsAfter.containsAll(entitlementCertsBefore),"The entitlement certs have not changed after an attempt to autosubscribe a second time.");
@@ -452,7 +453,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void VerifySystemCompliantFactWhenAllProductsAreSubscribable_Test() throws JSONException, Exception {
-		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null, null, null, null, Boolean.TRUE, false, null, null, null);
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null, null, null, null, Boolean.TRUE, false, null, null, null, null);
 		if (Boolean.valueOf(clienttasks.getFactValue("virt.is_guest"))) clienttasks.mapSystemAsAGuestOfItself();	// to avoid unmapped_guests_only pools
 		Assert.assertFalse(clienttasks.getCurrentlyInstalledProducts().isEmpty(),
 				"Products are currently installed for which the compliance of ALL are covered by currently available subscription pools.");
@@ -465,7 +466,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance), factValueForSystemCompliance,
 				"When a system has products installed for which ALL are covered by available subscription pools, the system should become compliant (see value for fact '"+factNameForSystemCompliance+"') after having subscribed to every available subscription pool.");
 		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.10-1")) {	// commit 13fe8ffd8f876d27079b961fb6675424e65b9a10	Bug 1171602 - subscription-manager status always exits 1
-			Assert.assertEquals(clienttasks.status_(null, null, null, null).getExitCode(), new Integer(0), "Expected exitCode from a call to status when the system is '"+factValueForSystemCompliance+"'.");
+			Assert.assertEquals(clienttasks.status_(null, null, null, null, null).getExitCode(), new Integer(0), "Expected exitCode from a call to status when the system is '"+factValueForSystemCompliance+"'.");
 		}
 	}
 
@@ -494,7 +495,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		if (!configureProductCertDirForAllProductsSubscribableCompleted) throw new SkipException("Unsatisfied dependency configureProductCertDirForAllProductsSubscribableCompleted="+configureProductCertDirForAllProductsSubscribableCompleted);
 		if (clienttasks.getCurrentlyRegisteredOwnerKey()==null) throw new SkipException("Unsatisfied dependency - expected system to already have been registered during a preceding testcase.");
 		log.info("The success of this test depends on the success of prior test VerifySystemCompliantFactWhenAllProductsAreSubscribable_Test");
-		SSHCommandResult result = clienttasks.subscribe(true, null, (List<String>)null, null, null, null, null, null, null, null, null, null);
+		SSHCommandResult result = clienttasks.subscribe(true, null, (List<String>)null, null, null, null, null, null, null, null, null, null, null);
 		Assert.assertTrue(result.getStdout().trim().startsWith(autosubscribeCompliantMessage), "When the system is already compliant, an attempt to auto-subscribe should inform us with exactly this message: "+autosubscribeCompliantMessage);
 	}
 
@@ -526,7 +527,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void VerifySystemCompliantFactWhenNoProductsAreSubscribable_Test() throws JSONException, Exception {
-		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null, null, null, null, Boolean.TRUE, false, null, null, null);
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null, null, null, null, Boolean.TRUE, false, null, null, null, null);
 		if (Boolean.valueOf(clienttasks.getFactValue("virt.is_guest"))) clienttasks.mapSystemAsAGuestOfItself();	// to avoid unmapped_guests_only pools
 		Assert.assertFalse(clienttasks.getCurrentlyInstalledProducts().isEmpty(),
 				"Products are currently installed for which the compliance of NONE are covered by currently available subscription pools.");
@@ -539,7 +540,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance), factValueForSystemNonCompliance,
 				"When a system has products installed for which NONE are covered by available subscription pools, the system should NOT become compliant (see value for fact '"+factNameForSystemCompliance+"') after having subscribed to every available subscription pool.");
 		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.10-1")) {	// commit 13fe8ffd8f876d27079b961fb6675424e65b9a10	Bug 1171602 - subscription-manager status always exits 1
-			Assert.assertEquals(clienttasks.status_(null, null, null, null).getExitCode(), new Integer(1), "Expected exitCode from a call to status when the system is '"+factValueForSystemNonCompliance+"'.");
+			Assert.assertEquals(clienttasks.status_(null, null, null, null, null).getExitCode(), new Integer(1), "Expected exitCode from a call to status when the system is '"+factValueForSystemNonCompliance+"'.");
 		}
 	}
 
@@ -584,7 +585,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		if (!configureProductCertDirForNoProductsSubscribableCompleted) throw new SkipException("Unsatisfied dependency configureProductCertDirForNoProductsSubscribableCompleted="+configureProductCertDirForNoProductsSubscribableCompleted);
 		if (clienttasks.getCurrentlyRegisteredOwnerKey()==null) throw new SkipException("Unsatisfied dependency - expected system to already have been registered during a preceding testcase.");
 		List <EntitlementCert> entitlementCertsBefore = clienttasks.getCurrentEntitlementCerts();
-		SSHCommandResult result = clienttasks.subscribe(true, null, (List<String>)null, null, null, null, null, null, null, null, null, null);
+		SSHCommandResult result = clienttasks.subscribe(true, null, (List<String>)null, null, null, null, null, null, null, null, null, null, null);
 		Assert.assertTrue(!result.getStdout().trim().startsWith(autosubscribeCompliantMessage), "When the system is not compliant, an attempt to auto-subscribe should NOT inform us with this message: "+autosubscribeCompliantMessage);
 		List <EntitlementCert> entitlementCertsAfter = clienttasks.getCurrentEntitlementCerts();
 		Assert.assertTrue(entitlementCertsBefore.containsAll(entitlementCertsAfter)&&entitlementCertsAfter.containsAll(entitlementCertsBefore),"The entitlement certs have not changed after an attempt to autosubscribe a second time.");
@@ -618,7 +619,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void VerifySystemCompliantFactWhenNoProductsAreInstalled_Test() throws JSONException, Exception {
-		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null, null, null, null, Boolean.TRUE, false, null, null, null);
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null, null, null, null, Boolean.TRUE, false, null, null, null, null);
 		if (Boolean.valueOf(clienttasks.getFactValue("virt.is_guest"))) clienttasks.mapSystemAsAGuestOfItself();	// to avoid unmapped_guests_only pools
 		Assert.assertTrue(clienttasks.getCurrentlyInstalledProducts().isEmpty(),
 				"No products are currently installed.");
@@ -629,7 +630,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance), factValueForSystemCompliance,
 				"Even after subscribing to all the available subscription pools, a system with no products installed should remain compliant (see value for fact '"+factNameForSystemCompliance+"').");
 		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.10-1")) {	// commit 13fe8ffd8f876d27079b961fb6675424e65b9a10	Bug 1171602 - subscription-manager status always exits 1
-			Assert.assertEquals(clienttasks.status_(null, null, null, null).getExitCode(), new Integer(0), "Expected exitCode from a call to status when the system is '"+factValueForSystemCompliance+"'.");
+			Assert.assertEquals(clienttasks.status_(null, null, null, null, null).getExitCode(), new Integer(0), "Expected exitCode from a call to status when the system is '"+factValueForSystemCompliance+"'.");
 		}
 	}
 
@@ -695,7 +696,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	public void VerifyAutoSubscribeAbortsWhenNoProductsAreInstalled_Test() throws JSONException, Exception {
 		if (!configureProductCertDirForNoProductsInstalledCompleted) throw new SkipException("Unsatisfied dependency configureProductCertDirForNoProductsInstalledCompleted="+configureProductCertDirForNoProductsInstalledCompleted);
 		if (clienttasks.getCurrentlyRegisteredOwnerKey()==null) throw new SkipException("Unsatisfied dependency - expected system to already have been registered during a preceding testcase.");
-		SSHCommandResult result = clienttasks.subscribe_(true, null, (List<String>)null, null, null, null, null, null, null, null, null, null);
+		SSHCommandResult result = clienttasks.subscribe_(true, null, (List<String>)null, null, null, null, null, null, null, null, null, null, null);
 
 		// exceptional result...
 		//	ssh root@hp-rx3600-01.rhts.eng.bos.redhat.com subscription-manager subscribe --auto
@@ -724,7 +725,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsTCMS(id="")
 	public void VerifySystemCompliantFactWhenUnregistered_Test() {
 		// unregister
-		clienttasks.unregister(null,null,null);
+		clienttasks.unregister(null,null,null, null);
 		configureProductCertDirAfterClass();
 		
 		// pre-test check for installed products
@@ -764,7 +765,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance), factValueForSystemCompliance,
 				"By definition, being registered to RHN Classic implies the system IS compliant no matter what products are installed (see value for fact '"+factNameForSystemCompliance+"').");
 		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.10-1")) {	// commit 13fe8ffd8f876d27079b961fb6675424e65b9a10	Bug 1171602 - subscription-manager status always exits 1
-			Assert.assertEquals(clienttasks.status_(null, null, null, null).getExitCode(), new Integer(0), "Expected exitCode from a call to status when the system is '"+factValueForSystemCompliance+"'.");
+			Assert.assertEquals(clienttasks.status_(null, null, null, null, null).getExitCode(), new Integer(0), "Expected exitCode from a call to status when the system is '"+factValueForSystemCompliance+"'.");
 		}
 	}
 
@@ -795,13 +796,13 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
 			       , testCaseID = {"RHEL6-21725", "RHEL7-33103"})
 	@Test(	description="subscription-manager: verify the system.compliant fact remains False when all installed products are subscribable in the future",
-			groups={"configureProductCertDirForAllProductsSubscribableInTheFuture","cli.tests","blockedbyBug-737553","blockedbyBug-649068","blockedbyBug-1183175"},
+			groups={"configureProductCertDirForAllProductsSubscribableInTheFuture","cli.tests","blockedbyBug-737553","blockedbyBug-649068","blockedbyBug-1183175","blockedbyBug-1440180"},
 			priority=800,
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void VerifySystemCompliantFactWhenAllProductsAreSubscribableInTheFuture_Test() throws JSONException, Exception {
 		List<ProductCert> currentProductCerts = clienttasks.getCurrentProductCerts();
-		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null, null, null, null, Boolean.TRUE, false, null, null, null);
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null, null, null, null, Boolean.TRUE, false, null, null, null, null);
 		if (Boolean.valueOf(clienttasks.getFactValue("virt.is_guest"))) clienttasks.mapSystemAsAGuestOfItself();	// to avoid unmapped_guests_only pools
 		
 		// initial assertions
@@ -1004,7 +1005,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		clienttasks.config(null, null, true, new String[]{"server","hostname","offline-"+serverHostname});
 		Integer expectedIdentityExitCode = new Integer(255);
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1"))  expectedIdentityExitCode = new Integer(70);	//EX_SOFTWARE	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
-		Assert.assertEquals(clienttasks.identity_(null, null, null, null, null, null, null).getExitCode(), expectedIdentityExitCode, "Identity fails when system is offline");
+		Assert.assertEquals(clienttasks.identity_(null, null, null, null, null, null, null, null).getExitCode(), expectedIdentityExitCode, "Identity fails when system is offline");
 		List<InstalledProduct> installedProductsCached = clienttasks.getCurrentlyInstalledProducts();
 		for (InstalledProduct installedProduct : installedProductsCached) {
 			Assert.assertTrue(!installedProduct.status.equalsIgnoreCase("Unknown"),"Installed product '"+installedProduct.productName+"' status '"+installedProduct.status+"' should NOT be Unknown when server is offline.");
@@ -1101,7 +1102,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		}
 		
 		// register and subscribe to all available subscriptions
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
 		if (Boolean.valueOf(clienttasks.getFactValue("virt.is_guest"))) clienttasks.mapSystemAsAGuestOfItself();	// to avoid unmapped_guests_only pools
 		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
 		
@@ -1248,8 +1249,8 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 				// this is a workaround as shown in the ADDTIONAL INFO of Bug 1351370 TO RECOVER FROM A BAD STATE
 				SSHCommandResult selinuxModeResult = client.runCommandAndWait("getenforce");	// Enforcing
 				client.runCommandAndWait("setenforce Permissive");
-				clienttasks.unregister_(null, null, null);
-				clienttasks.clean_(null, null, null);
+				clienttasks.unregister_(null, null, null, null);
+				clienttasks.clean_();
 				client.runCommandAndWait("setenforce "+selinuxModeResult.getStdout().trim());
 			}
 			// END OF WORKAROUND
@@ -1274,7 +1275,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	protected boolean configureProductCertDirForSomeProductsSubscribableCompleted=false;
 	@BeforeGroups(groups={"setup"},value="configureProductCertDirForSomeProductsSubscribable")
 	public void configureProductCertDirForSomeProductsSubscribable() {
-		clienttasks.unregister(null, null, null);
+		clienttasks.unregister(null, null, null, null);
 		// TEMPORARY WORKAROUND FOR BUG: Bug 1183175 - changing to a different rhsm.productcertdir configuration throws OSError: [Errno 17] File exists
 		boolean invokeWorkaroundWhileBugIsOpen = true;
 		String bugId="1183175"; 
@@ -1297,7 +1298,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	protected boolean configureProductCertDirForAllProductsSubscribableCompleted=false;	
 	@BeforeGroups(groups={"setup"},value="configureProductCertDirForAllProductsSubscribable")
 	public void configureProductCertDirForAllProductsSubscribable() {
-		clienttasks.unregister(null, null, null);
+		clienttasks.unregister(null, null, null, null);
 		// TEMPORARY WORKAROUND FOR BUG: Bug 1183175 - changing to a different rhsm.productcertdir configuration throws OSError: [Errno 17] File exists
 		boolean invokeWorkaroundWhileBugIsOpen = true;
 		String bugId="1183175"; 
@@ -1317,7 +1318,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	protected boolean configureProductCertDirForNoProductsSubscribableCompleted=false;
 	@BeforeGroups(groups={"setup"},value="configureProductCertDirForNoProductsSubscribable")
 	public void configureProductCertDirForNoProductsSubscribable() {
-		clienttasks.unregister(null, null, null);
+		clienttasks.unregister(null, null, null, null);
 		// TEMPORARY WORKAROUND FOR BUG: Bug 1183175 - changing to a different rhsm.productcertdir configuration throws OSError: [Errno 17] File exists
 		boolean invokeWorkaroundWhileBugIsOpen = true;
 		String bugId="1183175"; 
@@ -1337,7 +1338,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	protected boolean configureProductCertDirForNoProductsInstalledCompleted=false;
 	@BeforeGroups(groups={"setup"},value="configureProductCertDirForNoProductsInstalled")
 	public void configureProductCertDirForNoProductsInstalled() {
-		clienttasks.unregister(null, null, null);
+		clienttasks.unregister(null, null, null, null);
 		// TEMPORARY WORKAROUND FOR BUG: Bug 1183175 - changing to a different rhsm.productcertdir configuration throws OSError: [Errno 17] File exists
 		boolean invokeWorkaroundWhileBugIsOpen = true;
 		String bugId="1183175"; 
@@ -1356,7 +1357,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	protected boolean configureProductCertDirForAllProductsSubscribableInTheFutureCompleted=false;	
 	@BeforeGroups(groups={"setup"},value="configureProductCertDirForAllProductsSubscribableInTheFuture")
 	public void configureProductCertDirForAllProductsSubscribableInTheFuture() {
-		clienttasks.unregister(null, null, null);
+		clienttasks.unregister(null, null, null, null);
 		// TEMPORARY WORKAROUND FOR BUG: Bug 1183175 - changing to a different rhsm.productcertdir configuration throws OSError: [Errno 17] File exists
 		boolean invokeWorkaroundWhileBugIsOpen = true;
 		String bugId="1183175"; 
@@ -1380,7 +1381,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 
 	@BeforeGroups(groups={"setup"},value="configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevel")
 	public void configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevel() {
-		clienttasks.unregister(null, null, null);
+		clienttasks.unregister(null, null, null, null);
 		// TEMPORARY WORKAROUND FOR BUG: Bug 1183175 - changing to a different rhsm.productcertdir configuration throws OSError: [Errno 17] File exists
 		boolean invokeWorkaroundWhileBugIsOpen = true;
 		String bugId="1183175"; 
@@ -1400,7 +1401,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	protected boolean configureProductCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevelCompleted=false;		
 	@BeforeGroups(groups={"setup"},value="configureProductCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevel")
 	public void configureProductCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevel() {
-		clienttasks.unregister(null, null, null);
+		clienttasks.unregister(null, null, null, null);
 		// TEMPORARY WORKAROUND FOR BUG: Bug 1183175 - changing to a different rhsm.productcertdir configuration throws OSError: [Errno 17] File exists
 		boolean invokeWorkaroundWhileBugIsOpen = true;
 		String bugId="1183175"; 

@@ -54,8 +54,8 @@ public class RedeemTests extends SubscriptionManagerCLITestScript {
 			//@ImplementsNitrateTest(caseId=)
 	public void AttemptRedeemWithoutBeingRegistered_Test() {
 		
-		clienttasks.unregister(null,null,null);
-		SSHCommandResult redeemResult = clienttasks.redeem_(null,null,null,null,null, null);
+		clienttasks.unregister(null,null,null, null);
+		SSHCommandResult redeemResult = clienttasks.redeem_(null,null,null,null,null, null, null);
 		
 		// assert redemption results
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
@@ -78,8 +78,8 @@ public class RedeemTests extends SubscriptionManagerCLITestScript {
 	//@ImplementsNitrateTest(caseId=)
 	public void AttemptRedeemWithoutEmail_Test() {
 		
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
-		SSHCommandResult redeemResult = clienttasks.redeem_(null,null,null,null,null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
+		SSHCommandResult redeemResult = clienttasks.redeem_(null,null,null,null,null, null, null);
 		
 		// assert redemption results
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
@@ -106,8 +106,8 @@ public class RedeemTests extends SubscriptionManagerCLITestScript {
 		if (!sm_serverType.equals(CandlepinType.standalone)) throw new SkipException(warning);
 		log.info(warning);
 		
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
-		SSHCommandResult redeemResult = clienttasks.redeem("tester@redhat.com",null,null,null,null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
+		SSHCommandResult redeemResult = clienttasks.redeem("tester@redhat.com",null,null,null,null, null, null);
 		
 		// assert redemption results
 		String expectedMsgFromCandlepin = "Standalone candlepin does not support redeeming a subscription for dmi.system.manufacturer:";
@@ -139,7 +139,7 @@ public class RedeemTests extends SubscriptionManagerCLITestScript {
 		String warning = "This mock test was authored for execution against an on-premises candlepin server.";
 		if (!sm_serverType.equals(CandlepinType.standalone)) throw new SkipException(warning);
 		log.info(testDescription);
-		if (clienttasks.isVersion(servertasks.statusVersion, ">=", "2.0.0-1")) {	// 06/15/2015: DefaultSubscriptionServiceAdapter.java has been removed from candlepin-2.0.0+ with the introduction of per-org product stuff
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0-1")) {	// 06/15/2015: DefaultSubscriptionServiceAdapter.java has been removed from candlepin-2.0.0+ with the introduction of per-org product stuff
 			throw new SkipException("This test is no longer attemptable against an OnPremise candlepin due to the removal of DefaultSubscriptionServiceAdapter.java from candlepin-2.0.0-1+");
 		}
 		log.warning(warning);
@@ -152,10 +152,10 @@ public class RedeemTests extends SubscriptionManagerCLITestScript {
 		clienttasks.createFactsFileWithOverridingValues(facts);
 		
 		// update the facts
-		clienttasks.facts(null,true, null, null, null);
+		clienttasks.facts(null,true, null, null, null, null);
 		
 		// attempt redeem
-		SSHCommandResult redeemResult = clienttasks.redeem("tester@redhat.com",null,null,null,null, null);
+		SSHCommandResult redeemResult = clienttasks.redeem("tester@redhat.com",null,null,null,null, null, null);
 		
 		// assert the redeemResult here
 		if (expectedExitCode!=null) Assert.assertEquals(redeemResult.getExitCode(), expectedExitCode, "exitCode");
@@ -174,7 +174,7 @@ public class RedeemTests extends SubscriptionManagerCLITestScript {
 	public void AttemptToChangeConsumersCanActivateAttribute_Test() throws Exception {
 
 		// register and attempt to update the consumer by forcing its canActivate attribute to true
-		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null));
+		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null, null));
 		CandlepinTasks.setAttributeForConsumer(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerId, "canActivate", true);
 		log.warning("Beacuse the consumer's canActivate attribute is black-listed from changes, that^ attempt to change it to true should have been ignored.  Let's verify...");
 		JSONObject jsonConsumer = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/consumers/"+consumerId));
@@ -202,11 +202,11 @@ public class RedeemTests extends SubscriptionManagerCLITestScript {
 
 		
 		// register and attempt to update the consumer by forcing its canActivate attribute to true
-		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null));
+		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null, null));
 		CandlepinTasks.setAttributeForConsumer(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerId, "canActivate", true);
 
 		// attempt to redeem
-		SSHCommandResult redeemResult = clienttasks.redeem("tester@redhat.com",null,null,null,null, null);
+		SSHCommandResult redeemResult = clienttasks.redeem("tester@redhat.com",null,null,null,null, null, null);
 		
 		// assert the redeemResult here
 		Assert.assertEquals(redeemResult.getExitCode(), new Integer(0));
@@ -236,14 +236,14 @@ public class RedeemTests extends SubscriptionManagerCLITestScript {
 		clienttasks.createFactsFileWithOverridingValues(facts);
 		
 		// register and attempt redeem
-		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null));
+		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null, null));
 
 		// assert that the consumer's can_activate attribute is false
 		JSONObject jsonConsumer = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/consumers/"+consumerId));
 		Assert.assertFalse(jsonConsumer.getBoolean("canActivate"), "Upon registering a system with a dmi.system.serial_number of '"+facts.get("dmi.system.serial_number")+"', the consumer's canActivate attribute should be false.");
 		
 		// attempt to redeem
-		SSHCommandResult redeemResult = clienttasks.redeem("tester@redhat.com",null,null,null,null, null);
+		SSHCommandResult redeemResult = clienttasks.redeem("tester@redhat.com",null,null,null,null, null, null);
 		
 		// assert the redeemResult here
 		Assert.assertEquals(redeemResult.getExitCode(), new Integer(0));
@@ -302,7 +302,7 @@ public class RedeemTests extends SubscriptionManagerCLITestScript {
 		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
 		
 		// register
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
 		
 		
 		// String testDescription, String serialNumber, Integer expectedExitCode, String expectedStdout, String expectedStderr

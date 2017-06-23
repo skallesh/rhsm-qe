@@ -113,6 +113,7 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 			msgId = msgId.replace("up2date", "up to date");
 			msgId = msgId.replace("firstboot", "first boot");
 			msgId = msgId.replace("hostname", "host name");
+			msgId = msgId.replace("Hostname", "Host name");
 			msgId = msgId.replace("redhat", "red hat");
 			msgId = msgId.replace("\\tManifest", "Manifest");
 			msgId = msgId.replace("jbappplatform", "java boss application platform");
@@ -611,6 +612,18 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 		}
 		// END OF WORKAROUND
 		
+		// TEMPORARY WORKAROUND FOR BUG
+		if (modifiedManPage.contains("Specifes")) {
+			boolean invokeWorkaroundWhileBugIsOpen = true;
+			String bugId="1440319";	// Bug 1440319 - typo in the word "Specifes" in subscription-manager man page
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
+			if (invokeWorkaroundWhileBugIsOpen) {
+				log.warning("Ignoring unrecognized word '"+"Specifes"+"' while bug '"+bugId+"' is open.");
+				modifiedManPage = modifiedManPage.replaceAll("Specifes", "Specifies");
+			}
+		}
+		// END OF WORKAROUND
+		
 		// assert that there were no unexpected hunspell check failures in the modified man page
 		Assert.assertEquals(getSpellCheckFailuresForModifiedManPage(tool,manPageResult.getStdout(),modifiedManPage).size(),0,"There are zero unexpected hunspell check failures in the man page for '"+tool+"'.");
 	}
@@ -1069,8 +1082,10 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 
 		modifiedManPage = modifiedManPage.replaceAll("proxyuser", "proxy_user");
 		modifiedManPage = modifiedManPage.replaceAll("proxypass", "proxy_pass");
+		modifiedManPage = modifiedManPage.replaceAll("noproxy", "no_proxy");
 		modifiedManPage = modifiedManPage.replaceAll("PROXYUSERNAME", "PROXY_USERNAME");
 		modifiedManPage = modifiedManPage.replaceAll("PROXYPASSWORD", "PROXY_PASSWORD");
+		modifiedManPage = modifiedManPage.replaceAll("NOPROXY", "NO_PROXY");
 		modifiedManPage = modifiedManPage.replaceAll("CONSUMERTYPE", "CONSUMER_TYPE");
 		modifiedManPage = modifiedManPage.replaceAll("CONSUMERID", "CONSUMER_ID");
 		modifiedManPage = modifiedManPage.replaceAll("SERIALNUMBER", "SERIAL_NUMBER");
@@ -1248,6 +1263,7 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 		modifiedManPage = modifiedManPage.replaceAll("GPLv2", "General Public License, version 2");
 		modifiedManPage = modifiedManPage.replaceAll("HTTPS", "Hypertext Transfer Protocol Secure");
 		modifiedManPage = modifiedManPage.replaceAll("MERCHANTABILITY", "MERCHANTABLE");
+		modifiedManPage = modifiedManPage.replaceAll("'\\*'", "\"splat\"");	// comes from rhsm.conf no_proxy description: '*' is a special value
 		
 		// filesystem was judged WONTFIX https://bugzilla.redhat.com/show_bug.cgi?id=1193991#c5
 		modifiedManPage = modifiedManPage.replaceAll("filesystem", "file system");

@@ -76,8 +76,8 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 			            enabled=true)
 	public void FactsUpdateWhenRegistered_Test() {
 			                       
-		 clienttasks.register(sm_clientUsername, sm_clientPassword,sm_clientOrg, null, null, null, null, null, null, null, (List<String>)null, null,null, null, false, null, null, null, null);
-		 SSHCommandResult result = clienttasks.facts(null, true,null, null, null);
+		 clienttasks.register(sm_clientUsername, sm_clientPassword,sm_clientOrg, null, null, null, null, null, null, null, (List<String>)null, null,null, null, false, null, null, null, null, null);
+		 SSHCommandResult result = clienttasks.facts(null, true,null, null, null, null);
 	     Assert.assertEquals(result.getStdout().trim(),"Successfully updated the system facts.");
 	}
 
@@ -91,11 +91,11 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	public void FactsUpdateWhenNotRegistered_Test() {
 		
 		// make sure we are not registered
-		clienttasks.unregister(null, null, null);
+		clienttasks.unregister(null, null, null, null);
 		
 		log.info("Assert that one must be registered to update the facts...");
 		for (Boolean list : new Boolean[]{true,false}) {			
-			SSHCommandResult result = clienttasks.facts_(list, true, null, null, null);
+			SSHCommandResult result = clienttasks.facts_(list, true, null, null, null, null);
 			if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
 				Assert.assertEquals(result.getStderr().trim(),clienttasks.msg_ConsumerNotRegistered, "stderr indicates that one must be registered to update the facts.");
 			} else {
@@ -114,10 +114,10 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	public void FactsListWhenNotRegistered_Test() {
 		
 		// make sure we are not registered
-		clienttasks.unregister(null, null, null);
+		clienttasks.unregister(null, null, null, null);
 		
 		log.info("Assert that one need not be registered to list the facts...");		
-		SSHCommandResult result = clienttasks.facts(true, false, null, null, null);
+		SSHCommandResult result = clienttasks.facts(true, false, null, null, null, null);
 		Assert.assertContainsNoMatch(result.getStderr(),clienttasks.msg_ConsumerNotRegistered,
 				"One need not be registered to list the facts.");
 		Assert.assertContainsNoMatch(result.getStdout(),clienttasks.msg_ConsumerNotRegistered,
@@ -133,7 +133,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	public void FactsWithoutListOrUpdate_Test_DEPRECATED() {
 		
 		log.info("Assert that one need one must specify --list or --update...");		
-		SSHCommandResult result = clienttasks.facts_(false, false, null, null, null);
+		SSHCommandResult result = clienttasks.facts_(false, false, null, null, null, null);
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255),
 				"exitCode from the facts without --list or --update");
 		Assert.assertEquals(result.getStdout().trim(),clienttasks.msg_NeedListOrUpdateOption,
@@ -148,8 +148,8 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsNitrateTest(caseId=)
 	public void FactsDefaultsToFactsList_Test() {
 		
-		SSHCommandResult listResult = clienttasks.facts(true, null, null, null, null);
-		SSHCommandResult defaultResult = clienttasks.facts(null, null, null, null, null);
+		SSHCommandResult listResult = clienttasks.facts(true, null, null, null, null, null);
+		SSHCommandResult defaultResult = clienttasks.facts(null, null, null, null, null, null);
 		
 		log.info("Asserting that that the default facts result without specifying any options is the same as the result from facts --list...");
 		Assert.assertEquals(defaultResult.getExitCode(), listResult.getExitCode(),
@@ -182,11 +182,11 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	public void ConsumerFactsList_Test(SubscriptionManagerTasks smt) {
 		
 		// start with fresh registrations using the same clientusername user
-		smt.unregister(null, null, null);
-		smt.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, null, false, null, null, null);
+		smt.unregister(null, null, null, null);
+		smt.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, null, false, null, null, null, null);
 		
 		// list the system facts
-		smt.facts(true, false, null, null, null);
+		smt.facts(true, false, null, null, null, null);
 	}
 
 
@@ -218,10 +218,10 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		}
 		
 		// start with fresh registrations using the same clientusername user
-		workClientTasks.unregister(null, null, null);
-		servClientTasks.unregister(null, null, null);
-		workClientTasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, null, false, null, null, null);
-		servClientTasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, null, false, null, null, null);
+		workClientTasks.unregister(null, null, null, null);
+		servClientTasks.unregister(null, null, null, null);
+		workClientTasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, null, false, null, null, null, null);
+		servClientTasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, null, false, null, null, null, null);
 		
 
 		// get all the pools available to each client
@@ -251,8 +251,8 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void AssertPoolsWithSocketsGreaterThanSystemsCpuSocketAreNotAvailable_Test(SubscriptionManagerTasks smt) throws Exception {
-		smt.unregister(null, null, null);
-		String consumerId = smt.getCurrentConsumerId(smt.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null, null, null, null, (String)null, null, null, null, null, false, null, null, null));
+		smt.unregister(null, null, null, null);
+		String consumerId = smt.getCurrentConsumerId(smt.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null, null, null, null, (String)null, null, null, null, null, false, null, null, null, null));
 		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerId);
 		
 		boolean foundPoolWithSocketAttributes = false;
@@ -336,8 +336,8 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void AssertPoolsWithAnArchDifferentThanSystemsArchitectureAreNotAvailable_Test(SubscriptionManagerTasks smt) throws Exception {
-		smt.unregister(null, null, null);
-		String consumerId = smt.getCurrentConsumerId(smt.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null, null, null, null, (String)null, null, null, null, null, false, null, null, null));
+		smt.unregister(null, null, null, null);
+		String consumerId = smt.getCurrentConsumerId(smt.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null, null, null, null, (String)null, null, null, null, null, false, null, null, null, null));
 		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerId);
 
 		boolean foundPoolWithArchAttributes = false;
@@ -418,8 +418,8 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		}
 
 		// on a RHEL workstation register to candlepin (as type system)
-		clienttasks.unregister(null, null, null);
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, ConsumerType.system, null, null, null, null, null, (String)null, null, null, null, null, false, null, null, null);
+		clienttasks.unregister(null, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, ConsumerType.system, null, null, null, null, null, (String)null, null, null, null, null, false, null, null, null, null);
 
 		// get a list of available pools and all available pools (for this system consumer)
 		List<SubscriptionPool> compatiblePoolsAsSystemConsumer = clienttasks.getCurrentlyAvailableSubscriptionPools();
@@ -431,8 +431,8 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 				"The pools available to a type=system consumer is a subset of --all --available pools.");
 		
 		// now register to candlepin (as type candlepin)
-		clienttasks.unregister(null, null, null);
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, ConsumerType.candlepin, null, null, null, null, null, (String)null, null, null, null, null, false, null, null, null);
+		clienttasks.unregister(null, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, ConsumerType.candlepin, null, null, null, null, null, (String)null, null, null, null, null, false, null, null, null, null);
 		
 		// get a list of available pools and all available pools (for this candlepin consumer)
 		List<SubscriptionPool> compatiblePoolsAsCandlepinConsumer = clienttasks.getCurrentlyAvailableSubscriptionPools();
@@ -467,7 +467,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
 		
 		// register (as type candlepin)
-		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, ConsumerType.candlepin, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null));
+		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, ConsumerType.candlepin, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null));
 		
 		// by default, this consumer starts out with no capabilities
 		JSONObject jsonConsumer = (JSONObject) new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/consumers/"+consumerId));
@@ -549,7 +549,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		log.info("Now let's register a consumer of type=system and compare its list --all --available to the type=candlepin consumer's list --all --available.");
 		
 		// register (as type system)
-		consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, ConsumerType.system, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null));
+		consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, ConsumerType.system, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null));
 		List<SubscriptionPool> allAvailablePoolsToSystem = clienttasks.getCurrentlyAllAvailableSubscriptionPools();
 		List<SubscriptionPool> allAvailablePoolsToCandlepin = finalAllAvailablePools;
 		
@@ -604,7 +604,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		
 		Assert.assertEquals(factValue,fqdn,"System fact '"+fact+"' matches the system value from command '"+command+"'.");
 	}
-
+	
 	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
 			       , testCaseID = {"RHEL6-20019", "RHEL7-51036"})
 	@Test(	description="subscription-manager: assert presence of the new fact cpu.topology_source use to tell us what algorithm subscription-manager employed",
@@ -1007,7 +1007,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		client1tasks.createFactsFileWithOverridingValues(customFactsMap);
 		
 		// register client1 and get the original facts for consumerid from client1
-		String consumerId = client1tasks.getCurrentConsumerId(client1tasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, Boolean.TRUE, null, null, null, null));
+		String consumerId = client1tasks.getCurrentConsumerId(client1tasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, Boolean.TRUE, null, null, null, null, null));
 		Map<String,String> client1FactsMap = client1tasks.getFacts();
 		
 		// get consumerid's facts from Candlepin
@@ -1018,7 +1018,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		// assert that the candlepin's view of consumerid's facts are identical to the local client1's system facts
 		Assert.assertTrue(doSystemFactsMatchConsumerFacts(consumerId, client1FactsMap, consumer1FactsMap),"The facts on consumer '"+consumerId+"' known to the candlepin server are equivalent to the subscription-manager facts --list on client system '"+client1tasks.hostname+"'.");
 		
-		client1tasks.clean(null,null,null);
+		client1tasks.clean();
 		
 		
 		// give client2 a custom fact
@@ -1032,11 +1032,11 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.16.2-1")) {	// commit f14d2618ea94c18a0295ae3a5526a2ff252a3f99 Doesnt allow using --force with --consumerid
 			//	[root@jsefler-6 ~]# subscription-manager register --username=testuser1 --password=password --consumerid=fc1b9613-2793-4017-8b9f-a8ab85c5ba96 --force
 			//	Error: Can not force registration while attempting to recover registration with consumerid. Please use --force without --consumerid to re-register or use the clean command and try again without --force.
-			clienttasks.clean(null, null, null);
-			Assert.assertEquals(client2tasks.getCurrentConsumerId(client2tasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, consumerId, null, null, null, (String)null, null, null, null, false, null, null, null, null)), consumerId, "Registering to an existing consumerId should return the same consumerId.");
+			clienttasks.clean();
+			Assert.assertEquals(client2tasks.getCurrentConsumerId(client2tasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, consumerId, null, null, null, (String)null, null, null, null, false, null, null, null, null, null)), consumerId, "Registering to an existing consumerId should return the same consumerId.");
 
 		} else {
-			Assert.assertEquals(client2tasks.getCurrentConsumerId(client2tasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, consumerId, null, null, null, (String)null, null, null, null, true, null, null, null, null)), consumerId, "Registering to an existing consumerId should return the same consumerId.");
+			Assert.assertEquals(client2tasks.getCurrentConsumerId(client2tasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, consumerId, null, null, null, (String)null, null, null, null, true, null, null, null, null, null)), consumerId, "Registering to an existing consumerId should return the same consumerId.");
 		}
 		Map<String,String> client2FactsMap = client2tasks.getFacts();
 
@@ -1164,7 +1164,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		sshCommandResult = clienttasks.config(null, null, true, new String[]{"rhsm","report_package_profile","1"});
 		rhsmLogMarker = System.currentTimeMillis()+" Testing EnablementOfReportPackageProfile_Test during a register...";
 		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, rhsmLogMarker);
-		client1tasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, Boolean.TRUE, null, null, null, null);
+		client1tasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, Boolean.TRUE, null, null, null, null, null);
 		if (isPackagesSupported) {
 			Assert.assertTrue(RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, rhsmLogMarker, packagesNotSupportedLogMsg).trim().isEmpty(), "When the entitlements server supports package upload, this message should NOT be logged to "+clienttasks.rhsmLogFile+": "+packagesNotSupportedLogMsg);
 			Assert.assertTrue(RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, rhsmLogMarker, reportPackageProfileOffLogMsg).trim().isEmpty(), "When the entitlements server supports package upload and rhsm.report_package_profile is turned on , this message should NOT be logged to "+clienttasks.rhsmLogFile+": "+reportPackageProfileOffLogMsg);
@@ -1176,7 +1176,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		sshCommandResult = clienttasks.config(null, null, true, new String[]{"rhsm","report_package_profile","0"});
 		rhsmLogMarker = System.currentTimeMillis()+" Testing DisablementOfReportPackageProfile_Test during a register...";
 		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, rhsmLogMarker);
-		client1tasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, Boolean.TRUE, null, null, null, null);
+		client1tasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, Boolean.TRUE, null, null, null, null, null);
 		if (isPackagesSupported) {
 			Assert.assertTrue(RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, rhsmLogMarker, packagesNotSupportedLogMsg).trim().isEmpty(), "When the entitlements server supports package upload, this message should NOT be logged to "+clienttasks.rhsmLogFile+": "+packagesNotSupportedLogMsg);
 			Assert.assertTrue(!RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, rhsmLogMarker, reportPackageProfileOffLogMsg).trim().isEmpty(), "When the entitlements server supports package upload and rhsm.report_package_profile is turned off , this expected message should be logged to "+clienttasks.rhsmLogFile+": "+reportPackageProfileOffLogMsg);
@@ -1234,7 +1234,6 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		File malformedFactsFile = new File(clienttasks.factsDir+File.separatorChar+malformedFactsFilename);
 		
 		// mark the rhsm.log file
-//		client.runCommandAndWait("rm -f "+clienttasks.rhsmLogFile);	// remove it because it occasionally gets backed up to rhsm.log.1 in the midst of a pair of calls to RemoteFileTasks.markFile(...) and RemoteFileTasks.getTailFromMarkedFile(...)
 		String logMarker = System.currentTimeMillis()+" Testing MalformedCustomFacts_Test...";
 		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, logMarker);
 
@@ -1246,25 +1245,29 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		client.runCommandAndWait("cat "+malformedFactsFile);
 		
 		// attempt to register
-		SSHCommandResult result = clienttasks.register/*_*/(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, Boolean.TRUE, null, null, null, null);
+		SSHCommandResult result = clienttasks.register/*_*/(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, Boolean.TRUE, null, null, null, null, null);
 		
-		/* ORIGINAL FAILURE
-		//	[root@jsefler-5 ~]# subscription-manager register --username=testuser1 --password=password --org=admin --force
-		//	Expecting , delimiter: line 1 column 26 (char 26)
-		
+		/* No need to assert results because the register task will assert that the results are successful despite the malformed facts
 		// assert results
 		Assert.assertEquals(result.getExitCode(),Integer.valueOf(0),"Exitcode from an attempt to register with malformed facts file '"+malformedFactsFile+"'.");
 		Assert.assertEquals(result.getStdout(),"FIXME Need expected stdout message after bug 966747 is fixed","Stdout from an attempt to register with malformed facts file '"+malformedFactsFile+"'.");
 		Assert.assertEquals(result.getStderr(),"FIXME Need expected stderr message after bug 966747 is fixed","Stdout from an attempt to register with malformed facts file '"+malformedFactsFile+"'.");
 		*/
 		
-		/* FIXED BEHAVIOR */
-		// 2013-06-07 13:31:08,916 [WARNING]  @facts.py:125 - Unable to load custom facts file: /etc/rhsm/facts/malformed.facts
-		// get the tail of the marked rhsm.log file and assert
-		String logTail = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, logMarker, "WARNING").trim();
+		// get the tail of the marked rhsm.log file
+		String logTail = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, logMarker, null).trim();
+		
+		// assert a failure to load custom facts is logged
+		//	2013-06-07 13:31:08,916 [WARNING]  @facts.py:125 - Unable to load custom facts file: /etc/rhsm/facts/malformed.facts
 		String expectedLogMessage = "Unable to load custom facts file: "+malformedFactsFile;
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.19.3-1")) {	// commit 4b7a8d39888de09bbd98ad44807485635eece14d Bug 1435771: Fix UnboundLocalError during custom facts collection
+			//	2017-05-11 13:06:20,836 [INFO] subscription-manager:24583:MainThread @custom.py:85 - Loading custom facts from: /etc/rhsm/facts/malformed.facts
+			//	2017-05-11 13:06:20,837 [WARNING] subscription-manager:24583:MainThread @custom.py:40 - Unable to load custom facts file.
+			expectedLogMessage = "Loading custom facts from: "+malformedFactsFile;
+			Assert.assertTrue(logTail.contains(expectedLogMessage), "The '"+clienttasks.rhsmLogFile+"' reports expected log message '"+expectedLogMessage+"'.");
+			expectedLogMessage = "Unable to load custom facts file.";
+		}
 		Assert.assertTrue(logTail.contains(expectedLogMessage), "The '"+clienttasks.rhsmLogFile+"' reports expected log message '"+expectedLogMessage+"'.");
-
 	}
 	@AfterGroups(value={"MalformedCustomFacts_Test"},groups={"setup"})
 	public void afterMalformedCustomFacts_Test() {
@@ -1288,28 +1291,32 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		Assert.assertTrue(RemoteFileTasks.testExists(client, emptyFactsFile.getPath()), "The empty facts file should exist.");
 		
 		// mark the rhsm.log file
-//		client.runCommandAndWait("rm -f "+clienttasks.rhsmLogFile);	// remove it because it occasionally gets backed up to rhsm.log.1 in the midst of a pair of calls to RemoteFileTasks.markFile(...) and RemoteFileTasks.getTailFromMarkedFile(...)
 		String logMarker = System.currentTimeMillis()+" Testing EmptyCustomFacts_Test...";
 		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, logMarker);
 		
 		// attempt to register
-		SSHCommandResult result = clienttasks.register/*_*/(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, Boolean.TRUE, null, null, null, null);
+		SSHCommandResult result = clienttasks.register/*_*/(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, Boolean.TRUE, null, null, null, null, null);
 		
-		/* ORIGINAL FAILURE
-		//	[root@jsefler-5 ~]# subscription-manager register --username=testuser1 --password=password --org=admin --force
-		//	No JSON object could be decoded
-		
+		/* No need to assert results because the register task above will assert that the results are successful despite the empty facts
 		// assert results
 		Assert.assertEquals(result.getExitCode(),Integer.valueOf(0),"Exitcode from an attempt to register with an empty facts file '"+emptyFactsFile+"'.");
 		Assert.assertEquals(result.getStdout(),"FIXME Need expected stdout message after bug 966747 is fixed","Stdout from an attempt to register with an empty facts file '"+emptyFactsFile+"'.");
 		Assert.assertEquals(result.getStderr(),"FIXME Need expected stderr message after bug 966747 is fixed","Stdout from an attempt to register with an empty facts file '"+emptyFactsFile+"'.");
 		*/
 		
-		/* FIXED BEHAVIOR */
-		// 2013-06-07 13:31:08,916 [WARNING]  @facts.py:125 - Unable to load custom facts file: /etc/rhsm/facts/empty.facts
-		// get the tail of the marked rhsm.log file and assert
-		String logTail = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, logMarker, "WARNING").trim();
+		// get the tail of the marked rhsm.log file
+		String logTail = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, logMarker, null).trim();
+		
+		// assert a failure to load custom facts is logged
+		//	2013-06-07 13:31:08,916 [WARNING]  @facts.py:125 - Unable to load custom facts file: /etc/rhsm/facts/empty.facts
 		String expectedLogMessage = "Unable to load custom facts file: "+emptyFactsFile;
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.19.3-1")) {	// commit 4b7a8d39888de09bbd98ad44807485635eece14d Bug 1435771: Fix UnboundLocalError during custom facts collection
+			//	2017-05-11 13:06:20,836 [INFO] subscription-manager:24583:MainThread @custom.py:85 - Loading custom facts from: /etc/rhsm/facts/empty.facts
+			//	2017-05-11 13:06:20,837 [WARNING] subscription-manager:24583:MainThread @custom.py:40 - Unable to load custom facts file.
+			expectedLogMessage = "Loading custom facts from: "+emptyFactsFile;
+			Assert.assertTrue(logTail.contains(expectedLogMessage), "The '"+clienttasks.rhsmLogFile+"' reports expected log message '"+expectedLogMessage+"'.");
+			expectedLogMessage = "Unable to load custom facts file.";
+		} else
 		Assert.assertTrue(logTail.contains(expectedLogMessage), "The '"+clienttasks.rhsmLogFile+"' reports expected log message '"+expectedLogMessage+"'.");
 
 	}
@@ -1324,7 +1331,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
 			       , testCaseID = {"RHEL6-36616", "RHEL7-51426"})
 	@Test(	description="verify that the facts --list of name keys is independent of LANG/LC_ALL...  For example when LC_ALL=fr_FR.UTF-8 subscription-manager facts --list, EXPECTED: lscpu.virtualization_type: full  ACTUAL(failed): lscpu.type_de_virtualisation: complet",
-			groups={"blockedByBug-1225435"},
+			groups={"blockedByBug-1225435","blockedByBug-1450210"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyFactKeyNamesListedIsLangIndependent_Test() {
@@ -1351,8 +1358,40 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		}
 		Assert.assertTrue(allBaseFactKeyAreLangIndependent, "All the fact keys are independent of lang.  If this fails, see the warnings logged above.");
 	}
-
-
+	
+	
+	@Test(	description = "Verify the system.default_locale is included in facts list and resolves to the actual LANG of the shell",
+			groups = {"blockedByBug-1425922" },
+			enabled = true)
+	public void VerifySystemDefaultLocaleInFacts_Test() {
+		if (clienttasks.isPackageVersion("python-rhsm", "<", "1.19.3-1")) {	// commit 0670d70540a24a8e173d347e2240dcfb7535608a Bug 1425922: System locale in facts
+			throw new SkipException("This test applies a newer version of subscription manager that includes an implementation for RFE Bug 1425922.");
+		}
+		
+		String systemDefaultLocaleFact = "system.default_locale";
+		String systemDefaultLocaleFactValue= clienttasks.getFactValue(systemDefaultLocaleFact);
+		
+		// TEST 1
+		// assert that a fact is collected for the system default locale
+		//	[root@jsefler-rhel7 ~]# locale | grep LANG
+		//	LANG=en_US.UTF-8
+		String systemDefaultLocale = client.runCommandAndWait("locale | grep LANG").getStdout().trim().split("=")[1];
+		Assert.assertEquals(systemDefaultLocaleFactValue, systemDefaultLocale, "The system's value for fact '"+systemDefaultLocaleFact+"'.");
+		
+		// TEST 2
+		// loop through all the supported LANGS and assert that the fact is collected and the value is expected when the shell is run in each LANG
+		for (String lang : TranslationTests.supportedLangs) {
+			lang += ".UTF-8";	// append -UTF-8
+			
+			// get the facts for lang using the locale variable "LC_ALL"
+			Map<String,String> langFacts = clienttasks.getFacts("LC_ALL",lang,systemDefaultLocaleFact);
+			
+			// assert that the collected value for fact "system.default_locale" matches the LANG of the shell
+			Assert.assertEquals(langFacts.get(systemDefaultLocaleFact), lang, "The system's value for fact '"+systemDefaultLocaleFact+"' when run in a shell where LC_ALL='"+lang+"'.");
+		}
+	}
+	
+	
 	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
 			       , testCaseID = {"RHEL6-22221", "RHEL7-51427"})
 	@Test(	description="Verify proc_cpuinfo facts are now collected on subscription-manager-1.16.8-2+.  On ppc64 systems, also verify that a virt.uuid is collected on a pSeries platform.",
@@ -1368,7 +1407,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		
 		// log info about virt-what
 		client.runCommandAndWait("rpm -q virt-what");
-		client.runCommandAndWait("virt-what");
+		SSHCommandResult virtWhatResult = client.runCommandAndWait("virt-what");
 		
 		// this is the list of base facts in English
 		Map<String,String> procCpuInfoFacts = clienttasks.getFacts("proc_cpuinfo.common");
@@ -1423,9 +1462,12 @@ if (false) { // DO NOT RUN, BUT NOT READY TO DELETE CODE
 			String virtUuid = clienttasks.getFactValue("virt.uuid");
 			if (RemoteFileTasks.testExists(client, procDeviceTreeVmUuidFile)) {
 				String expectedVirtUuid = client.runCommandAndWait("cat "+procDeviceTreeVmUuidFile).getStdout().trim();
-				Assert.assertNotNull(virtUuid, "The virt.uuid fact is set on a '"+clienttasks.arch+"' platform when "+procDeviceTreeVmUuidFile+" is defined.");
-				Assert.assertEquals(virtUuid, expectedVirtUuid, "The virt.uuid fact on a '"+clienttasks.arch+"' '"+procCpuInfoFacts.get("proc_cpuinfo.common.model")+"' '"+procCpuInfoFacts.get("proc_cpuinfo.common.platform")+"' platform should match the contents of "+procDeviceTreeVmUuidFile);
-								
+				if (virtWhatResult.getStdout().isEmpty()) {	// when virt-what reports nothing, then this system is physical!
+					Assert.assertNull(virtUuid, "The virt.uuid fact is NOT set on a '"+clienttasks.arch+"' platform when virt-what reports nothing despite the fact that "+procDeviceTreeVmUuidFile+" is defined.");
+				} else {
+					Assert.assertNotNull(virtUuid, "The virt.uuid fact is set on a '"+clienttasks.arch+"' platform when "+procDeviceTreeVmUuidFile+" is defined.");
+					Assert.assertEquals(virtUuid, expectedVirtUuid, "The virt.uuid fact on a '"+clienttasks.arch+"' '"+procCpuInfoFacts.get("proc_cpuinfo.common.model")+"' '"+procCpuInfoFacts.get("proc_cpuinfo.common.platform")+"' platform should match the contents of "+procDeviceTreeVmUuidFile);
+				}
 				// assert virt.is_guest is True
 //				// TEMPORARY WORKAROUND FOR BUG
 //				// Bug 1072524 has been VERIFIED
@@ -1509,13 +1551,13 @@ if (false) { // DO NOT RUN, BUT NOT READY TO DELETE CODE
 	
 	// Configuration Methods ***********************************************************************
 	@BeforeClass(groups={"setup"})
-	protected void removeRhsmLogBeforeClass() {
+	protected void truncateRhsmLogBeforeClass() {
 		if (client==null) return;
 		
-		// remove the rhsm.log before this class to effectively reduce its size because it
+		// truncate the rhsm.log before this class to reduce its size because it
 		// occasionally gets backed up to rhsm.log.1 in the midst of a pair of calls to
 		// RemoteFileTasks.markFile(...) and RemoteFileTasks.getTailFromMarkedFile(...)
-		client.runCommandAndWait("rm -f "+clienttasks.rhsmLogFile);
+		client.runCommandAndWait("truncate --size=0 --no-create "+clienttasks.rhsmLogFile);
 	}
 	
 	

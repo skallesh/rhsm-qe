@@ -74,13 +74,13 @@ public class ContentIntegrationTests extends SubscriptionManagerCLITestScript{
 			factsMap.put("cpu.cpu_socket(s)", String.valueOf(moreSockets));
 			//factsMap.put("lscpu.cpu_socket(s)", String.valueOf(moreSockets));
 			clienttasks.createFactsFileWithOverridingValues(factsMap);
-			clienttasks.facts(null,true,null,null,null);
+			clienttasks.facts(null,true,null,null,null, null);
 			SubscriptionPool pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", productId, clienttasks.getCurrentlyAvailableSubscriptionPools());
 			Assert.assertNull(pool, "Subscription pool for product '"+productId+"' is NOT available when the client's sockets (simulated cpu.cpu_socket(s)='"+moreSockets+"') exceed '"+sockets+"'.");
 			factsMap.put("cpu.cpu_socket(s)", String.valueOf(sockets));
 			//factsMap.put("lscpu.cpu_socket(s)", String.valueOf(sockets));
 			clienttasks.createFactsFileWithOverridingValues(factsMap);
-			clienttasks.facts(null,true,null,null,null);
+			clienttasks.facts(null,true,null,null,null, null);
 		}
 
 		// get the pools available to this registered consumer
@@ -523,7 +523,7 @@ Fixed.  Thanks for catching that.
 			}
 			
 			// register
-			clienttasks.register(username, password, null, null, type, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+			clienttasks.register(username, password, null, null, type, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
 			currentRegisteredUsername = username;
 			currentlySubscribedProductIds.clear();
 		} else {

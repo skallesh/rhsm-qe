@@ -40,8 +40,8 @@ public class RefreshTests extends SubscriptionManagerCLITestScript {
 		
 		// Start fresh by unregistering and registering...
 		log.info("Start fresh by unregistering and registering...");
-		clienttasks.unregister(null, null, null);
-		clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null, null, null, null, (String)null, null, null, null, null, false, null, null, null));
+		clienttasks.unregister(null, null, null, null);
+		clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null, null, null, null, (String)null, null, null, null, null, false, null, null, null, null));
 		
 		// make sure the certFrequency will not affect the results of this test
 		log.info("Change the certFrequency to a large value to assure the rhsmcertd does not interfere with this test.");
@@ -83,7 +83,7 @@ public class RefreshTests extends SubscriptionManagerCLITestScript {
 		
 		// refresh
 		log.info("Refresh...");
-		clienttasks.refresh(null, null, null);
+		clienttasks.refresh(null, null, null, null);
 		
 		// was subscription-manager "Unable to refresh" as a result of a 404 trying to PUT?
 		String rhsmLogTail = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, rhsmLogMarker, "Unable to refresh");

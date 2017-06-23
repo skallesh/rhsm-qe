@@ -50,7 +50,7 @@ public class ModifierTests extends SubscriptionManagerCLITestScript {
 		// avoid throttling RateLimitExceededException from IT-Candlepin
 		if (!modifierPoolIds.contains(modifierPool.poolId) && CandlepinType.hosted.equals(sm_serverType)) {	// strategically get a new consumer to avoid 60 repeated API calls from the same consumer
 			// re-register as a new consumer
-			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
 		}
 		modifierPoolIds.add(modifierPool.poolId);
 		
@@ -113,7 +113,7 @@ public class ModifierTests extends SubscriptionManagerCLITestScript {
 		List<String> modifiedPoolIds = new ArrayList<String>();
 		if (poolsModified.isEmpty()) throw new SkipException("Cannot complete this test because it appears that there are no modifiable pools (e.g. EUS extended update subscription) available to this consumer's organization that can be modified by the modifier pool '"+modifierPool.subscriptionName+"'.");
 		for (SubscriptionPool pool : poolsModified) modifiedPoolIds.add(pool.poolId);
-		clienttasks.subscribe(null, null, modifiedPoolIds, null, null, null, null, null, null, null, null, null);
+		clienttasks.subscribe(null, null, modifiedPoolIds, null, null, null, null, null, null, null, null, null, null);
 		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(clienttasks.subscribeToSubscriptionPool(modifierPool,sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl));
 		if (areAllRequiredTagsProvided) {
 			Assert.assertTrue(clienttasks.getYumRepolist("all").contains(label),
@@ -143,13 +143,13 @@ public class ModifierTests extends SubscriptionManagerCLITestScript {
 		
 	@BeforeClass(groups="setup")
 	public void registerBeforeClass() throws Exception {
-		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, Boolean.TRUE, false, null, null, null));
+		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, Boolean.TRUE, false, null, null, null, null));
 		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerId);
 	}
 	
 	@AfterClass(groups="setup")
 	public void unregisterAfterClass() {
-		clienttasks.unregister(null, null, null);
+		clienttasks.unregister(null, null, null, null);
 	}
 	
 	// protected methods ***********************************************************************

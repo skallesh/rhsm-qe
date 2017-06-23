@@ -49,7 +49,7 @@ public class OrgsTests extends SubscriptionManagerCLITestScript {
 		log.info("Testing subscription-manager orgs module using username="+username+" password="+password+" and expecting orgs="+expectedOrgs+" ...");
 		
 		// use subscription-manager to get the organizations for which the user has access
-		SSHCommandResult orgsResult = clienttasks.orgs_(username, password, null, null, null, null, null);
+		SSHCommandResult orgsResult = clienttasks.orgs_(username, password, null, null, null, null, null, null);
 		
 		// when the expectedOrgs is empty, there is a special message, assert it
 		if (expectedOrgs.isEmpty()) {
@@ -79,7 +79,7 @@ public class OrgsTests extends SubscriptionManagerCLITestScript {
 		log.info("Testing subscription-manager orgs module using username="+username+" password="+password+" ...");
 		
 		// use subscription-manager to get the organizations for which the user has access
-		SSHCommandResult sshCommandResult = clienttasks.orgs_(username, password, null, null, null, null, null);
+		SSHCommandResult sshCommandResult = clienttasks.orgs_(username, password, null, null, null, null, null, null);
 		
 		// assert the sshCommandResult here
 		Integer expectedExitCode = new Integer(255);
@@ -189,7 +189,7 @@ public class OrgsTests extends SubscriptionManagerCLITestScript {
 		String prefixBeforeTest		= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "prefix");
 		
 		// orgs with a serverurl
-		SSHCommandResult sshCommandResult = clienttasks.orgs_(sm_clientUsername,sm_clientPassword,serverurl, null, null, null, null);
+		SSHCommandResult sshCommandResult = clienttasks.orgs_(sm_clientUsername,sm_clientPassword,serverurl, null, null, null, null, null);
 		
 		// assert the sshCommandResult here
 		if (expectedExitCode!=null)	Assert.assertEquals(sshCommandResult.getExitCode(), expectedExitCode,"ExitCode after register with --serverurl="+serverurl+" and other options:");
@@ -238,14 +238,14 @@ public class OrgsTests extends SubscriptionManagerCLITestScript {
 		SSHCommandResult sshCommandResult;
 		
 		// calling orgs without insecure should pass
-		sshCommandResult = clienttasks.orgs(sm_clientUsername,sm_clientPassword, null, false, null, null, null);
+		sshCommandResult = clienttasks.orgs(sm_clientUsername,sm_clientPassword, null, false, null, null, null, null);
 		
 		// change the rhsm.ca_cert_dir configuration to simulate a missing candlepin ca cert
 		client.runCommandAndWait("mkdir -p /tmp/emptyDir");
 		sshCommandResult = clienttasks.config(null, null, true, new String[]{"rhsm","ca_cert_dir","/tmp/emptyDir"});
 		
 		// calling orgs without insecure should now fail (throwing stderr "certificate verify failed")
-		sshCommandResult = clienttasks.orgs_(sm_clientUsername,sm_clientPassword, null, false, null, null, null);
+		sshCommandResult = clienttasks.orgs_(sm_clientUsername,sm_clientPassword, null, false, null, null, null, null);
 		Integer expectedExitCode = new Integer(255);
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) expectedExitCode = new Integer(70);	// EX_SOFTWARE	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
 		Assert.assertEquals(sshCommandResult.getExitCode(), expectedExitCode, "Exitcode from the orgs command when configuration rhsm.ca_cert_dir has been falsified.");
@@ -264,7 +264,7 @@ public class OrgsTests extends SubscriptionManagerCLITestScript {
 		}
 		
 		// calling orgs with insecure should now pass
-		sshCommandResult = clienttasks.orgs(sm_clientUsername,sm_clientPassword, null, true, null, null, null);
+		sshCommandResult = clienttasks.orgs(sm_clientUsername,sm_clientPassword, null, true, null, null, null, null);
 		
 		// assert that option --insecure did NOT persist to rhsm.conf
 		Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "insecure"), "0", "Expected value of "+clienttasks.rhsmConfFile+" server.insecure configuration.  Use of the --insecure option when calling the orgs module should NOT be persisted to rhsm.conf as true.");
@@ -293,12 +293,12 @@ public class OrgsTests extends SubscriptionManagerCLITestScript {
 		boolean skipTest = true;
 		Set<String> poolIdsTested = new HashSet<String>();
 		
-		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
 		String ownerKey = clienttasks.getCurrentlyRegisteredOwnerKey();
 		for (RegistrationData registrationDatum :  getRandomSubsetOfList(findGoodRegistrationData(false, sm_clientUsername,false, ownerKey),3)) {
 			for (SubscriptionPool subscriptionPool : getRandomSubsetOfList(registrationDatum.allAvailableSubscriptionPools,3)) {
 				if (!poolIdsTested.contains(subscriptionPool.poolId)) {
-					SSHCommandResult sshCommandResult = clienttasks.subscribe_(false, null, subscriptionPool.poolId, null, null, null, null, null, null, null, null, null);
+					SSHCommandResult sshCommandResult = clienttasks.subscribe_(false, null, subscriptionPool.poolId, null, null, null, null, null, null, null, null, null, null);
 					//Assert.assertEquals(sshCommandResult.getStdout().trim(), "Insufficient permissions", "Stdout from an attempt to subscribe to pool id '"+subscriptionPool.poolId+"' belonging to a different org '"+registrationDatum.ownerKey+"'.");	// server response 403 Forbidden
 					Assert.assertEquals(sshCommandResult.getStdout().trim(), String.format("Pool with id %s could not be found.",subscriptionPool.poolId), "Stdout from an attempt to subscribe to pool id '"+subscriptionPool.poolId+"' belonging to a different org '"+registrationDatum.ownerKey+"'.");	// new server response 404 Not Found from candlepin pull request https://github.com/candlepin/candlepin/pull/444 'Update auth system to allow "my system" administrators'
 					Assert.assertEquals(sshCommandResult.getStderr().trim(), "", "Stderr from an attempt to subscribe to pool id '"+subscriptionPool.poolId+"' belonging to a different org '"+registrationDatum.ownerKey+"'.");

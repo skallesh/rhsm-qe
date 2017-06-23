@@ -43,14 +43,14 @@ public class StatusTests extends SubscriptionManagerCLITestScript{
 			//@ImplementsNitrateTest(caseId=)
 	public void StatusIsTheDefault_Test() {
 		String overallStatusLabel = "Overall Status:";
-		clienttasks.unregister(null,null,null);
+		clienttasks.unregister(null,null,null, null);
 		SSHCommandResult defaultResult = RemoteFileTasks.runCommandAndAssert(client,clienttasks.command,Integer.valueOf(0));
-		SSHCommandResult statusResult = clienttasks.status(null, null, null, null);
+		SSHCommandResult statusResult = clienttasks.status(null, null, null, null, null);
 		Assert.assertTrue(statusResult.getStdout().contains(overallStatusLabel),"Expected status to report '"+overallStatusLabel+"'.");
 		Assert.assertTrue(defaultResult.toString().equals(statusResult.toString()), "When not registered, the default output running subscription-manager with no arguments should be identical to output from the status module.");
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
 		defaultResult = RemoteFileTasks.runCommandAndAssert(client,clienttasks.command,Integer.valueOf(0));
-		statusResult = clienttasks.status(null, null, null, null);
+		statusResult = clienttasks.status(null, null, null, null, null);
 		Assert.assertTrue(defaultResult.toString().split(overallStatusLabel)[0].equals(statusResult.toString().split(overallStatusLabel)[0]), "When registered, the default output running subscription-manager with no arguments should default to the status module.");
 	}
 
@@ -63,8 +63,8 @@ public class StatusTests extends SubscriptionManagerCLITestScript{
 			//@ImplementsNitrateTest(caseId=)
 	public void StatusWithoutBeingRegistered_Test() {
 		SSHCommandResult statusResult;
-		clienttasks.unregister(null,null,null);
-		statusResult = clienttasks.status(null, null, null, null);
+		clienttasks.unregister(null,null,null, null);
+		statusResult = clienttasks.status(null, null, null, null, null);
 		
 		//	[root@jsefler-5 ~]# subscription-manager status
 		//	+-------------------------------------------+
@@ -87,9 +87,9 @@ public class StatusTests extends SubscriptionManagerCLITestScript{
 	public void StatusWhileRegisteredWithoutEntitlements_Test() {
 		int numberOfInstalledProducts = clienttasks.getCurrentProductCertFiles().size();
 		SSHCommandResult statusResult;
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
 		List<InstalledProduct> installedProducts = clienttasks.getCurrentlyInstalledProducts();
-		statusResult = clienttasks.status(null, null, null, null);
+		statusResult = clienttasks.status(null, null, null, null, null);
 		
 		//	[root@jsefler-5 ~]# subscription-manager status
 		//	+-------------------------------------------+
@@ -139,10 +139,10 @@ public class StatusTests extends SubscriptionManagerCLITestScript{
 		factsMap.put("cpu.cpu_socket(s)", "100");
 		factsMap.put("cpu.core(s)_per_socket", "2");
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
 		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
 		String systemEntitlementsValid = clienttasks.getFactValue("system.entitlements_valid");
-		statusResult = clienttasks.status(null, null, null, null);
+		statusResult = clienttasks.status(null, null, null, null, null);
 		
 		//	[root@jsefler-5 ~]# subscription-manager status
 		//	+-------------------------------------------+
@@ -352,25 +352,27 @@ public class StatusTests extends SubscriptionManagerCLITestScript{
 		if (clienttasks.isPackageVersion("subscription-manager","<","1.9.2-1")) throw new SkipException("Installed package '"+clienttasks.installedPackageVersionMap.get("subscription-manager")+"' does not support status --ondate option.  It was introduced in subscription-manager-1.9.2-1.");
 		
 		// register with autosubscribe to establish today's status
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null, null);
 		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
 		
 		// make sure at least one installed product was subscribed, otherwise this test is not applicable
+		List <InstalledProduct> installedProducts = clienttasks.getCurrentlyInstalledProducts();
+		boolean noInstalledProducts = installedProducts.isEmpty();
 		boolean areAnyInstalledProductsSubscribable = false;
-		for (InstalledProduct installedProduct : clienttasks.getCurrentlyInstalledProducts()) {
+		for (InstalledProduct installedProduct : installedProducts) {
 			if (installedProduct.status.equals("Subscribed") || installedProduct.status.equals("Partially Subscribed")) {
 				areAnyInstalledProductsSubscribable = true; break;
 			}
 		}
 		// get today's status
-		SSHCommandResult statusResultToday = clienttasks.status(null,null,null, null);
+		SSHCommandResult statusResultToday = clienttasks.status(null,null,null, null, null);
 		Map<String,String> statusMapToday = getProductStatusMapFromStatusResult(statusResultToday);
 		
 		// get tomorrow's status
 		DateFormat yyyy_MM_dd_DateFormat = new SimpleDateFormat("yyyy-MM-dd");
 		Calendar tomorrow = new GregorianCalendar(); tomorrow.add(Calendar.HOUR, 24);
 		String onDateTomorrow = yyyy_MM_dd_DateFormat.format(tomorrow.getTime());
-		SSHCommandResult statusResultTomorrow = clienttasks.status(onDateTomorrow,null,null, null);
+		SSHCommandResult statusResultTomorrow = clienttasks.status(onDateTomorrow,null,null, null, null);
 		Map<String,String> statusMapTomorrow = getProductStatusMapFromStatusResult(statusResultTomorrow);
 		
 		// assert tomorrow's status is identical to today's (assumes no change in coverage)
@@ -383,19 +385,26 @@ public class StatusTests extends SubscriptionManagerCLITestScript{
 		for (ProductSubscription productSubscription : consumedProductSubscriptions) if (productSubscription.endDate.after(future)) future = productSubscription.endDate;
 		future.add(Calendar.HOUR, 24);	// add one day
 		String onDateFuture = yyyy_MM_dd_DateFormat.format(future.getTime());
-		SSHCommandResult statusResultFuture = clienttasks.status(onDateFuture,null,null, null);
+		SSHCommandResult statusResultFuture = clienttasks.status(onDateFuture,null,null, null, null);
 		Map<String,String> statusMapFuture = getProductStatusMapFromStatusResult(statusResultFuture);
 		
 		// assert future status is NOT identical to today's (assumes entitlements have expired)
-		if (areAnyInstalledProductsSubscribable) {
+		log.info("Status Map ondate=today: "+statusMapToday);
+		log.info("Status Map ondate=future: "+statusMapFuture);
+		if (areAnyInstalledProductsSubscribable || noInstalledProducts) {
 			Assert.assertTrue(!statusMapFuture.equals(statusMapToday),"Asserting that the status --ondate=future (the day after an entitlement expires) will NOT be identical to the status ondate=today (default).");
 		} else {
 			Assert.assertTrue(statusMapFuture.equals(statusMapToday),"Asserting that the status --ondate=future (the day after an entitlement expires) will be identical to the status ondate=today (default) because none of the subscriptions applied today provide coverage for the products installed today.");			
 		}
-		// assert future status is Invalid
-		String expectedStatus = "Overall Status: Invalid";
-		Assert.assertTrue(statusResultFuture.getStdout().contains(expectedStatus), "Expecting '"+expectedStatus+"' onDate '"+onDateFuture+"' which is one day beyond the most future endDate of the currently consumed subscriptions.");
-
+		
+		// assert future status
+		if (noInstalledProducts) {
+			String expectedStatus = "Overall Status: Current";
+			Assert.assertTrue(statusResultFuture.getStdout().contains(expectedStatus), "Expecting '"+expectedStatus+"' onDate '"+onDateFuture+"' which is one day beyond the most future endDate of the currently consumed subscriptions - when there are no installed products.");
+		} else {
+			String expectedStatus = "Overall Status: Invalid";
+			Assert.assertTrue(statusResultFuture.getStdout().contains(expectedStatus), "Expecting '"+expectedStatus+"' onDate '"+onDateFuture+"' which is one day beyond the most future endDate of the currently consumed subscriptions.");
+		}
 	}
 
 
@@ -412,7 +421,7 @@ public class StatusTests extends SubscriptionManagerCLITestScript{
 		DateFormat yyyy_MM_dd_DateFormat = new SimpleDateFormat("yyyy-MM-dd");
 		Calendar yesterday = new GregorianCalendar(); yesterday.add(Calendar.HOUR, -24);
 		String onDateYesterday = yyyy_MM_dd_DateFormat.format(yesterday.getTime());
-		SSHCommandResult statusResultYesterday = clienttasks.status_(onDateYesterday,null,null, null);
+		SSHCommandResult statusResultYesterday = clienttasks.status_(onDateYesterday,null,null, null, null);
 		
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
 			Assert.assertEquals(statusResultYesterday.getStderr().trim(), "Past dates are not allowed", "Stderr from call to status ondate yesterday.");
@@ -436,7 +445,7 @@ public class StatusTests extends SubscriptionManagerCLITestScript{
 		if (clienttasks.isPackageVersion("subscription-manager","<","1.9.2-1")) throw new SkipException("Installed package '"+clienttasks.installedPackageVersionMap.get("subscription-manager")+"' does not support status --ondate option.  It was introduced in subscription-manager-1.9.2-1.");
 		
 		// call status with an invalid ondate
-		SSHCommandResult statusResultYesterday = clienttasks.status_("2000-13-01",null,null, null);	// lucky month 13
+		SSHCommandResult statusResultYesterday = clienttasks.status_("2000-13-01",null,null, null, null);	// lucky month 13
 		
 		DateFormat yyyy_MM_dd_DateFormat = new SimpleDateFormat("yyyy-MM-dd");
 		String today = yyyy_MM_dd_DateFormat.format(Calendar.getInstance().getTime());

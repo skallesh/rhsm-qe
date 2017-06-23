@@ -35,12 +35,12 @@ public class UnregisterTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	@ImplementsNitrateTest(caseId=46714)
 	public void RegisterSubscribeAndUnregisterTest() {
-		clienttasks.unregister(null, null, null);
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, null, false, null, null, null);
+		clienttasks.unregister(null, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, null, false, null, null, null, null);
 		List<SubscriptionPool> availPoolsBeforeSubscribingToAllPools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsIndividually();
-		clienttasks.unregister(null, null, null);
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, null, false, null, null, null);
+		clienttasks.unregister(null, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, null, false, null, null, null, null);
 		for (SubscriptionPool afterPool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
 			SubscriptionPool originalPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", afterPool.poolId, availPoolsBeforeSubscribingToAllPools);
 			Assert.assertEquals(originalPool.quantity, afterPool.quantity,
@@ -81,8 +81,8 @@ public class UnregisterTests extends SubscriptionManagerCLITestScript {
 			// this is a workaround as shown in the ADDTIONAL INFO of Bug 1351370 TO RECOVER FROM A BAD STATE
 			SSHCommandResult selinuxModeResult = client.runCommandAndWait("getenforce");	// Enforcing
 			client.runCommandAndWait("setenforce Permissive");
-			clienttasks.unregister_(null, null, null);
-			clienttasks.clean_(null, null, null);
+			clienttasks.unregister_(null, null, null, null);
+			clienttasks.clean_();
 			client.runCommandAndWait("setenforce "+selinuxModeResult.getStdout().trim());
 		}
 		// END OF WORKAROUND
@@ -90,7 +90,7 @@ public class UnregisterTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg);
 		String logMarker = System.currentTimeMillis()+" Testing UnregisterShouldNotThrowUnauthorizedRequests_Test...";
 		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, logMarker);
-		clienttasks.unregister(null, null, null);
+		clienttasks.unregister(null, null, null, null);
 		//	[root@jsefler-6 ~]# grep -A1 "Making request" /var/log/rhsm/rhsm.log
 		//	2013-09-16 11:53:26,339 [DEBUG]  @connection.py:441 - Making request: DELETE /subscription/consumers/71775a6e-40e0-4422-8db6-5bff074389ef
 		//	2013-09-16 11:53:27,045 [DEBUG]  @connection.py:460 - Response status: 204

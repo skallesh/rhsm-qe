@@ -45,7 +45,7 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
 			       , testCaseID = {"RHEL6-20027", "RHEL7-51043"})
 	@Test(	description="subscription-manager: import a valid version 1.0 entitlement cert/key bundle and verify subscriptions are consumed",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-962520"},
+			groups={"AcceptanceTests","Tier1Tests","blockedByBug-962520","blockedByBug-1443693"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void ImportAnEntitlementVersion1CertAndKeyFromFile_Test() {
@@ -294,7 +294,7 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
 			       , testCaseID = {"RHEL6-36632", "RHEL7-51442"})
 	@Test(	description="subscription-manager: import a certificate for a future entitlement",
-			groups={"blockedByBug-860344"},
+			groups={"blockedByBug-860344","blockedByBug-1440180"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
 	public void ImportACertificateForAFutureEntitlement_Test() throws Exception {
@@ -507,7 +507,7 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 	public void ImportACertificateAndUnsubscribeWhileNotRegistered_Test() {
 		
 		// make sure we are NOT registered
-		clienttasks.unregister(null,null,null);
+		clienttasks.unregister(null,null,null, null);
 		
 		// make sure we are not consuming
 		List<ProductSubscription> productSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
@@ -521,7 +521,7 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(productSubscriptions.size()>0, "We should now be consuming an entitlement.");
 
 		// attempt to unsubscribe from it
-		clienttasks.unsubscribe(null, productSubscriptions.get(0).serialNumber, null,null,null, null);
+		clienttasks.unsubscribe(null, productSubscriptions.get(0).serialNumber, null,null,null, null, null);
 		productSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
 		Assert.assertEquals(productSubscriptions.size(), 0, "We should no longer be consuming the imported entitlement after unsubscribing (while not registered).");
 	}
@@ -638,15 +638,15 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 	@BeforeMethod(groups={"setup"})
 	public void removeAllEntitlementCertsBeforeEachTest() {
 		//clienttasks.removeAllCerts(false, true);
-		clienttasks.clean(null,null,null);
+		clienttasks.clean();
 	}
 	
 	@AfterClass(groups={"setup"}, alwaysRun=true)
 	public void cleanupAfterClass() {
 		if (clienttasks==null) return;
 		if (originalEntitlementCertDir!=null) clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "entitlementCertDir", originalEntitlementCertDir);
-		clienttasks.unregister_(null,null,null);
-		clienttasks.clean_(null,null,null);
+		clienttasks.unregister_(null,null,null, null);
+		clienttasks.clean_();
 	}
 	
 	
@@ -661,7 +661,7 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 		
 		// register
 		//clienttasks.unregister(null,null,null);	// avoid Bug 733525 - [Errno 2] No such file or directory: '/etc/pki/entitlement'
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
 
 		// change the entitlementCertDir to a temporary location to store all of the entitlements that will be used for importing
 		originalEntitlementCertDir = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "entitlementCertDir");
@@ -690,15 +690,25 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 			SubscriptionPool futurePool = (SubscriptionPool) getRandomListItem(futureSystemSubscriptionPoolsDataAsListOfLists).get(0);
 			
 			// subscribe to the future subscription pool
-			SSHCommandResult subscribeResult = clienttasks.subscribe(null,null,futurePool.poolId,null,null,null,null,null,null,null, null, null);
+			SSHCommandResult subscribeResult = clienttasks.subscribe(null,null,futurePool.poolId,null,null,null,null,null,null,null, null, null, null);
 	
 			// assert that the granted entitlement cert begins in the future
 			Calendar now = new GregorianCalendar();	now.setTimeInMillis(System.currentTimeMillis());
 			EntitlementCert futureEntitlementCert = clienttasks.getEntitlementCertCorrespondingToSubscribedPool(futurePool);		
 			
 			Assert.assertNotNull(futureEntitlementCert,"Found the newly granted EntitlementCert on the client after subscribing to future subscription pool '"+futurePool.poolId+"'.");
+			
+			// TEMPORARY WORKAROUND
+			Boolean invokeWorkaroundWhileBugIsOpen = true;
+			String bugId="1440180";	// Bug 1440180 - Attaching a future pool that will start one year from today changes the supposedly inactive subscription to current subscription
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			if (invokeWorkaroundWhileBugIsOpen) {
+				log.warning("Skipping validity and startDate assertions on future entitlement while bug "+bugId+" is open.");
+			} else {
+			// END OF WORKAROUND
 			Assert.assertTrue(futureEntitlementCert.validityNotBefore.after(now), "The newly granted EntitlementCert is not valid until the future.  EntitlementCert: "+futureEntitlementCert);
 			Assert.assertTrue(futureEntitlementCert.orderNamespace.startDate.after(now), "The newly granted EntitlementCert's OrderNamespace starts in the future.  OrderNamespace: "+futureEntitlementCert.orderNamespace);	
+			}
 			
 			// remember the futureEntitlementCertFile
 			futureEntitlementCertFile = clienttasks.getEntitlementCertFileFromEntitlementCert(futureEntitlementCert);
@@ -718,7 +728,7 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "entitlementCertDir", originalEntitlementCertDir);
 
 		// unregister client so as to test imports while not registered
-		clienttasks.unregister(null,null,null);
+		clienttasks.unregister(null,null,null, null);
 		
 		// assert that we have some valid entitlement certs for import testing
 		if (entitlementCertFiles.size()<1) throw new SkipException("Could not generate valid entitlement certs for these ImportTests.");
@@ -734,7 +744,7 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
 
 		// register
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
 
 		// change the entitlementCertDir to a temporary location to store all of the entitlements that will be used for importing
 		originalEntitlementCertDir = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "entitlementCertDir");
@@ -749,7 +759,7 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 		//clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();	// FAILS ON LARGE CONTENT SET SUBSCRIPTIONS
 		// assemble a list of all the available SubscriptionPool ids
 		for (SubscriptionPool pool :  clienttasks.getCurrentlyAvailableSubscriptionPools()) {
-			SSHCommandResult result = clienttasks.subscribe_(null,null, pool.poolId, null, null, null, null, null, null, null, null, null);	// do not check for success since the large content set subscriptions will expectedly fail
+			SSHCommandResult result = clienttasks.subscribe_(null,null, pool.poolId, null, null, null, null, null, null, null, null, null, null);	// do not check for success since the large content set subscriptions will expectedly fail
 			if (result.getExitCode().equals(new Integer(0))) break; // we only really need one for our tests
 		}
 		
@@ -760,7 +770,7 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "entitlementCertDir", originalEntitlementCertDir);
 
 		// unregister client so as to test imports while not registered
-		clienttasks.unregister(null,null,null);
+		clienttasks.unregister(null,null,null, null);
 		
 		// remove the temporary overriding facts for system.certificate_version
 		clienttasks.deleteFactsFileWithOverridingValues();

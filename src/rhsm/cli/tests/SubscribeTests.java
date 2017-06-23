@@ -25,6 +25,7 @@ import rhsm.base.CandlepinType;
 import rhsm.base.ConsumerType;
 import rhsm.base.SubscriptionManagerCLITestScript;
 import rhsm.cli.tasks.CandlepinTasks;
+import rhsm.cli.tasks.SubscriptionManagerTasks;
 import rhsm.data.ConsumerCert;
 import rhsm.data.EntitlementCert;
 import rhsm.data.InstalledProduct;
@@ -71,18 +72,20 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 ///*debugTesting*/ if (!productId.equals("2cores-2ram-multiattr")) throw new SkipException("debugTesting - Automator should comment out this line."); 		
 ///*debugTesting*/ if (!productId.equals("RH0380468")) throw new SkipException("debugTesting - Automator should comment out this line."); 		
 ///*debugTesting*/ if (!productId.equals("RH00284")) throw new SkipException("debugTesting - Automator should comment out this line."); 		
+///*debugTesting*/ if (!productId.equals("awesomeos-super-hypervisor")) throw new SkipException("debugTesting - Automator should comment out this line.");
+///*debugTesting*/ if (!productId.equals("awesomeos-instancebased")) throw new SkipException("debugTesting - Automator should comment out this line.");
 		// is this system a virtual guest system or a physical system
 		boolean systemIsGuest = Boolean.valueOf(clienttasks.getFactValue("virt.is_guest"));
 		
 		// begin test with a fresh register
-		clienttasks.unregister(null, null, null);
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, null, false, null, null, null);
+		clienttasks.unregister(null, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, null, false, null, null, null, null);
 		
 		// assert the subscription pool with the matching productId is available
 		SubscriptionPool pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", productId, clienttasks.getCurrentlyAllAvailableSubscriptionPools());	// clienttasks.getCurrentlyAvailableSubscriptionPools() is tested at the conclusion of this test
 ///*debugTesting*/pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", "8a9087e34c6b0d69014c6b0ede641f42", clienttasks.getCurrentlyAllAvailableSubscriptionPools());	// awesomeos-onesocketib; Instance Based (Temporary)
 		boolean isPoolRestrictedToUnmappedVirtualSystems = CandlepinTasks.isPoolRestrictedToUnmappedVirtualSystems(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId);
-		
+///*debugTesting*/ if (!isPoolRestrictedToUnmappedVirtualSystems) throw new SkipException("debugTesting - Automator should comment out this line.");
 		// special case...
 		if (pool==null) {	// when pool is null, another likely cause is that all of the available subscriptions from the pools are being consumed, let's check...
 			for (String poolId: CandlepinTasks.getPoolIdsForProductId(sm_clientUsername, sm_clientPassword, sm_serverUrl, clienttasks.getCurrentlyRegisteredOwnerKey(), productId)) {
@@ -208,9 +211,19 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		if (isPoolRestrictedToUnmappedVirtualSystems) {
 			// ... assert endDate is 24 hours after the date of registration
 			ConsumerCert cert = clienttasks.getCurrentConsumerCert();
-			Calendar consumerCertStartDate = cert.validityNotBefore; consumerCertStartDate.add(Calendar.HOUR, 24);
+			Calendar consumerCertStartDate = cert.validityNotBefore;
+			int hours = 24;
+			if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.1.0-1"/*FIXME CHANGE TO "2.1.1-1" ONCE TAG EXISTS*/)) {	// commit 0704a73dc0d3bf753351e87ca0b65d85a71acfbe 1450079: virt-who temporary subscription should be 7 days
+				hours = 7/*days*/ * 24/*hours per day*/;
+				log.info("Due to Candlepin RFE Bug 1450079, the vailidity period for temporary subscription pools has increased from one day to one week.");
+			}
+			if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.30-1")) {	// commit 9302c8f57f37dd5ec3c4020770ac1675a87d99ba 1419576: Pre-date certs to ease clock skew issues
+				hours+=1;
+				log.info("Due to Candlepin RFE Bug 1419576, we need to increment the expected expires_after by one hour to account for pre-dating the consumer identity's validityNotBefore date by one hour.");
+			}
+			consumerCertStartDate.add(Calendar.HOUR, hours);
 			Assert.assertEquals(ProductSubscription.formatDateString(consumedProductSubscription.endDate),ProductSubscription.formatDateString(consumerCertStartDate),
-				"Consumed productSubscription (from a unmapped_guests_only pool '"+pool.poolId+"') expires 24 hours after the time of consumer registration ("+ConsumerCert.formatDateString(clienttasks.getCurrentConsumerCert().validityNotBefore)+").");
+				"Consumed productSubscription (from a unmapped_guests_only pool '"+pool.poolId+"') expires '"+hours+"' hours after the time of consumer registration ("+ConsumerCert.formatDateString(clienttasks.getCurrentConsumerCert().validityNotBefore)+").");
 			//TODO Assert the start date after bug 1199670 is resolved
 		} else {
 			// ... assert endDate matches the originating subscription pool
@@ -442,8 +455,8 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			enabled=false)	// 6/9/2014 - takes way too long to run and has never revealed a bug
 	@ImplementsNitrateTest(caseId=41686)
 	public void SubscribeConsumerToEachAvailableSubscriptionPoolUsingPoolId_Test(String username, String password, String owner){
-		clienttasks.unregister(null, null, null);
-		clienttasks.register(username, password, owner, null, ConsumerType.system, null, null, Boolean.FALSE, null, null, (String)null, null, null, null, Boolean.FALSE, false, null, null, null);
+		clienttasks.unregister(null, null, null, null);
+		clienttasks.register(username, password, owner, null, ConsumerType.system, null, null, Boolean.FALSE, null, null, (String)null, null, null, null, Boolean.FALSE, false, null, null, null, null);
 		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsIndividually();
 	}
 	
@@ -472,7 +485,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		Assert.assertNull(CandlepinTasks.getConsumersNewestEntitlementSerialCorrespondingToSubscribedPoolId(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerId, pool.poolId),"The current consumer has not been granted any entitlements from pool '"+pool.poolId+"'.");
 		Assert.assertNotNull(clienttasks.subscribeToSubscriptionPool_(pool),"Authenticator '"+sm_clientUsername+"' has been granted an entitlement from pool '"+pool.poolId+"' under organization '"+sm_clientOrg+"'.");
 		BigInteger serial1 = CandlepinTasks.getConsumersNewestEntitlementSerialCorrespondingToSubscribedPoolId(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerId, pool.poolId);
-		SSHCommandResult subscribeResult = clienttasks.subscribe_(null,null,pool.poolId,null,null, null, null, null, null, null, null, null);
+		SSHCommandResult subscribeResult = clienttasks.subscribe_(null,null,pool.poolId,null,null, null, null, null, null, null, null, null, null);
 		String subscribeStdout = subscribeResult.getStdout().trim();
 		
 		subscribeStdout = clienttasks.workaroundForBug906550(subscribeStdout);
@@ -508,8 +521,8 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	public void SubscribeToMultipleDuplicateAndBadPools_Test() throws JSONException, Exception {
 		
 		// begin the test with a cleanly registered system
-		clienttasks.unregister(null, null, null);
-	    clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, null, false, null, null, null);
+		clienttasks.unregister(null, null, null, null);
+	    clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, null, false, null, null, null, null);
 	    
 		// assemble a list of all the available SubscriptionPool ids with duplicates and bad ids
 		List <String> poolIds = new ArrayList<String>();
@@ -525,7 +538,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		
 		// subscribe to all pool ids
 		log.info("Attempting to subscribe to multiple pools with duplicate and bad pool ids...");
-		SSHCommandResult subscribeResult = clienttasks.subscribe_(null, null, poolIds, null, null, null, null, null, null, null, null, null);
+		SSHCommandResult subscribeResult = clienttasks.subscribe_(null, null, poolIds, null, null, null, null, null, null, null, null, null, null);
 		
 		/*
 		No such entitlement pool: bad123
@@ -587,7 +600,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		errorMsg = "Either the consumer is not registered or the certificates are corrupted. Certificate update using daemon failed.";
 		
 		log.info("First test with an unregistered user and verify that the rhsmcertd actually fails since it cannot self-identify itself to the candlepin server.");
-		clienttasks.unregister(null, null, null);
+		clienttasks.unregister(null, null, null, null);
 		clienttasks.restart_rhsmcertd(minutes, null, false); sleep(10000); // allow 10sec for the initial update
 		log.info("Appending a marker in the '"+clienttasks.rhsmcertdLogFile+"' so we can assert that the certificates are being updated every '"+minutes+"' minutes");
 		String marker = "Testing rhsm.conf certFrequency="+minutes+" when unregistered..."; // https://tcms.engineering.redhat.com/case/41692/
@@ -600,7 +613,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		
 		
 		log.info("Now test with a registered user whose identity is corrupt and verify that the rhsmcertd actually fails since it cannot self-identify itself to the candlepin server.");
-		String consumerid = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, null, false, null, null, null));
+		String consumerid = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, null, false, null, null, null, null));
 		log.info("Corrupting the identity cert by borking its content...");
 		RemoteFileTasks.runCommandAndAssert(client, "openssl x509 -noout -text -in "+clienttasks.consumerCertFile()+" > /tmp/stdout; mv /tmp/stdout -f "+clienttasks.consumerCertFile(), 0);
 		clienttasks.restart_rhsmcertd(minutes, null, false); sleep(10000); // allow 10sec for the initial update
@@ -627,9 +640,9 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			//	type=SYSCALL msg=audit(1385054754.518:21794): arch=c000003e syscall=2 success=no exit=-13 a0=147ab10 a1=0 a2=1b6 a3=0 items=0 ppid=20771 pid=22456 auid=4294967295 uid=0 gid=0 euid=0 suid=0 fsuid=0 egid=0 sgid=0 fsgid=0 tty=(none) ses=4294967295 comm="rhsmcertd-worke" exe="/usr/bin/python2.7" subj=system_u:system_r:rhsmcertd_t:s0 key=(null)
 			//
 			// The WORKAROUND is to tell subscription-manager to clean before registering with the consumerId
-			clienttasks.clean(null, null, null);
+			clienttasks.clean();
 		}
-	    clienttasks.register(sm_clientUsername, sm_clientPassword, null, null, null, null, consumerid, null, null, null, (String)null, null, null, null, /* --force Boolean.TRUE was okay prior to subscription-manager-1.16.2-1 commit f14d2618ea94c18a0295ae3a5526a2ff252a3f99 and 6bd0448c85c10d8a58cae10372f0d4aa323d5c27 changing to */ Boolean.FALSE, false, null, null, null);
+	    clienttasks.register(sm_clientUsername, sm_clientPassword, null, null, null, null, consumerid, null, null, null, (String)null, null, null, null, /* --force Boolean.TRUE was okay prior to subscription-manager-1.16.2-1 commit f14d2618ea94c18a0295ae3a5526a2ff252a3f99 and 6bd0448c85c10d8a58cae10372f0d4aa323d5c27 changing to */ Boolean.FALSE, false, null, null, null, null);
 		clienttasks.restart_rhsmcertd(minutes, null, true); sleep(10000); // allow 10sec for the initial update
 		log.info("Appending a marker in the '"+clienttasks.rhsmcertdLogFile+"' so we can assert that the certificates are being updated every '"+minutes+"' minutes");
 		marker = "Testing rhsm.conf certFrequency="+minutes+" when registered..."; // https://tcms.engineering.redhat.com/case/41692/
@@ -695,10 +708,10 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	public void rhsmcertdEnsureCertificatesSynchronize_Test() throws JSONException, Exception{
 		
 		// start with a cleanly unregistered system
-		clienttasks.unregister(null, null, null);
+		clienttasks.unregister(null, null, null, null);
 		
 		// register a clean user
-	    clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, null, false, null, null, null);
+	    clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, null, false, null, null, null, null);
 	    
 	    // subscribe to all the available pools
 	    clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
@@ -735,7 +748,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	// Note: The objective if this test is essentially the same as ListTests.EnsureHardwareMatchingSubscriptionsAreListedAsAvailable_Test() and ListTests.EnsureNonHardwareMatchingSubscriptionsAreNotListedAsAvailable_Test(), but its implementation is slightly different
 	public void VerifyNormalAvailablePoolsFromSubscriptionsPassTheHardwareRulesCheck_Test() throws Exception {
 		
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
 		
 		// to prevent the unmapped_guests_only pools from being available for autosubscribe in subsequent VerifyInstalledProductCertWasAutoSubscribed_Test,
 		// let's pretend that this system is a host consumer and simulate virt-who by mapping this virtual system as a guest of itself
@@ -833,7 +846,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		
 		// autosubscribe
-		sshCommandResultFromAutosubscribe = clienttasks.subscribe(true,null,(String)null,null,null,null,null,null,null,null,null, null);
+		sshCommandResultFromAutosubscribe = clienttasks.subscribe(true,null,(String)null,null,null,null,null,null,null,null,null, null, null);
 		
 		/* RHEL57 RHEL61 Example Results...
 		# subscription-manager subscribe --auto
@@ -947,7 +960,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	public void SubscribeWithAutoMoreThanOnce_Test() throws Exception {
 
 		// before testing, make sure all the expected subscriptionPoolProductId are available
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
 		
 		// TEMPORARY WORKAROUND
 		if (Boolean.valueOf(clienttasks.getFactValue("virt.is_guest"))) {
@@ -961,12 +974,12 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		// END OF WORKAROUND
 		
 		// autosubscribe once
-		SSHCommandResult result1 = clienttasks.subscribe(Boolean.TRUE,null,(String)null,null,null,null,null,null,null, null, null, null);
+		SSHCommandResult result1 = clienttasks.subscribe(Boolean.TRUE,null,(String)null,null,null,null,null,null,null, null, null, null, null);
 		List<File> entitlementCertFiles1 = clienttasks.getCurrentEntitlementCertFiles();
 		List<InstalledProduct> autosubscribedProductStatusList1 = InstalledProduct.parse(result1.getStdout());
 		
 		// autosubscribe twice
-		SSHCommandResult result2 = clienttasks.subscribe(Boolean.TRUE,null,(String)null,null,null,null,null,null,null, null, null, null);
+		SSHCommandResult result2 = clienttasks.subscribe(Boolean.TRUE,null,(String)null,null,null,null,null,null,null, null, null, null, null);
 		List<File> entitlementCertFiles2 = clienttasks.getCurrentEntitlementCertFiles();
 		List<InstalledProduct> autosubscribedProductStatusList2 = InstalledProduct.parse(result2.getStdout());
 		
@@ -985,7 +998,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsNitrateTest(caseId=)
 	public void CandlepinConsumerEntitlementsDryrunWithUnavailableServiceLevel_Test() throws JSONException, Exception {
 		// register with force
-		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null));
+		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null));
 
 		String serviceLevel = "FOO";
 		JSONObject jsonDryrunResult= new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, String.format("/consumers/%s/entitlements/dry-run%s",consumerId, serviceLevel==null?"":String.format("?service_level=%s",serviceLevel))));
@@ -1016,12 +1029,12 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		//  on the first call to this dataProvided test, unsubscribe all subscriptions OR just unregister to a clean state
 		// this will remove any prior subscribed modifier entitlements to avoid test logic errors in this test.
 		if (firstcalltoCandlepinConsumerEntitlementsDryrunWithServiceLevel_Test) {
-			if (consumerId!=null) clienttasks.unsubscribe(true, (BigInteger)null, null, null, null, null);	//OR clienttasks.unregister(null,null,null);
+			if (consumerId!=null) clienttasks.unsubscribe(true, (BigInteger)null, null, null, null, null, null);	//OR clienttasks.unregister(null,null,null);
 			firstcalltoCandlepinConsumerEntitlementsDryrunWithServiceLevel_Test = false;
 		}
 
 		// store the initial state of the system
-		if (consumerId==null) consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, "SubscriptionServiceLevelConsumer", null, null, null, null, (String)null, null, null, null, null, false, null, null, null));
+		if (consumerId==null) consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, "SubscriptionServiceLevelConsumer", null, null, null, null, (String)null, null, null, null, null, false, null, null, null, null));
 		String orgKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerId);	//clienttasks.getCurrentlyRegisteredOwnerKey();
 		String initialServiceLevel = clienttasks.getCurrentServiceLevel();
 		List<EntitlementCert> initialEntitlementCerts = clienttasks.getCurrentEntitlementCerts();
@@ -1067,14 +1080,14 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		
 		// assert the the dry-run did not change the current service level
 		Assert.assertEquals(clienttasks.getCurrentServiceLevel(), initialServiceLevel,"The consumer's current service level setting was not affected by the dry-run query with serviceLevel '"+serviceLevel+"'.");
-		clienttasks.identity(null, null, true, null, null, null, null);
+		clienttasks.identity(null, null, true, null, null, null, null, null);
 		Assert.assertEquals(clienttasks.getCurrentServiceLevel(), initialServiceLevel,"The consumer's current service level setting was not affected by the dry-run query with serviceLevel '"+serviceLevel+"' even after an identity regeneration.");
 		
 		// assert that no new entitlements were actually given
 		Assert.assertTrue(clienttasks.getCurrentEntitlementCerts().containsAll(initialEntitlementCerts), "This system's prior entitlements are unchanged after the dry-run.");
 		
 		// actually autosubscribe with this service-level
-		clienttasks.subscribe(true, serviceLevel, (List<String>)null, (List<String>)null, (List<String>)null, null, null, null, null, null, null, null);
+		clienttasks.subscribe(true, serviceLevel, (List<String>)null, (List<String>)null, (List<String>)null, null, null, null, null, null, null, null, null);
 		//clienttasks.subscribe(true,"".equals(serviceLevel)?String.format("\"%s\"", serviceLevel):serviceLevel, (List<String>)null, (List<String>)null, (List<String>)null, null, null, null, null, null, null);
 		
 		// determine the newly granted entitlement certs
@@ -1194,10 +1207,10 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		
 		// for debugging purposes, list what is currently available so we can see the available quantity before we attempt to attach
-		clienttasks.list_(null, true, null, null, null, null, null, null, null, null, null, null, null);
+		clienttasks.list_(null, true, null, null, null, null, null, null, null, null, null, null, null, null);
 		
 		// subscribe with quantity
-		SSHCommandResult sshCommandResult = clienttasks.subscribe_(null,null,pool.poolId,null,null,quantity,null,null,null, null, null, null);
+		SSHCommandResult sshCommandResult = clienttasks.subscribe_(null,null,pool.poolId,null,null,quantity,null,null,null, null, null, null, null);
 		
 		// assert the sshCommandResult here
 		if (expectedExitCode!=null) Assert.assertEquals(sshCommandResult.getExitCode(), expectedExitCode,"ExitCode after subscribe with quantity=\""+quantity+"\" option:");
@@ -1232,12 +1245,15 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		int consumer1Quantity=0;
 		int totalPoolQuantity=0;
 		for (List<Object> row : getSubscribeWithQuantityDataAsListOfLists()) {
-			if (((String)(row.get(2))).equals("2") && ((String)(row.get(4))).startsWith("^Successful")) {	// find the row where quantity.equals("2")
-				consumer1Pool = (SubscriptionPool) row.get(1);
-				totalPoolQuantity = Integer.valueOf(consumer1Pool.quantity);
-				consumer1Quantity = Integer.valueOf((String) row.get(2));
-				SubscribeWithQuantity_Test(row.get(0), (SubscriptionPool)row.get(1), (String)row.get(2), (Integer)row.get(3), (String)row.get(4), (String)row.get(5));
-				break;
+			// find the row where quantity.equals("2")
+			if (((String)(row.get(2))!=null) && ((String)(row.get(4))!=null)) {
+				if (((String)(row.get(2))).equals("2") && ((String)(row.get(4))).startsWith("^Successful")) {
+					consumer1Pool = (SubscriptionPool) row.get(1);
+					totalPoolQuantity = Integer.valueOf(consumer1Pool.quantity);
+					consumer1Quantity = Integer.valueOf((String) row.get(2));
+					SubscribeWithQuantity_Test(row.get(0), (SubscriptionPool)row.get(1), (String)row.get(2), (Integer)row.get(3), (String)row.get(4), (String)row.get(5));
+					break;
+				}
 			}
 		}
 		if (consumer1Pool==null) Assert.fail("Failed to initiate the first consumer for this test.");
@@ -1246,8 +1262,8 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		String consumer1Id = clienttasks.getCurrentConsumerId(); systemConsumerIds.add(consumer1Id);
 		
 		// clean the client and register a second consumer
-		clienttasks.clean(null,null,null);
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, "SubscriptionQuantityConsumer2", null, null, null, null, (String)null, null, null, null, false, false, null, null, null);
+		clienttasks.clean();
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, "SubscriptionQuantityConsumer2", null, null, null, null, (String)null, null, null, null, false, false, null, null, null, null);
 		
 		// remember the second consumerId
 		String consumer2Id = clienttasks.getCurrentConsumerId(); systemConsumerIds.add(consumer2Id);
@@ -1261,32 +1277,32 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(consumer2Pool.quantity, String.valueOf(consumer2Quantity),"The pool quantity available to consumer2 has been decremented by the quantity consumer1 consumed.");
 		
 		// assert that consumer2 can NOT oversubscribe
-		Assert.assertTrue(!clienttasks.subscribe(null,null,consumer2Pool.poolId,null,null,String.valueOf(consumer2Quantity+1),null,null,null, null, null, null).getStdout().startsWith("Success"),"An attempt by consumer2 to oversubscribe using the remaining pool quantity+1 should NOT succeed.");
+		Assert.assertTrue(!clienttasks.subscribe(null,null,consumer2Pool.poolId,null,null,String.valueOf(consumer2Quantity+1),null,null,null, null, null, null, null).getStdout().startsWith("Success"),"An attempt by consumer2 to oversubscribe using the remaining pool quantity+1 should NOT succeed.");
 
 		// assert that consumer2 can successfully consume all the remaining pool quantity
-		Assert.assertTrue(clienttasks.subscribe(null,null,consumer2Pool.poolId,null,null,String.valueOf(consumer2Quantity),null,null,null, null, null, null).getStdout().startsWith("Success"),"An attempt by consumer2 to exactly consume the remaining pool quantity should succeed.");
+		Assert.assertTrue(clienttasks.subscribe(null,null,consumer2Pool.poolId,null,null,String.valueOf(consumer2Quantity),null,null,null, null, null, null, null).getStdout().startsWith("Success"),"An attempt by consumer2 to exactly consume the remaining pool quantity should succeed.");
 		
 		// start rolling back the subscribes
-		clienttasks.clean(null,null,null);
+		clienttasks.clean();
 		
 		// restore consumer1, unsubscribe, and assert remaining quantities
-		clienttasks.register(sm_clientUsername, sm_clientPassword, null, null, null, null, consumer1Id, null, null, null, (String)null, null, null, null, false, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, null, null, null, null, consumer1Id, null, null, null, (String)null, null, null, null, false, false, null, null, null, null);
 		Assert.assertNull(SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", consumer1Pool.poolId, clienttasks.getCurrentlyAvailableSubscriptionPools()),"SubscriptionPool '"+consumer1Pool.poolId+"' should NOT be available (because consumer1 is already subscribed to it).");
-		clienttasks.unsubscribe(null,clienttasks.getCurrentlyConsumedProductSubscriptions().get(0).serialNumber,null,null,null, null);
+		clienttasks.unsubscribe(null,clienttasks.getCurrentlyConsumedProductSubscriptions().get(0).serialNumber,null,null,null, null, null);
 		consumer1Pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", consumer1Pool.poolId, clienttasks.getCurrentlyAvailableSubscriptionPools()); 
 		Assert.assertEquals(consumer1Pool.quantity, String.valueOf(totalPoolQuantity-consumer2Quantity),"The pool quantity available to consumer1 has incremented by the quantity consumer1 consumed.");
-		clienttasks.unregister(null,null,null);
+		clienttasks.unregister(null,null,null, null);
 		
 		// restore consumer2, unsubscribe, and assert remaining quantities
-		clienttasks.register(sm_clientUsername, sm_clientPassword, null, null, null, null, consumer2Id, null, null, null, (String)null, null, null, null, false, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, null, null, null, null, consumer2Id, null, null, null, (String)null, null, null, null, false, false, null, null, null, null);
 		consumer2Pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", consumer2Pool.poolId, clienttasks.getCurrentlyAvailableSubscriptionPools());
 		//Assert.assertNull(consumer2Pool,"SubscriptionPool '"+consumer2Pool.poolId+"' should NOT be available (because consumer2 is already subscribed to it).");
 		Assert.assertNotNull(consumer2Pool,"SubscriptionPool '"+consumer2Pool.poolId+"' should be available even though consumer2 is already subscribed to it because it is multi-entitleable.");
 		Assert.assertEquals(consumer2Pool.quantity, String.valueOf(totalPoolQuantity-consumer2Quantity),"The pool quantity available to consumer2 is still decremented by the quantity consumer2 consumed.");
-		clienttasks.unsubscribe(null,clienttasks.getCurrentlyConsumedProductSubscriptions().get(0).serialNumber,null,null,null, null);
+		clienttasks.unsubscribe(null,clienttasks.getCurrentlyConsumedProductSubscriptions().get(0).serialNumber,null,null,null, null, null);
 		consumer2Pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", consumer2Pool.poolId, clienttasks.getCurrentlyAvailableSubscriptionPools()); 
 		Assert.assertEquals(consumer2Pool.quantity, String.valueOf(totalPoolQuantity),"The pool quantity available to consumer2 has been restored to its original total quantity");
-		clienttasks.unregister(null,null,null);
+		clienttasks.unregister(null,null,null, null);
 	}
 
 
@@ -1302,7 +1318,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		boolean isSystemVirtual = Boolean.valueOf(clienttasks.getFactValue("virt.is_guest"));
 		
 		// register
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
 		
 		// get all the available pools
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAllAvailableSubscriptionPools();
@@ -1319,7 +1335,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		int quantity = quantities.get(quantities.size()/2);	// choose the median as the quantity to subscribe with
 		
 		// collectively subscribe to all pools with --quantity
-		SSHCommandResult subscribeResult = clienttasks.subscribe_(null, null, poolIds, null, null, String.valueOf(quantity), null, null, null, null, null, null);
+		SSHCommandResult subscribeResult = clienttasks.subscribe_(null, null, poolIds, null, null, String.valueOf(quantity), null, null, null, null, null, null, null);
 		
 		/*
 		Multi-entitlement not supported for pool with id '8a90f8c6320e9a4401320e9be0e20480'.
@@ -1365,7 +1381,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
 			       , testCaseID = {"RHEL6-27122", "RHEL7-51945"})
 	@Test(	description="subscription-manager: subscribe to future subscription pool",
-			groups={"blockedByBug-979492"},
+			groups={"blockedByBug-979492","blockedByBug-1440180"},
 			//dataProvider="getAllFutureSystemSubscriptionPoolsData",	// 06/04/2014 takes too long; rarely reveals a bug
 			dataProvider="getRandomSubsetOfFutureSystemSubscriptionPoolsData",
 			enabled=true)
@@ -1377,7 +1393,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		now.setTimeInMillis(System.currentTimeMillis());
 		
 		// subscribe to the future subscription pool
-		SSHCommandResult subscribeResult = clienttasks.subscribe(null,null,pool.poolId,null,null,null,null,null,null,null, null, null);
+		SSHCommandResult subscribeResult = clienttasks.subscribe(null,null,pool.poolId,null,null,null,null,null,null,null, null, null, null);
 		// Pool is restricted to virtual guests: '8a90f85734205a010134205ae8d80403'.
 		// Pool is restricted to physical systems: '8a9086d3443c043501443c052aec1298'.
 		if (subscribeResult.getStdout().startsWith("Pool is restricted")) {
@@ -1405,11 +1421,11 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		SSHCommandResult subscribeResult;
 		SSHCommandResult attachResult;
 		
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
 		subscribeResult = client.runCommandAndWait(clienttasks.command+" subscribe --pool=123");
 		attachResult = client.runCommandAndWait(clienttasks.command+" attach --pool=123");
 		Assert.assertEquals(subscribeResult.toString(), attachResult.toString(), "Results from 'subscribe' and 'attach' module commands should be identical.");
-		clienttasks.unregister(null,null,null);
+		clienttasks.unregister(null,null,null, null);
 		subscribeResult = client.runCommandAndWait(clienttasks.command+" subscribe --pool=123");
 		attachResult = client.runCommandAndWait(clienttasks.command+" attach --pool=123");
 		Assert.assertEquals(subscribeResult.toString(), attachResult.toString(), "Results from 'subscribe' and 'attach' module commands should be identical.");
@@ -1481,7 +1497,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		//	[root@jsefler-5 ~]# 
 		
 		String systemCertificateVersion = clienttasks.getFactValue("system.certificate_version");
-		SSHCommandResult subscribeResult = clienttasks.subscribe_(null, null, pool.poolId, null, null, null, null, null, null, null, null, null);
+		SSHCommandResult subscribeResult = clienttasks.subscribe_(null, null, pool.poolId, null, null, null, null, null, null, null, null, null, null);
 		Assert.assertEquals(subscribeResult.getExitCode(), new Integer(255), "Exitcode from an attempt to subscribe to '"+pool.subscriptionName+"' when system.certificate_version is old '"+systemCertificateVersion+"'.");
 		
 		// CORES-based subscriptions
@@ -1570,7 +1586,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		}
 		
 		// register
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
 		
 		// get the available pools
 		List<SubscriptionPool> availablePools = clienttasks.getCurrentlyAvailableSubscriptionPools();
@@ -1615,8 +1631,8 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 					if (!productCertIdsFound.isEmpty()) {
 						
 						// start testing... autosubscribe and assert the consumed subscriptions are Virtual
-						clienttasks.unsubscribe(true, (BigInteger)null, null, null, null, null);
-						clienttasks.subscribe(true, null, null, (String)null, null, null, null, null, null, null, null, null);
+						clienttasks.unsubscribe(true, (BigInteger)null, null, null, null, null, null);
+						clienttasks.subscribe(true, null, null, (String)null, null, null, null, null, null, null, null, null, null);
 						for (ProductSubscription productSubscription : clienttasks.getCurrentlyConsumedProductSubscriptions()) {
 							Assert.assertEquals(productSubscription.machineType, "Virtual", "Autosubscribing a virtual system should favor granting an entitlement from a Virtual pool that provides "+productCertIdsFound+" over a Physical pool that provides "+productCertIdsFound+"'.");
 							Assert.assertTrue(productSubscription.provides.containsAll(productCertNamesFound), "The autosubscribed virtual subscription '"+productSubscription+"' provides for all of the installed products "+productCertNamesFound+".  (Note: This could potentially fail when the provided product names are do not exactly match the installed product cert names which is okay since the productIds are what really matter).");	// TODO We may need to comment this out or fix it if it starts failing due to changes in the subscription data.
@@ -1659,12 +1675,12 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		Boolean noOverlap = getRandomListItem(Arrays.asList(new Boolean[]{Boolean.TRUE,Boolean.FALSE}));
 		
 		if (clienttasks.getCurrentlyRegisteredOwnerKey() == null) {
-			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null);
-			clienttasks.autoheal(null, null, true, null, null, null);
-		} else clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null, null);
+			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null, null);
+			clienttasks.autoheal(null, null, true, null, null, null, null);
+		} else clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null, null, null);
 		
 		// call list with --pool-only to get a random list of available poolids
-		String poolOnlyListCommand = clienttasks.listCommand(all, true, null, null, null, null, matchInstalled, noOverlap, null, true, null, null, null);
+		String poolOnlyListCommand = clienttasks.listCommand(all, true, null, null, null, null, matchInstalled, noOverlap, null, true, null, null, null, null);
 		String tmpFile = "/tmp/poolIds.txt";
 		//RemoteFileTasks.runCommandAndAssert(client, poolOnlyListCommand+" > "+tmpFile, 0);
 		RemoteFileTasks.runCommandAndAssert(client, poolOnlyListCommand+" > "+tmpFile+" && echo abc123 >> "+tmpFile, 0);
@@ -1676,7 +1692,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		poolIdsFromFile.remove("abc123");
 		
 		// subscribe with the --file option
-		SSHCommandResult subscribeWithFileResult = clienttasks.subscribe(null, null, (List<String>) null, (List<String>) null, null, null, null, null, tmpFile, null, null, null);
+		SSHCommandResult subscribeWithFileResult = clienttasks.subscribe(null, null, (List<String>) null, (List<String>) null, null, null, null, null, tmpFile, null, null, null, null);
 		String expectedRejection = String.format("Pool with id %s could not be found.", "abc123");
 		Assert.assertTrue(subscribeWithFileResult.getStdout().trim().endsWith(expectedRejection), "The stdout result from subscribe with a file of poolIds ends with '"+expectedRejection+"'.");
 
@@ -1701,16 +1717,16 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		if (clienttasks.isPackageVersion("subscription-manager","<","1.13.8-1")) throw new SkipException("The attach --file function was not implemented in this version of subscription-manager.");	// commit 3167333fc3a261de939f4aa0799b4283f2b9f4d2 bug 1159974
 		
 		if (clienttasks.getCurrentlyRegisteredOwnerKey() == null) {
-			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null);
-			clienttasks.autoheal(null, null, true, null, null, null);
-		} else clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null, null);
+			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null, null);
+			clienttasks.autoheal(null, null, true, null, null, null, null);
+		} else clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null, null, null);
 		
 		// create an empty file of pool ids
 		String tmpFile = "/tmp/emptyFile.txt";
 		RemoteFileTasks.runCommandAndAssert(client, "rm -f "+tmpFile+" && touch "+tmpFile, 0);
 		
 		// subscribe with the --file option
-		SSHCommandResult subscribeWithFileResult = clienttasks.subscribe_(null, null, (List<String>) null, (List<String>) null, null, null, null, null, tmpFile, null, null, null);
+		SSHCommandResult subscribeWithFileResult = clienttasks.subscribe_(null, null, (List<String>) null, (List<String>) null, null, null, null, null, tmpFile, null, null, null, null);
 		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.13-1")) {	// commit 1ec3ee950642b24e6b55a23db10e447bd0fada4f	// Bug 1175291 - subscription-manager attach --file <file> ,with file being empty attaches subscription for installed product
 			String expectedStderr = String.format("Error: The file \"%s\" does not contain any pool IDs.",tmpFile);
 			Assert.assertEquals(subscribeWithFileResult.getStdout().trim(), "", "The stdout result from subscribe with an empty file of poolIds is empty.");
@@ -1739,29 +1755,30 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		Boolean noOverlap = getRandomListItem(Arrays.asList(new Boolean[]{Boolean.TRUE,Boolean.FALSE}));
 		
 		if (clienttasks.getCurrentlyRegisteredOwnerKey() == null) {
-			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null);
-			clienttasks.autoheal(null, null, true, null, null, null);
-		} else clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null, null);
+			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null, null);
+			clienttasks.autoheal(null, null, true, null, null, null, null);
+		} else clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null, null, null);
 		
 		// call list with --pool-only to get a random list of available poolids
-		String poolOnlyListCommand = clienttasks.listCommand(all, true, null, null, null, null, matchInstalled, noOverlap, null, true, null, null, null);
+		String poolOnlyListCommand = clienttasks.listCommand(all, true, null, null, null, null, matchInstalled, noOverlap, null, true, null, null, null, null);
 		String tmpFile = "/tmp/poolIds.txt";
 		RemoteFileTasks.runCommandAndAssert(client, poolOnlyListCommand+" > "+tmpFile, 0);
 		SSHCommandResult poolOnlyListResult = client.runCommandAndWait("cat "+tmpFile);
-		
+
+//NOT NECESSARY
 //		// convert the result to a list
 //		List<String> poolIdsFromFile = new ArrayList<String>();
 //		if (!poolOnlyListResult.getStdout().trim().isEmpty()) poolIdsFromFile = Arrays.asList(poolOnlyListResult.getStdout().trim().split("\n"));
 		
 		// subscribe with the --file option (to get our expected results)
-		SSHCommandResult subscribeWithFileResult = clienttasks.subscribe(null, null, (List<String>) null, (List<String>) null, null, null, null, null, tmpFile, null, null, null);
+		SSHCommandResult subscribeWithFileResult = clienttasks.subscribe(null, null, (List<String>) null, (List<String>) null, null, null, null, null, tmpFile, null, null, null, null);
 		
 		// return the subscriptions...
-		clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null, null);
+		clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null, null, null);
 		
 		// now let's run the same poolOnlyListCommand and pipe the results to subscription-manager attach --file - (the hyphen indicates stdin)
-		String stdinFileSubscribeCommand = clienttasks.subscribeCommand(null, null, (List<String>) null, (List<String>) null, null, null, null, null, "-", null, null, null);
-		SSHCommandResult stdinFileSubscribeCommandResult = client.runCommandAndWait(poolOnlyListCommand+" | "+stdinFileSubscribeCommand, (long) (3/*min*/*60*1000/*timeout*/));
+		String stdinFileSubscribeCommand = clienttasks.subscribeCommand(null, null, (List<String>) null, (List<String>) null, null, null, null, null, "-", null, null, null, null);
+		SSHCommandResult stdinFileSubscribeCommandResult = client.runCommandAndWait("cat "+tmpFile+" | "+stdinFileSubscribeCommand, (long) (3/*min*/*60*1000/*timeout*/));
 				
 		// assert the two subscribe results are identical
 		Assert.assertEquals(stdinFileSubscribeCommandResult.getExitCode(), subscribeWithFileResult.getExitCode(), "Exit Code comparison between the expected result of subscribing with a file of poolIds and subscribing with the poolIds piped to stdin.");
@@ -1780,12 +1797,12 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		if (clienttasks.isPackageVersion("subscription-manager","<","1.13.8-1")) throw new SkipException("The attach --file function was not implemented in this version of subscription-manager.");	// commit 3167333fc3a261de939f4aa0799b4283f2b9f4d2 bug 1159974
 		
 		if (clienttasks.getCurrentlyRegisteredOwnerKey() == null) {
-			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null);
-			clienttasks.autoheal(null, null, true, null, null, null);
-		} else clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null, null);
+			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null, null);
+			clienttasks.autoheal(null, null, true, null, null, null, null);
+		} else clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null, null, null);
 		
 		// now let's run the same poolOnlyListCommand and pipe the results to subscription-manager attach --file - (the hyphen indicates stdin)
-		String stdinFileSubscribeCommand = clienttasks.subscribeCommand(null, null, (List<String>) null, (List<String>) null, null, null, null, null, "-", null, null, null);
+		String stdinFileSubscribeCommand = clienttasks.subscribeCommand(null, null, (List<String>) null, (List<String>) null, null, null, null, null, "-", null, null, null, null);
 		SSHCommandResult stdinFileSubscribeCommandResult = client.runCommandAndWait("echo \"\" | "+stdinFileSubscribeCommand, (long) (3/*min*/*60*1000/*timeout*/));
 				
 		// assert the two subscribe results are identical
@@ -1807,23 +1824,23 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		if (clienttasks.isPackageVersion("subscription-manager","<","1.14.1-1")) throw new SkipException("Defaulting subscribe/attach to imply option --auto was not implemented in this version of subscription-manager.");	// commit cb590a75f3a2de921961808d00ab251180c51691 Make 'attach' auto unless otherwise specified
 
 		if (clienttasks.getCurrentlyRegisteredOwnerKey() == null) {
-			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null);
-			clienttasks.autoheal(null, null, true, null, null, null);
+			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null, null);
+			clienttasks.autoheal(null, null, true, null, null, null, null);
 		}
 
 		// first let's run subscribe --auto and collect the results.
-		clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null, null);
-		String subscribeWithAutoCommand = clienttasks.subscribeCommand(true, null, (List<String>) null, (List<String>) null, null, null, null, null, null, null, null, null);
+		clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null, null, null);
+		String subscribeWithAutoCommand = clienttasks.subscribeCommand(true, null, (List<String>) null, (List<String>) null, null, null, null, null, null, null, null, null, null);
 		//SSHCommandResult subscribeWithAutoCommandResult = client.runCommandAndWait(subscribeWithAutoCommand);
-		SSHCommandResult subscribeWithAutoCommandResult = clienttasks.subscribe(true, null, (String)null, null, null, null, null, null, null, null, null, null);
+		SSHCommandResult subscribeWithAutoCommandResult = clienttasks.subscribe(true, null, (String)null, null, null, null, null, null, null, null, null, null, null);
 		List<InstalledProduct> subscribeWithAutoCommandResultList = InstalledProduct.parse(subscribeWithAutoCommandResult.getStdout());
 		int subscribeWithAutoEntitlementCount = clienttasks.getCurrentEntitlementCertFiles().size();
 
 		// second let's run subscribe without --auto and collect the results.
-		clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null, null);
-		String subscribeWithoutAutoCommand = clienttasks.subscribeCommand(null, null, (List<String>) null, (List<String>) null, null, null, null, null, null, null, null, null);
+		clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null, null, null);
+		String subscribeWithoutAutoCommand = clienttasks.subscribeCommand(null, null, (List<String>) null, (List<String>) null, null, null, null, null, null, null, null, null, null);
 		//SSHCommandResult subscribeWithoutAutoCommandResult = client.runCommandAndWait(subscribeWithoutAutoCommand);
-		SSHCommandResult subscribeWithoutAutoCommandResult = clienttasks.subscribe(null, null, (String)null, null, null, null, null, null, null, null, null, null);
+		SSHCommandResult subscribeWithoutAutoCommandResult = clienttasks.subscribe(null, null, (String)null, null, null, null, null, null, null, null, null, null, null);
 		List<InstalledProduct> subscribeWithoutAutoCommandResultList = InstalledProduct.parse(subscribeWithoutAutoCommandResult.getStdout());
 		int subscribeWithoutAutoEntitlementCount = clienttasks.getCurrentEntitlementCertFiles().size();
 
@@ -1934,7 +1951,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
 		
 		// register
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, "SubscriptionQuantityConsumer", null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, "SubscriptionQuantityConsumer", null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
 		
 		// find pools with a positive quantity that are "multi-entitlement" (and "instance_multiplier" too)
 		SubscriptionPool instanceBasedPool = null;

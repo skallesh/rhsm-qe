@@ -320,6 +320,29 @@ public class BashCompletionTests extends SubscriptionManagerCLITestScript{
 			// Bug 1180273 - [RFE] rhn-migrate-classic-to-rhsm should allow the user to migrate a system without requiring credentials on RHN Classic
 			if (bashCommand.startsWith("rhn-migrate-classic-to-rhsm ") && clienttasks.isPackageVersion("subscription-manager",">=","1.14.3-1")) bugIds.add("1180273");		// https://bugzilla.redhat.com/show_bug.cgi?id=1180273#c9
 			
+			// Bug 1441397 - bash completion for all subscription-manager modules is failing to include the new --noproxy option
+			if (bashCommand.startsWith("subscription-manager attach ")) bugIds.add("1441397");
+			if (bashCommand.startsWith("subscription-manager auto-attach ")) bugIds.add("1441397");
+			if (bashCommand.startsWith("subscription-manager environments ")) bugIds.add("1441397");
+			if (bashCommand.startsWith("subscription-manager list ")) bugIds.add("1441397");
+			if (bashCommand.startsWith("subscription-manager orgs ")) bugIds.add("1441397");
+			if (bashCommand.startsWith("subscription-manager register ")) bugIds.add("1441397");
+			if (bashCommand.startsWith("subscription-manager remove ")) bugIds.add("1441397");
+			if (bashCommand.startsWith("subscription-manager service-level ")) bugIds.add("1441397");
+			if (bashCommand.startsWith("subscription-manager status ")) bugIds.add("1441397");
+			if (bashCommand.startsWith("subscription-manager subscribe ")) bugIds.add("1441397");
+			if (bashCommand.startsWith("subscription-manager unsubscribe ")) bugIds.add("1441397");
+			if (bashCommand.startsWith("subscription-manager redeem ")) bugIds.add("1441397");
+			if (bashCommand.startsWith("subscription-manager version ")) bugIds.add("1441397");
+			if (bashCommand.startsWith("subscription-manager repos ")) bugIds.add("1441397");
+			if (bashCommand.startsWith("subscription-manager repo-override ")) bugIds.add("1441397");
+			if (bashCommand.startsWith("subscription-manager facts ")) bugIds.add("1441397");
+			if (bashCommand.startsWith("subscription-manager identity ")) bugIds.add("1441397");
+			if (bashCommand.startsWith("subscription-manager refresh ")) bugIds.add("1441397");
+			if (bashCommand.startsWith("subscription-manager unregister ")) bugIds.add("1441397");
+			if (bashCommand.startsWith("subscription-manager release ")) bugIds.add("1441397");
+			if (bashCommand.startsWith("rhsm-debug system ")) bugIds.add("1441397");
+			
 			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 			
 			// append a new row to the dataProvider

@@ -42,10 +42,10 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 	public void RhsmDebugSystemWithoutBeingRegistered_Test() {
 		
 		// make sure we are not registered
-		clienttasks.unregister_(null, null, null);
+		clienttasks.unregister_(null, null, null, null);
 		
 		// attempt to run rhsm-debug system without being registered
-		String rhsmDebugSystemCommand = clienttasks.rhsmDebugSystemCommand(null, null, null, null, null, null, null, null);
+		String rhsmDebugSystemCommand = clienttasks.rhsmDebugSystemCommand(null, null, null, null, null, null, null, null, null);
 		SSHCommandResult result = client.runCommandAndWait(rhsmDebugSystemCommand);
 		
 		// assert results
@@ -208,10 +208,10 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(!RemoteFileTasks.testExists(client, destination), "Destination directory '"+destination+"' should not exist.");
 		
 		// register
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null, null);
 		
 		// run rhsm-debug system with a non-existent destination
-		String rhsmDebugSystemCommand = clienttasks.rhsmDebugSystemCommand(destination, null, null, null, null, null, null, null);
+		String rhsmDebugSystemCommand = clienttasks.rhsmDebugSystemCommand(destination, null, null, null, null, null, null, null, null);
 		SSHCommandResult result = client.runCommandAndWait(rhsmDebugSystemCommand);
 		
 		// assert results
@@ -235,10 +235,10 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(RemoteFileTasks.testExists(client, destination), "Destination file '"+destination+"' should already exist.");
 		
 		// register
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null, null);
 		
 		// run rhsm-debug system with a bad destination
-		String rhsmDebugSystemCommand = clienttasks.rhsmDebugSystemCommand(destination, null, null, null, null, null, null, null);
+		String rhsmDebugSystemCommand = clienttasks.rhsmDebugSystemCommand(destination, null, null, null, null, null, null, null, null);
 		SSHCommandResult result = client.runCommandAndWait(rhsmDebugSystemCommand);
 		
 		//	[root@jsefler-7 ~]# rhsm-debug system --destination /tmp/foo
@@ -263,6 +263,8 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
 	public void RhsmDebugSystemWithNonDefaultCertDirs1_Test() {
+		clienttasks.unregister_(null, null, null, null);	// to ensure a prior consumer is cleaned before we change the rhsm configuration 
+		
 		List<File> originalProductCertFiles = getRandomSubsetOfList(clienttasks.getCurrentProductCertFiles(),2);	// 2 is sufficient
 		
 		// remember the original configurations
@@ -430,17 +432,17 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 		String pluginConfDir = clienttasks.getConfParameter("pluginConfDir");
 		
 		// register
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
 		
 		// attach some random entitlements
 		List<String> poolIds = new ArrayList<String>(); 
 		List<SubscriptionPool> subscriptionPools = getRandomSubsetOfList(clienttasks.getCurrentlyAvailableSubscriptionPools(), 3);	// 3 is sufficient
 		for (SubscriptionPool subscriptionPool : subscriptionPools) poolIds.add(subscriptionPool.poolId);
 		if (poolIds.isEmpty()) throw new SkipException("Cannot test rhsm-debug when no subscription pools are available."); 
-		clienttasks.subscribe(null, null, poolIds, null, null, null, null, null, null, null, null, null);
+		clienttasks.subscribe(null, null, poolIds, null, null, null, null, null, null, null, null, null, null);
 
 		// run rhsm-debug system
-		String rhsmDebugSystemCommand = clienttasks.rhsmDebugSystemCommand(destination, noArchive, sos, noSubscriptions, subscriptions, null, null, null);
+		String rhsmDebugSystemCommand = clienttasks.rhsmDebugSystemCommand(destination, noArchive, sos, noSubscriptions, subscriptions, null, null, null, null);
 		SSHCommandResult result = client.runCommandAndWait(rhsmDebugSystemCommand);
 		clienttasks.logRuntimeErrors(result);
 		

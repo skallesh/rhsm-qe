@@ -197,10 +197,10 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 			priority=230, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void verifyEnabledRegisterConsumerTestPluginHooksAreCalled_Test1() {
-		removeRhsmLog();
+		truncateRhsmLog();
 		
 		// get the pre-registered facts on the system
-		clienttasks.unregister(null,null,null);
+		clienttasks.unregister(null,null,null, null);
 		Map<String,String> facts = clienttasks.getFacts();
 		
 		// get the current rhsm logging level; INFO or DEBUG
@@ -289,10 +289,10 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 			priority=260, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void verifyEnabledRegisterConsumerTestPluginHooksAreCalled_Test2() {
-		removeRhsmLog();
+		truncateRhsmLog();
 		
 		// get the pre-registered facts on the system
-		clienttasks.unregister(null,null,null);
+		clienttasks.unregister(null,null,null, null);
 		Map<String,String> facts = clienttasks.getFacts();
 		
 		// get the current rhsm logging level; INFO or DEBUG
@@ -385,10 +385,10 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 			priority=330, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void verifyEnabledFactsCollectionTestPluginHooksAreCalled_Test() {
-		removeRhsmLog();
+		truncateRhsmLog();
 		
 		// get the pre-registered facts on the system
-		clienttasks.unregister(null,null,null);
+		clienttasks.unregister(null,null,null, null);
 		Map<String,String> facts = clienttasks.getFacts();
 		
 		// get the current rhsm logging level; INFO or DEBUG
@@ -427,7 +427,7 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
 		logMarker = System.currentTimeMillis()+" Testing verifyEnabledFactsCollectionTestPluginHooksAreCalled_Test...";
 		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, logMarker);
-		clienttasks.facts(null,true,null,null,null);
+		clienttasks.facts(null,true,null,null,null, null);
 		sleep(5000);	// give the plugin hooks a chance to be called; I think this is an async process
 		
 		// assert the expected log calls
@@ -491,10 +491,10 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 			priority=430, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void verifyEnabledSubscribeTestPluginHooksAreCalled_Test() throws JSONException, Exception {
-		removeRhsmLog();
+		truncateRhsmLog();
 		
 		// get the pre-registered facts on the system
-		clienttasks.unregister(null,null,null);
+		clienttasks.unregister(null,null,null, null);
 		Map<String,String> facts = clienttasks.getFacts();
 		
 		// get the current rhsm logging level; INFO or DEBUG
@@ -508,7 +508,7 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		}
 		
 		// register and get the current available subscription list
-		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null,true,null,null,null,null));
+		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null,true,null,null,null,null, null));
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		if (pools.isEmpty()) throw new SkipException("Cannot randomly pick a pool for subscribing when there are no available pools for testing."); 
 		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
@@ -519,7 +519,7 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, logMarker);
 
 		// subscribe to a random pool (to generate calls to pre/post hooks)
-		clienttasks.subscribe(null,null,pool.poolId,null,null,quantity,null,null,null,null,null, null);
+		clienttasks.subscribe(null,null,pool.poolId,null,null,quantity,null,null,null,null,null, null, null);
 		//sleep(5000);	// give the plugin hooks a chance to be called; I think this is an async process
 
 		// get the tail of the marked rhsm.log file
@@ -614,10 +614,10 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 			priority=530, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void verifyEnabledAutoAttachTestPluginHooksAreCalled_Test() {
-		removeRhsmLog();
+		truncateRhsmLog();
 		
 		// get the pre-registered facts on the system
-		clienttasks.unregister(null,null,null);
+		clienttasks.unregister(null,null,null, null);
 		Map<String,String> facts = clienttasks.getFacts();
 		
 		// get the current rhsm logging level; INFO or DEBUG
@@ -631,7 +631,7 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		}
 		
 		// register
-		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,false,null,null,(List<String>)null,null,null,null,true,null,null,null,null));
+		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,false,null,null,(List<String>)null,null,null,null,true,null,null,null,null, null));
 
 // A BETTER SOLUTION FOR THIS WORKAROUND IS configureRhelProductCertDirBeforeGroups() unconfigureRhelProductCertDirAfterGroups()
 //		// TEMPORARY WORKAROUND FOR BUG
@@ -648,7 +648,10 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, logMarker);
 		
 		// autosubscribe
-		clienttasks.subscribe(true, null, (String)null, null, null, null, null, null, null, null, null, null);
+		clienttasks.subscribe(true, null, (String)null, null, null, null, null, null, null, null, null, null, null);
+		
+		// when no products are installed, autosubsribe will be blocked and the auto_attach_hooks will not be called.  take this case into account...
+		boolean noProductsInstalled = clienttasks.getCurrentProductCertFiles().isEmpty();
 		
 		// get the tail of the marked rhsm.log file
 		String logTail = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, logMarker, "Running p").trim();
@@ -667,6 +670,7 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		List<String> expectedLogInfo = new ArrayList<String>();
 		if (rhsmLogLevel.equals("DEBUG"))								expectedLogInfo.add("Running post_facts_collection_hook in facts_collection_test.FactsCollectionTestPlugin");	// enabled in prior FactsCollectionTestPlugin Tests 
 		if (rhsmLogLevel.equals("DEBUG")||rhsmLogLevel.equals("INFO"))	expectedLogInfo.add("Running post_facts_collection_hook: consumer facts count is "+facts.values().size());	// enabled in prior FactsCollectionTestPlugin Tests 
+		if (!noProductsInstalled) {
 		if (rhsmLogLevel.equals("DEBUG"))								expectedLogInfo.add("Running pre_auto_attach_hook in auto_attach_test.AutoAttachTestPlugin");
 		if (rhsmLogLevel.equals("DEBUG")||rhsmLogLevel.equals("INFO"))	expectedLogInfo.add("Running pre_auto_attach_hook: system is about to auto-attach");
 		if (rhsmLogLevel.equals("DEBUG")||rhsmLogLevel.equals("INFO"))	expectedLogInfo.add("Running pre_auto_attach_hook: auto-attaching consumer is "+consumerId);
@@ -674,9 +678,11 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		if (rhsmLogLevel.equals("DEBUG")||rhsmLogLevel.equals("INFO"))	expectedLogInfo.add("Running post_auto_attach_hook: system just auto-attached");
 		if (rhsmLogLevel.equals("DEBUG")||rhsmLogLevel.equals("INFO"))	expectedLogInfo.add("Running post_auto_attach_hook: auto-attached consumer is "+consumerId);
 		if (rhsmLogLevel.equals("DEBUG")||rhsmLogLevel.equals("INFO"))	expectedLogInfo.add("Running post_auto_attach_hook: auto-attached \\d+ entitlements");
+		}
 		if (              logTail.replaceAll("\n","").matches(".*"+joinListToString(expectedLogInfo,".*")+".*") == false) RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, logMarker, null);	// used for debugging
 		if (              logTail.replaceAll("\n","").matches(".*"+joinListToString(expectedLogInfo,".*")+".*") == false) clienttasks.plugins_(null,null,null,true);	// used for debugging
 		Assert.assertTrue(logTail.replaceAll("\n","").matches(".*"+joinListToString(expectedLogInfo,".*")+".*"), "The '"+clienttasks.rhsmLogFile+"' reports log messages: "+expectedLogInfo);
+		if (noProductsInstalled) throw new SkipException("Could not verifyEnabledAutoAttachTestPluginHooksAreCalled because no products are installed making auto_attach a no-op."); 
 	}
 	@AfterGroups(groups={"setup"},value="verifyEnabledAutoAttachTestPluginHooksAreCalled_Test", alwaysRun=true)
 	public void unconfigureRhelProductCertDirAfterGroups() {
@@ -736,7 +742,8 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 			priority=630, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void verifyEnabledProductIdInstallTestPluginHooksAreCalled_Test() {
-		removeRhsmLog();
+		if (clienttasks.getCurrentProductCertFiles().isEmpty()) throw new SkipException("This test will install a layered RHEL product which requires a base RHEL product cert to be installed.  Skipping this test because no RHEL product is installed.");
+		truncateRhsmLog();
 		
 		// get the current rhsm logging level; INFO or DEBUG
 		String rhsmLogLevel=null;
@@ -749,7 +756,7 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		}
 		
 		// register
-		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null,true,null,null,null,null));
+		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null,true,null,null,null,null, null));
 		
 		// mark the rhsm.log file
 		String logMarker = System.currentTimeMillis()+" Testing verifyEnabledProductIdInstallTestPluginHooksAreCalled_Test...";
@@ -777,7 +784,7 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		if (clienttasks.arch.startsWith("s390")) haProductId = "300"; // Red Hat Enterprise Linux High Availability (for IBM z Systems)
 		
 		// register to an account that offers High Availability subscriptions
-		consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_haUsername,sm_haPassword,sm_haOrg,null,null,null,null,null,null,null,(String)null,null,null, null, true, null, null, null, null));
+		consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_haUsername,sm_haPassword,sm_haOrg,null,null,null,null,null,null,null,(String)null,null,null, null, true, null, null, null, null, null));
 
 		// make sure that there are no ha packages and no productId installed
 		for (String haPackage : sm_haPackages) {
@@ -798,7 +805,7 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		SubscriptionPool haPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", sm_haSku, availableSubscriptionPools);
 		if (clienttasks.variant.equals("Server") && getArchesOfferringHighAvailabilityContent().contains(clienttasks.arch)) {
 			Assert.assertNotNull(haPool, "A subscription pool for High Availability SKU '"+sm_haSku+"' is available.");
-			clienttasks.subscribe(null,null,haPool.poolId, null,null,null,null,null,null,null,null, null);
+			clienttasks.subscribe(null,null,haPool.poolId, null,null,null,null,null,null,null,null, null, null);
 		} else {
 			throw new SkipException("Not expecting High Availability subscription SKU '"+sm_haSku+"' to offer content on a RHEL '"+clienttasks.redhatReleaseX+"' '"+clienttasks.variant+"' system with arch '"+clienttasks.arch+"'.");
 		}
@@ -926,10 +933,10 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 			priority=830, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void verifyEnabledAllSlotsTestPluginHooksAreCalled_Test() throws JSONException, Exception {
-		removeRhsmLog();
+		truncateRhsmLog();
 		
 		// get the pre-registered facts on the system
-		clienttasks.unregister(null,null,null);
+		clienttasks.unregister(null,null,null, null);
 		Map<String,String> facts = clienttasks.getFacts();
 		
 		// get the current rhsm logging level; INFO or DEBUG
@@ -947,13 +954,13 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, logMarker);
 
 		// register and subscribe to random pool
-		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null,true,null,null,null,null));
+		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null,true,null,null,null,null, null));
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		if (pools.isEmpty()) throw new SkipException("Cannot randomly pick a pool for subscribing when there are no available pools for testing."); 
 		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
 		String quantity = null;
 		/*if (clienttasks.isPackageVersion("subscription-manager",">=","1.10.3-1"))*/ if (pool.suggested!=null) if (pool.suggested<1) quantity = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId, "instance_multiplier"); 	// when the Suggested quantity is 0, let's specify a quantity to avoid Stdout: Quantity '1' is not a multiple of instance multiplier '2'
-		clienttasks.subscribe(null,null,pool.poolId,null,null,quantity,null,null,null,null,null, null);
+		clienttasks.subscribe(null,null,pool.poolId,null,null,quantity,null,null,null,null,null, null, null);
 		//sleep(5000);	// give the plugin hooks a chance to be called; I think this is an async process
 
 		// get the tail of the marked rhsm.log file
@@ -1013,12 +1020,12 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 	// Configuration methods ***********************************************************************
 	
 	//@BeforeClass(groups={"setup"})	// not often enough due to recently added noisy logging:    2013-05-25 02:04:06,091 [DEBUG]  @injection.py:64 - Returning callable provider for feature ENT_DIR: <class 'subscription_manager.certdirectory.EntitlementDirectory'>
-	protected void removeRhsmLog() {
+	protected void truncateRhsmLog() {
 		if (client==null) return;
 		
-		// remove the rhsm.log before this class to effectively reduce its size because it occasionally gets backed up to rhsm.log.1
+		// truncate the rhsm.log before this class to reduce its size because it occasionally gets backed up to rhsm.log.1
 		// in the midst of a pair of calls to RemoteFileTasks.markFile(...) and RemoteFileTasks.getTailFromMarkedFile(...)
-		client.runCommandAndWait("rm -f "+clienttasks.rhsmLogFile);
+		client.runCommandAndWait("truncate --size=0 "+clienttasks.rhsmLogFile);
 	}
 	
 	@BeforeClass(groups={"setup"})

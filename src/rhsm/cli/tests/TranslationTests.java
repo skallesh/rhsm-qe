@@ -114,7 +114,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	public void AttemptLocalizedRegistrationWithInvalidCredentials_Test(Object bugzilla, String lang, String username, String password, Integer exitCode, String stdoutRegex, String stderrRegex) {
 
 		// ensure we are unregistered
-		clienttasks.unregister(null, null, null);
+		clienttasks.unregister(null, null, null, null);
 		
 		log.info("Attempting to register to a candlepin server using invalid credentials and expecting output in language "+(lang==null?"DEFAULT":lang));
 		String command = String.format("%s register --username=%s --password=%s", clienttasks.command, username, password);
@@ -124,16 +124,17 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(!RemoteFileTasks.testExists(client,clienttasks.consumerKeyFile()), "Consumer key file '"+clienttasks.consumerKeyFile()+"' does NOT exist after an attempt to register with invalid credentials.");
 		Assert.assertTrue(!RemoteFileTasks.testExists(client,clienttasks.consumerCertFile()), "Consumer cert file '"+clienttasks.consumerCertFile()+" does NOT exist after an attempt to register with invalid credentials.");
 	}
-
-
+	
+	
 	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
 			       , testCaseID = {"RHEL6-21765", "RHEL7-32170"})
-	@Test(	description="attempt LANG=C subscription-manager register",
+	@Test(	description="verify subscription-manager register will succeed with fallback locale LANG=C; also verify the system.default_locale fact",
 			groups={"blockedByBug-729988"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void RegisterWithFallbackCLocale_Test() {
-
+		
+		// Bug 729988
 		//	[root@rhsm-compat-rhel61 ~]# LANG=C subscription-manager register --username stage_test_12 --password redhat 1>/tmp/stdout 2>/tmp/stderr
 		//	[root@rhsm-compat-rhel61 ~]# echo $?
 		//	255
@@ -142,16 +143,58 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 		//	'NoneType' object has no attribute 'lower'
 		//	[root@rhsm-compat-rhel61 ~]# 
 		
-		for(String lang: new String[]{"C","us"}) {
-			clienttasks.unregister(null, null, null);
-			String command = String.format("%s register --username %s --password %s", clienttasks.command,sm_clientUsername,sm_clientPassword);
-			if (sm_clientOrg!=null) command += String.format(" --org %s", sm_clientOrg);
-			//SSHCommandResult sshCommandResult = clienttasks.runCommandWithLang(lang,clienttasks.command+" register --username "+sm_clientUsername+" --password "+sm_clientPassword+" "+(sm_clientOrg!=null?"--org "+sm_clientOrg:""));
-			SSHCommandResult sshCommandResult = client.runCommandAndWait("LANG="+lang+" "+clienttasks.command+" register --username "+sm_clientUsername+" --password "+sm_clientPassword+" "+(sm_clientOrg!=null?"--org "+sm_clientOrg:""));
-			Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0),"ExitCode after register with LANG="+lang+" fallback locale.");
-			//Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), expectedStdoutRegex,"Stdout after register with LANG="+lang+" fallback locale.");
-			//Assert.assertContainsMatch(sshCommandResult.getStderr().trim(), expectedStderrRegex,"Stderr after register with LANG="+lang+" fallback locale.");
+		String lang="C";
+		clienttasks.unregister(null, null, null, null);
+		String command = String.format("%s register --username %s --password %s", clienttasks.command,sm_clientUsername,sm_clientPassword);
+		if (sm_clientOrg!=null) command += String.format(" --org %s", sm_clientOrg);
+		//SSHCommandResult sshCommandResult = clienttasks.runCommandWithLang(lang,clienttasks.command+" register --username "+sm_clientUsername+" --password "+sm_clientPassword+" "+(sm_clientOrg!=null?"--org "+sm_clientOrg:""));
+		SSHCommandResult sshCommandResult = client.runCommandAndWait("LANG="+lang+" "+clienttasks.command+" register --username "+sm_clientUsername+" --password "+sm_clientPassword+" "+(sm_clientOrg!=null?"--org "+sm_clientOrg:""));
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0),"ExitCode after register with LANG="+lang+" fallback locale.");
+		
+		// also test the system.default_locale fact for an unknown locale
+		if (clienttasks.isPackageVersion("python-rhsm", ">=", "1.19.3-1")) {	// commit 0670d70540a24a8e173d347e2240dcfb7535608a Bug 1425922: System locale in facts
+			String systemDefaultLocaleFact = "system.default_locale";
+			String systemDefaultLocale = client.runCommandAndWait("locale | grep LANG").getStdout().trim().split("=")[1];
+			Assert.assertEquals(clienttasks.getFactValue(systemDefaultLocaleFact), systemDefaultLocale, "The system's value for fact '"+systemDefaultLocaleFact+"'.");
 		}
+	}
+	
+	
+	@Test(	description="verify subscription-manager register will succeed with an unknown locale LANG=foo; also verify the system.default_locale fact reports Unknown",
+			groups={"blockedByBug-729988","blockedByBug-1449824"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void RegisterWithUnknownLocale_Test() {
+		
+		String lang="foo";
+		clienttasks.unregister(null, null, null, null);
+		String command = String.format("%s register --username %s --password %s", clienttasks.command,sm_clientUsername,sm_clientPassword);
+		if (sm_clientOrg!=null) command += String.format(" --org %s", sm_clientOrg);
+		SSHCommandResult sshCommandResult = client.runCommandAndWait("LANG="+lang+" "+clienttasks.registerCommand(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, null, null, null, null, null, null));
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0),"ExitCode after register with LANG="+lang+" fallback locale.");
+		Assert.assertEquals(clienttasks.getCurrentConsumerId(sshCommandResult),clienttasks.getCurrentConsumerId(),"The registered consumer's identity should be interpreted correctly from the stdout when registering with LANG="+lang+" fallback locale.");
+		
+		// also test the system.default_locale fact for an unknown locale
+		if (clienttasks.isPackageVersion("python-rhsm", ">=", "1.19.3-1")) {	// commit 0670d70540a24a8e173d347e2240dcfb7535608a Bug 1425922: System locale in facts
+			String systemDefaultLocaleFact = "system.default_locale";
+			String systemDefaultLocale = "Unknown";
+			sshCommandResult = client.runCommandAndWait("LANG="+lang+" "+clienttasks.factsCommand(true, null, null, null, null, null)+" | grep "+systemDefaultLocaleFact);
+			Assert.assertEquals(sshCommandResult.getStdout().trim(), String.format("%s: %s", systemDefaultLocaleFact,systemDefaultLocale), "The system's fact for the default locale when run with locale LANG="+lang+".");
+		}
+	}
+	
+	
+	@Test(	description="Verify that registering with a LANG (without specifying a UTF-8 encoding) will succeed.  For example: LANG=fr_FR subscription-manager register",
+			groups={},
+			dataProvider="getSupportedLangsData",
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void RegisterWithDefaultEncoding_Test(Object bugzilla, String lang) {
+		lang = lang.replaceAll("\\.UTF-8", "");	// make sure lang does not have any encoding (no ".UTF-8" suffix)
+		clienttasks.unregister(null, null, null, null);
+		String registerCommandWithLang = String.format("%s %s","LANG="+lang, clienttasks.registerCommand(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (List<String>)null, null, null, null, null, null, null, null, null, null));
+		SSHCommandResult sshCommandResult = client.runCommandAndWait(registerCommandWithLang);
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0),"ExitCode after register with LANG='"+lang+"' where no encoding was specified.");
 	}
 	
 	
@@ -161,7 +204,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	//@ImplementsNitrateTest(caseId=)
 	public void AttemptRedeemWithoutEmailUsingLang_Test() {
 		
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
 		//SSHCommandResult redeemResult = clienttasks.redeem_(null,null,null,null,null)
 		String lang = "de_DE";
 		log.info("Attempting to redeem without specifying email expecting output in language "+(lang==null?"DEFAULT":lang));
@@ -237,6 +280,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 			       , testCaseID = {"RHEL6-25823", "RHEL7-68145"})
 	@Test(	description="verify that only the expected rhsm.mo tranlation files are installed for each of the supported locales",
 			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1057532",
+					"blockedByBug-1441739",	// Zanata translations for subscription-manager 1.19 are not 100%
 					"blockedByBug-1391681",	// Zanata translations for subscription-manager 1.18 are not 100%
 					"blockedByBug-1340135",	// Zanata translations for subscription-manager 1.17 are not 100%
 					"blockedByBug-1303768",	// Zanata 1.16.X NOT 100%		// see Skip on Known Issue
@@ -319,6 +363,14 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 
 		}
 		// END OF WORKAROUND
+		
+		// Skip on Known Issue: https://bugzilla.redhat.com/show_bug.cgi?id=1441739#c1
+		if (false) // skip this SkipException due to https://bugzilla.redhat.com/show_bug.cgi?id=1441739#c2
+		if (!translationFile.getPath().contains("/ja/") && clienttasks.isPackageVersion("subscription-manager","==", "1.19")) {
+			if (!translationFilePassed) {
+				throw new SkipException("Missing translations from "+translationFile+" is a Known Issue for subscription-manager-1.19.  New translations for RHEL7.4 are Japanese only.  See https://bugzilla.redhat.com/show_bug.cgi?id=1441739#c1 and https://bugzilla.redhat.com/show_bug.cgi?id=1449667");
+			}
+		}
 		
 		Assert.assertTrue(translationFilePassed,"Exactly 1 occurance of all the expected translation msgids ("+translationMsgidSetForSubscriptionManager.size()+") were found in translation file '"+translationFile+"'.");
 	}
@@ -590,6 +642,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 		doNotTranslateSubStrings.addAll(Arrays.asList(new String[]{"&#x2022;"}));	// Unicode bullet character	// msgid "&#x2022; A network connection"	// msgid "&#x2022; The address of a subscription management service (optional)"	// msgid "&#x2022; Your account login"
 		doNotTranslateSubStrings.addAll(Arrays.asList(new String[]{"subscription-manager register --help"}));	// msgid "This system is not yet registered. Try 'subscription-manager register --help' for more information."
 		doNotTranslateSubStrings.addAll(Arrays.asList(new String[]{"subscription-manager plugins"}));	// msgid "View and configure subscription-manager plugins"
+		doNotTranslateSubStrings.add("%s:%s%s");	// msgid "Unregistering from: %s:%s%s"	// msgid "Registering to: %s:%s%s"
 		
 		List<String> ignoreTheseExceptionalCases = new ArrayList<String>();
 		//ignoreTheseExceptionalCases.add("View and configure subscription-manager plugins");	// 12/8/2015 stop ignoring... will be changed by bug 1061407 in https://github.com/candlepin/subscription-manager/pull/1343/
@@ -745,6 +798,28 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 			// Bug 1189950 - [ko_KR] bad translation for "{dateexample}" prevents error message from rendering
 			if (translationFile.getPath().contains("/ko/")) bugIds.add("1189950");
 			
+			// Bug 1463765 - fixes needed for a few pofilter test failures after pulling in new translations for rhel7.4	// this bug covers the unwanted translation of substring "%s:%s%s"
+			if (translationFile.getPath().contains("/as/")) bugIds.add("1463765");
+			if (translationFile.getPath().contains("/bn/")) bugIds.add("1463765");
+			if (translationFile.getPath().contains("/de_DE/")) bugIds.add("1463765");
+			if (translationFile.getPath().contains("/fr/")) bugIds.add("1463765");
+			if (translationFile.getPath().contains("/gu/")) bugIds.add("1463765");
+			if (translationFile.getPath().contains("/as/")) bugIds.add("1463765");
+			if (translationFile.getPath().contains("/hi/")) bugIds.add("1463765");
+			if (translationFile.getPath().contains("/ja/")) bugIds.add("1463765");
+			if (translationFile.getPath().contains("/kn/")) bugIds.add("1463765");
+			if (translationFile.getPath().contains("/ko/")) bugIds.add("1463765");
+			if (translationFile.getPath().contains("/pa/")) bugIds.add("1463765");
+			if (translationFile.getPath().contains("/ta_IN/")) bugIds.add("1463765");
+			if (translationFile.getPath().contains("/te/")) bugIds.add("1463765");
+			if (translationFile.getPath().contains("/as/")) bugIds.add("1463765");
+			if (translationFile.getPath().contains("/zh_CN/")) bugIds.add("1463765");
+			if (translationFile.getPath().contains("/zh_TW/")) bugIds.add("1463765");
+			if (translationFile.getPath().contains("/it/")) bugIds.add("1463765");
+			if (translationFile.getPath().contains("/pt_BR/")) bugIds.add("1463765");
+			if (translationFile.getPath().contains("/ru/")) bugIds.add("1463765");
+			if (translationFile.getPath().contains("/es_ES/")) bugIds.add("1463765");
+			
 			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 			ll.add(Arrays.asList(new Object[] {blockedByBzBug, translationFile}));
 		}
@@ -753,19 +828,6 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	
-	@BeforeGroups(groups="setup",value={"VerifyYumSearchDoesNotThrowAsciiCodecError_Test"})
-	public void beforeVerifyYumSearchDoesNotThrowAsciiCodecError_Test() {
-		if (clienttasks==null) return;
-		// register with auto-subscribe
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, true, false, null, null, null);
-		// skip the test when we do not have access to RHEL content
-		if (!clienttasks.isRhelProductCertSubscribed()) throw new SkipException("Cannot perform this test until an available RHEL subscription has been attached.");
-		// remove python-simplejson
-		String pkg="python-simplejson";
-		if (clienttasks.isPackageInstalled(pkg)) clienttasks.yumRemovePackage(pkg);
-	}
-
-
 	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
 			       , testCaseID = {"RHEL6-19946", "RHEL7-55158"})
 	@Test(	description="verify that \"'ascii' codec can't decode byte\" errors do not occur with yum search",
@@ -774,7 +836,9 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyYumSearchDoesNotThrowAsciiCodecError_Test(Object bugzilla, String lang) {
-		
+		// skip the test when we do not have access to RHEL content
+		if (!isRhelProductCertSubscribedForVerifyYumSearchDoesNotThrowAsciiCodecError) throw new SkipException("Cannot perform this test until an available RHEL subscription has been attached.");
+
 		// attempt to search for the zsh package using the lang
 		String command = "yum search zsh";
 		SSHCommandResult result = clienttasks.runCommandWithLang(lang, command);
@@ -817,7 +881,19 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(!result.getStdout().toLowerCase().contains(errorMsg.toLowerCase()), "Stdout from running '"+command+"' in locale '"+lang+"' does not contain error '"+errorMsg+"'.");
 		Assert.assertTrue(!result.getStderr().toLowerCase().contains(errorMsg.toLowerCase()), "Stderr from running '"+command+"' in locale '"+lang+"' does not contain error '"+errorMsg+"'.");
 	}
-	
+	@BeforeGroups(groups="setup",value={"VerifyYumSearchDoesNotThrowAsciiCodecError_Test"})
+	public void beforeVerifyYumSearchDoesNotThrowAsciiCodecError_Test() {
+		if (clienttasks==null) return;
+		// register with auto-subscribe
+		SSHCommandResult result = clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, true, false, null, null, null, null);
+		if (result.getStdout().contains("No products installed.")) return;	// this will cause VerifyYumSearchDoesNotThrowAsciiCodecError_Test to skip because isRhelProductCertSubscribedForVerifyYumSearchDoesNotThrowAsciiCodecError is false
+		isRhelProductCertSubscribedForVerifyYumSearchDoesNotThrowAsciiCodecError = clienttasks.isRhelProductCertSubscribed();
+		
+		// remove python-simplejson
+		String pkg="python-simplejson";
+		if (clienttasks.isPackageInstalled(pkg)) clienttasks.yumRemovePackage(pkg);
+	}
+	protected boolean isRhelProductCertSubscribedForVerifyYumSearchDoesNotThrowAsciiCodecError = false;
 	
 	
 	
@@ -873,7 +949,16 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 		//       the currently extracted message ids from the source code is probably incorrect.
 		//       There could be extra msgids in the translation files that were left over from the last round
 		//       of translations and are no longer applicable (should be excluded from this union algorithm).
+		// UPDATE: The block below that skips the unsupportedLocales should alleviate the TODO concern above.
 		for (File translationFile : translationFileMapForSubscriptionManager.keySet()) {
+			
+			// does this translationFile provide translations to an unsupportedLocale?
+			boolean isTranslationFileSupported = true;
+			for (String unsupportedLocale : unsupportedLocales) {
+				if (translationFile.getPath().contains(String.format("/%s/",unsupportedLocale))) isTranslationFileSupported=false;
+			}
+			if (!isTranslationFileSupported) continue; // skip the unsupportedLocales (so that the msgids from abandoned translations of prior releases do not interfere with expected msgids of this release)
+			
 			List<Translation> translationList = translationFileMapForSubscriptionManager.get(translationFile);
 			for (Translation translation : translationList) {
 				translationMsgidSetForSubscriptionManager.add(translation.msgid);
@@ -894,6 +979,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	static final List<String> supportedLocales = Arrays.asList(	"as",	"bn_IN","de_DE","es_ES","fr",	"gu",	"hi",	"it",	"ja",	"kn",	"ko",	"ml",	"mr",	"or",	"pa",	"pt_BR","ru",	"ta_IN","te",	"zh_CN","zh_TW"); 
 	static final List<String> unsupportedLocales = Arrays.asList(	"as",	"bn_IN",	/*"de_DE",*/	/*"es_ES",*/	/*"fr",*/	"gu",	"hi",	/*"it",*/	/*"ja",*/	"kn",	/*"ko",*/	"ml",	"mr",	"or",	"pa",	/*"pt_BR",*/	/*"ru",*/	"ta_IN",	"te"	/*"zh_CN",*/	/*"zh_TW"*/);	// comes from https://bugzilla.redhat.com/show_bug.cgi?id=1195824#c2
 	static final List<String> supportedLangs = Arrays.asList(	"as_IN","bn_IN","de_DE","es_ES","fr_FR","gu_IN","hi_IN","it_IT","ja_JP","kn_IN","ko_KR","ml_IN","mr_IN","or_IN","pa_IN","pt_BR","ru_RU","ta_IN","te_IN","zh_CN","zh_TW"); 
+	static final List<String> unsupportedLangs = Arrays.asList(	"as_IN","bn_IN",/*"de_DE","es_ES","fr_FR",*/"gu_IN","hi_IN",/*"it_IT","ja_JP",*/"kn_IN",/*"ko_KR",*/"ml_IN","mr_IN","or_IN","pa_IN",/*"pt_BR","ru_RU",*/"ta_IN","te_IN"/*,"zh_CN","zh_TW"*/); 
 
 	
 	protected List<String> newList(String item) {
@@ -952,9 +1038,13 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	protected List<List<Object>> getSupportedLangsDataAsListOfLists() {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		for (String lang : supportedLangs) {
+			// skip the unsupportedLangs
+			if (unsupportedLangs.contains(lang)) continue;
 			
 			// bugzillas
 			Object bugzilla = null;
+			if (lang.equals("fr_FR")) bugzilla = new BlockedByBzBug(new String[]{"1449839","1450210"});
+			if (lang.equals("ja_JP")) bugzilla = new BlockedByBzBug(new String[]{"1449839","1450210"});
 			
 			// Object bugzilla, String locale
 			ll.add(Arrays.asList(new Object[] {bugzilla,	lang}));
@@ -1196,18 +1286,17 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 		lang = "ru_RU"; output = "показать это сообщение и выйти";						helpOption=helpOptions.get(randomGenerator.nextInt(helpOptions.size())); ll.add(Arrays.asList(new Object[] {new BlockedByBzBug(new String[]{"1074568"}), lang, command+" "+helpOption, 0, newList(output.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$")}));
 		lang = "zh_CN"; output = "显示此帮助信息并退出";									helpOption=helpOptions.get(randomGenerator.nextInt(helpOptions.size())); ll.add(Arrays.asList(new Object[] {new BlockedByBzBug(new String[]{"1074568"}), lang, command+" "+helpOption, 0, newList(output.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$")}));
 		lang = "zh_TW"; output = "顯示此協助訊息並退出";									helpOption=helpOptions.get(randomGenerator.nextInt(helpOptions.size())); ll.add(Arrays.asList(new Object[] {new BlockedByBzBug(new String[]{"1074568"}), lang, command+" "+helpOption, 0, newList(output.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$")}));
-		lang = "as_IN"; output = "এই সহায় বাৰ্তা দেখুৱাওক";									helpOption=helpOptions.get(randomGenerator.nextInt(helpOptions.size())); ll.add(Arrays.asList(new Object[] {new BlockedByBzBug(new String[]{"1074568"}), lang, command+" "+helpOption, 0, newList(output.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$")}));
-		lang = "bn_IN"; output = "এই বার্তা প্রদর্শন করে";										helpOption=helpOptions.get(randomGenerator.nextInt(helpOptions.size())); ll.add(Arrays.asList(new Object[] {new BlockedByBzBug(new String[]{"1074568"}), lang, command+" "+helpOption, 0, newList(output.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$")}));
-		lang = "hi_IN"; output = "इस मदद संदेश को दिखाएँ";										helpOption=helpOptions.get(randomGenerator.nextInt(helpOptions.size())); ll.add(Arrays.asList(new Object[] {new BlockedByBzBug(new String[]{"1074568"}), lang, command+" "+helpOption, 0, newList(output.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$")}));
-		lang = "mr_IN"; output = "हे मदत संदेश दाखवा व";										helpOption=helpOptions.get(randomGenerator.nextInt(helpOptions.size())); ll.add(Arrays.asList(new Object[] {new BlockedByBzBug(new String[]{"1074568"}), lang, command+" "+helpOption, 0, newList(output.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$")}));
-		lang = "gu_IN"; output = "આ મદદ સંદેશાને બતાવો અને";									helpOption=helpOptions.get(randomGenerator.nextInt(helpOptions.size())); ll.add(Arrays.asList(new Object[] {new BlockedByBzBug(new String[]{"1074568"}), lang, command+" "+helpOption, 0, newList(output.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$")}));
-		lang = "kn_IN"; output = "ಈ ನೆರವಿನ ಸಂದೇಶವನ್ನು";										helpOption=helpOptions.get(randomGenerator.nextInt(helpOptions.size())); ll.add(Arrays.asList(new Object[] {new BlockedByBzBug(new String[]{"1074568"}), lang, command+" "+helpOption, 0, newList(output.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$")}));
-		lang = "ml_IN"; output = "ഈ സഹായ സന്ദേശം";									helpOption=helpOptions.get(randomGenerator.nextInt(helpOptions.size())); ll.add(Arrays.asList(new Object[] {new BlockedByBzBug(new String[]{"1074568"}), lang, command+" "+helpOption, 0, newList(output.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$")}));
-		lang = "or_IN"; output = "ଏହି ସହାୟତା ସନ୍ଦେଶ";										helpOption=helpOptions.get(randomGenerator.nextInt(helpOptions.size())); ll.add(Arrays.asList(new Object[] {new BlockedByBzBug(new String[]{"1074568"}), lang, command+" "+helpOption, 0, newList(output.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$")}));
-		lang = "pa_IN"; output = "ਇਹ ਮੱਦਦ ਸੁਨੇਹਾ ਵਿਖਾਉ ਅਤੇ ਬਾਹਰ ਜਾਉ";							helpOption=helpOptions.get(randomGenerator.nextInt(helpOptions.size())); ll.add(Arrays.asList(new Object[] {new BlockedByBzBug(new String[]{"1074568"}), lang, command+" "+helpOption, 0, newList(output.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll(" ", "\\\\n?\\\\s*")+"$")}));	// workaround for 878089: Add line wrapping when listing subscription-manager modules
-		lang = "ta_IN"; output = "இந்த உதவி செய்தியை";									helpOption=helpOptions.get(randomGenerator.nextInt(helpOptions.size())); ll.add(Arrays.asList(new Object[] {new BlockedByBzBug(new String[]{"1074568"}), lang, command+" "+helpOption, 0, newList(output.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$")}));
-		lang = "te_IN"; output = "ఈ సహయ సందేశం చూపి";										helpOption=helpOptions.get(randomGenerator.nextInt(helpOptions.size())); ll.add(Arrays.asList(new Object[] {new BlockedByBzBug(new String[]{"1074568"}), lang, command+" "+helpOption, 0, newList(output.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$")}));
-		
+		lang = "as_IN"; output = "এই সহায় বাৰ্তা দেখুৱাওক আৰু প্ৰস্থান কৰক";							helpOption=helpOptions.get(randomGenerator.nextInt(helpOptions.size())); ll.add(Arrays.asList(new Object[] {new BlockedByBzBug(new String[]{"1074568"}), lang, command+" "+helpOption, 0, newList(output.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll(" ", "\\\\s+")+"$")}));	// replace space with \s* to accommodate word wrapping from optparse  Bug 878089: Add line wrapping when listing subscription-manager modules
+		lang = "bn_IN"; output = "এই বার্তা প্রদর্শন করে প্রস্থান করা হবে";								helpOption=helpOptions.get(randomGenerator.nextInt(helpOptions.size())); ll.add(Arrays.asList(new Object[] {new BlockedByBzBug(new String[]{"1074568"}), lang, command+" "+helpOption, 0, newList(output.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll(" ", "\\\\s+")+"$")}));
+		lang = "hi_IN"; output = "इस मदद संदेश को दिखाएँ और बाहर हों";								helpOption=helpOptions.get(randomGenerator.nextInt(helpOptions.size())); ll.add(Arrays.asList(new Object[] {new BlockedByBzBug(new String[]{"1074568"}), lang, command+" "+helpOption, 0, newList(output.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll(" ", "\\\\s+")+"$")}));
+		lang = "mr_IN"; output = "हे मदत संदेश दाखवा व बाहेर पडा";									helpOption=helpOptions.get(randomGenerator.nextInt(helpOptions.size())); ll.add(Arrays.asList(new Object[] {new BlockedByBzBug(new String[]{"1074568"}), lang, command+" "+helpOption, 0, newList(output.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll(" ", "\\\\s+")+"$")}));
+		lang = "gu_IN"; output = "આ મદદ સંદેશાને બતાવો અને બહાર નીકળો";							helpOption=helpOptions.get(randomGenerator.nextInt(helpOptions.size())); ll.add(Arrays.asList(new Object[] {new BlockedByBzBug(new String[]{"1074568"}), lang, command+" "+helpOption, 0, newList(output.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll(" ", "\\\\s+")+"$")}));
+		lang = "kn_IN"; output = "ಈ ನೆರವಿನ ಸಂದೇಶವನ್ನು ತೋರಿಸಿ ನಿರ್ಗಮಿಸು";							helpOption=helpOptions.get(randomGenerator.nextInt(helpOptions.size())); ll.add(Arrays.asList(new Object[] {new BlockedByBzBug(new String[]{"1074568"}), lang, command+" "+helpOption, 0, newList(output.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll(" ", "\\\\s+")+"$")}));
+		lang = "ml_IN"; output = "ഈ സഹായ സന്ദേശം കാണിച്ചു് പുറത്തു് കടക്കുക";						helpOption=helpOptions.get(randomGenerator.nextInt(helpOptions.size())); ll.add(Arrays.asList(new Object[] {new BlockedByBzBug(new String[]{"1074568"}), lang, command+" "+helpOption, 0, newList(output.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll(" ", "\\\\s+")+"$")}));
+		lang = "or_IN"; output = "ଏହି ସହାୟତା ସନ୍ଦେଶ ଦେଖାନ୍ତୁ ଏବଂ ପ୍ରସ୍ଥାନ କରନ୍ତୁ";					helpOption=helpOptions.get(randomGenerator.nextInt(helpOptions.size())); ll.add(Arrays.asList(new Object[] {new BlockedByBzBug(new String[]{"1074568"}), lang, command+" "+helpOption, 0, newList(output.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll(" ", "\\\\s+")+"$")}));
+		lang = "pa_IN"; output = "ਇਹ ਮੱਦਦ ਸੁਨੇਹਾ ਵਿਖਾਉ ਅਤੇ ਬਾਹਰ ਜਾਉ";							helpOption=helpOptions.get(randomGenerator.nextInt(helpOptions.size())); ll.add(Arrays.asList(new Object[] {new BlockedByBzBug(new String[]{"1074568"}), lang, command+" "+helpOption, 0, newList(output.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll(" ", "\\\\s+")+"$")}));
+		lang = "ta_IN"; output = "இந்த உதவி செய்தியை காட்டி வெளியேறு";						helpOption=helpOptions.get(randomGenerator.nextInt(helpOptions.size())); ll.add(Arrays.asList(new Object[] {new BlockedByBzBug(new String[]{"1074568"}), lang, command+" "+helpOption, 0, newList(output.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll(" ", "\\\\s+")+"$")}));
+		lang = "te_IN"; output = "ఈ సహయ సందేశం చూపి నిష్క్రమించు";								helpOption=helpOptions.get(randomGenerator.nextInt(helpOptions.size())); ll.add(Arrays.asList(new Object[] {new BlockedByBzBug(new String[]{"1074568"}), lang, command+" "+helpOption, 0, newList(output.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll(" ", "\\\\s+")+"$")}));		
 		
 		// rhsmcertd --help|-h
 		// the following logic is also needed in HelpTests.getTranslatedCommandLineHelpDataAsListOfLists()
@@ -1223,7 +1312,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 		lang = "ko_KR"; output = "사용법:\\n  rhsmcertd [옵션...]";						helpOption=helpOptions.get(randomGenerator.nextInt(helpOptions.size())); ll.add(Arrays.asList(new Object[] {null, lang, command+" "+helpOption, 0, newList(output.replaceAll("\\.","\\\\.").replaceAll("\\[(.+)\\]", "\\\\[($1|OPTION\\\\.\\\\.\\\\.)\\\\]")+"\\s*$")}));
 		lang = "pt_BR"; output = "Uso:\\n  rhsmcertd [(OPÇÃO|OPÇÕES)...]";			helpOption=helpOptions.get(randomGenerator.nextInt(helpOptions.size())); ll.add(Arrays.asList(new Object[] {null, lang, command+" "+helpOption, 0, newList(output.replaceAll("\\.","\\\\.").replaceAll("\\[(.+)\\]", "\\\\[($1|OPTION\\\\.\\\\.\\\\.)\\\\]")+"\\s*$")}));
 		lang = "ru_RU"; output = "Использование:\\n  rhsmcertd [ПАРАМЕТР(…|...)]";	helpOption=helpOptions.get(randomGenerator.nextInt(helpOptions.size())); ll.add(Arrays.asList(new Object[] {null, lang, command+" "+helpOption, 0, newList(output.replaceAll("\\.","\\\\.").replaceAll("\\[(.+)\\]", "\\\\[($1|OPTION\\\\.\\\\.\\\\.)\\\\]")+"\\s*$")}));
-		lang = "zh_CN"; output = "用法：\\n  rhsmcertd [选项...]";					helpOption=helpOptions.get(randomGenerator.nextInt(helpOptions.size())); ll.add(Arrays.asList(new Object[] {null, lang, command+" "+helpOption, 0, newList(output.replaceAll("\\.","\\\\.").replaceAll("\\[(.+)\\]", "\\\\[($1|OPTION\\\\.\\\\.\\\\.)\\\\]")+"\\s*$")}));
+		lang = "zh_CN"; output = "用法：\\n  rhsmcertd [选项(…|...)]";				helpOption=helpOptions.get(randomGenerator.nextInt(helpOptions.size())); ll.add(Arrays.asList(new Object[] {null, lang, command+" "+helpOption, 0, newList(output.replaceAll("\\.","\\\\.").replaceAll("\\[(.+)\\]", "\\\\[($1|OPTION\\\\.\\\\.\\\\.)\\\\]")+"\\s*$")}));
 		lang = "zh_TW"; output = "用法：\\n  rhsmcertd [選項(…|...)]";				helpOption=helpOptions.get(randomGenerator.nextInt(helpOptions.size())); ll.add(Arrays.asList(new Object[] {null, lang, command+" "+helpOption, 0, newList(output.replaceAll("\\.","\\\\.").replaceAll("\\[(.+)\\]", "\\\\[($1|OPTION\\\\.\\\\.\\\\.)\\\\]")+"\\s*$")}));
 		lang = "as_IN"; output = "(ব্যৱহাৰ:|ব্যৱহাৰপ্ৰণালী:)\\n  rhsmcertd [OPTION...]";		helpOption=helpOptions.get(randomGenerator.nextInt(helpOptions.size())); ll.add(Arrays.asList(new Object[] {clienttasks.redhatReleaseX.equals("5")? new BlockedByBzBug("969608"):null, lang, command+" "+helpOption, 0, newList(output.replaceAll("\\.","\\\\.").replaceAll("\\[(.+)\\]", "\\\\[($1|OPTION\\\\.\\\\.\\\\.)\\\\]")+"\\s*$")}));
 		lang = "bn_IN"; output = "ব্যবহারপ্রণালী:\\n  rhsmcertd [OPTION...]";				helpOption=helpOptions.get(randomGenerator.nextInt(helpOptions.size())); ll.add(Arrays.asList(new Object[] {null, lang, command+" "+helpOption, 0, newList(output.replaceAll("\\.","\\\\.").replaceAll("\\[(.+)\\]", "\\\\[($1|OPTION\\\\.\\\\.\\\\.)\\\\]")+"\\s*$")}));
@@ -1231,11 +1320,11 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 		lang = "mr_IN"; output = "वापर:\\n  rhsmcertd [OPTION...]";					helpOption=helpOptions.get(randomGenerator.nextInt(helpOptions.size())); ll.add(Arrays.asList(new Object[] {clienttasks.redhatReleaseX.equals("5")? new BlockedByBzBug("969608"):null, lang, command+" "+helpOption, 0, newList(output.replaceAll("\\.","\\\\.").replaceAll("\\[(.+)\\]", "\\\\[($1|OPTION\\\\.\\\\.\\\\.)\\\\]")+"\\s*$")}));
 		lang = "gu_IN"; output = "વપરાશ:\\n  rhsmcertd [OPTION...]";					helpOption=helpOptions.get(randomGenerator.nextInt(helpOptions.size())); ll.add(Arrays.asList(new Object[] {null, lang, command+" "+helpOption, 0, newList(output.replaceAll("\\.","\\\\.").replaceAll("\\[(.+)\\]", "\\\\[($1|OPTION\\\\.\\\\.\\\\.)\\\\]")+"\\s*$")}));
 		lang = "kn_IN"; output = "ಬಳಕೆ:\\n  rhsmcertd [OPTION...]";					helpOption=helpOptions.get(randomGenerator.nextInt(helpOptions.size())); ll.add(Arrays.asList(new Object[] {clienttasks.redhatReleaseX.equals("5")? new BlockedByBzBug("969608"):null, lang, command+" "+helpOption, 0, newList(output.replaceAll("\\.","\\\\.").replaceAll("\\[(.+)\\]", "\\\\[($1|OPTION\\\\.\\\\.\\\\.)\\\\]")+"\\s*$")}));
-		lang = "ml_IN"; output = "ഉപയോഗിക്കേണ്ട വിധം:\\n  rhsmcertd [OPTION...]";		helpOption=helpOptions.get(randomGenerator.nextInt(helpOptions.size())); ll.add(Arrays.asList(new Object[] {null, lang, command+" "+helpOption, 0, newList(output.replaceAll("\\.","\\\\.").replaceAll("\\[(.+)\\]", "\\\\[($1|OPTION\\\\.\\\\.\\\\.)\\\\]")+"\\s*$")}));
+		lang = "ml_IN"; output = "ഉപയോഗിക്കേണ്ട വിധം:\\n  rhsmcertd [OPTION...]";			helpOption=helpOptions.get(randomGenerator.nextInt(helpOptions.size())); ll.add(Arrays.asList(new Object[] {null, lang, command+" "+helpOption, 0, newList(output.replaceAll("\\.","\\\\.").replaceAll("\\[(.+)\\]", "\\\\[($1|OPTION\\\\.\\\\.\\\\.)\\\\]")+"\\s*$")}));
 		lang = "or_IN"; output = "ବ୍ଯବହାର:\\n  rhsmcertd [ପସନ୍ଦ...]";					helpOption=helpOptions.get(randomGenerator.nextInt(helpOptions.size())); ll.add(Arrays.asList(new Object[] {null, lang, command+" "+helpOption, 0, newList(output.replaceAll("\\.","\\\\.").replaceAll("\\[(.+)\\]", "\\\\[($1|OPTION\\\\.\\\\.\\\\.)\\\\]")+"\\s*$")}));
 		lang = "pa_IN"; output = "ਵਰਤੋਂ:\\n  rhsmcertd [ਚੋਣ...]";						helpOption=helpOptions.get(randomGenerator.nextInt(helpOptions.size())); ll.add(Arrays.asList(new Object[] {null, lang, command+" "+helpOption, 0, newList(output.replaceAll("\\.","\\\\.").replaceAll("\\[(.+)\\]", "\\\\[($1|OPTION\\\\.\\\\.\\\\.)\\\\]")+"\\s*$")}));
 		lang = "ta_IN"; output = "பயன்பாடு:\\n  rhsmcertd [OPTION...]";				helpOption=helpOptions.get(randomGenerator.nextInt(helpOptions.size())); ll.add(Arrays.asList(new Object[] {null, lang, command+" "+helpOption, 0, newList(output.replaceAll("\\.","\\\\.").replaceAll("\\[(.+)\\]", "\\\\[($1|OPTION\\\\.\\\\.\\\\.)\\\\]")+"\\s*$")}));
-		lang = "te_IN"; output = "వినిమయం:\\n  rhsmcertd [ఇచ్చాపూర్వరకం...]";			helpOption=helpOptions.get(randomGenerator.nextInt(helpOptions.size())); ll.add(Arrays.asList(new Object[] {null, lang, command+" "+helpOption, 0, newList(output.replaceAll("\\.","\\\\.").replaceAll("\\[(.+)\\]", "\\\\[($1|OPTION\\\\.\\\\.\\\\.)\\\\]")+"\\s*$")}));
+		lang = "te_IN"; output = "వినిమయం:\\n  rhsmcertd [ఇచ్చాపూర్వరకం...]";				helpOption=helpOptions.get(randomGenerator.nextInt(helpOptions.size())); ll.add(Arrays.asList(new Object[] {null, lang, command+" "+helpOption, 0, newList(output.replaceAll("\\.","\\\\.").replaceAll("\\[(.+)\\]", "\\\\[($1|OPTION\\\\.\\\\.\\\\.)\\\\]")+"\\s*$")}));
 		
 		return ll;
 	}
@@ -1308,7 +1397,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 		}
 		// registration test for a user who has not accepted Red Hat's Terms and conditions (translated)  Man, why did you do something?
 		if (!sm_usernameWithUnacceptedTC.equals("")) {
-			if (sm_serverType.equals(CandlepinType.hosted))	ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"615362","642805","1089034","1095389"}),"de_DE.UTF-8", sm_usernameWithUnacceptedTC, sm_passwordWithUnacceptedTC, 255, null, "Sie müssen zuerst die allgemeinen Geschäftsbedingungen von Red Hat akzeptieren. Bitte besuchen Sie https://www.redhat.com/wapps/ugc. Sie müssen sich gegebenenfalls vom Kundenportal abmelden und anschließend wieder anmelden, um die allgemeinen Geschäftsbedingungen zu sehen."}));		// "Mensch, warum hast du auch etwas zu tun?? Bitte besuchen https://www.redhat.com/wapps/ugc!!!!!!!!!!!!!!!!!!"
+			if (sm_serverType.equals(CandlepinType.hosted))	ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"615362","642805","1089034","1095389","1458423"}),"de_DE.UTF-8", sm_usernameWithUnacceptedTC, sm_passwordWithUnacceptedTC, 255, null, "Sie müssen zuerst die allgemeinen Geschäftsbedingungen von Red Hat akzeptieren. Bitte besuchen Sie https://www.redhat.com/wapps/ugc. Sie müssen sich gegebenenfalls vom Kundenportal abmelden und anschließend wieder anmelden, um die allgemeinen Geschäftsbedingungen zu sehen."}));		// "Mensch, warum hast du auch etwas zu tun?? Bitte besuchen https://www.redhat.com/wapps/ugc!!!!!!!!!!!!!!!!!!"
 		}
 		
 		// registration test for a user who has been disabled (translated)

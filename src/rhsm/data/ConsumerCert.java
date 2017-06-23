@@ -220,7 +220,8 @@ Certificate:
 		//		End Date: 2028-09-11 21:02:22+00:00
 		//		Alt Name: DirName:/CN=jsefler-rhel59.usersys.redhat.com
 		//		Alt Name: URI:CN=jsefler-rhel511.usersys.redhat.com		<==== changed to this after bug fix https://bugzilla.redhat.com/show_bug.cgi?id=1094492#c1
-
+		//		Alt Name: DirName:/CN=d067e838-93ce-4d2d-9c85-51009220189a, DirName:/CN=jsefler-rhel7.usersys.redhat.com  <==== changed to this after bug 1395747 fix https://github.com/candlepin/candlepin/pull/1554
+		
 		//
 		//	Subject:
 		//		CN: 2f62b61b-9150-4ca2-83c6-72b76a31ad0b
@@ -239,7 +240,9 @@ Certificate:
 		// abstraction field				regex pattern (with a capturing group)
 		regexes.put("consumerid",			"Subject:(?:(?:\\n.+)+)CN: (.+)");
 		regexes.put("issuer",				"Issuer:(?:(?:\\n.+)+)CN: (.+)");	// added by bug 968364
-		regexes.put("name",					"Certificate:(?:(?:\\n.+)+)Alt Name: (?:DirName:/CN|URI:CN)=(.+)");	// valid prior to bug fix 1094492:  "Certificate:(?:(?:\\n.+)+)Alt Name: DirName:/CN=(.+)");	
+		//regexes.put("name",					"Certificate:(?:(?:\\n.+)+)Alt Name: DirName:/CN=(.+)");	// valid prior to bug fix 1094492
+		//regexes.put("name",					"Certificate:(?:(?:\\n.+)+)Alt Name: (?:DirName:/CN|URI:CN)=(.+)");	// valid prior to bug fix 1395747
+		regexes.put("name",					"Certificate:(?:(?:\\n.+)+)Alt Name: (?:DirName:/CN=[a-f0-9-]{36}, )?(?:(?:URI:CN)|(?:DirName:/CN))=(\\S+)$");
 		regexes.put("serialString",			"Certificate:(?:(?:\\n.+)+)Serial: (.+)");
 		regexes.put("validityNotBefore",	"Certificate:(?:(?:\\n.+)+)Start Date: (.+)");
 		regexes.put("validityNotAfter",		"Certificate:(?:(?:\\n.+)+)End Date: (.+)");
