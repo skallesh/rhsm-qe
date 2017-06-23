@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<testcase id="">
+    <title>RHSM-TC : rhsm.gui.tests.activation_key_tests.attach_subscriptions_even_wrong_org_was_used_before</title>
+    <description>Given a system is inregistered
+When I try to register with an automation key
+   and I use wrong org
+   and I click a button 'Back'
+   and I register with the right username and password
+Then the right subscriptions should be attached automatically.</description>
+    <test-steps>
+        <test-step>
+            <test-step-column id="step"/>
+        </test-step>
+    </test-steps>
+    <custom-fields>
+        <custom-field id="caseautomation" content="automated"/>
+        <custom-field id="caseimportance" content="high"/>
+        <custom-field id="caselevel" content="component"/>
+        <custom-field id="caseposneg" content="positive"/>
+        <custom-field id="testtype" content="functional"/>
+        <custom-field id="subtype1" content="reliability"/>
+        <custom-field id="subtype2" content="-"/>
+    </custom-fields>
+</testcase>

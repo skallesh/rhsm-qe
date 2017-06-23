@@ -58,7 +58,7 @@ When I try to register with an automation key
    and I register with the right username and password
 Then the right subscriptions should be attached automatically."}
         TestDefinition {:projectID [`DefTypes$Project/RHEL6 `DefTypes$Project/RedHatEnterpriseLinux7]
-                        }
+                        :testCaseID ["" ""]}
         }
   attach_subscriptions_even_wrong_org_was_used_before
   [_]

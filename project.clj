@@ -36,7 +36,7 @@
                  ;[test_clj.testng "1.0.1-SNAPSHOT"]
                  [test-clj.testng "1.1.0-SNAPSHOT"]
                  [levand/immuconf "0.1.0"]
-                 [com.github.redhatqe.polarize/polarize "0.6.0-SNAPSHOT"]
+                 [com.github.redhatqe.polarize/polarize "0.7.1-SNAPSHOT"]
                  [org.json/json "20160810"]
                  [http-kit "2.2.0"]
                  [mount "0.1.10"]]
