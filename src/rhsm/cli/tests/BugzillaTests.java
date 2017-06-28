@@ -4822,6 +4822,44 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 
 	}
 
+	/**
+	 * @author redakkan
+	 * @throws Exception
+	 * JSON Exception
+	 */
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+			, testCaseID = {"", ""})
+	@Test(	description="subscription-manager: subscribe with --file=invalid file from stdin is handled properly",
+			groups={"blockedByBug-1350402"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void SubscribeWithInvalidFileFromStdin_Test() throws JSONException, Exception {
+		if (clienttasks.isPackageVersion("subscription-manager","<","1.13.8-1")) throw new SkipException("The attach --file function was not implemented in this version of subscription-manager.");	// commit 3167333fc3a261de939f4aa0799b4283f2b9f4d2 bug 1159974
+
+		if (clienttasks.getCurrentlyRegisteredOwnerKey() == null) {
+			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null, null);
+		} else clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null, null, null);
+
+		String InvalidFile = "/tmp/invalid.txt";
+
+        /*About the bug : When stdout/stderr output of subscription-manager is redirected using pipe to some other process ... e.g. subscription-manager list --all --available --pool-only | subscription-manager subscribe --file=/tmp/invalid
+        and the second process does not read anything from stdout like in this case, then subscription-manager cannot write the buffer anywhere hence the command was terminated with some errors
+        The bug is reproducible only with stdin , hence passing the poolOnlyListCommand to pipe the out put
+
+        [root@ibm-x3250m3-01 ~]# subscription-manager list --all --available --pool-only | subscription-manager subscribe --file=/tmp/invalid
+		Error: The file "/tmp/invalid" does not exist or cannot be read.
+		close failed in file object destructor:
+		sys.excepthook is missing
+		lost sys.stderr
+        */
+		String poolOnlyListCommand = clienttasks.listCommand(true, true, null, null, null, null, null, null, null, true, null, null, null, null);
+		String stdinFileSubscribeCommand = clienttasks.subscribeCommand(null, null, (List<String>) null, (List<String>) null, null, null, null, null,InvalidFile, null, null, null, null);
+		SSHCommandResult stdinFileSubscribeCommandResult = client.runCommandAndWait(poolOnlyListCommand +"|" +stdinFileSubscribeCommand, (long) (3/*min*/*60*1000/*timeout*/));
+
+		//Assert the additional error messages no longer appear
+		Assert.assertEquals(stdinFileSubscribeCommandResult.getStderr(),"Error: The file \"/tmp/invalid.txt\" does not exist or cannot be read.");
+		Assert.assertEquals(stdinFileSubscribeCommandResult.getExitCode(),Integer.valueOf(64), "Exit Code comparison between the expected result of subscribing using a list of poolids from stdin along with a invalid file.");
+	}
 	@BeforeGroups(groups = "setup", value = {}, enabled = true)
 	public void unsubscribeBeforeGroup() {
 		clienttasks.unsubscribe(true, (BigInteger) null, null, null, null, null, null);
