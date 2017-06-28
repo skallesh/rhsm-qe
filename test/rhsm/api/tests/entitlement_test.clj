@@ -4,8 +4,6 @@
              [rhsm.gui.tasks.tasks :as tasks]
              [rhsm.api.tests.entitlement_tests :as tests]
              [rhsm.gui.tasks.test-config :refer [config]]
-             [org.httpkit.client :as http]
-             [rhsm.api.rest :as rest]
              [rhsm.gui.tests.base :as base]
              [clojure.data.json :as json]))
 
@@ -16,43 +14,14 @@
 
 ;; initialization of our testware
 (use-fixtures :once (fn [f]
-                      (base/startup nil)
+;;                      (base/startup nil)
                       (f)))
 
-(deftest entitlement-object-is-availabe-test
-  "shell
-[root@jstavel-rhel7-latest-server ~]# busctl tree com.redhat.RHSM1
-└─/com
-  └─/com/redhat
-    └─/com/redhat/RHSM1
-      ├─/com/redhat/RHSM1/Config
-      └─/com/redhat/RHSM1/RegisterServer
-"
-  (let [list-of-dbus-objects (->> "busctl tree com.redhat.RHSM1"
-                             tools/run-command
-                             :stdout
-                             (re-seq #"(├─|└─)/com/redhat/RHSM1/([^ ]+)")
-                             ;;  (["├─/com/redhat/RHSM1/Config\n" "├─" "Config\n"]
-                             ;;   ["└─/com/redhat/RHSM1/RegisterServer\n" "└─" "RegisterServer\n"])
-                             (map (fn [xs] (nth xs 2)))
-                             (map clojure.string/trim)
-                             (into #{}))]
-    (is (clojure.set/subset? #{"Entitlement"} list-of-dbus-objects))))
+(deftest entitlement-object-is-available-test
+  (tests/entitlement_object_is_available nil))
 
 (deftest entitlement-methods-inspection-test
-  (let [methods-of-entitlement-object
-        (->> "busctl introspect com.redhat.RHSM1 /com/redhat/RHSM1/Entitlement"
-             tools/run-command
-             :stdout
-             clojure.string/split-lines
-             (filter (fn [s] (re-find #"[\ \t]method[\ \t]" s)))
-             (map (fn [s] (clojure.string/replace s #"^([^\ \t]+).*" "$1")))
-             (into #{}))]
-    (is (clojure.set/subset? #{".GetStatus" ".GetPools"} methods-of-entitlement-object))))
+  (tests/entitlement_methods nil))
 
-(deftest GetStatus-entitlement-method
-  (->> "busctl call com.redhat.RHSM1 /com/redhat/RHSM1/Entitlement com.redhat.RHSM1.Entitlement GetStatus"
-       tools/run-command
-       )
-  )
-
+(deftest entitlement_status_of_invalid_subscription_test
+  (tests/entitlement_status_of_invalid_subscription_using_dbus nil))
