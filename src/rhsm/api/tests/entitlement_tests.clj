@@ -103,6 +103,7 @@ Then the response contains of keys ['status','overall_status','reasons']
     (match major
            (a :guard #(< (Integer. %) 7 )) (throw (SkipException. "busctl is not available in RHEL6"))
            :else nil))
+  (run-command "subscription-manager unregister")
   (run-command (format "subscription-manager register  --username %s --password %s --org=%s" (@config :username) (@config :password) (@config :owner-key)))
   (let [response (-> "busctl call com.redhat.RHSM1 /com/redhat/RHSM1/Entitlement com.redhat.RHSM1.Entitlement GetStatus"
                      run-command)]
@@ -115,6 +116,12 @@ Then the response contains of keys ['status','overall_status','reasons']
       (verify (= rest-of-the-string ""))
       (verify (= keys-of-the-parsed-response #{"status" "overall_status" "reasons"}))
       (verify (= status-of-the-response 1))
-      (verify (= overall-status "Invalid")))))
+      (verify (= overall-status "Invalid"))
+      (let [reason-texts (-> parsed-response (get "reasons") vals)
+            num-of-not-supported-reasons
+            (count (filter (fn [s] (.contains s "Not supported by a valid subscription."))
+                           reason-texts))]
+        ;; more that a half o texts should be 'Not supported by a valid subscription."
+        (verify (> num-of-not-supported-reasons (* 0.5 (count reason-texts))))))))
 
 (gen-class-testng)
