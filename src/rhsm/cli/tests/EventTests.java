@@ -740,7 +740,8 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 
 		// assert the feed...
 		assertTheNewFeed(oldFeed, newEventTitles);
-	}
+	}else throw new SkipException("Due to the Bug 1455361 ,consumer of type candlepin cannot"
+		+ " be registered via Subscription-manager ");
 	}
 
 
