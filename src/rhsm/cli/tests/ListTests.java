@@ -1081,6 +1081,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		Boolean matchInstalled = getRandomListItem(Arrays.asList(new Boolean[]{Boolean.TRUE,Boolean.FALSE}));
 		Boolean noOverlap = getRandomListItem(Arrays.asList(new Boolean[]{Boolean.TRUE,Boolean.FALSE}));
 ///*debugTesting*/ all=true; noOverlap=true; matchInstalled=false;	//  Bug 1301696 - getting unexpected hits on TESTDATA from subscription-manager list --available --matches=*os*
+///*debugTesting*/ all=true; noOverlap=false; matchInstalled=false;
 		log.info("Testing with all="+all);
 		log.info("Testing with matchInstalled="+matchInstalled);
 		log.info("Testing with noOverlap="+noOverlap);
@@ -1102,6 +1103,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		// randomly choose an available pool
 		SubscriptionPool randomAvailablePool = getRandomListItem(availableSubscriptionPools);
 ///*debugTesting*/ randomAvailablePool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", "awesomeos-ostree", availableSubscriptionPools);	//  Bug 1301696 - getting unexpected hits on TESTDATA from subscription-manager list --available --matches=*os*
+///*debugTesting*/ randomAvailablePool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", "RH0380468", availableSubscriptionPools);	//  Bug 1301696 - getting unexpected hits on TESTDATA from subscription-manager list --available --matches=*os*
 		log.info("Testing with randomAvailablePool="+randomAvailablePool);
 		
 		//	+-------------------------------------------+
@@ -1160,16 +1162,18 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		
 		
 		// Test 4: test wildcard --matches on Contract:
-		matchesString = randomAvailablePool.contract;
-		matchesString = matchesString.replaceFirst(".$","?");	// drop last char
-		actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, matchesString, null, null, null, null, null).getStdout());
-		assertActualResultOfListAvailableWithMatches(matchesString,actualSubscriptionPoolMatches,availableSubscriptionPools);
-		// also test case insensitivity
-		matchesString = randomizeCaseOfCharactersInString(matchesString);
-		matchesString = matchesString.replaceFirst("^.","?");	// and drop first char
-		actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, matchesString, null, null, null, null, null).getStdout());
-		assertActualResultOfListAvailableWithMatches(matchesString,actualSubscriptionPoolMatches,availableSubscriptionPools);
-		
+		if (randomAvailablePool.contract!=null && !randomAvailablePool.contract.isEmpty()) {
+			matchesString = randomAvailablePool.contract;
+			matchesString = matchesString.replaceFirst(".$","?");	// drop the last char and replace it with a '?' wildcard
+			actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, matchesString, null, null, null, null, null).getStdout());
+			assertActualResultOfListAvailableWithMatches(matchesString,actualSubscriptionPoolMatches,availableSubscriptionPools);
+			// also test case insensitivity
+			matchesString = randomizeCaseOfCharactersInString(matchesString);
+			matchesString = matchesString.replaceFirst("^.","?");	// also drop the first char and replace it with a '?' wildcard
+			actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, matchesString, null, null, null, null, null).getStdout());
+			assertActualResultOfListAvailableWithMatches(matchesString,actualSubscriptionPoolMatches,availableSubscriptionPools);
+		} else log.warning("Skipping list --available --matches test on a Contract item since it is null or empty on our random available subscription: "+randomAvailablePool);
+
 		
 		// Test 5: test wildcard --matches on Service Level:
 		if (randomAvailablePool.serviceLevel!=null && !randomAvailablePool.serviceLevel.isEmpty()) {
@@ -1182,7 +1186,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			matchesString = randomizeCaseOfCharactersInString(matchesString);
 			actualSubscriptionPoolMatches = SubscriptionPool.parse(clienttasks.list(all, true, null, null, null, null, matchInstalled, noOverlap, matchesString, null, null, null, null, null).getStdout());
 			assertActualResultOfListAvailableWithMatches(matchesString,actualSubscriptionPoolMatches,availableSubscriptionPools);
-		} else log.warning("Skipping list --available --matches test on a Service Level item since it is null on our random available subscription: "+randomAvailablePool);
+		} else log.warning("Skipping list --available --matches test on a Service Level item since it is null or empty on our random available subscription: "+randomAvailablePool);
 		
 		
 		// Test 6: test wildcard --matches on Provided ProductId:
