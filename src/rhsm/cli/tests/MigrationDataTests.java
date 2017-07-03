@@ -631,10 +631,14 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				log.info ("Searching the current product certs defined by release engineering for a newly generated instance of this migration product cert...");
 				boolean foundNewerVersionOfMigrationProductCert = false;
 				for (ProductCert rhnDefnitionProductCert : rhnDefnitionProductCerts) {
+					Set<String> rhnDefnitionProductCertProvidedTags = new HashSet<String>();
+					Set<String> migrationProductCertProvidedTags = new HashSet<String>();
+					if (rhnDefnitionProductCert.productNamespace.providedTags!=null) rhnDefnitionProductCertProvidedTags.addAll(Arrays.asList(rhnDefnitionProductCert.productNamespace.providedTags.split("\\s*,\\s*")));	// tags can be defined as a comma separated string
+					if (migrationProductCert.productNamespace.providedTags!=null) migrationProductCertProvidedTags.addAll(Arrays.asList(migrationProductCert.productNamespace.providedTags.split("\\s*,\\s*")));	// tags can be defined as a comma separated string
 					if (rhnDefnitionProductCert.productId.equals(migrationProductCert.productId) &&
-//						rhnDefnitionProductCert.productName.equals(migrationProductCert.productName) &&
+//NOT A MUST MATCH		rhnDefnitionProductCert.productName.equals(migrationProductCert.productName) &&
 						rhnDefnitionProductCert.productNamespace.version.equals(migrationProductCert.productNamespace.version) &&
-						rhnDefnitionProductCert.productNamespace.providedTags.equals(migrationProductCert.productNamespace.providedTags) &&
+						rhnDefnitionProductCertProvidedTags.containsAll(migrationProductCertProvidedTags) && migrationProductCertProvidedTags.containsAll(rhnDefnitionProductCertProvidedTags) &&
 						rhnDefnitionProductCert.productNamespace.arch.equals(migrationProductCert.productNamespace.arch) &&
 						rhnDefnitionProductCert.productNamespace.brandType==migrationProductCert.productNamespace.brandType) {
 						foundNewerVersionOfMigrationProductCert=true;
@@ -655,7 +659,22 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 					//		Tags: rhel-6-ibm-system-z
 					//		Brand Type: 
 					//		Brand Name: 
-					log.info("Ignoring the the WARNING for migration product cert '"+migrationProductCert.file+"' because it is irrelevant on RHEL7.  It applies to RHEL6: "+ migrationProductCert.productNamespace);
+					log.info("Ignoring the WARNING for migration product cert '"+migrationProductCert.file+"' because it is irrelevant on RHEL7.  It applies to RHEL6: "+ migrationProductCert.productNamespace);
+					continue;
+				}
+				
+				// skip a known issue product 126 was removed in commit http://git.app.eng.bos.redhat.com/git/rcm/rcm-metadata.git/commit/product_ids?id=f04a9cfd3dbe971f710afedfecc7f7c8bdf4c307 but was NOT regenerated in http://git.app.eng.bos.redhat.com/git/rcm/rcm-metadata.git/commit/product_ids?id=721aaec8aa57bff38929c6736dc98696b1a89011
+				if (migrationProductCert.file.getPath().equals("/usr/share/rhsm/product/RHEL-7/Server-SJIS-x86_64-1d1c6aac9e3b-126.pem")) {
+					//	[root@jsefler-rhel7 ~]# rct cat-cert /usr/share/rhsm/product/RHEL-7/Server-SJIS-x86_64-1d1c6aac9e3b-126.pem | grep -A7 "Product:"
+					//	Product:
+					//		ID: 126
+					//		Name: Red Hat S-JIS Support (for RHEL Server)
+					//		Version: 7.4
+					//		Arch: x86_64
+					//		Tags: rhel-7-server-sjis,rhel-7-sjis
+					//		Brand Type: 
+					//		Brand Name: 
+					log.info("Ignoring the WARNING for migration product cert '"+migrationProductCert.file+"' because it is extraneous ad will not harm anything.  It was excluded in the regenerated certs by rcm in commit http://git.app.eng.bos.redhat.com/git/rcm/rcm-metadata.git/commit/product_ids?id=721aaec8aa57bff38929c6736dc98696b1a89011");
 					continue;
 				}
 				
