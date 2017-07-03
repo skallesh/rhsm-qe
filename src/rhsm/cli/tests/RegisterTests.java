@@ -31,6 +31,7 @@ import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.jul.TestRecords;
 
+import rhsm.base.CandlepinType;
 import rhsm.base.ConsumerType;
 import rhsm.base.SubscriptionManagerCLITestScript;
 import rhsm.cli.tasks.CandlepinTasks;
@@ -854,22 +855,34 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 			       , testCaseID = {"RHEL6-27114", "RHEL7-51297"})
 	@Test(	description="subscription-manager-cli: register with --name and --type",
 			dataProvider="getRegisterWithNameAndType_TestData",
-			groups={},
+			groups={"registerversion"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void RegisterWithNameAndType_Test(Object bugzilla, String username, String password, String owner, String name, ConsumerType type, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex) {
 		
 		// start fresh by unregistering
 		clienttasks.unregister(null, null, null, null);
-		
 		// register with a name
-		SSHCommandResult sshCommandResult = clienttasks.register_(username,password,owner,null,type,name,null, null, null, null, (String)null, null, null, null, null, null, null, null, null, null);
-		
-		// assert the sshCommandResult here
-		if (expectedExitCode!=null) Assert.assertEquals(sshCommandResult.getExitCode(), expectedExitCode,"ExitCode after register with --name="+name+" --type="+type+" options:");
-		if (expectedStdoutRegex!=null) Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), expectedStdoutRegex,"Stdout after register with --name="+name+" --type="+type+" options:");
-		if (expectedStderrRegex!=null) Assert.assertContainsMatch(sshCommandResult.getStderr().trim(), expectedStderrRegex,"Stderr after register with --name="+name+" --type="+type+" options:");
+
+		if ((SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.1.1-1"))&& (type.equals(ConsumerType.candlepin))) {
+		    throw new SkipException("Due to the Bug 1455361 ,consumer of type candlepin cannot"
+				+ " be registered via Subscription-manager ");
+		}else{
+		 SSHCommandResult sshCommandResult = clienttasks.register_(username,password,owner,null,type,name,null, null, null, null, (String)null, null, null, null, null, null, null, null, null, null);
+			
+			// assert the sshCommandResult here
+		      	if (expectedExitCode!=null) Assert.assertEquals(sshCommandResult.getExitCode(), expectedExitCode,"ExitCode after register with --name="+name+" --type="+type+" options:");
+			if (expectedStdoutRegex!=null) Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), expectedStdoutRegex,"Stdout after register with --name="+name+" --type="+type+" options:");
+			if (expectedStderrRegex!=null) Assert.assertContainsMatch(sshCommandResult.getStderr().trim(), expectedStderrRegex,"Stderr after register with --name="+name+" --type="+type+" options:");
+			
+
+		}
+  
+		      
 	}
+	
+
+	
 	@DataProvider(name="getRegisterWithNameAndType_TestData")
 	public Object[][] getRegisterWithNameAndType_TestDataAs2dArray() throws JSONException, Exception {
 		return TestNGUtils.convertListOfListsTo2dArray(getRegisterWithNameAndType_TestDataAsListOfLists());
