@@ -816,6 +816,17 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		//  "updated": "2015-06-17T10:55:58.000+0000", 
 		//	"value": "x86_64,ppc64,ia64,ppc,x86"
 		
+		// INFO: rhel-ha-for-rhel-7-server-rpms/7Server/x86_64 is enabled by default
+		// NOT ANYMORE, WE NOW NEED TO ENABLE THE ADDON REPO (A GOOD CHANGE BY REL-ENG DURING THE RHEL7.4 TEST PHASE)
+		if (clienttasks.redhatReleaseX.equals("7") && clienttasks.arch.equals("x86_64")) {
+			clienttasks.repos(null, null, null, "rhel-ha-for-rhel-7-server-rpms", null, null, null, null, null);
+		}
+		
+		// INFO: rhel-ha-for-rhel-7-for-system-z-rpms/7Server/s390x is NOT enabled by default
+		if (clienttasks.redhatReleaseX.equals("7") && clienttasks.arch.equals("s390x")) {
+			clienttasks.repos(null, null, null, "rhel-ha-for-rhel-7-for-system-z-rpms", null, null, null, null, null);
+		}
+		
 		// mark the rhsm.log file
 		logMarker = System.currentTimeMillis()+" Testing verifyEnabledProductIdInstallTestPluginHooksAreCalled_Test...";
 		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, logMarker);
