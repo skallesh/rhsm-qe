@@ -855,7 +855,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 			       , testCaseID = {"RHEL6-27114", "RHEL7-51297"})
 	@Test(	description="subscription-manager-cli: register with --name and --type",
 			dataProvider="getRegisterWithNameAndType_TestData",
-			groups={"registerversion"},
+			groups={},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void RegisterWithNameAndType_Test(Object bugzilla, String username, String password, String owner, String name, ConsumerType type, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex) {
@@ -863,22 +863,13 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		// start fresh by unregistering
 		clienttasks.unregister(null, null, null, null);
 		// register with a name
-
-		if ((SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.1.1-1"))&& (type.equals(ConsumerType.candlepin))) {
-		    throw new SkipException("Due to the Bug 1455361 ,consumer of type candlepin cannot"
-				+ " be registered via Subscription-manager ");
-		}else{
-		 SSHCommandResult sshCommandResult = clienttasks.register_(username,password,owner,null,type,name,null, null, null, null, (String)null, null, null, null, null, null, null, null, null, null);
-			
-			// assert the sshCommandResult here
-		      	if (expectedExitCode!=null) Assert.assertEquals(sshCommandResult.getExitCode(), expectedExitCode,"ExitCode after register with --name="+name+" --type="+type+" options:");
-			if (expectedStdoutRegex!=null) Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), expectedStdoutRegex,"Stdout after register with --name="+name+" --type="+type+" options:");
-			if (expectedStderrRegex!=null) Assert.assertContainsMatch(sshCommandResult.getStderr().trim(), expectedStderrRegex,"Stderr after register with --name="+name+" --type="+type+" options:");
-			
-
-		}
-  
-		      
+		
+		SSHCommandResult sshCommandResult = clienttasks.register_(username,password,owner,null,type,name,null, null, null, null, (String)null, null, null, null, null, null, null, null, null, null);
+		
+		// assert the sshCommandResult here
+		if (expectedExitCode!=null)Assert.assertEquals(sshCommandResult.getExitCode(), expectedExitCode,"ExitCode after register with --name="+name+" --type="+type+" options:");
+		if (expectedStdoutRegex!=null) Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), expectedStdoutRegex,"Stdout after register with --name="+name+" --type="+type+" options:");
+		if (expectedStderrRegex!=null) Assert.assertContainsMatch(sshCommandResult.getStderr().trim(), expectedStderrRegex,"Stderr after register with --name="+name+" --type="+type+" options:");
 	}
 	
 
@@ -901,7 +892,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 			registerableConsumerTypes.add(consumerType);
 		}
 		
-		// interate across all ConsumerType values and append rows to the dataProvider
+		// iterate across all ConsumerType values and append rows to the dataProvider
 		for (ConsumerType type : ConsumerType.values()) {
 			String name = type.toString()+"_NAME";
 			
@@ -925,15 +916,27 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 					ll.add(Arrays.asList(new Object[]{null,  							username,	password,	name,	type,	Integer.valueOf(0),	"[a-f,0-9,\\-]{36} "+name,	null}));			
 				}
 				*/
-				ll.add(Arrays.asList(new Object[]{null,  	username,	password,	owner,	name,	type,	Integer.valueOf(0),	"The system has been registered with ID: [a-f,0-9,\\-]{36}",	null}));			
+				Integer expectedExitCode = new Integer(0);
+				String expectedStdoutRegex = "The system has been registered with ID: [a-f,0-9,\\-]{36}";
+				String expectedStderrRegex = null;
+				if ((SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">="/*TODO CHANGE TO ">" after candlepin 2.1.2-1 is tagged*/, "2.1.1-1")) && (ConsumerType.candlepin.equals(type))) {	// candlepin commit 739b51a0d196d9d3153320961af693a24c0b826f Bug 1455361: Disallow candlepin consumers to be registered via Subscription Manager
+					//	FINE: ssh root@jsefler-rhel7.usersys.redhat.com subscription-manager register --username=testuser1 --password=password --org=admin --type=candlepin --name="candlepin_NAME"
+					//	FINE: Stdout: Registering to: jsefler-candlepin.usersys.redhat.com:8443/candlepin
+					//	FINE: Stderr: You may not create a manifest consumer via Subscription Manager.
+					//	FINE: ExitCode: 70
+					expectedStdoutRegex = null;
+					expectedStderrRegex = "You may not create a manifest consumer via Subscription Manager.";
+					expectedExitCode = Integer.valueOf(70);	
+
+				}
+				ll.add(Arrays.asList(new Object[]{null,  username,	password,	owner,	name,	type,	expectedExitCode,	expectedStdoutRegex,	expectedStderrRegex}));
 			} else {
 				String expectedStderrRegex = "No such consumer type: "+type;
 				if (!clienttasks.workaroundForBug876764(sm_serverType)) expectedStderrRegex = "No such unit type: "+type;
 				expectedStderrRegex = String.format("Unit type '%s' could not be found.",type);	// changed to this by bug 876758 comment 5; https://bugzilla.redhat.com/show_bug.cgi?id=876758#c5
 				Integer expectedExitCode = new Integer(255);
 				if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) expectedExitCode = new Integer(70);	// EX_SOFTWARE	// post commit df95529a5edd0be456b3528b74344be283c4d258
-				ll.add(Arrays.asList(new Object[]{ null,	username,	password,	owner,	name,	type,	expectedExitCode,	null,	expectedStderrRegex}));			
-	
+				ll.add(Arrays.asList(new Object[]{null,	username,	password,	owner,	name,	type,	expectedExitCode,	null,	expectedStderrRegex}));
 			}
 		}
 
