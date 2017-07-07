@@ -3797,6 +3797,8 @@ if (false) {
 		// transfer the cert and key file to the client
 		RemoteFileTasks.putFile(sshCommandRunner.getConnection(), certFile.getPath(), consumerCertFile(), "0640");
 		RemoteFileTasks.putFile(sshCommandRunner.getConnection(), keyFile.getPath(), consumerKeyFile(), "0640");
+		
+		//return jsonCandlepinConsumer.getString("uuid");
 	}
 	
 	
