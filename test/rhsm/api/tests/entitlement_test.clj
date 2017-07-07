@@ -14,7 +14,7 @@
 
 ;; initialization of our testware
 (use-fixtures :once (fn [f]
-;;                      (base/startup nil)
+                      (base/startup nil)
                       (f)))
 
 (deftest entitlement-object-is-available-test
@@ -25,3 +25,6 @@
 
 (deftest entitlement_status_of_invalid_subscription_test
   (tests/entitlement_status_of_invalid_subscription_using_dbus nil))
+
+(deftest entitlement_status_of_invalid_subscription_test
+  (tests/get_consumed_pools_using_dbus nil))
