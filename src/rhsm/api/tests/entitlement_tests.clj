@@ -124,4 +124,51 @@ Then the response contains of keys ['status','overall_status','reasons']
         ;; more that a half o texts should be 'Not supported by a valid subscription."
         (verify (> num-of-not-supported-reasons (* 0.5 (count reason-texts))))))))
 
+
+(defn ^{Test {:groups ["DBUS"
+                       "API"
+                       "tier1"]
+              :description "Given a system is registered
+and subscription-manager tells a status is 'Invalid'
+When I call 'GetPools' using busctl and com.redhat.RHSM1.Entitlement object
+Then the response contains of list of entitlements info
+"}
+        TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]}}
+  get_consumed_pools_using_dbus
+  [ts]
+  (let [[_ major minor] (re-find #"(\d)\.(\d)" (-> :true get-release :version))]
+    (match major
+           (a :guard #(< (Integer. %) 7 )) (throw (SkipException. "busctl is not available in RHEL6"))
+           :else nil))
+  (run-command "subscription-manager unregister")
+  (run-command (format "subscription-manager register  --username %s --password %s --org=%s" (@config :username) (@config :password) (@config :owner-key)))
+  (run-command "subscription-manager attach --auto")
+  (run-command "subscription-manager list --consumed")
+  (let [response (-> "busctl call com.redhat.RHSM1 /com/redhat/RHSM1/Entitlement com.redhat.RHSM1.Entitlement GetPools" run-command)]
+    (verify (= (:exitcode response) 0))
+    (verify (=  (:stderr response) ""))
+    (let [[parsed-response rest-of-the-string] (-> response :stdout (.trim) dbus/parse)]
+      (verify (= rest-of-the-string ""))
+      (verify (= (type []) (type parsed-response)))
+      (let [first-pool (first parsed-response)]
+        (verify (= clojure.lang.PersistentHashMap (type first-pool)))
+        (let [keys-of-the-pool (keys first-pool)]
+          (verify (= #{"provides_management"
+                       "status_detail"
+                       "sku"
+                       "system_type"
+                       "serial"
+                       "provides"
+                       "subscription_name"
+                       "pool_id"
+                       "service_level"
+                       "account"
+                       "service_type"
+                       "contract"
+                       "starts"
+                       "subscription_type"
+                       "active"
+                       "ends"
+                       "quantity_used"} (into #{} keys-of-the-pool))))))))
+
 (gen-class-testng)
