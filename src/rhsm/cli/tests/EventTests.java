@@ -696,14 +696,17 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsTCMS(id="")
 	public void ExportCreated_Test() throws Exception {
 		if (sm_serverAdminUsername.equals("")||sm_serverAdminPassword.equals("")) throw new SkipException("This test requires the candlepin server admin username and password credentials.");
-
+		
 		// start fresh by unregistering
 		clienttasks.unregister(null, null, null, null);
 		
 		// register a type=candlepin consumer and subscribe to get an entitlement
 		// NOTE: Without the subscribe, this bugzilla is thrown: 
-		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, "<", "2.1.1-1")) {
-		    SSHCommandResult result = clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,ConsumerType.candlepin,null,null, null, null, null, (String)null, null, null, null, null, false, null, null, null, null);
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">="/*TODO CHANGE TO ">" after candlepin 2.1.2-1 is tagged*/, "2.1.1-1")) {	// candlepin commit 739b51a0d196d9d3153320961af693a24c0b826f Bug 1455361: Disallow candlepin consumers to be registered via Subscription Manager
+		    clienttasks.registerCandlepinConsumer(sm_clientUsername,sm_clientPassword,sm_clientOrg,sm_serverUrl,"candlepin");
+		} else {
+		    clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,ConsumerType.candlepin,null,null, null, null, null, (String)null, null, null, null, null, false, null, null, null, null);
+		}
 		
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		pools.remove( SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", "mktProductId-93x2", pools));	// avoid "Too many content sets..." from Issue/Bug 1455361 - strange pool availability and bind behavior for consumer of type candlepin
@@ -740,8 +743,6 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 
 		// assert the feed...
 		assertTheNewFeed(oldFeed, newEventTitles);
-	}else throw new SkipException("Due to the Bug 1455361 ,consumer of type candlepin cannot"
-		+ " be registered via Subscription-manager ");
 	}
 
 
