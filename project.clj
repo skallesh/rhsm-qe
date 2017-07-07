@@ -17,7 +17,7 @@
                  [com.redhat.qe/testng-listeners "1.0.0" 
                   :exclusions [com.redhat.qe/bugzilla-testng]]
                  [com.redhat.qe/verify-testng "1.0.0-SNAPSHOT"]
-                 [com.redhat.qe/rhsm-dbus "0.9.0-SNAPSHOT"]
+                 [com.redhat.qe/rhsm-dbus "0.9.1-SNAPSHOT"]
                  [gnome.ldtp "1.2.1-SNAPSHOT"]
                  [matchure "0.10.1"]
                  [org.clojure/core.match "0.3.0-alpha4"]
