@@ -3766,6 +3766,40 @@ if (false) {
 		return register(username, password, org, null, null, null, null, null, null, null, (String)null, null, null, null, null, null, null, null, null, null);
 	}
 	
+	/**
+	 * Useful workaround to create a candlepin consumer on a RHEL client when the version of
+	 * candlepin is greater that 2.1.1-1 due to a change in candlepin behavior blocking the
+	 * creation of a "candlepin" consumer from subscription-manager.
+	 * Reference candlepin commit 739b51a0d196d9d3153320961af693a24c0b826f
+	 * 1455361: Disallow candlepin consumers to be registered via Subscription Manager
+	 * @param username
+	 * @param password
+	 * @param org
+	 * @param serverUrl
+	 * @param consumerName
+	 * @throws Exception
+	 */
+	public void registerCandlepinConsumer(String username, String password, String org, String serverUrl, String consumerName) throws Exception {
+	    JSONObject jsonCandlepinConsumer = CandlepinTasks.createCandlepinConsumerUsingRESTfulAPI(username, password, serverUrl, org, consumerName);
+		String cert = jsonCandlepinConsumer.getJSONObject("idCert").getString("cert");
+		String key = jsonCandlepinConsumer.getJSONObject("idCert").getString("key");
+		
+		// write the cert and key to a local file
+	    File certFile = new File("test-output/cert.pem");
+    	Writer certWriter = new BufferedWriter(new FileWriter(certFile));
+		certWriter.write(cert);
+		certWriter.close();
+	    File keyFile = new File("test-output/key.pem");
+    	Writer keyWriter = new BufferedWriter(new FileWriter(keyFile));
+		keyWriter.write(key);
+		keyWriter.close();
+		
+		// transfer the cert and key file to the client
+		RemoteFileTasks.putFile(sshCommandRunner.getConnection(), certFile.getPath(), consumerCertFile(), "0640");
+		RemoteFileTasks.putFile(sshCommandRunner.getConnection(), keyFile.getPath(), consumerKeyFile(), "0640");
+	}
+	
+	
 	// reregister module tasks ************************************************************
 
 //	/**

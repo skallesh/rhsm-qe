@@ -3825,6 +3825,76 @@ schema generation failed
 		return new JSONObject(postResourceUsingRESTfulAPI(owner, password, url, "/owners", jsonData.toString()));
 	}
 	
+	static public JSONObject createCandlepinConsumerUsingRESTfulAPI(String authenticator, String password, String url, String owner, String name) throws Exception {
+		
+		//	[root@jsefler-rhel7 ~]# curl -k -u testuser1:password --header "Content-Type: application/json" --request POST 'https://jsefler-candlepin.usersys.redhat.com:8443/candlepin/consumers?owner=admin' --data '{"type":{"label":"candlepin"},"name":"candlepin_name"}' --stderr /dev/null | python -m json/tool
+		//	{
+		//	    "annotations": null,
+		//	    "autoheal": true,
+		//	    "canActivate": false,
+		//	    "capabilities": null,
+		//	    "contentAccessMode": null,
+		//	    "contentTags": null,
+		//	    "created": "2017-07-07T17:00:05+0000",
+		//	    "dev": false,
+		//	    "entitlementCount": 0,
+		//	    "entitlementStatus": null,
+		//	    "environment": null,
+		//	    "facts": null,
+		//	    "guestIds": [],
+		//	    "href": "/consumers/dc8a1d3b-b476-4c67-a363-f5b0ec230c89",
+		//	    "hypervisorId": null,
+		//	    "id": "8a90860f5d19a77e015d1dfe850f0b41",
+		//	    "idCert": {
+		//	        "cert": "-----BEGIN CERTIFICATE-----\nMIIDszCCAxygAwIBAgIIONYLLPkCksowDQYJKoZIhvcNAQEFBQAwTjEtMCsGA1UE\nAwwkanNlZmxlci1jYW5kbGVwaW4udXNlcnN5cy5yZWRoYXQuY29tMQswCQYDVQQG\nEwJVUzEQMA4GA1UEBwwHUmFsZWlnaDAeFw0xNzA3MDcxNjAwMDVaFw0zMzA3MDcx\nNzAwMDVaMC8xLTArBgNVBAMTJGRjOGExZDNiLWI0NzYtNGM2Ny1hMzYzLWY1YjBl\nYzIzMGM4OTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAMvY8PA8+EZ1\nPKSG9HHuQH1vD15dDUK72NZ2CpH6Gdfy9+dzQKuZwZ1P+43xeGU7kCpmZvPuEvhh\nX+CJ20WW2exRpjChU/Un00I8apNBdNhxLDIK9qXllqyvhi+WKZ+F/HVHhFE01lLy\nTYVX5LxSdQvE18bPQJR0hjLQmLXD/L95XiGXiKmUoBnjsrL8TRrB41AyOAxjl6bZ\n6HW7LfI40McbKuZwmWxz33el/N6u1ESlwVmS8rLuVVLmMrXcb2K4GB884TZKNSxL\ndpTFROJ8/T6ASTH8hJxcy+5BH7/G8sMtmAsojPzmtVaUG4QAaDfKIgAwugIkHDxK\nwPVC5cInQNUCAwEAAaOCATMwggEvMBEGCWCGSAGG+EIBAQQEAwIFoDALBgNVHQ8E\nBAMCBLAwfgYDVR0jBHcwdYAUS2QA9/x6L+MPwXo7mjN04xAZf9ahUqRQME4xLTAr\nBgNVBAMMJGpzZWZsZXItY2FuZGxlcGluLnVzZXJzeXMucmVkaGF0LmNvbTELMAkG\nA1UEBhMCVVMxEDAOBgNVBAcMB1JhbGVpZ2iCCQDt7lC7OV1PcTAdBgNVHQ4EFgQU\ntA2EI0nJfG38My4LPjloLXRcDNwwEwYDVR0lBAwwCgYIKwYBBQUHAwIwWQYDVR0R\nBFIwUKQxMC8xLTArBgNVBAMMJGRjOGExZDNiLWI0NzYtNGM2Ny1hMzYzLWY1YjBl\nYzIzMGM4OaQbMBkxFzAVBgNVBAMMDmNhbmRsZXBpbl9uYW1lMA0GCSqGSIb3DQEB\nBQUAA4GBAEowyr3R8a+sVzFlQRG7LFFnq08WZxAPkKRZAGB2hDX/Yelg5hfCdGqg\n/Ij+Hzt/alS1hd33cpwrMfdNFmKNGEHvvptMXNeArYmJla0h/77jjGfaw/cP24eh\nCcIooobf3LCrbYiHiWO/Fbt5F0XMgzGUIpCKE3Ks78pBpeV+P6t0\n-----END CERTIFICATE-----\n",
+		//	        "created": "2017-07-07T17:00:06+0000",
+		//	        "id": "8a90860f5d19a77e015d1dfe87560b43",
+		//	        "key": "-----BEGIN RSA PRIVATE KEY-----\nMIIEogIBAAKCAQEAy9jw8Dz4RnU8pIb0ce5AfW8PXl0NQrvY1nYKkfoZ1/L353NA\nq5nBnU/7jfF4ZTuQKmZm8+4S+GFf4InbRZbZ7FGmMKFT9SfTQjxqk0F02HEsMgr2\npeWWrK+GL5Ypn4X8dUeEUTTWUvJNhVfkvFJ1C8TXxs9AlHSGMtCYtcP8v3leIZeI\nqZSgGeOysvxNGsHjUDI4DGOXptnodbst8jjQxxsq5nCZbHPfd6X83q7URKXBWZLy\nsu5VUuYytdxvYrgYHzzhNko1LEt2lMVE4nz9PoBJMfyEnFzL7kEfv8bywy2YCyiM\n/Oa1VpQbhABoN8oiADC6AiQcPErA9ULlwidA1QIDAQABAoIBABcR6Uq3C74lnIRe\nRaHzPdc0T3/1df+8dLDo0Q9uR6h59fZ6w7HoB9J+79BDqMWENS+nQTWQFxOHKaum\nzmsUxHsLToyoZXEUXcNcRQ9/U/L+8+qB9SIXVrMadkxCaVmFd2nqex4ZpbvjckSK\nCvgJOPfpAiac5AkpGtr7Yp0Hnj4pEXg1bns2cghXzL7mI0GyHEAjswLVhTpxwTYM\nd2YhbFVGjTE3qdf4HidzX153jIHFT21+GEgITv71GM3XpR3aM0j9Xh1bpBE5MlW2\nY0u2kIJdirzXxRrSzZ2WQBm5lEbU9txKf33TkI9OTK7CAQdjs7oEzD6gnzNDgHNy\nlGc9RmECgYEA6FuYXtn6w7tzofLWuA1h+ikyxBiqZvZGIJ+nFY7r+B+/wVj/BoS5\n17etVMkzD+6fKhBEr8qGL50v9u4bZPtDOHvtc8mhm988Gbta43ImZhoMAcw/mlOU\nKGSFeHGu7UoXdo0jlDN6YkPWWn5MsJSzFIXoxNykGXher4pAoeZ36YkCgYEA4Ja2\n1HeFPyi0BeN+l4IyP7VFjF7XLo0PxX75Fr68w2/t8rlrzsR0EEFrh5xNlhvohXLg\n7Lf++mse/uW7fC8VBRSZ+hVyZScwB4fUuNP9Hnq0yNEHTCYz3Nq+vHa6uflNb1mX\n6TWOwegEIY9BnfqGzycUwydVfnAGleyLMUK5Ze0CgYAtPzjqr5PvbZ9U2A8MBD8i\nEce6+/qi1i5NyAknX49/397dbdErmcj+wtvT+OIiphsEe+qEOPHsb7WZZkCbZ3pt\nk2Rn+cmoqs3vTNakF+R2WXghGX8BNGlTfE+pZqnjt1veUBmvkF6yp/cj5BhXAn3k\n7zamrzidZR07Hbb8T/7l0QKBgAZQ1rVk4w9ioqVjv2SdWbJm85y98gkyGFZyeqjE\nFmTcmfFwe3KmHalzXYXDxH7LLB/Mmjyt8/Kw3n9GkJ4uaMXqzWW2ArCLiJM9o6LK\n+1xHERxwnGbs0BqO4DxGjnu6Yg4Wk+oQAoK7dppHAA5kRDRBIhlW2tWiatz+eO+a\ns8IFAoGAR2ScKdPOvrjJE8S+3+jar1GJ5WWiCaCVy0V9FxNJQ7hq7zdImBMN/G+q\n+99SGTMCY8Lw6RoED4AfOT5a15Kpd85bFezsAyFJH+7QkW/Me0LjGEszIMszuI94\nMKjqi6Ua4cx8PvsSK7chJ58HHurYHAXSEt3Ok/k5QX59i9FQPpg=\n-----END RSA PRIVATE KEY-----\n",
+		//	        "serial": {
+		//	            "collected": false,
+		//	            "created": "2017-07-07T17:00:05+0000",
+		//	            "expiration": "2033-07-07T17:00:05+0000",
+		//	            "id": 4095473198924206794,
+		//	            "revoked": false,
+		//	            "serial": 4095473198924206794,
+		//	            "updated": "2017-07-07T17:00:05+0000"
+		//	        },
+		//	        "updated": "2017-07-07T17:00:06+0000"
+		//	    },
+		//	    "installedProducts": null,
+		//	    "lastCheckin": null,
+		//	    "name": "candlepin_name",
+		//	    "owner": {
+		//	        "displayName": "Admin Owner",
+		//	        "href": "/owners/admin",
+		//	        "id": "8a90860f5d19a77e015d19a89aa20003",
+		//	        "key": "admin"
+		//	    },
+		//	    "recipientOwnerKey": null,
+		//	    "releaseVer": {
+		//	        "releaseVer": null
+		//	    },
+		//	    "serviceLevel": "",
+		//	    "type": {
+		//	        "id": "1003",
+		//	        "label": "candlepin",
+		//	        "manifest": true
+		//	    },
+		//	    "updated": "2017-07-07T17:00:06+0000",
+		//	    "username": "testuser1",
+		//	    "uuid": "dc8a1d3b-b476-4c67-a363-f5b0ec230c89"
+		//	}
+		
+		// initialize the data
+		JSONObject jsonTypeData = new JSONObject();
+		jsonTypeData.put("label", ConsumerType.candlepin.toString());
+		JSONObject jsonData = new JSONObject();
+		jsonData.put("type", jsonTypeData);
+		jsonData.put("name", name);
+		
+		return new JSONObject(postResourceUsingRESTfulAPI(authenticator, password, url, "/consumers?owner="+owner, jsonData.toString()));
+	}
+	
 	public SSHCommandResult deleteOwnerUsingCPC(String owner_name) {
 		log.info("Using the ruby client to delete_owner owner_name='"+owner_name+"'...");
 		if (serverInstallDir.isEmpty()) log.warning("serverInstallDir is empty.  Check the value of the sm.server.installDir in your automation.properties file.");
