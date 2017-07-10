@@ -34,7 +34,6 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 	Map<String, String> factsMap = new HashMap<String, String>();
 	protected String productId = "RamTest-product";
 	protected List<String> providedProduct = new ArrayList<String>();
-	protected String ownerKey = "";
 	// Test methods ***********************************************************************
 	
 	
@@ -57,9 +56,6 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null, null);
-		String consumerId = clienttasks.getCurrentConsumerId();
-		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,
-			consumerId);
 		clienttasks.autoheal(null, null, true, null, null, null, null);
 		
 		List<String> ramSubscriptionNames = new ArrayList<String>();
@@ -334,6 +330,7 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 				resourcePath);
 			CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,
 				sm_clientOrg, name + " BITS", productId, 1, attributes, null);
+			String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, clienttasks.getCurrentConsumerId());
 			return CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername,
 				sm_serverAdminPassword, sm_serverUrl, ownerKey, 10, startingMinutesFromNow, endingMinutesFromNow,
 				getRandInt(), getRandInt(), productId, providedProduct, null).getString("id");
