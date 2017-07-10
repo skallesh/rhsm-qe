@@ -317,22 +317,43 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 		//
 		//	Bill
 		
+		String messagesLogMarker = System.currentTimeMillis()+" Testing BrandbotShouldHandleEmptyBrandingFile_Test...";
+		RemoteFileTasks.markFile(client, clienttasks.messagesLogFile, messagesLogMarker);
 		String actualBrandName,actualPrettyName;
 		log.info("Testing an empty branding file...");
-		sleep(5000); // before echo to avoid tail -f /var/log/messages | grep brandbot...   systemd: brandbot.service start request repeated too quickly, refusing to start.
-		RemoteFileTasks.runCommandAndAssert(client, "rm -f "+brandingFile+" && touch "+brandingFile, 0);
+		// Note: If /var/lib/rhsm/branded_name is written too quickly, this will be found in the rhsm.log...
+		// Jul 10 11:42:39 jsefler-rhel7 systemd: start request repeated too quickly for brandbot.service
+		// Jul 10 11:42:39 jsefler-rhel7 systemd: brandbot.service failed.
+		sleep(5000); // will help avoid  systemd: brandbot.service start request repeated too quickly, refusing to start.
+		RemoteFileTasks.runCommandAndAssert(client, "truncate --size=0 "+brandingFile, 0);	//RemoteFileTasks.runCommandAndAssert(client, "rm -f "+brandingFile+" && touch "+brandingFile, 0);
 		actualBrandName = getCurrentBrandName();
 		Assert.assertEquals(actualBrandName, "", "The brand name contained within the first line of the brand file '"+brandingFile+"' (should be an empty string).");
+//debugTesting the following loop will force /var/log/messages systemd: start request repeated too quickly for brandbot.service
+//for(int i=0; i<6; i++) RemoteFileTasks.runCommandAndAssert(client, "echo `date` >> "+brandingFile, 0);
 		actualPrettyName = getCurrentPrettyName();
+		if (actualPrettyName!=null) {
+			// most likely... systemd: start request repeated too quickly for brandbot.service
+			String rhsmLogStatement = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.messagesLogFile, messagesLogMarker, "brandbot").trim();
+			if (!rhsmLogStatement.isEmpty()) log.warning(rhsmLogStatement);
+		}
 		Assert.assertNull(actualPrettyName, "The PRETTY_NAME contained within the os-release file '"+osReleaseFile+"' (should NOT be present when the brand file is empty).");
 		
 		log.info("Testing a non-empty branding file, but the first line is empty...");
-		sleep(5000); // before echo to avoid tail -f /var/log/messages | grep brandbot...   systemd: brandbot.service start request repeated too quickly, refusing to start.
+		// Note: If /var/lib/rhsm/branded_name is written too quickly, this will be found in the rhsm.log...
+		// Jul 10 11:42:39 jsefler-rhel7 systemd: start request repeated too quickly for brandbot.service
+		// Jul 10 11:42:39 jsefler-rhel7 systemd: brandbot.service failed.
+		sleep(5000); // will help avoid  systemd: brandbot.service start request repeated too quickly, refusing to start.
 		RemoteFileTasks.runCommandAndAssert(client, "echo '' >> "+brandingFile, 0);
+		sleep(5000);
 		RemoteFileTasks.runCommandAndAssert(client, "echo 'RHEL SubBranded OS (second line)' >> "+brandingFile, 0);
 		actualBrandName = getCurrentBrandName();
 		Assert.assertEquals(actualBrandName, "", "The brand name contained within the first line of the brand file '"+brandingFile+"' (should be an empty string).");
 		actualPrettyName = getCurrentPrettyName();
+		if (actualPrettyName!=null) {
+			// most likely... systemd: start request repeated too quickly for brandbot.service
+			String rhsmLogStatement = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.messagesLogFile, messagesLogMarker, "brandbot").trim();
+			if (!rhsmLogStatement.isEmpty()) log.warning(rhsmLogStatement);
+		}
 		Assert.assertNull(actualPrettyName, "The PRETTY_NAME contained within the os-release file '"+osReleaseFile+"' (should NOT be present when the first line of the brand file is empty).");
 	}
 	
@@ -530,7 +551,7 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 			return;	
 		}
 		
-		// Subscription with an branding
+		// Subscription with a branding
 		String productId = brandedSubscriptionProductId;
 		List<String> providedProductIds = new ArrayList<String>();
 		providedProductIds.add("99010");
