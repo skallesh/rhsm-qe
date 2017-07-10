@@ -616,17 +616,19 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	@Test(description = "verify if unsubscribe does not delete entitlement cert from location /etc/pki/entitlement/product for consumer type candlepin ", groups = {
 			"unsubscribeTheRegisteredConsumerTypeCandlepin", "blockedByBug-621962" }, enabled = true)
 	public void unsubscribeTheRegisteredConsumerTypeCandlepin() throws Exception {
-		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, "<", "2.1.1-1")) {
-			    clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, ConsumerType.candlepin, null,
-				null, null, null, null, (String) null, null, null, null, true, null, null, null, null, null);
+	    if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">="/*TODO CHANGE TO ">" after candlepin 2.1.2-1 is tagged*/, "2.1.1-1")) {	// candlepin commit 739b51a0d196d9d3153320961af693a24c0b826f Bug 1455361: Disallow candlepin consumers to be registered via Subscription Manager
+		    clienttasks.registerCandlepinConsumer(sm_clientUsername,sm_clientPassword,sm_clientOrg,sm_serverUrl,"candlepin");
+	    }else{
+		    clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, ConsumerType.candlepin, null,
+				null, null, null, null, (String) null, null, null, null, true, null, null, null, null, null); 
+	    }
 			    clienttasks.subscribe(true, null, (String) null, null, null, null, null, null, null, null, null, null, null);
 			    List<File> files = clienttasks.getCurrentEntitlementCertFiles();
 			    Assert.assertNotNull(files.size());
 			    clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 			    files = clienttasks.getCurrentEntitlementCertFiles();
 			    Assert.assertTrue(files.isEmpty());
-		}else throw new SkipException("Due to the Bug 1455361 ,consumer of type candlepin cannot"
-				+ " be registered via Subscription-manager ");
+		
 	}
 		
 
