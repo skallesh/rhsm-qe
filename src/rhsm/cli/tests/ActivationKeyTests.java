@@ -1829,8 +1829,16 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		if (assertConsumptionIsLimitedToThisPoolOnly) {
 			Assert.assertEquals(consumedProductSubscriptions.size(),1,"Expecting only one consumed product subscription.");
 			ProductSubscription consumedProductSubscription = consumedProductSubscriptions.get(0);
-			Assert.assertEquals(consumedProductSubscription.accountNumber.longValue(), jsonPool.getLong("accountNumber"), "The consumed product subscription comes from the same accountNumber as the pool added in the activation key.");
-			Assert.assertEquals(consumedProductSubscription.contractNumber.intValue(), jsonPool.getInt("contractNumber"), "The consumed product subscription comes from the same contractNumber as the pool added in the activation key.");
+ 			if (jsonPool.has("accountNumber")) {
+				Assert.assertEquals(consumedProductSubscription.accountNumber.longValue(), jsonPool.getLong("accountNumber"), "The consumed product subscription comes from the same accountNumber as the pool added in the activation key.");
+			} else {
+				Assert.assertNull(consumedProductSubscription.accountNumber, "The consumed product subscription has no accountNumber since the pool added in the activation key had no accountNumber.");
+			}
+			if (jsonPool.has("contractNumber")) {
+				Assert.assertEquals(consumedProductSubscription.contractNumber.intValue(), jsonPool.getInt("contractNumber"), "The consumed product subscription comes from the same contractNumber as the pool added in the activation key.");
+			} else {
+				Assert.assertNull(consumedProductSubscription.contractNumber, "The consumed product subscription has no contractNumber since the pool added in the activation key had no contractNumber.");
+			}
 			if (addQuantity!=null) {
 				Assert.assertEquals(consumedProductSubscription.quantityUsed, addQuantity, "The consumed product subscription is using the same quantity as requested by the pool added in the activation key.");
 			} else {
@@ -1905,6 +1913,8 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 			String keyName = String.format("ActivationKey%s_ForPool%s", System.currentTimeMillis(), jsonPool.getString("id"));
 ///*debugTesting*/ if (!jsonPool.getString("productName").equals("Awesome OS physical with unlimited guests")) continue;
 ///*debugTesting*/ if (!jsonPool.getString("productId").equals("awesomeos-instancebased")) continue;	// to create activationkeys with a temorary pool for unmapped guests
+///*debugTesting*/ if (!jsonPool.getString("productId").equals("adminos-onesocketib")) continue;	// to create activationkeys with a temorary pool for unmapped guests
+///*debugTesting*/ if (!jsonPool.getString("productId").equals("awesomeos-ul-quantity-virt")) continue;	// to create activationkeys with a temorary pool for unmapped guests
 			
 			// Object blockedByBug, String keyName, JSONObject jsonPool)
 			ll.add(Arrays.asList(new Object[] {null, keyName, jsonPool}));
