@@ -445,11 +445,14 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyAutosubscribeAfterChangingDevSkuFacts_Test() throws JSONException, Exception {
 		
+		boolean isGuest = Boolean.valueOf(clienttasks.getFactValue("virt.is_guest"));
+		
 		// register with force to get a fresh consumer
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg,null,null,null,null,false,null,null,(List)null,null,null,null,true,false,null,null,null, null);
 		
 		// find two value SKUs that can be used as a dev_sku
 		List <SubscriptionPool> subscriptionPools = clienttasks.getCurrentlyAvailableSubscriptionPools();
+///*debugTesting*/subscriptionPools = SubscriptionPool.findAllInstancesWithMatchingFieldFromList("productId", "awesomeos-virt-datacenter", subscriptionPools);
 		String devSku1=null, devSku2=null;
 		for (SubscriptionPool subscriptionPool : getRandomList(subscriptionPools)) {
 			// TEMPORARY WORKAROUND
@@ -471,6 +474,12 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 				log.info("Excluding subscription '"+subscriptionPool.productId+"' as a dev_sku candidate because its suggested quantity '"+subscriptionPool.suggested+"' is not 1 which is NOT indicative of a realistic dev_sku subscription.  Reference https://bugzilla.redhat.com/show_bug.cgi?id=1463320#c1");
 				continue;
 			}
+			// avoid "Unable to attach subscription for the product 'awesomeos-virt-datacenter': rulefailed.physical.only.
+			if (isGuest && CandlepinTasks.isPoolProductPhysicalOnly(sm_clientUsername, sm_clientPassword, subscriptionPool.poolId, sm_serverUrl)) {
+				log.info("Excluding subscription '"+subscriptionPool.productId+"' as a dev_sku candidate because its physical_only productAttribute is NOT indicative of a realistic dev_sku subscription.");
+				continue;
+			}
+			
 			if (devSku1==null) devSku1=subscriptionPool.productId;
 			if (devSku2==null && devSku1!=null && devSku1!=subscriptionPool.productId) devSku2=subscriptionPool.productId;
 			if (devSku2!=null && devSku1!=null) break;
