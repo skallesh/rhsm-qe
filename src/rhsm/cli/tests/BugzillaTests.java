@@ -4841,6 +4841,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	//@ImplementsNitrateTest(caseId=)
 	public void SubscribeWithInvalidFileFromStdin_Test() throws JSONException, Exception {
 		if (clienttasks.isPackageVersion("subscription-manager","<","1.13.8-1")) throw new SkipException("The attach --file function was not implemented in this version of subscription-manager.");	// commit 3167333fc3a261de939f4aa0799b4283f2b9f4d2 bug 1159974
+		if (clienttasks.isPackageVersion("subscription-manager","<","1.20.1-1")) throw new SkipException("The currently installed version ("+clienttasks.installedPackageVersionMap.get("subscription-manager")+") is blocked by bug 1350402 which is fixed in subscription-manager-1.20.1-1 and newer.");	// commit cda076cce4ac66d09eba31b64454d2780a6d1312 bug 1350402
 
 		if (clienttasks.getCurrentlyRegisteredOwnerKey() == null) {
 			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null, null);
