@@ -237,7 +237,7 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
 		"Only extra entitlement granted by the org/environment is present");
 	// now revoke the contentAccessMode set on the owner
 	CandlepinTasks.setAttributeForOrg(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, org,
-		attributeName, "");
+		attributeName, "entitlement");
 	clienttasks.refresh(null, null, null, null);
 
 	repoResult = clienttasks.repos(false, false, true, (String) null, null, null, null, null, null);
