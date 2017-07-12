@@ -1623,6 +1623,7 @@ if (false) {
 			RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd status",Integer.valueOf(0),"^rhsmcertd \\(pid \\d+\\) is running...$",null);		// master/RHEL58 branch
 			//RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd status",Integer.valueOf(0),"^rhsmcertd \\(pid( \\d+){1,2}\\) is running...$",null);	// tolerate 1 or 2 pids for RHEL62 or RHEL58; don't really care which it is since the next assert is really sufficient
 		}
+		SubscriptionManagerCLITestScript.sleep(1*1000/*milliseconds*/);
 		
 		// # tail -f /var/log/rhsm/rhsmcertd.log
 		// Wed Nov  9 15:21:54 2011: started: interval = 1440 minutes
@@ -1703,7 +1704,6 @@ if (false) {
 		//	Mon Jul 16 14:32:29 2012 [INFO] (Cert Check) Certificates updated.
 		//	Mon Jul 16 14:34:22 2012 [INFO] (Cert Check) Certificates updated.
 
-		String rhsmcertdLogResult = RemoteFileTasks.getTailFromMarkedFile(sshCommandRunner, rhsmcertdLogFile, rhsmcertdLogMarker, null).trim();
 		Integer waitSecondsForFirstUpdateCheck = 120; // this is a dev hard coded wait (seconds) before the first check for updates is attempted  REFERENCE BUG 818978#c2
 		String rhsmcertdLogExpectedStartingRhsmMsg = String.format(" Starting rhsmcertd...");
 		String rhsmcertdLogExpectedHealIntervalMsg = String.format(" Healing interval: %.1f minute(s) [%d second(s)]",healFrequency*1.0,healFrequency*60);/* msg was changed by bug 882459*/
@@ -1715,6 +1715,7 @@ if (false) {
 		if (isPackageVersion("subscription-manager",">=","1.19.9-1")) {	// commit e0e1a6b3e80c33e04fe79eaa696a821881f95f35 1443205: Simplify rhsmcertd log message plurality
 			rhsmcertdLogExpectedCertIntervalMsg = String.format(" Cert check interval: %.1f minutes [%d seconds]",certFrequency*1.0,certFrequency*60);
 		}
+		String rhsmcertdLogResult = RemoteFileTasks.getTailFromMarkedFile(sshCommandRunner, rhsmcertdLogFile, rhsmcertdLogMarker, null).trim();
 		Assert.assertTrue(rhsmcertdLogResult.contains(rhsmcertdLogExpectedStartingRhsmMsg),"Tail of rhsmcertd log contains the expected restart message '"+rhsmcertdLogExpectedStartingRhsmMsg+"'.");
 		Assert.assertTrue(rhsmcertdLogResult.contains(rhsmcertdLogExpectedHealIntervalMsg),"Tail of rhsmcertd log contains the expected restart message '"+rhsmcertdLogExpectedHealIntervalMsg+"'.");
 		Assert.assertTrue(rhsmcertdLogResult.contains(rhsmcertdLogExpectedCertIntervalMsg),"Tail of rhsmcertd log contains the expected restart message '"+rhsmcertdLogExpectedCertIntervalMsg+"'.");
