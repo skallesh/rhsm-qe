@@ -715,7 +715,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		DateFormat yyyy_MM_dd_DateFormat = new SimpleDateFormat("M/d/yy h:mm aaa");
 		String EndingDate = yyyy_MM_dd_DateFormat.format(endCalendar.getTime());
 		Calendar c2 = new GregorianCalendar();
-		sleep(1 * 57 * 1000 - (c2.getTimeInMillis() - c1.getTimeInMillis()));
+		sleep(1 * 59 * 1000 - (c2.getTimeInMillis() - c1.getTimeInMillis()));
 		new JSONObject(
 				CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername,
 						sm_clientPassword, sm_serverUrl, "/activation_keys/" + jsonActivationKey.getString("id")
@@ -2080,6 +2080,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			"VerifyBindAndUnbindInSyslog", "blockedByBug-919700" }, enabled = true)
 	@ImplementsNitrateTest(caseId = 68740)
 	public void VerifyBindAndUnbindInSyslog() throws JSONException, Exception {
+	        clienttasks.unregister(null, null, null, null);
 		String logMarker, expectedSyslogMessage, tailFromSyslogFile;
 
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
@@ -3681,7 +3682,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		// sleep(endingMinutesFromNow*60*1000);
 		// trying to reduce the wait time for the expiration by subtracting off
 		// some expensive test time
-		sleep(1 * 57 * 1000 - (c2.getTimeInMillis() - c1.getTimeInMillis()));
+		sleep(1 * 56 * 1000 - (c2.getTimeInMillis() - c1.getTimeInMillis()));
 		List<ProductSubscription> consumedProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
 		List<ProductSubscription> activeProductSubscriptions = ProductSubscription
 				.findAllInstancesWithMatchingFieldFromList("isActive", Boolean.TRUE, consumedProductSubscriptions);
@@ -4260,8 +4261,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		// sleep(endingMinutesFromNow*60*1000);
 		// trying to reduce the wait time for the expiration by subtracting off
 		// some expensive test time
-		sleep(1 * 57 * 1000 - (c2.getTimeInMillis() - c1.getTimeInMillis()));
-
+		sleep(1 * 59 * 1000 - (c2.getTimeInMillis() - c1.getTimeInMillis()));
 		InstalledProduct productCertBeforeHealing = ProductCert.findFirstInstanceWithMatchingFieldFromList("status",
 				"Expired", clienttasks.getCurrentlyInstalledProducts());
 		
@@ -4517,8 +4517,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		
 		InstalledProduct installedProductBeforeAutoAttach = InstalledProduct.findFirstInstanceWithCaseInsensitiveMatchingFieldFromList("status",
 									"Future Subscription", clienttasks.getCurrentlyInstalledProducts());
-	//	InstalledProduct installedProductBeforeAutoAttach = InstalledProduct.findFirstInstanceWithCaseInsensitiveMatchingFieldFromList("arch",
-	//								"clienttasks.arch", allInstalledProductBeforeAutoAttach);
 	
 		Assert.assertNotNull(installedProductBeforeAutoAttach, "Found installed product that is covered by a inactive subscription");
 		
@@ -5165,6 +5163,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	protected String createTestPool(int startingMinutesFromNow, int endingMinutesFromNow, Boolean FuturePool)
 			throws JSONException, Exception {
 	    	String name = "BugzillaTestSubscription";
+		providedProduct.add("37060");
 	    	if(FuturePool){
 		name = "BugillaTestInactiveSubscription";
 	    	}
@@ -5176,7 +5175,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		attributes.put("warning_period", "30");
 		attributes.put("type", "MKT");
 		attributes.put("type", "SVC");
-		providedProduct.add("100000000000002");
 		CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword,
 				sm_serverUrl, sm_clientOrg, productId);
 		String resourcePath = "/products/" + productId;
