@@ -87,6 +87,7 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 			// catch a corner case...
 			if (expiredProductSubscription==null) {	// then we were probably too slow and a trigger of rhsmcertd likely deleted the expired cert.
 				// Using this if block of code to confirm that assumption and skip the rest of this test
+				sleep(1*1000);	// desperate attempt to give rhsmcertdLogFile a chance to be updated so rhsmcertdLogTail will not be empty
 				String rhsmcertdLogTail = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmcertdLogFile, rhsmcertdLogMarker, null);
 				// rhsmcertd:
 				//	Fri Aug 26 15:42:19 2016 [INFO] (Cert Check) Certificates updated.
