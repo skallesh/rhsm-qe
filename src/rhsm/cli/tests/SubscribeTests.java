@@ -730,11 +730,13 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		
 		// assert that rhsmcertd has refreshed the entitlement certs back to the original
 	    Assert.assertEquals(clienttasks.getCurrentEntitlementCertFiles(), entitlementCertFiles,
-	    		"All the deleted entitlement certs have been re-synchronized by rhsm cert deamon.");
+	    		"All the deleted entitlement certs have been re-synchronized by rhsmcertd (rhsm cert deamon).");
 	}
 	@AfterGroups(groups={"setup"}, value={"rhsmcertdEnsureCertificatesSynchronize_Test"})
 	public void afterRhsmcertdEnsureCertificatesSynchronize_Test() {
+		clienttasks.unregister_(null, null, null, null);
 		if (certFrequencyString!=null) clienttasks.restart_rhsmcertd(Integer.valueOf(certFrequencyString), null, null);
+		sleep(10*1000);
 	}
 
 
