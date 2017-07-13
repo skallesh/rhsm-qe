@@ -1570,6 +1570,7 @@ if (false) {
 		}
 		
 		// mark the rhsmcertd log file before restarting the deamon
+ 		RemoteFileTasks.runCommandAndWait(sshCommandRunner, "touch "+rhsmcertdLogFile, TestRecords.action());	// to ensure the file exists before trying to mark it
 		String rhsmcertdLogMarker = System.currentTimeMillis()+" Testing service rhsmcertd restart...";
 		RemoteFileTasks.markFile(sshCommandRunner, rhsmcertdLogFile, rhsmcertdLogMarker);
 		
@@ -1623,7 +1624,6 @@ if (false) {
 			RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd status",Integer.valueOf(0),"^rhsmcertd \\(pid \\d+\\) is running...$",null);		// master/RHEL58 branch
 			//RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd status",Integer.valueOf(0),"^rhsmcertd \\(pid( \\d+){1,2}\\) is running...$",null);	// tolerate 1 or 2 pids for RHEL62 or RHEL58; don't really care which it is since the next assert is really sufficient
 		}
-		SubscriptionManagerCLITestScript.sleep(1*1000/*milliseconds*/);
 		
 		// # tail -f /var/log/rhsm/rhsmcertd.log
 		// Wed Nov  9 15:21:54 2011: started: interval = 1440 minutes
@@ -1715,7 +1715,14 @@ if (false) {
 		if (isPackageVersion("subscription-manager",">=","1.19.9-1")) {	// commit e0e1a6b3e80c33e04fe79eaa696a821881f95f35 1443205: Simplify rhsmcertd log message plurality
 			rhsmcertdLogExpectedCertIntervalMsg = String.format(" Cert check interval: %.1f minutes [%d seconds]",certFrequency*1.0,certFrequency*60);
 		}
-		String rhsmcertdLogResult = RemoteFileTasks.getTailFromMarkedFile(sshCommandRunner, rhsmcertdLogFile, rhsmcertdLogMarker, null).trim();
+		String rhsmcertdLogResult;
+		int i=0, delay=5;
+		do {	// retry every 5 seconds (up to a 20 seconds) for the expected update messages in the rhsmcertd log
+			if (i>0) SubscriptionManagerCLITestScript.sleep(delay*1000);	// wait a few seconds before trying again
+			rhsmcertdLogResult = RemoteFileTasks.getTailFromMarkedFile(sshCommandRunner, rhsmcertdLogFile, rhsmcertdLogMarker, null).trim();
+			if (rhsmcertdLogResult.contains(rhsmcertdLogExpectedStartingRhsmMsg)) break;
+		} while (delay*i++ < 20);	// Note: should wait at least 60+ additional seconds because auto-attach can timeout after 60 seconds.  see bug https://bugzilla.redhat.com/show_bug.cgi?id=964332#c6
+		
 		Assert.assertTrue(rhsmcertdLogResult.contains(rhsmcertdLogExpectedStartingRhsmMsg),"Tail of rhsmcertd log contains the expected restart message '"+rhsmcertdLogExpectedStartingRhsmMsg+"'.");
 		Assert.assertTrue(rhsmcertdLogResult.contains(rhsmcertdLogExpectedHealIntervalMsg),"Tail of rhsmcertd log contains the expected restart message '"+rhsmcertdLogExpectedHealIntervalMsg+"'.");
 		Assert.assertTrue(rhsmcertdLogResult.contains(rhsmcertdLogExpectedCertIntervalMsg),"Tail of rhsmcertd log contains the expected restart message '"+rhsmcertdLogExpectedCertIntervalMsg+"'.");
@@ -1781,12 +1788,12 @@ if (false) {
 			//String healMsg = assertCertificatesUpdate? "(Healing) Certificates updated.":"(Healing) Update failed (255), retry will occur on next run.";	// msg was changed by bug 882459
 			String healMsg = assertCertificatesUpdate? "(Auto-attach) Certificates updated.":"(Auto-attach) Update failed (255), retry will occur on next run.";
 			String certMsg = assertCertificatesUpdate? "(Cert Check) Certificates updated.":"(Cert Check) Update failed (255), retry will occur on next run.";
-			int i=0, delay=10;
+			/*int*/ i=0; delay=10;
 			do {	// retry every 10 seconds (up to a 90 seconds) for the expected update messages in the rhsmcertd log
-				SubscriptionManagerCLITestScript.sleep(delay*1000);i++;	// wait a few seconds before trying again
+				if (i>0) SubscriptionManagerCLITestScript.sleep(delay*1000);i++;	// wait a few seconds before trying again
 				rhsmcertdLogResult = RemoteFileTasks.getTailFromMarkedFile(sshCommandRunner, rhsmcertdLogFile, rhsmcertdLogMarker, null).trim();
 				if (rhsmcertdLogResult.contains(healMsg) && rhsmcertdLogResult.contains(certMsg)) break;
-			} while (delay*i < 90);	// Note: should wait at least 60+ additional seconds because auto-attach can timeout after 60 seconds.  see bug https://bugzilla.redhat.com/show_bug.cgi?id=964332#c6
+			} while (delay*i++ < 90);	// Note: should wait at least 60+ additional seconds because auto-attach can timeout after 60 seconds.  see bug https://bugzilla.redhat.com/show_bug.cgi?id=964332#c6
 			
 			boolean healMsgAssert = true;
 			boolean certMsgAssert = true;
