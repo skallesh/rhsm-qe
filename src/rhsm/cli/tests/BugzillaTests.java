@@ -1218,9 +1218,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		consumerId);
 		clienttasks.autoheal(null, null, true, null, null, null, null);
 		String futurePool = createTestPool(60 * 24 *365, 60 * 24 *(365*2),true);
-
-		List<String> providedProductIds = CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername, sm_clientPassword,
-		sm_serverUrl, futurePool);
 		String name = String.format("%s_%s-ActivationKey%s", sm_clientUsername, sm_clientOrg,
 				System.currentTimeMillis());
 		Map<String, String> mapActivationKeyRequest = new HashMap<String, String>();
@@ -1238,7 +1235,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.autoheal(null, null, true, null, null, null, null);
 		clienttasks.listConsumedProductSubscriptions();
 		InstalledProduct installedProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId",
-			"100000000000002", clienttasks.getCurrentlyInstalledProducts());
+			"37060", clienttasks.getCurrentlyInstalledProducts());
 		Assert.assertEquals(installedProduct.status, "Future Subscription");
 		
 	}
@@ -3682,7 +3679,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		// sleep(endingMinutesFromNow*60*1000);
 		// trying to reduce the wait time for the expiration by subtracting off
 		// some expensive test time
-		sleep(1 * 56 * 1000 - (c2.getTimeInMillis() - c1.getTimeInMillis()));
+		sleep(1 * 60 * 1000 - (c2.getTimeInMillis() - c1.getTimeInMillis()));
 		List<ProductSubscription> consumedProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
 		List<ProductSubscription> activeProductSubscriptions = ProductSubscription
 				.findAllInstancesWithMatchingFieldFromList("isActive", Boolean.TRUE, consumedProductSubscriptions);
@@ -3785,6 +3782,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			"VerifyDistinctStackingEntires", "blockedByBug-733327" }, enabled = true)
 	public void VerifyDistinctStackingEntires() throws Exception {
 		String poolId = null;
+		String productIds=null;
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
 				null, (String) null, null, null, null, true, null, null, null, null, null);
 		clienttasks.autoheal(null, null, true, null, null, null, null);
@@ -3808,20 +3806,29 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				if (!(pool.suggested == 1)) {
 					clienttasks.subscribe(null, null, pool.poolId, null, null, Integer.toString(quantity), null, null,
 							null, null, null, null, null);
-					poolId = pool.poolId;
+					 productIds = pool.productId;
 					providedProductId = pool.provides.get(randomGenerator.nextInt(pool.provides.size()));
 					if (!(providedProductId.isEmpty())) {
-						break;
-
+					    break;
 					}
-				}
+					
+			}
+			
+
 			}
 		}
 		InstalledProduct BeforeAttaching = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productName",
 				providedProductId, clienttasks.getCurrentlyInstalledProducts());
 		Assert.assertEquals(BeforeAttaching.status, "Partially Subscribed",
 				"Verified that installed product is partially subscribed");
-		clienttasks.subscribe(null, null, poolId, null, null, null, null, null, null, null, null, null, null);
+		List<SubscriptionPool> AvailableStackableSubscription = SubscriptionPool
+			.findAllInstancesWithMatchingFieldFromList("productId", productIds,
+					clienttasks.getAvailableSubscriptionsMatchingInstalledProducts());
+		System.out.println(AvailableStackableSubscription.size()+ "size .............");
+		for(SubscriptionPool pools :AvailableStackableSubscription){
+		    clienttasks.subscribeToSubscriptionPool(pools);
+		}
+		
 		InstalledProduct AfterAttaching = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productName",
 				providedProductId, clienttasks.getCurrentlyInstalledProducts());
 		Assert.assertEquals(AfterAttaching.status, "Subscribed", "Verified that installed product"
@@ -4261,7 +4268,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		// sleep(endingMinutesFromNow*60*1000);
 		// trying to reduce the wait time for the expiration by subtracting off
 		// some expensive test time
-		sleep(1 * 59 * 1000 - (c2.getTimeInMillis() - c1.getTimeInMillis()));
+		sleep(1 * 60 * 1000 - (c2.getTimeInMillis() - c1.getTimeInMillis()));
 		InstalledProduct productCertBeforeHealing = ProductCert.findFirstInstanceWithMatchingFieldFromList("status",
 				"Expired", clienttasks.getCurrentlyInstalledProducts());
 		
