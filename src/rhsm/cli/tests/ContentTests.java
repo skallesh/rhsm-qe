@@ -26,6 +26,7 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import com.redhat.qe.Assert;
+import com.redhat.qe.auto.bugzilla.BlockedByBzBug;
 import com.redhat.qe.auto.bugzilla.BugzillaAPIException;
 import com.redhat.qe.auto.bugzilla.BzChecker;
 import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
@@ -1280,6 +1281,181 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	
+	
+	
+	
+	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+					, testCaseID = {"", ""})
+	@Test(	description="Verify Extended Update Support content set repos (identified as containing '-eus-') have a non-empty list of modifiedProductIds",
+			//groups={"debugTest","Tier1Tests"},
+			dataProvider="getAllEUSProductContentSetData",
+			enabled=false)	// jsefler WORK IN PROGRESS; FIRST DRAFT; PASS: 48 FAIL 101
+	//@ImplementsNitrateTest(caseId=)
+	public void VerifyEUSProductContentSetModifiesProducts_Test(Object bugzilla, String eusProductName, String eusProductId, String eusContentSetName, String eusContentSetId, String eusContentSetLabel, List<String> modifiedProductIds) throws JSONException, Exception {
+		
+		log.info("The following curl request can be used to fetch the Candlepin representation for EUS Content Set '"+eusContentSetName+"': "+eusContentSetLabel);
+		JSONObject jsonContent = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/owners/"+getAllEUSProductContentSetDataAsListOfListsOwnerKey+"/content/"+eusContentSetId));
+		//	[root@jsefler-rhel7 ~]# curl --stderr /dev/null --insecure --user stage_ha_testuser:redhat --request GET 'https://subscription.rhsm.stage.redhat.com:443/subscription/owners/10992327/content/4180' | python -m json/tool
+		//	{
+		//	    "arches": "x86_64",
+		//	    "contentUrl": "/content/eus/rhel/server/7/$releasever/$basearch/highavailability/os",
+		//	    "created": "2017-05-31T17:29:04+0000",
+		//	    "gpgUrl": "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release",
+		//	    "id": "4180",
+		//	    "label": "rhel-ha-for-rhel-7-server-eus-rpms",
+		//	    "metadataExpire": 86400,
+		//	    "modifiedProductIds": [],
+		//	    "name": "Red Hat Enterprise Linux High Availability (for RHEL 7 Server) - Extended Update Support (RPMs)",
+		//	    "releaseVer": null,
+		//	    "requiredTags": "rhel-7-server",
+		//	    "type": "yum",
+		//	    "updated": "2017-05-31T17:29:04+0000",
+		//	    "uuid": "8a99f9825c5f84ae015c5f8dc05f0a77",
+		//	    "vendor": "Red Hat"
+		//	}
+		log.info("EUS Engineering Product:   "+eusProductName);
+		log.info("EUS Engineering ProductId: "+eusProductId);
+		log.info("EUS ContentSet Repo Name:  "+eusContentSetName);
+		log.info("EUS ContentSet Repo Label: "+eusContentSetLabel);
+		log.info("EUS ContentSet modifiedProductIds: "+modifiedProductIds);
+		
+		Assert.assertEquals(jsonContent.get("name"), eusContentSetName);	// if this does not pas, then the Candlepin API for /owners/{owner_key}/content/{content_id} is returning different values than returned from /owners/{owner_key}/products
+		Assert.assertEquals(jsonContent.get("label"), eusContentSetLabel);	// if this does not pas, then the Candlepin API for /owners/{owner_key}/content/{content_id} is returning different values than returned from /owners/{owner_key}/products
+		
+		// does this pool contain productContents that modify other products?
+		Assert.assertTrue(!modifiedProductIds.isEmpty(), "EUS Product id='"+eusProductId+"' content set repository '"+eusContentSetLabel+"' modifies a NON-EMPTY list of engineering productIds "+modifiedProductIds);
+	}
+	@DataProvider(name="getAllEUSProductContentSetData")
+	public Object[][] getAllEUSProductContentSetDataAs2dArray() throws JSONException, Exception {
+		return TestNGUtils.convertListOfListsTo2dArray(getAllEUSProductContentSetDataAsListOfLists());
+	}
+	protected List<List<Object>> getAllEUSProductContentSetDataAsListOfLists() throws JSONException, Exception {
+		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
+		
+		// register and get the owner_key
+		clienttasks.unregister(null, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, null, false, null, null, null, null);
+		getAllEUSProductContentSetDataAsListOfListsOwnerKey = clienttasks.getCurrentlyRegisteredOwnerKey();
+		Map<String,List<String>> eusLabelToModfiedProductIdsMap = new HashMap<String,List<String>>();
+		
+		//	[root@jsefler-rhel7 ~]# curl --stderr /dev/null --insecure --user REDACTED:REDACTED --request GET 'https://subscription.rhsm.stage.redhat.com:443/subscription/owners/10992327/products/84' | python -m json/tool
+		//	{
+		//	    "attributes": [
+		//	        {
+		//	            "name": "arch",
+		//	            "value": "ia64,ppc,ppc64,ppc64le,x86,x86_64"
+		//	        },
+		//	        {
+		//	            "name": "name",
+		//	            "value": "Red Hat Enterprise Linux High Availability (for RHEL Server) - Extended Update Support"
+		//	        },
+		//	        {
+		//	            "name": "type",
+		//	            "value": "SVC"
+		//	        }
+		//	    ],
+		//	    "created": "2017-05-31T17:30:20+0000",
+		//	    "dependentProductIds": [],
+		//	    "href": "/products/8a99f9835c5f85d2015c5f8eebc504e3",
+		//	    "id": "84",
+		//	    "multiplier": 1,
+		//	    "name": "Red Hat Enterprise Linux High Availability (for RHEL Server) - Extended Update Support",
+		//	    "productContent": [
+		//	        {
+		//	            "content": {
+		//	                "arches": "x86,x86_64",
+		//	                "contentUrl": "/content/eus/rhel/server/6/$releasever/$basearch/highavailability/os",
+		//	                "created": "2017-05-31T17:30:17+0000",
+		//	                "gpgUrl": "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release",
+		//	                "id": "1352",
+		//	                "label": "rhel-ha-for-rhel-6-server-eus-rpms",
+		//	                "metadataExpire": 86400,
+		//	                "modifiedProductIds": [],
+		//	                "name": "Red Hat Enterprise Linux High Availability (for RHEL 6 Server) - Extended Update Support (RPMs)",
+		//	                "releaseVer": null,
+		//	                "requiredTags": "rhel-6-server",
+		//	                "type": "yum",
+		//	                "updated": "2017-05-31T17:30:17+0000",
+		//	                "uuid": "8a99f9835c5f85d2015c5f8eddb20236",
+		//	                "vendor": "Red Hat"
+		//	            },
+		//	            "enabled": false
+		//	        },
+		// <SNIP FOR BREVITY>
+		//	        {
+		//	            "content": {
+		//	                "arches": "x86,x86_64",
+		//	                "contentUrl": "/content/eus/rhel/server/6/$releasever/$basearch/highavailability/debug",
+		//	                "created": "2017-05-31T17:30:17+0000",
+		//	                "gpgUrl": "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release",
+		//	                "id": "1351",
+		//	                "label": "rhel-ha-for-rhel-6-server-eus-debug-rpms",
+		//	                "metadataExpire": 86400,
+		//	                "modifiedProductIds": [
+		//	                    "83"
+		//	                ],
+		//	                "name": "Red Hat Enterprise Linux High Availability (for RHEL 6 Server) - Extended Update Support (Debug RPMs)",
+		//	                "releaseVer": null,
+		//	                "requiredTags": "rhel-6-server",
+		//	                "type": "yum",
+		//	                "updated": "2017-05-31T17:30:17+0000",
+		//	                "uuid": "8a99f9835c5f85d2015c5f8eddb20237",
+		//	                "vendor": "Red Hat"
+		//	            },
+		//	            "enabled": false
+		//	        }
+		//	    ],
+		//	    "updated": "2017-05-31T17:30:20+0000",
+		//	    "uuid": "8a99f9835c5f85d2015c5f8eebc504e3"
+		//	}
+		
+		// loop through all of the owner's products
+		JSONArray jsonProducts = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/owners/"+getAllEUSProductContentSetDataAsListOfListsOwnerKey+"/products"));
+		for (int i = 0; i < jsonProducts.length(); i++) {
+			JSONObject jsonProduct = (JSONObject) jsonProducts.get(i);
+			
+			String productId = jsonProduct.getString("id");
+			String productName = CandlepinTasks.getResourceAttributeValue(jsonProduct, "name");
+			
+			// loop through all of the product content sets
+			JSONArray jsonProductContents = jsonProduct.getJSONArray("productContent");
+			for (int j = 0; j < jsonProductContents.length(); j++) {
+				JSONObject jsonProductContent = (JSONObject) jsonProductContents.get(j);
+				JSONObject jsonContent = jsonProductContent.getJSONObject("content");
+				
+				// get the label and modifiedProductIds for each of the productContents
+				String label = jsonContent.getString("label");	// "rhel-ha-for-rhel-6-server-eus-rpms",
+				String name = jsonContent.getString("name");	// "Red Hat Enterprise Linux High Availability (for RHEL 6 Server) - Extended Update Support (RPMs)",
+				String id = jsonContent.getString("id");		// "1351"
+				String requiredTags = jsonContent.isNull("requiredTags")? null:jsonContent.getString("requiredTags"); // comma separated string
+				String type = jsonContent.getString("type");
+				JSONArray jsonModifiedProductIds = jsonContent.getJSONArray("modifiedProductIds");
+				List<String> modifiedProductIds = new ArrayList<String>();
+				for (int k = 0; k < jsonModifiedProductIds.length(); k++) {
+					String modifiedProductId = (String) jsonModifiedProductIds.get(k);
+					modifiedProductIds.add(modifiedProductId);
+				}
+				
+				// is this an EUS content set?
+				if (label.contains("-eus-")) {	// only add rows for eus repo labels
+					eusLabelToModfiedProductIdsMap.put(label, modifiedProductIds);
+					Object bugzilla=null;
+					// if this row is blocked, bugzilla = new BlockedByBzBug("1234567");
+					
+					// Object bugzilla, String eusProductName, String eusProductId, String eusContentSetName, String eusContentSetId, String eusContentSetLabel, List<String> modifiedProductIds
+					ll.add(Arrays.asList(new Object[]{bugzilla,  productName, productId, name, id, label, modifiedProductIds}));
+				}
+			}
+		}
+		
+		// logging a map of repo label to modifiedProductIds for debugging purposes
+		for (String key : eusLabelToModfiedProductIdsMap.keySet()) {
+			//log.info("label: "+key+" modifiedProductIds: "+eusLabelToModfiedProductIdsMap.get(key));
+			log.info(key+" "+eusLabelToModfiedProductIdsMap.get(key));
+		}
+		return ll;
+	}
+	protected String getAllEUSProductContentSetDataAsListOfListsOwnerKey=null;
 	
 	
 	
