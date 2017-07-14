@@ -257,10 +257,13 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
 	    "reporoverridePreference" ,"blockedByBug-1427069"},enabled = true)
 
     public void reporoverridePreference() throws Exception {
-
+	List<Repo> availableRepos= new ArrayList<Repo>();
+	List<String> repoIdsDisabledByDefault = new ArrayList<String>();
+	Map<String, String> attributesMap = new HashMap<String, String>();
+	String resourcePath = null;
+	String ExpectedRepoMsg = "There were no available repositories matching the specified criteria.";
 	CandlepinTasks.setAttributeForOrg(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, org,
 		attributeName, attributeValue);
-	String resourcePath = null;
 	String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null,
 		null, null, (String) null, null, null, null, true, null, null, null, null, null));
 	String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_clientUsername, sm_clientPassword, sm_serverUrl,
@@ -268,13 +271,19 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
 	for (SubscriptionPool availsubscriptions : clienttasks.getAvailableSubscriptionsMatchingInstalledProducts()) {
 	    subscriptionPoolProductId=availsubscriptions.productId; 
 	    subscriptionPoolId= availsubscriptions.poolId;
-	    break;
+	    clienttasks.subscribe(null, null,subscriptionPoolId, null, null, null, null, null, null, null, null, null, null);
+	    SSHCommandResult repoResult = clienttasks.repos(true, false, false, (String) null, null, null, null, null, null);
+	    if(!(repoResult.getStdout().trim().equals("This system has no repositories available through subscriptions."))){
+		System.out.println("here...........");
+		    break;
+
+	    }
+
 	}
-	clienttasks.subscribe(null, null,subscriptionPoolId, null, null, null, null, null, null, null, null, null, null);
-	List<Repo> availableRepos = clienttasks.getCurrentlySubscribedRepos();
-	List<String> repoIdsDisabledByDefault = new ArrayList<String>();
-	Map<String, String> attributesMap = new HashMap<String, String>();
-	String ExpectedRepoMsg = "There were no available repositories matching the specified criteria.";
+	//clienttasks.subscribe(null, null,subscriptionPoolId, null, null, null, null, null, null, null, null, null, null);
+	//List<Repo> 
+	
+	availableRepos =  clienttasks.getCurrentlySubscribedRepos();
 	SSHCommandResult repoResult = clienttasks.repos(false, false, true, (String) null, null, null, null, null, null);
 	Assert.assertNotEquals(repoResult.getStdout().toString().trim(), ExpectedRepoMsg);
 	SSHCommandResult enabledResult = clienttasks.repos(false, true, false, (String) null, null, null, null, null, null);
@@ -387,7 +396,7 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
 			servertasks.initialize(clienttasks.candlepinAdminUsername,clienttasks.candlepinAdminPassword,clienttasks.candlepinUrl);
 			if (client1tasks!=null) client1tasks.installRepoCaCert(fetchServerCaCertFile(), sm_serverHostname.split("\\.")[0]+".pem");
 			if (client2tasks!=null) client2tasks.installRepoCaCert(fetchServerCaCertFile(), sm_serverHostname.split("\\.")[0]+".pem");
-			updateProductAndContentLockStateOnDatabase(0);
+			//updateProductAndContentLockStateOnDatabase(0);
 		}
 	}
 
