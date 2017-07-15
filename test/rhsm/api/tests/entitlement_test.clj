@@ -26,5 +26,11 @@
 (deftest entitlement_status_of_invalid_subscription_test
   (tests/entitlement_status_of_invalid_subscription_using_dbus nil))
 
-(deftest entitlement_status_of_invalid_subscription_test
+(deftest entitlement_get_consumed_pools_using_dbus_test
   (tests/get_consumed_pools_using_dbus nil))
+
+(deftest entitlement_get_available_pools_using_dbus_test
+  (tests/get_available_pools_using_dbus nil))
+
+(deftest entitlement_get_available_pools_using_rest_test
+  (tests/get_available_pools_using_rest nil))
