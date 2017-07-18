@@ -1287,9 +1287,9 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
 					, testCaseID = {"", ""})
 	@Test(	description="Verify Extended Update Support content set repos (identified as containing '-eus-') have a non-empty list of modifiedProductIds",
-			//groups={"debugTest","Tier1Tests"},
+			groups={"Tier1Tests"},
 			dataProvider="getAllEUSProductContentSetData",
-			enabled=false)	// jsefler WORK IN PROGRESS; FIRST DRAFT; PASS: 48 FAIL 101
+			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyEUSProductContentSetModifiesProducts_Test(Object bugzilla, String eusProductName, String eusProductId, String eusContentSetName, String eusContentSetId, String eusContentSetLabel, List<String> modifiedProductIds) throws JSONException, Exception {
 		
@@ -1313,17 +1313,23 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		//	    "uuid": "8a99f9825c5f84ae015c5f8dc05f0a77",
 		//	    "vendor": "Red Hat"
 		//	}
-		log.info("EUS Engineering Product:   "+eusProductName);
-		log.info("EUS Engineering ProductId: "+eusProductId);
-		log.info("EUS ContentSet Repo Name:  "+eusContentSetName);
-		log.info("EUS ContentSet Repo Label: "+eusContentSetLabel);
+		log.info("EUS Engineering Product:           "+eusProductName);
+		log.info("EUS Engineering ProductId:         "+eusProductId);
+		log.info("EUS ContentSet Repo Name:          "+eusContentSetName);
+		log.info("EUS ContentSet Repo Label:         "+eusContentSetLabel);
+		log.info("EUS ContentSet id:                 "+eusContentSetId);
 		log.info("EUS ContentSet modifiedProductIds: "+modifiedProductIds);
 		
-		Assert.assertEquals(jsonContent.get("name"), eusContentSetName);	// if this does not pas, then the Candlepin API for /owners/{owner_key}/content/{content_id} is returning different values than returned from /owners/{owner_key}/products
-		Assert.assertEquals(jsonContent.get("label"), eusContentSetLabel);	// if this does not pas, then the Candlepin API for /owners/{owner_key}/content/{content_id} is returning different values than returned from /owners/{owner_key}/products
+		Assert.assertEquals(jsonContent.get("name"), eusContentSetName);	// if this does not pass, then the Candlepin API for /owners/{owner_key}/content/{content_id} is returning different values than returned from /owners/{owner_key}/products
+		Assert.assertEquals(jsonContent.get("label"), eusContentSetLabel);	// if this does not pass, then the Candlepin API for /owners/{owner_key}/content/{content_id} is returning different values than returned from /owners/{owner_key}/products
+		
+		// skip Red Hat Software Collections
+		if (modifiedProductIds.isEmpty() && eusContentSetLabel.contains("-rhscl-") && eusProductName.startsWith("Red Hat Software Collections")) {
+			throw new SkipException("Skipping '"+eusProductName+"' content set '"+eusContentSetLabel+"' because both the eus and non-eus rhscl repos are both provided by the same engineering product.  Hence a subscription to a Red Hat Software Collection includes extended update support.");
+		}
 		
 		// does this pool contain productContents that modify other products?
-		Assert.assertTrue(!modifiedProductIds.isEmpty(), "EUS Product id='"+eusProductId+"' content set repository '"+eusContentSetLabel+"' modifies a NON-EMPTY list of engineering productIds "+modifiedProductIds);
+		Assert.assertTrue(!modifiedProductIds.isEmpty(), "EUS Product '"+eusProductName+"' (id="+eusProductId+") content set repository '"+eusContentSetLabel+"' (id="+eusContentSetId+") modifies a NON-EMPTY list of engineering productIds (actualModifiedProductIds="+modifiedProductIds+")");
 	}
 	@DataProvider(name="getAllEUSProductContentSetData")
 	public Object[][] getAllEUSProductContentSetDataAs2dArray() throws JSONException, Exception {
@@ -1336,7 +1342,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		clienttasks.unregister(null, null, null, null);
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, null, false, null, null, null, null);
 		getAllEUSProductContentSetDataAsListOfListsOwnerKey = clienttasks.getCurrentlyRegisteredOwnerKey();
-		Map<String,List<String>> eusLabelToModfiedProductIdsMap = new HashMap<String,List<String>>();
+		Map<String,String> eusLabelToInfoMap = new HashMap<String,String>();
 		
 		//	[root@jsefler-rhel7 ~]# curl --stderr /dev/null --insecure --user REDACTED:REDACTED --request GET 'https://subscription.rhsm.stage.redhat.com:443/subscription/owners/10992327/products/84' | python -m json/tool
 		//	{
@@ -1438,20 +1444,112 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 				
 				// is this an EUS content set?
 				if (label.contains("-eus-")) {	// only add rows for eus repo labels
-					eusLabelToModfiedProductIdsMap.put(label, modifiedProductIds);
-					Object bugzilla=null;
-					// if this row is blocked, bugzilla = new BlockedByBzBug("1234567");
+					if (label.contains("rhel-4")) {
+						log.info("Skiping this test for rhel-4 content set repository '"+label+"' because subscription-manager was never delivered on rhel-4.");
+						continue;	// skip RHEL4 REPOS 
+					}
+					eusLabelToInfoMap.put(label, productId+","+productName+","+id+","+modifiedProductIds);
+					Set<String> bugIds = new HashSet<String>();
 					
+					// Bug 1471998 - content set mappings for "Red Hat S-JIS Support (for RHEL Server) - Extended Update Support" is missing from cdn/cs_mappings-prod.csv
+					if (label.equals("rhel-sjis-for-rhel-6-server-eus-debug-rpms")) bugIds.add("1471998");
+					if (label.equals("rhel-sjis-for-rhel-6-server-eus-rpms")) bugIds.add("1471998");
+					if (label.equals("rhel-sjis-for-rhel-6-server-eus-source-rpms")) bugIds.add("1471998");
+					if (label.equals("rhel-sjis-for-rhel-7-server-eus-debug-rpms")) bugIds.add("1471998");
+					if (label.equals("rhel-sjis-for-rhel-7-server-eus-rpms")) bugIds.add("1471998");
+					if (label.equals("rhel-sjis-for-rhel-7-server-eus-source-rpms")) bugIds.add("1471998");
+					
+					// Bug 1472001 - content set mappings for "Red Hat Enterprise Linux Resilient Storage (for RHEL Server) - Extended Update Support" is missing from cdn/cs_mappings-prod.csv
+					if (label.equals("rhel-rs-for-rhel-5-for-power-eus-debug-rpms")) bugIds.add("1472001");
+					if (label.equals("rhel-rs-for-rhel-5-for-power-eus-rpms")) bugIds.add("1472001");
+					if (label.equals("rhel-rs-for-rhel-5-for-power-eus-source-rpms")) bugIds.add("1472001");
+					if (label.equals("rhel-rs-for-rhel-7-server-eus-debug-rpms")) bugIds.add("1472001");
+					if (label.equals("rhel-rs-for-rhel-7-server-eus-rpms")) bugIds.add("1472001");
+					if (label.equals("rhel-rs-for-rhel-7-server-eus-source-rpms")) bugIds.add("1472001");
+					
+					// Bug 1472004 - content set mappings for "Red Hat Enterprise Linux High Availability (for RHEL Server) - Extended Update Support" is missing from cdn/cs_mappings-prod.csv
+					if (label.equals("rhel-ha-for-rhel-5-for-power-eus-debug-rpms")) bugIds.add("1472004");
+					if (label.equals("rhel-ha-for-rhel-5-for-power-eus-rpms")) bugIds.add("1472004");
+					if (label.equals("rhel-ha-for-rhel-5-for-power-eus-source-rpms")) bugIds.add("1472004");
+					if (label.equals("rhel-ha-for-rhel-7-server-eus-debug-rpms")) bugIds.add("1472004");
+					if (label.equals("rhel-ha-for-rhel-7-server-eus-rpms")) bugIds.add("1472004");
+					if (label.equals("rhel-ha-for-rhel-7-server-eus-source-rpms")) bugIds.add("1472004");
+					
+					// Bug 1472005 - content set mappings for "Oracle Java (for RHEL Server) - Extended Update Support" is missing from cdn/cs_mappings-prod.csv
+					if (label.equals("rhel-5-server-eus-thirdparty-oracle-java-isos")) bugIds.add("1472005");
+					if (label.equals("rhel-5-server-eus-thirdparty-oracle-java-rpms")) bugIds.add("1472005");
+					if (label.equals("rhel-5-server-eus-thirdparty-oracle-java-source-rpms")) bugIds.add("1472005");
+					if (label.equals("rhel-6-server-eus-thirdparty-oracle-java-isos")) bugIds.add("1472005");
+					if (label.equals("rhel-6-server-eus-thirdparty-oracle-java-rpms")) bugIds.add("1472005");
+					if (label.equals("rhel-6-server-eus-thirdparty-oracle-java-source-rpms")) bugIds.add("1472005");
+					if (label.equals("rhel-7-server-eus-thirdparty-oracle-java-isos")) bugIds.add("1472005");
+					if (label.equals("rhel-7-server-eus-thirdparty-oracle-java-rpms")) bugIds.add("1472005");
+					if (label.equals("rhel-7-server-eus-thirdparty-oracle-java-source-rpms")) bugIds.add("1472005");
+					
+					// Bug 1472007 - content set mappings for "Red Hat Enterprise Linux Server - Extended Update Support" is missing from cdn/cs_mappings-prod.csv
+					if (label.equals("rhel-5-server-eus-rh-common-debuginfo")) bugIds.add("1472007");
+					if (label.equals("rhel-5-server-eus-rh-common-isos")) bugIds.add("1472007");
+					if (label.equals("rhel-5-server-eus-rh-common-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-5-server-eus-rh-common-source-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-5-server-eus-rhn-tools-debug-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-5-server-eus-rhn-tools-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-5-server-eus-rhn-tools-source-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-5-server-eus-satellite-tools-6.1-debuginfo")) bugIds.add("1472007");
+					if (label.equals("rhel-5-server-eus-satellite-tools-6.1-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-5-server-eus-satellite-tools-6.1-source-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-6-server-eus-rhn-tools-debug-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-6-server-eus-rhn-tools-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-6-server-eus-rhn-tools-source-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-6-server-eus-satellite-tools-6.1-debug-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-6-server-eus-satellite-tools-6.1-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-6-server-eus-satellite-tools-6.1-source-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-6-server-eus-satellite-tools-6.2-debug-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-6-server-eus-satellite-tools-6.2-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-6-server-eus-satellite-tools-6.2-source-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-6-server-eus-satellite-tools-6.3-debug-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-6-server-eus-satellite-tools-6.3-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-6-server-eus-satellite-tools-6.3-source-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-7-server-eus-debug-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-7-server-eus-isos")) bugIds.add("1472007");
+					if (label.equals("rhel-7-server-eus-optional-debug-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-7-server-eus-optional-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-7-server-eus-optional-source-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-7-server-eus-rh-common-debug-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-7-server-eus-rh-common-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-7-server-eus-rh-common-source-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-7-server-eus-rhn-tools-debug-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-7-server-eus-rhn-tools-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-7-server-eus-rhn-tools-source-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-7-server-eus-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-7-server-eus-satellite-tools-6.1-debug-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-7-server-eus-satellite-tools-6.1-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-7-server-eus-satellite-tools-6.1-source-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-7-server-eus-satellite-tools-6.2-debug-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-7-server-eus-satellite-tools-6.2-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-7-server-eus-satellite-tools-6.2-source-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-7-server-eus-satellite-tools-6.3-debug-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-7-server-eus-satellite-tools-6.3-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-7-server-eus-satellite-tools-6.3-source-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-7-server-eus-source-isos")) bugIds.add("1472007");
+					if (label.equals("rhel-7-server-eus-source-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-7-server-eus-supplementary-debuginfo")) bugIds.add("1472007");
+					if (label.equals("rhel-7-server-eus-supplementary-isos")) bugIds.add("1472007");
+					if (label.equals("rhel-7-server-eus-supplementary-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-7-server-eus-supplementary-source-rpms")) bugIds.add("1472007");
+					
+					
+					BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 					// Object bugzilla, String eusProductName, String eusProductId, String eusContentSetName, String eusContentSetId, String eusContentSetLabel, List<String> modifiedProductIds
-					ll.add(Arrays.asList(new Object[]{bugzilla,  productName, productId, name, id, label, modifiedProductIds}));
+					ll.add(Arrays.asList(new Object[]{blockedByBzBug,  productName, productId, name, id, label, modifiedProductIds}));
 				}
 			}
 		}
 		
-		// logging a map of repo label to modifiedProductIds for debugging purposes
-		for (String key : eusLabelToModfiedProductIdsMap.keySet()) {
-			//log.info("label: "+key+" modifiedProductIds: "+eusLabelToModfiedProductIdsMap.get(key));
-			log.info(key+" "+eusLabelToModfiedProductIdsMap.get(key));
+		// logging a map of repo label to information for debugging purposes
+		for (String key : eusLabelToInfoMap.keySet()) {
+			// eusRepoLabel, fromEngProductId, fromEngProductName, whoseContentIdIs, modifiesTheseEngProductIds
+			log.info(key+","+eusLabelToInfoMap.get(key));
+			// WAS IMPORTED TO: https://docs.google.com/a/redhat.com/spreadsheets/d/1oFCJ0KI2CjV1bOavNkKzZRJl-CZ6CopxngJi4EJbii0/edit?usp=sharing
 		}
 		return ll;
 	}
