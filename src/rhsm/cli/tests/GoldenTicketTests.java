@@ -274,11 +274,8 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
 	    clienttasks.subscribe(null, null,subscriptionPoolId, null, null, null, null, null, null, null, null, null, null);
 	    SSHCommandResult repoResult = clienttasks.repos(true, false, false, (String) null, null, null, null, null, null);
 	    if(!(repoResult.getStdout().trim().equals("This system has no repositories available through subscriptions."))){
-		System.out.println("here...........");
 		    break;
-
 	    }
-
 	}
 	//clienttasks.subscribe(null, null,subscriptionPoolId, null, null, null, null, null, null, null, null, null, null);
 	//List<Repo> 
@@ -396,7 +393,7 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
 			servertasks.initialize(clienttasks.candlepinAdminUsername,clienttasks.candlepinAdminPassword,clienttasks.candlepinUrl);
 			if (client1tasks!=null) client1tasks.installRepoCaCert(fetchServerCaCertFile(), sm_serverHostname.split("\\.")[0]+".pem");
 			if (client2tasks!=null) client2tasks.installRepoCaCert(fetchServerCaCertFile(), sm_serverHostname.split("\\.")[0]+".pem");
-			//updateProductAndContentLockStateOnDatabase(0);
+			updateProductAndContentLockStateOnDatabase(0);
 		}
 	}
 
