@@ -2077,7 +2077,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			"VerifyBindAndUnbindInSyslog", "blockedByBug-919700" }, enabled = true)
 	@ImplementsNitrateTest(caseId = 68740)
 	public void VerifyBindAndUnbindInSyslog() throws JSONException, Exception {
-	        clienttasks.unregister(null, null, null, null);
+	    	clienttasks.removeAllCerts(true	, false, false);
+	    //    clienttasks.unregister(null, null, null, null);
 		String logMarker, expectedSyslogMessage, tailFromSyslogFile;
 
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
