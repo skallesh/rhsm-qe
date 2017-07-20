@@ -1284,8 +1284,8 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	
 	
 	
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-					, testCaseID = {"", ""})
+//	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
+//					, testCaseID = {"", ""})
 	@Test(	description="Verify Extended Update Support content set repos (identified as containing '-eus-') have a non-empty list of modifiedProductIds",
 			groups={"Tier1Tests"},
 			dataProvider="getAllEUSProductContentSetData",
