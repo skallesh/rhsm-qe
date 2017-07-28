@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<testcase id="RHEL7-96016">
+    <title>RHSM-TC : rhsm.cli.tests.BugzillaTests.SubscribeWithInvalidFileFromStdin_Test</title>
+    <description>subscription-manager: verify subscribe with --file=invalid file from stdin is handled properly</description>
+    <test-steps>
+        <test-step>
+            <test-step-column id="step"/>
+        </test-step>
+    </test-steps>
+    <custom-fields>
+        <custom-field id="caseautomation" content="automated"/>
+        <custom-field id="caseimportance" content="low"/>
+        <custom-field id="caselevel" content="component"/>
+        <custom-field id="caseposneg" content="negative"/>
+        <custom-field id="tags" content="Tier3"/>
+        <custom-field id="casecomponent" content="subscription-manager"/>
+        <custom-field id="testtype" content="functional"/>
+        <custom-field id="subtype1" content="reliability"/>
+        <custom-field id="subtype2" content="-"/>
+    </custom-fields>
+    <linked-work-items>
+        <linked-work-item workitem-id="RHEL7-84911" role-id="verifies"/>
+    </linked-work-items>
+</testcase>

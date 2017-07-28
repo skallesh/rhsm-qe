@@ -623,6 +623,16 @@
       "parameters" : [ ]
     }
   },
+  "rhsm.cli.tests.BugzillaTests.SubscribeWithInvalidFileFromStdin_Test" : {
+    "RHEL6" : {
+      "id" : "RHEL6-47892",
+      "parameters" : [ ]
+    },
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-96016",
+      "parameters" : [ ]
+    }
+  },
   "rhsm.cli.tests.BugzillaTests.SystemFactsInCLI" : {
     "RHEL6" : {
       "id" : "RHEL6-21929",
@@ -839,6 +849,16 @@
       "parameters" : [ ]
     }
   },
+  "rhsm.cli.tests.BugzillaTests.VerifyEmptyRepoOverrideRemove_Test" : {
+    "RHEL6" : {
+      "id" : "RHEL6-47894",
+      "parameters" : [ ]
+    },
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-96268",
+      "parameters" : [ ]
+    }
+  },
   "rhsm.cli.tests.BugzillaTests.VerifyEntitlementStartDate_Test" : {
     "RHEL6" : {
       "id" : "RHEL6-21946",
@@ -999,6 +1019,16 @@
       "parameters" : [ ]
     }
   },
+  "rhsm.cli.tests.BugzillaTests.VerifyProductCertWithNoneTag" : {
+    "RHEL6" : {
+      "id" : "RHEL6-47893",
+      "parameters" : [ ]
+    },
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-96267",
+      "parameters" : [ ]
+    }
+  },
   "rhsm.cli.tests.BugzillaTests.VerifyProductCertsAfterUnsubscribeAndunregister" : {
     "RHEL6" : {
       "id" : "RHEL6-21961",
@@ -1052,6 +1082,16 @@
     },
     "RedHatEnterpriseLinux7" : {
       "id" : "RHEL7-51827",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.cli.tests.BugzillaTests.VerifyRegisterWithConsumerIdForDifferentUser" : {
+    "RHEL6" : {
+      "id" : "RHEL6-47895",
+      "parameters" : [ ]
+    },
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-96269",
       "parameters" : [ ]
     }
   },

@@ -58,6 +58,10 @@ import rhsm.data.SubscriptionPool;
 import rhsm.data.YumRepo;
 
 import com.github.redhatqe.polarize.metadata.TestDefinition;
+import com.github.redhatqe.polarize.metadata.LinkedItem;
+import com.github.redhatqe.polarize.metadata.TestType;
+import com.github.redhatqe.polarize.metadata.DefTypes;
+import com.github.redhatqe.polarize.metadata.DefTypes.PosNeg;
 import com.github.redhatqe.polarize.metadata.DefTypes.Project;
 
 /**
@@ -323,8 +327,25 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@Test(description = "verify Product certs not be generated with a tag value of None ", groups = {
-			"VerifyProductCertWithNoneTag", "blockedByBug-955824" }, enabled = true)
+	@TestDefinition(//update= true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-47893", "RHEL7-96267"},
+//			linkedWorkItems= {
+//				@LinkedItem(
+//					workitemId= "",
+//					project= Project.RHEL6,
+//					role= DefTypes.Role.VERIFIES),
+//				@LinkedItem(
+//					workitemId= "",
+//					project= Project.RedHatEnterpriseLinux7,
+//					role= DefTypes.Role.VERIFIES)},
+			level= DefTypes.Level.COMPONENT, component= "releng",
+			testtype= @TestType(testtype= DefTypes.TestTypes.STRUCTURAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.LOW, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description= "verify Product certs not be generated with a tag value of None",
+			groups= {"VerifyProductCertWithNoneTag", "blockedByBug-955824" },
+			enabled= true)
 	public void VerifyProductCertWithNoneTag() throws Exception {
 		String baseProductsDir = "/usr/share/rhsm/product/RHEL-" + clienttasks.redhatReleaseX;
 		for (ProductCert productCert : clienttasks.getProductCerts(baseProductsDir)) {
@@ -3494,8 +3515,25 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@Test(description = "verify content set associated with product", groups = {
-			"VerifyRegisterWithConsumerIdForDifferentUser" }, enabled = true)
+	@TestDefinition(//update= true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-47895", "RHEL7-96269"},
+			linkedWorkItems= {
+				@LinkedItem(
+					workitemId= "RHEL6-28485",	// RHSM-REQ : subscription-manager cli registration and deregistration
+					project= Project.RHEL6,
+					role= DefTypes.Role.VERIFIES),
+				@LinkedItem(
+					workitemId= "RHEL7-84906",	// RHSM-REQ : subscription-manager cli registration and deregistration
+					project= Project.RedHatEnterpriseLinux7,
+					role= DefTypes.Role.VERIFIES)},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.LOW, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description= "verify registration fails when specifying a consumerid that has been revoked",
+			groups= {"VerifyRegisterWithConsumerIdForDifferentUser" },
+			enabled= true)
 	@ImplementsNitrateTest(caseId = 61710)
 	public void VerifyRegisterWithConsumerIdForDifferentUser() throws JSONException, Exception {
 		if (sm_client2Username == null)
@@ -4691,10 +4729,26 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 *
 	 * @throws JSONException *
 	 */
-	@Test(description = "verify repo-override --remove='' doesnot remove the overrides from the given repo", groups = {
-			"blockedByBug-1331739" }, enabled = true)
+	@TestDefinition(//update= true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-47894", "RHEL7-96268"},
+			linkedWorkItems= {
+				@LinkedItem(
+					workitemId= "RHEL6-28545",	// RHSM-REQ : subscription-manager cli repo listing and override management
+					project= Project.RHEL6,
+					role= DefTypes.Role.VERIFIES),
+				@LinkedItem(
+					workitemId= "RHEL7-84934",	// RHSM-REQ : subscription-manager cli repo listing and override management
+					project= Project.RedHatEnterpriseLinux7,
+					role= DefTypes.Role.VERIFIES)},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.MEDIUM, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description= "verify repo-override --remove='' does not remove the overrides from the given repo",
+			groups= {"blockedByBug-1331739" },
+			enabled= true)
 	public void VerifyEmptyRepoOverrideRemove_Test() throws JSONException, Exception {
-
 
 		  if (clienttasks.isPackageVersion("subscription-manager", "<",
 		  "1.19.4-1")) { // fix : https://github.com/candlepin/subscription-manager/pull/1474
@@ -4839,11 +4893,25 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * JSON Exception
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			, testCaseID = {"", ""})
-	@Test(	description="subscription-manager: subscribe with --file=invalid file from stdin is handled properly",
-			groups={"blockedByBug-1350402"},
-			enabled=true)
+	@TestDefinition(//update= true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-47892", "RHEL7-96016"},
+			linkedWorkItems= {
+				@LinkedItem(
+					workitemId= "RHEL6-28489",	// RHSM-REQ : subscription-manager cli attaching and removing subscriptions
+					project= Project.RHEL6,
+					role= DefTypes.Role.VERIFIES),
+				@LinkedItem(
+					workitemId= "RHEL7-84911",	// RHSM-REQ : subscription-manager cli attaching and removing subscriptions
+					project= Project.RedHatEnterpriseLinux7,
+					role= DefTypes.Role.VERIFIES)},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.LOW, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description= "subscription-manager: verify subscribe with --file=invalid file from stdin is handled properly",
+			groups= {"blockedByBug-1350402"},
+			enabled= true)
 	//@ImplementsNitrateTest(caseId=)
 	public void SubscribeWithInvalidFileFromStdin_Test() throws JSONException, Exception {
 		if (clienttasks.isPackageVersion("subscription-manager","<","1.13.8-1")) throw new SkipException("The attach --file function was not implemented in this version of subscription-manager.");	// commit 3167333fc3a261de939f4aa0799b4283f2b9f4d2 bug 1159974
