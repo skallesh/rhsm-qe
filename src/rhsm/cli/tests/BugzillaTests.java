@@ -93,7 +93,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			"Tier1Tests" }, dataProvider = "VerifyEUSRHELProductCertVersionFromEachCDNReleaseVersion_TestData", enabled = true)
 	public void VerifyEUSRHELProductCertVersionFromEachCDNReleaseVersion_Test(Object blockedByBug, String release,
 			String rhelRepoUrl, File eusEntitlementCertFile) throws JSONException, Exception {
-		if (sm_serverType.equals(CandlepinType.standalone))
+		if (!(sm_serverType.equals(CandlepinType.hosted)))
 			throw new SkipException("To be run against Stage only");
 		String rhelProductId = null;
 		if ((clienttasks.arch.equals("ppc64")) && (clienttasks.variant.equals("Server")))
@@ -770,7 +770,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			"InstalledProductMultipliesAfterSubscription", "AcceptanceTests", "Tier1Tests",
 			"blockedByBug-709412" }, enabled = true)
 	public void InstalledProductMultipliesAfterSubscription() throws Exception {
-		if (!sm_serverType.equals(CandlepinType.standalone))
+		if (!(sm_serverType.equals(CandlepinType.hosted)))
 			throw new SkipException("To be run against Stage only");
 
 		String serverUrl = getServerUrl(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "hostname"),
@@ -1471,7 +1471,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	@Test(description = "do not persist --serverurl option values to rhsm.conf when calling subscription-manager modules: orgs, environment, service-level", groups = {
 			"AcceptanceTests", "Tier1Tests", "blockedByBug-889573" }, enabled = false)
 	public void ServerUrloptionValuesInRHSMFile() throws JSONException, Exception {
-		if (!sm_serverType.equals(CandlepinType.standalone))
+		if (!(sm_serverType.equals(CandlepinType.hosted)))
 			throw new SkipException("To be run against Stage only");
 		String clientUsername = "stage_test_12";
 		String serverurl = "subscription.rhn.stage.redhat.com:443/subscription";
@@ -1566,7 +1566,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			groups = {"VerifyAutosubscribeReuseBasicAuthCredntials", "blockedByBug-707641","blockedByBug-919700" },
 			enabled = true)
 	public void VerifyAutosubscribeReuseBasicAuthCredntials() throws JSONException, Exception {
-		if (!sm_serverType.equals(CandlepinType.standalone)) throw new SkipException("This test was designed for execution against an opremise candlepin server.");
+		if (!(sm_serverType.equals(CandlepinType.standalone))) throw new SkipException("This test was designed for execution against an opremise candlepin server.");
 		servertasks.updateConfFileParameter("log4j.logger.org.candlepin.policy.js.compliance", "DEBUG");
 		servertasks.updateConfFileParameter("log4j.logger.org.candlepin", "DEBUG");
 		servertasks.restartTomcat();
@@ -1604,7 +1604,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	@Test(description = "verify if 500 errors in stage on subscribe/unsubscribe", groups = { "AcceptanceTests",
 			"Tier1Tests", "blockedByBug-878994" }, enabled = true)
 	public void Verify500ErrorOnStage() throws JSONException, Exception {
-		if (!sm_serverType.equals(CandlepinType.standalone))
+		if (!(sm_serverType.equals(CandlepinType.hosted)))
 			throw new SkipException("To be run against Stage only");
 		String logMessage = "remote server status code: 500";
 		String serverUrl = getServerUrl(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "hostname"),
