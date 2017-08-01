@@ -493,7 +493,8 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 				expectedRequiresList.add("manual: yum >= 3.2.29-73");
 			}
 			
-			if		(clienttasks.isPackageVersion("subscription-manager",">=","1.19.18-1"))	expectedRequiresList.add("manual: python-rhsm >= 1.19.9");		// RHEL7.4	// commit 2ad6cb20a37c7904b67cb8405663ea987c3e50df
+			if		(clienttasks.isPackageVersion("subscription-manager",">=","1.20.0-1"))	expectedRequiresList.add("manual: python-rhsm >= 1.20.0");		// RHEL7.5	// commit c2383f6cc1745d4d22f83b836bc64b2cd1423b32
+			else if	(clienttasks.isPackageVersion("subscription-manager",">=","1.19.18-1"))	expectedRequiresList.add("manual: python-rhsm >= 1.19.9");		// RHEL7.4	// commit 2ad6cb20a37c7904b67cb8405663ea987c3e50df
 			else if	(clienttasks.isPackageVersion("subscription-manager",">=","1.19.17-1"))	expectedRequiresList.add("manual: python-rhsm >= 1.19.8");		// RHEL7.4	// commit 186a9c1a56fa1115d2eae67f903de6fe9a0e3783
 			else if	(clienttasks.isPackageVersion("subscription-manager",">=","1.19.16-1"))	expectedRequiresList.add("manual: python-rhsm >= 1.19.7");		// RHEL7.4	// commit bea402362f4799189910dc336fe3d3bfd16b4fd2
 			else if	(clienttasks.isPackageVersion("subscription-manager",">=","1.19.12-1"))	expectedRequiresList.add("manual: python-rhsm >= 1.19.6");		// RHEL7.4	// commit bc41af9a25ee39075f3100577ebd2f9cff487048
@@ -524,6 +525,16 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.19.11-1")) {	// commit 88e3fdde1417e24c07d0c0b5a56b34ba6f904166  Bug 1446638: Remove dbus-x11 dependency
 			expectedRequiresList.remove("manual: dbus-x11");
+		}
+		
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.20.1-1")) {	// commit ca7e5d4650b2dabed9fc8daf9c8c7e8c2e2bfb7e	Require the 'six' Python 2 and 3 compatibility library.
+			expectedRequiresList.add("manual: python-six");
+		}
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.20.1-1")) {	// commit f20e28ab12b070095c4045aeecab2ccc9eba31b1	Add preliminary zypper support
+			expectedRequiresList.remove("manual: dbus-glib");
+		}
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.20.1-1")) {	// commit 21d9b5a6b7b3168046bc498e3db2f0469bb54fc2	Simplify subscription-manager spec file
+			expectedRequiresList.add("manual: chkconfig");
 		}
 		
 		for (String expectedRequires : expectedRequiresList) if (!actualRequiresList.contains(expectedRequires)) log.warning("The actual requires list is missing expected requires '"+expectedRequires+"'.");
