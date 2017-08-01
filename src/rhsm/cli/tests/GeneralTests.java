@@ -881,6 +881,10 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 					//none
 					"manual: subscription-manager = "+clienttasks.installedPackageVersionMap.get("subscription-manager").replace("subscription-manager-", "").replaceFirst("\\."+clienttasks.arch, ""),	// "manual: subscription-manager = 1.15.6-1.el7"	// Bug 1165771
 			}));
+			
+			if (clienttasks.isPackageVersion("subscription-manager-plugin-container",">=","1.20.1-1")) {	// commit 76c52b9002906d80b17baf6af4da67e648ce2415 1422196: Update container certs after plugin install
+				expectedRequiresList.add("post,interp: /bin/sh");
+			}
 		}
 		
 		for (String expectedRequires : expectedRequiresList) if (!actualRequiresList.contains(expectedRequires)) log.warning("The actual requires list is missing expected requires '"+expectedRequires+"'.");
