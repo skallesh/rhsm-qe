@@ -119,6 +119,16 @@
       "parameters" : [ "blockedByBug", "keyName", "jsonPool" ]
     }
   },
+  "rhsm.cli.tests.ActivationKeyTests.RegisterWithActivationKeyContainingPoolWithQuantity_Test" : {
+    "RHEL6" : {
+      "id" : "RHEL6-47896",
+      "parameters" : [ "blockedByBug", "keyName", "jsonPool", "addQuantity" ]
+    },
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-96498",
+      "parameters" : [ "blockedByBug", "keyName", "jsonPool", "addQuantity" ]
+    }
+  },
   "rhsm.cli.tests.ActivationKeyTests.RegisterWithActivationKeyContainingPool_Test" : {
     "RHEL6" : {
       "id" : "RHEL6-21798",

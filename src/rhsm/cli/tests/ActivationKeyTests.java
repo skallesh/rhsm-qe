@@ -34,7 +34,11 @@ import rhsm.data.ProductSubscription;
 import rhsm.data.SubscriptionPool;
 
 import com.redhat.qe.tools.SSHCommandResult;
+import com.github.redhatqe.polarize.metadata.DefTypes;
+import com.github.redhatqe.polarize.metadata.LinkedItem;
 import com.github.redhatqe.polarize.metadata.TestDefinition;
+import com.github.redhatqe.polarize.metadata.TestType;
+import com.github.redhatqe.polarize.metadata.DefTypes.PosNeg;
 import com.github.redhatqe.polarize.metadata.DefTypes.Project;
 
 /**
@@ -228,7 +232,23 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 * @throws Exception
 	 */
-	@Test(	description="create an activation key, add a pool to it with a quantity, and then register with the activation key",
+	@TestDefinition(//update= true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-47896", "RHEL7-96498"},
+			linkedWorkItems= {
+				@LinkedItem(
+					workitemId= "RHEL6-28485",	// RHSM-REQ : subscription-manager cli registration and deregistration
+					project= Project.RHEL6,
+					role= DefTypes.Role.VERIFIES),
+				@LinkedItem(
+					workitemId= "RHEL7-84906",	// RHSM-REQ : subscription-manager cli registration and deregistration
+					project= Project.RedHatEnterpriseLinux7,
+					role= DefTypes.Role.VERIFIES)},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description="create an activation key, add a pool to it with a quantity, and then register with the activation key (include variations on valid/invalid quantities)",
 			groups={"blockedByBug-973838"},
 			dataProvider="getRegisterWithActivationKeyContainingPoolWithQuantity_TestData",
 			enabled=true)
