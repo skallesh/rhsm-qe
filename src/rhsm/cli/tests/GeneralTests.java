@@ -552,7 +552,8 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		}
 		
 		List<String> expectedRequiresList = new ArrayList<String>();
-		if (clienttasks.redhatReleaseX.equals("5")) { 
+		if (clienttasks.redhatReleaseX.equals("5")) {
+			// rpm --query --requires subscription-manager-gui --verbose | egrep -v '\(.*\)''
 			expectedRequiresList.addAll(Arrays.asList(new String[]{
 					"subscription-manager = "+clienttasks.installedPackageVersionMap.get("subscription-manager").replace("subscription-manager-", "").replaceFirst("\\."+clienttasks.arch, ""),	//"manual: subscription-manager = 1.9.11-1.el6",
 					"librsvg2",
@@ -571,10 +572,9 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 					"usermode-gtk"
 			}));
 			for (String expectedRequires : expectedRequiresList) if (!actualRequiresList.contains(expectedRequires)) log.warning("The actual requires list is missing expected requires '"+expectedRequires+"'.");
-//			Assert.assertTrue(actualRequiresList.containsAll(expectedRequiresList), "The actual requires list of packages for '"+pkg+"' contains the expected list "+expectedRequiresList);
-//			return;
 		}
 		if (clienttasks.redhatReleaseX.equals("6")) {
+			// rpm --query --requires subscription-manager-gui --verbose | egrep -v '(^auto:|^rpmlib:)'
 			expectedRequiresList.addAll(Arrays.asList(new String[]{
 					"manual: subscription-manager = "+clienttasks.installedPackageVersionMap.get("subscription-manager").replace("subscription-manager-", "").replaceFirst("\\."+clienttasks.arch, ""),	//"manual: subscription-manager = 1.9.11-1.el6",
 					"manual: librsvg2("+clienttasks.arch.replace("_","-")+")",	//"manual: librsvg2(x86-64)",
@@ -596,6 +596,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 			}
 		}
 		if (clienttasks.redhatReleaseX.equals("7")) {
+			// rpm --query --requires subscription-manager-gui --verbose | egrep -v '(^auto:|^rpmlib:)'
 			expectedRequiresList.addAll(Arrays.asList(new String[]{
 					"manual: subscription-manager = "+clienttasks.installedPackageVersionMap.get("subscription-manager").replace("subscription-manager-", "").replaceFirst("\\."+clienttasks.arch, ""),	//"manual: subscription-manager = 1.9.11-1.el6",
 					"manual: librsvg2("+clienttasks.arch.replace("_","-")+")",	//"manual: librsvg2(x86-64)",
@@ -620,6 +621,10 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 			}
 			if (clienttasks.isPackageVersion("subscription-manager-gui",">=","1.19.9-1")) {	// commit 971bb300b1e07d0284c23b1b292a70c674b0037a 1441698: Install missing rpm package with fonts.
 				expectedRequiresList.add("manual: abattis-cantarell-fonts");	// when gtk3 is installed
+			}
+			if (clienttasks.isPackageVersion("subscription-manager-gui",">=","1.20.1-1")) {	// commit f20e28ab12b070095c4045aeecab2ccc9eba31b1 	// Add preliminary zypper support
+				expectedRequiresList.remove("manual: abattis-cantarell-fonts");
+				expectedRequiresList.add("manual: font(cantarell)");
 			}
 		}
 		if (clienttasks.isPackageVersion("subscription-manager-gui",">=","1.14.8-1")) {		// commit dc727c4adef8cdc49e319f2d90738e848061da78  Adrian says that these imports were never used
