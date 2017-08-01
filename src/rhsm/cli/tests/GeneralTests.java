@@ -338,6 +338,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 			if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.10.5-1")) expectedRequiresList.remove("python-simplejson");	// Bug 1006748 - remove subscription-manager dependency on python-simplejson; subscription-manager commit ee34aef839d0cb367e558f1cd7559590d95cd636
 			if (clienttasks.isPackageVersion("python-rhsm", ">=", "1.11.3-3")) expectedRequiresList.add("python-simplejson");	// Bug 1096676 - missing dependency on json; python-rhsm commit 19b9b55404c5a9bf4eb2828692f8a578a7645da1
 			if (clienttasks.isPackageVersion("python-rhsm", ">=", "1.11.3-4")) expectedRequiresList.add("python-dateutil");	// Bug 1090350 - Clock skew detected when the dates of server and client have no big time drift. commit 4c7fe4009a7902c236ff8f9445a2505bf0eb94e7
+			if (clienttasks.isPackageVersion("python-rhsm", ">=", "1.20.1-1")) expectedRequiresList.add("python-six");	// python-rhsm commit ca7e5d4650b2dabed9fc8daf9c8c7e8c2e2bfb7e	// Require the 'six' Python 2 and 3 compatibility library.
 //			for (String expectedRequires : expectedRequiresList) if (!actualRequiresList.contains(expectedRequires)) log.warning("The actual requires list is missing expected requires '"+expectedRequires+"'.");
 //			Assert.assertTrue(actualRequiresList.containsAll(expectedRequiresList), "The actual requires list of packages for '"+pkg+"' contains the expected list "+expectedRequiresList);
 //			return;
@@ -352,6 +353,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 			if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.10.5-1")) expectedRequiresList.remove("manual: python-simplejson");	// Bug 1006748 - remove subscription-manager dependency on python-simplejson; subscription-manager commit ee34aef839d0cb367e558f1cd7559590d95cd636
 			if (clienttasks.isPackageVersion("python-rhsm", ">=", "1.11.5-1")) expectedRequiresList.add("manual: python-dateutil");	// Bug 1090350 - Clock skew detected when the dates of server and client have no big time drift. commit b597dae53aacf2d8a307b77b7f38756ce3ee6860
 			if (clienttasks.isPackageVersion("python-rhsm", ">=", "1.17.5-1")) expectedRequiresList.add("manual: python-rhsm-certificates = "+clienttasks.installedPackageVersionMap.get("python-rhsm").replace("python-rhsm-", "").replaceFirst("\\."+clienttasks.arch, ""));	// Bug 1104332 - [RFE] Separate out the rhsm certs into a separate RPM	// python-rhsm commit 790aa1ddaa20db05c63019fcdd4bd7f5cd2adeb8	// manual: python-rhsm-certificates = 1.17.4-1.git.1.790aa1d.el7
+			if (clienttasks.isPackageVersion("python-rhsm", ">=", "1.20.1-1")) expectedRequiresList.add("manual: python-six");	// python-rhsm commit ca7e5d4650b2dabed9fc8daf9c8c7e8c2e2bfb7e	// Require the 'six' Python 2 and 3 compatibility library.
 			
 			if (clienttasks.redhatReleaseX.equals("7")) {
 				if (clienttasks.isPackageVersion("python-rhsm", ">=", "1.18.5-1")) expectedRequiresList.remove("manual: m2crypto");	// python-rhsm commit 214103dcffce29e31858ffee414d79c1b8063970	// Reduce usage of m2crypto (#184) on RHEL7+
