@@ -1421,6 +1421,16 @@
       "parameters" : [ ]
     }
   },
+  "rhsm.cli.tests.CertificateTests.VerifyBaseRHELProductCertArchAndTags_Test" : {
+    "RHEL6" : {
+      "id" : "RHEL6-20037",
+      "parameters" : [ ]
+    },
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-51046",
+      "parameters" : [ ]
+    }
+  },
   "rhsm.cli.tests.CertificateTests.VerifyBaseRHELProductCertIsInstalled_Test" : {
     "RHEL6" : {
       "id" : "RHEL6-20036",
