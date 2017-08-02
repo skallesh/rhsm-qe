@@ -2343,6 +2343,16 @@
       "parameters" : [ "bugzilla", "dockerImage" ]
     }
   },
+  "rhsm.cli.tests.EnvironmentsTests.All_Env_Register" : {
+    "RHEL6" : {
+      "id" : "RHEL6-47897",
+      "parameters" : [ ]
+    },
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-96737",
+      "parameters" : [ ]
+    }
+  },
   "rhsm.cli.tests.EnvironmentsTests.EnvironmentsWithCredentials_Test" : {
     "RHEL6" : {
       "id" : "RHEL6-27130",
