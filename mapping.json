@@ -3123,6 +3123,66 @@
       "parameters" : [ ]
     }
   },
+  "rhsm.cli.tests.GoldenTicketTests.ExtraEntitlementIsGrantedWhenRegisteredUsingActivationKey" : {
+    "RHEL6" : {
+      "id" : "RHEL6-47903",
+      "parameters" : [ ]
+    },
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-96741",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.cli.tests.GoldenTicketTests.VerifyGoldenTicketFunctionality" : {
+    "RHEL6" : {
+      "id" : "RHEL6-47902",
+      "parameters" : [ ]
+    },
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-96740",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.cli.tests.GoldenTicketTests.VerifyGoldenTicketIsGrantedWhenRegisteredUsingActivationKey" : {
+    "RHEL6" : {
+      "id" : "RHEL6-47903",
+      "parameters" : [ ]
+    },
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-96741",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.cli.tests.GoldenTicketTests.VerifyGoldenTicketfunctionality" : {
+    "RHEL6" : {
+      "id" : "RHEL6-47902",
+      "parameters" : [ ]
+    },
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-96740",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.cli.tests.GoldenTicketTests.VerifyRepoOverridePreference" : {
+    "RHEL6" : {
+      "id" : "RHEL6-47904",
+      "parameters" : [ ]
+    },
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-96742",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.cli.tests.GoldenTicketTests.VerifyRevokingContentAccessModeOnOwnerRemovesEntitlement" : {
+    "RHEL6" : {
+      "id" : "RHEL6-47905",
+      "parameters" : [ ]
+    },
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-96743",
+      "parameters" : [ ]
+    }
+  },
   "rhsm.cli.tests.HealingTests.VerifyAutohealAttributeCanBeToggledOffForConsumerUsingCLI_Test" : {
     "RHEL6" : {
       "id" : "RHEL6-20096",
