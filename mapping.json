@@ -2807,6 +2807,16 @@
       "parameters" : [ ]
     }
   },
+  "rhsm.cli.tests.FactsTests.VerifySystemDefaultLocaleInFacts_Test" : {
+    "RHEL6" : {
+      "id" : "RHEL6-47898",
+      "parameters" : [ ]
+    },
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-96739",
+      "parameters" : [ ]
+    }
+  },
   "rhsm.cli.tests.FlexibleBrandingTests.VerifyBrand_NameCreatedDuringRepeatedRHSMCERTDUpdates" : {
     "RHEL6" : {
       "id" : "RHEL6-36692",
