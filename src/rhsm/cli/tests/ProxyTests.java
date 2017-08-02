@@ -33,9 +33,12 @@ import rhsm.data.SubscriptionPool;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 import com.redhat.qe.tools.SSHCommandRunner;
-
+import com.github.redhatqe.polarize.metadata.DefTypes.PosNeg;
 import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.DefTypes;
+import com.github.redhatqe.polarize.metadata.LinkedItem;
 import com.github.redhatqe.polarize.metadata.TestDefinition;
+import com.github.redhatqe.polarize.metadata.TestType;
 
 /**
  * @author jsefler
@@ -1922,7 +1925,22 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	
 	
 	
-	
+	@TestDefinition(//update= true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-47906", "RHEL7-96744"},
+			linkedWorkItems= {
+				@LinkedItem(
+					workitemId= "RHEL6-28585",	// RHSM-REQ : Proxy settings
+					project= Project.RHEL6,
+					role= DefTypes.Role.VERIFIES),
+				@LinkedItem(
+					workitemId= "RHEL7-84941",	// RHSM-REQ : Proxy settings
+					project= Project.RedHatEnterpriseLinux7,
+					role= DefTypes.Role.VERIFIES)},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.MEDIUM, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="subscription-manager : register with noproxy specified via a command line option matching server.hostname should ignore proxy configurations and NOT send traffic through the configured proxy. (Positive and Negative Variations)",
 			groups={"blockedByBug-1420533"/*inspired the implementation of no_proxy configuration in rhsm.conf*/},
 			dataProvider="getRegisterAttemptsToVerifyHonoringNoProxyData",
@@ -1995,6 +2013,22 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 			}
 		}
 	}
+	@TestDefinition(//update= true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-47907", "RHEL7-96745"},
+			linkedWorkItems= {
+				@LinkedItem(
+					workitemId= "RHEL6-28585",	// RHSM-REQ : Proxy settings
+					project= Project.RHEL6,
+					role= DefTypes.Role.VERIFIES),
+				@LinkedItem(
+					workitemId= "RHEL7-84941",	// RHSM-REQ : Proxy settings
+					project= Project.RedHatEnterpriseLinux7,
+					role= DefTypes.Role.VERIFIES)},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.MEDIUM, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="subscription-manager : register with noproxy configured in rhsm.conf matching server.hostname should ignore proxy configurations and NOT send traffic through the configured proxy. (Positive and Negative Variations)",
 			groups={"blockedByBug-1420533"/*inspired the implementation of no_proxy configuration in rhsm.conf*/},
 			dataProvider="getRegisterAttemptsToVerifyHonoringNoProxyData",

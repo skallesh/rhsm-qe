@@ -5187,6 +5187,26 @@
       "parameters" : [ "blockedByBug", "username", "password", "org", "proxy", "proxyuser", "proxypassword", "proxy_hostnameConfig", "proxy_portConfig", "proxy_userConfig", "proxy_passwordConfig", "exitCode", "stdout", "stderr", "proxyRunner", "proxyLog", "proxyLogGrepPattern", "noProxyEnvVar", "hostnameMatchesNoProxyEnvVar" ]
     }
   },
+  "rhsm.cli.tests.ProxyTests.RegisterAttemptsToVerifyHonoringNoProxyViaCmdLineOpt_Test" : {
+    "RHEL6" : {
+      "id" : "RHEL6-47906",
+      "parameters" : [ "blockedByBug", "username", "password", "org", "proxy", "proxyuser", "proxypassword", "proxy_hostnameConfig", "proxy_portConfig", "proxy_userConfig", "proxy_passwordConfig", "exitCode", "stdout", "stderr", "proxyRunner", "proxyLog", "proxyLogGrepPattern", "noProxyOption", "hostnameMatchesNoProxyOption" ]
+    },
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-96744",
+      "parameters" : [ "blockedByBug", "username", "password", "org", "proxy", "proxyuser", "proxypassword", "proxy_hostnameConfig", "proxy_portConfig", "proxy_userConfig", "proxy_passwordConfig", "exitCode", "stdout", "stderr", "proxyRunner", "proxyLog", "proxyLogGrepPattern", "noProxyOption", "hostnameMatchesNoProxyOption" ]
+    }
+  },
+  "rhsm.cli.tests.ProxyTests.RegisterAttemptsToVerifyHonoringNoProxyViaRhsmConfig_Test" : {
+    "RHEL6" : {
+      "id" : "RHEL6-47907",
+      "parameters" : [ "blockedByBug", "username", "password", "org", "proxy", "proxyuser", "proxypassword", "proxy_hostnameConfig", "proxy_portConfig", "proxy_userConfig", "proxy_passwordConfig", "exitCode", "stdout", "stderr", "proxyRunner", "proxyLog", "proxyLogGrepPattern", "noProxyConfig", "hostnameMatchesNoProxyConfig" ]
+    },
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-96745",
+      "parameters" : [ "blockedByBug", "username", "password", "org", "proxy", "proxyuser", "proxypassword", "proxy_hostnameConfig", "proxy_portConfig", "proxy_userConfig", "proxy_passwordConfig", "exitCode", "stdout", "stderr", "proxyRunner", "proxyLog", "proxyLogGrepPattern", "noProxyConfig", "hostnameMatchesNoProxyConfig" ]
+    }
+  },
   "rhsm.cli.tests.ProxyTests.RegisterAttemptsUsingProxyServerDefinedByAnEnvironmentVariable_Test" : {
     "RHEL6" : {
       "id" : "RHEL6-21818",
