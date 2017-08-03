@@ -1,7 +1,7 @@
 (ns rhsm.api.tests.attach-test
   (:require  [clojure.test :refer :all]
              [rhsm.gui.tasks.tools :as tools]
-             ;;[rhsm.api.tests.entitlement_tests :as tests]
+             [rhsm.api.tests.attach_tests :as tests]
              [rhsm.gui.tasks.test-config :refer [config]]
              [org.httpkit.client :as http]
              [rhsm.api.rest :as rest]
@@ -26,4 +26,4 @@
   (tests/attach_methods nil))
 
 (deftest Attach-method-PoolAttach-test
-  (tests/attach_pool_using_dbus))
+  (tests/attach_pool_using_dbus nil))
