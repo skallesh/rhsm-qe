@@ -2091,6 +2091,16 @@
       "parameters" : [ "pool" ]
     }
   },
+  "rhsm.cli.tests.ContentTests.VerifyEUSProductContentSetModifiesProducts_Test" : {
+    "RHEL6" : {
+      "id" : "RHEL6-47914",
+      "parameters" : [ "bugzilla", "eusProductName", "eusProductId", "eusContentSetName", "eusContentSetId", "eusContentSetLabel", "modifiedProductIds" ]
+    },
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-97069",
+      "parameters" : [ "bugzilla", "eusProductName", "eusProductId", "eusContentSetName", "eusContentSetId", "eusContentSetLabel", "modifiedProductIds" ]
+    }
+  },
   "rhsm.cli.tests.ContentTests.VerifyGpgCheckValuesInYumRepos_Test" : {
     "RHEL6" : {
       "id" : "RHEL6-20082",
