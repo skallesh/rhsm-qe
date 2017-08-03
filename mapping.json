@@ -3193,6 +3193,46 @@
       "parameters" : [ ]
     }
   },
+  "rhsm.cli.tests.GuestLimitingTests.ComplianceOfHostWithFiveGuestsAndGuestLimitOfFour_Test" : {
+    "RHEL6" : {
+      "id" : "RHEL6-37721",
+      "parameters" : [ ]
+    },
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-51948",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.cli.tests.GuestLimitingTests.ComplianceOfHostWithOneOftheGuestReportedInactive_Test" : {
+    "RHEL6" : {
+      "id" : "RHEL6-37722",
+      "parameters" : [ ]
+    },
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-51949",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.cli.tests.GuestLimitingTests.ComplianceOfHostWithtwoGuestsAndGuestLimitOfFour_Test" : {
+    "RHEL6" : {
+      "id" : "RHEL6-37723",
+      "parameters" : [ ]
+    },
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-51950",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.cli.tests.GuestLimitingTests.VerifyGuestLimitIsGlobal_Test" : {
+    "RHEL6" : {
+      "id" : "RHEL6-37720",
+      "parameters" : [ ]
+    },
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-51537",
+      "parameters" : [ ]
+    }
+  },
   "rhsm.cli.tests.HealingTests.VerifyAutohealAttributeCanBeToggledOffForConsumerUsingCLI_Test" : {
     "RHEL6" : {
       "id" : "RHEL6-20096",
