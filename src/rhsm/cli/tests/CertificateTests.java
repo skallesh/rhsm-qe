@@ -538,16 +538,26 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		// After fix to Bug 1315901 - Stacktrace displayed when running rct against an inaccessible file
 		//	[root@jsefler-rhel7 ~]# su non-root-user --command 'rct cat-cert /etc/pki/consumer/cert.pem' 
 		//	Permission denied
-
+		String expectedStdout = "Permission denied";
+		Integer expectedExitCode = Integer.valueOf(1);
+		
+		// After fix to Bug 1472715 - Python module rhsm should never call exit()
+		//	[root@jsefler-rhel7 ~]# su non-root-user --command 'rct cat-cert /etc/pki/consumer/cert.pem'
+		//	Unable to read certificate file '/etc/pki/consumer/cert.pem': Error loading certificate: [Errno 13] Permission denied: '/etc/pki/consumer/cert.pem'
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.20.1-1")) {	// post commit f192653c46808239c2f193478c1dfeb55a6ee35c	//Bug 1472715: Python module rhsm should never call exit()
+			expectedStdout= String.format("Unable to read certificate file '%s': Error loading certificate: [Errno 13] Permission denied: '%s'",consumerCert.file.getPath(),consumerCert.file.getPath());
+			expectedExitCode = Integer.valueOf(0);
+		}
+		
 		// attempt to run command "rct cat-cert /etc/pki/consumer/cert.pem" as non-root-user
 		String command = "rct cat-cert "+consumerCert.file.getPath();
 		SSHCommandResult result = client.runCommandAndWait("su "+nonRootUser+" --command '"+command+"'");
 		
 		// assert expected results
 		Assert.assertTrue(!result.getStderr().toLowerCase().contains("Traceback".toLowerCase()), "Stderr from command '"+command+"' run as a non-root user does not contain a traceback.");
-		Assert.assertEquals(result.getStdout().trim(), "Permission denied", "Stdout from command '"+command+"' run as a non-root user.");
+		Assert.assertEquals(result.getStdout().trim(), expectedStdout, "Stdout from command '"+command+"' run as a non-root user.");
 		Assert.assertEquals(result.getStderr().trim(), "", "Stderr from command '"+command+"' run as a non-root user.");
-		Assert.assertEquals(result.getExitCode(), Integer.valueOf(1), "ExitCode from command '"+command+"' run as a non-root user.");
+		Assert.assertEquals(result.getExitCode(), expectedExitCode, "ExitCode from command '"+command+"' run as a non-root user.");
 	}
 	@AfterGroups(groups={"setup"}, value={"VerifyConsumerCertsAreNotAccessibleByNonRootUserUsingRct_Test"})
 	public void deleteNonRootUser() {
