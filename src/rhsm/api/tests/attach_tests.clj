@@ -102,6 +102,7 @@ Then the response contains of list of json strings described attached pools
       :stdout
       (.contains "Registering to:")
       verify)
+  ;;(->> "subscription-manager remove --all" tools/run-command)
   (let [list-of-available-pools (rest/list-of-available-pools
                                  (ctasks/server-url)
                                  (@config :owner-key)
@@ -152,24 +153,32 @@ Then the response contains of keys ['status','overall_status','reasons']
       :stdout
       (.contains "Registering to:")
       verify)
+  ;;(->> "subscription-manager remove --all" tools/run-command)
+
   (let [list-of-available-pools (rest/list-of-available-pools
                                  (ctasks/server-url)
                                  (@config :owner-key)
                                  (@config :username)
-                                 (@config :password))
-        ids-of-available-pools (map :id list-of-available-pools)
-        a-few-pool-ids (take 2 ids-of-available-pools)]
-    (let [{:keys [stdout stderr exitcode]} (->> (str "busctl call com.redhat.RHSM1 /com/redhat/RHSM1/Attach com.redhat.RHSM1.Attach AutoAttach"
-                               " asia{sv} "
-                               " 2 " (clojure.string/join " " a-few-pool-ids)
-                               " 1 " ;;quantity
-                               " 0 ")
-                  tools/run-command)]
+                                 (@config :password))]
+    (let [{:keys [stdout stderr exitcode]}
+          (->> (str "busctl call com.redhat.RHSM1 /com/redhat/RHSM1/Attach com.redhat.RHSM1.Attach AutoAttach"
+                    " sa{sv} "
+                    " Standard "
+                    " 0")
+               tools/run-command)]
       (verify (= stderr ""))
       (verify (= exitcode 0))
-      )
-    )
-  )
-
+      (let [[response-data rest] (-> stdout dbus/parse)]
+        ;; the value is pretty big to it is not necessary to see it in a command verity
+        (assert (= rest ""))
+        (assert (= (type response-data) java.lang.String))
+        (let [parsed (-> response-data (str/replace #"\\\"" "\"") json/read-str)
+              compliance-levels (->> parsed
+                                     (map (fn [pool] (-> pool
+                                                        (get "pool")
+                                                        (get "calculatedAttributes")
+                                                        (get "compliance_type"))))
+                                     set)]
+          (verify (= #{"Standard"} compliance-levels)))))))
 
 (gen-class-testng)
