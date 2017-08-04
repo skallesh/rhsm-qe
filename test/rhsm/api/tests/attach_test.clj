@@ -25,5 +25,8 @@
 (deftest attach-methods-inspection-test
   (tests/attach_methods nil))
 
-(deftest Attach-method-PoolAttach-test
+(deftest PoolAttach-test
   (tests/attach_pool_using_dbus nil))
+
+(deftest AutoAttach-test
+  (tests/autoattach_pool_using_dbus nil))
