@@ -538,6 +538,7 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 	}
 
 
+	@TestDefinition(projectID={/*Project.RHEL5*/},testCaseID={})
 	@Test(	description="register to a RHEL subscription and verify that release --list excludes 5.6, 5.5, 5.4, 5.3, 5.2, 5.1, 5.0",
 			groups={"blockedByBug-785989"/*,"blockedByBug-840509" MOVED TO TEMPORARY WORKAROUND*/,"blockedByBug-919700"},
 			enabled=true)
