@@ -46,9 +46,12 @@ import rhsm.data.SubscriptionPool;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 import com.redhat.qe.tools.SSHCommandRunner;
-
+import com.github.redhatqe.polarize.metadata.DefTypes.PosNeg;
 import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.DefTypes;
+import com.github.redhatqe.polarize.metadata.LinkedItem;
 import com.github.redhatqe.polarize.metadata.TestDefinition;
+import com.github.redhatqe.polarize.metadata.TestType;
 
 /**
  * @author ssalevan
@@ -1784,8 +1787,24 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
+	@TestDefinition(//update= true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-47919", "RHEL7-97262"},
+			linkedWorkItems= {
+				@LinkedItem(
+					workitemId= "RHEL6-28485",	// RHSM-REQ : subscription-manager cli registration and deregistration
+					project= Project.RHEL6,
+					role= DefTypes.Role.VERIFIES),
+				@LinkedItem(
+					workitemId= "RHEL7-84906",	// RHSM-REQ : subscription-manager cli registration and deregistration
+					project= Project.RedHatEnterpriseLinux7,
+					role= DefTypes.Role.VERIFIES)},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="subscription-manager: register with LC_ALL=C should succeed.",
-			groups={"blockedByBug-1445387","Tier1Tests"},
+			groups={"Tier1Tests","blockedByBug-1445387"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void RegisterWithLC_ALL_C_Test() {

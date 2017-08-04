@@ -5853,6 +5853,16 @@
       "parameters" : [ "bugzilla", "promptedUsername", "promptedPassword", "commandLineUsername", "commandLinePassword", "commandLineOrg", "expectedExitCode", "expectedStdoutRegex", "expectedStderrRegex" ]
     }
   },
+  "rhsm.cli.tests.RegisterTests.RegisterWithLC_ALL_C_Test" : {
+    "RHEL6" : {
+      "id" : "RHEL6-47919",
+      "parameters" : [ ]
+    },
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-97262",
+      "parameters" : [ ]
+    }
+  },
   "rhsm.cli.tests.RegisterTests.RegisterWithNameAndType_Test" : {
     "RHEL6" : {
       "id" : "RHEL6-27114",
