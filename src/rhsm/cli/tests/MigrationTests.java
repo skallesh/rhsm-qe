@@ -43,9 +43,12 @@ import rhsm.data.SubscriptionPool;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 import com.redhat.qe.tools.SSHCommandRunner;
-
+import com.github.redhatqe.polarize.metadata.DefTypes.PosNeg;
 import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.DefTypes;
+import com.github.redhatqe.polarize.metadata.LinkedItem;
 import com.github.redhatqe.polarize.metadata.TestDefinition;
+import com.github.redhatqe.polarize.metadata.TestType;
 
 /**
  * @author jsefler
@@ -105,6 +108,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	
 	// install-num-migrate-to-rhsm Test methods ***********************************************************************
 	
+	@TestDefinition(projectID={/*Project.RHEL5*/},testCaseID={})
 	@Test(	description="Execute migration tool install-num-migrate-to-rhsm with a known instnumber and assert the expected productCerts are copied",
 			groups={"AcceptanceTests","Tier1Tests","InstallNumMigrateToRhsmWithInstNumber_Test","blockedByBug-853187"},
 			dependsOnMethods={},
@@ -216,8 +220,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-26761", "RHEL7-55204"})
+	@TestDefinition(projectID={/*Project.RHEL5*/},testCaseID={})
 	@Test(	description="Execute migration tool install-num-migrate-to-rhsm with install-num used to provision this machine",
 			groups={"AcceptanceTests","Tier1Tests","InstallNumMigrateToRhsm_Test","blockedByBug-854879"},
 			dependsOnMethods={},
@@ -278,6 +281,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
+	@TestDefinition(projectID={/*Project.RHEL5*/},testCaseID={})
 	@Test(	description="Execute migration tool install-num-migrate-to-rhsm with a non-default rhsm.productcertdir configured",
 			groups={"blockedByBug-773707","blockedByBug-840415","InstallNumMigrateToRhsmWithNonDefaultProductCertDir_Test"},
 			dependsOnMethods={},
@@ -312,6 +316,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
+	@TestDefinition(projectID={/*Project.RHEL5*/},testCaseID={})
 	@Test(	description="Execute migration tool install-num-migrate-to-rhsm with a bad length install-num (expecting 16 chars long)",
 			groups={},
 			dependsOnMethods={},
@@ -341,8 +346,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6}
-			       , testCaseID = {"RHEL6-26760"})
+	@TestDefinition(projectID={/*Project.RHEL5*/},testCaseID={})
 	@Test(	description="Execute migration tool install-num-migrate-to-rhsm with no install-num found on machine",
 			groups={},
 			dependsOnMethods={},
@@ -361,8 +365,13 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21885", "RHEL7-51740"})
+	@TestDefinition(//update= true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21885", "RHEL7-51740"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.LOW, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="Assert that install-num-migrate-to-rhsm is only installed on RHEL5",
 			groups={"blockedByBug-790205","blockedByBug-1092754"},
 			dependsOnMethods={},

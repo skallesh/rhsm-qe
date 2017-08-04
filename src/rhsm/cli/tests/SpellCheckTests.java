@@ -730,6 +730,8 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(getSpellCheckFailuresForModifiedManPage(tool,manPageResult.getStdout(),modifiedManPage).size(),0,"There are zero unexpected hunspell check failures in the man page for '"+tool+"'.");
 	}
 
+
+	@TestDefinition(projectID={/*Project.RHEL5*/},testCaseID={})
 	@Test(	description="check the install-num-migrate-to-rhsm man page for misspelled words and typos",
 			groups={},
 			enabled=true)
