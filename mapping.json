@@ -7563,6 +7563,16 @@
       "parameters" : [ "bugzilla", "unmappedGuestsOnlyPool" ]
     }
   },
+  "rhsm.cli.tests.TranslationTests.AttemptLocalizedRegistrationWithInvalidCredentials_Test" : {
+    "RHEL6" : {
+      "id" : "RHEL6-19944",
+      "parameters" : [ "bugzilla", "lang", "username", "password", "exitCode", "stdoutRegex", "stderrRegex" ]
+    },
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-68143",
+      "parameters" : [ "bugzilla", "lang", "username", "password", "exitCode", "stdoutRegex", "stderrRegex" ]
+    }
+  },
   "rhsm.cli.tests.TranslationTests.RegisterWithFallbackCLocale_Test" : {
     "RHEL6" : {
       "id" : "RHEL6-21765",
