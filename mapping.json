@@ -7933,6 +7933,16 @@
       "parameters" : [ ]
     }
   },
+  "rhsm.cli.tests.VersionTests.VersionOfCandlepinWhenUnregistered_Test" : {
+    "RHEL6" : {
+      "id" : "RHEL6-25817",
+      "parameters" : [ ]
+    },
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-51277",
+      "parameters" : [ ]
+    }
+  },
   "rhsm.cli.tests.VersionTests.VersionOfCandlepinWhenUsingRHNClassicAndHostnameIsUnknown_Test" : {
     "RHEL6" : {
       "id" : "RHEL6-25818",

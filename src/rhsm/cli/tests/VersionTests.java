@@ -15,9 +15,12 @@ import rhsm.base.CandlepinType;
 import rhsm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
-
+import com.github.redhatqe.polarize.metadata.DefTypes.PosNeg;
 import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.DefTypes;
+import com.github.redhatqe.polarize.metadata.LinkedItem;
 import com.github.redhatqe.polarize.metadata.TestDefinition;
+import com.github.redhatqe.polarize.metadata.TestType;
 
 /**
  * @author jsefler
@@ -75,6 +78,22 @@ public class VersionTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
+	@TestDefinition(//update= true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-25817", "RHEL7-51277"},
+			linkedWorkItems= {
+				@LinkedItem(
+					workitemId= "RHEL6-28549",	// RHSM-REQ : subscription-manager cli version and help information
+					project= Project.RHEL6,
+					role= DefTypes.Role.VERIFIES),
+				@LinkedItem(
+					workitemId= "RHEL7-84938",	// RHSM-REQ : subscription-manager cli version and help information
+					project= Project.RedHatEnterpriseLinux7,
+					role= DefTypes.Role.VERIFIES)},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="assert that the candlepin sever version is reported by the version module (expect a message to indicate this system is not registered)",
 			groups={"blockedByBug-862308","blockedByBug-868347","blockedByBug-874623","blockedByBug-1284120"},
 			enabled=true)
