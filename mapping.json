@@ -7583,6 +7583,16 @@
       "parameters" : [ ]
     }
   },
+  "rhsm.cli.tests.TranslationTests.RegisterWithUnknownLocale_Test" : {
+    "RHEL6" : {
+      "id" : "RHEL6-47920",
+      "parameters" : [ ]
+    },
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-97321",
+      "parameters" : [ ]
+    }
+  },
   "rhsm.cli.tests.TranslationTests.TranslatedCommandLineHelp_Test" : {
     "RHEL6" : {
       "id" : "RHEL6-21766",

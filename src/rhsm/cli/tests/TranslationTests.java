@@ -179,6 +179,22 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
+	@TestDefinition(//update= true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-47920", "RHEL7-97321"},
+			linkedWorkItems= {
+				@LinkedItem(
+					workitemId= "RHEL6-28564",	// RHSM-REQ : Translation
+					project= Project.RHEL6,
+					role= DefTypes.Role.VERIFIES),
+				@LinkedItem(
+					workitemId= "RHEL7-84942",	// RHSM-REQ : Translation
+					project= Project.RedHatEnterpriseLinux7,
+					role= DefTypes.Role.VERIFIES)},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="verify subscription-manager register will succeed with an unknown locale LANG=foo; also verify the system.default_locale fact reports Unknown",
 			groups={"blockedByBug-729988","blockedByBug-1449824"},
 			enabled=true)
