@@ -34,9 +34,12 @@ import rhsm.cli.tasks.SubscriptionManagerTasks;
 import rhsm.data.SubscriptionPool;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
-
+import com.github.redhatqe.polarize.metadata.DefTypes.PosNeg;
 import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.DefTypes;
+import com.github.redhatqe.polarize.metadata.LinkedItem;
 import com.github.redhatqe.polarize.metadata.TestDefinition;
+import com.github.redhatqe.polarize.metadata.TestType;
 
 
 
@@ -856,6 +859,22 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 		
 	
 	
+	@TestDefinition(//update= true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-47928", "RHEL7-97327"},
+			linkedWorkItems= {
+				@LinkedItem(
+					workitemId= "RHEL6-28576",	// RHSM-REQ : Host-limited Guest Subscriptions
+					project= Project.RHEL6,
+					role= DefTypes.Role.RELATES_TO),
+				@LinkedItem(
+					workitemId= "RHEL7-84958",	// RHSM-REQ : Host-limited Guest Subscriptions
+					project= Project.RedHatEnterpriseLinux7,
+					role= DefTypes.Role.RELATES_TO)},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="Verify the virt_limit multiplier on guest pool quantity is not clobbered by refresh pools",
 			groups={"blockedByBug-679617"},
 			dependsOnGroups={},
@@ -1160,6 +1179,22 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
+	@TestDefinition(//update= true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-47927", "RHEL7-97326"},
+			linkedWorkItems= {
+				@LinkedItem(
+					workitemId= "RHEL6-28576",	// RHSM-REQ : Host-limited Guest Subscriptions
+					project= Project.RHEL6,
+					role= DefTypes.Role.RELATES_TO),
+				@LinkedItem(
+					workitemId= "RHEL7-84958",	// RHSM-REQ : Host-limited Guest Subscriptions
+					project= Project.RedHatEnterpriseLinux7,
+					role= DefTypes.Role.RELATES_TO)},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="Verify the Candlepin API denies PUTting of guestIds onto a guest consumer",
 			groups={"blockedByBug-737935","VerifyGuestIdsCanNOTBePutOntoGuestConsumer_Test"},
 			dependsOnGroups={},
@@ -1203,6 +1238,22 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
+	@TestDefinition(//update= true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-47926", "RHEL7-97325"},
+			linkedWorkItems= {
+				@LinkedItem(
+					workitemId= "RHEL6-28576",	// RHSM-REQ : Host-limited Guest Subscriptions
+					project= Project.RHEL6,
+					role= DefTypes.Role.RELATES_TO),
+				@LinkedItem(
+					workitemId= "RHEL7-84958",	// RHSM-REQ : Host-limited Guest Subscriptions
+					project= Project.RedHatEnterpriseLinux7,
+					role= DefTypes.Role.RELATES_TO)},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="When Host B PUTs the same guestId as HostA, the guestId should be removed from HostA (simulation of a guest moved from Host A to Host B)",
 			groups={"blockedByBug-737935","VerifyGuestIdIsRemovedFromHostConsumerAWhenHostConsumerBPutsSameGuestId_Test"},
 			dependsOnGroups={},

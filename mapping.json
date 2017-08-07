@@ -7993,6 +7993,16 @@
       "parameters" : [ ]
     }
   },
+  "rhsm.cli.tests.VirtualizationTests.VerifyGuestIdIsRemovedFromHostConsumerAWhenHostConsumerBPutsSameGuestId_Test" : {
+    "RHEL6" : {
+      "id" : "RHEL6-47926",
+      "parameters" : [ ]
+    },
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-97325",
+      "parameters" : [ ]
+    }
+  },
   "rhsm.cli.tests.VirtualizationTests.VerifyGuestIdsCanBePutOntoHostConsumer_Test" : {
     "RHEL6" : {
       "id" : "RHEL6-37711",
@@ -8001,6 +8011,26 @@
     "RedHatEnterpriseLinux7" : {
       "id" : "RHEL7-51488",
       "parameters" : [ ]
+    }
+  },
+  "rhsm.cli.tests.VirtualizationTests.VerifyGuestIdsCanNOTBePutOntoGuestConsumer_Test" : {
+    "RHEL6" : {
+      "id" : "RHEL6-47927",
+      "parameters" : [ ]
+    },
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-97326",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.cli.tests.VirtualizationTests.VerifyGuestPoolQuantityIsNotClobberedByRefreshPools_Test" : {
+    "RHEL6" : {
+      "id" : "RHEL6-47928",
+      "parameters" : [ "subscriptionId", "productName", "productId", "quantity", "virtLimit", "hostPoolId", "guestPoolId", "physicalOnly" ]
+    },
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-97327",
+      "parameters" : [ "subscriptionId", "productName", "productId", "quantity", "virtLimit", "hostPoolId", "guestPoolId", "physicalOnly" ]
     }
   },
   "rhsm.cli.tests.VirtualizationTests.VerifyHostAndGuestPoolQuantities_Test" : {
