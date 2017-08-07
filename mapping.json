@@ -7733,6 +7733,26 @@
       "parameters" : [ ]
     }
   },
+  "rhsm.cli.tests.UnsubscribeTests.MultiClientAttemptToDeadLockOnUnsubscribeAll_Test" : {
+    "RHEL6" : {
+      "id" : "RHEL6-36591",
+      "parameters" : [ ]
+    },
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-51395",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.cli.tests.UnsubscribeTests.RemoveDeprecatesUnsubscribe_Test" : {
+    "RHEL6" : {
+      "id" : "RHEL6-36592",
+      "parameters" : [ ]
+    },
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-51396",
+      "parameters" : [ ]
+    }
+  },
   "rhsm.cli.tests.UnsubscribeTests.ResubscribeAfterUnsubscribe_Test" : {
     "RHEL6" : {
       "id" : "RHEL6-27124",
@@ -7741,6 +7761,136 @@
     "RedHatEnterpriseLinux7" : {
       "id" : "RHEL7-51397",
       "parameters" : [ "productSubscription" ]
+    }
+  },
+  "rhsm.cli.tests.UnsubscribeTests.UnsubscribeAfterSubscribingToFutureSubscriptionPool_Test" : {
+    "RHEL6" : {
+      "id" : "RHEL6-27125",
+      "parameters" : [ "pool" ]
+    },
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-51946",
+      "parameters" : [ "pool" ]
+    }
+  },
+  "rhsm.cli.tests.UnsubscribeTests.UnsubscribeAndAttemptToReuseTheRevokedEntitlementCert_Test" : {
+    "RHEL6" : {
+      "id" : "RHEL6-47922",
+      "parameters" : [ "subscriptionPool" ]
+    },
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-97323",
+      "parameters" : [ "subscriptionPool" ]
+    }
+  },
+  "rhsm.cli.tests.UnsubscribeTests.UnsubscribeFromAValidPoolIdAndSerial_Test" : {
+    "RHEL6" : {
+      "id" : "RHEL6-36850",
+      "parameters" : [ ]
+    },
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-51398",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.cli.tests.UnsubscribeTests.UnsubscribeFromAllPoolIds_Test" : {
+    "RHEL6" : {
+      "id" : "RHEL6-36594",
+      "parameters" : [ ]
+    },
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-51399",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.cli.tests.UnsubscribeTests.UnsubscribeFromAllSerialsIncludingRevokedSerials_Test" : {
+    "RHEL6" : {
+      "id" : "RHEL6-36595",
+      "parameters" : [ ]
+    },
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-51400",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.cli.tests.UnsubscribeTests.UnsubscribeFromAllSerials_Test" : {
+    "RHEL6" : {
+      "id" : "RHEL6-36596",
+      "parameters" : [ ]
+    },
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-51401",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.cli.tests.UnsubscribeTests.UnsubscribeFromAll_Test" : {
+    "RHEL6" : {
+      "id" : "RHEL6-36597",
+      "parameters" : [ ]
+    },
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-51402",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.cli.tests.UnsubscribeTests.UnsubscribeFromAnInvalidSerial_Test" : {
+    "RHEL6" : {
+      "id" : "RHEL6-36598",
+      "parameters" : [ ]
+    },
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-51403",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.cli.tests.UnsubscribeTests.UnsubscribeFromAnUnknownPoolIdAndSerial_Test" : {
+    "RHEL6" : {
+      "id" : "RHEL6-36599",
+      "parameters" : [ ]
+    },
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-51404",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.cli.tests.UnsubscribeTests.UnsubscribeFromAnUnknownPoolId_Test" : {
+    "RHEL6" : {
+      "id" : "RHEL6-36363",
+      "parameters" : [ ]
+    },
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-51405",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.cli.tests.UnsubscribeTests.UnsubscribeFromPoolIdWhenNotRegistered_Test" : {
+    "RHEL6" : {
+      "id" : "RHEL6-47923",
+      "parameters" : [ ]
+    },
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-51406",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.cli.tests.UnsubscribeTests.UnsubscribeFromPool_Test" : {
+    "RHEL6" : {
+      "id" : "RHEL6-47924",
+      "parameters" : [ ]
+    },
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-51406",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.cli.tests.UnsubscribeTests.UnsubscribeFromSerialWhenNotRegistered_Test" : {
+    "RHEL6" : {
+      "id" : "RHEL6-36600",
+      "parameters" : [ ]
+    },
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-51408",
+      "parameters" : [ ]
     }
   },
   "rhsm.cli.tests.UnsubscribeTests.UnsubscribeFromValidProductIDs_Test" : {
