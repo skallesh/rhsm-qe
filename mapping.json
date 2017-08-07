@@ -7573,6 +7573,16 @@
       "parameters" : [ "bugzilla", "lang", "username", "password", "exitCode", "stdoutRegex", "stderrRegex" ]
     }
   },
+  "rhsm.cli.tests.TranslationTests.RegisterWithDefaultEncoding_Test" : {
+    "RHEL6" : {
+      "id" : "RHEL6-47921",
+      "parameters" : [ "bugzilla", "lang" ]
+    },
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-97322",
+      "parameters" : [ "bugzilla", "lang" ]
+    }
+  },
   "rhsm.cli.tests.TranslationTests.RegisterWithFallbackCLocale_Test" : {
     "RHEL6" : {
       "id" : "RHEL6-21765",
