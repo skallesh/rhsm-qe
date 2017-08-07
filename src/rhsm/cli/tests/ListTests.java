@@ -443,7 +443,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	
 	@Test(	description="subscription-manager-cli: RHEL Personal should be the only available subscription to a consumer registered as type person",
 			groups={"EnsureOnlyRHELPersonalIsAvailableToRegisteredPerson_Test"},
-			enabled=true)
+			enabled=false)	// registered consumers type of "person" was originally intended for entitling people to training.  Red Hat Learning Management systems never made use if it, and candlepin has no active requirements for it.  Disabling the personal tests...  Reference https://bugzilla.redhat.com/show_bug.cgi?id=967160#c1
 	//@ImplementsNitrateTest(caseId=)
 	public void EnsureOnlyRHELPersonalIsAvailableToRegisteredPerson_Test() throws JSONException {
 //		String rhelPersonalProductId = getProperty("sm.rhpersonal.productId", "");
@@ -462,9 +462,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		// register a person
 		clienttasks.unregister(null, null, null, null);
 		clienttasks.register(username, password, owner, null, ConsumerType.person, null, null, null, null, null, (String)null, null, null, null, null, false, null, null, null, null);
-
-		if (true) throw new SkipException("Support for RHELPersonal Subscriptions was yanked in favor of new DataCenter SKUs.");
-
+		
 		// assert that subscriptions with personal productIds are available to this person consumer
 		List<SubscriptionPool> subscriptionPools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		for (String personProductId : getPersonProductIds()) {

@@ -409,13 +409,13 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	@Test(	description="subscription-manager Yum plugin: ensure content can be downloaded/installed/removed after subscribing to a personal subpool",
 			groups={"InstallAndRemovePackageAfterSubscribingToPersonalSubPool_Test"},
 			dataProvider="getPackageFromEnabledRepoAndPersonalSubscriptionSubPoolData",
-			enabled=true)
+			enabled=false)	// registered consumers type of "person" was originally intended for entitling people to training.  Red Hat Learning Management systems never made use if it, and candlepin has no active requirements for it.  Disabling the personal tests...  Reference https://bugzilla.redhat.com/show_bug.cgi?id=967160#c1
 	//@ImplementsNitrateTest(caseId=) //TODO Find a tcms caseId for
 	public void InstallAndRemovePackageAfterSubscribingToPersonalSubPool_Test(String pkg, String repoLabel, SubscriptionPool pool) throws JSONException, Exception {
 		InstallAndRemovePackageFromEnabledRepoAfterSubscribingToPool_Test(pkg, repoLabel, pool, null);
 	}
-
-
+	
+	
 	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
 			       , testCaseID = {"RHEL6-25986", "RHEL7-56655"})
 	@Test(	description="subscription-manager Yum plugin: ensure yum groups can be installed/removed",
@@ -2175,10 +2175,6 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
 		if (client1tasks==null) return ll;
 		if (client2tasks==null) return ll;
-		if (true) {
-			log.warning("Support for the Personal Subscriptions was yanked in favor of new DataCenter SKUs.");
-			return ll;
-		}
 		
 		// assure we are registered (as a person on client2 and a system on client1)
 		

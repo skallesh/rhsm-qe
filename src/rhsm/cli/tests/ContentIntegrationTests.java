@@ -50,7 +50,7 @@ import rhsm.data.SubscriptionPool;
  * if no productid is there, then contact rhel-eng/jgreguske/dgregor
  */
 
-@Test(groups={"ContentIntegrationTests","Tier2Tests"})
+@Test(groups={"ContentIntegrationTests","Tier2Tests"},enabled=false)	// disabled in favor of various ContentTests which do not depend on the maintenance of dataProvider="getSubscribeData"
 public class ContentIntegrationTests extends SubscriptionManagerCLITestScript{
 
 	
@@ -59,7 +59,7 @@ public class ContentIntegrationTests extends SubscriptionManagerCLITestScript{
 	@Test(	description="register and subscribe to expected product subscription",
 			groups={"AcceptanceTests","Tier1Tests"},
 			dataProvider="getSubscribeData",
-			enabled=true)
+			enabled=false)	// disabled in favor of various ContentTests which do not depend on the maintenance of dataProvider="getSubscribeData"
 	//@ImplementsNitrateTest(caseId=) //TODO Find a tcms caseId
 	public void RegisterAndSubscribe_Test(String username, String password, ConsumerType type, String productId, String variant, String arch, Integer sockets, String engProductId) {
 
@@ -135,7 +135,7 @@ public class ContentIntegrationTests extends SubscriptionManagerCLITestScript{
 			groups={"VerifyPackagesAreAvailable","blockedByBug-905546"},
 			dependsOnMethods={"RegisterAndSubscribe_Test"}, alwaysRun=true,
 			dataProvider="getDefaultEnabledContentNamespaceData",
-			enabled=true)
+			enabled=false)	// disabled in favor of various ContentTests which do not depend on the maintenance of dataProvider="getSubscribeData"
 	//@ImplementsNitrateTest(caseId=) //TODO Find a tcms caseId
 	public void VerifyPackagesAreAvailableForDefaultEnabledContentNamespace_Test(String username, String password, ConsumerType type, String productId, Integer sockets, ContentNamespace contentNamespace) {
 		String abled = contentNamespace.enabled? "enabled":"disabled";	// is this an enabled or disabled test?
@@ -185,7 +185,7 @@ public class ContentIntegrationTests extends SubscriptionManagerCLITestScript{
 			groups={"VerifyPackagesAreAvailable"},
 			dependsOnMethods={"RegisterAndSubscribe_Test"}, alwaysRun=true,
 			dataProvider="getDefaultDisabledContentNamespaceData",
-			enabled=true)
+			enabled=false)	// disabled in favor of various ContentTests which do not depend on the maintenance of dataProvider="getSubscribeData"
 	//@ImplementsNitrateTest(caseId=) //TODO Find a tcms caseId
 	public void VerifyPackagesAreAvailableForDefaultDisabledContentNamespace_Test(String username, String password, ConsumerType type, String productId, Integer sockets, ContentNamespace contentNamespace) {
 		Assert.assertFalse(contentNamespace.enabled,"Reconfirming that we are are about to test a default disabled contentNamespace.");
@@ -198,7 +198,7 @@ public class ContentIntegrationTests extends SubscriptionManagerCLITestScript{
 			dependsOnMethods={"RegisterAndSubscribe_Test"}, alwaysRun=true,
 			dependsOnGroups={"VerifyPackagesAreAvailable"},
 			dataProvider="getContentNamespaceData",
-			enabled=true)
+			enabled=false)	// disabled in favor of various ContentTests which do not depend on the maintenance of dataProvider="getSubscribeData"
 	//@ImplementsNitrateTest(caseId=) //TODO Find a tcms caseId
 	public void DownloadRandomPackageFromContentNamespace_Test(String username, String password, ConsumerType type, String productId, Integer sockets, ContentNamespace contentNamespace) {
 		EntitlementCert entitlementCert = recallTheEntitlementCertGrantedAfterSubscribing(username, password, type, productId, sockets);
@@ -251,7 +251,7 @@ public class ContentIntegrationTests extends SubscriptionManagerCLITestScript{
 			dependsOnMethods={"RegisterAndSubscribe_Test"}, alwaysRun=true,
 			dependsOnGroups={"VerifyPackagesAreAvailable"},
 			dataProvider="getContentNamespaceData",
-			enabled=true)
+			enabled=false)	// disabled in favor of various ContentTests which do not depend on the maintenance of dataProvider="getSubscribeData"
 	//@ImplementsNitrateTest(caseId=) //TODO Find a tcms caseId
 	public void InstallAndRemoveUniquePackageFromContentNamespace_Test(String username, String password, ConsumerType type, String productId, Integer sockets, ContentNamespace contentNamespace) {
 		EntitlementCert entitlementCert = recallTheEntitlementCertGrantedAfterSubscribing(username, password, type, productId, sockets);
