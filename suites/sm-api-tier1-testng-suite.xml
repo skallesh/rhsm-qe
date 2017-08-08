@@ -27,4 +27,49 @@
     </groups>
   </test>
 
+  <test name="API: Attach">
+    <classes>
+      <class name="rhsm.base.SubscriptionManagerBaseTestScript"/>
+      <class name="rhsm.api.tests.attach_tests" />
+      <class name="rhsm.gui.tests.base" />
+    </classes>
+    <groups>
+      <run>
+        <include name="setup" />
+        <include name="tier1"/>
+        <include name="cleanup" />
+      </run>
+    </groups>
+  </test>
+
+  <test name="API: Activation Key">
+    <classes>
+      <class name="rhsm.base.SubscriptionManagerBaseTestScript"/>
+      <class name="rhsm.api.tests.activation_key_tests" />
+      <class name="rhsm.gui.tests.base" />
+    </classes>
+    <groups>
+      <run>
+        <include name="setup" />
+        <include name="tier1"/>
+        <include name="cleanup" />
+      </run>
+    </groups>
+  </test>
+
+  <test name="API: Entitlement">
+    <classes>
+      <class name="rhsm.base.SubscriptionManagerBaseTestScript"/>
+      <class name="rhsm.api.tests.entitlement_tests" />
+      <class name="rhsm.gui.tests.base" />
+    </classes>
+    <groups>
+      <run>
+        <include name="setup" />
+        <include name="tier1"/>
+        <include name="cleanup" />
+      </run>
+    </groups>
+  </test>
+
 </suite>
