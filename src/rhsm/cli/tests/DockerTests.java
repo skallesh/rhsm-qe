@@ -11,8 +11,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.DefTypes;
 import com.github.redhatqe.polarize.metadata.TestDefinition;
+import com.github.redhatqe.polarize.metadata.TestType;
+import com.github.redhatqe.polarize.metadata.DefTypes.PosNeg;
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
 
 import org.json.JSONException;
 import org.testng.SkipException;
@@ -74,19 +77,24 @@ import rhsm.data.YumRepo;
  *   Bug 1186386 - Docker unable to pull from CDN due to CA failure
  *   Bug 1328729 - Docker client doesn't link entitlements certs
  */
-@Test(groups={"DockerTests","Tier3Tests"})
+@Test(groups={"DockerTests"})
 public class DockerTests extends SubscriptionManagerCLITestScript {
 
 	// Test methods ***********************************************************************
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-26768", "RHEL7-51756"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-26768", "RHEL7-51756"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="Verify that when in container mode, attempts to run subscription-manager are blocked",
-			groups={"VerifySubscriptionManagementCommandIsDisabledInContainerMode_Test","blockedByBug-1114126"},
+			groups={"Tier3Tests","VerifySubscriptionManagementCommandIsDisabledInContainerMode_Test","blockedByBug-1114126"},
 			dataProvider="getSubscriptionManagementCommandData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifySubscriptionManagementCommandIsDisabledInContainerMode_Test(Object bugzilla, String helpCommand) {
+	public void testSubscriptionManagementCommandIsDisabledInContainerMode(Object bugzilla, String helpCommand) {
 		
 		// CLOSED WONTFIX exceptions
 		if (helpCommand.contains("subscription-manager-gui")) throw new SkipException("Disabled use of '"+helpCommand+"' in container mode was CLOSED WONTFIX.  See https://bugzilla.redhat.com/show_bug.cgi?id=1114132#c5");
@@ -125,19 +133,18 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-
-
-
-
-
-
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-26769", "RHEL7-51757"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-26769", "RHEL7-51757"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="Verify that when in container mode, redhat.repo is populated from the entitlements in /etc/rhsm/entitlement-host",
-			groups={"VerifySubscriptionManagementEntitlementsInContainerMode_Test"},
+			groups={"Tier3Tests","VerifySubscriptionManagementEntitlementsInContainerMode_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifySubscriptionManagementEntitlementsInContainerMode_Test() {
+	public void testSubscriptionManagementEntitlementsInContainerMode() {
 		
 		// start by registering the host with autosubscribe to gain some entitlements...
 		log.info("Start fresh by registering the host with autosubscribe and getting the host's yum repolist...");
@@ -214,13 +221,18 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 	protected String consumerId=null;
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-26767", "RHEL7-33099"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-26767", "RHEL7-33099"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="Verify that subscription-manager-container-plugin provides needed registry_hostnames and CA certs",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1184940","blockedByBug-1186386"},
+			groups={"Tier1Tests","blockedByBug-1184940","blockedByBug-1186386"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyExpectedRegistryHostnamesAreConfigured_Test() {
+	public void testExpectedRegistryHostnamesAreConfigured() {
 		clienttasks.unregister(null, null, null, null);
 		
 		// get the list of registry_hostnames from /etc/rhsm/pluginconf.d/container_content.ContainerContentPlugin.conf
@@ -244,16 +256,250 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-26770", "RHEL7-51758"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
+	@Test(	description="Verify that entitlements providing containerimage content are copied to relevant directories when attached via auto-subscribe (as governed by the subscription-manager-plugin-container package)",
+			groups={"Tier1Tests"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void testContainerConfigurationsAreSetAfterAutoSubscribingAndUnsubscribing() {
+		
+		// get the list of registry_hostnames from /etc/rhsm/pluginconf.d/container_content.ContainerContentPlugin.conf
+		String registry_hostnames = clienttasks.getConfFileParameter(containerContentPluginFile.getPath(), "registry_hostnames");
+		List<String> registryHostnames = Arrays.asList(registry_hostnames.split(" *, *"));
+		// configure another registry_hostname for functional test purposes
+		if (!registryHostnames.contains("rhsm-test.redhat.com")) clienttasks.updateConfFileParameter(containerContentPluginFile.getPath(), "registry_hostnames",registry_hostnames+","+"rhsm-test.redhat.com");	// rhsm-test.redhat.com does NOT appear to come from a redhat.com CDN
+		if (!registryHostnames.contains("cdn.rhsm-test.redhat.com")) clienttasks.updateConfFileParameter(containerContentPluginFile.getPath(), "registry_hostnames",registry_hostnames+","+"cdn.rhsm-test.redhat.com");	// cdn.rhsm-test.redhat.com DOES appear to come from a redhat.com CDN because it matches regex ^cdn\.(?:.*\.)?redhat\.com$
+		registry_hostnames = clienttasks.getConfFileParameter(containerContentPluginFile.getPath(), "registry_hostnames");
+		registryHostnames = Arrays.asList(registry_hostnames.split(" *, *"));
+		
+		// register the host, autosubscribe, and get the granted entitlements
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,true,null,null,(String)null,null,null, null, true, false, null, null, null, null);
+		List<EntitlementCert> entitlementCerts = clienttasks.getCurrentEntitlementCerts();
+		
+		// verify that the entitlements which provide containerimage content are copied to registry_hostnames...
+		//	[root@jsefler-os7 ~]# ls /etc/docker/certs.d/registry.access.redhat.com/
+		//	5109020365795659852.cert  5109020365795659852.key
+		//	[root@jsefler-os7 ~]# ls /etc/docker/certs.d/cdn.redhat.com
+		//	5109020365795659852.cert  5109020365795659852.key  redhat-uep.crt
+		if (!verifyEntitlementsProvidingContainerImageContentAreCopiedToRegistryHostnames(entitlementCerts,registryHostnames)) throw new SkipException("None of the auto-attached subscriptions for this system provide content of type \"containerimage\".");
+		
+		// individually unsubscribe from entitlements and assert the entitlement bearing a containerimage is also removed from registry_hostnames
+		for (EntitlementCert entitlementCert : entitlementCerts) {
+			List<ContentNamespace> containerImageContentNamespaces = ContentNamespace.findAllInstancesWithCaseInsensitiveMatchingFieldFromList("type", "containerimage", entitlementCert.contentNamespaces);
+			BigInteger serialNumber = clienttasks.getSerialNumberFromEntitlementCertFile(entitlementCert.file);
+			clienttasks.unsubscribeFromSerialNumber(serialNumber);
+			if (!containerImageContentNamespaces.isEmpty()) {
+				// after unsubscribing, assert that the entitlementCert was removed from the directory of registry_hostnames
+				for (String registryHostname : registryHostnames) {
+					File certFile = getRegistryHostnameCertFileFromEntitlementCert(registryHostname,entitlementCert);
+					File keyFile = getRegistryHostnameCertKeyFileFromEntitlementCert(registryHostname,entitlementCert);
+					Assert.assertTrue(!RemoteFileTasks.testExists(client, certFile.getPath()),"Entitlement cert '"+entitlementCert.orderNamespace.productName+"' providing a 'containerimage' (case insensitive) was removed from '"+certFile.getPath()+"' after unsubscribing.");
+					Assert.assertTrue(!RemoteFileTasks.testExists(client, keyFile.getPath()),"Corresponding entitlement key providing a 'containerimage' (case insensitive) was removed from '"+keyFile.getPath()+"' after unsubscribing.");
+				}
+			}
+		}
+	}
+
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-26766", "RHEL7-51755"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
+	@Test(	description="Verify that entitlements providing containerimage content are copied to relevant directories when attached via auto-heal (as governed by the subscription-manager-plugin-container package)",
+			groups={"Tier1Tests","blockedByBug-1165692","blockedByBug-1344500","blockedByBug-1343139"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void testContainerConfigurationsAreSetAfterAutoHealingAndUnsubscribing() {
+		
+		// get the list of registry_hostnames from /etc/rhsm/pluginconf.d/container_content.ContainerContentPlugin.conf
+		String registry_hostnames = clienttasks.getConfFileParameter(containerContentPluginFile.getPath(), "registry_hostnames");
+		List<String> registryHostnames = Arrays.asList(registry_hostnames.split(" *, *"));
+		// configure another registry_hostname for functional test purposes
+		if (!registryHostnames.contains("rhsm-test.redhat.com")) clienttasks.updateConfFileParameter(containerContentPluginFile.getPath(), "registry_hostnames",registry_hostnames+","+"rhsm-test.redhat.com");	// rhsm-test.redhat.com does NOT appear to come from a redhat.com CDN
+		if (!registryHostnames.contains("cdn.rhsm-test.redhat.com")) clienttasks.updateConfFileParameter(containerContentPluginFile.getPath(), "registry_hostnames",registry_hostnames+","+"cdn.rhsm-test.redhat.com");	// cdn.rhsm-test.redhat.com DOES appear to come from a redhat.com CDN because it matches regex ^cdn\.(?:.*\.)?redhat\.com$
+		registry_hostnames = clienttasks.getConfFileParameter(containerContentPluginFile.getPath(), "registry_hostnames");
+		registryHostnames = Arrays.asList(registry_hostnames.split(" *, *"));
+		
+		// make sure we are Enforcing selinux
+		RemoteFileTasks.runCommandAndAssert(client, "setenforce 1", Integer.valueOf(0));
+		RemoteFileTasks.runCommandAndAssert(client, "getenforce", Integer.valueOf(0), "Enforcing",null);
+		
+		// register the host, auto-heal, and get the granted entitlements
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,false,null,null,(String)null,null,null, null, true, null, null, null, null, null);
+		clienttasks.autoheal(null, true, null, null, null, null, null);
+		clienttasks.restart_rhsmcertd(null, null, true);
+		List<EntitlementCert> entitlementCerts = clienttasks.getCurrentEntitlementCerts();
+		
+		// verify that the entitlements which provide containerimage content are copied to registry_hostnames...
+		if (!verifyEntitlementsProvidingContainerImageContentAreCopiedToRegistryHostnames(entitlementCerts,registryHostnames)) throw new SkipException("None of the auto-attached subscriptions for this system provide content of type \"containerimage\".");
+		
+		// individually unsubscribe from entitlements and assert the entitlement bearing a containerimage is also removed from registry_hostnames
+		for (EntitlementCert entitlementCert : entitlementCerts) {
+			List<ContentNamespace> containerImageContentNamespaces = ContentNamespace.findAllInstancesWithCaseInsensitiveMatchingFieldFromList("type", "containerimage", entitlementCert.contentNamespaces);
+			BigInteger serialNumber = clienttasks.getSerialNumberFromEntitlementCertFile(entitlementCert.file);
+			clienttasks.unsubscribeFromSerialNumber(serialNumber);
+			if (!containerImageContentNamespaces.isEmpty()) {
+				// after unsubscribing, assert that the entitlementCert was removed from the directory of registry_hostnames
+				for (String registryHostname : registryHostnames) {
+					File certFile = getRegistryHostnameCertFileFromEntitlementCert(registryHostname,entitlementCert);
+					File keyFile = getRegistryHostnameCertKeyFileFromEntitlementCert(registryHostname,entitlementCert);
+					Assert.assertTrue(!RemoteFileTasks.testExists(client, certFile.getPath()),"Entitlement cert '"+entitlementCert.orderNamespace.productName+"' providing a 'containerimage' (case insensitive) was removed from '"+certFile.getPath()+"' after unsubscribing.");
+					Assert.assertTrue(!RemoteFileTasks.testExists(client, keyFile.getPath()),"Corresponding entitlement key providing a 'containerimage' (case insensitive) was removed from '"+keyFile.getPath()+"' after unsubscribing.");
+				}
+			}
+		}
+	}
+	protected boolean verifyEntitlementsProvidingContainerImageContentAreCopiedToRegistryHostnames(List<EntitlementCert> entitlementCerts, List<String> registryHostnames) {
+		// get a list of the currently installed product Certs
+		List<ProductCert> currentProductCerts = clienttasks.getCurrentProductCerts();
+		
+		// verify that the entitlements which provide containerimage content are copied to registry_hostnames...
+		//	[root@jsefler-os7 ~]# ls /etc/docker/certs.d/registry.access.redhat.com/
+		//	5109020365795659852.cert  5109020365795659852.key
+		//	[root@jsefler-os7 ~]# ls /etc/docker/certs.d/cdn.redhat.com
+		//	5109020365795659852.cert  5109020365795659852.key  redhat-uep.crt
+		boolean foundContainerImageContent = false;
+		for (EntitlementCert entitlementCert : entitlementCerts) {
+			List<ContentNamespace> containerImageContentNamespaces = ContentNamespace.findAllInstancesWithCaseInsensitiveMatchingFieldFromList("type", "containerimage", entitlementCert.contentNamespaces);
+			if (containerImageContentNamespaces.isEmpty()) {
+				// assert that the entitlementCert was NOT copied to the directory of registry_hostnames because it does not contain content of type 'containerimage' (case insensitive).
+				for (String registryHostname : registryHostnames) {
+					File certFile = getRegistryHostnameCertFileFromEntitlementCert(registryHostname,entitlementCert);
+					File keyFile = getRegistryHostnameCertKeyFileFromEntitlementCert(registryHostname,entitlementCert);
+					Assert.assertTrue(!RemoteFileTasks.testExists(client, certFile.getPath()),"Entitlement cert '"+entitlementCert.file+"' '"+entitlementCert.orderNamespace.productName+"' was NOT copied to '"+certFile+"' because it does not contain content of type 'containerimage' (case insensitive).");
+					Assert.assertTrue(!RemoteFileTasks.testExists(client, keyFile.getPath()),"Corresponding entitlement key '"+clienttasks.getEntitlementCertKeyFileFromEntitlementCert(entitlementCert)+"' was NOT copied to '"+keyFile+"' because it does not contain content of type 'containerimage' (case insensitive).");
+				}
+			} else {
+				foundContainerImageContent = true;
+				// assert that the entitlementCert was copied to the directory of registry_hostnames (but only if all of its required_tags are installed)
+				for (String registryHostname : registryHostnames) {
+					File certFile = getRegistryHostnameCertFileFromEntitlementCert(registryHostname,entitlementCert);
+					File keyFile = getRegistryHostnameCertKeyFileFromEntitlementCert(registryHostname,entitlementCert);					
+					
+					// determine if this entitlement contains at least one container image with required tags that are provided by the installed product certs
+					boolean entitlementContainsAtLeastOneContainerImageContentNamespaceWithRequiredTagsThatAreProvidedByInstalledProducts = false;
+					for (ContentNamespace containerImageContentNamespace : containerImageContentNamespaces) {
+						if (clienttasks.areAllRequiredTagsInContentNamespaceProvidedByProductCerts(containerImageContentNamespace, currentProductCerts)) {
+							entitlementContainsAtLeastOneContainerImageContentNamespaceWithRequiredTagsThatAreProvidedByInstalledProducts = true;
+							log.info("containerImageContentNamespace '"+containerImageContentNamespace.name+"' has requiredTags '"+containerImageContentNamespace.requiredTags+"' that ARE provided by the currently installed products.");
+						} else {
+							log.info("containerImageContentNamespace '"+containerImageContentNamespace.name+"' has requiredTags '"+containerImageContentNamespace.requiredTags+"' that are NOT provided by the currently installed products.");			
+						}
+					}
+					if (entitlementContainsAtLeastOneContainerImageContentNamespaceWithRequiredTagsThatAreProvidedByInstalledProducts) {	
+						Assert.assertTrue(RemoteFileTasks.testExists(client, certFile.getPath()),"Entitlement cert '"+entitlementCert.file+"' '"+entitlementCert.orderNamespace.productName+"' providing a 'containerimage' (case insensitive) was copied to '"+certFile+"' because at least one contentNamespace of type containerimage from the entitlement has required_tags that are provided by the currently installed product certs.  Entitled content of type containeriamge: "+containerImageContentNamespaces);
+						Assert.assertTrue(RemoteFileTasks.testExists(client, keyFile.getPath()),"Corresponding entitlement key '"+clienttasks.getEntitlementCertKeyFileFromEntitlementCert(entitlementCert)+"' providing a 'containerimage' (case insensitive) was copied to '"+keyFile+"' because at least one contentNamespace of type containerimage from the entitlement has required_tags that are provided by the currently installed product certs.  Entitled content of type containeriamge: "+containerImageContentNamespaces);
+						// also assert that the ca cert corresponding to registry hostname is copied to the directory as a ca.crt, but only if it appears to be a redhat.com CDN
+						verifyCaCertInEtcDockerCertsRegistryHostnameDir(registryHostname);
+					} else {
+						Assert.assertTrue(!RemoteFileTasks.testExists(client, certFile.getPath()),"Entitlement cert '"+entitlementCert.file+"' '"+entitlementCert.orderNamespace.productName+"' providing a 'containerimage' (case insensitive) was NOT copied to '"+certFile+"' because no contentNamespace of type containerimage from the entitlement has required_tags that are provided by the currently installed product certs.  Entitled content of type containeriamge: "+containerImageContentNamespaces);
+						Assert.assertTrue(!RemoteFileTasks.testExists(client, keyFile.getPath()),"Corresponding entitlement key '"+clienttasks.getEntitlementCertKeyFileFromEntitlementCert(entitlementCert)+"' providing a 'containerimage' (case insensitive) was NOT copied to '"+keyFile+"' because no contentNamespace of type containerimage from the entitlement has required_tags that are provided by the currently installed product certs.  Entitled content of type containeriamge: "+containerImageContentNamespaces);
+					}
+				}
+			}
+		}
+		return foundContainerImageContent;
+	}
+	protected final String etcDockerCertsDir = "/etc/docker/certs.d/";
+	protected File getRegistryHostnameCertFileFromEntitlementCert(String registryHostname, EntitlementCert entitlementCert) {
+		return (new File(etcDockerCertsDir+registryHostname+"/"+(entitlementCert.file.getName().split("\\.")[0])+".cert"));
+	}
+	protected File getRegistryHostnameCertKeyFileFromEntitlementCert(String registryHostname, EntitlementCert entitlementCert) {
+		return (new File(etcDockerCertsDir+registryHostname+"/"+(entitlementCert.file.getName().split("\\.")[0])+".key"));
+	}
+	/**
+	 * @param registryHostname
+	 * @return File path to /etc/docker/certs.d/registryHostname/ca.crt
+	 */
+	protected File getRegistryHostnameCACert(String registryHostname) {
+		/* Bug 1184940 - Subscription Manager Container Plugin Requires Config / CA Cert Update
+		 * FailedQA thereby invalidating this solution
+		return (new File("/etc/docker/certs.d/"+registryHostname+"/"+"redhat-uep.crt"));	// implemented by commit 6246a41fc1666eafa60b4d4341c8a50bde0df297
+		*/
+		
+		// commit db16ad8abb4c2f2bf4e895384f1246293fc4cba4 from Bug 1186386 - Docker unable to pull from CDN due to CA failure
+		// Only registry hostnames that appear to match a redhat.com CDN should get a redhat-entitlement-authority.pem
+		//if (clienttasks.isPackageVersion("subscription-manager-plugin-container",">=","1.13.19-1")) {	// Bug 1186386 - Docker unable to pull from CDN due to CA failure	// commit db16ad8abb4c2f2bf4e895384f1246293fc4cba4
+			if (registryHostname.matches("cdn\\.(?:.*\\.)?redhat\\.com")) {
+				return (new File(etcDockerCertsDir+registryHostname+"/"+"redhat-entitlement-authority.crt"));	// implemented by commit db16ad8abb4c2f2bf4e895384f1246293fc4cba4
+			}
+		//}
+		
+		return null;	// the ca cert for this registry is unknown
+	}
+	
+	
+	/**
+	 * For the given registryHostname (comes from registry_hostnames configured in /etc/rhsm/pluginconf.d/container_content.ContainerContentPlugin.conf),
+	 * verify that the redhat-entitlement-authority.pem is copied to the directory ONLY when the registryHostname appears to be a redhat.com CDN.
+	 * @param registryHostname
+	 */
+	protected void verifyCaCertInEtcDockerCertsRegistryHostnameDir(String registryHostname) {
+		if (clienttasks.isPackageVersion("subscription-manager-plugin-container","<","1.13.19-1")) {	// Bug 1186386 - Docker unable to pull from CDN due to CA failure	// commit db16ad8abb4c2f2bf4e895384f1246293fc4cba4
+			Assert.fail("This version of subscription-manager-plugin-container does not properly place a CA crt in /etc/docker/certs.d/<registry_hostname>/ca.crt");
+		}
+		
+		// also assert that the ca cert corresponding to registry hostname is copied to the directory as a ca.crt, but only if it appears to be a redhat.com CDN
+		File caCertFile = getRegistryHostnameCACert(registryHostname);
+		if (caCertFile==null) { // assert that there is NO ca.crt located in /etc/docker/certs.d/<registryHostname>
+			//	[root@jsefler-os7 ~]# ls /etc/docker/certs.d/registry.access.redhat.com/*.crt
+			//	ls: cannot access /etc/docker/certs.d/registry.access.redhat.com/*.crt: No such file or directory
+			//	[root@jsefler-os7 ~]# echo $?
+			//	2
+			String path = etcDockerCertsDir+registryHostname;
+			SSHCommandResult result = client.runCommandAndWait("ls "+path+"/*.crt");
+			Assert.assertEquals(result.getExitCode(), Integer.valueOf(2), "The exitCode above should indicate that there are no ca.crt files installed in '"+path+"'. ");
+		} else {
+			//	[root@jsefler-os7 ~]# ls /etc/docker/certs.d/cdn.redhat.com/*.crt
+			//	/etc/docker/certs.d/cdn.redhat.com/redhat-entitlement-authority.crt
+			//	[root@jsefler-os7 ~]# echo $?
+			//	0
+			File redhatEntitlementAuthorityPemFile = new File(clienttasks.caCertDir+"/redhat-entitlement-authority.pem");	// redhat-entitlement-authority.pem
+			Assert.assertTrue(RemoteFileTasks.testExists(client, caCertFile.getPath()),"CA crt '"+redhatEntitlementAuthorityPemFile+"' was copied to '"+caCertFile+"' because registry hostname '"+registryHostname+"' appears to match a redhat.com CDN.");
+			
+			SSHCommandResult result = client.runCommandAndWait("cmp "+redhatEntitlementAuthorityPemFile.getPath()+" "+caCertFile.getPath());
+			Assert.assertEquals(result.getExitCode(), Integer.valueOf(0), "ExitCode from comparing CA cert files byte by byte for equality.");
+			Assert.assertEquals(result.getStderr(), "", "Stderr from comparing CA cert files byte by byte for equality.");
+			Assert.assertEquals(result.getStdout(), "", "Stdout from comparing CA cert files byte by byte for equality.");
+		}
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	
 	// RHEL7 Only ==============================================================================================
-    @TestDefinition( projectID = {Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL7-51754"})
+    @TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL7-51754"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="install the latest docker package on the host",
-			groups={"AcceptanceTests","Tier1Tests"},
+			groups={"Tier1Tests"},
 			enabled=true)
 	@SuppressWarnings("unused")
 	//@ImplementsNitrateTest(caseId=)
-	public void InstallDockerPackageOnHost_Test() throws IOException, JSONException {
+	public void testInstallDockerPackageOnHost() throws IOException, JSONException {
 		// assert that the host system is rhel7+
 		if (Integer.valueOf(clienttasks.redhatReleaseX)<7) throw new SkipException("Installation of docker.rpm is only applicable on RHEL7+");
 		if (!clienttasks.arch.equals("x86_64")) throw new SkipException("Installation of docker.rpm is only applicable on arch x86_64");
@@ -343,15 +589,20 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 		return new SSHCommandResult(exitCode,stdout.trim(),stderr.trim());
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-26772", "RHEL7-55316"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-26772", "RHEL7-55316"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="verify the specified docker image downloads and will run subscription-manager >= 1.12.4-1",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1186386"},
-			dependsOnMethods={"InstallDockerPackageOnHost_Test"},
+			groups={"Tier1Tests","blockedByBug-1186386"},
+			dependsOnMethods={"testInstallDockerPackageOnHost"},
 			dataProvider="getDockerImageData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void PullDockerImage_Test(Object bugzilla, String dockerImage) {
+	public void testPullDockerImage(Object bugzilla, String dockerImage) {
 		// TODO: Once registry.access.redhat.com is protected by certificates, this test will require a valid entitlement for containerimages.
 		// unregister the host
 		clienttasks.unregister(null, null, null, null);
@@ -418,15 +669,20 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(SubscriptionManagerTasks.isVersion(subscriptionManagerVersionInDockerImage, ">=", "1.12.4-1"), "Expecting the version of subscription-manager baked inside image '"+dockerImage+"' to be >= 1.12.4-1 (first docker compatible version of subscription-manager)");
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-26771", "RHEL7-55538"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL7-55538"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="verify a running container has no yum repolist when the host has no entitlement",
-			groups={"AcceptanceTests","Tier1Tests"},
-			dependsOnMethods={"PullDockerImage_Test"},
+			groups={"Tier1Tests"},
+			dependsOnMethods={"testPullDockerImage"},
 			dataProvider="getDockerImageData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyYumRepolistIsEmptyOnRunningDockerImageWhenHostIsUnregistered_Test(Object bugzilla, String dockerImage) {
+	public void testYumRepolistIsEmptyOnRunningDockerImageWhenHostIsUnregistered(Object bugzilla, String dockerImage) {
 		// unregister the host
 		clienttasks.unregister(null, null, null, null);
 		
@@ -444,15 +700,20 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(yumRepolistResultOnRunningDockerImage.getStdout().trim().endsWith(expectedStdoutMsg), "Stdout from docker run yum repolist command ends with '"+expectedStdoutMsg+"'");
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-26773", "RHEL7-55539"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL7-55539"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="verify a running container has yum repolist access to appropriate content from the host's entitlement",
-			groups={"AcceptanceTests","Tier1Tests"},
-			dependsOnMethods={"VerifyYumRepolistIsEmptyOnRunningDockerImageWhenHostIsUnregistered_Test"},
+			groups={"Tier1Tests"},
+			dependsOnMethods={"testYumRepolistIsEmptyOnRunningDockerImageWhenHostIsUnregistered"},
 			dataProvider="getDockerImageData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyYumRepolistOnRunningDockerImageConsumedFromHostEntitlements_Test(Object bugzilla, String dockerImage) {
+	public void testYumRepolistOnRunningDockerImageConsumedFromHostEntitlements(Object bugzilla, String dockerImage) {
 		// register the host and autosubscribe
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,true,null,null,(String)null,null,null, null, true, false, null, null, null, null);
 		
@@ -625,15 +886,20 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL7-60185"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL7-60185"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="verify a running container has access to all the entitlement certs from the host",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1353433"},
-			dependsOnMethods={"VerifyYumRepolistOnRunningDockerImageConsumedFromHostEntitlements_Test"},
+			groups={"Tier1Tests","blockedByBug-1353433"},
+			dependsOnMethods={"testYumRepolistOnRunningDockerImageConsumedFromHostEntitlements"},
 			dataProvider="getDockerImageData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyAllHostEntitlementsAreSharedWithRunningDockerImage_Test(Object bugzilla, String dockerImage) {
+	public void testAllHostEntitlementsAreSharedWithRunningDockerImage(Object bugzilla, String dockerImage) {
 		
 		// Note: the secret sauce for sharing host files to a running container are these two soft links from the container to the host...
 		//	[root@hp-sl2x170zg6-01 ~]# docker run --rm docker-registry.usersys.redhat.com/brew/rhel7:latest ls -l /etc/pki/entitlement-host
@@ -717,213 +983,16 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 		// Test 2: assert the listed filenames match (after more entitlements have been attached to the host)
 		Assert.assertEquals(entitlementCertListingResult.getStdout().trim(), entitlementHostCertListingResult.getStdout().trim(), "The entitlement cert files accessible in directory '"+entitlementHostDir+"' within a running container match the entitlment cert files found in the host's directory '"+entitlementDir+"'.");
 	}
-
-
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-26770", "RHEL7-51758"})
-	@Test(	description="Verify that entitlements providing containerimage content are copied to relevant directories when attached via auto-subscribe (as governed by the subscription-manager-plugin-container package)",
-			groups={"AcceptanceTests","Tier1Tests"},
-			enabled=true)
-	//@ImplementsNitrateTest(caseId=)
-	public void VerifyContainerConfigurationsAreSetAfterAutoSubscribingAndUnsubscribing_Test() {
-		
-		// get the list of registry_hostnames from /etc/rhsm/pluginconf.d/container_content.ContainerContentPlugin.conf
-		String registry_hostnames = clienttasks.getConfFileParameter(containerContentPluginFile.getPath(), "registry_hostnames");
-		List<String> registryHostnames = Arrays.asList(registry_hostnames.split(" *, *"));
-		// configure another registry_hostname for functional test purposes
-		if (!registryHostnames.contains("rhsm-test.redhat.com")) clienttasks.updateConfFileParameter(containerContentPluginFile.getPath(), "registry_hostnames",registry_hostnames+","+"rhsm-test.redhat.com");	// rhsm-test.redhat.com does NOT appear to come from a redhat.com CDN
-		if (!registryHostnames.contains("cdn.rhsm-test.redhat.com")) clienttasks.updateConfFileParameter(containerContentPluginFile.getPath(), "registry_hostnames",registry_hostnames+","+"cdn.rhsm-test.redhat.com");	// cdn.rhsm-test.redhat.com DOES appear to come from a redhat.com CDN because it matches regex ^cdn\.(?:.*\.)?redhat\.com$
-		registry_hostnames = clienttasks.getConfFileParameter(containerContentPluginFile.getPath(), "registry_hostnames");
-		registryHostnames = Arrays.asList(registry_hostnames.split(" *, *"));
-		
-		// register the host, autosubscribe, and get the granted entitlements
-		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,true,null,null,(String)null,null,null, null, true, false, null, null, null, null);
-		List<EntitlementCert> entitlementCerts = clienttasks.getCurrentEntitlementCerts();
-		
-		// verify that the entitlements which provide containerimage content are copied to registry_hostnames...
-		//	[root@jsefler-os7 ~]# ls /etc/docker/certs.d/registry.access.redhat.com/
-		//	5109020365795659852.cert  5109020365795659852.key
-		//	[root@jsefler-os7 ~]# ls /etc/docker/certs.d/cdn.redhat.com
-		//	5109020365795659852.cert  5109020365795659852.key  redhat-uep.crt
-		if (!verifyEntitlementsProvidingContainerImageContentAreCopiedToRegistryHostnames(entitlementCerts,registryHostnames)) throw new SkipException("None of the auto-attached subscriptions for this system provide content of type \"containerimage\".");
-		
-		// individually unsubscribe from entitlements and assert the entitlement bearing a containerimage is also removed from registry_hostnames
-		for (EntitlementCert entitlementCert : entitlementCerts) {
-			List<ContentNamespace> containerImageContentNamespaces = ContentNamespace.findAllInstancesWithCaseInsensitiveMatchingFieldFromList("type", "containerimage", entitlementCert.contentNamespaces);
-			BigInteger serialNumber = clienttasks.getSerialNumberFromEntitlementCertFile(entitlementCert.file);
-			clienttasks.unsubscribeFromSerialNumber(serialNumber);
-			if (!containerImageContentNamespaces.isEmpty()) {
-				// after unsubscribing, assert that the entitlementCert was removed from the directory of registry_hostnames
-				for (String registryHostname : registryHostnames) {
-					File certFile = getRegistryHostnameCertFileFromEntitlementCert(registryHostname,entitlementCert);
-					File keyFile = getRegistryHostnameCertKeyFileFromEntitlementCert(registryHostname,entitlementCert);
-					Assert.assertTrue(!RemoteFileTasks.testExists(client, certFile.getPath()),"Entitlement cert '"+entitlementCert.orderNamespace.productName+"' providing a 'containerimage' (case insensitive) was removed from '"+certFile.getPath()+"' after unsubscribing.");
-					Assert.assertTrue(!RemoteFileTasks.testExists(client, keyFile.getPath()),"Corresponding entitlement key providing a 'containerimage' (case insensitive) was removed from '"+keyFile.getPath()+"' after unsubscribing.");
-				}
-			}
-		}
-	}
-
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-26766", "RHEL7-51755"})
-	@Test(	description="Verify that entitlements providing containerimage content are copied to relevant directories when attached via auto-heal (as governed by the subscription-manager-plugin-container package)",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1165692","blockedByBug-1344500","blockedByBug-1343139"},
-			enabled=true)
-	//@ImplementsNitrateTest(caseId=)
-	public void VerifyContainerConfigurationsAreSetAfterAutoHealingAndUnsubscribing_Test() {
-		
-		// get the list of registry_hostnames from /etc/rhsm/pluginconf.d/container_content.ContainerContentPlugin.conf
-		String registry_hostnames = clienttasks.getConfFileParameter(containerContentPluginFile.getPath(), "registry_hostnames");
-		List<String> registryHostnames = Arrays.asList(registry_hostnames.split(" *, *"));
-		// configure another registry_hostname for functional test purposes
-		if (!registryHostnames.contains("rhsm-test.redhat.com")) clienttasks.updateConfFileParameter(containerContentPluginFile.getPath(), "registry_hostnames",registry_hostnames+","+"rhsm-test.redhat.com");	// rhsm-test.redhat.com does NOT appear to come from a redhat.com CDN
-		if (!registryHostnames.contains("cdn.rhsm-test.redhat.com")) clienttasks.updateConfFileParameter(containerContentPluginFile.getPath(), "registry_hostnames",registry_hostnames+","+"cdn.rhsm-test.redhat.com");	// cdn.rhsm-test.redhat.com DOES appear to come from a redhat.com CDN because it matches regex ^cdn\.(?:.*\.)?redhat\.com$
-		registry_hostnames = clienttasks.getConfFileParameter(containerContentPluginFile.getPath(), "registry_hostnames");
-		registryHostnames = Arrays.asList(registry_hostnames.split(" *, *"));
-		
-		// make sure we are Enforcing selinux
-		RemoteFileTasks.runCommandAndAssert(client, "setenforce 1", Integer.valueOf(0));
-		RemoteFileTasks.runCommandAndAssert(client, "getenforce", Integer.valueOf(0), "Enforcing",null);
-		
-		// register the host, auto-heal, and get the granted entitlements
-		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,false,null,null,(String)null,null,null, null, true, null, null, null, null, null);
-		clienttasks.autoheal(null, true, null, null, null, null, null);
-		clienttasks.restart_rhsmcertd(null, null, true);
-		List<EntitlementCert> entitlementCerts = clienttasks.getCurrentEntitlementCerts();
-		
-		// verify that the entitlements which provide containerimage content are copied to registry_hostnames...
-		if (!verifyEntitlementsProvidingContainerImageContentAreCopiedToRegistryHostnames(entitlementCerts,registryHostnames)) throw new SkipException("None of the auto-attached subscriptions for this system provide content of type \"containerimage\".");
-		
-		// individually unsubscribe from entitlements and assert the entitlement bearing a containerimage is also removed from registry_hostnames
-		for (EntitlementCert entitlementCert : entitlementCerts) {
-			List<ContentNamespace> containerImageContentNamespaces = ContentNamespace.findAllInstancesWithCaseInsensitiveMatchingFieldFromList("type", "containerimage", entitlementCert.contentNamespaces);
-			BigInteger serialNumber = clienttasks.getSerialNumberFromEntitlementCertFile(entitlementCert.file);
-			clienttasks.unsubscribeFromSerialNumber(serialNumber);
-			if (!containerImageContentNamespaces.isEmpty()) {
-				// after unsubscribing, assert that the entitlementCert was removed from the directory of registry_hostnames
-				for (String registryHostname : registryHostnames) {
-					File certFile = getRegistryHostnameCertFileFromEntitlementCert(registryHostname,entitlementCert);
-					File keyFile = getRegistryHostnameCertKeyFileFromEntitlementCert(registryHostname,entitlementCert);
-					Assert.assertTrue(!RemoteFileTasks.testExists(client, certFile.getPath()),"Entitlement cert '"+entitlementCert.orderNamespace.productName+"' providing a 'containerimage' (case insensitive) was removed from '"+certFile.getPath()+"' after unsubscribing.");
-					Assert.assertTrue(!RemoteFileTasks.testExists(client, keyFile.getPath()),"Corresponding entitlement key providing a 'containerimage' (case insensitive) was removed from '"+keyFile.getPath()+"' after unsubscribing.");
-				}
-			}
-		}
-	}
-	protected boolean verifyEntitlementsProvidingContainerImageContentAreCopiedToRegistryHostnames(List<EntitlementCert> entitlementCerts, List<String> registryHostnames) {
-		// get a list of the currently installed product Certs
-		List<ProductCert> currentProductCerts = clienttasks.getCurrentProductCerts();
-		
-		// verify that the entitlements which provide containerimage content are copied to registry_hostnames...
-		//	[root@jsefler-os7 ~]# ls /etc/docker/certs.d/registry.access.redhat.com/
-		//	5109020365795659852.cert  5109020365795659852.key
-		//	[root@jsefler-os7 ~]# ls /etc/docker/certs.d/cdn.redhat.com
-		//	5109020365795659852.cert  5109020365795659852.key  redhat-uep.crt
-		boolean foundContainerImageContent = false;
-		for (EntitlementCert entitlementCert : entitlementCerts) {
-			List<ContentNamespace> containerImageContentNamespaces = ContentNamespace.findAllInstancesWithCaseInsensitiveMatchingFieldFromList("type", "containerimage", entitlementCert.contentNamespaces);
-			if (containerImageContentNamespaces.isEmpty()) {
-				// assert that the entitlementCert was NOT copied to the directory of registry_hostnames because it does not contain content of type 'containerimage' (case insensitive).
-				for (String registryHostname : registryHostnames) {
-					File certFile = getRegistryHostnameCertFileFromEntitlementCert(registryHostname,entitlementCert);
-					File keyFile = getRegistryHostnameCertKeyFileFromEntitlementCert(registryHostname,entitlementCert);
-					Assert.assertTrue(!RemoteFileTasks.testExists(client, certFile.getPath()),"Entitlement cert '"+entitlementCert.file+"' '"+entitlementCert.orderNamespace.productName+"' was NOT copied to '"+certFile+"' because it does not contain content of type 'containerimage' (case insensitive).");
-					Assert.assertTrue(!RemoteFileTasks.testExists(client, keyFile.getPath()),"Corresponding entitlement key '"+clienttasks.getEntitlementCertKeyFileFromEntitlementCert(entitlementCert)+"' was NOT copied to '"+keyFile+"' because it does not contain content of type 'containerimage' (case insensitive).");
-				}
-			} else {
-				foundContainerImageContent = true;
-				// assert that the entitlementCert was copied to the directory of registry_hostnames (but only if all of its required_tags are installed)
-				for (String registryHostname : registryHostnames) {
-					File certFile = getRegistryHostnameCertFileFromEntitlementCert(registryHostname,entitlementCert);
-					File keyFile = getRegistryHostnameCertKeyFileFromEntitlementCert(registryHostname,entitlementCert);					
-					
-					// determine if this entitlement contains at least one container image with required tags that are provided by the installed product certs
-					boolean entitlementContainsAtLeastOneContainerImageContentNamespaceWithRequiredTagsThatAreProvidedByInstalledProducts = false;
-					for (ContentNamespace containerImageContentNamespace : containerImageContentNamespaces) {
-						if (clienttasks.areAllRequiredTagsInContentNamespaceProvidedByProductCerts(containerImageContentNamespace, currentProductCerts)) {
-							entitlementContainsAtLeastOneContainerImageContentNamespaceWithRequiredTagsThatAreProvidedByInstalledProducts = true;
-							log.info("containerImageContentNamespace '"+containerImageContentNamespace.name+"' has requiredTags '"+containerImageContentNamespace.requiredTags+"' that ARE provided by the currently installed products.");
-						} else {
-							log.info("containerImageContentNamespace '"+containerImageContentNamespace.name+"' has requiredTags '"+containerImageContentNamespace.requiredTags+"' that are NOT provided by the currently installed products.");			
-						}
-					}
-					if (entitlementContainsAtLeastOneContainerImageContentNamespaceWithRequiredTagsThatAreProvidedByInstalledProducts) {	
-						Assert.assertTrue(RemoteFileTasks.testExists(client, certFile.getPath()),"Entitlement cert '"+entitlementCert.file+"' '"+entitlementCert.orderNamespace.productName+"' providing a 'containerimage' (case insensitive) was copied to '"+certFile+"' because at least one contentNamespace of type containerimage from the entitlement has required_tags that are provided by the currently installed product certs.  Entitled content of type containeriamge: "+containerImageContentNamespaces);
-						Assert.assertTrue(RemoteFileTasks.testExists(client, keyFile.getPath()),"Corresponding entitlement key '"+clienttasks.getEntitlementCertKeyFileFromEntitlementCert(entitlementCert)+"' providing a 'containerimage' (case insensitive) was copied to '"+keyFile+"' because at least one contentNamespace of type containerimage from the entitlement has required_tags that are provided by the currently installed product certs.  Entitled content of type containeriamge: "+containerImageContentNamespaces);
-						// also assert that the ca cert corresponding to registry hostname is copied to the directory as a ca.crt, but only if it appears to be a redhat.com CDN
-						verifyCaCertInEtcDockerCertsRegistryHostnameDir(registryHostname);
-					} else {
-						Assert.assertTrue(!RemoteFileTasks.testExists(client, certFile.getPath()),"Entitlement cert '"+entitlementCert.file+"' '"+entitlementCert.orderNamespace.productName+"' providing a 'containerimage' (case insensitive) was NOT copied to '"+certFile+"' because no contentNamespace of type containerimage from the entitlement has required_tags that are provided by the currently installed product certs.  Entitled content of type containeriamge: "+containerImageContentNamespaces);
-						Assert.assertTrue(!RemoteFileTasks.testExists(client, keyFile.getPath()),"Corresponding entitlement key '"+clienttasks.getEntitlementCertKeyFileFromEntitlementCert(entitlementCert)+"' providing a 'containerimage' (case insensitive) was NOT copied to '"+keyFile+"' because no contentNamespace of type containerimage from the entitlement has required_tags that are provided by the currently installed product certs.  Entitled content of type containeriamge: "+containerImageContentNamespaces);
-					}
-				}
-			}
-		}
-		return foundContainerImageContent;
-	}
-	protected final String etcDockerCertsDir = "/etc/docker/certs.d/";
-	protected File getRegistryHostnameCertFileFromEntitlementCert(String registryHostname, EntitlementCert entitlementCert) {
-		return (new File(etcDockerCertsDir+registryHostname+"/"+(entitlementCert.file.getName().split("\\.")[0])+".cert"));
-	}
-	protected File getRegistryHostnameCertKeyFileFromEntitlementCert(String registryHostname, EntitlementCert entitlementCert) {
-		return (new File(etcDockerCertsDir+registryHostname+"/"+(entitlementCert.file.getName().split("\\.")[0])+".key"));
-	}
-	/**
-	 * @param registryHostname
-	 * @return File path to /etc/docker/certs.d/registryHostname/ca.crt
-	 */
-	protected File getRegistryHostnameCACert(String registryHostname) {
-		/* Bug 1184940 - Subscription Manager Container Plugin Requires Config / CA Cert Update
-		 * FailedQA thereby invalidating this solution
-		return (new File("/etc/docker/certs.d/"+registryHostname+"/"+"redhat-uep.crt"));	// implemented by commit 6246a41fc1666eafa60b4d4341c8a50bde0df297
-		*/
-		
-		// commit db16ad8abb4c2f2bf4e895384f1246293fc4cba4 from Bug 1186386 - Docker unable to pull from CDN due to CA failure
-		// Only registry hostnames that appear to match a redhat.com CDN should get a redhat-entitlement-authority.pem
-		//if (clienttasks.isPackageVersion("subscription-manager-plugin-container",">=","1.13.19-1")) {	// Bug 1186386 - Docker unable to pull from CDN due to CA failure	// commit db16ad8abb4c2f2bf4e895384f1246293fc4cba4
-			if (registryHostname.matches("cdn\\.(?:.*\\.)?redhat\\.com")) {
-				return (new File(etcDockerCertsDir+registryHostname+"/"+"redhat-entitlement-authority.crt"));	// implemented by commit db16ad8abb4c2f2bf4e895384f1246293fc4cba4
-			}
-		//}
-		
-		return null;	// the ca cert for this registry is unknown
-	}
 	
 	
-	/**
-	 * For the given registryHostname (comes from registry_hostnames configured in /etc/rhsm/pluginconf.d/container_content.ContainerContentPlugin.conf),
-	 * verify that the redhat-entitlement-authority.pem is copied to the directory ONLY when the registryHostname appears to be a redhat.com CDN.
-	 * @param registryHostname
-	 */
-	protected void verifyCaCertInEtcDockerCertsRegistryHostnameDir(String registryHostname) {
-		if (clienttasks.isPackageVersion("subscription-manager-plugin-container","<","1.13.19-1")) {	// Bug 1186386 - Docker unable to pull from CDN due to CA failure	// commit db16ad8abb4c2f2bf4e895384f1246293fc4cba4
-			Assert.fail("This version of subscription-manager-plugin-container does not properly place a CA crt in /etc/docker/certs.d/<registry_hostname>/ca.crt");
-		}
-		
-		// also assert that the ca cert corresponding to registry hostname is copied to the directory as a ca.crt, but only if it appears to be a redhat.com CDN
-		File caCertFile = getRegistryHostnameCACert(registryHostname);
-		if (caCertFile==null) { // assert that there is NO ca.crt located in /etc/docker/certs.d/<registryHostname>
-			//	[root@jsefler-os7 ~]# ls /etc/docker/certs.d/registry.access.redhat.com/*.crt
-			//	ls: cannot access /etc/docker/certs.d/registry.access.redhat.com/*.crt: No such file or directory
-			//	[root@jsefler-os7 ~]# echo $?
-			//	2
-			String path = etcDockerCertsDir+registryHostname;
-			SSHCommandResult result = client.runCommandAndWait("ls "+path+"/*.crt");
-			Assert.assertEquals(result.getExitCode(), Integer.valueOf(2), "The exitCode above should indicate that there are no ca.crt files installed in '"+path+"'. ");
-		} else {
-			//	[root@jsefler-os7 ~]# ls /etc/docker/certs.d/cdn.redhat.com/*.crt
-			//	/etc/docker/certs.d/cdn.redhat.com/redhat-entitlement-authority.crt
-			//	[root@jsefler-os7 ~]# echo $?
-			//	0
-			File redhatEntitlementAuthorityPemFile = new File(clienttasks.caCertDir+"/redhat-entitlement-authority.pem");	// redhat-entitlement-authority.pem
-			Assert.assertTrue(RemoteFileTasks.testExists(client, caCertFile.getPath()),"CA crt '"+redhatEntitlementAuthorityPemFile+"' was copied to '"+caCertFile+"' because registry hostname '"+registryHostname+"' appears to match a redhat.com CDN.");
-			
-			SSHCommandResult result = client.runCommandAndWait("cmp "+redhatEntitlementAuthorityPemFile.getPath()+" "+caCertFile.getPath());
-			Assert.assertEquals(result.getExitCode(), Integer.valueOf(0), "ExitCode from comparing CA cert files byte by byte for equality.");
-			Assert.assertEquals(result.getStderr(), "", "Stderr from comparing CA cert files byte by byte for equality.");
-			Assert.assertEquals(result.getStdout(), "", "Stdout from comparing CA cert files byte by byte for equality.");
-		}
-	}
+	
+	
+	
+	
+	
+	
+	
+
 	
 	
 	

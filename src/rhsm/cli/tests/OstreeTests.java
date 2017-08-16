@@ -28,8 +28,11 @@ import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 
-import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.DefTypes;
 import com.github.redhatqe.polarize.metadata.TestDefinition;
+import com.github.redhatqe.polarize.metadata.TestType;
+import com.github.redhatqe.polarize.metadata.DefTypes.PosNeg;
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
 
 /**
  * @author jsefler
@@ -119,20 +122,25 @@ import com.github.redhatqe.polarize.metadata.TestDefinition;
  *  
  *  
  */
-@Test(groups={"OstreeTests","Tier3Tests"})
+@Test(groups={"OstreeTests"})
 public class OstreeTests extends SubscriptionManagerCLITestScript {
 
 	// Test methods ***********************************************************************
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-22238", "RHEL7-51753"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-22238", "RHEL7-51753"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="Verify that the ostree config and origin files are set after attaching an atomic subscription; attempt an atomic upgrade; unsubscribe and verify ostree config files are unset",
-			groups={"subscribeAndUnsubscribeTests","AcceptanceTests","Tier1Tests"},
+			groups={"Tier1Tests","subscribeAndUnsubscribeTests"},
 			dataProvider="getOstreeSubscriptionPools",
 			priority=10,
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyOstreeConfigurationsAreSetAfterSubscribingAndUnsubscribing_Test(Object bugzilla, SubscriptionPool osTreeSubscriptionPool) {
+	public void testOstreeConfigurationsAreSetAfterSubscribingAndUnsubscribing(Object bugzilla, SubscriptionPool osTreeSubscriptionPool) {
 		clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null, null, null);	// this test is designed to be entitled to one subscription at a time. 
 		String baseurl = clienttasks.getConfParameter("baseurl");
 		String repo_ca_cert = clienttasks.getConfParameter("repo_ca_cert");
@@ -430,7 +438,7 @@ public class OstreeTests extends SubscriptionManagerCLITestScript {
 	
 	
 //	@Test(	description="Verify that the ostree config and origin files are and that when in container mode, attempts to run subscription-manager are blocked",
-//			groups={"subscribeAndUnsubscribeTests","AcceptanceTests","Tier1Tests"},
+//			groups={"Tier1Tests","subscribeAndUnsubscribeTests"},
 //			dataProvider="getOstreeProductSubscriptions",
 //			priority=20,
 //			enabled=true)

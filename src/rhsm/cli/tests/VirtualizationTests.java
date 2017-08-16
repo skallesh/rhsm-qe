@@ -110,19 +110,24 @@ import com.github.redhatqe.polarize.metadata.TestType;
 // https://docspace.corp.redhat.com/people/ndevos/blog/2011/05/26/how-to-quickly-install-a-rhel-5-system-running-xen-and-install-a-guest
 
 
-@Test(groups={"VirtualizationTests","Tier2Tests"})
+@Test(groups={"VirtualizationTests"})
 public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 
 	
 	// Test methods ***********************************************************************
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20091", "RHEL7-51101"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20091", "RHEL7-51101"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="subscription-manager: facts list should report virt.is_guest and virt.host_type and virt.uuid",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1018807","blockedByBug-1242409","blockedByBug-1308732"}, dependsOnGroups={},
+			groups={"Tier1Tests","blockedByBug-1018807","blockedByBug-1242409","blockedByBug-1308732"}, dependsOnGroups={},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VirtFactsReportedOnThisClient_Test() {
+	public void testVirtFactsReportedOnThisClient() {
 		
 		// make sure the original virt-what is in place 
 		RemoteFileTasks.runCommandAndAssert(client, "cp -f "+virtWhatFileBackup+" "+virtWhatFile, 0);
@@ -211,14 +216,19 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-37714", "RHEL7-51491"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-37714", "RHEL7-51491"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager: facts list reports the host hypervisor type and uuid on which the guest client is running",
 			dataProvider="getVirtWhatData",
-			groups={"VirtFactsWhenClientIsAGuest_Test","blockedByBug-1242409"}, dependsOnGroups={},
+			groups={"Tier2Tests","VirtFactsWhenClientIsAGuest_Test","blockedByBug-1242409"}, dependsOnGroups={},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=70202)
-	public void VirtFactsWhenClientIsAGuest_Test(Object bugzilla, String host_type) {
+	public void testVirtFactsWhenClientIsAGuest(Object bugzilla, String host_type) {
 		
 		log.info("We will fake out the ability of subscription-manager to read virt-what output on a '"+host_type+"' hypervisor by clobbering virt-what with a fake bash script...");
 		forceVirtWhatToReturnGuest(host_type);
@@ -263,13 +273,18 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-37715", "RHEL7-51492"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-37715", "RHEL7-51492"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager: facts list reports when the client is running on bare metal",
-			groups={"blockedByBug-726440","blockedByBug-1308732","VirtFactsWhenClientIsAHost_Test"}, dependsOnGroups={},
+			groups={"Tier2Tests","blockedByBug-726440","blockedByBug-1308732","VirtFactsWhenClientIsAHost_Test"}, dependsOnGroups={},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=70203)
-	public void VirtFactsWhenClientIsAHost_Test() {
+	public void testVirtFactsWhenClientIsAHost() {
 		
 		log.info("We will fake out the ability of subscription-manager to read virt-what output on bare metal by clobbering virt-what with a fake bash script...");
 		forceVirtWhatToReturnHost();
@@ -305,13 +320,18 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-37716", "RHEL7-51493"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-37716", "RHEL7-51493"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager: facts list should not crash on virt facts when virt-what fails",
-			groups={"blockedByBug-668936","blockedByBug-768397","VirtFactsWhenVirtWhatFails_Test"}, dependsOnGroups={},
+			groups={"Tier2Tests","blockedByBug-668936","blockedByBug-768397","VirtFactsWhenVirtWhatFails_Test"}, dependsOnGroups={},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VirtFactsWhenVirtWhatFails_Test() {
+	public void testVirtFactsWhenVirtWhatFails() {
 		
 		log.info("We will fail virt-what by forcing it to return a non-zero value...");
 		forceVirtWhatToFail();
@@ -336,13 +356,18 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-37717", "RHEL7-51494"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-37717", "RHEL7-51494"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager: facts list should report is_guest and uuid as Unknown when virt-what is not installed",
-			groups={"blockedByBug-768397"}, dependsOnGroups={},
+			groups={"Tier2Tests","blockedByBug-768397"}, dependsOnGroups={},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VirtFactsWhenVirtWhatIsNotInstalled_Test() {
+	public void testVirtFactsWhenVirtWhatIsNotInstalled() {
 		
 		log.info("We will remove virt-what for this test...");
 		
@@ -372,14 +397,19 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20090", "RHEL7-59440"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20090", "RHEL7-59440"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="Verify host and guest pools are generated from a virtualization-aware subscription.",
-			groups={"AcceptanceTests","Tier1Tests"/*,"blockedByBug-750279"*/},
+			groups={"Tier1Tests","blockedByBug-750279"},
 			dependsOnGroups={},
 			dataProvider="getVirtSubscriptionData",
 			enabled=true)
-	public void VerifyHostAndGuestPoolsAreGeneratedForVirtualizationAwareSubscription_Test(String subscriptionId, String productName, String productId, int quantity, String virtLimit, String hostPoolId, String guestPoolId, Boolean physicalOnly) throws JSONException, Exception {
+	public void testHostAndGuestPoolsAreGeneratedForVirtualizationAwareSubscription(String subscriptionId, String productName, String productId, int quantity, String virtLimit, String hostPoolId, String guestPoolId, Boolean physicalOnly) throws JSONException, Exception {
 
 //		log.info("When an owner has purchased a virtualization-aware subscription ("+productName+"; subscriptionId="+subscriptionId+"), he should have subscription access to two pools: one for the host and one for the guest.");
 //
@@ -783,14 +813,19 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-22223", "RHEL7-59439"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-22223", "RHEL7-59439"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="Verify host and guest pools quantities generated from a virtualization-aware subscription",
-			groups={"AcceptanceTests","Tier1Tests","VerifyHostAndGuestPoolQuantities_Test"}, // "blockedByBug-679617" indirectly when this script is run as part of the full TestNG suite since this is influenced by other scripts calling refresh pools
+			groups={"Tier1Tests","VerifyHostAndGuestPoolQuantities_Test"}, // "blockedByBug-679617" indirectly when this script is run as part of the full TestNG suite since this is influenced by other scripts calling refresh pools
 			dependsOnGroups={},
 			dataProvider="getVirtSubscriptionData",
 			enabled=true)
-	public void VerifyHostAndGuestPoolQuantities_Test(String subscriptionId, String productName, String productId, int quantity, String virtLimit, String hostPoolId, String guestPoolId, Boolean physicalOnly) throws JSONException, Exception {
+	public void testHostAndGuestPoolQuantities(String subscriptionId, String productName, String productId, int quantity, String virtLimit, String hostPoolId, String guestPoolId, Boolean physicalOnly) throws JSONException, Exception {
 		if (hostPoolId==null && guestPoolId==null) throw new SkipException("Failed to find expected host and guest pools derived from virtualization-aware subscription id '"+subscriptionId+"' ("+productName+").");
 //if (!productId.equals("awesomeos-virt-unlimited")) throw new SkipException("debugTesting VerifyHostAndGuestPoolQuantities_Test");
 		JSONObject jsonHostPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/pools/"+hostPoolId));	
@@ -859,7 +894,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 		
 	
 	
-	@TestDefinition(//update= true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-47928", "RHEL7-97327"},
 			linkedWorkItems= {
@@ -876,12 +911,12 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
 	@Test(	description="Verify the virt_limit multiplier on guest pool quantity is not clobbered by refresh pools",
-			groups={"blockedByBug-679617"},
+			groups={"Tier2Tests","blockedByBug-679617"},
 			dependsOnGroups={},
 			dependsOnMethods={"VerifyHostAndGuestPoolQuantities_Test"},
 			dataProvider="getVirtSubscriptionData",
 			enabled=true)
-	public void VerifyGuestPoolQuantityIsNotClobberedByRefreshPools_Test(String subscriptionId, String productName, String productId, int quantity, String virtLimit, String hostPoolId, String guestPoolId, Boolean physicalOnly) throws JSONException, Exception {
+	public void testGuestPoolQuantityIsNotClobberedByRefreshPools(String subscriptionId, String productName, String productId, int quantity, String virtLimit, String hostPoolId, String guestPoolId, Boolean physicalOnly) throws JSONException, Exception {
 		if (hostPoolId==null && guestPoolId==null) throw new SkipException("Failed to find expected host and guest pools derived from virtualization-aware subscription id '"+subscriptionId+"' ("+productName+").");
 		if (servertasks.dbConnection==null) throw new SkipException("This testcase requires a connection to the candlepin database so that it can updateSubscriptionDatesOnDatabase.");
 
@@ -930,14 +965,19 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-27131", "RHEL7-64494"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-27131", "RHEL7-64494"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="Verify host and guest pools to a virtualization-aware subscription are subscribable on a guest system (unless it is physical_only).",
-			groups={"VerifyHostAndGuestPoolsAreSubscribableOnGuestSystem_Test"},
+			groups={"Tier2Tests","VerifyHostAndGuestPoolsAreSubscribableOnGuestSystem_Test"},
 			dependsOnGroups={},
 			dataProvider="getVirtSubscriptionData",
 			enabled=true)
-	public void VerifyHostAndGuestPoolsAreSubscribableOnGuestSystem_Test(String subscriptionId, String productName, String productId, int quantity, String virtLimit, String hostPoolId, String guestPoolId, Boolean physicalOnly) throws JSONException, Exception {
+	public void testHostAndGuestPoolsAreSubscribableOnGuestSystem(String subscriptionId, String productName, String productId, int quantity, String virtLimit, String hostPoolId, String guestPoolId, Boolean physicalOnly) throws JSONException, Exception {
 		if (hostPoolId==null && guestPoolId==null) throw new SkipException("Failed to find expected host and guest pools derived from virtualization-aware subscription id '"+subscriptionId+"' ("+productName+").");
 		
 		// trick this system into believing it is a virt guest
@@ -979,14 +1019,19 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-27132", "RHEL7-64495"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-27132", "RHEL7-64495"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="Verify only the derived host pool from a virtualization-aware subscription is subscribable on a host system.  The guest pool should not be available nor subscribable.",
-			groups={"VerifyHostPoolIsSubscribableOnHostSystemWhileGuestPoolIsNot_Test"},
+			groups={"Tier2Tests","VerifyHostPoolIsSubscribableOnHostSystemWhileGuestPoolIsNot_Test"},
 			dependsOnGroups={},
 			dataProvider="getVirtSubscriptionData",
 			enabled=true)
-	public void VerifyHostPoolIsSubscribableOnHostSystemWhileGuestPoolIsNot_Test(String subscriptionId, String productName, String productId, int quantity, String virtLimit, String hostPoolId, String guestPoolId, Boolean physicalOnly) throws JSONException, Exception {
+	public void testHostPoolIsSubscribableOnHostSystemWhileGuestPoolIsNot(String subscriptionId, String productName, String productId, int quantity, String virtLimit, String hostPoolId, String guestPoolId, Boolean physicalOnly) throws JSONException, Exception {
 		if (hostPoolId==null && guestPoolId==null) throw new SkipException("Failed to find expected host and guest pools derived from virtualization-aware subscription id '"+subscriptionId+"' ("+productName+").");
 
 		// trick this system into believing it is a host
@@ -1014,13 +1059,18 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-37713", "RHEL7-51490"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-37713", "RHEL7-51490"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="Verify the subscription-manager list --avail appropriately displays pools with MachineType: virtual",
-			groups={"VerifyVirtualMachineTypeIsReportedInListAvailablePools_Test"},
+			groups={"Tier2Tests","VerifyVirtualMachineTypeIsReportedInListAvailablePools_Test"},
 			dependsOnGroups={},
 			enabled=true)
-	public void VerifyVirtualMachineTypeIsReportedInListAvailablePools_Test() throws JSONException, Exception {
+	public void testVirtualMachineTypeIsReportedInListAvailablePools() throws JSONException, Exception {
 
 		// trick this system into believing it is a virt guest
 		forceVirtWhatToReturnGuest("kvm");
@@ -1038,13 +1088,18 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-37712", "RHEL7-51489"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-37712", "RHEL7-51489"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="Verify the subscription-manager list --avail appropriately displays pools with MachineType: physical",
-			groups={"VerifyPhysicalMachineTypeValuesInListAvailablePools_Test"},
+			groups={"Tier2Tests","VerifyPhysicalMachineTypeValuesInListAvailablePools_Test"},
 			dependsOnGroups={},
 			enabled=true)
-	public void VerifyPhysicalMachineTypeValuesInListAvailablePools_Test() throws JSONException, Exception {
+	public void testPhysicalMachineTypeValuesInListAvailablePools() throws JSONException, Exception {
 
 		// trick this system into believing it is a host
 		forceVirtWhatToReturnHost();
@@ -1062,13 +1117,18 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-37711", "RHEL7-51488"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-37711", "RHEL7-51488"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="Verify the Candlepin API accepts PUTting of guestIds onto host consumer (to be used by virt-who)",
-			groups={"blockedByBug-737935","VerifyGuestIdsCanBePutOntoHostConsumer_Test"},
+			groups={"Tier2Tests","blockedByBug-737935","VerifyGuestIdsCanBePutOntoHostConsumer_Test"},
 			dependsOnGroups={},
 			enabled=true)
-	public void VerifyGuestIdsCanBePutOntoHostConsumer_Test() throws JSONException, Exception {
+	public void testGuestIdsCanBePutOntoHostConsumer() throws JSONException, Exception {
 
 		int k=1; JSONObject jsonConsumer; List<String> actualGuestIds = new ArrayList<String>(){};
 		
@@ -1179,7 +1239,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
-	@TestDefinition(//update= true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-47927", "RHEL7-97326"},
 			linkedWorkItems= {
@@ -1196,10 +1256,10 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
 	@Test(	description="Verify the Candlepin API denies PUTting of guestIds onto a guest consumer",
-			groups={"blockedByBug-737935","VerifyGuestIdsCanNOTBePutOntoGuestConsumer_Test"},
+			groups={"Tier2Tests","blockedByBug-737935","VerifyGuestIdsCanNOTBePutOntoGuestConsumer_Test"},
 			dependsOnGroups={},
 			enabled=true)
-	public void VerifyGuestIdsCanNOTBePutOntoGuestConsumer_Test() throws JSONException, Exception {
+	public void testGuestIdsCanNOTBePutOntoGuestConsumer() throws JSONException, Exception {
 
 		int k=1; JSONObject jsonConsumer; List<String> actualGuestIds = new ArrayList<String>(){};
 		
@@ -1238,7 +1298,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
-	@TestDefinition(//update= true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-47926", "RHEL7-97325"},
 			linkedWorkItems= {
@@ -1255,10 +1315,10 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
 	@Test(	description="When Host B PUTs the same guestId as HostA, the guestId should be removed from HostA (simulation of a guest moved from Host A to Host B)",
-			groups={"blockedByBug-737935","VerifyGuestIdIsRemovedFromHostConsumerAWhenHostConsumerBPutsSameGuestId_Test"},
+			groups={"Tier2Tests","blockedByBug-737935","VerifyGuestIdIsRemovedFromHostConsumerAWhenHostConsumerBPutsSameGuestId_Test"},
 			dependsOnGroups={},
 			enabled=true)
-	public void VerifyGuestIdIsRemovedFromHostConsumerAWhenHostConsumerBPutsSameGuestId_Test() throws JSONException, Exception {
+	public void testGuestIdIsRemovedFromHostConsumerAWhenHostConsumerBPutsSameGuestId() throws JSONException, Exception {
 
 		int k=1; JSONObject jsonConsumer; List<String> actualGuestIds = new ArrayList<String>(){};
 		

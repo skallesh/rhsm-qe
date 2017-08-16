@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<testcase id="RHEL6-21703">
+    <title>RHSM-TC : rhsm.cli.tests.ServiceLevelTests.testInstalledProductsProvidedByAvailablePoolsWithExemptServiceLevelAreAutoSubscribedRegardlessOfServiceLevel</title>
+    <description>installed products provided by available pools with an exempt service level should be auto-subscribed regardless of what service level is specified (or is not specified)</description>
+    <test-steps>
+        <test-step>
+            <test-step-column id="step">
+                <parameter name="bugzilla" scope="local"/>
+                <parameter name="installedProductId" scope="local"/>
+                <parameter name="serviceLevel" scope="local"/>
+            </test-step-column>
+        </test-step>
+    </test-steps>
+    <custom-fields>
+        <custom-field id="caseautomation" content="automated"></custom-field>
+        <custom-field id="caseimportance" content="high"></custom-field>
+        <custom-field id="caselevel" content="component"></custom-field>
+        <custom-field id="caseposneg" content="positive"></custom-field>
+        <custom-field id="tags" content="Tier1"></custom-field>
+        <custom-field id="casecomponent" content="subscription-manager"></custom-field>
+        <custom-field id="testtype" content="functional"></custom-field>
+        <custom-field id="subtype1" content="reliability"></custom-field>
+        <custom-field id="subtype2" content="-"></custom-field>
+    </custom-fields>
+</testcase>

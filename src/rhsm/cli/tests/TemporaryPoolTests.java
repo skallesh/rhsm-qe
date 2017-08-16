@@ -33,8 +33,11 @@ import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 
-import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.DefTypes;
 import com.github.redhatqe.polarize.metadata.TestDefinition;
+import com.github.redhatqe.polarize.metadata.TestType;
+import com.github.redhatqe.polarize.metadata.DefTypes.PosNeg;
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
 
 /**
  * @author jsefler
@@ -48,19 +51,24 @@ import com.github.redhatqe.polarize.metadata.TestDefinition;
  * Etherpad for 24 Hour Temporary Pools for Unmapped Guests
  *   http://etherpad.corp.redhat.com/MZhnahVIDk  --for review
  */
-@Test(groups={"TemporaryPoolTests","Tier3Tests","AcceptanceTests","Tier1Tests"})
+@Test(groups={"TemporaryPoolTests"})
 public class TemporaryPoolTests extends SubscriptionManagerCLITestScript {
 	
 	// Test methods ***********************************************************************
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20093", "RHEL7-51735"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20093", "RHEL7-51735"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="given an available unmapped_guests_only pool, assert that it is available only to virtual systems whose host consumer has not yet mapped its virt.uuid as a guestId onto the host consumer.  Moreover, assert that once mapped, the pool is no longer available.",
-			groups={},
+			groups={"Tier1Tests"},
 			dataProvider="getAvailableUnmappedGuestsOnlySubscriptionPoolsData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyAvailabilityOfUnmappedGuestsOnlySubpool_Test(Object bugzilla, SubscriptionPool unmappedGuestsOnlyPool) throws JSONException, Exception {
+	public void testAvailabilityOfUnmappedGuestsOnlySubpool(Object bugzilla, SubscriptionPool unmappedGuestsOnlyPool) throws JSONException, Exception {
 		
 		// system facts were overridden in dataProvider with factsMap to fake this system as a guest
 		
@@ -113,14 +121,19 @@ public class TemporaryPoolTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20094", "RHEL7-51736"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20094", "RHEL7-51736"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="given an available unmapped_guests_only pool, assert that attaching it does not throw any Tracebacks ",
-			groups={"blockedByBug-1198369"},
+			groups={"Tier1Tests","blockedByBug-1198369"},
 			dataProvider="getAvailableUnmappedGuestsOnlySubscriptionPoolsData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyNoTracebacksAreThrownWhenSubscribingToUnmappedGuestsOnlySubpool_Test(Object bugzilla, SubscriptionPool unmappedGuestsOnlyPool) throws JSONException, Exception {
+	public void testNoTracebacksAreThrownWhenSubscribingToUnmappedGuestsOnlySubpool(Object bugzilla, SubscriptionPool unmappedGuestsOnlyPool) throws JSONException, Exception {
 		
 		// system facts were overridden in dataProvider with factsMap to fake this system as a guest
 		
@@ -154,14 +167,19 @@ public class TemporaryPoolTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20095", "RHEL7-51737"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20095", "RHEL7-51737"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="given an available unmapped_guests_only pool, attach it and verify the granted entitlement (validityNotAfter date is 24 hours after consumer's registration), installed product (Subscribed), and system status (Insufficient - Guest has not been reported on any host and is using a temporary unmapped guest subscription.)",
-			groups={"blockedByBug-1362701"},
+			groups={"Tier1Tests","blockedByBug-1362701"},
 			dataProvider="getAvailableUnmappedGuestsOnlySubscriptionPoolsData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyStatusDetailsAfterAttachingUnmappedGuestsOnlySubpool_Test(Object bugzilla, SubscriptionPool unmappedGuestsOnlyPool) throws JSONException, Exception {
+	public void testStatusDetailsAfterAttachingUnmappedGuestsOnlySubpool(Object bugzilla, SubscriptionPool unmappedGuestsOnlyPool) throws JSONException, Exception {
 		
 		// system facts were overridden in dataProvider with factsMap to fake this system as a guest
 		
@@ -258,14 +276,19 @@ public class TemporaryPoolTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20092", "RHEL7-59320"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20092", "RHEL7-59320"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="given an available unmapped_guests_only pool, attach it and attempt to auto-heal - repeated attempts to auto-heal should NOT add more and more entitlements",
-			groups={"blockedByBug-1198494"},
+			groups={"Tier1Tests","blockedByBug-1198494"},
 			dataProvider="getAvailableUnmappedGuestsOnlySubscriptionPoolsData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyAutoHealingIsStableAfterAttachingUnmappedGuestsOnlySubpool_Test(Object bugzilla, SubscriptionPool unmappedGuestsOnlyPool) throws JSONException, Exception {
+	public void testAutoHealingIsStableAfterAttachingUnmappedGuestsOnlySubpool(Object bugzilla, SubscriptionPool unmappedGuestsOnlyPool) throws JSONException, Exception {
 		
 		// system facts were overridden in dataProvider with factsMap to fake this system as a guest
 		
@@ -320,14 +343,19 @@ public class TemporaryPoolTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-22237", "RHEL7-59322"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-22237", "RHEL7-59322"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="Once a guest is mapped, while consuming a temporary pool entitlement, the entitlement should be removed at the next checkin.  Verify this while autoheal is disabled.",
-			groups={"blockedByBug-1198494"},
+			groups={"Tier1Tests","blockedByBug-1198494"},
 			dataProvider="getAvailableUnmappedGuestsOnlySubscriptionPoolsData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyAutomaticRemovalOfAnAttachedUnmappedGuestsOnlySubpoolOnceGuestIsMapped_Test(Object bugzilla, SubscriptionPool unmappedGuestsOnlyPool) throws JSONException, Exception {
+	public void testAutomaticRemovalOfAnAttachedUnmappedGuestsOnlySubpoolOnceGuestIsMapped(Object bugzilla, SubscriptionPool unmappedGuestsOnlyPool) throws JSONException, Exception {
 		
 		// system facts were overridden in dataProvider with factsMap to fake this system as a guest
 		
@@ -368,14 +396,19 @@ public class TemporaryPoolTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-22236", "RHEL7-59321"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-22236", "RHEL7-59321"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="Once a guest is mapped, while consuming a temporary pool entitlement, the entitlement should be removed and the system auto-healed at the next checkin.  Verify it.",
-			groups={"blockedByBug-1198494"},
+			groups={"Tier1Tests","blockedByBug-1198494"},
 			dataProvider="getAvailableUnmappedGuestsOnlySubscriptionPoolsData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyAutoHealingOfAnAttachedUnmappedGuestsOnlySubpoolOnceGuestIsMapped_Test(Object bugzilla, SubscriptionPool unmappedGuestsOnlyPool) throws JSONException, Exception {
+	public void testAutoHealingOfAnAttachedUnmappedGuestsOnlySubpoolOnceGuestIsMapped(Object bugzilla, SubscriptionPool unmappedGuestsOnlyPool) throws JSONException, Exception {
 		
 		// system facts were overridden in dataProvider with factsMap to fake this system as a guest
 		
@@ -421,17 +454,17 @@ public class TemporaryPoolTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Consume a temporary pool entitlement and wait a day for it to expire, then assert its removal and assert the pool is not longer available to this consumer.",
-			groups={"blockedByBug-1199078","VerifyExpirationOfUnmappedGuestsOnlySubpool_Test"},
+			groups={"Tier1Tests","blockedByBug-1199078","VerifyExpirationOfUnmappedGuestsOnlySubpool_Test"},
 			dataProvider="getAvailableUnmappedGuestsOnlySubscriptionPoolsData",
 			enabled=false)	// TODO Temporarily disabling this test because changing the system clock during an automated test seems to knock the system off the network during runs on Jenkins thereby loosing ssh connection; service network restarts are needed
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyExpirationOfUnmappedGuestsOnlySubpool_Test(Object bugzilla, SubscriptionPool unmappedGuestsOnlyPool) throws JSONException, Exception {
+	public void testExpirationOfUnmappedGuestsOnlySubpool(Object bugzilla, SubscriptionPool unmappedGuestsOnlyPool) throws JSONException, Exception {
 		if (!CandlepinType.standalone.equals(sm_serverType)) throw new SkipException("This automated test should only be attempted on a standalone server.");
 		
 		// system facts are overridden with factsMap to fake this system as a guest
 		
 		// reset the date on the client and server
-		resetDatesAfterVerifyExpirationOfUnmappedGuestsOnlySubpool_Test();
+		resetDatesAfterTestExpirationOfUnmappedGuestsOnlySubpool();
 		
 		// make sure we are freshly registered (to discard a consumer from a former data provided iteration that has mapped guests)
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null/* autoheal defaults to true*/, null, null, null, null);	
@@ -484,7 +517,7 @@ public class TemporaryPoolTests extends SubscriptionManagerCLITestScript {
 	protected int clientHoursFastForwarded = 0;
 	protected int serverHoursFastForwarded = 0;
 	@AfterGroups(value={"VerifyExpirationOfUnmappedGuestsOnlySubpool_Test"},groups={"setup"})
-	public void resetDatesAfterVerifyExpirationOfUnmappedGuestsOnlySubpool_Test() {
+	public void resetDatesAfterTestExpirationOfUnmappedGuestsOnlySubpool() {
 		// reset the date on the client and server
 		if (client!=null) {
 			RemoteFileTasks.runCommandAndAssert(client, String.format("date -s -%dhours",clientHoursFastForwarded), 0);
@@ -512,25 +545,10 @@ public class TemporaryPoolTests extends SubscriptionManagerCLITestScript {
 	
 	
 	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	// Candidates for an automated Test:
-	
-	
-	
-	
 	// Configuration methods ***********************************************************************
 
 	@AfterClass(groups={"setup"})
-	public void afterVerifyAvailabilityOfDerivedProductSubpool_Test() {
-//		clienttasks.unsubscribeFromTheCurrentlyConsumedSerialsCollectively();	// will avoid: Runtime Error No row with the given identifier exists: [org.candlepin.model.PoolAttribute#8a99f98a46b4fa990146ba9494032318] at org.hibernate.UnresolvableObjectException.throwIfNull:64
+	public void afterTestAvailabilityOfDerivedProductSubpool() {
 		clienttasks.unregister(null,null,null, null);
 		clienttasks.deleteFactsFileWithOverridingValues();
 	}

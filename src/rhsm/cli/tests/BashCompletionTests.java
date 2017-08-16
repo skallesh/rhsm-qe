@@ -20,7 +20,10 @@ import com.redhat.qe.auto.bugzilla.BzChecker;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.tools.SSHCommandResult;
 
+import com.github.redhatqe.polarize.metadata.DefTypes;
 import com.github.redhatqe.polarize.metadata.TestDefinition;
+import com.github.redhatqe.polarize.metadata.TestType;
+import com.github.redhatqe.polarize.metadata.DefTypes.PosNeg;
 import com.github.redhatqe.polarize.metadata.DefTypes.Project;
 
 /**
@@ -41,20 +44,24 @@ import com.github.redhatqe.polarize.metadata.DefTypes.Project;
  * rpm -Uvh ftp://fr2.rpmfind.net/linux/epel/6/i386/bash-completion-1.3-7.el6.noarch.rpm
  * 
  */
-@Test(groups={"BashCompletionTests","Tier2Tests"})
+@Test(groups={"BashCompletionTests"})
 public class BashCompletionTests extends SubscriptionManagerCLITestScript{
 	
 	
 	// Test Methods ***********************************************************************
-	@TestDefinition( projectID={Project.RHEL6, Project.RedHatEnterpriseLinux7}
-	               , testCaseID={"RHEL6-19942", "RHEL7-68140"}
-			       , tags="tier1 tier2")
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-19942", "RHEL7-68140"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="when subscription-manager is run with no args, it should default to the help report",
-			groups={"AcceptanceTests","Tier1Tests"},
+			groups={"Tier1Tests"},
 			dataProvider="BashCompletionData",
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
-	public void BashCompletion_Test(Object bugzilla, String bashCommand, Set<String> expectedCompletions) {
+	public void testBashCompletion(Object bugzilla, String bashCommand, Set<String> expectedCompletions) {
 		
 		// inspired by https://github.com/lacostej/unity3d-bash-completion/blob/master/lib/completion.py
 		List<String> program_args =  Arrays.asList(bashCommand.split("\\s+"));

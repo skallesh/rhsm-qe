@@ -1342,7 +1342,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		}
 	}
 	
-	// this list will be populated by subclass ResisterTests.RegisterWithCredentials_Test
+	// this list will be populated by subclass ResisterTests.testRegisterWithCredentials
 	protected static List<RegistrationData> registrationDataList = new ArrayList<RegistrationData>();	
 
 //	/**
@@ -1352,7 +1352,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 //	 * @throws JSONException
 //	 */
 //	protected RegistrationData findRegistrationDataNotMatchingOwnerKey(String key) throws JSONException {
-//		Assert.assertTrue (!registrationDataList.isEmpty(), "The RegisterWithCredentials_Test has been executed thereby populating the registrationDataList with content for testing."); 
+//		Assert.assertTrue (!registrationDataList.isEmpty(), "The testRegisterWithCredentials has been executed thereby populating the registrationDataList with content for testing."); 
 //		for (RegistrationData registration : registrationDataList) {
 //			if (registration.ownerKey!=null) {
 //				if (!registration.ownerKey.equals(key)) {
@@ -1377,7 +1377,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		List<RegistrationData> goodRegistrationData = new ArrayList<RegistrationData>();
 		List<String> ownersWithMatchingUsername = new ArrayList<String>();
 		List<String> usernamesWithMatchingOwnerKey = new ArrayList<String>();
-		Assert.assertTrue (!registrationDataList.isEmpty(), "The RegisterWithCredentials_Test has been executed thereby populating the registrationDataList with content for testing."); 
+		Assert.assertTrue (!registrationDataList.isEmpty(), "The testRegisterWithCredentials has been executed thereby populating the registrationDataList with content for testing."); 
 		for (RegistrationData registrationDatum : registrationDataList) {
 			if (registrationDatum.registerResult.getExitCode().intValue()==0) {
 				if (registrationDatum.ownerKey.equals(ownerKey)) usernamesWithMatchingOwnerKey.add(registrationDatum.username);
@@ -1435,7 +1435,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 //	 * @throws JSONException
 //	 */
 //	protected RegistrationData findRegistrationDataMatchingOwnerKeyButNotMatchingUsername(String key, String username) throws JSONException {
-//		Assert.assertTrue (!registrationDataList.isEmpty(), "The RegisterWithCredentials_Test has been executed thereby populating the registrationDataList with content for testing."); 
+//		Assert.assertTrue (!registrationDataList.isEmpty(), "The testRegisterWithCredentials has been executed thereby populating the registrationDataList with content for testing."); 
 //		for (RegistrationData registration : registrationDataList) {
 //			if (registration.ownerKey!=null) {
 //				if (registration.ownerKey.equals(key)) {
@@ -1456,7 +1456,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 //	 * @throws JSONException
 //	 */
 //	protected RegistrationData findRegistrationDataMatchingUsername(String username) throws JSONException {
-//		Assert.assertTrue (!registrationDataList.isEmpty(), "The RegisterWithCredentials_Test has been executed thereby populating the registrationDataList with content for testing."); 
+//		Assert.assertTrue (!registrationDataList.isEmpty(), "The testRegisterWithCredentials has been executed thereby populating the registrationDataList with content for testing."); 
 //		for (RegistrationData registration : registrationDataList) {
 //			if (registration.username.equals(username)) {
 //				return registration;
@@ -1469,16 +1469,16 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	 * This can be called by Tests that depend on it in a BeforeClass method to insure that registrationDataList has been populated.
 	 * @throws Exception 
 	 */
-	protected void RegisterWithCredentials_Test() throws Exception {
+	protected void testRegisterWithCredentials() throws Exception {
 		if (registrationDataList.isEmpty()) {
 			clienttasks.unregister(null,null,null, null); // make sure client is unregistered
 			for (List<Object> credentials : getRegisterCredentialsDataAsListOfLists()) {
 				rhsm.cli.tests.RegisterTests registerTests = new rhsm.cli.tests.RegisterTests();
 				registerTests.setupBeforeSuite();
 				try {
-					registerTests.RegisterWithCredentials_Test((String)credentials.get(0), (String)credentials.get(1), (String)credentials.get(2));			
+					registerTests.testRegisterWithCredentials((String)credentials.get(0), (String)credentials.get(1), (String)credentials.get(2));			
 				} catch (AssertionError e) {
-					log.warning("Ignoring a failure in RegisterWithCredentials_Test("+(String)credentials.get(0)+", "+(String)credentials.get(1)+", "+(String)credentials.get(2)+")");
+					log.warning("Ignoring a failure in testRegisterWithCredentials("+(String)credentials.get(0)+", "+(String)credentials.get(1)+", "+(String)credentials.get(2)+")");
 				}
 			}
 		}
@@ -1901,7 +1901,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		}
 		
 		// manually reorder the pools so that the base "Red Hat Enterprise Linux*" pool is first in the list
-		// This is a workaround for InstallAndRemovePackageAfterSubscribingToPool_Test so as to avoid installing
+		// This is a workaround for testInstallAndRemovePackageAfterSubscribingToPool so as to avoid installing
 		// a package from a repo that has a package dependency from a repo that is not yet entitled.
 		int i=0;
 		for (List<Object> list : ll) {
@@ -2399,7 +2399,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		}
 		
 		// minimize the number of dataProvided rows (useful during automated testcase development)
-		// WARNING: When true, this will fail the VerifyNormalAvailablePoolsFromSubscriptionsPassTheHardwareRulesCheck_Test
+		// WARNING: When true, this will fail the testVerifyNormalAvailablePoolsFromSubscriptionsPassTheHardwareRulesCheck
 		if (Boolean.valueOf(getProperty("sm.debug.dataProviders.minimize","false"))) ll=ll.subList(0,1);
 
 		return ll;
@@ -3671,11 +3671,11 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	
 	
 	
-	@DataProvider(name="getServerurl_TestData")
-	public Object[][] getServerurl_TestDataAs2dArray() {
-		return TestNGUtils.convertListOfListsTo2dArray(getServerurl_TestDataAsListOfLists());
+	@DataProvider(name="getServerurlData")
+	public Object[][] getServerurlDataAs2dArray() {
+		return TestNGUtils.convertListOfListsTo2dArray(getServerurlDataAsListOfLists());
 	}
-	protected List<List<Object>> getServerurl_TestDataAsListOfLists() {
+	protected List<List<Object>> getServerurlDataAsListOfLists() {
 		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
 		if (servertasks==null) return ll;
 		if (clienttasks==null) return ll;

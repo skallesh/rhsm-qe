@@ -50,14 +50,14 @@ import rhsm.data.SubscriptionPool;
  * if no productid is there, then contact rhel-eng/jgreguske/dgregor
  */
 
-@Test(groups={"ContentIntegrationTests","Tier2Tests"},enabled=false)	// disabled in favor of various ContentTests which do not depend on the maintenance of dataProvider="getSubscribeData"
+@Test(groups={"ContentIntegrationTests"},enabled=false)	// disabled in favor of various ContentTests which do not depend on the maintenance of dataProvider="getSubscribeData"
 public class ContentIntegrationTests extends SubscriptionManagerCLITestScript{
 
 	
 	// Test Methods ***********************************************************************
 
 	@Test(	description="register and subscribe to expected product subscription",
-			groups={"AcceptanceTests","Tier1Tests"},
+			groups={"Tier1Tests"},
 			dataProvider="getSubscribeData",
 			enabled=false)	// disabled in favor of various ContentTests which do not depend on the maintenance of dataProvider="getSubscribeData"
 	//@ImplementsNitrateTest(caseId=) //TODO Find a tcms caseId
@@ -132,7 +132,7 @@ public class ContentIntegrationTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	@Test(	description="verify the CDN provides packages for the default enabled content set after subscribing to a product subscription",
-			groups={"VerifyPackagesAreAvailable","blockedByBug-905546"},
+			groups={"Tier2Tests","VerifyPackagesAreAvailable","blockedByBug-905546"},
 			dependsOnMethods={"RegisterAndSubscribe_Test"}, alwaysRun=true,
 			dataProvider="getDefaultEnabledContentNamespaceData",
 			enabled=false)	// disabled in favor of various ContentTests which do not depend on the maintenance of dataProvider="getSubscribeData"
@@ -182,7 +182,7 @@ public class ContentIntegrationTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="verify the CDN provides packages for the non-default enabled content set after subscribing to a product subscription",
-			groups={"VerifyPackagesAreAvailable"},
+			groups={"Tier2Tests","VerifyPackagesAreAvailable"},
 			dependsOnMethods={"RegisterAndSubscribe_Test"}, alwaysRun=true,
 			dataProvider="getDefaultDisabledContentNamespaceData",
 			enabled=false)	// disabled in favor of various ContentTests which do not depend on the maintenance of dataProvider="getSubscribeData"
@@ -194,7 +194,7 @@ public class ContentIntegrationTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="ensure a random available package can be downloaded from the enabled repo ",
-			groups={},
+			groups={"Tier2Tests"},
 			dependsOnMethods={"RegisterAndSubscribe_Test"}, alwaysRun=true,
 			dependsOnGroups={"VerifyPackagesAreAvailable"},
 			dataProvider="getContentNamespaceData",
@@ -247,7 +247,7 @@ public class ContentIntegrationTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	@Test(	description="ensure a unique available package can be installed/removed from the enabled repo ",
-			groups={},
+			groups={"Tier2Tests"},
 			dependsOnMethods={"RegisterAndSubscribe_Test"}, alwaysRun=true,
 			dependsOnGroups={"VerifyPackagesAreAvailable"},
 			dataProvider="getContentNamespaceData",

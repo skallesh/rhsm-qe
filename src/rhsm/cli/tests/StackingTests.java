@@ -25,28 +25,36 @@ import com.redhat.qe.Assert;
 import com.redhat.qe.auto.bugzilla.BlockedByBzBug;
 import com.redhat.qe.auto.testng.TestNGUtils;
 
-import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.DefTypes;
 import com.github.redhatqe.polarize.metadata.TestDefinition;
+import com.github.redhatqe.polarize.metadata.TestType;
+import com.github.redhatqe.polarize.metadata.DefTypes.PosNeg;
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
 
 /**
  * @author jsefler
  *
  *
  */
-@Test(groups={"StackingTests","Tier2Tests"})
+@Test(groups={"StackingTests"})
 public class StackingTests extends SubscriptionManagerCLITestScript {
 
 	
 	// Test methods ***********************************************************************
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20011", "RHEL7-51033"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20011", "RHEL7-51033"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="subscription-manager: subscribe to each pool with the same stacking_id to achieve compliance",
 			enabled=true,
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-739671", "blockedByBug-740377", "blockedByBug-861993", "blockedByBug-955142"},
+			groups={"Tier1Tests","blockedByBug-739671", "blockedByBug-740377", "blockedByBug-861993", "blockedByBug-955142"},
 			dataProvider="getAvailableStackableAttributeSubscriptionPoolsData")
 	//@ImplementsNitrateTest(caseId=)
-	public void StackEachPoolToAchieveAttributeCompliance_Test(Object bugzilla, String attribute, boolean systemIsGuest, List<SubscriptionPool> stackableAttributeSubscriptionPools) throws JSONException, Exception{
+	public void testStackEachPoolToAchieveAttributeCompliance(Object bugzilla, String attribute, boolean systemIsGuest, List<SubscriptionPool> stackableAttributeSubscriptionPools) throws JSONException, Exception{
 		
 		// The strategy in this test is to simulate the facts on the systems so that the attribute being tested ("cores","ram",or "sockets", or "vcpu")
 		// will achieve full compliance for all of the provided products after attaching a quantity of one entitlement
@@ -367,7 +375,7 @@ public class StackingTests extends SubscriptionManagerCLITestScript {
 //	
 //	@Test(	description="subscription-manager: subscribe to each pool with the same stacking_id to achieve compliance",
 //			enabled=true,
-//			groups={"AcceptanceTests","Tier1Tests","blockedByBug-739671", "blockedByBug-740377", "blockedByBug-861993", "blockedByBug-955142"},
+//			groups={"Tier1Tests","blockedByBug-739671", "blockedByBug-740377", "blockedByBug-861993", "blockedByBug-955142"},
 //			dataProvider="getAvailableStackableAttributeSubscriptionPoolsData")
 //	//@ImplementsNitrateTest(caseId=)
 //	public void StackEachPoolToAchieveAttributeCompliance_Test(Object bugzilla, String attribute, List<SubscriptionPool> stackableAttributeSubscriptionPools) throws JSONException, Exception{

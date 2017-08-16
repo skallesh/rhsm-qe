@@ -25,8 +25,11 @@ import rhsm.cli.tasks.SubscriptionManagerTasks;
 import rhsm.data.Repo;
 import rhsm.data.SubscriptionPool;
 
-import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.DefTypes;
 import com.github.redhatqe.polarize.metadata.TestDefinition;
+import com.github.redhatqe.polarize.metadata.TestType;
+import com.github.redhatqe.polarize.metadata.DefTypes.PosNeg;
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
 
 /**
  * @author skallesh
@@ -37,15 +40,21 @@ import com.github.redhatqe.polarize.metadata.TestDefinition;
  *         RedHatEnterpriseLinux7/wiki/RHSMQE/RHSM_SKU%20level%20content%
  *         20override?sidebar=approvals
  */
-@Test(groups = { "SKULevelContentOverrideTests", "Tier3Tests" })
+@Test(groups={"SKULevelContentOverrideTests"})
 public class SKULevelContentOverrideTests extends SubscriptionManagerCLITestScript {
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-37020", "RHEL7-54835"})
-	@Test(description = "Verify content can be overriden at SKU level,content overriden at sku level can be enabled/disabled by using subscription-manager repos --enable/--disable commands and enabled repo is given prefrence over disabled repo", groups = {
-			"OverrideAtSKULevelTest", "blockedByBug-1403160" }, dataProvider = "getSubscriptions", enabled = true)
-	public void OverrideAtSKULevelTest(Object Bugzilla, SubscriptionPool subscriptionpool)
-			throws JSONException, Exception {
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-37020", "RHEL7-54835"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "Verify content can be overriden at SKU level,content overriden at sku level can be enabled/disabled by using subscription-manager repos --enable/--disable commands and enabled repo is given prefrence over disabled repo",
+			groups = {"Tier3Tests","OverrideAtSKULevelTest", "blockedByBug-1403160" },
+			dataProvider = "getSubscriptions",
+			enabled = true)
+	public void testContentOverrideAtSKULevel(Object Bugzilla, SubscriptionPool subscriptionpool) throws JSONException, Exception {
 		String resourcePath = null;
 		String requestBody = null;
 		String consumerId = clienttasks.getCurrentConsumerId(

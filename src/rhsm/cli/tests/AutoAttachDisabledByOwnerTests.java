@@ -3,8 +3,12 @@ package rhsm.cli.tests;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.github.redhatqe.polarize.metadata.DefTypes.PosNeg;
 import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.DefTypes;
 import com.github.redhatqe.polarize.metadata.TestDefinition;
+import com.github.redhatqe.polarize.metadata.TestType;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.testng.annotations.AfterGroups;
@@ -23,16 +27,22 @@ import rhsm.cli.tasks.CandlepinTasks;
  * @throws Exception
  * @throws JSONException
  */
-@Test(groups = { "AutoAttachDisabledByOwnerTests", "Tier3Tests" })
+@Test(groups = {"AutoAttachDisabledByOwnerTests"})
 public class AutoAttachDisabledByOwnerTests extends SubscriptionManagerCLITestScript {
 	List<String> ownerKey = new ArrayList<String>();
 	String owner = null;
 
-	@TestDefinition( projectID = {Project.RHEL6}
-	               , testCaseID = {"RHEL6-39111"})
-	@Test(description = "Disable Auto attach by Owner", groups = { "DisableOwner",
-			"blockedByBug-1382355" }, enabled = true)
-	public void DisableAutoAttachByOwner() throws Exception {
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-39111","RHEL7-97445"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "Disable Auto attach by Owner",
+			groups = {"Tier3Tests","DisableOwner","blockedByBug-1382355"},
+			enabled = true)
+	public void testDisableAutoAttachByOwner() throws Exception {
 		JSONObject jsonData = new JSONObject();
 		String resourcePath = "/owners/" + owner;
 		jsonData.put("autobindDisabled", "true");

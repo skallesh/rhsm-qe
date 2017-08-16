@@ -42,7 +42,7 @@ import rhsm.data.SubscriptionPool;
  *         References:https://docs.google.com/document/d/1h-CeEV_FEu885JhZNkydzQQsDkAQ-WtZ5cisCxj4Lao/edit?ts=5873bb00
  */
 
-@Test(groups = { "GoldenTicketTests", "Tier3Tests" })
+@Test(groups = {"GoldenTicketTests"})
 public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
     protected String attributeName = "contentAccessMode";
     protected String attributeValue = "org_environment";
@@ -50,7 +50,7 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
     public static String subscriptionPoolProductId =null;
     private String subscriptionPoolId;
     
-	@TestDefinition(//update= true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-47902", "RHEL7-96740"},
 			linkedWorkItems= {
@@ -67,9 +67,9 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier3")
     @Test(	description = "Verify golden ticket entitlement is granted when system is registered to an org that has contentAccessMode set",
-			groups = {"blockedByBug-1425438"},
+			groups = {"Tier3Tests","blockedByBug-1425438"},
 			enabled = true)
-    public void VerifyGoldenTicketFunctionality() throws Exception {
+    public void testGoldenTicketFunctionality() throws Exception {
 
 	CandlepinTasks.setAttributeForOrg(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, org,
 		attributeName, attributeValue);
@@ -178,7 +178,7 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
 
 
 
-	@TestDefinition(//update= true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-47903", "RHEL7-96741"},
 			linkedWorkItems= {
@@ -195,9 +195,9 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier3")
 	@Test(	description = "Verify golden ticket entitlement is granted when system is registered using an activationkey belonging to an org that has a contentAccessMode set",
-			groups = {},
+			groups = {"Tier3Tests"},
 			enabled = true)
-    public void VerifyGoldenTicketIsGrantedWhenRegisteredUsingActivationKey() throws JSONException, Exception {
+    public void testGoldenTicketIsGrantedWhenRegisteredUsingActivationKey() throws JSONException, Exception {
 
 	// verify registering the system to activation key belonging to owner(contentAccessmode set) with auto-attach false has access to golden ticket
 	CandlepinTasks.setAttributeForOrg(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, org,
@@ -246,7 +246,7 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
 
 
 
-	@TestDefinition(//update= true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-47905", "RHEL7-96743"},
 			linkedWorkItems= {
@@ -263,9 +263,9 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier3")
 	@Test(	description = "Verify revoking contentAccessMode set on the owner removes extra entitlement",
-			groups = {"blockedByBug-1448855" },
+			groups = {"Tier3Tests","blockedByBug-1448855" },
 			enabled = true)
-    public void VerifyRevokingContentAccessModeOnOwnerRemovesEntitlement() throws Exception {
+    public void testRevokingContentAccessModeOnOwnerRemovesEntitlement() throws Exception {
 
 	CandlepinTasks.setAttributeForOrg(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, org,
 		attributeName, attributeValue);
@@ -303,7 +303,7 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
 
 
 
-	@TestDefinition(//update= true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-47904", "RHEL7-96742"},
 			linkedWorkItems= {
@@ -320,9 +320,9 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.MEDIUM, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier3")
     @Test(	description = "Verify SKU level contentOverride is given priority over default golden ticket one",
-    		groups = {"blockedByBug-1427069"},
+    		groups = {"Tier3Tests","blockedByBug-1427069"},
     		enabled = true)
-    public void VerifyRepoOverridePreference() throws Exception {
+    public void testRepoOverridePreference() throws Exception {
 	List<Repo> availableRepos= new ArrayList<Repo>();
 	List<String> repoIdsDisabledByDefault = new ArrayList<String>();
 	Map<String, String> attributesMap = new HashMap<String, String>();

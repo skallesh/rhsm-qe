@@ -23,8 +23,11 @@ import rhsm.cli.tasks.SubscriptionManagerTasks;
 
 import com.redhat.qe.tools.SSHCommandResult;
 
-import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.DefTypes;
 import com.github.redhatqe.polarize.metadata.TestDefinition;
+import com.github.redhatqe.polarize.metadata.TestType;
+import com.github.redhatqe.polarize.metadata.DefTypes.PosNeg;
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
 
 /**
  * @author jsefler
@@ -41,18 +44,23 @@ import com.github.redhatqe.polarize.metadata.TestDefinition;
  * [root@candlepin server]# diff -u src/main/java/org/candlepin/service/impl/DefaultSubscriptionServiceAdapter.java.orig  src/main/java/org/candlepin/service/impl/DefaultSubscriptionServiceAdapter.java > candlepin-RedeemTests-branch-master.patch
  * [root@candlepin server]# patch --verbose --dry-run -p0 < candlepin-RedeemTests-branch-master.patch
  */
-@Test(groups={"RedeemTests","Tier2Tests"})
+@Test(groups={"RedeemTests"})
 public class RedeemTests extends SubscriptionManagerCLITestScript {
 
 	// Test methods ***********************************************************************
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36620", "RHEL7-51431"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36620", "RHEL7-51431"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager: verify redeem requires registration",
-			groups={},
+			groups={"Tier2Tests"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
-	public void AttemptRedeemWithoutBeingRegistered_Test() {
+	public void testAttemptRedeemWithoutBeingRegistered() {
 		
 		clienttasks.unregister(null,null,null, null);
 		SSHCommandResult redeemResult = clienttasks.redeem_(null,null,null,null,null, null, null);
@@ -70,13 +78,18 @@ public class RedeemTests extends SubscriptionManagerCLITestScript {
 		}
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20024", "RHEL7-51041"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20024", "RHEL7-51041"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="subscription-manager: attempt redeem without --email option",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-727600"},
+			groups={"Tier1Tests","blockedByBug-727600"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void AttemptRedeemWithoutEmail_Test() {
+	public void testAttemptRedeemWithoutEmail() {
 		
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
 		SSHCommandResult redeemResult = clienttasks.redeem_(null,null,null,null,null, null, null);
@@ -95,13 +108,18 @@ public class RedeemTests extends SubscriptionManagerCLITestScript {
 		}
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36622", "RHEL7-60489"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36622", "RHEL7-60489"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager: attempt redeem with --email option (against a standalone candlepin server)",
-			groups={"blockedByBug-726791","blockedByBug-1248833","blockedByBug-1263474"},
+			groups={"Tier2Tests","blockedByBug-726791","blockedByBug-1248833","blockedByBug-1263474"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void RedeemWithEmail_Test() {
+	public void testRedeemWithEmail() {
 		String warning = "This test was authored for execution against a standalone candlepin server.";
 		if (!sm_serverType.equals(CandlepinType.standalone)) throw new SkipException(warning);
 		log.info(warning);
@@ -128,14 +146,19 @@ public class RedeemTests extends SubscriptionManagerCLITestScript {
 		}
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-27129", "RHEL7-64492"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-27129", "RHEL7-64492"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager: attempt redeem against an onpremises candlepin server that has been patched for mock testing",
-			groups={"MockRedeemTests", "blockedByBug-727978"},
+			groups={"Tier2Tests","MockRedeemTests", "blockedByBug-727978"},
 			dataProvider="getOnPremisesMockAttemptToRedeemData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void OnPremisesMockAttemptToRedeem_Test(Object blockedByBug, String testDescription, String serialNumber, Integer expectedExitCode, String expectedStdout, String expectedStderr) {
+	public void testOnPremisesMockAttemptToRedeem(Object blockedByBug, String testDescription, String serialNumber, Integer expectedExitCode, String expectedStdout, String expectedStderr) {
 		String warning = "This mock test was authored for execution against an on-premises candlepin server.";
 		if (!sm_serverType.equals(CandlepinType.standalone)) throw new SkipException(warning);
 		log.info(testDescription);
@@ -165,13 +188,18 @@ public class RedeemTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36621", "RHEL7-51432"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36621", "RHEL7-51432"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager: attempt change a consumers canActivate attribute",
-			groups={},
+			groups={"Tier2Tests"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void AttemptToChangeConsumersCanActivateAttribute_Test() throws Exception {
+	public void testAttemptToChangeConsumersCanActivateAttribute() throws Exception {
 
 		// register and attempt to update the consumer by forcing its canActivate attribute to true
 		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null, null));
@@ -183,10 +211,10 @@ public class RedeemTests extends SubscriptionManagerCLITestScript {
 	
 	// This test is the hosted equivalent for CASE 2 from getOnPremisesMockAttemptToRedeemData
 	@Test(	description="subscription-manager: attempt redeem against a hosted candlepin server using a non-found Dell service tag",
-			groups={"AcceptanceTests","Tier1Tests","MockRedeemTests", "blockedByBug-688806"},
+			groups={"Tier1Tests","MockRedeemTests", "blockedByBug-688806"},
 			enabled=false)	// TODO THIS TEST IS BLOCKED SINCE WE CANNOT CHANGE THE "canActivate" ATTRIBUTE
 	//@ImplementsNitrateTest(caseId=)
-	public void HostedMockAttemptToRedeemUsingNonFoundDellServiceTag_Test() throws Exception {
+	public void testHostedMockAttemptToRedeemUsingNonFoundDellServiceTag() throws Exception {
 		String warning = "This mock test was authored for execution against a hosted candlepin server.";
 		if (!sm_serverType.equals(CandlepinType.hosted)) throw new SkipException(warning);
 		//log.warning(warning);
@@ -216,13 +244,18 @@ public class RedeemTests extends SubscriptionManagerCLITestScript {
 	
 	
 	// This test is the hosted equivalent for CASE 4 from getOnPremisesMockAttemptToRedeemData
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20025", "RHEL7-52261"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20025", "RHEL7-52261"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="subscription-manager: attempt redeem against a hosted candlepin server when consumer's canActivate attribute is false",
-			groups={"AcceptanceTests","Tier1Tests","MockRedeemTests", "blockedByBug-688806", "blockedByBug-1248833"},
+			groups={"Tier1Tests","MockRedeemTests", "blockedByBug-688806", "blockedByBug-1248833"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void HostedMockAttemptToRedeemWhenCanActivateIsFalse_Test() throws JSONException, Exception {
+	public void testHostedMockAttemptToRedeemWhenCanActivateIsFalse() throws JSONException, Exception {
 		String warning = "This mock test was authored for execution against a hosted candlepin server.";
 		if (!sm_serverType.equals(CandlepinType.hosted)) throw new SkipException(warning);
 		//log.warning(warning);

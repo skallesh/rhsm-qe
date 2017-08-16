@@ -54,20 +54,25 @@ import com.redhat.qe.tools.SSHCommandResult;
  * @author jsefler
  *
  */
-@Test(groups={"ContentTests","Tier2Tests"})
+@Test(groups={"ContentTests"})
 public class ContentTests extends SubscriptionManagerCLITestScript{
 
 	
 	// Test methods ***********************************************************************
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-25987", "RHEL7-51485"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-25987", "RHEL7-51485"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags="Tier2")
 	@Test(	description="subscription-manager Yum plugin: enable/disable",
-			groups={"FipsTests","EnableDisableManageReposAndVerifyContentAvailable_Test","blockedByBug-804227","blockedByBug-871146","blockedByBug-905546","blockedByBug-1017866"},
+			groups={"Tier2Tests","FipsTests","EnableDisableManageReposAndVerifyContentAvailable_Test","blockedByBug-804227","blockedByBug-871146","blockedByBug-905546","blockedByBug-1017866"},
 			//dataProvider="getAvailableSubscriptionPoolsData",	// very thorough, but takes too long to execute and rarely finds more bugs
 			dataProvider="getRandomSubsetOfAvailableSubscriptionPoolsData",
 			enabled=true)
 	@ImplementsNitrateTest(caseId=41696,fromPlan=2479)
-	public void EnableDisableManageReposAndVerifyContentAvailable_Test(SubscriptionPool pool) throws JSONException, Exception {
+	public void testEnableDisableManageReposAndVerifyContentAvailable(SubscriptionPool pool) throws JSONException, Exception {
 
 		// get the currently installed product certs to be used when checking for conditional content tagging
 		List<ProductCert> currentProductCerts = clienttasks.getCurrentProductCerts();
@@ -179,13 +184,18 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20085", "RHEL7-51099"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-20085", "RHEL7-51099"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags="Tier1")
 	@Test(	description="subscription-manager content flag : Default content flag should enable",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-804227","blockedByBug-871146","blockedByBug-924919","blockedByBug-962520"},
+			groups={"Tier1Tests","blockedByBug-804227","blockedByBug-871146","blockedByBug-924919","blockedByBug-962520"},
 	        enabled=true)
 	@ImplementsNitrateTest(caseId=47578,fromPlan=2479)
-	public void VerifyYumRepoListsEnabledContent_Test() throws JSONException, Exception{
+	public void testYumRepoListsEnabledContent() throws JSONException, Exception{
 // Original code from ssalevan
 //	    ArrayList<String> repos = this.getYumRepolist();
 //	    
@@ -227,13 +237,18 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20082", "RHEL7-51098"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-20082", "RHEL7-51098"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags="Tier1")
 	@Test(	description="subscription-manager content flag : gpgcheck value in redhat.repo should be disabled when gpg_url is empty or null",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-741293","blockedByBug-805690","blockedByBug-962520"},
+			groups={"Tier1Tests","blockedByBug-741293","blockedByBug-805690","blockedByBug-962520"},
 	        enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyGpgCheckValuesInYumRepos_Test() throws JSONException, Exception {
+	public void testGpgCheckValuesInYumRepos() throws JSONException, Exception {
 		//	[root@jsefler-r63-server ~]# cat /etc/yum.repos.d/redhat.repo 
 		//	#
 		//	# Certificate-Based Repositories
@@ -329,11 +344,11 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager Yum plugin: ensure content can be downloaded/installed/removed",
-			groups={"FipsTests","AcceptanceTests","Tier1Tests","blockedByBug-701425","blockedByBug-871146","blockedByBug-962520"},
+			groups={"Tier1Tests","FipsTests","blockedByBug-701425","blockedByBug-871146","blockedByBug-962520"},
 			dataProvider="getPackageFromEnabledRepoAndSubscriptionPoolData",
 			enabled=false)	// disabled in favor of replacement InstallAndRemoveAnyPackageFromEnabledRepoAfterSubscribingToPool_Test
 	@ImplementsNitrateTest(caseId=41695,fromPlan=2479)
-	public void InstallAndRemovePackageFromEnabledRepoAfterSubscribingToPool_Test(String pkg, String repoLabel, SubscriptionPool pool, String quantity) throws JSONException, Exception {
+	public void testInstallAndRemovePackageFromEnabledRepoAfterSubscribingToPool(String pkg, String repoLabel, SubscriptionPool pool, String quantity) throws JSONException, Exception {
 		if (pkg==null) throw new SkipException("Could NOT find a unique available package from repo '"+repoLabel+"' after subscribing to SubscriptionPool: "+pool);
 		
 		// to avoid interference from an already enabled repo from a prior attached subscription that also
@@ -363,14 +378,19 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-22222", "RHEL7-55190"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-22222", "RHEL7-55190"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags="Tier1")
 	@Test(	description="subscription-manager Yum plugin: ensure content can be downloaded/installed/removed",
-			groups={"FipsTests","AcceptanceTests","Tier1Tests","blockedByBug-701425","blockedByBug-871146","blockedByBug-962520"},
+			groups={"Tier1Tests","FipsTests","blockedByBug-701425","blockedByBug-871146","blockedByBug-962520"},
 			dataProvider="getEnabledRepoAndSubscriptionPoolData",
 			enabled=true)
 	@ImplementsNitrateTest(caseId=41695,fromPlan=2479)
-	public void InstallAndRemoveAnyPackageFromEnabledRepoAfterSubscribingToPool_Test(String repoLabel, SubscriptionPool pool, String quantity) throws JSONException, Exception {
+	public void testInstallAndRemoveAnyPackageFromEnabledRepoAfterSubscribingToPool(String repoLabel, SubscriptionPool pool, String quantity) throws JSONException, Exception {
 		
 		// to avoid interference from an already enabled repo from a prior attached subscription that also
 		// contains this same packages (e.g. -htb- repos versus non -htb- repos) it would be best to remove
@@ -407,23 +427,28 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager Yum plugin: ensure content can be downloaded/installed/removed after subscribing to a personal subpool",
-			groups={"InstallAndRemovePackageAfterSubscribingToPersonalSubPool_Test"},
+			groups={"Tier2Tests","InstallAndRemovePackageAfterSubscribingToPersonalSubPool_Test"},
 			dataProvider="getPackageFromEnabledRepoAndPersonalSubscriptionSubPoolData",
 			enabled=false)	// registered consumers type of "person" was originally intended for entitling people to training.  Red Hat Learning Management systems never made use if it, and candlepin has no active requirements for it.  Disabling the personal tests...  Reference https://bugzilla.redhat.com/show_bug.cgi?id=967160#c1
 	//@ImplementsNitrateTest(caseId=) //TODO Find a tcms caseId for
-	public void InstallAndRemovePackageAfterSubscribingToPersonalSubPool_Test(String pkg, String repoLabel, SubscriptionPool pool) throws JSONException, Exception {
-		InstallAndRemovePackageFromEnabledRepoAfterSubscribingToPool_Test(pkg, repoLabel, pool, null);
+	public void testInstallAndRemovePackageAfterSubscribingToPersonalSubPool(String pkg, String repoLabel, SubscriptionPool pool) throws JSONException, Exception {
+		testInstallAndRemovePackageFromEnabledRepoAfterSubscribingToPool(pkg, repoLabel, pool, null);
 	}
 	
 	
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-25986", "RHEL7-56655"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-25986", "RHEL7-56655"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags="Tier2")
 	@Test(	description="subscription-manager Yum plugin: ensure yum groups can be installed/removed",
-			groups={"FipsTests"},
+			groups={"Tier2Tests","FipsTests"},
 			dataProvider="getYumAvailableGroupFromEnabledRepoAndSubscriptionPoolData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=) //TODO Find a tcms caseId for
-	public void InstallAndRemoveYumGroupFromEnabledRepoAfterSubscribingToPool_Test(String availableGroup, String repoLabel, SubscriptionPool pool) throws JSONException, Exception {
+	public void testInstallAndRemoveYumGroupFromEnabledRepoAfterSubscribingToPool(String availableGroup, String repoLabel, SubscriptionPool pool) throws JSONException, Exception {
 		if (availableGroup==null) throw new SkipException("No yum groups corresponding to enabled repo '"+repoLabel+" were found after subscribing to pool: "+pool);
 		
 		// remove any previously attached subscriptions
@@ -472,11 +497,11 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		clienttasks.unsubscribeFromSerialNumber(entitlementCert.serialNumber);
 	}
 	@Test(	description="subscription-manager Yum plugin: ensure yum groups can be removed/re-installed",
-			groups={},
+			groups={"Tier2Tests"},
 			dataProvider="getYumInstalledGroupFromEnabledRepoAndSubscriptionPoolData",
 			enabled=false)	// jsefler - I don't like this test because groups installed from the latest compose will have newer packages and required packages than available from the subscription CDN content
 	//@ImplementsNitrateTest(caseId=) //TODO Find a tcms caseId for
-	public void RemoveAndInstallYumGroupFromEnabledRepoAfterSubscribingToPool_Test(String installedGroup, String repoLabel, SubscriptionPool pool) throws JSONException, Exception {
+	public void testRemoveAndInstallYumGroupFromEnabledRepoAfterSubscribingToPool(String installedGroup, String repoLabel, SubscriptionPool pool) throws JSONException, Exception {
 		if (installedGroup==null) throw new SkipException("No yum groups corresponding to enabled repo '"+repoLabel+" were found after subscribing to pool: "+pool);
 				
 		// unsubscribe from this pool
@@ -506,11 +531,11 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="verify redhat.repo file does not contain an excessive (more than two) number of successive blank lines",
-			groups={"blockedByBug-737145"},
+			groups={"Tier2Tests","blockedByBug-737145"},
 			enabled=false) // Disabling... this test takes too long to execute.  VerifyRedHatRepoFileIsPurgedOfBlankLinesByYumPlugin_Test effectively provides the same test coverage.
 	@Deprecated
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyRedHatRepoFileDoesNotContainExcessiveBlankLines_Test_DEPRECATED() {
+	public void testRedHatRepoFileDoesNotContainExcessiveBlankLines_DEPRECATED() {
 		
 		// successive blank lines in redhat.repo must not exceed N
 		int N=2; String regex = "(\\n\\s*){"+(N+2)+",}"; 	//  (\n\s*){4,}
@@ -547,13 +572,18 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		Assert.assertContainsMatch(redhatRepoFileContents,"^# Managed by \\(rhsm\\) subscription-manager$",null,"Comment heading \"Managed by (rhsm) subscription-manager\" was found inside "+clienttasks.redhatRepoFile);		
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20083", "RHEL7-51096"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-20083", "RHEL7-51096"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags="Tier1")
 	@Test(	description="verify redhat.repo file is purged of successive blank lines by subscription-manager yum plugin",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-737145","blockedByBug-838113","blockedByBug-924919","blockedByBug-979492","blockedByBug-1017969","blockedByBug-1035440"},	/* yum stdout/stderr related bugs 872310 901612 1017354 1017969 */
+			groups={"Tier1Tests","blockedByBug-737145","blockedByBug-838113","blockedByBug-924919","blockedByBug-979492","blockedByBug-1017969","blockedByBug-1035440"},	/* yum stdout/stderr related bugs 872310 901612 1017354 1017969 */
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=) //TODO Find a tcms caseId for
-	public void VerifyRedHatRepoFileIsPurgedOfBlankLinesByYumPlugin_Test() {
+	public void testRedHatRepoFileIsPurgedOfBlankLinesByYumPlugin() {
 		
 		// TEMPORARY WORKAROUND
 		if (clienttasks.arch.equals("ppc64le")) {
@@ -648,11 +678,11 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		Assert.assertContainsMatch(redhatRepoFileContents,"^# test for bug 737145$",null,"User defined comment remains inside "+clienttasks.redhatRepoFile+" after triggering the yum plugin for subscription-manager.");		
 	}
 	@Test(	description="verify redhat.repo file is purged of successive blank lines by subscription-manager yum plugin",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-737145"},
+			groups={"Tier1Tests","blockedByBug-737145"},
 			enabled=false)	// was valid before bug fix 781510
 	@Deprecated
 	//@ImplementsNitrateTest(caseId=) //TODO Find a tcms caseId for
-	public void VerifyRedHatRepoFileIsPurgedOfBlankLinesByYumPlugin_Test_DEPRECATED() {
+	public void testRedHatRepoFileIsPurgedOfBlankLinesByYumPlugin_DEPRECATED() {
 		
 		// successive blank lines in redhat.repo must not exceed N
 		int N=2; String regex = "(\\n\\s*){"+(N+2)+",}"; 	//  (\n\s*){4,}
@@ -685,13 +715,18 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36652", "RHEL7-51484"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-36652", "RHEL7-51484"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags="Tier2")
 	@Test(	description="Verify that a 185 content set product subscription is always subscribable",
-			groups={"SubscribabilityOfContentSetProduct_Tests","blockedByBug-871146","blockedByBug-905546"},
+			groups={"Tier2Tests","SubscribabilityOfContentSetProduct_Tests","blockedByBug-871146","blockedByBug-905546"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifySubscribabilityOfSKUProvidingA185ContentSetProduct_Test() {
+	public void testSubscribabilityOfSKUProvidingA185ContentSetProduct() {
 
 		Map<String,String> factsMap = new HashMap<String,String>();
 		File entitlementCertFile;
@@ -756,35 +791,50 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36653", "RHEL7-51486"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-36653", "RHEL7-51486"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags="Tier2")
 	@Test(	description="Verify that a 186 content set product subscription is subscribable only when system.certificate_version >= 3.0",
-			groups={"SubscribabilityOfContentSetProduct_Tests","blockedByBug-871146","blockedByBug-905546"},
+			groups={"Tier2Tests","SubscribabilityOfContentSetProduct_Tests","blockedByBug-871146","blockedByBug-905546"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifySubscribabilityOfSKUProvidingA186ContentSetProduct_Test() {
+	public void testSubscribabilityOfSKUProvidingA186ContentSetProduct() {
 		VerifySubscribabilityOfSKUProvidingTooManyContentSets(subscriptionSKUProvidingA186ContentSetProduct,186);
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36654", "RHEL7-51487"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-36654", "RHEL7-51487"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags="Tier2")
 	@Test(	description="Verify that a subscription providing two 93 content set products is subscribable only when system.certificate_version >= 3.0",
-			groups={"SubscribabilityOfContentSetProduct_Tests","blockedByBug-879022","blockedByBug-905546"},
+			groups={"Tier2Tests","SubscribabilityOfContentSetProduct_Tests","blockedByBug-879022","blockedByBug-905546"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifySubscribabilityOfSKUProvidingTwo93ContentSetProducts_Test() {
+	public void testSubscribabilityOfSKUProvidingTwo93ContentSetProducts() {
 		VerifySubscribabilityOfSKUProvidingTooManyContentSets(subscriptionSKUProvidingTwo93ContentSetProducts,93*2);
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20086", "RHEL7-51097"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-20086", "RHEL7-51097"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags="Tier1")
 	@Test(	description="Verify that yum vars used in a baseurl are listed in a yum repo parameter called ui_repoid_vars",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-906554"},
+			groups={"Tier1Tests","blockedByBug-906554"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyYumRepoUiRepoIdVars_Test() throws JSONException, Exception {
+	public void testYumRepoUiRepoIdVars() throws JSONException, Exception {
 		// register
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
 
@@ -830,13 +880,18 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20080", "RHEL7-33076"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-20080", "RHEL7-33076"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags="Tier1")
 	@Test(	description="Verify that all content sets granted from a subscription pool that are restricted to specific arches satisfy the current system's arch.",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-706187","blockedByBug-975520","VerifyArchRestrictedContentSetsEntitledAfterSubscribeAllSatisfiesTheSystemArch_Test"},
+			groups={"Tier1Tests","blockedByBug-706187","blockedByBug-975520","VerifyArchRestrictedContentSetsEntitledAfterSubscribeAllSatisfiesTheSystemArch_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyArchRestrictedContentSetsEntitledAfterSubscribeAllSatisfiesTheSystemArch_Test() throws JSONException, Exception {
+	public void testArchRestrictedContentSetsEntitledAfterSubscribeAllSatisfiesTheSystemArch() throws JSONException, Exception {
 		// get a list of all of the available poolIds that provide arch-based content sets
 		List<List<Object>> subscriptionPoolsDataList = getAllAvailableSubscriptionPoolsProvidingArchBasedContentDataAsListOfLists();
 		List<String> archBasedSubscriptionPoolIds = new ArrayList<String>();
@@ -887,14 +942,19 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20081", "RHEL7-50720"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-20081", "RHEL7-50720"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags="Tier1")
 	@Test(	description="Verify that all content sets granted from a subscription pool satisfy the system arch and subset the provided product's arch",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-706187","blockedByBug-975520"},
+			groups={"Tier1Tests","blockedByBug-706187","blockedByBug-975520"},
 			dataProvider="getAllAvailableSubscriptionPoolsProvidingArchBasedContentData",//"getAvailableSubscriptionPoolsData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyContentSetsEntitledFromSubscriptionPoolSatisfyTheSystemArch_Test(SubscriptionPool pool) throws JSONException, Exception {
+	public void testContentSetsEntitledFromSubscriptionPoolSatisfyTheSystemArch(SubscriptionPool pool) throws JSONException, Exception {
 		List<String> providedProductIds = CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername,sm_clientPassword,sm_serverUrl,pool.poolId);
 		if (providedProductIds.isEmpty()) throw new SkipException("This test is not applicable for a pool that provides no products.");
 		JSONObject jsonStatus = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(/*authenticator*/null,/*password*/null,sm_serverUrl,"/status"));
@@ -1107,13 +1167,18 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	protected Set<String> poolIds = new HashSet<String>();
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20084", "RHEL7-55189"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-20084", "RHEL7-55189"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags="Tier1")
 	@Test(	description="Verify that all there is at least one available RHEL subscription and that yum content is available for the installed RHEL product cert",
-			groups={"FipsTests","AcceptanceTests","Tier1Tests","blockedByBug-1156638"},
+			groups={"Tier1Tests","FipsTests","blockedByBug-1156638"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyRhelSubscriptionContentIsAvailable_Test() throws JSONException, Exception {
+	public void testRhelSubscriptionContentIsAvailable() throws JSONException, Exception {
 		
 		// TODO Move this workaround to the end of this test
 		// TEMPORARY WORKAROUND
@@ -1209,14 +1274,19 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20087", "RHEL7-55191"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-20087", "RHEL7-55191"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags="Tier1")
 	@Test(	description="Verify that yum install does not fail when service rsyslog is stopped",
-			groups={"FipsTests","AcceptanceTests","Tier1Tests","blockedByBug-1211557","VerifyYumInstallSucceedsWhenServiceRsyslogIsStopped_Test"},
-			dependsOnMethods={"VerifyRhelSubscriptionContentIsAvailable_Test"},
+			groups={"Tier1Tests","FipsTests","blockedByBug-1211557","VerifyYumInstallSucceedsWhenServiceRsyslogIsStopped_Test"},
+			dependsOnMethods={"testRhelSubscriptionContentIsAvailable"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyYumInstallSucceedsWhenServiceRsyslogIsStopped_Test() throws JSONException, Exception {
+	public void testYumInstallSucceedsWhenServiceRsyslogIsStopped() throws JSONException, Exception {
 		// assume a RHEL subscription is available from dependent VerifyRhelSubscriptionContentIsAvailable_Test
 		
 		// register and attach a RHEL subscription via autosubscribe
@@ -1288,7 +1358,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	
 	
 	
-	@TestDefinition(//update= true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-47914", "RHEL7-97069"},
 			linkedWorkItems= {
@@ -1302,14 +1372,14 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 					role= DefTypes.Role.RELATES_TO)},
 			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
-			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier1")
 	@Test(	description="Verify Extended Update Support content set repos (identified as containing '-eus-') have a non-empty list of modifiedProductIds",
 			groups={"Tier1Tests"},
 			dataProvider="getAllEUSProductContentSetData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyEUSProductContentSetModifiesProducts_Test(Object bugzilla, String eusProductName, String eusProductId, String eusContentSetName, String eusContentSetId, String eusContentSetLabel, List<String> modifiedProductIds) throws JSONException, Exception {
+	public void testEUSProductContentSetsAssertingNonEmptyModifiesProducts(Object bugzilla, String eusProductName, String eusProductId, String eusContentSetName, String eusContentSetId, String eusContentSetLabel, List<String> modifiedProductIds) throws JSONException, Exception {
 		
 		log.info("The following curl request can be used to fetch the Candlepin representation for EUS Content Set '"+eusContentSetName+"': "+eusContentSetLabel);
 		JSONObject jsonContent = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/owners/"+getAllEUSProductContentSetDataAsListOfListsOwnerKey+"/content/"+eusContentSetId));

@@ -20,8 +20,11 @@ import rhsm.data.EntitlementCert;
 import rhsm.data.SubscriptionPool;
 import com.redhat.qe.tools.SSHCommandResult;
 
-import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.DefTypes;
 import com.github.redhatqe.polarize.metadata.TestDefinition;
+import com.github.redhatqe.polarize.metadata.TestType;
+import com.github.redhatqe.polarize.metadata.DefTypes.PosNeg;
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
 
 /**
  * @author jsefler
@@ -32,19 +35,24 @@ import com.github.redhatqe.polarize.metadata.TestDefinition;
  */
 
 
-@Test(groups={"OverconsumptionTests","Tier2Tests"})
+@Test(groups={"OverconsumptionTests"})
 public class OverconsumptionTests extends SubscriptionManagerCLITestScript{
 	
 	
 	// Test Methods ***********************************************************************
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36655", "RHEL7-51495"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36655", "RHEL7-51495"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager: Basic attempt to oversubscribe the pool quantity",
-			groups={},
+			groups={"Tier2Tests"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void BasicAttemptToOversubscribe_Test() throws JSONException, Exception {
+	public void testBasicAttemptToOversubscribe() throws JSONException, Exception {
 	
 		// find the pool with the least positive quantity available >= 2
 		client1tasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, registereeName, null, null, null, null, (String)null, null, null, null, Boolean.TRUE, false, null, null, null, null);
@@ -106,14 +114,19 @@ public class OverconsumptionTests extends SubscriptionManagerCLITestScript{
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-37718", "RHEL7-51496"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-37718", "RHEL7-51496"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager: Concurrent attempt to subscribe",
-			groups={},
-			dependsOnMethods={"BasicAttemptToOversubscribe_Test"},
+			groups={"Tier2Tests"},
+			dependsOnMethods={"testBasicAttemptToOversubscribe"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void ConcurrentAttemptToSubscribe_Test() throws JSONException, Exception {
+	public void testConcurrentAttemptToSubscribe() throws JSONException, Exception {
 		if (client1==null || client2==null) throw new SkipException("This test requires two clients.");
 
 		// reregister the first systemConsumerId and unsubscribe from the test pool
@@ -193,14 +206,19 @@ public class OverconsumptionTests extends SubscriptionManagerCLITestScript{
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-37719", "RHEL7-51497"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-37719", "RHEL7-51497"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager: Concurrent attempt to oversubscribe the pool quantity",
-			groups={"blockedByBug-671195","blockedByBug-1336054"},
-			dependsOnMethods={"ConcurrentAttemptToSubscribe_Test"},
+			groups={"Tier2Tests","blockedByBug-671195","blockedByBug-1336054"},
+			dependsOnMethods={"testConcurrentAttemptToSubscribe"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void ConcurrentAttemptToOversubscribe_Test() throws JSONException, Exception {
+	public void testConcurrentAttemptToOversubscribe() throws JSONException, Exception {
 		if (client1==null || client2==null) throw new SkipException("This test requires two clients.");
 		
 		// reregister the first systemConsumerId and unsubscribe from the test pool

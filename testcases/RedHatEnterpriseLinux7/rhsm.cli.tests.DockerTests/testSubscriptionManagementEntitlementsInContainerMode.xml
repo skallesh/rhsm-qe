@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<testcase id="RHEL7-51757">
+    <title>RHSM-TC : rhsm.cli.tests.DockerTests.testSubscriptionManagementEntitlementsInContainerMode</title>
+    <description>Verify that when in container mode, redhat.repo is populated from the entitlements in /etc/rhsm/entitlement-host</description>
+    <test-steps>
+        <test-step>
+            <test-step-column id="step"/>
+        </test-step>
+    </test-steps>
+    <custom-fields>
+        <custom-field id="caseautomation" content="automated"/>
+        <custom-field id="caseimportance" content="high"/>
+        <custom-field id="caselevel" content="component"/>
+        <custom-field id="caseposneg" content="positive"/>
+        <custom-field id="tags" content="Tier3"/>
+        <custom-field id="casecomponent" content="subscription-manager"/>
+        <custom-field id="testtype" content="functional"/>
+        <custom-field id="subtype1" content="reliability"/>
+        <custom-field id="subtype2" content="-"/>
+    </custom-fields>
+</testcase>

@@ -11,8 +11,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.github.redhatqe.polarize.metadata.DefTypes.PosNeg;
 import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.DefTypes;
 import com.github.redhatqe.polarize.metadata.TestDefinition;
+import com.github.redhatqe.polarize.metadata.TestType;
 
 import org.json.JSONException;
 import org.testng.SkipException;
@@ -50,7 +53,7 @@ import com.redhat.qe.tools.SSHCommandResult;
  */
 
 
-@Test(groups={"ComplianceTests","AcceptanceTests","Tier1Tests"})
+@Test(groups={"ComplianceTests"})
 public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	
 	
@@ -66,14 +69,19 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20064", "RHEL7-51070"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-20064", "RHEL7-51070"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="when a subscription is attached that does not match the system's arch, assert the installed product status is blocked from going green",
-			groups={"cli.tests","VerifyComplianceConsidersSystemArch_Test","blockedByBug-909467"},
+			groups={"Tier1Tests","cli.tests","VerifyComplianceConsidersSystemArch_Test","blockedByBug-909467"},
 			dataProvider="getSubscriptionPoolProvidingProductIdOnArchData",
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void VerifyComplianceConsidersSystemArch_Test(Object bugzilla, SubscriptionPool pool, String providingProductId, String poolArch) {
+	public void testComplianceConsidersSystemArch(Object bugzilla, SubscriptionPool pool, String providingProductId, String poolArch) {
 		clienttasks.deleteFactsFileWithOverridingValues(fakeArchFactsFilename);
 		clienttasks.unsubscribe(true, (BigInteger)null, null, null, null, null, null);
 		//OVERKILL InstalledProduct installedProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", providingProductId, clienttasks.getCurrentlyInstalledProducts());
@@ -204,15 +212,20 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21704", "RHEL7-51071"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21704", "RHEL7-51071"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="subscription-manager: verify the system.compliant fact is True when all installed products are subscribable by more than one common service level",
-			groups={"configureProductCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevel","cli.tests","blockedbyBug-859652","blockedbyBug-1183175"},
+			groups={"Tier1Tests","configureProductCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevel","cli.tests","blockedbyBug-859652","blockedbyBug-1183175"},
 			dataProvider="getAllProductsSubscribableByMoreThanOneCommonServiceLevelValuesData",
 			priority=100,
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void VerifySystemCompliantFactWhenAllProductsSubscribableByMoreThanOneCommonServiceLevel_Test(Object bugzilla, String servicelevel) {
+	public void testSystemCompliantFactWhenAllProductsSubscribableByMoreThanOneCommonServiceLevel(Object bugzilla, String servicelevel) {
 		
 		// test register with service level
 		clienttasks.unregister_(null,null,null, null);
@@ -252,41 +265,56 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		}
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21705", "RHEL7-33096"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21705", "RHEL7-33096"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="rhsm-complianced: verify rhsm-complianced -d -s reports a compliant status when all installed products are subscribable by more than one common service level",
-			groups={"cli.tests","blockedByBug-991580","blockedByBug-1395794"},
-			priority=110,//dependsOnMethods={"VerifySystemCompliantFactWhenAllProductsSubscribableByMoreThanOneCommonServiceLevel_Test"},			
+			groups={"Tier1Tests","cli.tests","blockedByBug-991580","blockedByBug-1395794"},
+			priority=110,//dependsOnMethods={"testSystemCompliantFactWhenAllProductsSubscribableByMoreThanOneCommonServiceLevel"},			
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void VerifyRhsmCompliancedWhenAllProductsSubscribableByMoreThanOneCommonServiceLevel_Test() throws JSONException, Exception {
+	public void testRhsmCompliancedWhenAllProductsSubscribableByMoreThanOneCommonServiceLevel() throws JSONException, Exception {
 		if (!configureProductCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevelCompleted) throw new SkipException("Unsatisfied dependency configureProductCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevelCompleted="+configureProductCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevelCompleted);
 		if (clienttasks.getCurrentlyRegisteredOwnerKey()==null) throw new SkipException("Unsatisfied dependency - expected system to already have been registered during a preceding testcase.");
 		verifyRhsmCompliancedWhenAllProductsAreSubscribable();
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21706", "RHEL7-51072"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21706", "RHEL7-51072"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="when all installed products are subscribable by more than one common service level and system is compliant, auto-subscribe should abort",
-			groups={"cli.tests","blockedByBug-864207"},
-			priority=120,//dependsOnMethods={"VerifySystemCompliantFactWhenAllProductsSubscribableByMoreThanOneCommonServiceLevel_Test"},
+			groups={"Tier1Tests","cli.tests","blockedByBug-864207"},
+			priority=120,//dependsOnMethods={"testSystemCompliantFactWhenAllProductsSubscribableByMoreThanOneCommonServiceLevel"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void VerifyAutoSubscribeAbortsWhenCompliantAndAllProductsSubscribableByMoreThanOneCommonServiceLevel_Test() throws JSONException, Exception {
+	public void testAutoSubscribeAbortsWhenCompliantAndAllProductsSubscribableByMoreThanOneCommonServiceLevel() throws JSONException, Exception {
 		if (!configureProductCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevelCompleted) throw new SkipException("Unsatisfied dependency configureProductCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevelCompleted="+configureProductCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevelCompleted);
 		if (clienttasks.getCurrentlyRegisteredOwnerKey()==null) throw new SkipException("Unsatisfied dependency - expected system to already have been registered during a preceding testcase.");
 		SSHCommandResult result = clienttasks.subscribe(true, null, (List<String>)null, null, null, null, null, null, null, null, null, null, null);
 		Assert.assertTrue(result.getStdout().trim().startsWith(autosubscribeCompliantMessage), "When the system is already compliant, an attempt to auto-subscribe should inform us with exactly this message: "+autosubscribeCompliantMessage);
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21707", "RHEL7-51073"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21707", "RHEL7-51073"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="when the candlepin server goes offline, assert the Installed Product Status is reported from cache",
-			groups={"cli.tests","VerifyListInstalledIsCachedAfterAllProductsSubscribableByMoreThanOneCommonServiceLevel_Test"},
-			priority=130,//dependsOnMethods={"VerifySystemCompliantFactWhenAllProductsSubscribableByMoreThanOneCommonServiceLevel_Test"},
+			groups={"Tier1Tests","cli.tests","VerifyListInstalledIsCachedAfterAllProductsSubscribableByMoreThanOneCommonServiceLevel_Test"},
+			priority=130,//dependsOnMethods={"testSystemCompliantFactWhenAllProductsSubscribableByMoreThanOneCommonServiceLevel"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void VerifyListInstalledIsCachedAfterAllProductsSubscribableByMoreThanOneCommonServiceLevel_Test() throws JSONException, Exception {
+	public void testListInstalledIsCachedAfterAllProductsSubscribableByMoreThanOneCommonServiceLevel() throws JSONException, Exception {
 		if (!configureProductCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevelCompleted) throw new SkipException("Unsatisfied dependency configureProductCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevelCompleted="+configureProductCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevelCompleted);
 		if (clienttasks.getCurrentlyRegisteredOwnerKey()==null) throw new SkipException("Unsatisfied dependency - expected system to already have been registered during a preceding testcase.");
 		verifyListInstalledIsCachedWhenServerGoesOffline();
@@ -298,52 +326,72 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21708", "RHEL7-51074"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21708", "RHEL7-51074"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="subscription-manager: verify the system.compliant fact is True when all installed products are subscribable by one common service level",
-			groups={"configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevel","cli.tests","blockedbyBug-859652","blockedbyBug-1183175"},
+			groups={"Tier1Tests","configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevel","cli.tests","blockedbyBug-859652","blockedbyBug-1183175"},
 			priority=200,
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void VerifySystemCompliantFactWhenAllProductsSubscribableByOneCommonServiceLevel_Test() {
-		VerifySystemCompliantFactWhenAllProductsSubscribableByMoreThanOneCommonServiceLevel_Test(null,allProductsSubscribableByOneCommonServiceLevelValue);
+	public void testSystemCompliantFactWhenAllProductsSubscribableByOneCommonServiceLevel() {
+		testSystemCompliantFactWhenAllProductsSubscribableByMoreThanOneCommonServiceLevel(null,allProductsSubscribableByOneCommonServiceLevelValue);
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21709", "RHEL7-51075"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21709", "RHEL7-51075"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="rhsm-complianced: verify rhsm-complianced -d -s reports a compliant status when all installed products are subscribable by one common service level",
-			groups={"cli.tests","blockedByBug-864383","blockedByBug-865193","blockedByBug-991580","blockedByBug-1395794"},
-			priority=210,//dependsOnMethods={"VerifySystemCompliantFactWhenAllProductsSubscribableByOneCommonServiceLevel_Test"},
+			groups={"Tier1Tests","cli.tests","blockedByBug-864383","blockedByBug-865193","blockedByBug-991580","blockedByBug-1395794"},
+			priority=210,//dependsOnMethods={"testSystemCompliantFactWhenAllProductsSubscribableByOneCommonServiceLevel"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void VerifyRhsmCompliancedWhenAllProductsSubscribableByOneCommonServiceLevel_Test() throws JSONException, Exception {
+	public void testRhsmCompliancedWhenAllProductsSubscribableByOneCommonServiceLevel() throws JSONException, Exception {
 		if (!configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevelCompleted) throw new SkipException("Unsatisfied dependency configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevelCompleted="+configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevelCompleted);
 		if (clienttasks.getCurrentlyRegisteredOwnerKey()==null) throw new SkipException("Unsatisfied dependency - expected system to already have been registered during a preceding testcase.");
 		verifyRhsmCompliancedWhenAllProductsAreSubscribable();
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21710", "RHEL7-51076"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21710", "RHEL7-51076"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="when all installed products are subscribable by one common service level and system is compliant, auto-subscribe should abort",
-			groups={"cli.tests","blockedByBug-864207"},
-			priority=220,//dependsOnMethods={"VerifySystemCompliantFactWhenAllProductsSubscribableByOneCommonServiceLevel_Test"},	
+			groups={"Tier1Tests","cli.tests","blockedByBug-864207"},
+			priority=220,//dependsOnMethods={"testSystemCompliantFactWhenAllProductsSubscribableByOneCommonServiceLevel"},	
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void VerifyAutoSubscribeAbortsWhenCompliantAndAllProductsSubscribableByOneCommonServiceLevel_Test() throws JSONException, Exception {
+	public void testAutoSubscribeAbortsWhenCompliantAndAllProductsSubscribableByOneCommonServiceLevel() throws JSONException, Exception {
 		if (!configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevelCompleted) throw new SkipException("Unsatisfied dependency configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevelCompleted="+configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevelCompleted);
 		if (clienttasks.getCurrentlyRegisteredOwnerKey()==null) throw new SkipException("Unsatisfied dependency - expected system to already have been registered during a preceding testcase.");
 		SSHCommandResult result = clienttasks.subscribe(true, null, (List<String>)null, null, null, null, null, null, null, null, null, null, null);
 		Assert.assertTrue(result.getStdout().trim().startsWith(autosubscribeCompliantMessage), "When the system is already compliant, an attempt to auto-subscribe should inform us with exactly this message: "+autosubscribeCompliantMessage);
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21711", "RHEL7-33084"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21711", "RHEL7-33084"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="when the candlepin server goes offline, assert the Installed Product Status is reported from cache",
-			groups={"cli.tests","VerifyListInstalledIsCachedAfterAllProductsSubscribableByOneCommonServiceLevel_Test"},
-			priority=230,//dependsOnMethods={"VerifySystemCompliantFactWhenAllProductsSubscribableByOneCommonServiceLevel_Test"},
+			groups={"Tier1Tests","cli.tests","VerifyListInstalledIsCachedAfterAllProductsSubscribableByOneCommonServiceLevel_Test"},
+			priority=230,//dependsOnMethods={"testSystemCompliantFactWhenAllProductsSubscribableByOneCommonServiceLevel"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void VerifyListInstalledIsCachedAfterAllProductsSubscribableByOneCommonServiceLevel_Test() throws JSONException, Exception {
+	public void testListInstalledIsCachedAfterAllProductsSubscribableByOneCommonServiceLevel() throws JSONException, Exception {
 		if (!configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevelCompleted) throw new SkipException("Unsatisfied dependency configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevelCompleted="+configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevelCompleted);
 		if (clienttasks.getCurrentlyRegisteredOwnerKey()==null) throw new SkipException("Unsatisfied dependency - expected system to already have been registered during a preceding testcase.");
 		verifyListInstalledIsCachedWhenServerGoesOffline();
@@ -355,14 +403,19 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21712", "RHEL7-51077"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21712", "RHEL7-51077"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="subscription-manager: verify the system.compliant fact is False when some installed products are subscribable",
-			groups={"configureProductCertDirForSomeProductsSubscribable","cli.tests","blockedbyBug-1183175"},
+			groups={"Tier1Tests","configureProductCertDirForSomeProductsSubscribable","cli.tests","blockedbyBug-1183175"},
 			priority=300,
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void VerifySystemCompliantFactWhenSomeProductsAreSubscribable_Test() throws JSONException, Exception {
+	public void testSystemCompliantFactWhenSomeProductsAreSubscribable() throws JSONException, Exception {
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null, null, null, null, Boolean.TRUE, false, null, null, null, null);
 		if (Boolean.valueOf(clienttasks.getFactValue("virt.is_guest"))) clienttasks.mapSystemAsAGuestOfItself();	// to avoid unmapped_guests_only pools
 		Assert.assertFalse(clienttasks.getCurrentlyInstalledProducts().isEmpty(),
@@ -378,14 +431,19 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		}
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21713", "RHEL7-51078"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21713", "RHEL7-51078"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="rhsm-complianced: verify rhsm-complianced -d -s reports a non-compliant status when some installed products are subscribable",
-			groups={"cli.tests","blockedbyBug-723336","blockedbyBug-691480","blockedbyBug-846834","blockedByBug-991580","blockedByBug-1395794"},
-			priority=310,//dependsOnMethods={"VerifySystemCompliantFactWhenSomeProductsAreSubscribable_Test"},
+			groups={"Tier1Tests","cli.tests","blockedbyBug-723336","blockedbyBug-691480","blockedbyBug-846834","blockedByBug-991580","blockedByBug-1395794"},
+			priority=310,//dependsOnMethods={"testSystemCompliantFactWhenSomeProductsAreSubscribable"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void VerifyRhsmCompliancedWhenSomeProductsAreSubscribable_Test() throws JSONException, Exception {
+	public void testRhsmCompliancedWhenSomeProductsAreSubscribable() throws JSONException, Exception {
 		if (!configureProductCertDirForSomeProductsSubscribableCompleted) throw new SkipException("Unsatisfied dependency configureProductCertDirForSomeProductsSubscribableCompleted="+configureProductCertDirForSomeProductsSubscribableCompleted);
 		if (clienttasks.getCurrentlyRegisteredOwnerKey()==null) throw new SkipException("Unsatisfied dependency - expected system to already have been registered during a preceding testcase.");
 		String command = clienttasks.rhsmComplianceD+" -s -d";
@@ -408,14 +466,19 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(sshCommandResult.getStderr().trim(), "", "Stderr from command '"+command+"'");
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21714", "RHEL7-51079"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21714", "RHEL7-51079"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="when some installed products are subscribable and system is NOT compliant, auto-subscribing again should try but not get any new entitlements",
-			groups={"cli.tests","blockedByBug-723044"},
-			priority=320,//dependsOnMethods={"VerifySystemCompliantFactWhenSomeProductsAreSubscribable_Test"},
+			groups={"Tier1Tests","cli.tests","blockedByBug-723044"},
+			priority=320,//dependsOnMethods={"testSystemCompliantFactWhenSomeProductsAreSubscribable"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void VerifyAutoSubscribeAttemptsWhenNotCompliantAndSomeProductsAreSubscribable_Test() throws JSONException, Exception {
+	public void testAutoSubscribeAttemptsWhenNotCompliantAndSomeProductsAreSubscribable() throws JSONException, Exception {
 		if (!configureProductCertDirForSomeProductsSubscribableCompleted) throw new SkipException("Unsatisfied dependency configureProductCertDirForSomeProductsSubscribableCompleted="+configureProductCertDirForSomeProductsSubscribableCompleted);
 		if (clienttasks.getCurrentlyRegisteredOwnerKey()==null) throw new SkipException("Unsatisfied dependency - expected system to already have been registered during a preceding testcase.");
 		List <EntitlementCert> entitlementCertsBefore = clienttasks.getCurrentEntitlementCerts();
@@ -426,14 +489,19 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(entitlementCertsBefore.size(), entitlementCertsAfter.size(), "The number of entitlement certs did not change after an attempt to autosubscribe a second time.");
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21715", "RHEL7-51080"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21715", "RHEL7-51080"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="when the candlepin server goes offline, assert the Installed Product Status is reported from cache",
-			groups={"cli.tests","VerifyListInstalledIsCachedAfterSomeProductsAreSubscribable_Test"},
-			priority=330,//dependsOnMethods={"VerifySystemCompliantFactWhenSomeProductsAreSubscribable_Test"},
+			groups={"Tier1Tests","cli.tests","VerifyListInstalledIsCachedAfterSomeProductsAreSubscribable_Test"},
+			priority=330,//dependsOnMethods={"testSystemCompliantFactWhenSomeProductsAreSubscribable"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void VerifyListInstalledIsCachedAfterSomeProductsAreSubscribable_Test() throws JSONException, Exception {
+	public void testListInstalledIsCachedAfterSomeProductsAreSubscribable() throws JSONException, Exception {
 		if (!configureProductCertDirForSomeProductsSubscribableCompleted) throw new SkipException("Unsatisfied dependency configureProductCertDirForSomeProductsSubscribableCompleted="+configureProductCertDirForSomeProductsSubscribableCompleted);
 		if (clienttasks.getCurrentlyRegisteredOwnerKey()==null) throw new SkipException("Unsatisfied dependency - expected system to already have been registered during a preceding testcase.");
 		verifyListInstalledIsCachedWhenServerGoesOffline();
@@ -445,14 +513,19 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21716", "RHEL7-51081"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21716", "RHEL7-51081"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="subscription-manager: verify the system.compliant fact is True when all installed products are subscribable",
-			groups={"configureProductCertDirForAllProductsSubscribable","cli.tests","blockedbyBug-1183175"},
+			groups={"Tier1Tests","configureProductCertDirForAllProductsSubscribable","cli.tests","blockedbyBug-1183175"},
 			priority=400,
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void VerifySystemCompliantFactWhenAllProductsAreSubscribable_Test() throws JSONException, Exception {
+	public void testSystemCompliantFactWhenAllProductsAreSubscribable() throws JSONException, Exception {
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null, null, null, null, Boolean.TRUE, false, null, null, null, null);
 		if (Boolean.valueOf(clienttasks.getFactValue("virt.is_guest"))) clienttasks.mapSystemAsAGuestOfItself();	// to avoid unmapped_guests_only pools
 		Assert.assertFalse(clienttasks.getCurrentlyInstalledProducts().isEmpty(),
@@ -470,28 +543,38 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		}
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21717", "RHEL7-51082"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21717", "RHEL7-51082"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="rhsm-complianced: verify rhsm-complianced -d -s reports a compliant status when all installed products are subscribable (or an appropriate warning period status if an entitlement is within its warning period status)",
-			groups={"cli.tests","blockedbyBug-723336","blockedByBug-991580","blockedByBug-1395794"},
-			priority=410,//dependsOnMethods={"VerifySystemCompliantFactWhenAllProductsAreSubscribable_Test"},
+			groups={"Tier1Tests","cli.tests","blockedbyBug-723336","blockedByBug-991580","blockedByBug-1395794"},
+			priority=410,//dependsOnMethods={"testSystemCompliantFactWhenAllProductsAreSubscribable"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void VerifyRhsmCompliancedWhenAllProductsAreSubscribable_Test() throws JSONException, Exception {
+	public void testRhsmCompliancedWhenAllProductsAreSubscribable() throws JSONException, Exception {
 		if (!configureProductCertDirForAllProductsSubscribableCompleted) throw new SkipException("Unsatisfied dependency configureProductCertDirForAllProductsSubscribableCompleted="+configureProductCertDirForAllProductsSubscribableCompleted);
 		if (clienttasks.getCurrentlyRegisteredOwnerKey()==null) throw new SkipException("Unsatisfied dependency - expected system to already have been registered during a preceding testcase.");
 		log.info("The success of this test depends on the success of prior test VerifySystemCompliantFactWhenAllProductsAreSubscribable_Test");
 		verifyRhsmCompliancedWhenAllProductsAreSubscribable();
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21718", "RHEL7-51083"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21718", "RHEL7-51083"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="when all installed products are subscribable and system in compliant, auto-subscribe should abort",
-			groups={"cli.tests","blockedByBug-864207"},
-			priority=420,//dependsOnMethods={"VerifySystemCompliantFactWhenAllProductsAreSubscribable_Test"},
+			groups={"Tier1Tests","cli.tests","blockedByBug-864207"},
+			priority=420,//dependsOnMethods={"testSystemCompliantFactWhenAllProductsAreSubscribable"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void VerifyAutoSubscribeAbortsWhenCompliantAndAllProductsAreSubscribable_Test() throws JSONException, Exception {
+	public void testAutoSubscribeAbortsWhenCompliantAndAllProductsAreSubscribable() throws JSONException, Exception {
 		if (!configureProductCertDirForAllProductsSubscribableCompleted) throw new SkipException("Unsatisfied dependency configureProductCertDirForAllProductsSubscribableCompleted="+configureProductCertDirForAllProductsSubscribableCompleted);
 		if (clienttasks.getCurrentlyRegisteredOwnerKey()==null) throw new SkipException("Unsatisfied dependency - expected system to already have been registered during a preceding testcase.");
 		log.info("The success of this test depends on the success of prior test VerifySystemCompliantFactWhenAllProductsAreSubscribable_Test");
@@ -499,14 +582,19 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		Assert.assertTrue(result.getStdout().trim().startsWith(autosubscribeCompliantMessage), "When the system is already compliant, an attempt to auto-subscribe should inform us with exactly this message: "+autosubscribeCompliantMessage);
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21719", "RHEL7-51084"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21719", "RHEL7-51084"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="when the candlepin server goes offline, assert the Installed Product Status is reported from cache",
-			groups={"cli.tests","VerifyListInstalledIsCachedAfterAllProductsSubscribable_Test"},
-			priority=430,//dependsOnMethods={"VerifySystemCompliantFactWhenAllProductsAreSubscribable_Test"},
+			groups={"Tier1Tests","cli.tests","VerifyListInstalledIsCachedAfterAllProductsSubscribable_Test"},
+			priority=430,//dependsOnMethods={"testSystemCompliantFactWhenAllProductsAreSubscribable"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void VerifyListInstalledIsCachedAfterAllProductsSubscribable_Test() throws JSONException, Exception {
+	public void testListInstalledIsCachedAfterAllProductsSubscribable() throws JSONException, Exception {
 		if (!configureProductCertDirForAllProductsSubscribableCompleted) throw new SkipException("Unsatisfied dependency configureProductCertDirForAllProductsSubscribableCompleted="+configureProductCertDirForAllProductsSubscribableCompleted);
 		if (clienttasks.getCurrentlyRegisteredOwnerKey()==null) throw new SkipException("Unsatisfied dependency - expected system to already have been registered during a preceding testcase.");
 		log.info("The success of this test depends on the success of prior test VerifySystemCompliantFactWhenAllProductsAreSubscribable_Test");
@@ -519,14 +607,19 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21720", "RHEL7-51085"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21720", "RHEL7-51085"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="subscription-manager: verify the system.compliant fact is False when no installed products are subscribable",
-			groups={"configureProductCertDirForNoProductsSubscribable","cli.tests","blockedbyBug-1183175"},
+			groups={"Tier1Tests","configureProductCertDirForNoProductsSubscribable","cli.tests","blockedbyBug-1183175"},
 			priority=500,
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void VerifySystemCompliantFactWhenNoProductsAreSubscribable_Test() throws JSONException, Exception {
+	public void testSystemCompliantFactWhenNoProductsAreSubscribable() throws JSONException, Exception {
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null, null, null, null, Boolean.TRUE, false, null, null, null, null);
 		if (Boolean.valueOf(clienttasks.getFactValue("virt.is_guest"))) clienttasks.mapSystemAsAGuestOfItself();	// to avoid unmapped_guests_only pools
 		Assert.assertFalse(clienttasks.getCurrentlyInstalledProducts().isEmpty(),
@@ -544,14 +637,19 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		}
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21721", "RHEL7-51086"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21721", "RHEL7-51086"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="rhsm-complianced: verify rhsm-complianced -d -s reports a non-compliant status when no installed products are subscribable",
-			groups={"cli.tests","blockedbyBug-723336","blockedbyBug-691480","blockedbyBug-846834","blockedByBug-991580","blockedByBug-1395794"},
-			priority=510,//dependsOnMethods={"VerifySystemCompliantFactWhenNoProductsAreSubscribable_Test"},
+			groups={"Tier1Tests","cli.tests","blockedbyBug-723336","blockedbyBug-691480","blockedbyBug-846834","blockedByBug-991580","blockedByBug-1395794"},
+			priority=510,//dependsOnMethods={"testSystemCompliantFactWhenNoProductsAreSubscribable"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void VerifyRhsmCompliancedWhenNoProductsAreSubscribable_Test() throws JSONException, Exception {
+	public void testRhsmCompliancedWhenNoProductsAreSubscribable() throws JSONException, Exception {
 		if (!configureProductCertDirForNoProductsSubscribableCompleted) throw new SkipException("Unsatisfied dependency configureProductCertDirForNoProductsSubscribableCompleted="+configureProductCertDirForNoProductsSubscribableCompleted);
 		if (clienttasks.getCurrentlyRegisteredOwnerKey()==null) throw new SkipException("Unsatisfied dependency - expected system to already have been registered during a preceding testcase.");
 		String command = clienttasks.rhsmComplianceD+" -s -d";
@@ -574,14 +672,19 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(sshCommandResult.getStderr().trim(), "", "Stderr from command '"+command+"'");
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21722", "RHEL7-51087"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21722", "RHEL7-51087"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="when no installed products are subscribable and system is NOT compliant, auto-subscribing again should try but not get any new entitlements",
-			groups={"cli.tests","blockedByBug-723044"},
-			priority=520,//dependsOnMethods={"VerifySystemCompliantFactWhenNoProductsAreSubscribable_Test"},
+			groups={"Tier1Tests","cli.tests","blockedByBug-723044"},
+			priority=520,//dependsOnMethods={"testSystemCompliantFactWhenNoProductsAreSubscribable"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void VerifyAutoSubscribeAttemptsWhenNotCompliantAndNoProductsAreSubscribable_Test() throws JSONException, Exception {
+	public void testAutoSubscribeAttemptsWhenNotCompliantAndNoProductsAreSubscribable() throws JSONException, Exception {
 		if (!configureProductCertDirForNoProductsSubscribableCompleted) throw new SkipException("Unsatisfied dependency configureProductCertDirForNoProductsSubscribableCompleted="+configureProductCertDirForNoProductsSubscribableCompleted);
 		if (clienttasks.getCurrentlyRegisteredOwnerKey()==null) throw new SkipException("Unsatisfied dependency - expected system to already have been registered during a preceding testcase.");
 		List <EntitlementCert> entitlementCertsBefore = clienttasks.getCurrentEntitlementCerts();
@@ -592,14 +695,19 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(entitlementCertsBefore.size(), entitlementCertsAfter.size(), "The number of entitlement certs did not change after an attempt to autosubscribe a second time.");
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21723", "RHEL7-51088"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21723", "RHEL7-51088"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="when the candlepin server goes offline, assert the Installed Product Status is reported from cache",
-			groups={"cli.tests","VerifyListInstalledIsCachedAfterNoProductsAreSubscribable_Test"},
-			priority=530,//dependsOnMethods={"VerifySystemCompliantFactWhenNoProductsAreSubscribable_Test"},
+			groups={"Tier1Tests","cli.tests","VerifyListInstalledIsCachedAfterNoProductsAreSubscribable_Test"},
+			priority=530,//dependsOnMethods={"testSystemCompliantFactWhenNoProductsAreSubscribable"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void VerifyListInstalledIsCachedAfterNoProductsAreSubscribable_Test() throws JSONException, Exception {
+	public void testListInstalledIsCachedAfterNoProductsAreSubscribable() throws JSONException, Exception {
 		if (!configureProductCertDirForNoProductsSubscribableCompleted) throw new SkipException("Unsatisfied dependency configureProductCertDirForNoProductsSubscribableCompleted="+configureProductCertDirForNoProductsSubscribableCompleted);
 		if (clienttasks.getCurrentlyRegisteredOwnerKey()==null) throw new SkipException("Unsatisfied dependency - expected system to already have been registered during a preceding testcase.");
 		verifyListInstalledIsCachedWhenServerGoesOffline();
@@ -611,14 +719,19 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20065", "RHEL7-51089"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-20065", "RHEL7-51089"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="subscription-manager: verify the system.compliant fact is True when no products are installed",
-			groups={"configureProductCertDirForNoProductsInstalled","cli.tests","blockedbyBug-1183175"},
+			groups={"Tier1Tests","configureProductCertDirForNoProductsInstalled","cli.tests","blockedbyBug-1183175"},
 			priority=600,
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void VerifySystemCompliantFactWhenNoProductsAreInstalled_Test() throws JSONException, Exception {
+	public void testSystemCompliantFactWhenNoProductsAreInstalled() throws JSONException, Exception {
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null, null, null, null, Boolean.TRUE, false, null, null, null, null);
 		if (Boolean.valueOf(clienttasks.getFactValue("virt.is_guest"))) clienttasks.mapSystemAsAGuestOfItself();	// to avoid unmapped_guests_only pools
 		Assert.assertTrue(clienttasks.getCurrentlyInstalledProducts().isEmpty(),
@@ -634,14 +747,19 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		}
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20066", "RHEL7-51090"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-20066", "RHEL7-51090"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="rhsm-complianced: verify rhsm-complianced -d -s reports a compliant status when no products are installed (and a warning period status when at least one entitlement cert is within its warning period)",
-			groups={"cli.tests","blockedbyBug-723336","blockedByBug-991580","blockedByBug-1395794"},
-			priority=610,//dependsOnMethods={"VerifySystemCompliantFactWhenNoProductsAreInstalled_Test"},		
+			groups={"Tier1Tests","cli.tests","blockedbyBug-723336","blockedByBug-991580","blockedByBug-1395794"},
+			priority=610,//dependsOnMethods={"testSystemCompliantFactWhenNoProductsAreInstalled"},		
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void VerifyRhsmCompliancedWhenNoProductsAreInstalled_Test() throws JSONException, Exception {
+	public void testRhsmCompliancedWhenNoProductsAreInstalled() throws JSONException, Exception {
 		if (!configureProductCertDirForNoProductsInstalledCompleted) throw new SkipException("Unsatisfied dependency configureProductCertDirForNoProductsInstalledCompleted="+configureProductCertDirForNoProductsInstalledCompleted);
 		if (clienttasks.getCurrentlyRegisteredOwnerKey()==null) throw new SkipException("Unsatisfied dependency - expected system to already have been registered during a preceding testcase.");
 		String command = clienttasks.rhsmComplianceD+" -s -d";
@@ -686,14 +804,19 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20067", "RHEL7-33100"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-20067", "RHEL7-33100"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="when no products are installed, auto-subscribe should abort",
-			groups={"cli.tests","blockedByBug-864207","blockedByBug-962545"},
-			priority=620,//dependsOnMethods={"VerifySystemCompliantFactWhenNoProductsAreInstalled_Test"},
+			groups={"Tier1Tests","cli.tests","blockedByBug-864207","blockedByBug-962545"},
+			priority=620,//dependsOnMethods={"testSystemCompliantFactWhenNoProductsAreInstalled"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void VerifyAutoSubscribeAbortsWhenNoProductsAreInstalled_Test() throws JSONException, Exception {
+	public void testAutoSubscribeAbortsWhenNoProductsAreInstalled() throws JSONException, Exception {
 		if (!configureProductCertDirForNoProductsInstalledCompleted) throw new SkipException("Unsatisfied dependency configureProductCertDirForNoProductsInstalledCompleted="+configureProductCertDirForNoProductsInstalledCompleted);
 		if (clienttasks.getCurrentlyRegisteredOwnerKey()==null) throw new SkipException("Unsatisfied dependency - expected system to already have been registered during a preceding testcase.");
 		SSHCommandResult result = clienttasks.subscribe_(true, null, (List<String>)null, null, null, null, null, null, null, null, null, null, null);
@@ -716,14 +839,19 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21724", "RHEL7-51091"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21724", "RHEL7-51091"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="subscription-manager: verify the system.compliant fact when system is unregistered and has installed products (should be incompliant)",
-			groups={"RHNClassicTests","cli.tests"},
+			groups={"Tier1Tests","RHNClassicTests","cli.tests"},
 			priority=700,
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void VerifySystemCompliantFactWhenUnregistered_Test() {
+	public void testSystemCompliantFactWhenUnregistered() {
 		// unregister
 		clienttasks.unregister(null,null,null, null);
 		configureProductCertDirAfterClass();
@@ -741,14 +869,19 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 				"While at least one product cert is installed and we are NOT registered to RHN Classic, the system should NOT be compliant (see value for fact '"+factNameForSystemCompliance+"').");
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20068", "RHEL7-51092"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-20068", "RHEL7-51092"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="subscription-manager: verify the system.compliant fact when system is already registered to RHN Classic",
-			groups={"RHNClassicTests","cli.tests","blockedByBug-742027"},
-			priority=710,//dependsOnMethods={"VerifySystemCompliantFactWhenUnregistered_Test"},
+			groups={"Tier1Tests","RHNClassicTests","cli.tests","blockedByBug-742027"},
+			priority=710,//dependsOnMethods={"testSystemCompliantFactWhenUnregistered"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void VerifySystemCompliantFactWhenRegisteredToRHNClassic_Test() {
+	public void testSystemCompliantFactWhenRegisteredToRHNClassic() {
 		if (!clienttasks.isPackageInstalled("rhn-client-tools")) throw new SkipException("Cannot be registered to RHN Classic when package rhn-client-tools is not installed.");
 		
 		// simulate registration to RHN Classic by creating a /etc/sysconfig/rhn/systemid
@@ -769,14 +902,19 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		}
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20069", "RHEL7-51093"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-20069", "RHEL7-51093"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="rhsm-complianced: verify rhsm-complianced -d -s reports a compliant status when registered to RHN Classic",
-			groups={"RHNClassicTests","cli.tests","blockedByBug-1395794"},
-			priority=720,//dependsOnMethods={"VerifySystemCompliantFactWhenRegisteredToRHNClassic_Test"},
+			groups={"Tier1Tests","RHNClassicTests","cli.tests","blockedByBug-1395794"},
+			priority=720,//dependsOnMethods={"testSystemCompliantFactWhenRegisteredToRHNClassic"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void VerifyRhsmCompliancedWhenRegisteredToRHNClassic_Test() {
+	public void testRhsmCompliancedWhenRegisteredToRHNClassic() {
 		if (!clienttasks.isPackageInstalled("rhn-client-tools")) throw new SkipException("Cannot be registered to RHN Classic when package rhn-client-tools is not installed.");
 		
 		String command = clienttasks.rhsmComplianceD+" -s --debug";
@@ -793,14 +931,19 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21725", "RHEL7-33103"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21725", "RHEL7-33103"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="subscription-manager: verify the system.compliant fact remains False when all installed products are subscribable in the future",
-			groups={"configureProductCertDirForAllProductsSubscribableInTheFuture","cli.tests","blockedbyBug-737553","blockedbyBug-649068","blockedbyBug-1183175","blockedbyBug-1440180"},
+			groups={"Tier1Tests","configureProductCertDirForAllProductsSubscribableInTheFuture","cli.tests","blockedbyBug-737553","blockedbyBug-649068","blockedbyBug-1183175","blockedbyBug-1440180"},
 			priority=800,
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void VerifySystemCompliantFactWhenAllProductsAreSubscribableInTheFuture_Test() throws JSONException, Exception {
+	public void testSystemCompliantFactWhenAllProductsAreSubscribableInTheFuture() throws JSONException, Exception {
 		List<ProductCert> currentProductCerts = clienttasks.getCurrentProductCerts();
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null, null, null, null, Boolean.TRUE, false, null, null, null, null);
 		if (Boolean.valueOf(clienttasks.getFactValue("virt.is_guest"))) clienttasks.mapSystemAsAGuestOfItself();	// to avoid unmapped_guests_only pools
@@ -858,14 +1001,19 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 				"When a system has products installed for which ALL are covered by future available subscription pools, the system should remain non-compliant (see value for fact '"+factNameForSystemCompliance+"') after having subscribed to every available subscription pool.");
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21726", "RHEL7-51094"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21726", "RHEL7-51094"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="rhsm-complianced: verify rhsm-complianced -d -s reports a non-compliant status when all installed products are subscribable in the future",
-			groups={"cli.tests","blockedByBug-991580","blockedByBug-1395794"},
-			priority=810,//dependsOnMethods={"VerifySystemCompliantFactWhenAllProductsAreSubscribableInTheFuture_Test"},
+			groups={"Tier1Tests","cli.tests","blockedByBug-991580","blockedByBug-1395794"},
+			priority=810,//dependsOnMethods={"testSystemCompliantFactWhenAllProductsAreSubscribableInTheFuture"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void VerifyRhsmCompliancedWhenAllProductsAreSubscribableInTheFuture_Test() throws JSONException, Exception {
+	public void testRhsmCompliancedWhenAllProductsAreSubscribableInTheFuture() throws JSONException, Exception {
 		if (!configureProductCertDirForAllProductsSubscribableInTheFutureCompleted) throw new SkipException("Unsatisfied dependency configureProductCertDirForAllProductsSubscribableInTheFutureCompleted="+configureProductCertDirForAllProductsSubscribableInTheFutureCompleted);
 		if (clienttasks.getCurrentlyRegisteredOwnerKey()==null) throw new SkipException("Unsatisfied dependency - expected system to already have been registered during a preceding testcase.");
 		String command = clienttasks.rhsmComplianceD+" -s -d";
@@ -879,14 +1027,19 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(sshCommandResult.getStderr().trim(), "", "Stderr from command '"+command+"'");
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21727", "RHEL7-51095"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21727", "RHEL7-51095"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="when the candlepin server goes offline, assert the Installed Product Status is reported from cache",
-			groups={"cli.tests","VerifyListInstalledIsCachedAfterAllProductsAreSubscribableInTheFuture_Test"},
-			priority=830,//dependsOnMethods={"VerifySystemCompliantFactWhenAllProductsAreSubscribableInTheFuture_Test"},
+			groups={"Tier1Tests","cli.tests","VerifyListInstalledIsCachedAfterAllProductsAreSubscribableInTheFuture_Test"},
+			priority=830,//dependsOnMethods={"testSystemCompliantFactWhenAllProductsAreSubscribableInTheFuture"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void VerifyListInstalledIsCachedAfterAllProductsAreSubscribableInTheFuture_Test() throws JSONException, Exception {
+	public void testListInstalledIsCachedAfterAllProductsAreSubscribableInTheFuture() throws JSONException, Exception {
 		if (!configureProductCertDirForAllProductsSubscribableInTheFutureCompleted) throw new SkipException("Unsatisfied dependency configureProductCertDirForAllProductsSubscribableInTheFutureCompleted="+configureProductCertDirForAllProductsSubscribableInTheFutureCompleted);
 		if (clienttasks.getCurrentlyRegisteredOwnerKey()==null) throw new SkipException("Unsatisfied dependency - expected system to already have been registered during a preceding testcase.");
 		verifyListInstalledIsCachedWhenServerGoesOffline();

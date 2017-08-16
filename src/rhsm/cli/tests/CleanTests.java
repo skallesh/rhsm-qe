@@ -3,8 +3,12 @@ package rhsm.cli.tests;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.github.redhatqe.polarize.metadata.DefTypes.PosNeg;
 import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.DefTypes;
 import com.github.redhatqe.polarize.metadata.TestDefinition;
+import com.github.redhatqe.polarize.metadata.TestType;
+
 import org.json.JSONException;
 import org.testng.SkipException;
 import org.testng.annotations.AfterClass;
@@ -23,18 +27,23 @@ import com.redhat.qe.tools.SSHCommandResult;
  *
  *
  */
-@Test(groups={"CleanTests","Tier2Tests"})
+@Test(groups={"CleanTests"})
 public class CleanTests extends SubscriptionManagerCLITestScript {
 
 	// Test methods ***********************************************************************
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20022", "RHEL7-51039"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-20022", "RHEL7-51039"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="subscription-manager-cli: clean and verify the identity is removed",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-654429","blockedByBug-962520"},
+			groups={"Tier1Tests","blockedByBug-654429","blockedByBug-962520"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=64178)	// http://gibson.usersys.redhat.com/agilo/ticket/4020
-	public void Clean_Test() {
+	public void testClean() {
 		
 		// Start fresh by unregistering and registering...
 		log.info("Start fresh by unregistering and registering...");
@@ -66,13 +75,18 @@ public class CleanTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20021", "RHEL7-51038"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-20021", "RHEL7-51038"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="subscription-manager: set manage_repos to 0 and assert clean still works.",
 			enabled=true,
-			groups={"AcceptanceTests","Tier1Tests", "blockedByBug-799394", "CleanAfterRhsmManageReposIsConfigured_Test"})
+			groups={"Tier1Tests", "blockedByBug-799394", "CleanAfterRhsmManageReposIsConfigured_Test"})
 	//@ImplementsNitrateTest(caseId=)
-	public void CleanAfterRhsmManageReposIsConfigured_Test() throws JSONException, Exception{
+	public void testCleanAfterRhsmManageReposIsConfigured() throws JSONException, Exception{
 		List<String[]> rhsmManageRepo = new ArrayList<String[]>();
 		for (String value : new String[]{"1","0"}) {
 			rhsmManageRepo.clear();
@@ -85,13 +99,18 @@ public class CleanTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36617", "RHEL7-51428"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-36617", "RHEL7-51428"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="verify redhat.repo file is deleted of after calling subscription-manager clean",
-			groups={"blockedByBug-781510"},
+			groups={"Tier2Tests","blockedByBug-781510"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=) //TODO Find a tcms caseId for
-	public void VerifyRedHatRepoFileIsDeletedAfterClean_Test() {
+	public void testRedHatRepoFileIsDeletedAfterClean() {
 		
 		// Start fresh by registering...
 		log.info("Start fresh by registering...");
@@ -103,13 +122,18 @@ public class CleanTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36618", "RHEL7-51429"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-36618", "RHEL7-51429"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="verify Splice cert/key pair remains after subscription-manager clean",
-			groups={"blockedByBug-1026501"},
+			groups={"Tier2Tests","blockedByBug-1026501"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifySpliceCertsRemainAfterClean_Test() {
+	public void testSpliceCertsRemainAfterClean() {
 		if (clienttasks.isPackageVersion("subscription-manager","<","1.10.14-1")) throw new SkipException("Installed package '"+clienttasks.installedPackageVersionMap.get("subscription-manager")+"' is blockedByBug https://bugzilla.redhat.com/show_bug.cgi?id=1026501 which is fixed in subscription-manager-1.10.14-1.");
 		
 		// Start fresh by registering...

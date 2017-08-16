@@ -28,8 +28,11 @@ import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 
-import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.DefTypes;
 import com.github.redhatqe.polarize.metadata.TestDefinition;
+import com.github.redhatqe.polarize.metadata.TestType;
+import com.github.redhatqe.polarize.metadata.DefTypes.PosNeg;
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
 
 /**
  * @author jsefler
@@ -75,18 +78,23 @@ z9YYKfC1vLxL2wAgMhOCdKZM+Qlu1stb0B/EF3oxc/iZrhDvJLjijbMpphw=
  * Regards, Alex
  * 
  */
-@Test(groups={"ManifestTests","Tier2Tests"})
+@Test(groups={"ManifestTests"})
 public class ManifestTests extends SubscriptionManagerCLITestScript {
 	
 	// Test methods ***********************************************************************
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36647", "RHEL7-51458"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36647", "RHEL7-51458"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="execute rct dump-manifest against all of the test manifest files",
-			groups={"blockedByBug-961124"},
+			groups={"Tier2Tests","blockedByBug-961124"},
 			priority=5, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void RCTDumpManifestTwice_Test() throws Exception {
+	public void testRCTDumpManifestTwice() throws Exception {
 		if (manifestFiles.isEmpty()) throw new SkipException("No manifest files have been loaded.");
 		
 		// execute and assert rct dump-manifest MANIFEST_FILE
@@ -103,14 +111,19 @@ public class ManifestTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36648", "RHEL7-51459"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36648", "RHEL7-51459"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="execute rct dump-manifest against all of the test manifest files",
-			groups={"blockedByBug-919561"},
+			groups={"Tier2Tests","blockedByBug-919561"},
 			dataProvider="ManifestFilesData",
 			priority=10, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void RCTDumpManifest_Test(Object bugzilla, File manifestFile) throws Exception {
+	public void testRCTDumpManifest(Object bugzilla, File manifestFile) throws Exception {
 		
 		// execute and assert rct dump-manifest MANIFEST_FILE
 		RemoteFileTasks.runCommandAndAssert(client, "cd "+manifestFile.getParent()+" && rm -rf consumer_export.zip export signature", 0);
@@ -138,14 +151,19 @@ public class ManifestTests extends SubscriptionManagerCLITestScript {
 		}
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36649", "RHEL7-51478"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36649", "RHEL7-51478"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="execute rct dump-manifest --destination=/tmp/RCTDumpManifestDestination_Test against all of the test manifest files",
-			groups={"blockedByBug-919561"},
+			groups={"Tier2Tests","blockedByBug-919561"},
 			dataProvider="ManifestFilesData",
 			priority=20, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void RCTDumpManifestDestination_Test(Object bugzilla, File manifestFile) throws Exception {
+	public void testRCTDumpManifestDestination(Object bugzilla, File manifestFile) throws Exception {
 		
 		//RemoteFileTasks.runCommandAndAssert(client, "rm -rf "+dumpDestination, Integer.valueOf(0));	// do not do this since we want to use the results in subsequent tests
 		String destination = dumpDestination+File.separator+manifestFile.getName().replaceFirst("\\.zip$", "");	// append another subdirectory for uniqueness
@@ -177,30 +195,40 @@ public class ManifestTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36651", "RHEL7-51483"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36651", "RHEL7-51483"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="execute rct cat-manifest against all of the test manifest files",
-			groups={"blockedByBug-919561","blockedByBug-913720","blockedByBug-967137","blockedByBug-914717"},
-			dependsOnMethods={"RCTDumpManifestDestination_Test"}, // to populate manifestFileContentMap
+			groups={"Tier2Tests","blockedByBug-919561","blockedByBug-913720","blockedByBug-967137","blockedByBug-914717"},
+			dependsOnMethods={"testRCTDumpManifestDestination"}, // to populate manifestFileContentMap
 			alwaysRun=true,	// run even when there are failures or skips in RCTDumpManifestDestination_Test
 			dataProvider="ManifestFilesData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void RCTCatManifest_Test(Object bugzilla, File manifestFile) throws Exception {
+	public void testRCTCatManifest(Object bugzilla, File manifestFile) throws Exception {
 		verifyRCTCatManifestWithOptions(manifestFile, null);
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36650", "RHEL7-74911"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36650", "RHEL7-74911"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="execute rct cat-manifest with --no-content option against all of the test manifest files",
-			groups={"blockedByBug-1336883"},
-			dependsOnMethods={"RCTDumpManifestDestination_Test"}, // to populate manifestFileContentMap
+			groups={"Tier2Tests","blockedByBug-1336883"},
+			dependsOnMethods={"testRCTDumpManifestDestination"}, // to populate manifestFileContentMap
 			alwaysRun=true,	// run even when there are failures or skips in RCTDumpManifestDestination_Test
 			dataProvider="ManifestFilesData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void RCTCatManifestNoContent_Test(Object bugzilla, File manifestFile) throws Exception {
+	public void testRCTCatManifestNoContent(Object bugzilla, File manifestFile) throws Exception {
 		if (clienttasks.isPackageVersion("subscription-manager","<","1.17.10-1")) { // RHEL7.3 commit 860b178e0eb5b91df01c424dad29c521e1c23767  Bug 1336883 - [RFE] Update the 'rct' command to allow not outputting content-set data
 			throw new SkipException("This  version of subscription-manager does not include the --no-content option.  (RFE Bug 1336883 was first inc1uded in subscription-manager-1.17.10-1)");
 		}
@@ -208,13 +236,18 @@ public class ManifestTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36645", "RHEL7-51456"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36645", "RHEL7-51456"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="execute rct cat-manifest against a non-zip file (e.g. the identity cert)",
-			groups={"blockedByBug-994344"},
+			groups={"Tier2Tests","blockedByBug-994344"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void RCTCatManifestWithNonZipFile_Test() {
+	public void testRCTCatManifestWithNonZipFile() {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg);
 		
 		// execute and assert rct cat-manifest against the consumer cert pem file
@@ -225,13 +258,18 @@ public class ManifestTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36646", "RHEL7-51457"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36646", "RHEL7-51457"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="execute rct dump-manifest against a non-zip file (e.g. the identity cert)",
-			groups={"blockedByBug-994344"},
+			groups={"Tier2Tests","blockedByBug-994344"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void RCTDumpManifestWithNonZipFile_Test() {
+	public void testRCTDumpManifestWithNonZipFile() {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg);
 		
 		// execute and assert rct dump-manifest against the consumer cert pem file

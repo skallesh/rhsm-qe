@@ -21,25 +21,28 @@ import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 import com.redhat.qe.tools.SSHCommandRunner;
 
-import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.DefTypes;
 import com.github.redhatqe.polarize.metadata.TestDefinition;
+import com.github.redhatqe.polarize.metadata.TestType;
+import com.github.redhatqe.polarize.metadata.DefTypes.PosNeg;
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
 
 /**
  * @author jsefler
  *
  *
  */
-@Test(groups={"RhsmDebugTests","Tier2Tests"})
+@Test(groups={"RhsmDebugTests"})
 public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 
 	
 	// Test methods ***********************************************************************
 	
 	@Test(	description="attempt to call rhsm-debug system without being registered",
-			groups={"blockedByBug-1039653"},
+			groups={"Tier2Tests","blockedByBug-1039653"},
 			enabled=false)	// already covered by a dataProvider row in GeneralTests.getNegativeFunctionalityDataAsListOfLists()
 	//@ImplementsNitrateTest(caseId=)
-	public void RhsmDebugSystemWithoutBeingRegistered_Test() {
+	public void testRhsmDebugSystemWithoutBeingRegistered() {
 		
 		// make sure we are not registered
 		clienttasks.unregister_(null, null, null, null);
@@ -55,26 +58,36 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20112", "RHEL7-51116"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20112", "RHEL7-51116"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="after registering and subscribing, call rhsm-debug system and verify the expected contents of the written debug file",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1038206","blockedByBug-1040338","blockedByBug-1060727","blockedByBug-1070737","blockedByBug-1070737","blockedByBug-1039653"},
+			groups={"Tier1Tests","blockedByBug-1038206","blockedByBug-1040338","blockedByBug-1060727","blockedByBug-1070737","blockedByBug-1070737","blockedByBug-1039653"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
-	public void RhsmDebugSystem_Test() {
+	public void testRhsmDebugSystem() {
 		
 		// run the rhsmDebugSystemTest with no options
 		verifyRhsmDebugSystemTestWithOptions(null,null, null, null, null);
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36659", "RHEL7-51505"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36659", "RHEL7-51505"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="after registering and subscribing, call rhsm-debug system with --no-archive option and verify the results",
-			groups={"blockedByBug-1060730","blockedByBug-1060727","blockedByBug-1070737","blockedByBug-1039653"},
+			groups={"Tier2Tests","blockedByBug-1060730","blockedByBug-1060727","blockedByBug-1070737","blockedByBug-1039653"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
-	public void RhsmDebugSystemWithNoArchive_Test() {
+	public void testRhsmDebugSystemWithNoArchive() {
 		
 		// run the rhsmDebugSystemTest with --no-archive
 		verifyRhsmDebugSystemTestWithOptions(null,true, null, null, null);
@@ -84,13 +97,18 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36658", "RHEL7-51504"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36658", "RHEL7-51504"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="after registering and subscribing, call rhsm-debug system with --destination option and verify the results",
-			groups={"blockedByBug-1040338","blockedByBug-1060727","blockedByBug-1070737","blockedByBug-1039653"},
+			groups={"Tier2Tests","blockedByBug-1040338","blockedByBug-1060727","blockedByBug-1070737","blockedByBug-1039653"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
-	public void RhsmDebugSystemWithDestination_Test() {
+	public void testRhsmDebugSystemWithDestination() {
 		
 		// create a valid destination directory
 		SSHCommandResult result = client.runCommandAndWait("echo $HOME");
@@ -105,26 +123,36 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36664", "RHEL7-51510"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36664", "RHEL7-51510"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="after registering and subscribing, call rhsm-debug system with --sos option and verify the results",
-			groups={"blockedByBug-1040338","blockedByBug-1060727","blockedByBug-1070737","blockedByBug-1039653"},
+			groups={"Tier2Tests","blockedByBug-1040338","blockedByBug-1060727","blockedByBug-1070737","blockedByBug-1039653"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
-	public void RhsmDebugSystemWithSos_Test() {
+	public void testRhsmDebugSystemWithSos() {
 		
 		// run the rhsmDebugSystemTest with --sos
 		verifyRhsmDebugSystemTestWithOptions(null,null, true, null, null);
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36660", "RHEL7-51506"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36660", "RHEL7-51506"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="after registering and subscribing, call rhsm-debug system with --no-subscriptions option and verify the results",
-			groups={"blockedByBug-1114117"},
+			groups={"Tier2Tests","blockedByBug-1114117"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
-	public void RhsmDebugSystemWithNoSubscriptions_Test() {
+	public void testRhsmDebugSystemWithNoSubscriptions() {
 		if (clienttasks.isPackageVersion("subscription-manager","<","1.12.7-1")) throw new SkipException("rhsm-debug system --no-subscriptions is applicable in versions >= subscription-manager-1.12.7-1");
 		
 		// run the rhsmDebugSystemTest with --no-subscriptions
@@ -132,13 +160,18 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36666", "RHEL7-51512"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36666", "RHEL7-51512"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="after registering and subscribing, call rhsm-debug system with --subscriptions option and verify the results",
-			groups={"blockedByBug-1246680"},
+			groups={"Tier2Tests","blockedByBug-1246680"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
-	public void RhsmDebugSystemWithSubscriptions_Test() {
+	public void testRhsmDebugSystemWithSubscriptions() {
 		if (clienttasks.isPackageVersion("subscription-manager","<","1.14.1-1")) throw new SkipException("rhsm-debug system --subscriptions is applicable in versions >= subscription-manager-1.14.1-1");
 		
 		// run the rhsmDebugSystemTest with --subscriptions
@@ -146,13 +179,18 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36665", "RHEL7-51511"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36665", "RHEL7-51511"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="after registering and subscribing, call rhsm-debug system with --subscriptions option and verify the results",
-			groups={"blockedByBug-1194906","blockedByBug-1246680"},
+			groups={"Tier2Tests","blockedByBug-1194906","blockedByBug-1246680"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
-	public void RhsmDebugSystemWithSubscriptionsAndNoSubscriptions_Test() {
+	public void testRhsmDebugSystemWithSubscriptionsAndNoSubscriptions() {
 		if (clienttasks.isPackageVersion("subscription-manager","<","1.15.9-12")) throw new SkipException("rhsm-debug system --subscriptions --no-subscriptions was not fixed until versions >= subscription-manager-1.15.9-12");
 		
 		// mark the log file
@@ -174,13 +212,18 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36657", "RHEL7-51503"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36657", "RHEL7-51503"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="after registering and subscribing, call rhsm-debug system with both --no-archive and --destination option and verify the results",
-			groups={"blockedByBug-1040338","blockedByBug-1060727","blockedByBug-1070737","blockedByBug-1039653"},
+			groups={"Tier2Tests","blockedByBug-1040338","blockedByBug-1060727","blockedByBug-1070737","blockedByBug-1039653"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
-	public void RhsmDebugSystemWithDestinationAndNoArchive_Test() {
+	public void testRhsmDebugSystemWithDestinationAndNoArchive() {
 		
 		// create a valid destination directory
 		SSHCommandResult result = client.runCommandAndWait("echo $HOME");
@@ -195,13 +238,18 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36663", "RHEL7-51509"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36663", "RHEL7-51509"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="after registering, call rhsm-debug system with a non-existent --destination option",
-			groups={"blockedByBug-1039653"},
+			groups={"Tier2Tests","blockedByBug-1039653"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
-	public void RhsmDebugSystemWithNonExistentDestination_Test() {
+	public void testRhsmDebugSystemWithNonExistentDestination() {
 		
 		// establish a non-existent destination directory
 		String destination = "/tmp/rhsmDebugNonExistantDestination/";	// this directory should NOT exist
@@ -221,13 +269,18 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36656", "RHEL7-51502"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36656", "RHEL7-51502"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="after registering, call rhsm-debug system with a bad (already existing as a file) --destination option",
-			groups={"blockedByBug-1070737","blockedByBug-1039653","blockedByBug-1093382"},
+			groups={"Tier2Tests","blockedByBug-1070737","blockedByBug-1039653","blockedByBug-1093382"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
-	public void RhsmDebugSystemWithBadDestination_Test() {
+	public void testRhsmDebugSystemWithBadDestination() {
 		
 		// establish a bad destination
 		String destination = "/tmp/foo";	// create this as a file
@@ -256,13 +309,18 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36661", "RHEL7-51507"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36661", "RHEL7-51507"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="exercise the rhsm-debug tool with non-default configurations for consumerCertDir entitlementCertDir and productCertDir",
-			groups={"RhsmDebugSystemWithNonDefaultCertDirs1_Test","blockedByBug-1040546","blockedByBug-1060727","blockedByBug-1070737","blockedByBug-1039653"},
+			groups={"Tier2Tests","RhsmDebugSystemWithNonDefaultCertDirs1_Test","blockedByBug-1040546","blockedByBug-1060727","blockedByBug-1070737","blockedByBug-1039653"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
-	public void RhsmDebugSystemWithNonDefaultCertDirs1_Test() {
+	public void testRhsmDebugSystemWithNonDefaultCertDirs1() {
 		clienttasks.unregister_(null, null, null, null);	// to ensure a prior consumer is cleaned before we change the rhsm configuration 
 		
 		List<File> originalProductCertFiles = getRandomSubsetOfList(clienttasks.getCurrentProductCertFiles(),2);	// 2 is sufficient
@@ -303,13 +361,18 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36662", "RHEL7-51508"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36662", "RHEL7-51508"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="exercise the rhsm-debug tool with non-default configurations for ca_cert_dir pluginDir pluginConfDir",
-			groups={"RhsmDebugSystemWithNonDefaultCertDirs2_Test","blockedByBug-1055664","blockedByBug-1060727","blockedByBug-1070737","blockedByBug-1039653"},
+			groups={"Tier2Tests","RhsmDebugSystemWithNonDefaultCertDirs2_Test","blockedByBug-1055664","blockedByBug-1060727","blockedByBug-1070737","blockedByBug-1039653"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
-	public void RhsmDebugSystemWithNonDefaultCertDirs2_Test() {
+	public void testRhsmDebugSystemWithNonDefaultCertDirs2() {
 		
 		// remember the original configurations
 		/* already taken care of in saveOriginalCertDirConfigurationsBeforeClass

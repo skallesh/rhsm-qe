@@ -9,8 +9,12 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
 
-import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.DefTypes;
 import com.github.redhatqe.polarize.metadata.TestDefinition;
+import com.github.redhatqe.polarize.metadata.TestType;
+import com.github.redhatqe.polarize.metadata.DefTypes.PosNeg;
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -30,18 +34,23 @@ import rhsm.data.SubscriptionPool;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandRunner;
 
-@Test(groups={"ExpirationTests","Tier2Tests"})
+@Test(groups={"ExpirationTests"})
 public class ExpirationTests extends SubscriptionManagerCLITestScript {
 
 	
 	// Test methods ***********************************************************************
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36638", "RHEL7-51448"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36638", "RHEL7-51448"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscribe to a pool that will expire soon and assert the entitlements are removed after it expires",
-			groups={"blockedByBug-655835","blockedByBug-660713","blockedByBug-854312","blockedByBug-907638","blockedByBug-994266"}, dependsOnGroups={},
+			groups={"Tier2Tests","blockedByBug-655835","blockedByBug-660713","blockedByBug-854312","blockedByBug-907638","blockedByBug-994266"}, dependsOnGroups={},
 			enabled=true)
-	public void VerifyEntitlementsAfterSubscriptionExpires_Test() throws Exception{
+	public void testEntitlementsAfterSubscriptionExpires() throws Exception{
 		clienttasks.restart_rhsmcertd(certFrequency, null, true);
 
 		// create a subscription pool that will expire 2 minutes from now
@@ -123,9 +132,9 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Verify expired entitlement is added to the certifiate revocation list after the subscription expires",
-			groups={}, dependsOnMethods={"VerifyEntitlementsAfterSubscriptionExpires_Test"},
+			groups={"Tier2Tests"}, dependsOnMethods={"testEntitlementsAfterSubscriptionExpires"},
 			enabled=false)	// TODO Review the validity of this testcase with development (Current behavior is that expiringCert is NOT actually added to list of RevokedCerts.  Instead they remain on the system for acknowledgment and manual removal)
-	public void VerifyExpiredEntitlementIsAddedToCertificateRevocationList_Test() throws Exception{
+	public void testExpiredEntitlementIsAddedToCertificateRevocationList() throws Exception{
 		if (expiringCert==null) throw new SkipException("This test requires a successful run of a prior test whose entitlement cert has expired."); 
 
 		log.info("Check the CRL list on the server and verify the expired entitlement cert serial is revoked...");
@@ -141,12 +150,17 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-37710", "RHEL7-51450"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-37710", "RHEL7-51450"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="assert that a soon to expire pool is removed from availablity after it expires",
-			groups={}, dependsOnGroups={},
+			groups={"Tier2Tests"}, dependsOnGroups={},
 			enabled=true)
-	public void VerifyPoolIsRemovedAfterSubscriptionExpires_Test() throws Exception {
+	public void testPoolIsRemovedAfterSubscriptionExpires() throws Exception {
 		
 		// create a subscription pool that will expire 2 minutes from now
 		int endingMinutesFromNow = 2;
@@ -165,12 +179,17 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-37709", "RHEL7-51449"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-37709", "RHEL7-51449"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="assert that a soon to be available pool is not yet available",
-			groups={}, dependsOnGroups={},
+			groups={"Tier2Tests"}, dependsOnGroups={},
 			enabled=true)
-	public void VerifyPoolIsNotYetAvailableUntilTheStartDate_Test() throws Exception {
+	public void testPoolIsNotYetAvailableUntilTheStartDate() throws Exception {
 		
 		// create a subscription pool that will start 2 minutes from now
 		int startingMinutesFromNow = 3;

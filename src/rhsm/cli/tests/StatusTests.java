@@ -23,14 +23,17 @@ import com.redhat.qe.auto.bugzilla.BzChecker;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 
-import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.DefTypes;
 import com.github.redhatqe.polarize.metadata.TestDefinition;
+import com.github.redhatqe.polarize.metadata.TestType;
+import com.github.redhatqe.polarize.metadata.DefTypes.PosNeg;
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
 
 /**
  *  @author jsefler
  *
  */
-@Test(groups={"StatusTests","Tier2Tests"})
+@Test(groups={"StatusTests"})
 public class StatusTests extends SubscriptionManagerCLITestScript{
 	
 	
@@ -38,10 +41,10 @@ public class StatusTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="when subscription-manager is run with no args, it should default to the status module",
-			groups={},
+			groups={"Tier2Tests"},
 			enabled=false)	// this test was invalided by Bug 974123 - subscription-manager defaults to status and not to help
 			//@ImplementsNitrateTest(caseId=)
-	public void StatusIsTheDefault_Test() {
+	public void testStatusIsTheDefault() {
 		String overallStatusLabel = "Overall Status:";
 		clienttasks.unregister(null,null,null, null);
 		SSHCommandResult defaultResult = RemoteFileTasks.runCommandAndAssert(client,clienttasks.command,Integer.valueOf(0));
@@ -55,13 +58,18 @@ public class StatusTests extends SubscriptionManagerCLITestScript{
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36569", "RHEL7-51357"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36569", "RHEL7-51357"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="run subscription-manager status without being registered; status should be Unknown",
-			groups={},
+			groups={"Tier2Tests"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
-	public void StatusWithoutBeingRegistered_Test() {
+	public void testStatusWithoutBeingRegistered() {
 		SSHCommandResult statusResult;
 		clienttasks.unregister(null,null,null, null);
 		statusResult = clienttasks.status(null, null, null, null, null);
@@ -78,13 +86,18 @@ public class StatusTests extends SubscriptionManagerCLITestScript{
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-19969", "RHEL7-51008"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-19969", "RHEL7-51008"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="run subscription-manager status when registered without entitlements",
-			groups={"AcceptanceTests","Tier1Tests"},
+			groups={"Tier1Tests"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
-	public void StatusWhileRegisteredWithoutEntitlements_Test() {
+	public void testStatusWhileRegisteredWithoutEntitlements() {
 		int numberOfInstalledProducts = clienttasks.getCurrentProductCertFiles().size();
 		SSHCommandResult statusResult;
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
@@ -125,13 +138,18 @@ public class StatusTests extends SubscriptionManagerCLITestScript{
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-19968", "RHEL7-51007"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-19968", "RHEL7-51007"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="run subscription-manager status when registered with entitlements",
-			groups={"AcceptanceTests","Tier1Tests", "blockedByBug-958827","StatusWhileRegisteredWithEntitlements_Test"},
+			groups={"Tier1Tests", "blockedByBug-958827","StatusWhileRegisteredWithEntitlements_Test"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
-	public void StatusWhileRegisteredWithEntitlements_Test() throws JSONException, Exception {
+	public void testStatusWhileRegisteredWithEntitlements() throws JSONException, Exception {
 		SSHCommandResult statusResult;
 		// override the system facts setting the attribute count to a value for which all the stackable subscriptions are needed to achieve compliance
 		Map<String,String> factsMap = new HashMap<String,String>();
@@ -342,13 +360,18 @@ public class StatusTests extends SubscriptionManagerCLITestScript{
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-19967", "RHEL7-33081"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-19967", "RHEL7-33081"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="run subscription-manager status ondate (tomorrow and a future date after one of today's entitlements expire)",
-			groups={"AcceptanceTests","Tier1Tests"},
+			groups={"Tier1Tests"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
-	public void StatusOnFutureDate_Test() throws JSONException, Exception {
+	public void testStatusOnFutureDate() throws JSONException, Exception {
 		if (clienttasks.isPackageVersion("subscription-manager","<","1.9.2-1")) throw new SkipException("Installed package '"+clienttasks.installedPackageVersionMap.get("subscription-manager")+"' does not support status --ondate option.  It was introduced in subscription-manager-1.9.2-1.");
 		
 		// register with autosubscribe to establish today's status
@@ -408,13 +431,18 @@ public class StatusTests extends SubscriptionManagerCLITestScript{
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36568", "RHEL7-51356"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36568", "RHEL7-51356"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="run subscription-manager status ondate (yesterday)",
-			groups={"blockedByBug-1092594"},
+			groups={"Tier2Tests","blockedByBug-1092594"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
-	public void StatusOnPastDate_Test() throws JSONException, Exception {
+	public void testStatusOnPastDate() throws JSONException, Exception {
 		if (clienttasks.isPackageVersion("subscription-manager","<","1.9.2-1")) throw new SkipException("Installed package '"+clienttasks.installedPackageVersionMap.get("subscription-manager")+"' does not support status --ondate option.  It was introduced in subscription-manager-1.9.2-1.");
 		
 		// get yeterday's status
@@ -435,13 +463,18 @@ public class StatusTests extends SubscriptionManagerCLITestScript{
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36567", "RHEL7-51355"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36567", "RHEL7-51355"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="run subscription-manager status ondate (invalid)",
-			groups={},
+			groups={"Tier2Tests"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
-	public void StatusOnInvalidDate_Test() throws JSONException, Exception {
+	public void testStatusOnInvalidDate() throws JSONException, Exception {
 		if (clienttasks.isPackageVersion("subscription-manager","<","1.9.2-1")) throw new SkipException("Installed package '"+clienttasks.installedPackageVersionMap.get("subscription-manager")+"' does not support status --ondate option.  It was introduced in subscription-manager-1.9.2-1.");
 		
 		// call status with an invalid ondate

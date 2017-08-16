@@ -22,7 +22,10 @@ import rhsm.cli.tasks.CandlepinTasks;
 import rhsm.data.EntitlementCert;
 import rhsm.data.SubscriptionPool;
 
+import com.github.redhatqe.polarize.metadata.DefTypes;
 import com.github.redhatqe.polarize.metadata.TestDefinition;
+import com.github.redhatqe.polarize.metadata.TestType;
+import com.github.redhatqe.polarize.metadata.DefTypes.PosNeg;
 import com.github.redhatqe.polarize.metadata.DefTypes.Project;
 
 /**
@@ -30,19 +33,25 @@ import com.github.redhatqe.polarize.metadata.DefTypes.Project;
  * </BR>
  * These tests target subscriptions that do not provide any products, but instead are intended to grant an entitlement to a server-side function such as a Management Add-On.
  */
-@Test(groups={"ManagementAddOnTests","Tier2Tests"})
+@Test(groups={"ManagementAddOnTests"})
 public class ManagementAddOnTests extends SubscriptionManagerCLITestScript {
 
 	
 	// Test methods ***********************************************************************
 
-    @TestDefinition(projectID={Project.RHEL6}, testCaseID={"RHEL6-27127"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-27127", "RHEL7-51412"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags="Tier2")
 	@Test(	description="verify that the entitlement cert granted by subscribing to a management add-on product does not contain a content namespace.",
-			groups={},
+			groups={"Tier2Tests"},
 			dependsOnGroups={},
 			dataProvider="getAddOnSubscriptionData",
 			enabled=true)
-	public void VerifyManagementAddOnEntitlementsContainNoContentNamespace (Object bugzilla, SubscriptionPool managementAddOnPool) {
+	public void testManagementAddOnEntitlementsContainNoContentNamespace (Object bugzilla, SubscriptionPool managementAddOnPool) {
 		
 		// subscribe to a management add-on pool
 		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(clienttasks.subscribeToSubscriptionPool(managementAddOnPool,sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl));
@@ -52,13 +61,19 @@ public class ManagementAddOnTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition(projectID={Project.RHEL6}, testCaseID={"RHEL6-27128"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-27128", "RHEL7-51413"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags="Tier2")
 	@Test(	description="verify that the entitlement cert granted by subscribing to a management add-on product does not contain a product namespace.",
-			groups={},
+			groups={"Tier2Tests"},
 			dependsOnGroups={},
 			dataProvider="getAddOnSubscriptionData",
 			enabled=true)
-	public void VerifyManagementAddOnEntitlementsContainNoProductNamespace (Object bugzilla, SubscriptionPool managementAddOnPool) {
+	public void testManagementAddOnEntitlementsContainNoProductNamespace (Object bugzilla, SubscriptionPool managementAddOnPool) {
 		
 		// subscribe to a management add-on pool
 		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(clienttasks.subscribeToSubscriptionPool(managementAddOnPool,sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl));
@@ -79,7 +94,6 @@ public class ManagementAddOnTests extends SubscriptionManagerCLITestScript {
 	@BeforeClass(groups="setup")
 	public void registerBeforeClass() throws Exception {
 		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, Boolean.TRUE, false, null, null, null, null));
-//		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(serverHostname, serverPort, serverPrefix, clientusername, clientpassword, consumerId);
 	}
 	
 	@AfterClass(groups="setup")
@@ -90,13 +104,10 @@ public class ManagementAddOnTests extends SubscriptionManagerCLITestScript {
 	
 	// protected methods ***********************************************************************
 	
-//	protected String ownerKey = "";
-
 	
 	
 	
 	// Data Providers ***********************************************************************
-	
 	
 	@DataProvider(name="getAddOnSubscriptionData")
 	public Object[][] getAddOnSubscriptionDataAs2dArray() throws JSONException, Exception {

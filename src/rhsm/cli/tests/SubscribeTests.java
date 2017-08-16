@@ -43,28 +43,36 @@ import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 
-import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.DefTypes;
 import com.github.redhatqe.polarize.metadata.TestDefinition;
+import com.github.redhatqe.polarize.metadata.TestType;
+import com.github.redhatqe.polarize.metadata.DefTypes.PosNeg;
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
 
 /**
  * @author ssalevan
  * @author jsefler
  *
  */
-@Test(groups={"SubscribeTests","Tier2Tests"})
+@Test(groups={"SubscribeTests"})
 public class SubscribeTests extends SubscriptionManagerCLITestScript{
 
 	// Test methods ***********************************************************************
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-19980", "RHEL7-33092"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-19980", "RHEL7-33092"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="subscription-manager-cli: subscribe consumer to subscription pool product id",	//; and assert the subscription pool is not available when it does not match the system hardware.",
 			dataProvider="getAllSystemSubscriptionPoolProductData",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-660713","blockedByBug-806986","blockedByBug-878986","blockedByBug-962520","blockedByBug-1008647","blockedByBug-1009600","blockedByBug-996993"},
+			groups={"Tier1Tests","blockedByBug-660713","blockedByBug-806986","blockedByBug-878986","blockedByBug-962520","blockedByBug-1008647","blockedByBug-1009600","blockedByBug-996993"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void SubscribeToSubscriptionPoolProductId_Test(String productId, JSONArray bundledProductDataAsJSONArray) throws Exception {
+	public void testSubscribeToSubscriptionPoolProductId(String productId, JSONArray bundledProductDataAsJSONArray) throws Exception {
 ///*debugTesting*/ if (!productId.equals("awesomeos-ul-quantity-virt")) throw new SkipException("debugTesting - Automator should comment out this line."); 		
 ///*debugTesting*/ if (!productId.equals("awesomeos-onesocketib")) throw new SkipException("debugTesting - Automator should comment out this line."); 		
 ///*debugTesting*/ if (!productId.equals("awesomeos-virt-4")) throw new SkipException("debugTesting - Automator should comment out this line."); 		
@@ -404,12 +412,12 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager-cli: subscribe consumer to an entitlement using product ID",
-			groups={"blockedByBug-584137"},
+			groups={"Tier2Tests","blockedByBug-584137"},
 			dataProvider="getAvailableSubscriptionPoolsData",
 			enabled=false)	// Subscribing to a Subscription Pool using --product Id has been removed in subscription-manager-0.71-1.el6.i686.)
 	@ImplementsNitrateTest(caseId=41680)
 	@Deprecated
-	public void SubscribeToValidSubscriptionsByProductID_Test_DEPRECATED(SubscriptionPool pool){
+	public void testSubscribeToValidSubscriptionsByProductId_DEPRECATED(SubscriptionPool pool){
 //		sm.unsubscribeFromEachOfTheCurrentlyConsumedProductSubscriptions();
 //		sm.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
 		clienttasks.subscribeToSubscriptionPoolUsingProductId(pool);
@@ -417,10 +425,10 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager-cli: subscribe consumer to an entitlement using product ID",
-			groups={"blockedByBug-584137"},
+			groups={"Tier2Tests","blockedByBug-584137"},
 			enabled=false)	// old/disabled test from ssalevan
 	@Deprecated
-	public void SubscribeToASingleEntitlementByProductID_Test_DEPRECATED(){
+	public void testSubscribeToASingleEntitlementByProductId_DEPRECATED(){
 		clienttasks.unsubscribeFromTheCurrentlyConsumedProductSubscriptionSerialsIndividually();
 		SubscriptionPool MCT0696 = new SubscriptionPool("MCT0696", "696");
 		MCT0696.addProductID("Red Hat Directory Server");
@@ -433,15 +441,20 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-27120", "RHEL7-51381"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-27120", "RHEL7-51381"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager-cli: subscribe consumer to an entitlement using pool ID",
-			groups={"Tier0Tests","blockedByBug-584137"},
+			groups={"Tier0Tests","Tier2Tests","blockedByBug-584137"},
 			//dataProvider="getAvailableSubscriptionPoolsData",	// very thorough, but takes too long to execute and rarely finds more bugs
 			dataProvider="getRandomSubsetOfAvailableSubscriptionPoolsData",
 			enabled=true)
 	@ImplementsNitrateTest(caseId=41686)
-	public void SubscribeToValidSubscriptionsByPoolID_Test(SubscriptionPool pool){
+	public void testSubscribeToValidSubscriptionsByPoolId(SubscriptionPool pool){
 // non-dataProvided test procedure
 //		sm.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 //		sm.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
@@ -450,11 +463,11 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager-cli: subscribe consumer to each available subscription pool using pool ID",
-			groups={"blockedByBug-584137"},
+			groups={"Tier2Tests","blockedByBug-584137"},
 			dataProvider="getGoodRegistrationData",
 			enabled=false)	// 6/9/2014 - takes way too long to run and has never revealed a bug
 	@ImplementsNitrateTest(caseId=41686)
-	public void SubscribeConsumerToEachAvailableSubscriptionPoolUsingPoolId_Test(String username, String password, String owner){
+	public void testSubscribeConsumerToEachAvailableSubscriptionPoolUsingPoolId(String username, String password, String owner){
 		clienttasks.unregister(null, null, null, null);
 		clienttasks.register(username, password, owner, null, ConsumerType.system, null, null, Boolean.FALSE, null, null, (String)null, null, null, null, Boolean.FALSE, false, null, null, null, null);
 		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsIndividually();
@@ -462,25 +475,30 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager-cli: subscribe consumer to an entitlement using registration token",
-			groups={"blockedByBug-584137"},
+			groups={"Tier2Tests","blockedByBug-584137"},
 			enabled=false)	// Bug 670823 - if subscribe with regtoken is gone, then it should be removed from cli
 	@Deprecated
 	@ImplementsNitrateTest(caseId=41681)
-	public void SubscribeToRegToken_Test_DEPRECATED(){
+	public void testSubscribeToRegToken_DEPRECATED(){
 		clienttasks.unsubscribeFromTheCurrentlyConsumedProductSubscriptionSerialsIndividually();
 		clienttasks.subscribeToRegToken(sm_regtoken);
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-27123", "RHEL7-51392"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-27123", "RHEL7-51392"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="Subscribed for Already subscribed Entitlement.",
-			groups={"blockedByBug-584137","blockedByBug-979492"},
+			groups={"Tier2Tests","blockedByBug-584137","blockedByBug-979492"},
 			// dataProvider="getAvailableSubscriptionPoolsData", TAKES TOO LONG AND RARELY REVEALS A BUG - changing to getRandomSubsetOfAvailableSubscriptionPoolsData
 			dataProvider="getRandomSubsetOfAvailableSubscriptionPoolsData",
 			enabled=true)
 	@ImplementsNitrateTest(caseId=41897)
-	public void AttemptToSubscribeToAnAlreadySubscribedPool_Test(SubscriptionPool pool) throws JSONException, Exception{
+	public void testAttemptToSubscribeToAnAlreadySubscribedPool(SubscriptionPool pool) throws JSONException, Exception{
 		String consumerId = clienttasks.getCurrentConsumerId();
 		Assert.assertNull(CandlepinTasks.getConsumersNewestEntitlementSerialCorrespondingToSubscribedPoolId(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerId, pool.poolId),"The current consumer has not been granted any entitlements from pool '"+pool.poolId+"'.");
 		Assert.assertNotNull(clienttasks.subscribeToSubscriptionPool_(pool),"Authenticator '"+sm_clientUsername+"' has been granted an entitlement from pool '"+pool.poolId+"' under organization '"+sm_clientOrg+"'.");
@@ -513,12 +531,17 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36587", "RHEL7-51390"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36587", "RHEL7-51390"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager-cli: subscribe consumer to multiple/duplicate/bad pools in one call",
-			groups={"blockedByBug-622851","blockedByBug-995597"},
+			groups={"Tier2Tests","blockedByBug-622851","blockedByBug-995597"},
 			enabled=true)
-	public void SubscribeToMultipleDuplicateAndBadPools_Test() throws JSONException, Exception {
+	public void testSubscribeToMultipleDuplicateAndBadPools() throws JSONException, Exception {
 		
 		// begin the test with a cleanly registered system
 		clienttasks.unregister(null, null, null, null);
@@ -582,20 +605,25 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	protected String certFrequencyString=null;
 	@BeforeGroups(groups={"setup"}, value={"rhsmcertdChangeCertFrequency_Test"})
-	public void beforeRhsmcertdChangeCertFrequency_Test() {
+	public void beforeRhsmcertdChangeCertFrequency() {
 		if (clienttasks==null) return;
 		if (certFrequencyString==null) certFrequencyString = clienttasks.getConfParameter("certCheckInterval");
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36590", "RHEL7-51394"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36590", "RHEL7-51394"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="rhsmcertd: change certFrequency",
+			groups={"Tier2Tests","rhsmcertdChangeCertFrequency_Test","blockedByBug-617703","blockedByBug-700952","blockedByBug-708512","blockedByBug-907638","blockedByBug-822402","blockedByBug-986572","blockedByBug-1000301","blockedByBug-1026435"},
 			dataProvider="getCertFrequencyData",
-			groups={"rhsmcertdChangeCertFrequency_Test","blockedByBug-617703","blockedByBug-700952","blockedByBug-708512","blockedByBug-907638","blockedByBug-822402","blockedByBug-986572","blockedByBug-1000301","blockedByBug-1026435"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=41692)
-	public void rhsmcertdChangeCertFrequency_Test(int minutes) {
+	public void testRhsmcertdChangeCertFrequency(int minutes) {
 		String errorMsg = "Either the consumer is not registered with candlepin or the certificates are corrupted. Certificate updation using daemon failed.";
 		errorMsg = "Either the consumer is not registered or the certificates are corrupted. Certificate update using daemon failed.";
 		
@@ -694,18 +722,23 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 
 	}
 	@AfterGroups(groups={"setup"}, value={"rhsmcertdChangeCertFrequency_Test"})
-	public void afterRhsmcertdChangeCertFrequency_Test() {
+	public void afterRhsmcertdChangeCertFrequency() {
 		if (certFrequencyString!=null) clienttasks.restart_rhsmcertd(Integer.valueOf(certFrequencyString), null, null);
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36584", "RHEL7-51387"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36584", "RHEL7-51387"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="rhsmcertd: ensure certificates synchronize",
-			groups={"rhsmcertdEnsureCertificatesSynchronize_Test","blockedByBug-617703","blockedByBug-907638","blockedByBug-822402","blockedByBug-986572","blockedByBug-1000301","blockedByBug-1026435"},
+			groups={"Tier2Tests","rhsmcertdEnsureCertificatesSynchronize_Test","blockedByBug-617703","blockedByBug-907638","blockedByBug-822402","blockedByBug-986572","blockedByBug-1000301","blockedByBug-1026435"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=41694)
-	public void rhsmcertdEnsureCertificatesSynchronize_Test() throws JSONException, Exception{
+	public void testRhsmcertdEnsureCertificatesSynchronize() throws JSONException, Exception{
 		
 		// start with a cleanly unregistered system
 		clienttasks.unregister(null, null, null, null);
@@ -725,7 +758,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	    		"All the entitlement certs have been deleted.");
 		
 	    // restart the rhsmcertd to run every 1 minute and wait for a refresh
-	    beforeRhsmcertdChangeCertFrequency_Test();
+	    beforeRhsmcertdChangeCertFrequency();
 		clienttasks.restart_rhsmcertd(1, null, true);
 		
 		// assert that rhsmcertd has refreshed the entitlement certs back to the original
@@ -733,22 +766,27 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	    		"All the deleted entitlement certs have been re-synchronized by rhsmcertd (rhsm cert deamon).");
 	}
 	@AfterGroups(groups={"setup"}, value={"rhsmcertdEnsureCertificatesSynchronize_Test"})
-	public void afterRhsmcertdEnsureCertificatesSynchronize_Test() {
+	public void afterRhsmcertdEnsureCertificatesSynchronize() {
 		clienttasks.unregister_(null, null, null, null);
 		if (certFrequencyString!=null) clienttasks.restart_rhsmcertd(Integer.valueOf(certFrequencyString), null, null);
 		sleep(10*1000);
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-19982", "RHEL7-51016"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-19982", "RHEL7-51016"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="subscription-manager: make sure the normal available pools come from subscriptions that pass the hardware rules for availability.",
-			groups={"AcceptanceTests","Tier1Tests"},
+			groups={"Tier1Tests"},
 			dependsOnGroups={},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	// Note: The objective if this test is essentially the same as ListTests.EnsureHardwareMatchingSubscriptionsAreListedAsAvailable_Test() and ListTests.EnsureNonHardwareMatchingSubscriptionsAreNotListedAsAvailable_Test(), but its implementation is slightly different
-	public void VerifyNormalAvailablePoolsFromSubscriptionsPassTheHardwareRulesCheck_Test() throws Exception {
+	public void testNormalAvailablePoolsFromSubscriptionsPassTheHardwareRulesCheck() throws Exception {
 		
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
 		
@@ -828,14 +866,19 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	protected List<List<Object>> subscriptionPoolProductData;
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-19984", "RHEL7-51018"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-19984", "RHEL7-51018"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="subscription-manager-cli: autosubscribe consumer and verify expected subscription pool product id are consumed",
-			groups={"AcceptanceTests","Tier1Tests","AutoSubscribeAndVerify", "blockedByBug-680399", "blockedByBug-734867", "blockedByBug-740877"},
-			dependsOnMethods={"VerifyNormalAvailablePoolsFromSubscriptionsPassTheHardwareRulesCheck_Test"},
+			groups={"Tier1Tests","AutoSubscribeAndVerify", "blockedByBug-680399", "blockedByBug-734867", "blockedByBug-740877"},
+			dependsOnMethods={"testNormalAvailablePoolsFromSubscriptionsPassTheHardwareRulesCheck"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void InititiateAutoSubscribe_Test() throws Exception {
+	public void testInititiateAutoSubscribe() throws Exception {
 		
 		// re-calculate the subscriptionPoolProductData accounting for a match to installed system software
 		subscriptionPoolProductData = getSystemSubscriptionPoolProductDataAsListOfLists(true,true);
@@ -903,15 +946,20 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-19985", "RHEL7-51019"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-19985", "RHEL7-51019"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="subscription-manager-cli: autosubscribe consumer and verify expected subscription pool product id are consumed",
-			groups={"AcceptanceTests","Tier1Tests","AutoSubscribeAndVerify","blockedByBug-672438","blockedByBug-678049","blockedByBug-743082","blockedByBug-865193","blockedByBug-864383","blockedByBug-977321"},
-			dependsOnMethods={"InititiateAutoSubscribe_Test"},
+			groups={"Tier1Tests","AutoSubscribeAndVerify","blockedByBug-672438","blockedByBug-678049","blockedByBug-743082","blockedByBug-865193","blockedByBug-864383","blockedByBug-977321"},
+			dependsOnMethods={"testInititiateAutoSubscribe"},
 			dataProvider="getInstalledProductCertsData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyInstalledProductCertWasAutoSubscribed_Test(Object bugzilla, ProductCert productCert) throws Exception {
+	public void testInstalledProductCertWasAutoSubscribed(Object bugzilla, ProductCert productCert) throws Exception {
 		
 		// search the subscriptionPoolProductData for a bundledProduct matching the productCert's productName
 		// (subscriptionPoolProductData was set in a prior test methods that this test depends on)
@@ -953,13 +1001,18 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	SSHCommandResult sshCommandResultFromAutosubscribe;
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36580", "RHEL7-51382"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36580", "RHEL7-51382"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager: autosubscribe consumer more than once and verify we are not duplicately subscribed",
-			groups={"blockedByBug-723044","blockedByBug-743082","blockedByBug-977321"},
+			groups={"Tier2Tests","blockedByBug-723044","blockedByBug-743082","blockedByBug-977321"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void SubscribeWithAutoMoreThanOnce_Test() throws Exception {
+	public void testSubscribeWithAutoMoreThanOnce() throws Exception {
 
 		// before testing, make sure all the expected subscriptionPoolProductId are available
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
@@ -992,13 +1045,18 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36588", "RHEL7-51391"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36588", "RHEL7-51391"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager: call the Candlepin API dry_run to get the pools and quantity that would be used to complete an autosubscribe with an unavailable service level",
-			groups={"blockedByBug-864508"},
+			groups={"Tier2Tests","blockedByBug-864508"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void CandlepinConsumerEntitlementsDryrunWithUnavailableServiceLevel_Test() throws JSONException, Exception {
+	public void testCandlepinConsumerEntitlementsDryrunWithUnavailableServiceLevel() throws JSONException, Exception {
 		// register with force
 		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null));
 
@@ -1014,14 +1072,19 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-19983", "RHEL7-51017"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-19983", "RHEL7-51017"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="subscription-manager: call the Candlepin API dry_run to get the pools and quantity that would be used to complete an autosubscribe with a valid service level",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-859652","blockedByBug-962520"},
+			groups={"Tier1Tests","blockedByBug-859652","blockedByBug-962520"},
 			dataProvider="getSubscribeWithAutoAndServiceLevelData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void CandlepinConsumerEntitlementsDryrunWithServiceLevel_Test(Object bugzilla, String serviceLevel) throws JSONException, Exception {
+	public void testCandlepinConsumerEntitlementsDryrunWithServiceLevel(Object bugzilla, String serviceLevel) throws JSONException, Exception {
 		// Reference: https://engineering.redhat.com/trac/Entitlement/wiki/SlaSubscribe
 	    //"GET"
 	    //"url": "/consumers/{consumer_uuid}/entitlements/dry-run?service_level=#{service_level}", 
@@ -1194,14 +1257,19 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-19981", "RHEL7-33098"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-19981", "RHEL7-33098"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="subscription-manager: subscribe using various good and bad values for the --quantity option",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-962520"},
+			groups={"Tier1Tests","blockedByBug-962520"},
 			dataProvider="getSubscribeWithQuantityData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void SubscribeWithQuantity_Test(Object meta, SubscriptionPool pool, String quantity, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex) {
+	public void testSubscribeWithQuantity(Object meta, SubscriptionPool pool, String quantity, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex) {
 		log.info("Testing subscription-manager subscribe using various good and bad values for the --quantity option.");
 		if(pool==null) throw new SkipException(expectedStderrRegex);	// special case in the dataProvider to identify when a test pool was not available; expectedStderrRegex contains a message for what kind of test pool was being searched for.
 	
@@ -1234,13 +1302,18 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36578", "RHEL7-51379"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36578", "RHEL7-51379"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager: subscribe using --quantity option and assert the available quantity is properly decremented/incremeneted as multiple consumers subscribe/unsubscribe.",
-			groups={"blockedByBug-979492"},
+			groups={"Tier2Tests","blockedByBug-979492"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void MultiConsumerSubscribeWithQuantity_Test() throws NumberFormatException, JSONException, Exception {
+	public void testMultiConsumerSubscribeWithQuantity() throws NumberFormatException, JSONException, Exception {
 		
 		// start by calling SubscribeWithQuantity_Test with the row from the dataProvider where quantity=2
 		SubscriptionPool consumer1Pool = null;
@@ -1253,7 +1326,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 					consumer1Pool = (SubscriptionPool) row.get(1);
 					totalPoolQuantity = Integer.valueOf(consumer1Pool.quantity);
 					consumer1Quantity = Integer.valueOf((String) row.get(2));
-					SubscribeWithQuantity_Test(row.get(0), (SubscriptionPool)row.get(1), (String)row.get(2), (Integer)row.get(3), (String)row.get(4), (String)row.get(5));
+					testSubscribeWithQuantity(row.get(0), (SubscriptionPool)row.get(1), (String)row.get(2), (Integer)row.get(3), (String)row.get(4), (String)row.get(5));
 					break;
 				}
 			}
@@ -1308,13 +1381,18 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36585", "RHEL7-51388"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36585", "RHEL7-51388"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager: subscribe to multiple pools using --quantity that exceeds some pools and is under other pools.",
-			groups={"blockedByBug-722975"},
+			groups={"Tier2Tests","blockedByBug-722975"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void SubscribeWithQuantityToMultiplePools_Test() throws JSONException, Exception {
+	public void testSubscribeWithQuantityToMultiplePools() throws JSONException, Exception {
 		
 		// is this system virtual
 		boolean isSystemVirtual = Boolean.valueOf(clienttasks.getFactValue("virt.is_guest"));
@@ -1380,15 +1458,20 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-27122", "RHEL7-51945"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-27122", "RHEL7-51945"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager: subscribe to future subscription pool",
-			groups={"blockedByBug-979492","blockedByBug-1440180"},
+			groups={"Tier2Tests","blockedByBug-979492","blockedByBug-1440180"},
 			//dataProvider="getAllFutureSystemSubscriptionPoolsData",	// 06/04/2014 takes too long; rarely reveals a bug
 			dataProvider="getRandomSubsetOfFutureSystemSubscriptionPoolsData",
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
-	public void SubscribeToFutureSubscriptionPool_Test(SubscriptionPool pool) throws Exception {
+	public void testSubscribeToFutureSubscriptionPool(SubscriptionPool pool) throws Exception {
 //if (!pool.productId.equals("awesomeos-virt-unlmtd-phys")) throw new SkipException("debugTesting pool productId="+pool.productId);
 		
 		Calendar now = new GregorianCalendar();
@@ -1410,13 +1493,18 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36586", "RHEL7-51389"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36586", "RHEL7-51389"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager: subscribe and attach can be used interchangably",
-			groups={"blockedByBug-874804","blockedByBug-981689"},
+			groups={"Tier2Tests","blockedByBug-874804","blockedByBug-981689"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
-	public void AttachDeprecatedSubscribe_Test() throws Exception {
+	public void testAttachDeprecatedSubscribe() throws Exception {
 		SSHCommandResult result = client.runCommandAndWait(clienttasks.command+" --help");
 		Assert.assertContainsMatch(result.getStdout(), "^\\s*subscribe\\s+Deprecated, see attach$");
 		
@@ -1443,14 +1531,19 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-27121", "RHEL7-51386"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-27121", "RHEL7-51386"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="Make sure that older subscription-managers are denied attempts to attach a subscription based on: ram, cores",
-			groups={"VerifyOlderClientsAreDeniedEntitlementsToRamAndCoresBasedSubscriptions_Test","blockedByBug-957218" },
+			groups={"Tier2Tests","VerifyOlderClientsAreDeniedEntitlementsToRamAndCoresBasedSubscriptions_Test","blockedByBug-957218" },
 			dataProvider="getAllAvailableRamCoresSubscriptionPoolsData",
 			enabled=true)	// TODO THIS TEST IS A CANDIDATE FOR DISABLEMENT AFTER IMPLEMENTATION OF BUG 957218
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyOlderClientsAreDeniedEntitlementsToRamAndCoresBasedSubscriptions_Test(Object bugzilla, SubscriptionPool pool) throws JSONException, Exception {
+	public void testOlderClientsAreDeniedEntitlementsToRamAndCoresBasedSubscriptions(Object bugzilla, SubscriptionPool pool) throws JSONException, Exception {
 		if (true) {
 			log.warning("Effectively, this test is now obsolete due to RFE Bugzilla https://bugzilla.redhat.com/show_bug.cgi?id=888866 which reversed the original intent of this test.");
 			String systemCertificateVersion = clienttasks.getFactValue("system.certificate_version");
@@ -1568,13 +1661,18 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36577", "RHEL7-51378"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36577", "RHEL7-51378"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager: autosubscribe on a virtual system should favor virtual pools",
-			groups={"blockedByBug-927101","AutoSubscribeOnVirtualSystemsFavorVirtualPools_Test"},
+			groups={"Tier2Tests","blockedByBug-927101","AutoSubscribeOnVirtualSystemsFavorVirtualPools_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void AutoSubscribeOnVirtualSystemsFavorVirtualPools_Test() throws JSONException, Exception {
+	public void testAutoSubscribeOnVirtualSystemsFavorVirtualPools() throws JSONException, Exception {
 		
 		// force the system to be virtual
 		Map<String, String> factsMap = new HashMap<String, String>();
@@ -1663,13 +1761,18 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36583", "RHEL7-51385"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36583", "RHEL7-51385"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager: subscribe with --file whose contents are a list of poolids",
-			groups={"blockedByBug-1159974"},
+			groups={"Tier2Tests","blockedByBug-1159974"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
-	public void SubscribeWithFileOfPoolIds_Test() throws JSONException, Exception {
+	public void testSubscribeWithFileOfPoolIds() throws JSONException, Exception {
 		if (clienttasks.isPackageVersion("subscription-manager","<","1.13.8-1")) throw new SkipException("The attach --file function was not implemented in this version of subscription-manager.");	// commit 3167333fc3a261de939f4aa0799b4283f2b9f4d2 bug 1159974
 		
 		Boolean all = false;	//getRandomListItem(Arrays.asList(new Boolean[]{Boolean.TRUE,Boolean.FALSE}));
@@ -1709,13 +1812,18 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36582", "RHEL7-51384"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36582", "RHEL7-51384"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager: subscribe with --file whose contents are empty.  No pools should be attached.",
-			groups={"blockedByBug-1175291"},
+			groups={"Tier2Tests","blockedByBug-1175291"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
-	public void SubscribeWithFileOfEmptyPoolIds_Test() throws JSONException, Exception {
+	public void testSubscribeWithFileOfEmptyPoolIds() throws JSONException, Exception {
 		if (clienttasks.isPackageVersion("subscription-manager","<","1.13.8-1")) throw new SkipException("The attach --file function was not implemented in this version of subscription-manager.");	// commit 3167333fc3a261de939f4aa0799b4283f2b9f4d2 bug 1159974
 		
 		if (clienttasks.getCurrentlyRegisteredOwnerKey() == null) {
@@ -1743,13 +1851,18 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36589", "RHEL7-51393"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36589", "RHEL7-51393"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager: subscribe with --file=- which indicates that the pools will be read from stdin",
-			groups={"blockedByBug-1159974"},
+			groups={"Tier2Tests","blockedByBug-1159974"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
-	public void SubscribeWithFileOfPoolIdsFromStdin_Test() throws JSONException, Exception {
+	public void testSubscribeWithFileOfPoolIdsFromStdin() throws JSONException, Exception {
 		if (clienttasks.isPackageVersion("subscription-manager","<","1.13.8-1")) throw new SkipException("The attach --file function was not implemented in this version of subscription-manager.");	// commit 3167333fc3a261de939f4aa0799b4283f2b9f4d2 bug 1159974
 		
 		Boolean all = false;	//getRandomListItem(Arrays.asList(new Boolean[]{Boolean.TRUE,Boolean.FALSE}));
@@ -1789,13 +1902,18 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36581", "RHEL7-51383"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36581", "RHEL7-51383"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager: subscribe with --file=- which indicates that the pools will be read from stdin",
-			groups={"blockedByBug-1159974","blockedByBug-1175291"},
+			groups={"Tier2Tests","blockedByBug-1159974","blockedByBug-1175291"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
-	public void SubscribeWithFileOfEmptyPoolIdsFromStdin_Test() throws JSONException, Exception {
+	public void testSubscribeWithFileOfEmptyPoolIdsFromStdin() throws JSONException, Exception {
 		if (clienttasks.isPackageVersion("subscription-manager","<","1.13.8-1")) throw new SkipException("The attach --file function was not implemented in this version of subscription-manager.");	// commit 3167333fc3a261de939f4aa0799b4283f2b9f4d2 bug 1159974
 		
 		if (clienttasks.getCurrentlyRegisteredOwnerKey() == null) {
@@ -1815,13 +1933,18 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36579", "RHEL7-51380"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36579", "RHEL7-51380"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager: subscribe with no args should now default to --auto",
-			groups={},
+			groups={"Tier2Tests"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
-			public void SubscribeDefaultsToAutosubscribe_Test() throws JSONException, Exception {
+			public void testSubscribeDefaultsToAutosubscribe() throws JSONException, Exception {
 		// commit cb590a75f3a2de921961808d00ab251180c51691 subscription-manager-1.13.13-1)
 		if (clienttasks.isPackageVersion("subscription-manager","<","1.14.1-1")) throw new SkipException("Defaulting subscribe/attach to imply option --auto was not implemented in this version of subscription-manager.");	// commit cb590a75f3a2de921961808d00ab251180c51691 Make 'attach' auto unless otherwise specified
 

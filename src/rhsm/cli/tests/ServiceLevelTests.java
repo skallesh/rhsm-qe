@@ -36,8 +36,11 @@ import rhsm.data.ProductSubscription;
 import rhsm.data.SubscriptionPool;
 import com.redhat.qe.tools.SSHCommandResult;
 
-import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.DefTypes;
 import com.github.redhatqe.polarize.metadata.TestDefinition;
+import com.github.redhatqe.polarize.metadata.TestType;
+import com.github.redhatqe.polarize.metadata.DefTypes.PosNeg;
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
 
 /**
  * @author jsefler
@@ -45,20 +48,25 @@ import com.github.redhatqe.polarize.metadata.TestDefinition;
  * Reference: https://engineering.redhat.com/trac/Entitlement/wiki/SlaSubscribe
  */
 
-@Test(groups={"ServiceLevelTests","Tier3Tests"})
+@Test(groups={"ServiceLevelTests"})
 public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 
 		
 	// Test methods ***********************************************************************
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21874", "RHEL7-51713"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21874", "RHEL7-51713"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="subscription-manager: service-level (when not registered)",
-			groups={"blockedByBug-826856"/*,"blockedByBug-837036"*/},
+			groups={"Tier3Tests","blockedByBug-826856"/*,"blockedByBug-837036"*/},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ServiceLevelWhenNotRegistered_Test() {
+	public void testServiceLevelWhenNotRegistered() {
 		
 		// make sure we are not registered
 		clienttasks.unregister(null, null, null, null);
@@ -99,13 +107,18 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21878", "RHEL7-51717"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21878", "RHEL7-51717"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="subscription-manager: service-level --show (when not registered)",
-			groups={"blockedByBug-826856",/*"blockedByBug-837036"*/},
+			groups={"Tier3Tests","blockedByBug-826856",/*"blockedByBug-837036"*/},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ServiceLevelShowWhenNotRegistered_Test() {
+	public void testServiceLevelShowWhenNotRegistered() {
 		
 		// make sure we are not registered
 		clienttasks.unregister(null, null, null, null);
@@ -146,13 +159,18 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21871", "RHEL7-51722"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21871", "RHEL7-51722"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="subscription-manager: service-level --list (when not registered)",
-			groups={},
+			groups={"Tier3Tests"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ServiceLevelListWhenNotRegistered_Test() {
+	public void testServiceLevelListWhenNotRegistered() {
 		
 		// make sure we are not registered
 		clienttasks.unregister(null, null, null, null);
@@ -168,13 +186,18 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21872", "RHEL7-51726"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21872", "RHEL7-51726"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="subscription-manager: service-level --set (when not registered)",
-			groups={},
+			groups={"Tier3Tests"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ServiceLevelSetWhenNotRegistered_Test() {
+	public void testServiceLevelSetWhenNotRegistered() {
 		
 		// make sure we are not registered
 		clienttasks.unregister(null, null, null, null);
@@ -215,13 +238,18 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21868", "RHEL7-51727"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21868", "RHEL7-51727"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="subscription-manager: service-level --unset (when not registered)",
-			groups={},
+			groups={"Tier3Tests"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ServiceLevelUnsetWhenNotRegistered_Test() {
+	public void testServiceLevelUnsetWhenNotRegistered() {
 		
 		// make sure we are not registered
 		clienttasks.unregister(null, null, null, null);
@@ -262,13 +290,18 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21877", "RHEL7-51729"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21877", "RHEL7-51729"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="subscription-manager: service-level --list (with invalid credentials)",
-			groups={"blockedByBug-1256960"/*is a duplicate of*/,"blockedByBug-1254349"},
+			groups={"Tier3Tests","blockedByBug-1256960"/*is a duplicate of*/,"blockedByBug-1254349"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ServiceLevelListWithInvalidCredentials_Test() {
+	public void testServiceLevelListWithInvalidCredentials() {
 		String x = String.valueOf(getRandInt());
 		SSHCommandResult result;
 				
@@ -292,13 +325,18 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21865", "RHEL7-51721"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21865", "RHEL7-51721"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="subscription-manager: service-level --list (with invalid org)",
-			groups={"blockedByBug-796468","blockedByBug-815479","blockedByBug-1256960"/*is a duplicate of*/,"blockedByBug-1254349"},
+			groups={"Tier3Tests","blockedByBug-796468","blockedByBug-815479","blockedByBug-1256960"/*is a duplicate of*/,"blockedByBug-1254349"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=165509)
-	public void ServiceLevelListWithInvalidOrg_Test() {
+	public void testServiceLevelListWithInvalidOrg() {
 		String x = String.valueOf(getRandInt());
 		SSHCommandResult result;
 				
@@ -322,11 +360,11 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager: service-level --show (after registering without a service level)",
-			groups={},
+			groups={"Tier3Tests"},
 			enabled=false) // assertions in this test are already a subset of ServiceLevelShowAvailable_Test(...)
 	@Deprecated
 	@ImplementsNitrateTest(caseId=157213)
-	public void ServiceLevelShowAfterRegisteringWithoutServiceLevel_Test_DEPRECATED() throws JSONException, Exception  {
+	public void testServiceLevelShowAfterRegisteringWithoutServiceLevel_DEPRECATED() throws JSONException, Exception  {
 		SSHCommandResult result;
 				
 		// register with no service-level
@@ -341,14 +379,19 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-19993", "RHEL7-51025"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-19993", "RHEL7-51025"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="subscription-manager: service-level --show (after registering without a service level)",
-			groups={"AcceptanceTests","Tier1Tests"},
+			groups={"Tier1Tests"},
 			dataProvider="getRegisterCredentialsExcludingNullOrgData",
 			enabled=true)
 	@ImplementsNitrateTest(caseId=155949)
-	public void ServiceLevelShowAvailable_Test(String username, String password, String org) throws JSONException, Exception  {
+	public void testServiceLevelShowAvailable(String username, String password, String org) throws JSONException, Exception  {
 				
 		// register with no service-level
 		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(username,password,org,null,null,null,null,null,null,null,(List<String>)null,null,null,null,true, null, null, null, null, null));
@@ -422,12 +465,17 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21863", "RHEL7-51725"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21863", "RHEL7-51725"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="subscription-manager: register to a Candlepin server using autosubscribe with an unavailable servicelevel",
-			groups={"blockedByBug-795798","blockedByBug-864508","blockedByBug-864508","blockedByBug-1221273"},
+			groups={"Tier3Tests","blockedByBug-795798","blockedByBug-864508","blockedByBug-864508","blockedByBug-1221273"},
 			enabled=true)
-	public void RegisterWithUnavailableServiceLevel_Test() {
+	public void testRegisterWithUnavailableServiceLevel() {
 
 		// attempt the registration
 		String unavailableServiceLevel = "FOO";
@@ -461,15 +509,20 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-19991", "RHEL7-51023"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-19991", "RHEL7-51023"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="subscription-manager: register with autosubscribe while specifying an valid service level; assert the entitlements granted match the requested service level",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-859652","blockedByBug-919700"},
+			groups={"Tier1Tests","blockedByBug-859652","blockedByBug-919700"},
 			// dataProvider="getAllAvailableServiceLevelData",	// 06/05/2014 takes too long; rarely reveals a bug
 			dataProvider="getRandomSubsetOfAllAvailableServiceLevelData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void RegisterWithAvailableServiceLevel_Test(Object bugzilla, String serviceLevel) throws JSONException, Exception {
+	public void testRegisterWithAvailableServiceLevel(Object bugzilla, String serviceLevel) throws JSONException, Exception {
 		// Reference: https://engineering.redhat.com/trac/Entitlement/wiki/SlaSubscribe
 
 		// register with autosubscribe specifying a valid service level
@@ -501,15 +554,20 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-19995", "RHEL7-51028"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-19995", "RHEL7-51028"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="subscription-manager: register with autosubscribe while specifying an valid random case SeRviCEleVel; assert the installed product status is independent of the specified service level case.",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-859652","blockedByBug-859652","blockedByBug-919700"},
+			groups={"Tier1Tests","blockedByBug-859652","blockedByBug-859652","blockedByBug-919700"},
 			// dataProvider="getAllAvailableServiceLevelData",	// 06/05/2014 takes too long; rarely reveals a bug
 			dataProvider="getRandomSubsetOfAllAvailableServiceLevelData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyRegisterWithServiceLevelIsCaseInsensitive(Object bugzilla, String serviceLevel) {
+	public void testRegisterWithServiceLevelIsCaseInsensitive(Object bugzilla, String serviceLevel) {
 		
 		// TEMPORARY WORKAROUND FOR BUG
 		if (sm_serverType.equals(CandlepinType.hosted)) {
@@ -561,13 +619,18 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21862", "RHEL7-51730"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21862", "RHEL7-51730"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="subscription-manager: subscribe with auto while specifying an unavailable service level",
-			groups={"blockedByBug-795798","blockedByBug-864508"},
+			groups={"Tier3Tests","blockedByBug-795798","blockedByBug-864508"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void AutoSubscribeWithUnavailableServiceLevel_Test() {
+	public void testAutoSubscribeWithUnavailableServiceLevel() {
 		
 		// register with force
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
@@ -588,15 +651,20 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-19990", "RHEL7-51022"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-19990", "RHEL7-51022"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="subscription-manager: subscribe with auto while specifying an valid service level; assert the entitlements granted match the requested service level",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-859652","blockedByBug-977321"},
+			groups={"Tier1Tests","blockedByBug-859652","blockedByBug-977321"},
 			// dataProvider="getAllAvailableServiceLevelData",	// 06/05/2014 takes too long; rarely reveals a bug
 			dataProvider="getRandomSubsetOfAllAvailableServiceLevelData",
 			enabled=true)
 	@ImplementsNitrateTest(caseId=157229)	// 147971
-	public void AutoSubscribeWithServiceLevel_Test(Object bugzilla, String serviceLevel) throws JSONException, Exception {
+	public void testAutoSubscribeWithServiceLevel(Object bugzilla, String serviceLevel) throws JSONException, Exception {
 		// Reference: https://engineering.redhat.com/trac/Entitlement/wiki/SlaSubscribe
 		
 		// ensure system is registered
@@ -655,14 +723,19 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21861", "RHEL7-51724"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21861", "RHEL7-51724"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="subscription-manager: after autosubscribing with a service level, assert that another autosubscribe (without specifying service level) uses the service level persisted from the first sutosubscribe",
-			groups={"blockedByBug-859652","blockedByBug-977321"},
+			groups={"Tier3Tests","blockedByBug-859652","blockedByBug-977321"},
 			dependsOnMethods={},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void AutoSubscribeAgainAssertingServiceLevelIsPersisted_Test() throws JSONException, Exception {
+	public void testAutoSubscribeAgainAssertingServiceLevelIsPersisted() throws JSONException, Exception {
 		// Reference: https://engineering.redhat.com/trac/Entitlement/wiki/SlaSubscribe
 
 		// get all the valid service levels available to this org	
@@ -670,7 +743,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		String serviceLevel = serviceLevelsExpected.get(randomGenerator.nextInt(serviceLevelsExpected.size()));
 		
 		//clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, serviceLevel, null, (String)null, null, false, null, null, null);
-		AutoSubscribeWithServiceLevel_Test(null,serviceLevel);
+		testAutoSubscribeWithServiceLevel(null,serviceLevel);
 
 		// return all entitlements
 		clienttasks.unsubscribe(true, (BigInteger)null, null, null, null, null, null);
@@ -704,44 +777,59 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-19989", "RHEL7-33078"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-19989", "RHEL7-33078"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="subscription-manager: subscribe with auto without specifying any service level; assert the service level used matches whatever the consumer's current preference level is set",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-859652","blockedByBug-977321"},
+			groups={"Tier1Tests","blockedByBug-859652","blockedByBug-977321"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void AutoSubscribeWithNullServiceLevel_Test() throws JSONException, Exception {
-		AutoSubscribeWithServiceLevel_Test(null,null);
+	public void testAutoSubscribeWithNullServiceLevel() throws JSONException, Exception {
+		testAutoSubscribeWithServiceLevel(null,null);
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-19988", "RHEL7-51021"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-19988", "RHEL7-51021"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="subscription-manager: subscribe with auto specifying a service level of \"\"; assert the service level is unset and the autosubscribe proceeds without any service level preference",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-859652","blockedByBug-977321","blockedByBug-1001169"},
+			groups={"Tier1Tests","blockedByBug-859652","blockedByBug-977321","blockedByBug-1001169"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void AutoSubscribeWithBlankServiceLevel_Test() throws JSONException, Exception {
-		AutoSubscribeWithServiceLevel_Test(null,"");
+	public void testAutoSubscribeWithBlankServiceLevel() throws JSONException, Exception {
+		testAutoSubscribeWithServiceLevel(null,"");
 		
 		// adding the following instructions specifically to force the testing of bug 1001169
 		List<String> availableServiceLevels = clienttasks.getCurrentlyAvailableServiceLevels();
 		if (availableServiceLevels.isEmpty()) throw new SkipException("Skipping the remainder of this test when there are no available service levels.");
 		String randomAvailableServiceLevel = availableServiceLevels.get(randomGenerator.nextInt(availableServiceLevels.size()));
 		clienttasks.service_level(null, null, randomAvailableServiceLevel, null, null, null, null, null, null, null, null, null, null);
-		AutoSubscribeWithServiceLevel_Test(null,"");
+		testAutoSubscribeWithServiceLevel(null,"");
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-19994", "RHEL7-51026"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-19994", "RHEL7-51026"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="subscription-manager: autosubscribe while specifying an valid service level; assert the installed product status is independent of the specified SerViceLeVEL case.",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-818319","blockedByBug-859652"},
+			groups={"Tier1Tests","blockedByBug-818319","blockedByBug-859652"},
 			// dataProvider="getAllAvailableServiceLevelData",	// 06/05/2014 takes too long; rarely reveals a bug
 			dataProvider="getRandomSubsetOfAllAvailableServiceLevelData",
 			enabled=true)
 	@ImplementsNitrateTest(caseId=157227) // 157226 //157225
-	public void VerifyAutoSubscribeWithServiceLevelIsCaseInsensitive_Test(Object bugzilla, String serviceLevel) throws JSONException, Exception {
+	public void testAutoSubscribeWithServiceLevelIsCaseInsensitive(Object bugzilla, String serviceLevel) throws JSONException, Exception {
 		
 		// TEMPORARY WORKAROUND FOR BUG
 		if (sm_serverType.equals(CandlepinType.hosted)) {
@@ -805,14 +893,19 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21703", "RHEL7-51027"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21703", "RHEL7-51027"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="installed products provided by available pools with an exempt service level should be auto-subscribed regardless of what service level is specified (or is not specified)",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-818319","blockedByBug-859652","blockedByBug-919700"},
+			groups={"Tier1Tests","blockedByBug-818319","blockedByBug-859652","blockedByBug-919700"},
 			dataProvider="getExemptInstalledProductAndServiceLevelData",
 			enabled=true)
 	@ImplementsNitrateTest(caseId=157229)
-	public void VerifyInstalledProductsProvidedByAvailablePoolsWithExemptServiceLevelAreAutoSubscribedRegardlessOfServiceLevel_Test(Object bugzilla, String installedProductId, String serviceLevel) {
+	public void testInstalledProductsProvidedByAvailablePoolsWithExemptServiceLevelAreAutoSubscribedRegardlessOfServiceLevel(Object bugzilla, String installedProductId, String serviceLevel) {
 		
 		// randomize the case of the service level
 		String seRvICElevEl = randomizeCaseOfCharactersInString(serviceLevel);
@@ -851,15 +944,20 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21869", "RHEL7-51714"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21869", "RHEL7-51714"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="Using curl, set the default service level for an org and then register using org credentials to verify consumer's service level",
-			groups={"SetDefaultServiceLevelForOrgAndRegister_Test"},
+			groups={"Tier3Tests","SetDefaultServiceLevelForOrgAndRegister_Test"},
 			// dataProvider="getAllAvailableServiceLevelData",	// 06/05/2014 takes too long; rarely reveals a bug
 			dataProvider="getRandomSubsetOfAllAvailableServiceLevelData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void SetDefaultServiceLevelForOrgAndRegister_Test(Object bugzilla, String defaultServiceLevel) throws JSONException, Exception {
+	public void testSetDefaultServiceLevelForOrgAndRegister(Object bugzilla, String defaultServiceLevel) throws JSONException, Exception {
 		
 		// update the defaultServiceLevel on the Org
 		if (orgForSetDefaultServiceLevelForOrgAndRegister_Test==null) orgForSetDefaultServiceLevelForOrgAndRegister_Test = clienttasks.getCurrentlyRegisteredOwnerKey();
@@ -881,14 +979,19 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21880", "RHEL7-51732"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21880", "RHEL7-51732"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="Using curl, unset the default service level for an org and then register using org credentials to verify consumer's service level is not set",
-			groups={},
-			dependsOnMethods={"SetDefaultServiceLevelForOrgAndRegister_Test"},
+			groups={"Tier3Tests"},
+			dependsOnMethods={"testSetDefaultServiceLevelForOrgAndRegister"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void UnsetDefaultServiceLevelForOrgAndRegister_Test() throws JSONException, Exception {
+	public void testUnsetDefaultServiceLevelForOrgAndRegister() throws JSONException, Exception {
 		
 		// update the defaultServiceLevel on the Org (setting to "" will nullify the attribute on the org; setting to JSONObject.NULL does not work)
 		JSONObject jsonOrg = CandlepinTasks.setAttributeForOrg(sm_clientUsername, sm_clientPassword, sm_serverUrl, orgForSetDefaultServiceLevelForOrgAndRegister_Test, "defaultServiceLevel", "");
@@ -901,13 +1004,18 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21873", "RHEL7-51728"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21873", "RHEL7-51728"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="subscription-manager: service-level --set (with unavailable serviceLevel)",
-			groups={"blockedByBug-864508"},
+			groups={"Tier3Tests","blockedByBug-864508"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ServiceLevelSetWithUnavailableServiceLevel_Test() throws JSONException, Exception {
+	public void testServiceLevelSetWithUnavailableServiceLevel() throws JSONException, Exception {
 			
 		// test while registered
 		if (clienttasks.getCurrentConsumerId()==null) clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg);
@@ -927,13 +1035,18 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21867", "RHEL7-51716"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21867", "RHEL7-51716"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="subscription-manager: service-level --set (with exempt serviceLevel should be treated as unavailable)",
-			groups={"blockedByBug-864508"},
+			groups={"Tier3Tests","blockedByBug-864508"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ServiceLevelSetWithExemptServiceLevel_Test() {
+	public void testServiceLevelSetWithExemptServiceLevel() {
 			
 		// test while registered
 		if (clienttasks.getCurrentConsumerId()==null) clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null,null, null, null, null, null, null);
@@ -953,15 +1066,20 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21875", "RHEL7-51718"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21875", "RHEL7-51718"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="subscription-manager: service-level --set (with available serviceLevel)",
-			groups={},
+			groups={"Tier3Tests"},
 			// dataProvider="getAllAvailableServiceLevelData",	// 06/05/2014 takes too long; rarely reveals a bug
 			dataProvider="getRandomSubsetOfAllAvailableServiceLevelData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ServiceLevelSetWithAvailableServiceLevel_Test(Object bugzilla, String serviceLevel) {
+	public void testServiceLevelSetWithAvailableServiceLevel(Object bugzilla, String serviceLevel) {
 		
 		// no need to register ("getAllAvailableServiceLevelData" will re-register with force)
 		
@@ -970,31 +1088,41 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21870", "RHEL7-51715"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21870", "RHEL7-51715"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="subscription-manager: service-level --set should accept \"\" to effectively unset",
-			groups={"blockedByBug-835050"},
+			groups={"Tier3Tests","blockedByBug-835050"},
 			// dataProvider="getAllAvailableServiceLevelData",	// 06/05/2014 takes too long; rarely reveals a bug
 			dataProvider="getRandomSubsetOfAllAvailableServiceLevelData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void UnsetServiceLevel_Test(Object bugzilla, String serviceLevel) {
+	public void testUnsetServiceLevel(Object bugzilla, String serviceLevel) {
 		
-		ServiceLevelSetWithAvailableServiceLevel_Test(bugzilla,serviceLevel);
+		testServiceLevelSetWithAvailableServiceLevel(bugzilla,serviceLevel);
 		clienttasks.service_level(null, null, "", null, null, null, null, null, null, null, null, null, null);
 		Assert.assertEquals(clienttasks.getCurrentServiceLevel(), "", "The serviceLevel can effectively be unset by setting a value of \"\".");
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21866", "RHEL7-51731"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21866", "RHEL7-51731"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="subscription-manager: service-level --set (with case insensitivity) is preserved throughtout an identity regeneration",
-			groups={},
+			groups={"Tier3Tests"},
 			// dataProvider="getAllAvailableServiceLevelData",	// 06/05/2014 takes too long; rarely reveals a bug
 			dataProvider="getRandomSubsetOfAllAvailableServiceLevelData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ServiceLevelSetWithAvailableServiceLevelIsPreservedThroughIdentityRegeneration_Test(Object bugzilla, String serviceLevel) throws JSONException, Exception {
+	public void testServiceLevelSetWithAvailableServiceLevelIsPreservedThroughIdentityRegeneration(Object bugzilla, String serviceLevel) throws JSONException, Exception {
 		
 		// no need to register ("getAllAvailableServiceLevelData" will re-register with force)
 		
@@ -1005,30 +1133,40 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21876", "RHEL7-51720"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21876", "RHEL7-51720"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="subscription-manager: service-level --unset after setting an available service level",
-			groups={"blockedByBug-829803","blockedByBug-829812"},
+			groups={"Tier3Tests","blockedByBug-829803","blockedByBug-829812"},
 			// dataProvider="getAllAvailableServiceLevelData",	// 06/05/2014 takes too long; rarely reveals a bug
 			dataProvider="getRandomSubsetOfAllAvailableServiceLevelData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ServiceLevelUnsetAfterSet_Test(Object bugzilla, String serviceLevel) {
+	public void testServiceLevelUnsetAfterSet(Object bugzilla, String serviceLevel) {
 		
-		ServiceLevelSetWithAvailableServiceLevel_Test(bugzilla,serviceLevel);
+		testServiceLevelSetWithAvailableServiceLevel(bugzilla,serviceLevel);
 		clienttasks.service_level(null, null, null, true, null, null, null, null, null, null, null, null, null);
 		Assert.assertEquals(clienttasks.getCurrentServiceLevel(), "", "The serviceLevel is unset after calling with the --unset option.");
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-19992", "RHEL7-51024"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-19992", "RHEL7-51024"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="subscription-manager: service-level --list should be unique (regardless of case)",
-			groups={/*"blockedByBug-845043",*/"AcceptanceTests","Tier1Tests"},
+			groups={"Tier1Tests","blockedByBug-845043"},
 			dataProvider="getRegisterCredentialsExcludingNullOrgData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ServiceLevelListIsUnique_Test(String username, String password, String org) {
+	public void testServiceLevelListIsUnique(String username, String password, String org) {
 		
 		clienttasks.register(username, password, org,null,null,null,null,null,null,null,(String)null,null,null,null,true,null,null,null, null, null);
 		
@@ -1055,14 +1193,19 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21879", "RHEL7-51719"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21879", "RHEL7-51719"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="subscription-manager: service-level --list with --serverurl",
 			dataProvider="getServerurl_TestData",
-			groups={"ServiceLevelListWithServerurl_Test"},
+			groups={"Tier3Tests","ServiceLevelListWithServerurl_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ServiceLevelListWithServerurl_Test(Object bugzilla, String serverurl, String expectedHostname, String expectedPort, String expectedPrefix, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrMatch) {
+	public void testServiceLevelListWithServerurl(Object bugzilla, String serverurl, String expectedHostname, String expectedPort, String expectedPrefix, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrMatch) {
 		// get original server at the beginning of this test
 		String hostnameBeforeTest	= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "hostname");
 		String portBeforeTest		= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "port");
@@ -1109,13 +1252,18 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21864", "RHEL7-51723"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21864", "RHEL7-51723"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="subscription-manager: service-level list with --insecure",
-			groups={"ServiceLevelListWithInsecure_Test","blockedByBug-844411","blockedByBug-993202","blockedByBug-1256960"/*is a duplicate of*/,"blockedByBug-1254349"},
+			groups={"Tier3Tests","ServiceLevelListWithInsecure_Test","blockedByBug-844411","blockedByBug-993202","blockedByBug-1256960"/*is a duplicate of*/,"blockedByBug-1254349"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ServiceLevelListWithInsecure_Test() {
+	public void testServiceLevelListWithInsecure() {
 		SSHCommandResult sshCommandResult;
 		
 		// calling service level list without insecure should pass

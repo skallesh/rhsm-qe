@@ -45,19 +45,24 @@ import com.github.redhatqe.polarize.metadata.DefTypes.Project;
  * @author jsefler
  *
  */
-@Test(groups={"ActivationKeyTests","Tier3Tests"})
+@Test(groups={"ActivationKeyTests"})
 public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 	
 	
 	// Test methods ***********************************************************************
-	@TestDefinition( projectID={Project.RHEL6, Project.RedHatEnterpriseLinux7}
-	               , testCaseID={"RHEL6-21790", "RHEL7-51607"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID={Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID={"RHEL6-21790", "RHEL7-51607"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="create an activation key named with an international character, add a pool to it (without specifying a quantity), and then register with the activation key",
-			groups={},
+			groups={"Tier3Tests"},
 			dataProvider="getRegisterWithUnknownActivationKeyData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
-	public void AttemptRegisterWithUnknownActivationKey_Test(Object blockedByBug, String unknownActivationKeyName, String org) {
+	public void testAttemptRegisterWithUnknownActivationKey(Object blockedByBug, String unknownActivationKeyName, String org) {
 		
 		//SSHCommandResult sshCommandResult = clienttasks.register_(null, null, org, null, null, null, null, null, null, null, unknownActivationKeyName, null, null, true, null, null, null, null);
 		SSHCommandResult sshCommandResult = clienttasks.runCommandWithLang(null,String.format("%s register --force --org=%s --activationkey=\"%s\"", clienttasks.command, org, unknownActivationKeyName));
@@ -83,14 +88,19 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(sshCommandResult.getExitCode(), expectedExitCode);
 	}
 
-	@TestDefinition( projectID={Project.RHEL6, Project.RedHatEnterpriseLinux7}
-	               , testCaseID={"RHEL6-21786", "RHEL7-51603"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID={Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID={"RHEL6-21786", "RHEL7-51603"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="use the candlepin api to create valid activation keys",
-			groups={},
+			groups={"Tier3Tests"},
 			dataProvider="getRegisterCredentialsExcludingNullOrgData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
-	public void ActivationKeyCreationDeletion_Test(String username, String password, String org) throws JSONException, Exception {
+	public void testActivationKeyCreationDeletion(String username, String password, String org) throws JSONException, Exception {
 		// generate a unique name for this test
 		String name = String.format("%s_%s-ActivationKey%s", username,org,System.currentTimeMillis());
 		
@@ -155,14 +165,19 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID={Project.RHEL6, Project.RedHatEnterpriseLinux7}
-	               , testCaseID={"RHEL6-21788", "RHEL7-51605"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID={Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID={"RHEL6-21788", "RHEL7-51605"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="use the candlepin api to attempt creation of an activation key with a bad name",
-			groups={},
+			groups={"Tier3Tests"},
 			dataProvider="getActivationKeyCreationWithBadNameData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
-	public void AttemptActivationKeyCreationWithBadNameData_Test(Object blockedByBug, String badName) throws JSONException, Exception {
+	public void testAttemptActivationKeyCreationWithBadNameData(Object blockedByBug, String badName) throws JSONException, Exception {
 		
 		// create a JSON object to represent the request body (with bad data)
 		Map<String,String> mapActivationKeyRequest = new HashMap<String,String>();
@@ -187,13 +202,18 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 	}
 	
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-	               , testCaseID = {"RHEL6-21787", "RHEL7-51604"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21787", "RHEL7-51604"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="use the candlepin api to attempt to create a duplicate activation key",
-			groups={"blockedByBug-728636"},
+			groups={"Tier3Tests","blockedByBug-728636"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
-	public void AttemptActivationKeyCreationInDuplicate_Test() throws JSONException, Exception {
+	public void testAttemptActivationKeyCreationInDuplicate() throws JSONException, Exception {
 
 		// generate a unique name for this test
 		String name = String.format("%s_%s-DuplicateActivationKey%s", sm_clientUsername,sm_clientOrg,System.currentTimeMillis());
@@ -232,7 +252,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 * @throws Exception
 	 */
-	@TestDefinition(//update= true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-47896", "RHEL7-96498"},
 			linkedWorkItems= {
@@ -249,11 +269,11 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier3")
 	@Test(	description="create an activation key, add a pool to it with a quantity, and then register with the activation key (include variations on valid/invalid quantities)",
-			groups={"blockedByBug-973838"},
-			dataProvider="getRegisterWithActivationKeyContainingPoolWithQuantity_TestData",
+			groups={"Tier3Tests","blockedByBug-973838"},
+			dataProvider="getRegisterWithActivationKeyContainingPoolWithQuantityData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
-	public SSHCommandResult RegisterWithActivationKeyContainingPoolWithQuantity_Test(Object blockedByBug, String keyName, JSONObject jsonPool, Integer addQuantity) throws JSONException, Exception {
+	public SSHCommandResult testRegisterWithActivationKeyContainingPoolWithQuantity(Object blockedByBug, String keyName, JSONObject jsonPool, Integer addQuantity) throws JSONException, Exception {
 //if (!jsonPool.getString("productId").equals("awesomeos-virt-4")) throw new SkipException("debugging...");
 //if (jsonPool.getInt("quantity")!=-1) throw new SkipException("debugging...");
 //if (!jsonPool.getString("productId").equals("awesomeos-virt-unlimited")) throw new SkipException("debugging...");
@@ -587,36 +607,46 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21797", "RHEL7-51614"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21797", "RHEL7-51614"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="create an activation key, add it to a pool with a quantity outside the total possible available.  Also test adding a key with quantity 0 and -1. Also test pools with an unlimited quantity.",
-			groups={"blockedByBug-729125"},
+			groups={"Tier3Tests","blockedByBug-729125"},
 			dataProvider="getAllMultiEntitlementJSONPoolsData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
-	public void RegisterWithActivationKeyContainingPoolWithQuantityOutsideAvailableQuantity_Test(Object blockedByBug, String keyName, JSONObject jsonPool) throws JSONException, Exception {
+	public void testRegisterWithActivationKeyContainingPoolWithQuantityOutsideAvailableQuantity(Object blockedByBug, String keyName, JSONObject jsonPool) throws JSONException, Exception {
 		
 		// choose a random pool quantity > totalPoolQuantity)
 		Integer jsonPoolQuantity = jsonPool.getInt("quantity");	// can be -1 for an unlimited pool
 		Integer excessiveQuantity = jsonPoolQuantity + 1 + randomGenerator.nextInt(10)/*returns 0 to 9*/;	// can be 0 or more
 		//String keyName = String.format("ActivationKey%s_ForPool%s_", System.currentTimeMillis(), jsonPool.getString("id"));
 		
-		RegisterWithActivationKeyContainingPoolWithQuantity_Test(blockedByBug, keyName+"_Quantity"+excessiveQuantity, jsonPool, excessiveQuantity);
-		RegisterWithActivationKeyContainingPoolWithQuantity_Test(blockedByBug, keyName+"_Quantity-"+excessiveQuantity, jsonPool, -1*excessiveQuantity);
-		if (!excessiveQuantity.equals(Integer.valueOf(0))/* already tested 0*/) RegisterWithActivationKeyContainingPoolWithQuantity_Test(blockedByBug, keyName+"_Quantity0", jsonPool, 0);
-		if (!excessiveQuantity.equals(Integer.valueOf(1))/* already tested 1*/) RegisterWithActivationKeyContainingPoolWithQuantity_Test(blockedByBug, keyName+"_Quantity-1", jsonPool, -1);
+		testRegisterWithActivationKeyContainingPoolWithQuantity(blockedByBug, keyName+"_Quantity"+excessiveQuantity, jsonPool, excessiveQuantity);
+		testRegisterWithActivationKeyContainingPoolWithQuantity(blockedByBug, keyName+"_Quantity-"+excessiveQuantity, jsonPool, -1*excessiveQuantity);
+		if (!excessiveQuantity.equals(Integer.valueOf(0))/* already tested 0*/) testRegisterWithActivationKeyContainingPoolWithQuantity(blockedByBug, keyName+"_Quantity0", jsonPool, 0);
+		if (!excessiveQuantity.equals(Integer.valueOf(1))/* already tested 1*/) testRegisterWithActivationKeyContainingPoolWithQuantity(blockedByBug, keyName+"_Quantity-1", jsonPool, -1);
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21798", "RHEL7-51615"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21798", "RHEL7-51615"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="create an activation key, add a pool to it (without specifying a quantity), and then register with the activation key",
-			groups={"blockedByBug-878986","blockedByBug-979492","blockedByBug-1023568"},
-			dataProvider="getRegisterWithActivationKeyContainingPool_TestData",
+			groups={"Tier3Tests","blockedByBug-878986","blockedByBug-979492","blockedByBug-1023568"},
+			dataProvider="getRegisterWithActivationKeyContainingPoolData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
-	public void RegisterWithActivationKeyContainingPool_Test(Object blockedByBug, String keyName, JSONObject jsonPool) throws JSONException, Exception {
-		RegisterWithActivationKeyContainingPoolWithQuantity_Test(blockedByBug, keyName, jsonPool, null);
+	public void testRegisterWithActivationKeyContainingPool(Object blockedByBug, String keyName, JSONObject jsonPool) throws JSONException, Exception {
+		testRegisterWithActivationKeyContainingPoolWithQuantity(blockedByBug, keyName, jsonPool, null);
 	}
 	
 	/*
@@ -625,22 +655,27 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 	 * @Test enabled=false
 	 */
 	@Test(	description="create an activation key named with an international character, add a pool to it (without specifying a quantity), and then register with the activation key",
-			groups={"blockedByBug-803773","blockedByBug-1023568"},
-			dataProvider="getRegisterWithInternationalActivationKeyContainingPool_TestData",
+			groups={"Tier3Tests","blockedByBug-803773","blockedByBug-1023568"},
+			dataProvider="getRegisterWithInternationalActivationKeyContainingPoolData",
 			enabled=false)
 	@Deprecated
 	//@ImplementsNitrateTest(caseId=)	
-	public void RegisterWithInternationalActivationKeyContainingPool_Test(Object blockedByBug, String keyName, JSONObject jsonPool) throws JSONException, Exception {
-		RegisterWithActivationKeyContainingPoolWithQuantity_Test(blockedByBug, keyName, jsonPool, null);
+	public void testRegisterWithInternationalActivationKeyContainingPool(Object blockedByBug, String keyName, JSONObject jsonPool) throws JSONException, Exception {
+		testRegisterWithActivationKeyContainingPoolWithQuantity(blockedByBug, keyName, jsonPool, null);
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21801", "RHEL7-51618"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21801", "RHEL7-51618"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="create an activation key for each org and then attempt to register with the activation key using a different org",
-			groups={},
+			groups={"Tier3Tests"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
-	public void RegisterWithActivationKeyUsingWrongOrg_Test() throws JSONException, Exception {
+	public void testRegisterWithActivationKeyUsingWrongOrg() throws JSONException, Exception {
 		
 		// loop through existing owners and remember the orgs
 		JSONArray jsonOwners = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,"/owners"));
@@ -711,14 +746,19 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21796", "RHEL7-51613"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21796", "RHEL7-51613"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="create an activation key with a valid quantity and attempt to register with it when not enough entitlements remain",
-			groups={},
+			groups={"Tier3Tests"},
 			dataProvider="getAllMultiEntitlementJSONPoolsData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
-	public void RegisterWithActivationKeyContainingPoolForWhichNotEnoughQuantityRemains_Test(Object blockedByBug, String keyName, JSONObject jsonPool) throws JSONException, Exception {
+	public void testRegisterWithActivationKeyContainingPoolForWhichNotEnoughQuantityRemains(Object blockedByBug, String keyName, JSONObject jsonPool) throws JSONException, Exception {
 		
 		// first, figure out how many entitlements remain
 		int quantityAvail = jsonPool.getInt("quantity")-jsonPool.getInt("consumed");
@@ -755,7 +795,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		
 		// finally do the test...
 		// create an activation key, add the current pool to the activation key with this valid quantity, and attempt to register with it.
-		SSHCommandResult registerResult = RegisterWithActivationKeyContainingPoolWithQuantity_Test(blockedByBug, keyName, jsonCurrentPool, quantityAvail);
+		SSHCommandResult registerResult = testRegisterWithActivationKeyContainingPoolWithQuantity(blockedByBug, keyName, jsonCurrentPool, quantityAvail);
 		
 		String expectedStderr = String.format("No entitlements are available from the pool with id '%s'.", jsonCurrentPool.getString("id"));
 		expectedStderr = String.format("No subscriptions are available from the pool with id '%s'.", jsonCurrentPool.getString("id"));	// string changed by bug 876758
@@ -772,13 +812,18 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21795", "RHEL7-51612"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21795", "RHEL7-51612"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="create an activation key and add many pools to it and then register asserting all the pools get consumed",
-			groups={"blockedByBug-1040101"},
+			groups={"Tier3Tests","blockedByBug-1040101"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
-	public void RegisterWithActivationKeyContainingMultiplePools_Test() throws JSONException, Exception {
+	public void testRegisterWithActivationKeyContainingMultiplePools() throws JSONException, Exception {
 		
 		// get all of the pools belonging to ownerKey
 		JSONArray jsonPools = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/owners/"+sm_clientOrg+"/pools?listall=true"));	
@@ -855,13 +900,18 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21802", "RHEL7-51619"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21802", "RHEL7-51619"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="create many activation keys with one added pool per key and then register with --activationkey=comma_separated_string_of_keys asserting all the pools get consumed",
-			groups={"blockedByBug-878986","blockedByBug-979492","blockedByBug-1040101"},
+			groups={"Tier3Tests","blockedByBug-878986","blockedByBug-979492","blockedByBug-1040101"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
-	public void RegisterWithListOfCommaSeparatedActivationKeys_Test() throws JSONException, Exception {
+	public void testRegisterWithListOfCommaSeparatedActivationKeys() throws JSONException, Exception {
 		
 		// get all of the pools belonging to ownerKey
 		JSONArray jsonPools = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/owners/"+sm_clientOrg+"/pools?listall=true"));	
@@ -942,13 +992,18 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21803", "RHEL7-51620"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21803", "RHEL7-51620"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="create many activation keys with one added pool per key and then register with a sequence of many --activationkey parameters asserting each pool per key gets consumed",
-			groups={"blockedByBug-878986","blockedByBug-979492","blockedByBug-1040101"},
+			groups={"Tier3Tests","blockedByBug-878986","blockedByBug-979492","blockedByBug-1040101"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
-	public void RegisterWithSequenceOfMultipleActivationKeys_Test() throws JSONException, Exception {
+	public void testRegisterWithSequenceOfMultipleActivationKeys() throws JSONException, Exception {
 		
 		// get all of the pools belonging to ownerKey
 		JSONArray jsonPools = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/owners/"+sm_clientOrg+"/pools?listall=true"));	
@@ -1025,13 +1080,18 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21799", "RHEL7-51616"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21799", "RHEL7-51616"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="create an activation key, add a release to it, and then register with the activation key",
-			groups={"blockedByBug-1062292"},
+			groups={"Tier3Tests","blockedByBug-1062292"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
-	public void RegisterWithActivationKeyContainingReleaseVer_Test() throws JSONException, Exception {
+	public void testRegisterWithActivationKeyContainingReleaseVer() throws JSONException, Exception {
 		
 		// generate a unique activation key name for this test
 		String keyName = String.format("ActivationKey%s_WithReleaseVer", System.currentTimeMillis());
@@ -1143,13 +1203,18 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21792", "RHEL7-51609"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21792", "RHEL7-51609"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="create an activation key, add content overrides, and then register with the activation key",
-			groups={"blockedByBug-1062292"},
+			groups={"Tier3Tests","blockedByBug-1062292"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
-	public void RegisterWithActivationKeyContainingContentOverrides_Test() throws JSONException, Exception {
+	public void testRegisterWithActivationKeyContainingContentOverrides() throws JSONException, Exception {
 		if (clienttasks.isPackageVersion("subscription-manager","<","1.10.7-1")) throw new SkipException("Installed package '"+clienttasks.installedPackageVersionMap.get("subscription-manager")+"' is blockedByBug https://bugzilla.redhat.com/show_bug.cgi?id=803746 which is fixed in subscription-manager-1.10.7-1.");
 		
 		// generate a unique activation key name for this test
@@ -1279,13 +1344,18 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21789", "RHEL7-51606"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21789", "RHEL7-51606"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="use the candlepin api to attempt creation of an activation key with a bad service level",
-			groups={},	// Candlepin commit 387463519444634bb242b456db7bc89cf0eae43e Add SLA functionality to Activation Keys.
+			groups={"Tier3Tests"},	// Candlepin commit 387463519444634bb242b456db7bc89cf0eae43e Add SLA functionality to Activation Keys.
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
-	public void AttemptActivationKeyCreationWithBadServiceLevel_Test() throws JSONException, Exception {
+	public void testAttemptActivationKeyCreationWithBadServiceLevel() throws JSONException, Exception {
 		
 		// create a JSON object to represent the request body (with bad service level)
 		Map<String,String> mapActivationKeyRequest = new HashMap<String,String>();
@@ -1306,13 +1376,18 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		}
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21800", "RHEL7-51617"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21800", "RHEL7-51617"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="create an activation key, add a service level to it, and then register with the activation key",
-			groups={},	// Candlepin commit 387463519444634bb242b456db7bc89cf0eae43e Add SLA functionality to Activation Keys.
+			groups={"Tier3Tests"},	// Candlepin commit 387463519444634bb242b456db7bc89cf0eae43e Add SLA functionality to Activation Keys.
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
-	public void RegisterWithActivationKeyContainingServiceLevel_Test() throws JSONException, Exception {
+	public void testRegisterWithActivationKeyContainingServiceLevel() throws JSONException, Exception {
 		
 		// generate a unique activation key name for this test
 		String keyName = String.format("ActivationKey%s_WithServiceLevel", System.currentTimeMillis());
@@ -1388,13 +1463,18 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(clienttasks.getCurrentServiceLevel(), serviceLevel, "After registering with an activation key containing an updated serviceLevel, the current service level is properly set.");
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21794", "RHEL7-51611"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21794", "RHEL7-51611"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="create an activation key, add a service level (for a future subscription) to it, and then register with the activation key",
-			groups={"RegisterWithActivationKeyContainingFutureServiceLevel_Test"},	// Candlepin commit 387463519444634bb242b456db7bc89cf0eae43e Add SLA functionality to Activation Keys.
+			groups={"Tier3Tests","RegisterWithActivationKeyContainingFutureServiceLevel"},	// Candlepin commit 387463519444634bb242b456db7bc89cf0eae43e Add SLA functionality to Activation Keys.
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
-	public void RegisterWithActivationKeyContainingFutureServiceLevel_Test() throws JSONException, Exception {
+	public void testRegisterWithActivationKeyContainingFutureServiceLevel() throws JSONException, Exception {
 		
 		// generate a unique activation key name for this test
 		String keyName = String.format("ActivationKey%s_WithFutureServiceLevel", System.currentTimeMillis());
@@ -1418,13 +1498,13 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(clienttasks.getCurrentServiceLevel(), futureServiceLevel, "After registering with an activation key containing a serviceLevel, the current service level is properly set.");
 	}
 	protected String futureServiceLevel = null;
-	@BeforeGroups(value={"RegisterWithActivationKeyContainingFutureServiceLevel_Test"}, groups={"setup"})
-	public void beforeRegisterWithActivationKeyContainingFutureServiceLevel_Test() throws JSONException, Exception {
+	@BeforeGroups(value={"RegisterWithActivationKeyContainingFutureServiceLevel"}, groups={"setup"})
+	public void beforeRegisterWithActivationKeyContainingFutureServiceLevel() throws JSONException, Exception {
 		String name,productId, serviceLevel;
 		List<String> providedProductIds = new ArrayList<String>();
 		Map<String,String> attributes = new HashMap<String,String>();
 		if (server==null) {
-			log.warning("Skipping beforeRegisterWithActivationKeyContainingFutureServiceLevel_Test() when server is null.");
+			log.warning("Skipping beforeRegisterWithActivationKeyContainingFutureServiceLevel() when server is null.");
 			return;	
 		}
 	
@@ -1451,13 +1531,18 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21793", "RHEL7-51610"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21793", "RHEL7-51610"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="create an activation key, add a service level (for an expired subscription) to it, and then register with the activation key",
-			groups={"RegisterWithActivationKeyContainingExpiredServiceLevel_Test","blockedByBug-1262435","blockedByBug-1344765"},	// Candlepin commit 387463519444634bb242b456db7bc89cf0eae43e Add SLA functionality to Activation Keys.
+			groups={"Tier3Tests","RegisterWithActivationKeyContainingExpiredServiceLevel","blockedByBug-1262435","blockedByBug-1344765"},	// Candlepin commit 387463519444634bb242b456db7bc89cf0eae43e Add SLA functionality to Activation Keys.
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
-	public void RegisterWithActivationKeyContainingExpiredServiceLevel_Test() throws JSONException, Exception {
+	public void testRegisterWithActivationKeyContainingExpiredServiceLevel() throws JSONException, Exception {
 		
 		// generate a unique activation key name for this test
 		String keyName = String.format("ActivationKey%s_WithExpiredServiceLevel", System.currentTimeMillis());
@@ -1512,13 +1597,13 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(result.getStderr().trim(), expectedStderr,"Stderr message from an attempt to register with an activation key whose service level '"+expiredServiceLevel+"' is only supported by a pool that has now expired.");	
 	}
 	protected String expiredServiceLevel = null;
-	@BeforeGroups(value={"RegisterWithActivationKeyContainingExpiredServiceLevel_Test"}, groups={"setup"})
-	public void beforeRegisterWithActivationKeyContainingExpiredServiceLevel_Test() throws JSONException, Exception {
+	@BeforeGroups(value={"RegisterWithActivationKeyContainingExpiredServiceLevel"}, groups={"setup"})
+	public void beforeRegisterWithActivationKeyContainingExpiredServiceLevel() throws JSONException, Exception {
 		String name,productId, serviceLevel;
 		List<String> providedProductIds = new ArrayList<String>();
 		Map<String,String> attributes = new HashMap<String,String>();
 		if (server==null) {
-			log.warning("Skipping beforeRegisterWithActivationKeyContainingExpiredServiceLevel_Test() when server is null.");
+			log.warning("Skipping beforeRegisterWithActivationKeyContainingExpiredServiceLevel() when server is null.");
 			return;	
 		}
 	
@@ -1545,12 +1630,17 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21791", "RHEL7-51608"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21791", "RHEL7-51608"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="attempt to register two different consumers with multiple activation keys (in reverse order) containing many subscriptions",
-			groups={"blockedByBug-1095939"})
+			groups={"Tier3Tests","blockedByBug-1095939"})
 			//@ImplementsNitrateTest(caseId=)
-	public void MultiClientAttemptToDeadLockOnRegisterWithActivationKeys_Test() throws JSONException, Exception {
+	public void testMultiClientAttemptToDeadLockOnRegisterWithActivationKeys() throws JSONException, Exception {
 		if (client2tasks==null) throw new SkipException("This multi-client test requires a second client.");
 		
 		// register two clients
@@ -1711,10 +1801,10 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 	@BeforeClass(groups="setup")
 	public void setupBeforeClass() throws Exception {
 		if (sm_clientOrg!=null) return;
-		// alternative to dependsOnGroups={"RegisterWithCredentials_Test"}
+		// alternative to dependsOnGroups={"RegisterWithCredentials"}
 		// This allows us to satisfy a dependency on registrationDataList making TestNG add unwanted Test results.
 		// This also allows us to individually run this Test Class on Hudson.
-		RegisterWithCredentials_Test(); // needed to populate registrationDataList
+		testRegisterWithCredentials(); // needed to populate registrationDataList
 		clienttasks.stop_rhsmcertd();	// needed to prevent autoheal from subscribing to pools that the activation keys are supposed to be subscribing
 	}
 	
@@ -1921,11 +2011,11 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		return ll;
 	}
 	
-	@DataProvider(name="getRegisterWithActivationKeyContainingPool_TestData")
-	public Object[][] getRegisterWithActivationKeyContainingPool_TestDataAs2dArray() throws Exception {
-		return TestNGUtils.convertListOfListsTo2dArray(getRegisterWithActivationKeyContainingPool_TestDataAsListOfLists());
+	@DataProvider(name="getRegisterWithActivationKeyContainingPoolData")
+	public Object[][] getRegisterWithActivationKeyContainingPoolDataAs2dArray() throws Exception {
+		return TestNGUtils.convertListOfListsTo2dArray(getRegisterWithActivationKeyContainingPoolDataAsListOfLists());
 	}
-	protected List<List<Object>> getRegisterWithActivationKeyContainingPool_TestDataAsListOfLists() throws Exception {
+	protected List<List<Object>> getRegisterWithActivationKeyContainingPoolDataAsListOfLists() throws Exception {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		//for (List<Object> l : getAllJSONPoolsDataAsListOfLists()) {	// takes a long time and rarely reveals a bug, limiting the loop to a random subset...
 		for (List<Object> l : getRandomSubsetOfList(getAllJSONPoolsDataAsListOfLists(),10)) {
@@ -1942,11 +2032,11 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		return ll;
 	}
 	
-	@DataProvider(name="getRegisterWithInternationalActivationKeyContainingPool_TestData")
-	public Object[][] getRegisterWithInternationalActivationKeyContainingPool_TestDataAs2dArray() throws Exception {
-		return TestNGUtils.convertListOfListsTo2dArray(getRegisterWithInternationalActivationKeyContainingPool_TestDataAsListOfLists());
+	@DataProvider(name="getRegisterWithInternationalActivationKeyContainingPoolData")
+	public Object[][] getRegisterWithInternationalActivationKeyContainingPoolDataAs2dArray() throws Exception {
+		return TestNGUtils.convertListOfListsTo2dArray(getRegisterWithInternationalActivationKeyContainingPoolDataAsListOfLists());
 	}
-	protected List<List<Object>> getRegisterWithInternationalActivationKeyContainingPool_TestDataAsListOfLists() throws Exception {
+	protected List<List<Object>> getRegisterWithInternationalActivationKeyContainingPoolDataAsListOfLists() throws Exception {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		
 		// randomly choose a pool
@@ -1959,11 +2049,11 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		return ll;
 	}
 	
-	@DataProvider(name="getRegisterWithActivationKeyContainingPoolWithQuantity_TestData")
-	public Object[][] getRegisterWithActivationKeyContainingPoolWithQuantity_TestDataAs2dArray() throws Exception {
-		return TestNGUtils.convertListOfListsTo2dArray(getRegisterWithActivationKeyContainingPoolWithQuantity_TestDataAsListOfLists());
+	@DataProvider(name="getRegisterWithActivationKeyContainingPoolWithQuantityData")
+	public Object[][] getRegisterWithActivationKeyContainingPoolWithQuantityDataAs2dArray() throws Exception {
+		return TestNGUtils.convertListOfListsTo2dArray(getRegisterWithActivationKeyContainingPoolWithQuantityDataAsListOfLists());
 	}
-	protected List<List<Object>> getRegisterWithActivationKeyContainingPoolWithQuantity_TestDataAsListOfLists() throws Exception {
+	protected List<List<Object>> getRegisterWithActivationKeyContainingPoolWithQuantityDataAsListOfLists() throws Exception {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		for (List<Object> l : getAllJSONPoolsDataAsListOfLists()) {
 			JSONObject jsonPool = (JSONObject)l.get(0);

@@ -8,8 +8,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.DefTypes;
 import com.github.redhatqe.polarize.metadata.TestDefinition;
+import com.github.redhatqe.polarize.metadata.TestType;
+import com.github.redhatqe.polarize.metadata.DefTypes.PosNeg;
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+
 import org.apache.xmlrpc.XmlRpcException;
 
 import org.json.JSONException;
@@ -34,19 +38,24 @@ import com.redhat.qe.tools.SSHCommandResult;
  * @author jsefler
  *
  */
-@Test(groups={"GeneralTests","Tier2Tests"})
+@Test(groups={"GeneralTests"})
 public class GeneralTests extends SubscriptionManagerCLITestScript{
 	
 	
 	// Test Methods ***********************************************************************
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20373", "RHEL7-32155"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20373", "RHEL7-32155"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager-cli: attempt to access functionality without registering",
-			groups={"blockedByBug-749332","blockedByBug-1119688"},
+			groups={"Tier2Tests","blockedByBug-749332","blockedByBug-1119688"},
 			dataProvider="UnregisteredCommandData")
 	@ImplementsNitrateTest(caseId=50215)
-	public void AttemptingCommandsWithoutBeingRegistered_Test(String command) {
+	public void testCommandsWithoutBeingRegistered(String command) {
 		log.info("Testing subscription-manager-cli command without being registered, expecting it to fail: "+ command);
 		clienttasks.unregister(null, null, null, null);
 		
@@ -60,12 +69,17 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20380", "RHEL7-61488"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20380", "RHEL7-61488"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager-cli: attempt to access functionality that does not exist",
-			groups={"blockedByBug-1098308"},
+			groups={"Tier2Tests","blockedByBug-1098308"},
 			dataProvider="NegativeFunctionalityData")
-	public void AttemptingCommandsThatAreInvalid_Test(Object blockedByBug, String command, Integer expectedExitCode, String expectedStdout, String expectedStderr) {
+	public void testCommandsThatAreInvalid(Object blockedByBug, String command, Integer expectedExitCode, String expectedStdout, String expectedStderr) {
 		log.info("Testing subscription-manager-cli command that is invalid, expecting it to fail: "+ command);
 		SSHCommandResult result = client.runCommandAndWait(command);
 		if (expectedExitCode!=null)	Assert.assertEquals(result.getExitCode(), expectedExitCode, "The expected exit code.");
@@ -74,11 +88,16 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20293", "RHEL7-32164"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20293", "RHEL7-32164"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="assert the exit code from service rhsmcertd status when running and stopped",
-			groups={"blockedByBug-895263","blockedByBug-824680","blockedByBug-842464"})
-	public void VerifyExitCodeStatusForRhmscertd_Test() {
+			groups={"Tier2Tests","blockedByBug-895263","blockedByBug-824680","blockedByBug-842464"})
+	public void testExitCodeStatusForRhmscertd() {
 		Integer expectedStoppedStatus = new Integer(3);
 		Integer expectedRunningStatus = new Integer(0);
 		log.info("When service "+clienttasks.rhsmCertD+" is stopped, the expected service status exit code is: "+expectedStoppedStatus);
@@ -88,11 +107,16 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			      , testCaseID = {"RHEL6-19943", "RHEL7-32162"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-19943", "RHEL7-32162"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="assert the exit code from service rhsmcertd status when running and stopped",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-913118","blockedByBug-912707","blockedByBug-914113","blockedByBug-1241247","blockedByBug-1395794"})
-	protected void verifyRhsmcertdDoesNotThrowDeprecationWarnings_Test() throws JSONException, Exception {
+			groups={"Tier1Tests","blockedByBug-913118","blockedByBug-912707","blockedByBug-914113","blockedByBug-1241247","blockedByBug-1395794"})
+	protected void testRhsmcertdDoesNotThrowDeprecationWarnings() throws JSONException, Exception {
 		clienttasks.unregister(null, null, null, null);
 		String marker = System.currentTimeMillis()+" Testing verifyRhsmcertdDoesNotThrowDeprecationWarnings_Test...";
 		RemoteFileTasks.markFile(client, clienttasks.messagesLogFile, marker);
@@ -129,13 +153,18 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20391", "RHEL7-32157"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20391", "RHEL7-32157"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="assert rhsmd is logged to both /var/log/rhsm/rhsm.log and /var/log/messages",
-			groups={"blockedbyBug-976868","blockedByBug-1395794"},
+			groups={"Tier2Tests","blockedbyBug-976868","blockedByBug-1395794"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void VerifyRhsmdForceSignalsToRhsmlogAndSyslog_Test() {
+	public void testRhsmdForceSignalsToRhsmlogAndSyslog() {
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null,null,null,null,null,null, null);
 		
 		Map<String,String> signalMap = new HashMap<String,String>();
@@ -177,13 +206,18 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20374", "RHEL7-32169"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20374", "RHEL7-32169"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="assert permissions on /etc/cron.daily/rhsmd",
-			groups={"blockedbyBug-1012566"},
+			groups={"Tier2Tests","blockedbyBug-1012566"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void VerifyPermissionsOnEtcCronDailyRhsmd_Test() {
+	public void testPermissionsOnEtcCronDailyRhsmd() {
 		if (clienttasks.isPackageVersion("subscription-manager","<","1.10.3-1")) throw new SkipException("Installed package '"+clienttasks.installedPackageVersionMap.get("subscription-manager")+"' is blockedByBug https://bugzilla.redhat.com/show_bug.cgi?id=1012566 which is fixed in subscription-manager-1.10.3-1.");
 		
 		//	[root@jsefler-6 ~]# ls -l /etc/cron.daily/rhsmd 
@@ -207,13 +241,18 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20384", "RHEL7-32171"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20384", "RHEL7-32171"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="verify enablement of yum plugin for subscription-manager in /etc/yum/pluginconf.d/subscription-manager.conf ",
-			groups={"VerifyYumPluginForSubscriptionManagerEnablement_Test", "blockedByBug-1017354","blockedByBug-1087620"},
+			groups={"Tier2Tests","VerifyYumPluginForSubscriptionManagerEnablement_Test", "blockedByBug-1017354","blockedByBug-1087620"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void VerifyYumPluginForSubscriptionManagerEnablement_Test() {
+	public void testYumPluginForSubscriptionManagerEnablement() {
 		SSHCommandResult sshCommandResult;
 		String stdoutRegex,stdout;
 		
@@ -278,13 +317,18 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36512", "RHEL7-59018"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36512", "RHEL7-59018"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="check the rpm requires list for changes to python-rhsm-certificates",
-			groups={"blockedByBug-1104332"},
+			groups={"Tier2Tests","blockedByBug-1104332"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void VerifyRpmRequireListForPythonRhsmCertificates_Test() {
+	public void testRpmRequireListForPythonRhsmCertificates() {
 		String pkg = "python-rhsm-certificates";
 		if (!clienttasks.isPackageInstalled(pkg)) throw new SkipException("This test require that package '"+pkg+"' be installed.");
 		String rpmCommand = "rpm --query --requires "+pkg+" --verbose";
@@ -308,13 +352,18 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20301", "RHEL7-32161"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20301", "RHEL7-32161"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="check the rpm requires list for changes to python-rhsm",
-			groups={"blockedByBug-1006748","blockedByBug-800732","blockedByBug-1096676"},
+			groups={"Tier2Tests","blockedByBug-1006748","blockedByBug-800732","blockedByBug-1096676"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void VerifyRpmRequireListForPythonRhsm_Test() {
+	public void testRpmRequireListForPythonRhsm() {
 		String pkg = "python-rhsm";
 		if (!clienttasks.isPackageInstalled(pkg)) throw new SkipException("This test require that package '"+pkg+"' be installed.");
 		String rpmCommand = "rpm --query --requires "+pkg+" --verbose";
@@ -366,13 +415,18 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20299", "RHEL7-32159"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20299", "RHEL7-32159"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="check the rpm requires list for changes to subscription-manager",
-			groups={"blockedbyBug-801280","blockedByBug-1006748","blockedByBug-800744","blockedByBug-1080531","blockedByBug-850331"},
+			groups={"Tier2Tests","blockedbyBug-801280","blockedByBug-1006748","blockedByBug-800744","blockedByBug-1080531","blockedByBug-850331"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void VerifyRpmRequireListForSubscriptionManager_Test() {
+	public void testRpmRequireListForSubscriptionManager() {
 		String pkg = "subscription-manager";
 		if (!clienttasks.isPackageInstalled(pkg)) throw new SkipException("This test require that package '"+pkg+"' be installed.");
 		String rpmCommand = "rpm --query --requires "+pkg+" --verbose";
@@ -543,13 +597,18 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20376", "RHEL7-32168"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20376", "RHEL7-32168"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="check the rpm requires list for changes to subscription-manager-gui",
-			groups={"blockedbyBug-1004908"},
+			groups={"Tier2Tests","blockedbyBug-1004908"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void VerifyRpmRequireListForSubscriptionManagerGui_Test() {
+	public void testRpmRequireListForSubscriptionManagerGui() {
 		String pkg = "subscription-manager-gui";
 		if (!clienttasks.isPackageInstalled(pkg)) throw new SkipException("This test require that package '"+pkg+"' be installed.");
 		String rpmCommand = "rpm --query --requires "+pkg+" --verbose";
@@ -654,15 +713,20 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6}
-			, testCaseID = {"RHEL6-20393"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20393", "RHEL7-32175"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="check the rpm requires list for changes to subscription-manager-firstboot",
-			groups={"blockedbyBug-1004908"},
+			groups={"Tier2Tests","blockedbyBug-1004908"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void VerifyRpmRequireListForSubscriptionManagerFirstboot_Test() {
+	public void testRpmRequireListForSubscriptionManagerFirstboot() {
 		String pkg = "subscription-manager-firstboot";
-		if (!clienttasks.isPackageInstalled(pkg)) throw new SkipException("This test require that package '"+pkg+"' be installed.");
+		if (!clienttasks.isPackageInstalled(pkg)) throw new SkipException("This test requires that package '"+pkg+"' be installed.");
 		if (clienttasks.installedPackageVersionMap.get("subscription-manager-gui")==null) clienttasks.isPackageVersion("subscription-manager-gui","==","0.0");	// will populate clienttasks.installedPackageVersionMap.get("subscription-manager-gui")
 		String rpmCommand = "rpm --query --requires "+pkg+" --verbose";
 		if (Integer.valueOf(clienttasks.redhatReleaseX) == 5) rpmCommand += " | egrep -v '\\(.*\\)'";
@@ -703,13 +767,18 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20399", "RHEL7-51274"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20399", "RHEL7-51274"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="check the rpm requires list for changes to subscription-manager-initial-setup-addon",
-			groups={"blockedbyBug-1246146","blockedbyBug-1246391"},
+			groups={"Tier2Tests","blockedbyBug-1246146","blockedbyBug-1246391"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void VerifyRpmRequireListForSubscriptionManagerInitialSetupAddon_Test() {
+	public void testRpmRequireListForSubscriptionManagerInitialSetupAddon() {
 		String pkg = "subscription-manager-initial-setup-addon";
 		if (!clienttasks.isPackageInstalled(pkg)) throw new SkipException("This test require that package '"+pkg+"' be installed.");
 		if (clienttasks.installedPackageVersionMap.get("subscription-manager-gui")==null) clienttasks.isPackageVersion("subscription-manager-gui","==","0.0");	// will populate clienttasks.installedPackageVersionMap.get("subscription-manager-gui")
@@ -740,13 +809,18 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20390", "RHEL7-32182"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20390", "RHEL7-32182"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="check the rpm requires list for changes to subscription-manager-migration",
-			groups={"blockedByBug-1049037"},
+			groups={"Tier2Tests","blockedByBug-1049037"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void VerifyRpmRequireListForSubscriptionManagerMigration_Test() {
+	public void testRpmRequireListForSubscriptionManagerMigration() {
 		String pkg = "subscription-manager-migration";
 		if (!clienttasks.isPackageInstalled(pkg)) throw new SkipException("This test require that package '"+pkg+"' be installed.");
 		String rpmCommand = "rpm --query --requires "+pkg+" --verbose";
@@ -786,13 +860,18 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20394", "RHEL7-32174"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20394", "RHEL7-32174"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="check the rpm requires list for changes to subscription-manager-migration-data",
-			groups={},
+			groups={"Tier2Tests"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void VerifyRpmRequireListForSubscriptionManagerMigrationData_Test() {
+	public void testRpmRequireListForSubscriptionManagerMigrationData() {
 		String pkg = "subscription-manager-migration-data";
 		if (!clienttasks.isPackageInstalled(pkg)) throw new SkipException("This test require that package '"+pkg+"' be installed.");
 		String rpmCommand = "rpm --query --requires "+pkg+" --verbose";
@@ -825,13 +904,18 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20400", "RHEL7-32167"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20400", "RHEL7-32167"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="check the rpm requires list for changes to subscription-manager-plugin-ostree",
-			groups={"blockedByBug-1165771"},
+			groups={"Tier2Tests","blockedByBug-1165771"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void VerifyRpmRequireListForSubscriptionManagerPluginOstree_Test() {
+	public void testRpmRequireListForSubscriptionManagerPluginOstree() {
 		String pkg = "subscription-manager-plugin-ostree";
 		if (!clienttasks.isPackageInstalled(pkg)) throw new SkipException("This test require that package '"+pkg+"' be installed.");
 		String rpmCommand = "rpm --query --requires "+pkg+" --verbose";
@@ -863,13 +947,18 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20294", "RHEL7-32179"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20294", "RHEL7-32179"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="check the rpm requires list for changes to subscription-manager-plugin-container",
-			groups={"blockedByBug-1165771"},
+			groups={"Tier2Tests","blockedByBug-1165771"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void VerifyRpmRequireListForSubscriptionManagerPluginContainer_Test() {
+	public void testRpmRequireListForSubscriptionManagerPluginContainer() {
 		// initial version subscription-manager-plugin-container-1.13.7-1.el7.x86_64
 		String pkg = "subscription-manager-plugin-container";
 		if (!clienttasks.isPackageInstalled(pkg)) throw new SkipException("This test require that package '"+pkg+"' be installed.");
@@ -904,13 +993,18 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20296", "RHEL7-32158"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20296", "RHEL7-32158"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="When the client is 1 hour or more (normalized for time zone and daylight savings time) ahead of candlepin's clock, verify that a WARNING is logged to rhsm.log",
-			groups={"VerifyPositiveClockSkewDetection_Test","blockedByBug-772936","blockedByBug-1090350"},
+			groups={"Tier2Tests","VerifyPositiveClockSkewDetection_Test","blockedByBug-772936","blockedByBug-1090350"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void VerifyPositiveClockSkewDetection_Test() {
+	public void testPositiveClockSkewDetection() {
 		//client.runCommandAndWait("rm -f "+clienttasks.rhsmLogFile);	// remove it because it occasionally gets backed up to rhsm.log.1 in the midst of a pair of calls to RemoteFileTasks.markFile(...) and RemoteFileTasks.getTailFromMarkedFile(...)
 		client.runCommandAndWait("truncate --size=0 --no-create "+clienttasks.rhsmLogFile);	// truncate it to avoid getting backed up to rhsm.log.1 in the midst of a pair of calls to RemoteFileTasks.markFile(...) and RemoteFileTasks.getTailFromMarkedFile(...)
 		clienttasks.unregister(null, null, null, null);	// do not need to be registered for this test
@@ -944,13 +1038,18 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	protected Integer positiveClockSkewMinutes = null;
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20367", "RHEL7-32177"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20367", "RHEL7-32177"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="When the client is 1 hour or more (normalized for time zone and daylight savings time) behind candlepin's clock, verify that a WARNING is logged to rhsm.log",
-			groups={"VerifyNegativeClockSkewDetection_Test","blockedByBug-772936","blockedByBug-1090350"},
+			groups={"Tier2Tests","VerifyNegativeClockSkewDetection_Test","blockedByBug-772936","blockedByBug-1090350"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void VerifyNegativeClockSkewDetection_Test() {
+	public void testNegativeClockSkewDetection() {
 		//client.runCommandAndWait("rm -f "+clienttasks.rhsmLogFile);	// remove it because it occasionally gets backed up to rhsm.log.1 in the midst of a pair of calls to RemoteFileTasks.markFile(...) and RemoteFileTasks.getTailFromMarkedFile(...)
 		client.runCommandAndWait("truncate --size=0 --no-create "+clienttasks.rhsmLogFile);	// truncate it to avoid getting backed up to rhsm.log.1 in the midst of a pair of calls to RemoteFileTasks.markFile(...) and RemoteFileTasks.getTailFromMarkedFile(...)
 		clienttasks.unregister(null, null, null, null);	// do not need to be registered for this test
@@ -988,13 +1087,18 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20383", "RHEL7-51273"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20383", "RHEL7-51273"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="check the rpm query list for subscription-manager-migration and verify it does NOT list sat5to6",
-			groups={"blockedByBug-1145833"},
+			groups={"Tier2Tests","blockedByBug-1145833"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void VerifyRpmListForSubscriptionManagerMigrationExcludesSat5to6_Test() {
+	public void testRpmListForSubscriptionManagerMigrationExcludesSat5to6() {
 		// initial version subscription-manager-plugin-container-1.13.7-1.el7.x86_64
 		String pkg = "subscription-manager-migration";
 		if (!clienttasks.isPackageInstalled(pkg)) throw new SkipException("This test require that package '"+pkg+"' be installed.");
@@ -1006,13 +1110,18 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20292", "RHEL7-51272"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20292", "RHEL7-51272"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="python-rhsm should not set socket.setdefaulttimeout(60)",
-			groups={"blockedByBug-1195446"},
+			groups={"Tier2Tests","blockedByBug-1195446"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void VerifyPythonRhsmDoesNotSetSocketDefaultTimeout_Test() throws IOException {
+	public void testPythonRhsmDoesNotSetSocketDefaultTimeout() throws IOException {
 		if (clienttasks.isPackageVersion("python-rhsm", "<", "1.14.2-1")) throw new SkipException("Blocking bugzilla 1195446 was not fixed until version python-rhsm-1.14.2-1");	// python-rhsm commit a974e5d636009fa41bec2b4a9d33f853e9e72a2b
 		
 		// copy the ismanagedtest.py script to the client

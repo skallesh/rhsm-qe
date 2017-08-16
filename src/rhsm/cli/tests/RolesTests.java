@@ -17,28 +17,36 @@ import rhsm.base.SubscriptionManagerCLITestScript;
 import rhsm.cli.tasks.CandlepinTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 
-import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.DefTypes;
 import com.github.redhatqe.polarize.metadata.TestDefinition;
+import com.github.redhatqe.polarize.metadata.TestType;
+import com.github.redhatqe.polarize.metadata.DefTypes.PosNeg;
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
 
 /**
  * @author jsefler
  *
  *
  */
-@Test(groups={"RolesTests","Tier2Tests"})
+@Test(groups={"RolesTests"})
 public class RolesTests extends SubscriptionManagerCLITestScript {
 
 	
 	// Test methods ***********************************************************************
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-27134", "RHEL7-51498"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-27134", "RHEL7-51498"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="for the given user credentials, verify that the permission access (READ_ONLY,ALL) are obeyed by attempting to register",
 			enabled=true,
-			groups={},
+			groups={"Tier2Tests"},
 			dataProvider="getUserRoleOrgPermissionAccessData")
 	//@ImplementsNitrateTest(caseId=)
-	public void UserRoleOrgPermissionAccess_Test(String username, String password, String roleName, String orgKey, String access){
+	public void testUserRoleOrgPermissionAccess(String username, String password, String roleName, String orgKey, String access){
 		SSHCommandResult sshCommandResult;
 
 		// flatten all the AccessType values into a comma separated list

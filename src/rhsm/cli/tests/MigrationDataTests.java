@@ -37,8 +37,11 @@ import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 
-import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.DefTypes;
 import com.github.redhatqe.polarize.metadata.TestDefinition;
+import com.github.redhatqe.polarize.metadata.TestType;
+import com.github.redhatqe.polarize.metadata.DefTypes.PosNeg;
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
 
 /**
  * @author jsefler
@@ -76,30 +79,40 @@ import com.github.redhatqe.polarize.metadata.TestDefinition;
  *
  *  for F in `rpm -ql subscription-manager-migration-data | grep .pem`; do echo ""; rct cat-cert $F | grep -i "Version"; done;
  */
-@Test(groups={"MigrationDataTests","Tier3Tests"})
+@Test(groups={"MigrationDataTests"})
 public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 
 	// Test methods ***********************************************************************
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20097", "RHEL7-51104"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20097", "RHEL7-51104"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="Verify that the channel-cert-mapping.txt exists",
-			groups={"AcceptanceTests","Tier1Tests"},
+			groups={"Tier1Tests"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyChannelCertMappingFileExists_Test() {
+	public void testChannelCertMappingFileExists() {
 		Assert.assertTrue(RemoteFileTasks.testExists(client, channelCertMappingFilename),"The expected channel cert mapping file '"+channelCertMappingFilename+"' exists.");
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20100", "RHEL7-51107"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20100", "RHEL7-51107"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="Verify that the channel-cert-mapping.txt contains a unique map of channels to product certs",
-			groups={"AcceptanceTests","Tier1Tests"},
-			dependsOnMethods={"VerifyChannelCertMappingFileExists_Test"},
+			groups={"Tier1Tests"},
+			dependsOnMethods={"testChannelCertMappingFileExists"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyChannelCertMapping_Test() throws FileNotFoundException, IOException {
+	public void testChannelCertMapping() throws FileNotFoundException, IOException {
 		Assert.assertTrue(RemoteFileTasks.testExists(client, channelCertMappingFilename),"The expected channel cert mapping file '"+channelCertMappingFilename+"' exists.");
 		
 		// Read the channelCertMappingFilename as if they were properties (Warning! this will mask non-unique mappings)
@@ -139,14 +152,19 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20101", "RHEL7-51108"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20101", "RHEL7-51108"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="Verify RHEL4 channel mappings exist in channel-cert-mapping.txt",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1009932","blockedByBug-1025338","blockedByBug-1080072","blockedByBug-1100872"},
-			dependsOnMethods={"VerifyChannelCertMappingFileExists_Test"},
+			groups={"Tier1Tests","blockedByBug-1009932","blockedByBug-1025338","blockedByBug-1080072","blockedByBug-1100872"},
+			dependsOnMethods={"testChannelCertMappingFileExists"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyRHEL4ChannelMappings_Test() {
+	public void testRHEL4ChannelMappings() {
 		
 		// hand assemble a list of expected RHEL4 channels
 		// [root@jsefler-6 ~]# egrep 'rhel-.*-4(:|-.*:|\.[[:digit:]]\.z:)' /usr/share/rhsm/product/RHEL-6/channel-cert-mapping.txt | egrep --invert-match  '(-ost-4|-4-els|-4-hwcert)'
@@ -248,14 +266,19 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21883", "RHEL7-51738"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21883", "RHEL7-51738"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="Verify RHEL6 channel mappings for AUS channels exist in channel-cert-mapping.txt",
-			groups={"blockedByBug-825089"},
-			dependsOnMethods={"VerifyChannelCertMappingFileExists_Test"},
+			groups={"Tier3Tests","blockedByBug-825089"},
+			dependsOnMethods={"testChannelCertMappingFileExists"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyRHEL6AUSChannelMappings_Test() {
+	public void testRHEL6AUSChannelMappings() {
 		
 		// What is AUS? Advanced Mission Critical Update Support
 		// For RHEL 6, AUS provides access to a 6-year “Long Life” maintenance stream for specific minor releases (4 years longer than EUS)
@@ -390,14 +413,19 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20103", "RHEL7-51110"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20103", "RHEL7-51110"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="Verify that all product cert files mapped in channel-cert-mapping.txt exist",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-771615"},
-			dependsOnMethods={"VerifyChannelCertMapping_Test"},
+			groups={"Tier1Tests","blockedByBug-771615"},
+			dependsOnMethods={"testChannelCertMapping"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyAllMappedProductCertFilesExists_Test() {
+	public void testAllMappedProductCertFilesExists() {
 
 		boolean allMappedProductCertFilesExist = true;
 		for (String mappedProductCertFilename : mappedProductCertFilenames) {
@@ -413,14 +441,19 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20102", "RHEL7-51109"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20102", "RHEL7-51109"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="Verify that all existing product cert files are mapped in channel-cert-mapping.txt",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-799103","blockedByBug-849274","blockedByBug-909436","blockedByBug-1025338"},
-			dependsOnMethods={"VerifyChannelCertMapping_Test"},
+			groups={"Tier1Tests","blockedByBug-799103","blockedByBug-849274","blockedByBug-909436","blockedByBug-1025338"},
+			dependsOnMethods={"testChannelCertMapping"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyAllExistingProductCertFilesAreMapped_Test() {
+	public void testAllExistingProductCertFilesAreMapped() {
 		
 		// get a list of all the existing product cert files
 		SSHCommandResult result = client.runCommandAndWait("ls "+baseProductsDir+"/*.pem");
@@ -456,13 +489,13 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(allExitingProductCertFilesAreMapped,"All of the existing productCert files in directory '"+baseProductsDir+"' are mapped to a channel in '"+channelCertMappingFilename+"'.");
 	}
 	
-	
+	@Deprecated
 	@Test(	description="Verify that the migration product certs support this system's RHEL release version",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-782208"},
-			dependsOnMethods={"VerifyChannelCertMapping_Test"},
+			groups={"Tier1Tests","blockedByBug-782208"},
+			dependsOnMethods={"testChannelCertMapping"},
 			enabled=false)	// 9/12/2013 RHEL65: disabled in favor of new VerifyMigrationProductCertsSupportThisSystemsRhelVersion_Test; this old test was based on the generation of subscription-manager-migration-data from product-baseline.json
 	@ImplementsNitrateTest(caseId=130940)
-	public void VerifyMigrationProductCertsSupportThisSystemsRhelVersion_Test_OLD() {
+	public void testMigrationProductCertsSupportThisSystemsRhelVersion_DEPRECATED() {
 		
 		// process all the migration product cert files into ProductCerts and assert their version
 		boolean verifiedVersionOfAllMigrationProductCertFiles = true;
@@ -482,14 +515,19 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(verifiedVersionOfAllMigrationProductCertFiles,"All of the migration productCerts in directory '"+baseProductsDir+"' support this version of RHEL '"+clienttasks.redhatReleaseXY+"'.");
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20106", "RHEL7-51111"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20106", "RHEL7-51111"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="Verify that the migration product certs support this system's RHEL release version",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-782208","blockedByBug-1006060","blockedByBug-1025338","blockedByBug-1080072","blockedByBug-1110863","blockedByBug-1148110","blockedByBug-1197864","blockedByBug-1300766","blockedByBug-1241221","blockedByBug-1328579","blockedByBug-1393573","blockedByBug-1436441"},
-			dependsOnMethods={"VerifyChannelCertMapping_Test"},
+			groups={"Tier1Tests","blockedByBug-782208","blockedByBug-1006060","blockedByBug-1025338","blockedByBug-1080072","blockedByBug-1110863","blockedByBug-1148110","blockedByBug-1197864","blockedByBug-1300766","blockedByBug-1241221","blockedByBug-1328579","blockedByBug-1393573","blockedByBug-1436441"},
+			dependsOnMethods={"testChannelCertMapping"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=130940)
-	public void VerifyMigrationProductCertsSupportThisSystemsRhelVersion_Test() {
+	public void testMigrationProductCertsSupportThisSystemsRhelVersion() {
 		
 		// process all the migration product cert files into ProductCerts and assert their version
 		boolean verifiedVersionOfAllMigrationProductCertFiles = false;
@@ -510,11 +548,12 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
+	@Deprecated
 	@Test(	description="Verify that the migration product certs match those from rhn definitions",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-799152","blockedByBug-814360","blockedByBug-861420","blockedByBug-861470","blockedByBug-872959","blockedByBug-875760","blockedByBug-875802"},
+			groups={"Tier1Tests","blockedByBug-799152","blockedByBug-814360","blockedByBug-861420","blockedByBug-861470","blockedByBug-872959","blockedByBug-875760","blockedByBug-875802"},
 			enabled=false)	// 9/9/2013 RHEL65: disabled in favor of new VerifyMigrationProductCertsMatchThoseFromRhnDefinitions_Test
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyMigrationProductCertsMatchThoseFromRhnDefinitions_Test_OLD() {
+	public void testMigrationProductCertsMatchThoseFromRhnDefinitions_DEPRECATED() {
 		
 		// process all the migration product cert files into ProductCerts and assert they match those from the RHN Definitions
 
@@ -578,13 +617,18 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(verifiedMatchForAllMigrationProductCertFiles,"All of the migration productCerts in directory '"+baseProductsDir+"' match the current ["+sm_rhnDefinitionsGitRepository+"] product certs for this RHEL release '"+clienttasks.redhatReleaseXY+"' ");
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20098", "RHEL7-51105"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20098", "RHEL7-51105"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="Verify that the migration product certs match those from rhn definitions",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-799152","blockedByBug-814360","blockedByBug-861420","blockedByBug-861470","blockedByBug-872959","blockedByBug-875760","blockedByBug-875802","blockedByBug-1305695"},
+			groups={"Tier1Tests","blockedByBug-799152","blockedByBug-814360","blockedByBug-861420","blockedByBug-861470","blockedByBug-872959","blockedByBug-875760","blockedByBug-875802","blockedByBug-1305695"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyMigrationProductCertsMatchThoseFromRhnDefinitions_Test() {
+	public void testMigrationProductCertsMatchThoseFromRhnDefinitions() {
 		
 		// assemble a list of rhnDefinitionsProductCertsDirs that we care about under [rcm/rcm-metadata.git] / product_ids /
 		// Note: we care about all of the productCertsDirs
@@ -716,13 +760,14 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
+	@Deprecated
 	@Test(	description="Verify that all of the required RHN Channels in the ProductBaseline file are accounted for in channel-cert-mapping.txt",
-			groups={},
-			dependsOnMethods={"VerifyChannelCertMapping_Test"},
+			groups={"Tier3Tests"},
+			dependsOnMethods={"testChannelCertMapping"},
 			dataProvider="RhnChannelFromProductBaselineData",
-			enabled=false)	// 9/9/2013 RHEL65: disabling this test in favor of new VerifyChannelCertMappingFileSupportsRhnChannelFromProductCerts_Test
+			enabled=false)	// 9/9/2013 RHEL65: disabling this test in favor of new testChannelCertMappingFileSupportsRhnChannelFromProductCerts
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyChannelCertMappingFileSupportsRhnChannelFromProductBaseline_Test_OLD(Object bugzilla, String productBaselineRhnChannel, String productBaselineProductId) throws JSONException {
+	public void testChannelCertMappingFileSupportsRhnChannelFromProductBaseline_DEPRECATED(Object bugzilla, String productBaselineRhnChannel, String productBaselineProductId) throws JSONException {
 		
 		// does the cdn indicate that this channel maps to more than one product?
 		if (cdnProductBaselineChannelMap.get(productBaselineRhnChannel).size()>1) {
@@ -828,15 +873,20 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				"The subscription-manager-migration-data file '"+channelCertMappingFilename+"' maps RHN Channel '"+productBaselineRhnChannel+"' to the same productId as dictated in the CDN Product Baseline.");
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21884", "RHEL7-51739"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21884", "RHEL7-51739"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="Verify that all of the required RHN Channels in the product-certs.json file are accounted for in channel-cert-mapping.txt",
-			groups={"blockedByBug-1025338","blockedByBug-1080072","blockedByBug-1241221"},
-			dependsOnMethods={"VerifyChannelCertMapping_Test"},
+			groups={"Tier3Tests","blockedByBug-1025338","blockedByBug-1080072","blockedByBug-1241221"},
+			dependsOnMethods={"testChannelCertMapping"},
 			dataProvider="RhnChannelFromProductCertsData",
 			enabled=true) // Starting in RHEL65, we are moving away from product-baseline.json and replacing it with product-certs.json
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyChannelCertMappingFileSupportsRhnChannelFromProductCerts_Test(Object bugzilla, String productCertsRhnChannel, File productCertsProductFile) throws JSONException {
+	public void testChannelCertMappingFileSupportsRhnChannelFromProductCerts(Object bugzilla, String productCertsRhnChannel, File productCertsProductFile) throws JSONException {
 
 // UNDER CONSTRUCTION
 //		// does the cdn indicate that this channel maps to more than one product?
@@ -968,15 +1018,20 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20104", "RHEL7-33102"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20104", "RHEL7-33102"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="Verify that all of the classic RHN Channels available to a classically registered consumer are accounted for in the in the channel-cert-mapping.txt or is a known exception",
-			groups={"AcceptanceTests","Tier1Tests"},
-			dependsOnMethods={"VerifyChannelCertMapping_Test"},
+			groups={"Tier1Tests"},
+			dependsOnMethods={"testChannelCertMapping"},
 			dataProvider="getRhnClassicBaseAndAvailableChildChannelsData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyChannelCertMappingFileSupportsRhnClassicBaseAndAvailableChildChannel_Test(Object bugzilla, String classicRhnChannel) {
+	public void testChannelCertMappingFileSupportsRhnClassicBaseAndAvailableChildChannel(Object bugzilla, String classicRhnChannel) {
 		
 		// SPECIAL CASES.....
 		
@@ -1238,14 +1293,19 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20099", "RHEL7-51106"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20099", "RHEL7-51106"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="Verify that the channel-cert-mapping.txt does NOT contain any High Touch Beta channel mappings",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1011992"},
-			dependsOnMethods={"VerifyChannelCertMappingFileExists_Test"},
+			groups={"Tier1Tests","blockedByBug-1011992"},
+			dependsOnMethods={"testChannelCertMappingFileExists"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyChannelCertMappingDoesNotContainHighTouchBetaChannels_Test() {
+	public void testChannelCertMappingDoesNotContainHighTouchBetaChannels() {
 		Assert.assertTrue(RemoteFileTasks.testExists(client, channelCertMappingFilename),"The expected channel cert mapping file '"+channelCertMappingFilename+"' exists.");
 		
 		SSHCommandResult sshCommandResult = client.runCommandAndWait("grep -- -htb "+channelCertMappingFilename);
@@ -1255,14 +1315,19 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20105", "RHEL7-55203"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20105", "RHEL7-55203"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="Verify that the expected RHN base channels supporting this system's RHEL release version are mapped to product certs whose version matches this system's RHEL release",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1110863","blockedByBug-1148110","blockedByBug-1197864","blockedByBug-1300766","blockedByBug-1222712","blockedByBug-1228387","blockedByBug-1241221","blockedByBug-1328579","blockedByBug-1328609","blockedByBug-1366747","blockedByBug-1393573","blockedByBug-1436441"},
-			dependsOnMethods={"VerifyChannelCertMapping_Test"},
+			groups={"Tier1Tests","blockedByBug-1110863","blockedByBug-1148110","blockedByBug-1197864","blockedByBug-1300766","blockedByBug-1222712","blockedByBug-1228387","blockedByBug-1241221","blockedByBug-1328579","blockedByBug-1328609","blockedByBug-1366747","blockedByBug-1393573","blockedByBug-1436441"},
+			dependsOnMethods={"testChannelCertMapping"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyExpectedBaseChannelsSupportThisSystemsRhelVersion_Test() {
+	public void testExpectedBaseChannelsSupportThisSystemsRhelVersion() {
 		
 		List<String> expectedBaseChannels = new ArrayList<String>();
 		if (clienttasks.redhatReleaseX.equals("7")) {
@@ -1360,15 +1425,20 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 		if (!allBaseChannelProductCertsMatchThisRhelRelease) Assert.fail("Review logged warnings above for expected RHN base channel product cert versions that do not match this system.s dot release.");
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20107", "RHEL7-51112"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20107", "RHEL7-51112"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="Verify that the expected RHN RHEL channels supporting this system's RHEL release X.Y version are mapped to product certs whose version matches this system's RHEL release X.Y (also asserts beta channels to Beta product certs)",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1080072","blockedByBug-1110863","blockedByBug-1148110","blockedByBug-1197864","blockedByBug-1300766","blockedByBug-1222712","blockedByBug-1241221","blockedByBug-1328579","blockedByBug-1393573","blockedByBug-1436441"},
+			groups={"Tier1Tests","blockedByBug-1080072","blockedByBug-1110863","blockedByBug-1148110","blockedByBug-1197864","blockedByBug-1300766","blockedByBug-1222712","blockedByBug-1241221","blockedByBug-1328579","blockedByBug-1393573","blockedByBug-1436441"},
 			dataProvider="RhnRhelChannelsFromChannelMappingData",
-			dependsOnMethods={"VerifyChannelCertMapping_Test"},
+			dependsOnMethods={"testChannelCertMapping"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyRhnRhelChannelsProductCertSupportThisSystemsRhelVersion_Test(Object bugzilla, String rhnRhelChannel) {
+	public void testRhnRhelChannelsProductCertSupportThisSystemsRhelVersion(Object bugzilla, String rhnRhelChannel) {
 		Assert.assertTrue(!channelsToProductCertFilenamesMap.get(rhnRhelChannel).equalsIgnoreCase("none"), "RHN RHEL Channel '"+rhnRhelChannel+"' does not map to None.");
 		ProductCert rhnRhelProductCert = clienttasks.getProductCertFromProductCertFile(new File(baseProductsDir+"/"+channelsToProductCertFilenamesMap.get(rhnRhelChannel)));
 		if (rhnRhelChannel.contains(/*clienttasks.redhatReleaseX+*/"-beta-") || rhnRhelChannel.endsWith(/*clienttasks.redhatReleaseX+*/"-beta")) {

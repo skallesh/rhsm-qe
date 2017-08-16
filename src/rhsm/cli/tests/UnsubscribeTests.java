@@ -25,6 +25,7 @@ import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.jul.TestRecords;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
+
 import com.github.redhatqe.polarize.metadata.DefTypes.PosNeg;
 import com.github.redhatqe.polarize.metadata.DefTypes.Project;
 import com.github.redhatqe.polarize.metadata.DefTypes;
@@ -36,36 +37,46 @@ import com.github.redhatqe.polarize.metadata.TestType;
  * @author jsefler
  *
  */
-@Test(groups={"UnsubscribeTests","Tier2Tests"})
+@Test(groups={"UnsubscribeTests"})
 public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	
 	// Test Methods ***********************************************************************
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-27126", "RHEL7-51409"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-27126", "RHEL7-51409"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager-cli: unsubscribe consumer from an entitlement using product ID",
-			groups={"blockedByBug-584137", "blockedByBug-602852", "blockedByBug-873791"},
+			groups={"Tier2Tests","blockedByBug-584137", "blockedByBug-602852", "blockedByBug-873791"},
 			//dataProvider="getAllConsumedProductSubscriptionsData",	// 06/04/2014 takes too long; rarely reveals a bug
 			dataProvider="getRandomSubsetOfConsumedProductSubscriptionsData",
 			enabled=true)
 	@ImplementsNitrateTest(caseId=41688)
-	public void UnsubscribeFromValidProductIDs_Test(ProductSubscription productSubscription){
+	public void testUnsubscribeFromValidProductIDs(ProductSubscription productSubscription){
 //		sm.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
 //		sm.unsubscribeFromEachOfTheCurrentlyConsumedProductSubscriptions();
 		clienttasks.unsubscribeFromProductSubscription(productSubscription);
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-27124", "RHEL7-51397"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-27124", "RHEL7-51397"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="Unsubscribe product entitlement and re-subscribe",
-			groups={"blockedByBug-584137","blockedByBug-602852","blockedByBug-873791","blockedByBug-979492"},
+			groups={"Tier2Tests","blockedByBug-584137","blockedByBug-602852","blockedByBug-873791","blockedByBug-979492"},
 			//dataProvider="getAllConsumedProductSubscriptionsData",	// 06/04/2014 takes too long; rarely reveals a bug
 			dataProvider="getRandomSubsetOfConsumedProductSubscriptionsData",
 			enabled=true)
 	@ImplementsNitrateTest(caseId=41898)
-	public void ResubscribeAfterUnsubscribe_Test(ProductSubscription productSubscription) throws Exception{
+	public void testResubscribeAfterUnsubscribe(ProductSubscription productSubscription) throws Exception{
 ///*debugTesting*/if (!productSubscription.productId.equals("awesomeos-unlimited-quantity")) throw new SkipException("debugTesting");
 		
 		// now loop through each consumed product subscription and unsubscribe/re-subscribe
@@ -77,7 +88,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	
-	@TestDefinition(//update= true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-47922", "RHEL7-97323"},
 			linkedWorkItems= {
@@ -93,13 +104,13 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier1")
-	@Test(description="Malicious Test - Unsubscribe and then attempt to reuse the revoked entitlement cert.",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-584137","blockedByBug-602852","blockedByBug-672122","blockedByBug-804227","blockedByBug-871146","blockedByBug-905546","blockedByBug-962520","blockedByBug-822402","blockedByBug-986572","blockedByBug-1000301","blockedByBug-1026435"},
+	@Test(	description="Unsubscribe from a valid entitlement and then maliciously attempt to reuse the revoked entitlement cert.",
+			groups={"Tier1Tests","blockedByBug-584137","blockedByBug-602852","blockedByBug-672122","blockedByBug-804227","blockedByBug-871146","blockedByBug-905546","blockedByBug-962520","blockedByBug-822402","blockedByBug-986572","blockedByBug-1000301","blockedByBug-1026435"},
 			//dataProvider="getAvailableSubscriptionPoolsData",	// very thorough, but takes too long to execute and rarely finds more bugs
 			dataProvider="getRandomSubsetOfAvailableSubscriptionPoolsData",
 			enabled=true)
 	@ImplementsNitrateTest(caseId=41903)
-	public void UnsubscribeAndAttemptToReuseTheRevokedEntitlementCert_Test(SubscriptionPool subscriptionPool) throws JSONException, Exception{
+	public void testUnsubscribeAndAttemptToReuseTheRevokedEntitlementCert(SubscriptionPool subscriptionPool) throws JSONException, Exception{
 		client.runCommandAndWaitWithoutLogging("killall -9 yum");
 		
 		// choose a quantity before subscribing to avoid Stdout: Quantity '1' is not a multiple of instance multiplier '2'
@@ -160,7 +171,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 	}
 
 	
-	@TestDefinition(//update= true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-27125", "RHEL7-51946"},
 			linkedWorkItems= {
@@ -177,12 +188,12 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
 	@Test(	description="subscription-manager: subscribe and then unsubscribe from a future subscription pool",
-			groups={"blockedByBug-727970","blockedByBug-958775"},
+			groups={"Tier2Tests","blockedByBug-727970","blockedByBug-958775"},
 			//dataProvider="getAllFutureSystemSubscriptionPoolsData",	// 06/04/2014 takes too long; rarely reveals a bug
 			dataProvider="getRandomSubsetOfFutureSystemSubscriptionPoolsData",
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
-	public void UnsubscribeAfterSubscribingToFutureSubscriptionPool_Test(SubscriptionPool pool) throws Exception {
+	public void testUnsubscribeAfterSubscribingToFutureSubscriptionPool(SubscriptionPool pool) throws Exception {
 //if (!pool.productId.equals("awesomeos-virt-unlmtd-phys")) throw new SkipException("debugTesting pool productId="+pool.productId);
 		
 		Calendar now = new GregorianCalendar();
@@ -218,7 +229,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	
-	@TestDefinition(//update= true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-36600", "RHEL7-51408"},
 			linkedWorkItems= {
@@ -234,11 +245,11 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
-	@Test(description="Attempt to unsubscribe from a serial when not registered",
-			groups={"blockedByBug-735338","blockedByBug-838146","blockedByBug-865590","blockedByBug-873791"},
+	@Test(	description="Attempt to unsubscribe from a serial when not registered",
+			groups={"Tier2Tests","blockedByBug-735338","blockedByBug-838146","blockedByBug-865590","blockedByBug-873791"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void UnsubscribeFromSerialWhenNotRegistered_Test() {
+	public void testUnsubscribeFromSerialWhenNotRegistered() {
 	
 		// first make sure we are subscribed to a pool
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null, true, false, null, null, null, null);
@@ -264,7 +275,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	
-	@TestDefinition(//update= true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-36598", "RHEL7-51403"},
 			linkedWorkItems= {
@@ -280,11 +291,11 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
-	@Test(description="Attempt to unsubscribe when from an invalid serial number",
-			groups={"blockedByBug-706889","blockedByBug-867766"},
+	@Test(	description="Attempt to unsubscribe when from an invalid serial number",
+			groups={"Tier2Tests","blockedByBug-706889","blockedByBug-867766"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void UnsubscribeFromAnInvalidSerial_Test() {
+	public void testUnsubscribeFromAnInvalidSerial() {
 		SSHCommandResult result;
 		
 		BigInteger serial = BigInteger.valueOf(-123);
@@ -306,7 +317,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	
-	@TestDefinition(//update= true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-36597", "RHEL7-51402"},
 			linkedWorkItems= {
@@ -322,11 +333,11 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
-	@Test(description="Verify the feedback after unsubscribing from all consumed subscriptions using unsubscribe --all",
-			groups={"blockedByBug-812388","blockedByBug-844455"},
+	@Test(	description="Verify the feedback after unsubscribing from all consumed subscriptions using unsubscribe --all",
+			groups={"Tier2Tests","blockedByBug-812388","blockedByBug-844455"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void UnsubscribeFromAll_Test() {
+	public void testUnsubscribeFromAll() {
 	
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null, true, null, null, null, null, null);
 		clienttasks.subscribeToTheCurrentlyAllAvailableSubscriptionPoolsCollectively();
@@ -344,7 +355,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	
-	@TestDefinition(//update= true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-36596", "RHEL7-51401"},
 			linkedWorkItems= {
@@ -360,11 +371,11 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
-	@Test(description="Verify the feedback after unsubscribing from all consumed subscriptions using unsubscribe --serial SERIAL1 --serial SERIAL2 --serial SERIAL3 etc.",
-			groups={"blockedByBug-867766"},
+	@Test(	description="Verify the feedback after unsubscribing from all consumed subscriptions using unsubscribe --serial SERIAL1 --serial SERIAL2 --serial SERIAL3 etc.",
+			groups={"Tier2Tests","blockedByBug-867766"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void UnsubscribeFromAllSerials_Test() throws Exception {
+	public void testUnsubscribeFromAllSerials() throws Exception {
 	
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null, true, false, null, null, null, null);
 		List<SubscriptionPool> pools = clienttasks.subscribeToTheCurrentlyAllAvailableSubscriptionPoolsCollectively();
@@ -444,7 +455,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	
-	@TestDefinition(//update= true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-36595", "RHEL7-51400"},
 			linkedWorkItems= {
@@ -460,11 +471,11 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
-	@Test(description="Verify the feedback after unsubscribing from all consumed subscriptions (including revoked serials) using unsubscribe --serial SERIAL1 --serial SERIAL2 --serial SERIAL3 etc.",
-			groups={"blockedByBug-867766"},
+	@Test(	description="Verify the feedback after unsubscribing from all consumed subscriptions (including revoked serials) using unsubscribe --serial SERIAL1 --serial SERIAL2 --serial SERIAL3 etc.",
+			groups={"Tier2Tests","blockedByBug-867766"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void UnsubscribeFromAllSerialsIncludingRevokedSerials_Test() throws JSONException, Exception {
+	public void testUnsubscribeFromAllSerialsIncludingRevokedSerials() throws JSONException, Exception {
 	
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null,true,false,null,null,null, null);
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAllAvailableSubscriptionPools();
@@ -587,7 +598,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 //	}
 	
 	
-	@TestDefinition(//update= true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-36592", "RHEL7-51396"},
 			linkedWorkItems= {
@@ -604,10 +615,10 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
 	@Test(	description="subscription-manager: unsubscribe and remove can be used interchangably",
-			groups={"blockedByBug-874749"},
+			groups={"Tier2Tests","blockedByBug-874749"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
-	public void RemoveDeprecatesUnsubscribe_Test() throws Exception {
+	public void testRemoveDeprecatesUnsubscribe() throws Exception {
 		SSHCommandResult result = client.runCommandAndWait(clienttasks.command+" --help");
 		Assert.assertContainsMatch(result.getStdout(), "^\\s*unsubscribe\\s+Deprecated, see remove$");
 		
@@ -632,7 +643,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	
-	@TestDefinition(//update= true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-36591", "RHEL7-51395"},
 			linkedWorkItems= {
@@ -649,9 +660,9 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
 	@Test(	description="after attaching many subscriptions (in a different order) to two different consumers, call unsubscribe --all on each consumer",
-			groups={"blockedByBug-1095939"})
+			groups={"Tier2Tests","blockedByBug-1095939"})
 			//@ImplementsNitrateTest(caseId=)
-	public void MultiClientAttemptToDeadLockOnUnsubscribeAll_Test() throws JSONException, Exception {
+	public void testMultiClientAttemptToDeadLockOnUnsubscribeAll() throws JSONException, Exception {
 		if (client2tasks==null) throw new SkipException("This multi-client test requires a second client.");
 		
 		// register two clients
@@ -712,9 +723,9 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	
 	
-	@TestDefinition(//update= true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
-			testCaseID= {"RHEL6-47923", "RHEL7-51406"},
+			testCaseID= {"RHEL6-47923", "RHEL7-51407"},
 			linkedWorkItems= {
 				@LinkedItem(
 					workitemId= "RHEL6-28489",	// RHSM-REQ : subscription-manager cli attaching and removing subscriptions
@@ -728,11 +739,11 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier1")
-	@Test(description="Attempt to unsubscribe from a pool id when not registered",
-			groups={"blockedByBug-1198178", "AcceptanceTests","Tier1Tests"},
+	@Test(	description="Attempt to unsubscribe from a pool id when not registered",
+			groups={"Tier1Tests","blockedByBug-1198178"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void UnsubscribeFromPoolIdWhenNotRegistered_Test() {
+	public void testUnsubscribeFromPoolIdWhenNotRegistered() {
 		if (clienttasks.isPackageVersion("subscription-manager","<","1.16.5-1")) throw new SkipException("The unsubscribe --pool function was not implemented in this version of subscription-manager.  See RFE Bug 1198178");
 	
 		// first make sure we are subscribed to a pool
@@ -774,7 +785,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	
-	@TestDefinition(//update= true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-47924", "RHEL7-51406"},
 			linkedWorkItems= {
@@ -790,11 +801,11 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier1")
-	@Test(description="Attempt to unsubscribe from a valid pool id",
-			groups={"blockedByBug-1198178","AcceptanceTests","Tier1Tests"},
+	@Test(	description="Attempt to unsubscribe from a valid pool id",
+			groups={"Tier1Tests","blockedByBug-1198178"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void UnsubscribeFromPool_Test() {
+	public void testUnsubscribeFromPool() {
 		if (clienttasks.isPackageVersion("subscription-manager","<","1.16.5-1")) throw new SkipException("The unsubscribe --pool function was not implemented in this version of subscription-manager.  See RFE Bug 1198178");
 		
 		// register and get available pools
@@ -859,7 +870,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	
-	@TestDefinition(//update= true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-36363", "RHEL7-51405"},
 			linkedWorkItems= {
@@ -875,11 +886,11 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier1")
-	@Test(description="Attempt to unsubscribe from an unknown pool id",
-			groups={"blockedByBug-1198178","blockedByBug-1298586", "AcceptanceTests","Tier1Tests"},
+	@Test(	description="Attempt to unsubscribe from an unknown pool id",
+			groups={"Tier1Tests","blockedByBug-1198178","blockedByBug-1298586"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void UnsubscribeFromAnUnknownPoolId_Test() {
+	public void testUnsubscribeFromAnUnknownPoolId() {
 		if (clienttasks.isPackageVersion("subscription-manager","<","1.16.5-1")) throw new SkipException("The unsubscribe --pool function was not implemented in this version of subscription-manager.  See RFE Bug 1198178");
 		
 		// register
@@ -916,7 +927,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	
-	@TestDefinition(//update= true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-36594", "RHEL7-51399"},
 			linkedWorkItems= {
@@ -932,11 +943,11 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
-	@Test(description="Verify the feedback after unsubscribing from all consumed subscriptions using unsubscribe --pool POOLID1 --pool POOLID2 --pool POOLID3 etc.",
-			groups={"blockedByBug-1198178","blockedByBug-1288626"},
+	@Test(	description="Verify the feedback after unsubscribing from all consumed subscriptions using unsubscribe --pool POOLID1 --pool POOLID2 --pool POOLID3 etc.",
+			groups={"Tier2Tests","blockedByBug-1198178","blockedByBug-1288626"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void UnsubscribeFromAllPoolIds_Test() throws Exception {
+	public void testUnsubscribeFromAllPoolIds() throws Exception {
 		if (clienttasks.isPackageVersion("subscription-manager","<","1.16.5-1")) throw new SkipException("The unsubscribe --pool function was not implemented in this version of subscription-manager.  See RFE Bug 1198178");
 		if (!servertasks.statusCapabilities.contains("remove_by_pool_id")) throw new SkipException("The registered entitlement server does not support remove --pool");
 		
@@ -1033,7 +1044,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	
-	@TestDefinition(//update= true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-36599", "RHEL7-51404"},
 			linkedWorkItems= {
@@ -1049,11 +1060,11 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
-	@Test(description="Attempt to unsubscribe from an unknown pool id and serial",
-			groups={"blockedByBug-1198178","blockedByBug-1298586"},
+	@Test(	description="Attempt to unsubscribe from an unknown pool id and serial",
+			groups={"Tier2Tests","blockedByBug-1198178","blockedByBug-1298586"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void UnsubscribeFromAnUnknownPoolIdAndSerial_Test() {
+	public void testUnsubscribeFromAnUnknownPoolIdAndSerial() {
 		if (clienttasks.isPackageVersion("subscription-manager","<","1.16.5-1")) throw new SkipException("The unsubscribe --pool function was not implemented in this version of subscription-manager.  See RFE Bug 1198178");
 		if (!servertasks.statusCapabilities.contains("remove_by_pool_id")) throw new SkipException("The registered entitlement server does not support remove --pool");
 		
@@ -1084,9 +1095,9 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	
-	@TestDefinition(//update= true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
-			testCaseID= {"RHEL6-36850", "RHEL7-51398"},
+			testCaseID= {"RHEL6-36593", "RHEL7-51398"},
 			linkedWorkItems= {
 				@LinkedItem(
 					workitemId= "RHEL6-28489",	// RHSM-REQ : subscription-manager cli attaching and removing subscriptions
@@ -1100,11 +1111,11 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
-	@Test(description="Attempt to unsubscribe from an valid pool id and serial",
-			groups={"blockedByBug-1198178"},
+	@Test(	description="Attempt to unsubscribe from an valid pool id and serial",
+			groups={"Tier2Tests","blockedByBug-1198178"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void UnsubscribeFromAValidPoolIdAndSerial_Test() {
+	public void testUnsubscribeFromAValidPoolIdAndSerial() {
 		if (clienttasks.isPackageVersion("subscription-manager","<","1.16.5-1")) throw new SkipException("The unsubscribe --pool function was not implemented in this version of subscription-manager.  See RFE Bug 1198178");
 		if (!servertasks.statusCapabilities.contains("remove_by_pool_id")) throw new SkipException("The registered entitlement server does not support remove --pool");
 		

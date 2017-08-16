@@ -42,18 +42,23 @@ import com.redhat.qe.tools.SSHCommandResult;
  * Publish TestView1 and promoted it to Library > TestEnv1
  * Publish TestView2 and promoted it to Library > TestEnv2
  */
-@Test(groups={"EnvironmentsTests","Tier2Tests"})
+@Test(groups={"EnvironmentsTests"})
 public class EnvironmentsTests extends SubscriptionManagerCLITestScript {
 
 	// Test methods ***********************************************************************
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36626", "RHEL7-51434"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36626", "RHEL7-51434"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager: verify that an on-premises candlepin server does NOT support environments",
-			groups={},
+			groups={"Tier2Tests"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyThatCandlepinDoesNotSupportEnvironments_Test() throws JSONException, Exception {
+	public void testThatCandlepinDoesNotSupportEnvironments() throws JSONException, Exception {
 		
 		// ask the candlepin server if it supports environment
 		boolean supportsEnvironments = CandlepinTasks.isEnvironmentsSupported(sm_clientUsername, sm_clientPassword, sm_serverUrl);
@@ -65,15 +70,20 @@ public class EnvironmentsTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-	               , testCaseID = {"RHEL6-36627", "RHEL7-51435"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36627", "RHEL7-51435"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager: run the environments module while prompting for user credentials interactively",
-			groups={"blockedbyBug-878986"},
+			groups={"Tier2Tests","blockedbyBug-878986"},
 			dataProvider = "getInteractiveCredentialsForNonSupportedEnvironmentsData",
-			dependsOnMethods={"VerifyThatCandlepinDoesNotSupportEnvironments_Test"},
+			dependsOnMethods={"testThatCandlepinDoesNotSupportEnvironments"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void EnvironmentsWithInteractivePromptingForCredentials_Test(Object bugzilla, String promptedUsername, String promptedPassword, String commandLineUsername, String commandLinePassword, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex) {
+	public void testEnvironmentsWithInteractivePromptingForCredentials(Object bugzilla, String promptedUsername, String promptedPassword, String commandLineUsername, String commandLinePassword, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex) {
 
 		// call environments while providing a valid username at the interactive prompt
 		String command;
@@ -115,10 +125,10 @@ public class EnvironmentsTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager: attempt environments without --org option",
-			groups={"blockedByBug-849105"},
+			groups={"Tier2Tests","blockedByBug-849105"},
 			enabled=false)	// 2/5/2013 this test is obsoleted by implementation of Bug 727092 - [RFE]: Enhance subscription-manager to prompt the user for an Org Name.
 	//@ImplementsNitrateTest(caseId=)
-	public void AttemptEnvironmentsWithoutOrg_Test() {
+	public void testAttemptEnvironmentsWithoutOrg() {
 		
 		SSHCommandResult environmentsResult = clienttasks.environments_(sm_clientUsername,sm_clientPassword,null,null,null,null, null, null, null);
 		Assert.assertEquals(environmentsResult.getStderr().trim(), "", "Stderr from environments without specifying the --org option.");
@@ -148,14 +158,19 @@ public class EnvironmentsTests extends SubscriptionManagerCLITestScript {
 		clientOrg 		= clienttasks.getOrgs(sm_clientUsername,sm_clientPassword).get(0).orgKey;	// use the first org
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36624", "RHEL7-51433"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36624", "RHEL7-51433"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager: environments with --serverurl",
 			dataProvider="getEnvironmentsWithServerurl_TestData",
-			groups={"EnvironmentsWithServerurl_Test"},
+			groups={"Tier2Tests","EnvironmentsWithServerurl_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void EnvironmentsWithServerurl_Test(Object bugzilla, String serverurl, String expectedHostname, String expectedPort, String expectedPrefix, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrMatch) {
+	public void testEnvironmentsWithServerurl(Object bugzilla, String serverurl, String expectedHostname, String expectedPort, String expectedPrefix, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrMatch) {
 		// get original server at the beginning of this test
 		String hostnameBeforeTest	= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "hostname");
 		String portBeforeTest		= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "port");
@@ -200,7 +215,7 @@ public class EnvironmentsTests extends SubscriptionManagerCLITestScript {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		String eErrMsg = "Error: Server does not support environments.";
 		
-		for (List<Object> l : getServerurl_TestDataAsListOfLists()) {
+		for (List<Object> l : getServerurlDataAsListOfLists()) {
 			Integer expectedExitCode = (Integer) l.get(5);
 			
 			// Object bugzilla, String serverurl, String expectedHostname, String expectedPort, String expectedPrefix, Integer expectedExitCode, String expectedStdout, String expectedStderr
@@ -228,13 +243,18 @@ public class EnvironmentsTests extends SubscriptionManagerCLITestScript {
 		rhsm_ca_cert_dir	= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsm", "ca_cert_dir");
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6}
-			, testCaseID = {"RHEL6-36623"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36623", "RHEL7-97798"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager: environments with --insecure",
-			groups={"EnvironmentsWithInsecure_Test","blockedByBug-844411","blockedByBug-993202"},
+			groups={"Tier2Tests","EnvironmentsWithInsecure_Test","blockedByBug-844411","blockedByBug-993202"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void EnvironmentsWithInsecure_Test() {
+	public void testEnvironmentsWithInsecure() {
 		if (!CandlepinType.katello.equals(sm_serverType) && clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.10-1")) {	// post commit 13fe8ffd8f876d27079b961fb6675424e65b9a10
 			throw new SkipException("This test is not applicable against a non-katello server which does not support environments.");
 		}
@@ -279,14 +299,19 @@ public class EnvironmentsTests extends SubscriptionManagerCLITestScript {
 		if (rhsm_ca_cert_dir!=null) clienttasks.config(null, null, true, new String[]{"rhsm","ca_cert_dir",rhsm_ca_cert_dir});
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-27130", "RHEL7-64493"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-27130", "RHEL7-64493"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager: run the environments module with valid user credentials and verify the expected environments are listed",
-			groups={"blockedByBug-1063491"},
+			groups={"Tier2Tests","blockedByBug-1063491"},
 			dataProvider="getEnvironmentsForOrgsData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void EnvironmentsWithCredentials_Test(String username, String password, String org, List<Environment> expectedEnvironments) {
+	public void testEnvironmentsWithCredentials(String username, String password, String org, List<Environment> expectedEnvironments) {
 		log.info("Testing subscription-manager environments module using username="+username+" password="+password+" org="+org+" and expecting environmnets="+expectedEnvironments+" ...");
 		
 		// use subscription-manager to get the organizations for which the user has access
@@ -309,13 +334,17 @@ public class EnvironmentsTests extends SubscriptionManagerCLITestScript {
 	 *
 	 */
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36625", "RHEL7-64493"})
-	@BeforeGroups(value={"Libraryas_env"}, groups={"setup"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36625", "RHEL7-64493"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(description="Library as an Env",
-			groups={"blockedByBug-963579"},
+			groups={"Tier2Tests","blockedByBug-963579"},
 			enabled=true)
-	public void Libraryas_env(){
+	public void testLibraryAsEnv(){
 		SSHCommandResult sshCommandResult;
 		// added by jsefler 
 		if (!CandlepinType.katello.equals(sm_serverType)) throw new SkipException("This test is only applicable against a server that supports environments.");
@@ -342,7 +371,7 @@ public class EnvironmentsTests extends SubscriptionManagerCLITestScript {
 	 *
 	 *
 	 */
-	@TestDefinition(//update= true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-47897", "RHEL7-96737"},
 			linkedWorkItems= {
@@ -358,9 +387,10 @@ public class EnvironmentsTests extends SubscriptionManagerCLITestScript {
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.MEDIUM, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
-	@BeforeGroups(value={"Register with All Environment"}, groups={"setup"})
-	@Test(description="Register with env other than Library",enabled=true)
-	public void All_Env_Register(){
+	@Test(	description="Register with env other than Library",
+			groups={"Tier2Tests"},
+			enabled=true)
+	public void testAllEnvRegister(){
 		SSHCommandResult sshCommandResult;
 		// added by jsefler 
 		if (!CandlepinType.katello.equals(sm_serverType)) throw new SkipException("This test is only applicable against a server that supports environments.");

@@ -7,8 +7,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
 
-import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.DefTypes;
 import com.github.redhatqe.polarize.metadata.TestDefinition;
+import com.github.redhatqe.polarize.metadata.TestType;
+import com.github.redhatqe.polarize.metadata.DefTypes.PosNeg;
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -57,19 +60,24 @@ using the username/password as authentication
 
 -- bk
  */
-@Test(groups={"IdentityTests","Tier2Tests"})
+@Test(groups={"IdentityTests"})
 public class IdentityTests extends SubscriptionManagerCLITestScript {
 
 	
 	// Test methods ***********************************************************************
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36543", "RHEL7-51318"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36543", "RHEL7-51318"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager-cli: identity (when not registered)",
-			groups={"blockedByBug-654429"},
+			groups={"Tier2Tests","blockedByBug-654429"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void IdentityWhenNotRegistered_Test() {
+	public void testIdentityWhenNotRegistered() {
 		
 		// make sure we are not registered
 		clienttasks.unregister(null, null, null, null);
@@ -90,13 +98,18 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36545", "RHEL7-51320"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36545", "RHEL7-51320"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager-cli: identity should report RHN Classic remote server type when only registered classically",
-			groups={"RHNClassicTests"},
+			groups={"Tier2Tests","RHNClassicTests"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void IdentityWhenRegisteredToRHNClassic_Test() {
+	public void testIdentityWhenRegisteredToRHNClassic() {
 
 		// make sure we are not registered (to Candlepin)
 		clienttasks.unregister(null, null, null, null);
@@ -113,13 +126,18 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36544", "RHEL7-51319"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36544", "RHEL7-51319"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager-cli: identity should report RHN Classic remote server type and candlepin when over-registered",
-			groups={"RHNClassicTests","blockedByBug-846834","blockedByBug-852328"},
+			groups={"Tier2Tests","RHNClassicTests","blockedByBug-846834","blockedByBug-852328"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void IdentityWhenRegisteredToRHNClassicAndCandlepin_Test() {
+	public void testIdentityWhenRegisteredToRHNClassicAndCandlepin() {
 
 		// make sure we are registered (to Candlepin)
 		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg));
@@ -142,13 +160,18 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36547", "RHEL7-51322"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36547", "RHEL7-51322"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager-cli: identity",
-			groups={"blockedByBug-852001","blockedByBug-1101522","blockedByBug-1451003"},
+			groups={"Tier2Tests","blockedByBug-852001","blockedByBug-1101522","blockedByBug-1451003"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void Identity_Test() throws JSONException, Exception {
+	public void testIdentity() throws JSONException, Exception {
 		String identityRegex;
 		
 		// start fresh by unregistering and registering
@@ -178,13 +201,18 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36546", "RHEL7-51321"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36546", "RHEL7-51321"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager-cli: identity (when the client registered with --name)",
-			groups={"blockedByBug-647891","blockedByBug-1101522","blockedByBug-1451003"},
+			groups={"Tier2Tests","blockedByBug-647891","blockedByBug-1101522","blockedByBug-1451003"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void IdentityWithName_Test() {
+	public void testIdentityWithName() {
 		String identityRegex;
 		
 		// start fresh by unregistering and registering
@@ -205,13 +233,18 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-19961", "RHEL7-33075"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-19961", "RHEL7-33075"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="subscription-manager-cli: identity regenerate",
-			groups={"AcceptanceTests","Tier1Tests"},
+			groups={"Tier1Tests"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=64179)
-	public void IdentityRegenerate_Test() {
+	public void testIdentityRegenerate() {
 		
 		// start fresh by unregistering and registering
 		clienttasks.unregister(null, null, null, null);
@@ -237,13 +270,18 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36542", "RHEL7-51317"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36542", "RHEL7-51317"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager-cli: identity regenerate with username and password from the same owner",
-			groups={"blockedByBug-1254349"}, /*dependsOnGroups={"RegisterWithCredentials_Test"},*/
+			groups={"Tier2Tests","blockedByBug-1254349"}, /*dependsOnGroups={"RegisterWithCredentials_Test"},*/
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void IdentityRegenerateWithUsernameAndPaswordFromTheSameOwner_Test() throws Exception {
+	public void testIdentityRegenerateWithUsernameAndPaswordFromTheSameOwner() throws Exception {
 
 		// start fresh by unregistering and registering
 		clienttasks.unregister(null, null, null, null);
@@ -277,13 +315,18 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36541", "RHEL7-51316"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36541", "RHEL7-51316"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager-cli: identity regenerate with username and password from a different owner (negative test)",
-			groups={}, /*dependsOnGroups={"RegisterWithCredentials_Test"},*/
+			groups={"Tier2Tests"}, /*dependsOnGroups={"testRegisterWithCredentials"},*/
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void IdentityRegenerateWithUsernameAndPaswordFromADifferentOwner_Test() throws Exception {
+	public void testIdentityRegenerateWithUsernameAndPaswordFromADifferentOwner() throws Exception {
 
 		// start fresh by unregistering and registering
 		clienttasks.unregister(null, null, null, null);
@@ -307,13 +350,18 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36540", "RHEL7-51315"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36540", "RHEL7-51315"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager-cli: identity regenerate with invalid username and password (attempt with and without force) (negative test)",
-			groups={},
+			groups={"Tier2Tests"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void IdentityRegenerateWithInvalidUsernameAndPasword_Test() {
+	public void testIdentityRegenerateWithInvalidUsernameAndPasword() {
 		
 		// start fresh by unregistering and registering
 		clienttasks.unregister(null, null, null, null);
@@ -344,14 +392,19 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		}
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-19962", "RHEL7-51006"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-19962", "RHEL7-51006"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="subscription-manager: assert that the consumer cert is backed up when a server-side deletion is detected.",
-			groups={"AcceptanceTests","Tier1Tests","VerifyIdentityIsBackedUpWhenConsumerIsDeletedServerSide_Test","blockedByBug-814466","blockedByBug-813296","blockedByBug-838187","blockedByBug-852706","blockedByBug-872847","blockedByBug-894633","blockedByBug-907638","blockedByBug-822402","blockedByBug-986572","blockedByBug-1000301","blockedByBug-1026435","blockedByBug-1019747","blockedByBug-1026501","blockedByBug-1366301","blockedByBug-1397201"},
+			groups={"Tier1Tests","VerifyIdentityIsBackedUpWhenConsumerIsDeletedServerSide_Test","blockedByBug-814466","blockedByBug-813296","blockedByBug-838187","blockedByBug-852706","blockedByBug-872847","blockedByBug-894633","blockedByBug-907638","blockedByBug-822402","blockedByBug-986572","blockedByBug-1000301","blockedByBug-1026435","blockedByBug-1019747","blockedByBug-1026501","blockedByBug-1366301","blockedByBug-1397201"},
 			dataProvider="getConsumerCertDirData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyIdentityIsBackedUpWhenConsumerIsDeletedServerSide_Test(Object bugzilla, String consumerCertDir) throws Exception {
+	public void testIdentityIsBackedUpWhenConsumerIsDeletedServerSide(Object bugzilla, String consumerCertDir) throws Exception {
 		
 		// set the rhsm.consumerCertDir (DO NOT USE SubscriptionTasks.config(...))
 		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile,"consumerCertDir",consumerCertDir);
@@ -516,7 +569,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		// alternative to dependsOnGroups={"RegisterWithCredentials_Test"}
 		// This allows us to satisfy a dependency on registrationDataList making TestNG add unwanted Test results.
 		// This also allows us to individually run this Test Class on Hudson.
-		RegisterWithCredentials_Test(); // needed to populate registrationDataList
+		testRegisterWithCredentials(); // needed to populate registrationDataList
 	}
 	
 	@AfterClass(groups="setup")

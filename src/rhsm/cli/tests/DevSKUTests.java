@@ -10,8 +10,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.DefTypes;
 import com.github.redhatqe.polarize.metadata.TestDefinition;
+import com.github.redhatqe.polarize.metadata.TestType;
+import com.github.redhatqe.polarize.metadata.DefTypes.PosNeg;
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -70,19 +73,24 @@ import rhsm.data.SubscriptionPool;
  *   http://etherpad.corp.redhat.com/8D1JQhUxc0
  *       
  */
-@Test(groups={"DevSKUTests","Tier3Tests","AcceptanceTests","Tier1Tests"})
+@Test(groups={"DevSKUTests"})
 public class DevSKUTests extends SubscriptionManagerCLITestScript {
 	
 	// Test methods ***********************************************************************
 	
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-25335", "RHEL7-52092"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-25335", "RHEL7-52092"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="given an available SKU, configure the system with custom facts dev_sku=SKU, register the system with auto-attach and verify several requirements of the attached entitlement",
-			groups={},
+			groups={"Tier1Tests"},
 			dataProvider="getDevSkuData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyDevSku_Test(Object bugzilla, String devSku, String devPlatform) throws JSONException, Exception {
+	public void testDevSku(Object bugzilla, String devSku, String devPlatform) throws JSONException, Exception {
 		
 		// get the JSON product representation of the devSku 
 		String resourcePath = "/products/"+devSku;
@@ -278,13 +286,18 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20116", "RHEL7-51857"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20116", "RHEL7-51857"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="configure the system with custom facts for a dev_sku, register the system with auto-subscribe verify the attached entitlement can be removed and re-autoattached",
-			groups={},
+			groups={"Tier1Tests"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyDevSkuEntitlementCanBeRemovedAndReAttached_Test() throws JSONException, Exception {
+	public void testDevSkuEntitlementCanBeRemovedAndReAttached() throws JSONException, Exception {
 		
 		// get a valid dev_sku to test with
 		List<Object> l = getRandomValidDevSkuData();
@@ -331,13 +344,18 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-22313", "RHEL7-51859"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-22313", "RHEL7-51859"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="configure the system with custom facts for a dev_sku, register the system with auto-subscribe and verify that an attempt to redundantly autosubscribed will re-issue a replacement entitlement (remove the old and attach a new).",
-			groups={"blockedByBug-1292877"},
+			groups={"Tier1Tests","blockedByBug-1292877"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyRedundantAutosubscribesForDevSkuEntitlementWillReissueNewEntitlement_Test() throws JSONException, Exception {
+	public void testRedundantAutosubscribesForDevSkuEntitlementWillReissueNewEntitlement() throws JSONException, Exception {
 
 		// get a valid dev_sku to test with
 		List<Object> l = getRandomValidDevSkuData();
@@ -386,13 +404,18 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-26779", "RHEL7-51858"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-26779", "RHEL7-51858"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="configure the system with custom facts for a dev_sku, register the system with auto-subscribe and verify that a cost-based subscription can be manually attached without affecting the devSku entitlement",
-			groups={"blockedByBug-1298577"},
+			groups={"Tier1Tests","blockedByBug-1298577"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyManualSubscribesWhileConsumingDevSkuEntitlement_Test() throws JSONException, Exception {
+	public void testManualSubscribesWhileConsumingDevSkuEntitlement() throws JSONException, Exception {
 
 		// get a valid dev_sku to test with
 		List<Object> l = getRandomValidDevSkuData();
@@ -437,13 +460,18 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21993", "RHEL7-51855"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21993", "RHEL7-51855"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="configure the system with custom facts for a dev_sku, register the system with auto-subscribe, alter the dev_sku facts, re-autosubscribe, and verify the initial entitlement was purged",
-			groups={"blockedByBug-1295452"},
+			groups={"Tier1Tests","blockedByBug-1295452"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyAutosubscribeAfterChangingDevSkuFacts_Test() throws JSONException, Exception {
+	public void testAutosubscribeAfterChangingDevSkuFacts() throws JSONException, Exception {
 		
 		boolean isGuest = Boolean.valueOf(clienttasks.getFactValue("virt.is_guest"));
 		
@@ -530,13 +558,18 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21994", "RHEL7-51856"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21994", "RHEL7-51856"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="configure the system with custom facts for a dev_sku, register the system with auto-subscribe, alter the dev_sku facts, re-autosubscribe, and verify the initial entitlement was purged",
-			groups={"blockedByBug-1294465","VerifyAutosubscribedDevSkuWithAnUnknownProductInstalled_Test"},
+			groups={"Tier1Tests","blockedByBug-1294465","VerifyAutosubscribedDevSkuWithAnUnknownProductInstalled_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyAutosubscribedDevSkuWithAnUnknownProductInstalled_Test() throws JSONException, Exception {
+	public void testAutosubscribedDevSkuWithAnUnknownProductInstalled() throws JSONException, Exception {
 		// unregister to get rid of current consumer
 		clienttasks.unregister(null, null, null, null);
 		

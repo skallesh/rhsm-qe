@@ -26,7 +26,7 @@ import com.github.redhatqe.polarize.metadata.TestType;
  * @author jsefler
  *
  */
-@Test(groups={"VersionTests","Tier2Tests"})
+@Test(groups={"VersionTests"})
 public class VersionTests extends SubscriptionManagerCLITestScript {
 	
 	// SAMPLE RESULTS
@@ -40,13 +40,18 @@ public class VersionTests extends SubscriptionManagerCLITestScript {
 	
 	// Test methods ***********************************************************************
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-25822", "RHEL7-51282"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-25822", "RHEL7-51282"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="assert that the installed version of subscription-manager is reported by the subscription-manager version module ",
-			groups={"blockedByBug-1241184","blockedByBug-1284120"},
+			groups={"Tier2Tests","blockedByBug-1241184","blockedByBug-1284120"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VersionOfSubscriptionManager_Test() {
+	public void testVersionOfSubscriptionManager() {
 		
 		// get the expected results for subscription-manager rpm version
 		String expectedReport = client.runCommandAndWait("rpm -q subscription-manager --queryformat '%{NAME}: %{VERSION}-%{RELEASE}'").getStdout().trim();
@@ -59,13 +64,18 @@ public class VersionTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-25819", "RHEL7-51279"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-25819", "RHEL7-51279"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="assert that the installed version of python-rhsm is reported by the subscription-manager version module ",
-			groups={"blockedByBug-1284120"},
+			groups={"Tier2Tests","blockedByBug-1284120"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VersionOfPythonRhsm_Test() {
+	public void testVersionOfPythonRhsm() {
 		
 		// get the expected results for python-rhsm rpm version
 		String expectedReport = client.runCommandAndWait("rpm -q python-rhsm --queryformat '%{NAME}: %{VERSION}-%{RELEASE}'").getStdout().trim();
@@ -78,7 +88,7 @@ public class VersionTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
-	@TestDefinition(//update= true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-25817", "RHEL7-51277"},
 			linkedWorkItems= {
@@ -95,10 +105,10 @@ public class VersionTests extends SubscriptionManagerCLITestScript {
 			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
 	@Test(	description="assert that the candlepin sever version is reported by the version module (expect a message to indicate this system is not registered)",
-			groups={"blockedByBug-862308","blockedByBug-868347","blockedByBug-874623","blockedByBug-1284120"},
+			groups={"Tier2Tests","blockedByBug-862308","blockedByBug-868347","blockedByBug-874623","blockedByBug-1284120"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VersionOfCandlepinWhenUnregistered_Test() {
+	public void testVersionOfCandlepinWhenUnregistered() {
 
 		// make sure we are not registered
 		clienttasks.unregister(null, null, null, null);
@@ -116,13 +126,18 @@ public class VersionTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-25816", "RHEL7-51276"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-25816", "RHEL7-51276"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="assert that the candlepin sever version is reported when not registered AND hostname is bogus (expect a message to indicate this system is not registered)",
-			groups={"VersionOfCandlepinWhenUnregisteredAndHostnameIsUnknown_Test","blockedByBug-843191","blockedByBug-874623","blockedByBug-1284120"},
+			groups={"Tier2Tests","VersionOfCandlepinWhenUnregisteredAndHostnameIsUnknown","blockedByBug-843191","blockedByBug-874623","blockedByBug-1284120"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VersionOfCandlepinWhenUnregisteredAndHostnameIsUnknown_Test() {
+	public void testVersionOfCandlepinWhenUnregisteredAndHostnameIsUnknown() {
 
 		// make sure we are not registered
 		clienttasks.unregister(null, null, null, null);
@@ -136,13 +151,18 @@ public class VersionTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-25818", "RHEL7-51278"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-25818", "RHEL7-51278"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="assert that the candlepin sever version is reported as Unknown when registered classically AND hostname is bogus",
-			groups={"VersionOfCandlepinWhenUsingRHNClassicAndHostnameIsUnknown_Test","blockedByBug-843191","blockedByBug-1284120"},
+			groups={"Tier2Tests","VersionOfCandlepinWhenUsingRhnClassicAndHostnameIsUnknown","blockedByBug-843191","blockedByBug-1284120"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VersionOfCandlepinWhenUsingRHNClassicAndHostnameIsUnknown_Test() {
+	public void testVersionOfCandlepinWhenUsingRhnClassicAndHostnameIsUnknown() {
 
 		// make sure we are not registered
 		clienttasks.unregister(null, null, null, null);
@@ -160,13 +180,18 @@ public class VersionTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-25815", "RHEL7-49360"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-25815", "RHEL7-49360"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="assert that the candlepin sever version and type are reported by the subscription-manager version module",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-843649","blockedByBug-1284120"},
+			groups={"Tier1Tests","blockedByBug-843649","blockedByBug-1284120"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VersionOfCandlepinWhenRegistered_Test() {
+	public void testVersionOfCandlepinWhenRegistered() {
 		
 		// TEMPORARY WORKAROUND FOR BUG
 		String bugId="843649"; //  Bug 843649 - subscription-manager server version reports Unknown against prod/stage candlepin
@@ -192,13 +217,18 @@ public class VersionTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-25820", "RHEL7-51280"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-25820", "RHEL7-51280"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="assert the sever version and type when registered to RHN Classic (and simultaneously NOT registered to Subscription Management)",
-			groups={"blockedByBug-852328","VersionOfServerWhenUsingRHNClassic_Test","blockedByBug-1284120"},
+			groups={"Tier2Tests","blockedByBug-852328","VersionOfServerWhenUsingRhnClassic","blockedByBug-1284120"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VersionOfServerWhenRegisteredAndUsingRHNClassic_Test() {
+	public void testVersionOfServerWhenRegisteredAndUsingRhnClassic() {
 		
 		if (Arrays.asList("6.1","6.2","6.3","5.7","5.8","5.9").contains(clienttasks.redhatReleaseXY)) {
 			throw new SkipException("Blocking bugzilla 852328 was fixed in a subsequent release.  Skipping this test since we already know it will fail in RHEL release '"+clienttasks.redhatReleaseXY+"'.");
@@ -217,13 +247,18 @@ public class VersionTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-25821", "RHEL7-51281"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-25821", "RHEL7-51281"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="assert the sever version and type when registered to RHN Classic (and simultaneously registered to Subscription Management)",
-			groups={"blockedByBug-852328","VersionOfServerWhenUsingRHNClassic_Test","blockedByBug-1284120"},
+			groups={"Tier2Tests","blockedByBug-852328","VersionOfServerWhenUsingRhnClassic","blockedByBug-1284120"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VersionOfServerWhenUnregisteredAndUsingRHNClassic_Test() {
+	public void testVersionOfServerWhenUnregisteredAndUsingRhnClassic() {
 
 		// make sure we are unregistered
 		clienttasks.unregister(null,null,null, null);
@@ -235,21 +270,26 @@ public class VersionTests extends SubscriptionManagerCLITestScript {
 		
 		assertServerVersionAndType(servertasks.statusVersion,servertasks.statusRelease,"RHN Classic");
 	}
-	@AfterGroups(groups={"setup"},value="VersionOfServerWhenUsingRHNClassic_Test")
-	public void afterVersionOfServerWhenUsingRHNClassic_Test() {
+	@AfterGroups(groups={"setup"},value="VersionOfServerWhenUsingRhnClassic")
+	public void afterTestVersionOfServerWhenUsingRhnClassic() {
 		if (clienttasks!=null) {
 			clienttasks.removeRhnSystemIdFile();
 		}
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-25814", "RHEL7-51275"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-25814", "RHEL7-51275"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="assert that no errors are reported while executing version module while registered and unregistered",
-			groups={"blockedByBug-848409","blockedByBug-1284120"},
+			groups={"Tier2Tests","blockedByBug-848409","blockedByBug-1284120"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyNoErrorWhileCheckingServerVersion_Test() {
+	public void testNoErrorWhileCheckingServerVersion() {
 		
 		// from Bug 848409 - Error while checking server version: No such file or directory
 		//	[root@jsefler-59server ~]# subscription-manager version
@@ -280,8 +320,8 @@ public class VersionTests extends SubscriptionManagerCLITestScript {
 	
 	
 	// Configuration methods ***********************************************************************
-	@AfterGroups(value={"VersionOfCandlepinWhenUnregisteredAndHostnameIsUnknown_Test","VersionOfCandlepinWhenUsingRHNClassicAndHostnameIsUnknown_Test"}, groups={"setup"})
-	public void afterVersionOfCandlepinWhenUsingRHNClassicAndHostnameIsUnknown_Test() {
+	@AfterGroups(value={"VersionOfCandlepinWhenUnregisteredAndHostnameIsUnknown","VersionOfCandlepinWhenUsingRhnClassicAndHostnameIsUnknown"}, groups={"setup"})
+	public void afterTestingVersionOfCandlepinWhen() {
 		if (server_hostname!=null)	clienttasks.config(null,null,true,new String[]{"server","hostname",server_hostname});
 	}
 	protected String server_hostname;

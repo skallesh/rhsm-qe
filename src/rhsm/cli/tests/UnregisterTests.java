@@ -2,7 +2,10 @@ package rhsm.cli.tests;
 
 import java.util.List;
 
+import com.github.redhatqe.polarize.metadata.DefTypes;
 import com.github.redhatqe.polarize.metadata.TestDefinition;
+import com.github.redhatqe.polarize.metadata.TestType;
+import com.github.redhatqe.polarize.metadata.DefTypes.PosNeg;
 import com.github.redhatqe.polarize.metadata.DefTypes.Project;
 
 import org.testng.SkipException;
@@ -23,18 +26,23 @@ import rhsm.data.SubscriptionPool;
  * @author ssalevan
  *
  */
-@Test(groups={"UnregisterTests","Tier2Tests"})
+@Test(groups={"UnregisterTests"})
 public class UnregisterTests extends SubscriptionManagerCLITestScript {
 	
 	
 	// Test Methods ***********************************************************************
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20392", "RHEL7-51410"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20392", "RHEL7-51410"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(description="unregister the consumer",
-			groups={"blockedByBug-589626"},
+			groups={"Tier2Tests","blockedByBug-589626"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=46714)
-	public void RegisterSubscribeAndUnregisterTest() {
+	public void testRegisterSubscribeAndUnregister() {
 		clienttasks.unregister(null, null, null, null);
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, null, false, null, null, null, null);
 		List<SubscriptionPool> availPoolsBeforeSubscribingToAllPools = clienttasks.getCurrentlyAvailableSubscriptionPools();
@@ -49,13 +57,18 @@ public class UnregisterTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20016", "RHEL7-51411"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20016", "RHEL7-51411"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(description="unregister should not make unauthorized requests",
-			groups={"AcceptanceTests","Tier1Tests","UnregisterShouldNotThrowUnauthorizedRequests_Test","blockedByBug-997935","blockedByBug-1158578","blockedByBug-1207403","blockedByBug-1389559","blockedByBug-1395794"},
+			groups={"Tier1Tests","UnregisterShouldNotThrowUnauthorizedRequests_Test","blockedByBug-997935","blockedByBug-1158578","blockedByBug-1207403","blockedByBug-1389559","blockedByBug-1395794"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void UnregisterShouldNotThrowUnauthorizedRequests_Test() {
+	public void testUnregisterShouldNotThrowUnauthorizedRequests() {
 		if (clienttasks.isPackageVersion("subscription-manager","<","1.10.1-1")) throw new SkipException("Installed package '"+clienttasks.installedPackageVersionMap.get("subscription-manager")+"' is blockedByBug https://bugzilla.redhat.com/show_bug.cgi?id=997935 which is fixed in subscription-manager-1.10.1-1.");
 		
 		// TEMPORARY WORKAROUND FOR BUG
@@ -119,7 +132,7 @@ public class UnregisterTests extends SubscriptionManagerCLITestScript {
 	String pluginConfDir_forUnregisterShouldNotThrowUnauthorizedRequests_Test=null;
 	String ostreeContentPluginEnabled_forUnregisterShouldNotThrowUnauthorizedRequests_Test=null;
 	@AfterGroups(groups={"setup"},value="UnregisterShouldNotThrowUnauthorizedRequests_Test")
-	public void afterUnregisterShouldNotThrowUnauthorizedRequests_Test() {
+	public void afterUnregisterShouldNotThrowUnauthorizedRequests() {
 		// restore the the "enabled" parameter in /etc/rhsm/pluginconf.d/ostree_content.OstreeContentPlugin.conf
 		if (pluginConfDir_forUnregisterShouldNotThrowUnauthorizedRequests_Test!=null) {
 			if (ostreeContentPluginEnabled_forUnregisterShouldNotThrowUnauthorizedRequests_Test!=null) {

@@ -8,8 +8,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.DefTypes;
 import com.github.redhatqe.polarize.metadata.TestDefinition;
+import com.github.redhatqe.polarize.metadata.TestType;
+import com.github.redhatqe.polarize.metadata.DefTypes.PosNeg;
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
 
 import org.testng.SkipException;
 import org.testng.annotations.AfterClass;
@@ -36,19 +39,24 @@ import com.redhat.qe.tools.SSHCommandResult;
  * Bug 712980 - Import Certificate neglects to also import the corresponding key.pem - https://bugzilla.redhat.com/show_bug.cgi?id=712980
  * Bug 733873 - subscription-manager import --help should not use proxy options - https://bugzilla.redhat.com/show_bug.cgi?id=733873
  */
-@Test(groups={"ImportTests","Tier2Tests"})
+@Test(groups={"ImportTests"})
 public class ImportTests extends SubscriptionManagerCLITestScript {
 
 	// Test methods ***********************************************************************
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20027", "RHEL7-51043"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20027", "RHEL7-51043"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="subscription-manager: import a valid version 1.0 entitlement cert/key bundle and verify subscriptions are consumed",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-962520","blockedByBug-1443693"},
+			groups={"Tier1Tests","blockedByBug-962520","blockedByBug-1443693"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ImportAnEntitlementVersion1CertAndKeyFromFile_Test() {
+	public void testImportAnEntitlementVersion1CertAndKeyFromFile() {
 		
 		// assemble a valid bundled cert/key certificate file
 		File importEntitlementCertFile = entitlementV1CertFiles.get(randomGenerator.nextInt(entitlementV1CertFiles.size()));
@@ -93,13 +101,18 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20026", "RHEL7-51042"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20026", "RHEL7-51042"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="subscription-manager: import a valid entitlement cert/key bundle and verify subscriptions are consumed",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-712980","blockedByBug-730380","blockedByBug-860344"},
+			groups={"Tier1Tests","blockedByBug-712980","blockedByBug-730380","blockedByBug-860344"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ImportAnEntitlementCertAndKeyFromFile_Test() {
+	public void testImportAnEntitlementCertAndKeyFromFile() {
 		
 		// assemble a valid bundled cert/key certificate file
 		File importEntitlementCertFile = entitlementCertFiles.get(randomGenerator.nextInt(entitlementCertFiles.size()));
@@ -140,13 +153,18 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36633", "RHEL7-51443"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36633", "RHEL7-51443"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager: import a certificate from a file (saved as a different name) and verify subscriptions are consumed",
-			groups={"blockedByBug-734606","blockedByBug-860344"},
+			groups={"Tier2Tests","blockedByBug-734606","blockedByBug-860344"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ImportAnEntitlementCertAndKeyFromASavedAsFile_Test() {
+	public void testImportAnEntitlementCertAndKeyFromASavedAsFile() {
 		
 		// assemble a valid bundled cert/key certificate file
 		File importEntitlementCertFile = entitlementCertFiles.get(randomGenerator.nextInt(entitlementCertFiles.size()));
@@ -194,13 +212,18 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36635", "RHEL7-51445"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36635", "RHEL7-51445"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager: import a valid entitlement key/cert bundle and verify subscriptions are consumed",
-			groups={"blockedByBug-860344"},
+			groups={"Tier2Tests","blockedByBug-860344"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ImportAnEntitlementKeyAndCertFromFile_Test() {
+	public void testImportAnEntitlementKeyAndCertFromFile() {
 		
 		// assemble a valid bundled cert/key certificate file
 		File importEntitlementCertFile = entitlementCertFiles.get(randomGenerator.nextInt(entitlementCertFiles.size()));
@@ -241,13 +264,18 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36634", "RHEL7-51444"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36634", "RHEL7-51444"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager: attempt an entitlement cert import from a file in the current directory",
-			groups={"blockedByBug-849171","blockedByBug-860344"},
+			groups={"Tier2Tests","blockedByBug-849171","blockedByBug-860344"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ImportAnEntitlementCertAndKeyFromFileInCurrentDirectory_Test() {
+	public void testImportAnEntitlementCertAndKeyFromFileInCurrentDirectory() {
 		
 		// assemble a valid bundled cert/key certificate file
 		File importEntitlementCertFile = entitlementCertFiles.get(randomGenerator.nextInt(entitlementCertFiles.size()));
@@ -291,13 +319,18 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36632", "RHEL7-51442"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36632", "RHEL7-51442"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager: import a certificate for a future entitlement",
-			groups={"blockedByBug-860344","blockedByBug-1440180"},
+			groups={"Tier2Tests","blockedByBug-860344","blockedByBug-1440180"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
-	public void ImportACertificateForAFutureEntitlement_Test() throws Exception {
+	public void testImportACertificateForAFutureEntitlement() throws Exception {
 		
 		if (futureEntitlementCertFile==null) throw new SkipException("Could not generate an entitlement certificate for a future subscription.");
 		
@@ -347,62 +380,87 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36628", "RHEL7-51436"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36628", "RHEL7-51436"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager: attempt an entitlement cert import from a file containing the cert only (negative test)",
-			groups={"blockedByBug-735226","blockedByBug-849171"},
+			groups={"Tier2Tests","blockedByBug-735226","blockedByBug-849171"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void AttemptAnEntitlementImportFromACertOnlyFile_Test() {
+	public void testAttemptAnEntitlementImportFromACertOnlyFile() {
 		File importEntitlementCertFile = entitlementCertFiles.get(randomGenerator.nextInt(entitlementCertFiles.size()));
 		attemptAnEntitlementImportFromAnInvalidFile_Test(importEntitlementCertFile);
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36630", "RHEL7-51438"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36630", "RHEL7-51438"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager: attempt an entitlement cert import from a file containing only a key (negative test)",
-			groups={"blockedByBug-849171"},
+			groups={"Tier2Tests","blockedByBug-849171"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void AttemptAnEntitlementImportFromAKeyOnlyFile_Test() {
+	public void testAttemptAnEntitlementImportFromAKeyOnlyFile() {
 		File importEntitlementCertFile = entitlementCertFiles.get(randomGenerator.nextInt(entitlementCertFiles.size()));
 		File importEntitlementKeyFile = clienttasks.getEntitlementCertKeyFileCorrespondingToEntitlementCertFile(importEntitlementCertFile);
 		attemptAnEntitlementImportFromAnInvalidFile_Test(importEntitlementKeyFile);
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36629", "RHEL7-51437"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36629", "RHEL7-51437"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager: attempt an entitlement cert import using an identity cert (negative test)",
-			groups={"blockedByBug-844178","blockedByBug-849171"},
+			groups={"Tier2Tests","blockedByBug-844178","blockedByBug-849171"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void AttemptAnEntitlementImportFromAConsumerCertFile_Test() {
+	public void testAttemptAnEntitlementImportFromAConsumerCertFile() {
 		File invalidCertificate = consumerCertFile;
 		attemptAnEntitlementImportFromAnInvalidFile_Test(invalidCertificate);
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-37707", "RHEL7-51439"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-37707", "RHEL7-51439"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager: attempt an entitlement cert import using non existent file (negative test)",
-			groups={},
+			groups={"Tier2Tests"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void AttemptAnEntitlementImportFromNonExistentFile_Test() {
+	public void testAttemptAnEntitlementImportFromNonExistentFile() {
 		String invalidCertificate = "/tmp/nonExistentFile.pem";
 		attemptAnEntitlementImportFromAnInvalidFile_Test(new File(invalidCertificate));
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36637", "RHEL7-51447"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36637", "RHEL7-51447"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager: import multiple valid certificates and verify subscriptions are consumed",
-			groups={"blockedByBug-860344"},
+			groups={"Tier2Tests","blockedByBug-860344"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ImportMultipleCertificates_Test() {
+	public void testImportMultipleCertificates() {
 		
 		// create a list of valid import certificate files
 		List<String> importCertificates = new ArrayList<String>();
@@ -429,13 +487,18 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 		}
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36636", "RHEL7-51446"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36636", "RHEL7-51446"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager: import multiple certificates including invalid ones",
-			groups={"blockedByBug-844178","blockedByBug-860344"},
+			groups={"Tier2Tests","blockedByBug-844178","blockedByBug-860344"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ImportMultipleCertificatesIncludingInvalidCertificates_Test() {
+	public void testImportMultipleCertificatesIncludingInvalidCertificates() {
 		
 		// create a list of valid import certificate files
 		List<String> importCertificates = new ArrayList<String>();
@@ -498,13 +561,18 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36631", "RHEL7-51441"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36631", "RHEL7-51441"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager: unsubscribe from an imported entitlement (while not registered)",
-			groups={"blockedByBug-735338","blockedByBug-838146","blockedByBug-860344","blockedByBug-865590"},
+			groups={"Tier2Tests","blockedByBug-735338","blockedByBug-838146","blockedByBug-860344","blockedByBug-865590"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ImportACertificateAndUnsubscribeWhileNotRegistered_Test() {
+	public void testImportACertificateAndUnsubscribeWhileNotRegistered() {
 		
 		// make sure we are NOT registered
 		clienttasks.unregister(null,null,null, null);
@@ -527,13 +595,18 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-37708", "RHEL7-51440"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-37708", "RHEL7-51440"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager: import (without any options) should fail",
-			groups={},
+			groups={"Tier2Tests"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void AttemptAnEntitlementImportWithoutOptions_Test() {
+	public void testAttemptAnEntitlementImportWithoutOptions() {
 
 		SSHCommandResult result = clienttasks.importCertificate_((String)null);
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688

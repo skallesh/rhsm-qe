@@ -10,8 +10,12 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.github.redhatqe.polarize.metadata.DefTypes.PosNeg;
 import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.DefTypes;
 import com.github.redhatqe.polarize.metadata.TestDefinition;
+import com.github.redhatqe.polarize.metadata.TestType;
+
 import org.testng.SkipException;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterGroups;
@@ -43,19 +47,24 @@ import com.redhat.qe.tools.SSHCommandRunner;
 "subscription-manager config --[section.name] [value]" sets the value for an attribute by the section. Only existing attribute names are allowed. Adding new attribute names would not be useful anyway as the python code would be in need of altering to use it.
 
  */
-@Test(groups={"ConfigTests","Tier2Tests"})
+@Test(groups={"ConfigTests"})
 public class ConfigTests extends SubscriptionManagerCLITestScript {
 
 	// Test methods ***********************************************************************
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36675", "RHEL7-51520"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-36675", "RHEL7-51520"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags="Tier2")
 	@Test(	description="subscription-manager: use config --list to get the value of /etc/rhsm.rhsm.conf [server]ca_cert_dir (should not exist)",
-			groups={"blockedByBug-993202"},
+			groups={"Tier2Tests","blockedByBug-993202"},
 			priority=5,
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void GetCaCertDirValue_Test() {
+	public void testGetCaCertDirValue() {
 		String section, parameter="ca_cert_dir";
 		section="server";
 		Assert.assertNull(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, section, parameter), "Config file '"+clienttasks.rhsmConfFile+"' section '"+section+"' parameter '"+parameter+"' should NOT be set.");
@@ -64,15 +73,20 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20113", "RHEL7-33091"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-20113", "RHEL7-33091"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags="Tier1")
 	@Test(	description="subscription-manager: use config to set each of the rhsm.conf parameter values and verify it is persisted to /etc/rhsm.rhsm.conf",
-			groups={"AcceptanceTests","Tier1Tests"},
+			groups={"Tier1Tests"},
 			dataProvider="getConfigSectionNameData",
 			priority=10,
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ConfigSetSectionNameValue_Test(Object bugzilla, String section, String name, String setValue) {
+	public void testConfigSetSectionNameValue(Object bugzilla, String section, String name, String setValue) {
 		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
 		listOfSectionNameValues.add(new String[]{section, name.toLowerCase(), setValue});	// the config options require lowercase for --section.name=value, but the value written to conf.file may not be lowercase
 		clienttasks.config(null,null,true,listOfSectionNameValues);
@@ -82,16 +96,21 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36676", "RHEL7-51521"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-36676", "RHEL7-51521"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags="Tier2")
 	@Test(	description="subscription-manager: use config module to list all of the currently set rhsm.conf parameter values",
-			groups={},
+			groups={"Tier2Tests"},
 			dataProvider="getConfigSectionNameData",
-			//dependsOnMethods={"ConfigSetSectionNameValue_Test"}, alwaysRun=true,
+			//dependsOnMethods={"testConfigSetSectionNameValue"}, alwaysRun=true,
 			priority=20,
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ConfigGetSectionNameValue_Test(Object bugzilla, String section, String name, String expectedValue) {
+	public void testConfigGetSectionNameValue(Object bugzilla, String section, String name, String expectedValue) {
 
 		// get a the config list (only once to save some unnecessary logging)
 		// SSHCommandResult sshCommandResultFromConfigGetSectionNameValue_Test = clienttasks.config(true,null,null,(String[])null);
@@ -159,16 +178,21 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 	protected SSHCommandResult sshCommandResultFromConfigGetSectionNameValue_Test = null;
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36677", "RHEL7-51522"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-36677", "RHEL7-51522"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags="Tier2")
 	@Test(	description="subscription-manager: use config module to remove each of the rhsm.conf parameter values from /etc/rhsm/rhsm.conf",
-			groups={"blockedByBug-1223860"},
+			groups={"Tier2Tests","blockedByBug-1223860"},
 			dataProvider="getConfigSectionNameData",
-			//dependsOnMethods={"ConfigGetSectionNameValue_Test"}, alwaysRun=true,
+			//dependsOnMethods={"testConfigGetSectionNameValue"}, alwaysRun=true,
 			priority=30,
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ConfigRemoveSectionNameValue_Test(Object bugzilla, String section, String name, String value) {
+	public void testConfigRemoveSectionNameValue(Object bugzilla, String section, String name, String value) {
 		
 		// use config to remove the section name value
 		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
@@ -193,16 +217,21 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36678", "RHEL7-51523"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-36678", "RHEL7-51523"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags="Tier2")
 	@Test(	description="subscription-manager: after having removed all the config parameters using the config module, assert that the config list shows the default values in use by wrapping them in [] and the others are simply blanked.",
-			groups={},
+			groups={"Tier2Tests"},
 			dataProvider="getConfigSectionNameData",
-			//dependsOnMethods={"ConfigRemoveSectionNameValue_Test"}, alwaysRun=true,
+			//dependsOnMethods={"testConfigRemoveSectionNameValue"}, alwaysRun=true,
 			priority=40,
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ConfigGetSectionNameValueAndVerifyDefault_Test(Object bugzilla, String section, String name, String ignoreValue) {
+	public void testConfigGetSectionNameValueAndVerifyDefault(Object bugzilla, String section, String name, String ignoreValue) {
 
 		// get the config list (only once to save some unnecessary logging)
 		// SSHCommandResult sshCommandResultFromConfigGetSectionNameValue_Test = clienttasks.config(true,null,null,(String[])null);
@@ -262,15 +291,20 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 	protected SSHCommandResult sshCommandResultFromConfigGetSectionNameValueAndVerifyDefault_Test = null;
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36679", "RHEL7-51524"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-36679", "RHEL7-51524"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags="Tier2")
 	@Test(	description="subscription-manager: use config module to simultaneously remove multiple rhsm.conf parameter values from /etc/rhsm/rhsm.conf",
-			groups={"blockedByBug-735695","blockedByBug-927350","blockedByBug-1297337"},
-			//dependsOnMethods={"ConfigGetSectionNameValueAndVerifyDefault_Test"}, alwaysRun=true,
+			groups={"Tier2Tests","blockedByBug-735695","blockedByBug-927350","blockedByBug-1297337"},
+			//dependsOnMethods={"testConfigGetSectionNameValueAndVerifyDefault"}, alwaysRun=true,
 			priority=50,
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ConfigRemoveMultipleSectionNameValues_Test() {
+	public void testConfigRemoveMultipleSectionNameValues() {
 		
 		// not necessary but adds a little more to the test
 		// restore the backup rhsm.conf file
@@ -311,13 +345,18 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36671", "RHEL7-51517"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-36671", "RHEL7-51517"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags="Tier2")
 	@Test(	description="subscription-manager: attempt to use config module to remove a non-existing-section parameter from /etc/rhsm/rhsm.conf (negative test)",
-			groups={"blockedByBug-747024","blockedByBug-746264"},
+			groups={"Tier2Tests","blockedByBug-747024","blockedByBug-746264"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ConfigRemoveNonExistingSectionName_Test() {
+	public void testConfigRemoveNonExistingSectionName() {
 		String section = "non-existing-section";
 		String name = "non-existing-parameter";
 		String value = "non-existing-value";
@@ -336,13 +375,18 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36670", "RHEL7-51516"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-36670", "RHEL7-51516"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags="Tier2")
 	@Test(	description="subscription-manager: attempt to use config module to remove a non-existing-parameter from a valid section in /etc/rhsm/rhsm.conf (negative test)",
-			groups={"blockedByBug-736784"},
+			groups={"Tier2Tests","blockedByBug-736784"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ConfigRemoveNonExistingParameterFromValidSection_Test() {
+	public void testConfigRemoveNonExistingParameterFromValidSection() {
 		String section = "server";
 		String name = "non-existing-parameter";
 		String value = "value";
@@ -365,14 +409,19 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36667", "RHEL7-51513"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-36667", "RHEL7-51513"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags="Tier2")
 	@Test(	description="subscription-manager: attempt to use config module to list together with set and/or remove option(s) for config parameters",
-			groups={"blockedByBug-730020"},
+			groups={"Tier2Tests","blockedByBug-730020"},
 			dataProvider="getNegativeConfigListSetRemoveData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ConfigAttemptListWithSetAndRemoveOptions_Test(Object blockedByBug, Boolean list, Boolean remove, Boolean set, String[] section_name_value) {
+	public void testConfigAttemptListWithSetAndRemoveOptions(Object blockedByBug, Boolean list, Boolean remove, Boolean set, String[] section_name_value) {
 		
 		SSHCommandResult configResult = clienttasks.config_(list,remove,set,section_name_value);
 
@@ -387,13 +436,18 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36668", "RHEL7-51514"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-36668", "RHEL7-51514"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags="Tier2")
 	@Test(	description="subscription-manager: config (without any options) should default to --list",
-			groups={"blockedByBug-811594"},
+			groups={"Tier2Tests","blockedByBug-811594"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ConfigDefaultsToConfigList_Test() {
+	public void testConfigDefaultsToConfigList() {
 		
 		SSHCommandResult listResult = clienttasks.config(true, null, null, (String[])null);
 		SSHCommandResult defaultResult = clienttasks.config(null, null, null, (String[])null);
@@ -408,13 +462,18 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36669", "RHEL7-51515"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-36669", "RHEL7-51515"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags="Tier2")
 	@Test(	description="subscription-manager: config for repo_ca_cert should interpolate the default value for ca_cert_dir",
-			groups={"blockedByBug-997194","ConfigForRepoCaCertUsesDefaultCaCertDir_Test"},
+			groups={"Tier2Tests","blockedByBug-997194","ConfigForRepoCaCertUsesDefaultCaCertDir_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ConfigForRepoCaCertUsesDefaultCaCertDir_Test() {
+	public void testConfigForRepoCaCertUsesDefaultCaCertDir() {
 		
 		// this bug is specifically designed to test Bug 997194 - repo_ca_cert configuration ignored using older configuration
 		
@@ -440,13 +499,18 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 	protected String repoCaCertConfigured = null;
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36673", "RHEL7-51518"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-36673", "RHEL7-51518"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags="Tier2")
 	@Test(	description="verify the default configurations for server hostname:port/prefix after running config removal",
-			groups={"blockedByBug-988085","blockedByBug-1223860","blockedByBug-1297337","VerifyDefaultsForServerHostnamePortPrefixAfterConfigRemoval_Test"},
+			groups={"Tier2Tests","blockedByBug-988085","blockedByBug-1223860","blockedByBug-1297337","VerifyDefaultsForServerHostnamePortPrefixAfterConfigRemoval_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyDefaultsForServerHostnamePortPrefixAfterConfigRemoval_Test() {
+	public void testDefaultsForServerHostnamePortPrefixAfterConfigRemoval() {
 		
 		// this bug is specifically designed to test Bug 988085 - After running subscription-manager config --remove server.hostname, different default values available from GUI and CLI
 
@@ -488,13 +552,18 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 	protected String serverPrefixConfigured = null;
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36674", "RHEL7-51519"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-36674", "RHEL7-51519"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags="Tier2")
 	@Test(	description="verify that only the expected configration parameters are present in the rhsm config file; useful for detecting newly added configurations by the subscription-manager developers",
-			groups={},
+			groups={"Tier2Tests"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyExpectedConfigParameters_Test() {
+	public void testExpectedConfigParameters() {
 		
 		SSHCommandResult rawConfigList = clienttasks.config(true, null, null, (String[])null);
 		//	[root@jsefler-7 ~]# subscription-manager config --list
@@ -557,14 +626,19 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36672", "RHEL7-57876"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-36672", "RHEL7-57876"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags="Tier2")
 	@Test(	description="verify the [server]server_timeout can be configured and function properly when the server does not respond within the timeout seconds",
-			groups={"blockedByBug-1346417","VerifyConfigServerTimeouts_Test"},
+			groups={"Tier2Tests","blockedByBug-1346417","VerifyConfigServerTimeouts_Test"},
 			enabled=true)
 	// TODO: Verifies: https://polarion.engineering.redhat.com/polarion/#/project/RHEL6/workitem?id=RHEL6-28580
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyConfigServerTimeouts_Test() throws IOException {
+	public void testConfigServerTimeouts() throws IOException {
 		// this bug is specifically designed to test Bug 1346417 - [RFE] Allow users to set socket timeout.
 		if (clienttasks.isPackageVersion("python-rhsm", "<", "1.17.3-1")) {  // python-rhsm commit 5780140650a59d45a03372a0390f92fd7c3301eb Allow users to set socket timeout.
 			throw new SkipException("This test applies a newer version of python-rhsm that includes an implementation for RFE Bug 1346417 - Allow users to set socket timeout.");

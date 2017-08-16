@@ -16,27 +16,35 @@ import rhsm.cli.tasks.CandlepinTasks;
 import rhsm.data.SubscriptionPool;
 import com.redhat.qe.tools.SSHCommandResult;
 
-import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.DefTypes;
 import com.github.redhatqe.polarize.metadata.TestDefinition;
+import com.github.redhatqe.polarize.metadata.TestType;
+import com.github.redhatqe.polarize.metadata.DefTypes.PosNeg;
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
 
 /**
  * @author jsefler
  *
  */
-@Test(groups={"MultiClientTests","Tier3Tests"})
+@Test(groups={"MultiClientTests"})
 public class MultiClientTests extends SubscriptionManagerCLITestScript{
 	
 
 	// Test Methods ***********************************************************************
 
 	// FIXME Redesign this test to use only one client box and use clean and register --consumerid to switch users  (see SubscribeTests.MultiConsumerSubscribeWithQuantity_Test as an example)
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21882", "RHEL7-51734"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21882", "RHEL7-51734"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags="Tier3")
 	@Test(	description="bind/unbind with two users/consumers",
-			groups={"blockedByBug-979492"},
+			groups={"Tier3Tests","blockedByBug-979492"},
 			dataProvider="getAvailableSubscriptionPoolsData")
 	@ImplementsNitrateTest(caseId=53217)
-	public void MultiClientSubscribeToSameSubscriptionPool_Test(SubscriptionPool pool) throws JSONException, Exception {
+	public void testMultiClientSubscribeToSameSubscriptionPool(SubscriptionPool pool) throws JSONException, Exception {
 //if (!pool.quantity.equalsIgnoreCase("unlimited")) throw new SkipException("debugging...");
 		// test prerequisites
 		if (client2tasks==null) throw new SkipException("This multi-client test requires a second client.");
@@ -107,13 +115,18 @@ public class MultiClientTests extends SubscriptionManagerCLITestScript{
 
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21881", "RHEL7-51733"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21881", "RHEL7-51733"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags="Tier3")
 	@Test(	description="verify that only one person can be registered under username at a time",
-			groups={"MultiClientRegisterAsPerson_Test"},
+			groups={"Tier3Tests","MultiClientRegisterAsPerson_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void MultiClientRegisterAsPerson_Test() throws JSONException, Exception {
+	public void testMultiClientRegisterAsPerson() throws JSONException, Exception {
 		// test prerequisites
 		if (client2tasks==null) throw new SkipException("This multi-client test requires a second client.");
 		unregisterMultiClientRegisterAsPersonAfterGroups();
