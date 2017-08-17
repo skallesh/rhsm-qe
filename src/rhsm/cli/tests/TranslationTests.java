@@ -11,6 +11,7 @@ import java.util.Set;
 import org.testng.SkipException;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeGroups;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
@@ -95,6 +96,10 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-21766", "RHEL7-32176"},
+			linkedWorkItems= {
+				@LinkedItem(project= Project.RHEL6, workitemId= "RHEL6-28564", role= DefTypes.Role.VERIFIES),	// RHSM-REQ : Translation
+				@LinkedItem(project= Project.RedHatEnterpriseLinux7, workitemId= "RHEL7-84942",role= DefTypes.Role.VERIFIES),	// RHSM-REQ : Translation
+			},
 			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
@@ -119,14 +124,11 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-19944", "RHEL7-68143"},
 			linkedWorkItems= {
-				@LinkedItem(
-					workitemId= "RHEL6-28564",	// RHSM-REQ : Translation
-					project= Project.RHEL6,
-					role= DefTypes.Role.VERIFIES),
-				@LinkedItem(
-					workitemId= "RHEL7-84942",	// RHSM-REQ : Translation
-					project= Project.RedHatEnterpriseLinux7,
-					role= DefTypes.Role.VERIFIES)},
+				@LinkedItem(project= Project.RHEL6, workitemId= "RHEL6-28564", role= DefTypes.Role.VERIFIES),	// RHSM-REQ : Translation
+				@LinkedItem(project= Project.RedHatEnterpriseLinux7, workitemId= "RHEL7-84942",role= DefTypes.Role.VERIFIES),	// RHSM-REQ : Translation
+				@LinkedItem(project= Project.RHEL6, workitemId= "RHEL6-28485", role= DefTypes.Role.VERIFIES),	// RHSM-REQ : subscription-manager cli registration and deregistration
+				@LinkedItem(project= Project.RedHatEnterpriseLinux7, workitemId= "RHEL7-84906",role= DefTypes.Role.VERIFIES),	// RHSM-REQ : subscription-manager cli registration and deregistration
+			},
 			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
@@ -153,6 +155,12 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-21765", "RHEL7-32170"},
+			linkedWorkItems= {
+				@LinkedItem(project= Project.RHEL6, workitemId= "RHEL6-28564", role= DefTypes.Role.VERIFIES),	// RHSM-REQ : Translation
+				@LinkedItem(project= Project.RedHatEnterpriseLinux7, workitemId= "RHEL7-84942",role= DefTypes.Role.VERIFIES),	// RHSM-REQ : Translation
+				@LinkedItem(project= Project.RHEL6, workitemId= "RHEL6-28485", role= DefTypes.Role.VERIFIES),	// RHSM-REQ : subscription-manager cli registration and deregistration
+				@LinkedItem(project= Project.RedHatEnterpriseLinux7, workitemId= "RHEL7-84906",role= DefTypes.Role.VERIFIES),	// RHSM-REQ : subscription-manager cli registration and deregistration
+			},
 			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
@@ -193,14 +201,11 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-47920", "RHEL7-97321"},
 			linkedWorkItems= {
-				@LinkedItem(
-					workitemId= "RHEL6-28564",	// RHSM-REQ : Translation
-					project= Project.RHEL6,
-					role= DefTypes.Role.VERIFIES),
-				@LinkedItem(
-					workitemId= "RHEL7-84942",	// RHSM-REQ : Translation
-					project= Project.RedHatEnterpriseLinux7,
-					role= DefTypes.Role.VERIFIES)},
+				@LinkedItem(project= Project.RHEL6, workitemId= "RHEL6-28564", role= DefTypes.Role.VERIFIES),	// RHSM-REQ : Translation
+				@LinkedItem(project= Project.RedHatEnterpriseLinux7, workitemId= "RHEL7-84942",role= DefTypes.Role.VERIFIES),	// RHSM-REQ : Translation
+				@LinkedItem(project= Project.RHEL6, workitemId= "RHEL6-28485", role= DefTypes.Role.VERIFIES),	// RHSM-REQ : subscription-manager cli registration and deregistration
+				@LinkedItem(project= Project.RedHatEnterpriseLinux7, workitemId= "RHEL7-84906",role= DefTypes.Role.VERIFIES),	// RHSM-REQ : subscription-manager cli registration and deregistration
+			},
 			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
@@ -233,14 +238,11 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-47921", "RHEL7-97322"},
 			linkedWorkItems= {
-				@LinkedItem(
-					workitemId= "RHEL6-28564",	// RHSM-REQ : Translation
-					project= Project.RHEL6,
-					role= DefTypes.Role.VERIFIES),
-				@LinkedItem(
-					workitemId= "RHEL7-84942",	// RHSM-REQ : Translation
-					project= Project.RedHatEnterpriseLinux7,
-					role= DefTypes.Role.VERIFIES)},
+				@LinkedItem(project= Project.RHEL6, workitemId= "RHEL6-28564", role= DefTypes.Role.VERIFIES),	// RHSM-REQ : Translation
+				@LinkedItem(project= Project.RedHatEnterpriseLinux7, workitemId= "RHEL7-84942",role= DefTypes.Role.VERIFIES),	// RHSM-REQ : Translation
+				@LinkedItem(project= Project.RHEL6, workitemId= "RHEL6-28485", role= DefTypes.Role.VERIFIES),	// RHSM-REQ : subscription-manager cli registration and deregistration
+				@LinkedItem(project= Project.RedHatEnterpriseLinux7, workitemId= "RHEL7-84906",role= DefTypes.Role.VERIFIES),	// RHSM-REQ : subscription-manager cli registration and deregistration
+			},
 			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
@@ -306,6 +308,10 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-19945", "RHEL7-68144"},
+			linkedWorkItems= {
+				@LinkedItem(project= Project.RHEL6, workitemId= "RHEL6-28564", role= DefTypes.Role.VERIFIES),	// RHSM-REQ : Translation
+				@LinkedItem(project= Project.RedHatEnterpriseLinux7, workitemId= "RHEL7-84942",role= DefTypes.Role.VERIFIES),	// RHSM-REQ : Translation
+			},
 			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
@@ -345,6 +351,10 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-25823", "RHEL7-68145"},
+			linkedWorkItems= {
+				@LinkedItem(project= Project.RHEL6, workitemId= "RHEL6-28564", role= DefTypes.Role.VERIFIES),	// RHSM-REQ : Translation
+				@LinkedItem(project= Project.RedHatEnterpriseLinux7, workitemId= "RHEL7-84942",role= DefTypes.Role.VERIFIES),	// RHSM-REQ : Translation
+			},
 			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
@@ -508,12 +518,16 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-21768", "RHEL7-51284"},
+			linkedWorkItems= {
+				@LinkedItem(project= Project.RHEL6, workitemId= "RHEL6-28564", role= DefTypes.Role.VERIFIES),	// RHSM-REQ : Translation
+				@LinkedItem(project= Project.RedHatEnterpriseLinux7, workitemId= "RHEL7-84942",role= DefTypes.Role.VERIFIES),	// RHSM-REQ : Translation
+			},
 			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
-			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
-			tags= "Tier2")
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.LOW, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="verify that msgid \"Deprecated, see attach\" did NOT translate the command line module \"attach\" for all languages",
-			groups={"Tier2Tests","blockedByBug-891375","blockedByBug-891378","blockedByBug-891380","blockedByBug-891383","blockedByBug-891384","blockedByBug-891386","blockedByBug-891391","blockedByBug-891394","blockedByBug-891398","blockedByBug-891402","blockedByBug-1061381"},
+			groups={"Tier3Tests","blockedByBug-891375","blockedByBug-891378","blockedByBug-891380","blockedByBug-891383","blockedByBug-891384","blockedByBug-891386","blockedByBug-891391","blockedByBug-891394","blockedByBug-891398","blockedByBug-891402","blockedByBug-1061381"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void testMsgIdDeprecatedSeeAttach() {
@@ -524,12 +538,16 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-21770", "RHEL7-51286"},
+			linkedWorkItems= {
+				@LinkedItem(project= Project.RHEL6, workitemId= "RHEL6-28564", role= DefTypes.Role.VERIFIES),	// RHSM-REQ : Translation
+				@LinkedItem(project= Project.RedHatEnterpriseLinux7, workitemId= "RHEL7-84942",role= DefTypes.Role.VERIFIES),	// RHSM-REQ : Translation
+			},
 			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
-			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
-			tags= "Tier2")
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.LOW, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="verify that msgid \"Deprecated, see remove\" did NOT translate the command line module \"remove\" for all languages",
-			groups={"Tier2Tests","blockedByBug-891375","blockedByBug-891378","blockedByBug-891380","blockedByBug-891383","blockedByBug-891384","blockedByBug-891386","blockedByBug-891391","blockedByBug-891394","blockedByBug-891398","blockedByBug-891402"},
+			groups={"Tier3Tests","blockedByBug-891375","blockedByBug-891378","blockedByBug-891380","blockedByBug-891383","blockedByBug-891384","blockedByBug-891386","blockedByBug-891391","blockedByBug-891394","blockedByBug-891398","blockedByBug-891402"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void testMsgIdDeprecatedSeeRemove() {
@@ -540,12 +558,16 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-21769", "RHEL7-51285"},
+			linkedWorkItems= {
+				@LinkedItem(project= Project.RHEL6, workitemId= "RHEL6-28564", role= DefTypes.Role.VERIFIES),	// RHSM-REQ : Translation
+				@LinkedItem(project= Project.RedHatEnterpriseLinux7, workitemId= "RHEL7-84942",role= DefTypes.Role.VERIFIES),	// RHSM-REQ : Translation
+			},
 			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
-			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
-			tags= "Tier2")
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.LOW, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="verify that msgid \"deprecated, see auto-attach-interval\" did NOT translate the command line option \"auto-attach-interval\" for all languages",
-			groups={"Tier2Tests","blockedByBug-891375","blockedByBug-891434","blockedByBug-891377","blockedByBug-928073","blockedByBug-928082"},
+			groups={"Tier3Tests","blockedByBug-891375","blockedByBug-891434","blockedByBug-891377","blockedByBug-928073","blockedByBug-928082"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void testMsgIdDeprecatedSeeAutoAttachInterval() {
@@ -557,6 +579,10 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-36513", "RHEL7-32165"},
+			linkedWorkItems= {
+				@LinkedItem(project= Project.RHEL6, workitemId= "RHEL6-28564", role= DefTypes.Role.VERIFIES),	// RHSM-REQ : Translation
+				@LinkedItem(project= Project.RedHatEnterpriseLinux7, workitemId= "RHEL7-84942",role= DefTypes.Role.VERIFIES),	// RHSM-REQ : Translation
+			},
 			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
@@ -610,12 +636,16 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-21771", "RHEL7-32172"},
+			linkedWorkItems= {
+				@LinkedItem(project= Project.RHEL6, workitemId= "RHEL6-28564", role= DefTypes.Role.VERIFIES),	// RHSM-REQ : Translation
+				@LinkedItem(project= Project.RedHatEnterpriseLinux7, workitemId= "RHEL7-84942",role= DefTypes.Role.VERIFIES),	// RHSM-REQ : Translation
+			},
 			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
-			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
-			tags= "Tier2")
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.MEDIUM, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="verify that translation msgstr does NOT contain over-escaped newline character \\n (should be \n)",
-			groups={"Tier2Tests"},
+			groups={"Tier3Tests"},
 			dataProvider="getTranslationFileDataForVerifyTranslationsDoNotContainOverEscapedNewlineCharacter_Test",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -657,10 +687,10 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 			testCaseID= {"RHEL6-21767", "RHEL7-51283"},
 			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
-			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
-			tags= "Tier2")
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.LOW, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="verify that candlepin translation msgstr does NOT contain unescaped single quotes in the msgid",
-			groups={"Tier2Tests"},
+			groups={"Tier3Tests"},
 			dataProvider="getTranslationFileDataForVerifyCandlepinTranslationsDoNotContainUnescapedSingleQuotes_Test",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -725,6 +755,10 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-21772", "RHEL7-32178"},
+			linkedWorkItems= {
+				@LinkedItem(project= Project.RHEL6, workitemId= "RHEL6-28564", role= DefTypes.Role.VERIFIES),	// RHSM-REQ : Translation
+				@LinkedItem(project= Project.RedHatEnterpriseLinux7, workitemId= "RHEL7-84942",role= DefTypes.Role.VERIFIES),	// RHSM-REQ : Translation
+			},
 			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
@@ -937,6 +971,12 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-19946", "RHEL7-55158"},
+			linkedWorkItems= {
+				@LinkedItem(project= Project.RHEL6, workitemId= "RHEL6-28564", role= DefTypes.Role.VERIFIES),	// RHSM-REQ : Translation
+				@LinkedItem(project= Project.RedHatEnterpriseLinux7, workitemId= "RHEL7-84942",role= DefTypes.Role.VERIFIES),	// RHSM-REQ : Translation
+				@LinkedItem(project= Project.RHEL6, workitemId= "RHEL6-28563", role= DefTypes.Role.RELATES_TO),	// RHSM-REQ : Yum installation of entitled content and product certificates
+				@LinkedItem(project= Project.RedHatEnterpriseLinux7, workitemId= "RHEL7-84940",role= DefTypes.Role.RELATES_TO),	// RHSM-REQ : Yum installation of entitled content and product certificates
+			},
 			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
@@ -1006,6 +1046,56 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	}
 	protected boolean isRhelProductCertSubscribedForVerifyYumSearchDoesNotThrowAsciiCodecError = false;
 	
+	
+	
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-47934", "RHEL7-98520"},
+			linkedWorkItems= {
+				@LinkedItem(project= Project.RHEL6, workitemId= "RHEL6-28564", role= DefTypes.Role.VERIFIES),	// RHSM-REQ : Translation
+				@LinkedItem(project= Project.RedHatEnterpriseLinux7, workitemId= "RHEL7-84942",role= DefTypes.Role.VERIFIES),	// RHSM-REQ : Translation
+			},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
+	@Test(	description="verify that \"UnicodeDecodeError\" and \"Traceback\" errors do not occur when /usr/libexec/rhsmcertd-worker is executed",
+			groups={"debugTest","Tier2Tests","blockedByBug-1480395","groupRhsmcertdworkerUsingLang"},
+			dataProvider="getSupportedLangsData",
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void testRhsmcertdworkerUsingLang(Object bugzilla, String lang) {
+		String command = clienttasks.rhsmCertDWorker;
+		SSHCommandResult result = clienttasks.runCommandWithLang(lang, clienttasks.rhsmCertDWorker);
+		//	201708171549:54.571 - FINE: ssh root@jsefler-rhel7.usersys.redhat.com LANG=de_DE.UTF-8 /usr/libexec/rhsmcertd-worker
+		//	201708171549:55.810 - FINE: Stdout: 
+		//	Berechtigungszertifikate & Repositorys aktualisieren
+		//	Berechtigungszertifikate und Repositorys konnten nicht aktualisiert werden
+		//	 (com.redhat.qe.tools.SSHCommandRunner.runCommandAndWait)
+		//	201708171549:55.812 - FINE: Stderr: 
+		//	Traceback (most recent call last):
+		//	  File "/usr/lib64/python2.7/logging/__init__.py", line 851, in emit
+		//	    msg = self.format(record)
+		//	  File "/usr/lib64/python2.7/logging/__init__.py", line 724, in format
+		//	    return fmt.format(record)
+		//	  File "/usr/lib64/python2.7/logging/__init__.py", line 467, in format
+		//	    s = self._fmt % record.__dict__
+		//	UnicodeDecodeError: 'ascii' codec can't decode byte 0xc3 in position 117: ordinal not in range(128)
+		//	Logged from file repolib.py, line 328
+		//	201708171549:55.817 - FINE: ExitCode: 255
+		String errorMsg = "Traceback";
+		Assert.assertTrue(!result.getStdout().toLowerCase().contains(errorMsg.toLowerCase()), "Stdout from running '"+command+"' in locale '"+lang+"' does not contain error '"+errorMsg+"'.");
+		Assert.assertTrue(!result.getStderr().toLowerCase().contains(errorMsg.toLowerCase()), "Stderr from running '"+command+"' in locale '"+lang+"' does not contain error '"+errorMsg+"'.");
+		Assert.assertEquals(result.getExitCode(), Integer.valueOf(0), "ExitCode from running '"+command+"' in locale '"+lang+"'.");
+		errorMsg = "UnicodeDecodeError";
+		Assert.assertTrue(!result.getStdout().toLowerCase().contains(errorMsg.toLowerCase()), "Stdout from running '"+command+"' in locale '"+lang+"' does not contain error '"+errorMsg+"'.");
+		Assert.assertTrue(!result.getStderr().toLowerCase().contains(errorMsg.toLowerCase()), "Stderr from running '"+command+"' in locale '"+lang+"' does not contain error '"+errorMsg+"'.");
+	}
+	@BeforeGroups(groups="setup",value={"groupRhsmcertdworkerUsingLang"})
+	public void beforeGroupRhsmcertdworkerUsingLang() {
+		if (clienttasks==null) return;
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
+	}
 	
 	
 	

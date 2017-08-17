@@ -18,4 +18,8 @@
         <custom-field id="subtype1" content="reliability"></custom-field>
         <custom-field id="subtype2" content="-"></custom-field>
     </custom-fields>
+    <linked-work-items>
+        <linked-work-item workitem-id="RHEL6-28564" role-id="verifies"/>
+        <linked-work-item workitem-id="RHEL6-28485" role-id="verifies"/>
+    </linked-work-items>
 </testcase>

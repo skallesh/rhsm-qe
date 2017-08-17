@@ -7649,6 +7649,16 @@
       "parameters" : [ ]
     }
   },
+  "rhsm.cli.tests.TranslationTests.testRhsmcertdworkerUsingLang" : {
+    "RHEL6" : {
+      "id" : "RHEL6-47934",
+      "parameters" : [ "bugzilla", "lang" ]
+    },
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-98520",
+      "parameters" : [ "bugzilla", "lang" ]
+    }
+  },
   "rhsm.cli.tests.TranslationTests.testTranslatedCommandLineHelp" : {
     "RHEL6" : {
       "id" : "RHEL6-21766",
