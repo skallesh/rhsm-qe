@@ -913,7 +913,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 	@Test(	description="Verify the virt_limit multiplier on guest pool quantity is not clobbered by refresh pools",
 			groups={"Tier2Tests","blockedByBug-679617"},
 			dependsOnGroups={},
-			dependsOnMethods={"VerifyHostAndGuestPoolQuantities_Test"},
+			dependsOnMethods={"testHostAndGuestPoolQuantities"},
 			dataProvider="getVirtSubscriptionData",
 			enabled=true)
 	public void testGuestPoolQuantityIsNotClobberedByRefreshPools(String subscriptionId, String productName, String productId, int quantity, String virtLimit, String hostPoolId, String guestPoolId, Boolean physicalOnly) throws JSONException, Exception {

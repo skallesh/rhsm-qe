@@ -61,7 +61,7 @@ public class ContentIntegrationTests extends SubscriptionManagerCLITestScript{
 			dataProvider="getSubscribeData",
 			enabled=false)	// disabled in favor of various ContentTests which do not depend on the maintenance of dataProvider="getSubscribeData"
 	//@ImplementsNitrateTest(caseId=) //TODO Find a tcms caseId
-	public void RegisterAndSubscribe_Test(String username, String password, ConsumerType type, String productId, String variant, String arch, Integer sockets, String engProductId) {
+	public void testRegisterAndSubscribe(String username, String password, ConsumerType type, String productId, String variant, String arch, Integer sockets, String engProductId) {
 
 		// register a new consumer
 		registerConsumerWhenNotAlreadyRegistered(username, password, type, sockets);	
@@ -133,11 +133,11 @@ public class ContentIntegrationTests extends SubscriptionManagerCLITestScript{
 	
 	@Test(	description="verify the CDN provides packages for the default enabled content set after subscribing to a product subscription",
 			groups={"Tier2Tests","VerifyPackagesAreAvailable","blockedByBug-905546"},
-			dependsOnMethods={"RegisterAndSubscribe_Test"}, alwaysRun=true,
+			dependsOnMethods={"testRegisterAndSubscribe"}, alwaysRun=true,
 			dataProvider="getDefaultEnabledContentNamespaceData",
 			enabled=false)	// disabled in favor of various ContentTests which do not depend on the maintenance of dataProvider="getSubscribeData"
 	//@ImplementsNitrateTest(caseId=) //TODO Find a tcms caseId
-	public void VerifyPackagesAreAvailableForDefaultEnabledContentNamespace_Test(String username, String password, ConsumerType type, String productId, Integer sockets, ContentNamespace contentNamespace) {
+	public void testPackagesAreAvailableForDefaultEnabledContentNamespace(String username, String password, ConsumerType type, String productId, Integer sockets, ContentNamespace contentNamespace) {
 		String abled = contentNamespace.enabled? "enabled":"disabled";	// is this an enabled or disabled test?
 		EntitlementCert entitlementCert = recallTheEntitlementCertGrantedAfterSubscribing(username, password, type, productId, sockets);
 		Integer packageCount=null;
@@ -183,24 +183,24 @@ public class ContentIntegrationTests extends SubscriptionManagerCLITestScript{
 	
 	@Test(	description="verify the CDN provides packages for the non-default enabled content set after subscribing to a product subscription",
 			groups={"Tier2Tests","VerifyPackagesAreAvailable"},
-			dependsOnMethods={"RegisterAndSubscribe_Test"}, alwaysRun=true,
+			dependsOnMethods={"testRegisterAndSubscribe"}, alwaysRun=true,
 			dataProvider="getDefaultDisabledContentNamespaceData",
 			enabled=false)	// disabled in favor of various ContentTests which do not depend on the maintenance of dataProvider="getSubscribeData"
 	//@ImplementsNitrateTest(caseId=) //TODO Find a tcms caseId
-	public void VerifyPackagesAreAvailableForDefaultDisabledContentNamespace_Test(String username, String password, ConsumerType type, String productId, Integer sockets, ContentNamespace contentNamespace) {
+	public void testPackagesAreAvailableForDefaultDisabledContentNamespace(String username, String password, ConsumerType type, String productId, Integer sockets, ContentNamespace contentNamespace) {
 		Assert.assertFalse(contentNamespace.enabled,"Reconfirming that we are are about to test a default disabled contentNamespace.");
-		VerifyPackagesAreAvailableForDefaultEnabledContentNamespace_Test(username, password, type, productId, sockets, contentNamespace);
+		testPackagesAreAvailableForDefaultEnabledContentNamespace(username, password, type, productId, sockets, contentNamespace);
 	}
 	
 	
 	@Test(	description="ensure a random available package can be downloaded from the enabled repo ",
 			groups={"Tier2Tests"},
-			dependsOnMethods={"RegisterAndSubscribe_Test"}, alwaysRun=true,
+			dependsOnMethods={"testRegisterAndSubscribe"}, alwaysRun=true,
 			dependsOnGroups={"VerifyPackagesAreAvailable"},
 			dataProvider="getContentNamespaceData",
 			enabled=false)	// disabled in favor of various ContentTests which do not depend on the maintenance of dataProvider="getSubscribeData"
 	//@ImplementsNitrateTest(caseId=) //TODO Find a tcms caseId
-	public void DownloadRandomPackageFromContentNamespace_Test(String username, String password, ConsumerType type, String productId, Integer sockets, ContentNamespace contentNamespace) {
+	public void testDownloadRandomPackageFromContentNamespace(String username, String password, ConsumerType type, String productId, Integer sockets, ContentNamespace contentNamespace) {
 		EntitlementCert entitlementCert = recallTheEntitlementCertGrantedAfterSubscribing(username, password, type, productId, sockets);
 
 		// register
@@ -248,12 +248,12 @@ public class ContentIntegrationTests extends SubscriptionManagerCLITestScript{
 	
 	@Test(	description="ensure a unique available package can be installed/removed from the enabled repo ",
 			groups={"Tier2Tests"},
-			dependsOnMethods={"RegisterAndSubscribe_Test"}, alwaysRun=true,
+			dependsOnMethods={"testRegisterAndSubscribe"}, alwaysRun=true,
 			dependsOnGroups={"VerifyPackagesAreAvailable"},
 			dataProvider="getContentNamespaceData",
 			enabled=false)	// disabled in favor of various ContentTests which do not depend on the maintenance of dataProvider="getSubscribeData"
 	//@ImplementsNitrateTest(caseId=) //TODO Find a tcms caseId
-	public void InstallAndRemoveUniquePackageFromContentNamespace_Test(String username, String password, ConsumerType type, String productId, Integer sockets, ContentNamespace contentNamespace) {
+	public void testInstallAndRemoveUniquePackageFromContentNamespace(String username, String password, ConsumerType type, String productId, Integer sockets, ContentNamespace contentNamespace) {
 		EntitlementCert entitlementCert = recallTheEntitlementCertGrantedAfterSubscribing(username, password, type, productId, sockets);
 
 //if (!contentNamespace.label.equals("rhel-6-server-beta-debug-rpms")) throw new SkipException("debugging");
