@@ -819,9 +819,9 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
-			tags= "Tier1")
+			tags= "Tier1 Tier2")
 	@Test(	description="Verify host and guest pools quantities generated from a virtualization-aware subscription",
-			groups={"Tier1Tests","VerifyHostAndGuestPoolQuantities_Test"}, // "blockedByBug-679617" indirectly when this script is run as part of the full TestNG suite since this is influenced by other scripts calling refresh pools
+			groups={"Tier1Tests","Tier2Tests","VerifyHostAndGuestPoolQuantities_Test"}, // "blockedByBug-679617" indirectly when this script is run as part of the full TestNG suite since this is influenced by other scripts calling refresh pools
 			dependsOnGroups={},
 			dataProvider="getVirtSubscriptionData",
 			enabled=true)
