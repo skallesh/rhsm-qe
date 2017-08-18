@@ -29,8 +29,7 @@
 
 (defn ^{BeforeSuite {:groups ["setup"]}}
   startup [_]
-  (c/init)
-  (chrome/start-chrome))
+  (c/init))
 
 (defn ^{AfterSuite {:groups ["cleanup"]}}
   cleanup [_]
@@ -39,7 +38,41 @@
 (defn ^{Test {:groups ["register"
                        "cockpit"
                        "tier1"]
-              :dataProvider "client-with-webdriver"}
+              :dataProvider "run-command"}
+        TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]}}
+  package_is_installed
+  [ts run-command]
+  (->> "rpm -qa | grep cockpit"
+       run-command
+       :stdout
+       clojure.string/split-lines
+       (filter (partial re-find #"^cockpit-"))
+       count
+       (< 1) ;; let the num of rows is larger that 1
+       is))
+
+(defn ^{Test {:groups ["register"
+                       "cockpit"
+                       "tier1"]
+              :dataProvider "run-command"
+              :dependsOnMethods ["package_is_installed"]}
+        TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]}}
+  service_is_running
+  [ts run-command]
+  "[root@jstavel-rhel7-latest-server ~]# systemctl status cockpit.service
+● cockpit.service - Cockpit Web Service
+   Loaded: loaded (/usr/lib/systemd/system/cockpit.service; static; vendor preset: disabled)"
+  (let [result #spy/d (->> "systemctl status cockpit.service"
+                           run-command
+                           :stdout)]
+    (is (.contains result "cockpit.service - Cockpit Web Service"))
+    (is (re-find #"\n[ \t]+Loaded:[ \t]+loaded" result))))
+
+(defn ^{Test {:groups ["register"
+                       "cockpit"
+                       "tier1"]
+              :dataProvider "client-with-webdriver"
+              :dependsOnMethods ["service_is_running"]}
         TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]}}
   register
   [ts driver run-command]
@@ -103,66 +136,12 @@
         vector
         to-array-2d)))
 
+(defn ^{DataProvider {:name "run-command"}}
+  provide_run_command
+  "It provides a running Chrome/Firefox instance."
+  [_]
+  (-> [(partial run-command @c/clientcmd)]
+      vector
+      to-array-2d))
+
 (gen-class-testng)
-
-(comment
-  (def client-hostname "jstavel-rhel7-latest-server.usersys.redhat.com")
-  (def client-cockpit-username "root")
-  (def client-cockpit-password "redhat")
-
-  ;;(def driver1 (ChromeDriver. "/usr/local/bin/chromedriver"))
-  ;;(def driver (chrome/start-chrome "/usr/local/bin/chromedriver"))
-  (System/setProperty "webdriver.chrome.driver" "/usr/local/bin/chromedriver")
-  (def dd (chrome/start-chrome))
-  (def dd2 (ChromeDriver.))
-  (browser/get (format "http://%s:%d" client-hostname 9090))
-  (browser/get dd2 "http://www.google.com")
-  (def el (browser/find-element-by-css-selector ".page"))
-  (def el2 (browser/find-element-by-css-selector dd2 ".page"))
-  (element/get-text el2)
-  (.get driver (format "http://%s:%d" client-hostname 9090))
-  ;;(.findElement driver (by/id "login-user-input"))
-  ;;(driver/find-element driver (by/id "login-user-input"))
-
-  (def login-user-input (.until (new WebDriverWait dd 10)
-                                (ExpectedConditions/visibilityOfElementLocated
-                                 (by/id "login-user-input"))))
-  (def login-password-input (.until (new WebDriverWait dd 10)
-                                    (ExpectedConditions/visibilityOfElementLocated
-                                     (by/id "login-password-input"))))
-  (def login-button (.until (new WebDriverWait dd 10)
-                            (ExpectedConditions/visibilityOfElementLocated
-                             (by/id "login-button"))))
-  
-  ;;(def login-user-input (browser/find-element (by/id "login-user-input")))
-  ;;(def login-password-input (browser/find-element (by/id "login-password-input")))
-  ;; (def login-button (.findElement driver (by/id "login-button")))
-
-  (element/send-keys login-user-input client-cockpit-username)
-  (element/send-keys login-password-input client-cockpit-password)
-  (element/click login-button)
-  (def subscriptions-link (.. (WebDriverWait. dd 10)
-                              (until (ExpectedConditions/visibilityOfElementLocated
-                                      (by/xpath "//a[@href='/subscriptions']")))))
-  ;;(def subscriptions-link (browser/find-element (by/xpath "//a[@href='/subscriptions']")))
-  (element/click subscriptions-link)
-  (def subscriptions-iframe (browser/find-element
-                             dd
-                             (by/xpath "//iframe[@name='cockpit1:localhost/subscriptions' and @data-loaded=1]")))
-  ;;(element/get-text content)
-  (.. dd (switchTo) (defaultContent))
-  (.. dd (switchTo) (frame subscriptions-iframe))
-  (.. dd (findElement (by/css-selector "div.subscription-status-ct")))
-  (def subscriptions-status
-    (->> (by/css-selector "div.subscription-status-ct label")
-         (browser/find-element dd)
-         (element/get-text)))
-  (def subscriptions-action
-    (->> (by/css-selector "div.subscription-status-ct button")
-         (browser/find-element dd)
-         (element/get-text)))
-  (.. (WebDriverWait. dd 60)
-      (until (ExpectedConditions/visibilityOfElementLocated
-              (by/css-selector "div.subscription-status-ct label")))
-      (getText))
-  )
