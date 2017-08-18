@@ -68,6 +68,11 @@
                          :password1 "sm.client2.password"
                          :username "sm.client1.username"
                          :username1 "sm.client2.username"
+                                        ; cockpit user informations
+                         :cockpit-username "sm.client1.cockpit.username"
+                         :cockpit-password "sm.client1.cockpit.password"
+                         :cockpit-username1 "sm.client2.cockpit.username"
+                         :cockpit-password1 "sm.client2.cockpit.password"
 
                          ;; candlepin server admin informations
                          :admin-username "sm.server.admin.username"
