@@ -12,7 +12,7 @@
         <custom-field id="caseimportance" content="high"></custom-field>
         <custom-field id="caselevel" content="component"></custom-field>
         <custom-field id="caseposneg" content="positive"></custom-field>
-        <custom-field id="tags" content="Tier1"></custom-field>
+        <custom-field id="tags" content="Tier1 Tier2 Tier3"></custom-field>
         <custom-field id="casecomponent" content="subscription-manager"></custom-field>
         <custom-field id="testtype" content="functional"></custom-field>
         <custom-field id="subtype1" content="reliability"></custom-field>

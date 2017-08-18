@@ -84,15 +84,15 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 
 	// Test methods ***********************************************************************
 
-	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-20097", "RHEL7-51104"},
 			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
-			tags= "Tier1")
+			tags= "Tier1 Tier2 Tier3")
 	@Test(	description="Verify that the channel-cert-mapping.txt exists",
-			groups={"Tier1Tests"},
+			groups={"Tier1Tests","Tier2Tests","Tier3Tests"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void testChannelCertMappingFileExists() {
@@ -100,15 +100,15 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-20100", "RHEL7-51107"},
 			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
-			tags= "Tier1")
+			tags= "Tier1 Tier2 Tier3")
 	@Test(	description="Verify that the channel-cert-mapping.txt contains a unique map of channels to product certs",
-			groups={"Tier1Tests"},
+			groups={"Tier1Tests","Tier2Tests","Tier3Tests"},
 			dependsOnMethods={"testChannelCertMappingFileExists"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -152,15 +152,15 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-20101", "RHEL7-51108"},
 			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
-			tags= "Tier1")
+			tags= "Tier3")
 	@Test(	description="Verify RHEL4 channel mappings exist in channel-cert-mapping.txt",
-			groups={"Tier1Tests","blockedByBug-1009932","blockedByBug-1025338","blockedByBug-1080072","blockedByBug-1100872"},
+			groups={"Tier3Tests","blockedByBug-1009932","blockedByBug-1025338","blockedByBug-1080072","blockedByBug-1100872"},
 			dependsOnMethods={"testChannelCertMappingFileExists"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -266,7 +266,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-21883", "RHEL7-51738"},
 			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
@@ -413,7 +413,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-20103", "RHEL7-51110"},
 			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
@@ -441,7 +441,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-20102", "RHEL7-51109"},
 			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
@@ -515,7 +515,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(verifiedVersionOfAllMigrationProductCertFiles,"All of the migration productCerts in directory '"+baseProductsDir+"' support this version of RHEL '"+clienttasks.redhatReleaseXY+"'.");
 	}
 
-	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-20106", "RHEL7-51111"},
 			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
@@ -617,7 +617,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(verifiedMatchForAllMigrationProductCertFiles,"All of the migration productCerts in directory '"+baseProductsDir+"' match the current ["+sm_rhnDefinitionsGitRepository+"] product certs for this RHEL release '"+clienttasks.redhatReleaseXY+"' ");
 	}
 
-	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-20098", "RHEL7-51105"},
 			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
@@ -873,7 +873,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				"The subscription-manager-migration-data file '"+channelCertMappingFilename+"' maps RHN Channel '"+productBaselineRhnChannel+"' to the same productId as dictated in the CDN Product Baseline.");
 	}
 
-	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-21884", "RHEL7-51739"},
 			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
@@ -1018,7 +1018,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-20104", "RHEL7-33102"},
 			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
@@ -1293,15 +1293,15 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-20099", "RHEL7-51106"},
 			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
-			tags= "Tier1")
+			tags= "Tier2")
 	@Test(	description="Verify that the channel-cert-mapping.txt does NOT contain any High Touch Beta channel mappings",
-			groups={"Tier1Tests","blockedByBug-1011992"},
+			groups={"Tier2Tests","blockedByBug-1011992"},
 			dependsOnMethods={"testChannelCertMappingFileExists"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -1315,7 +1315,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-20105", "RHEL7-55203"},
 			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
@@ -1425,7 +1425,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 		if (!allBaseChannelProductCertsMatchThisRhelRelease) Assert.fail("Review logged warnings above for expected RHN base channel product cert versions that do not match this system.s dot release.");
 	}
 
-	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-20107", "RHEL7-51112"},
 			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
