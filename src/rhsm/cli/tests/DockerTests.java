@@ -591,7 +591,7 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 
 	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RedHatEnterpriseLinux7},
-			testCaseID= {"RHEL6-26772", "RHEL7-55316"},
+			testCaseID= {"RHEL7-55316"},
 			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
