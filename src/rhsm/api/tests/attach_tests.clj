@@ -7,11 +7,11 @@
         [slingshot.slingshot :only (try+
                                     throw+)]
         [com.redhat.qe.verify :only (verify)]
-        rhsm.gui.tasks.tools
         gnome.ldtp)
   (:require [clojure.tools.logging :as log]
             [rhsm.gui.tasks.tasks :as tasks]
             [rhsm.gui.tasks.tools :as tools]
+            [rhsm.gui.tasks.test-config :as c]
             [org.httpkit.client :as http]
             [clojure.data.json :as json]
             [rhsm.dbus.parser :as dbus]
@@ -25,22 +25,35 @@
             BeforeClass
             AfterClass
             BeforeGroups
+            BeforeSuite
+            AfterSuite
             AfterGroups
             DataProvider]
            org.testng.SkipException
            [com.github.redhatqe.polarize.metadata TestDefinition]
            [com.github.redhatqe.polarize.metadata DefTypes$Project]))
 
+(defn maybe-append-locale
+  [locale command]
+  (if (clojure.string/blank? locale)
+    command
+    (format "LANG=%s %s" locale command)))
+
+(defn ^{BeforeSuite {:groups ["setup"]}}
+  startup [_]
+  (c/init))
+
 (defn ^{Test {:groups ["DBUS"
                        "API"
                        "tier1"]
+              :dataProvider "client-with-locales"
               :description "Given a dbus service rhsm is active
 When I call 'tree' using busctl for com.redhat.RHSM1
 Then the response contains 'Attach' node
 "}
         TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]}}
   attach_object_is_available
-  [ts]
+  [ts run-command locale]
   "shell
 [root@jstavel-rhel7-latest-server ~]# busctl tree com.redhat.RHSM1
 └─/com
@@ -51,18 +64,20 @@ Then the response contains 'Attach' node
       ├─/com/redhat/RHSM1/Attach
       └─/com/redhat/RHSM1/RegisterServer
 "
-  (let [list-of-dbus-objects (->> "busctl tree com.redhat.RHSM1"
-                                  run-command
-                                  :stdout
-                                  (re-seq #"(├─|└─)/com/redhat/RHSM1/([^ ]+)")
-                                  (map (fn [xs] (nth xs 2)))
-                                  (map clojure.string/trim)
-                                  (into #{}))]
+  (let [list-of-dbus-objects #spy/d (->> "busctl tree com.redhat.RHSM1"
+                                         (maybe-append-locale locale)
+                                         tools/run-command
+                                         :stdout
+                                         (re-seq #"(├─|└─)/com/redhat/RHSM1/([^ ]+)")
+                                         (map (fn [xs] (nth xs 2)))
+                                         (map clojure.string/trim)
+                                         (into #{}))]
     (verify (clojure.set/subset? #{"Attach"} list-of-dbus-objects))))
 
 (defn ^{Test {:groups ["DBUS"
                        "API"
                        "tier1"]
+              :dataProvider "client-with-locales"
               :description "Given a dbus service rhsm is active
 When I call 'introspect' using busctl for com.redhat.RHSM1
    and an interface /com/redhat/RHSM1/Attach
@@ -70,9 +85,10 @@ Then the methods list contains of methods 'AutoAttach', 'PoolAttach'
 "}
         TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]}}
   attach_methods
-  [ts]
+  [ts run-command locale]
   (let [methods-of-the-object
         (->> "busctl introspect com.redhat.RHSM1 /com/redhat/RHSM1/Attach"
+             (maybe-append-locale locale)
              run-command
              :stdout
              clojure.string/split-lines
@@ -84,24 +100,25 @@ Then the methods list contains of methods 'AutoAttach', 'PoolAttach'
 (defn ^{Test {:groups ["DBUS"
                        "API"
                        "tier1"]
+              :dataProvider "client-with-locales"
               :description "Given a system is registered without any attached pool
 When I call a DBus method 'PoolAttach' at com.redhat.RHSM1.Attach object
 Then the response contains of list of json strings described attached pools
 "}
         TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]}}
   attach_pool_using_dbus
-  [ts]
-  (let [[_ major minor] (re-find #"(\d)\.(\d)" (-> :true get-release :version))]
+  [ts run-command locale]
+  (let [[_ major minor] (re-find #"(\d)\.(\d)" (-> :true tools/get-release :version))]
     (match major
            (a :guard #(< (Integer. %) 7 )) (throw (SkipException. "busctl is not available in RHEL6"))
            :else nil))
-  (->> "subscription-manager unregister" tools/run-command)
-  (-> (format "subscription-manager register --username=%s --password=%s --org=%s"
-              (@config :username) (@config :password) (@config :owner-key))
-      tools/run-command
-      :stdout
-      (.contains "Registering to:")
-      verify)
+  (->> "subscription-manager unregister" run-command)
+  (let [output (->> (format "subscription-manager register --username=%s --password=%s --org=%s"
+                           (@config :username) (@config :password) (@config :owner-key))
+                   (maybe-append-locale locale)
+                   run-command
+                   :stdout) ]
+    (verify (.contains output "Registering to:")))
   ;;(->> "subscription-manager remove --all" tools/run-command)
   (let [list-of-available-pools (rest/list-of-available-pools
                                  (ctasks/server-url)
@@ -117,13 +134,14 @@ Then the response contains of list of json strings described attached pools
                     (format " %d " num-of-wanted-pools) (clojure.string/join " " a-few-pool-ids)
                     " 1 " ;;quantity
                     " 0 ")
-               tools/run-command)]
+               (maybe-append-locale locale)
+               run-command)]
       (verify (= stderr ""))
       (verify (= exitcode 0))
       (let [[response-data rest] (-> stdout dbus/parse)]
-        (verify (= rest ""))
-        (verify (= (type response-data) clojure.lang.PersistentVector))
-        (verify (= (count response-data) num-of-wanted-pools))
+        (assert (= rest ""))
+        (assert (= (type response-data) clojure.lang.PersistentVector))
+        (assert (= (count response-data) num-of-wanted-pools))
         (let [entitlements (map (fn [x] (-> x (str/replace #"\\\"" "\"") json/read-str)) response-data)]
           (let [ids-from-response (->> entitlements
                                        (map (fn [ent] (-> ent first (get "pool") (get "id"))))
@@ -133,6 +151,7 @@ Then the response contains of list of json strings described attached pools
 (defn ^{Test {:groups ["DBUS"
                        "API"
                        "tier1"]
+              :dataProvider "client-with-locales"
               :description "Given a system is registered without any attached pool
 When I call a DBus method 'AutoAttach' at com.redhat.RHSM1.Attach object
 with the proper Service Level
@@ -141,20 +160,22 @@ Then the response contains of keys ['status','overall_status','reasons']
 "}
         TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]}}
   autoattach_pool_using_dbus
-  [ts]
-  (let [[_ major minor] (re-find #"(\d)\.(\d)" (-> :true get-release :version))]
+  [ts run-command locale]
+  (let [[_ major minor] (re-find #"(\d)\.(\d)" (-> :true tools/get-release :version))]
     (match major
            (a :guard #(< (Integer. %) 7 )) (throw (SkipException. "busctl is not available in RHEL6"))
            :else nil))
-  (->> "subscription-manager unregister" tools/run-command)
-  (-> (format "subscription-manager register --username=%s --password=%s --org=%s"
-              (@config :username) (@config :password) (@config :owner-key))
-      tools/run-command
-      :stdout
-      (.contains "Registering to:")
-      verify)
-  ;;(->> "subscription-manager remove --all" tools/run-command)
+  (->> "subscription-manager unregister"
+       (maybe-append-locale locale)
+       run-command)
+  (let [output (->> (format "subscription-manager register --username=%s --password=%s --org=%s"
+                           (@config :username) (@config :password) (@config :owner-key))
+                   (maybe-append-locale locale)
+                   run-command
+                   :stdout)]
+    (verify (.contains output "Registering to:")))
 
+  ;;(->> "subscription-manager remove --all" tools/run-command)
   (let [list-of-available-pools (rest/list-of-available-pools
                                  (ctasks/server-url)
                                  (@config :owner-key)
@@ -165,7 +186,8 @@ Then the response contains of keys ['status','overall_status','reasons']
                     " sa{sv} "
                     " Standard "
                     " 0")
-               tools/run-command)]
+               (maybe-append-locale locale)
+               run-command)]
       (verify (= stderr ""))
       (verify (= exitcode 0))
       (let [[response-data rest] (-> stdout dbus/parse)]
@@ -180,5 +202,25 @@ Then the response contains of keys ['status','overall_status','reasons']
                                                         (get "compliance_type"))))
                                      set)]
           (verify (= #{"Standard"} compliance-levels)))))))
+
+(defn run-command
+  "Runs a given command on the client using SSHCommandRunner()."
+  [runner command]
+  (let [result (.runCommandAndWait runner command)
+        out (.getStdout result)
+        err (.getStderr result)
+        exit (.getExitCode result)]
+    {:stdout out
+     :stderr err
+     :exitcode exit}))
+
+(defn ^{DataProvider {:name "client-with-locales"}}
+  client_with_locales
+  "It provides a run-command for a locally run command. And locales dict to solve problems with locales."
+  [_]
+  (-> [[(partial run-command @c/clientcmd) "en_US.UTF-8"]
+       [(partial run-command @c/clientcmd) "ja_JP.UTF-8"]
+       [(partial run-command @c/clientcmd) "it_IT.UTF-8"]]
+      to-array-2d))
 
 (gen-class-testng)
