@@ -1,32 +1,54 @@
 (ns rhsm.cockpit.tasks
   (:require [clojure.string :as string]
-            ;; [webica.core :as w]
-            ;; [webica.by :as by]
-            ;; [webica.web-driver :as driver]
-            ;; [webica.web-element :as element]
-            ;; [webica.remote-web-driver :as browser]
-            ;; [webica.web-driver-wait :as wait]
-            [clojure.tools.logging :as log]
-            )
-  )
+            [clojure.tools.logging :as log])
+  (:import org.openqa.selenium.support.ui.ExpectedConditions
+           org.openqa.selenium.support.ui.WebDriverWait
+           org.openqa.selenium.By))
 
-;; (defn login [user password]
-;;   "#login-user-input"
-;;   #spy/d (wait/until
-;;           (wait/instance 10)
-;;           (wait/condition
-;;            (fn [driver]
-;;              (some? (browser/find-element (by/id "login-user-input"))))))
-;;   (println "press Enter") (read-line)
-;;   ;; (input-text "#login-user-input" user)
-;;   ;; (input-text "#login-password-input" password)
-;;   ;; (click "#login-button")
-;;   ;; (wait-until #(exists? "#content-user-name"))
-;;   )
+(defn is-logged?
+  [driver]
+  (-> driver
+      (.findElements (By/id  "content-user-name"))
+      count
+      (= 0)
+      not))
 
-;; (deftest subscription-dialog
-;;   (login (env :sm-cockpit-login-user) (env :sm-cockpit-login-password))
-;;   (click {:xpath "//a[@data-target='#tools-panel']"})
-;;   (wait-until #(displayed? {:xpath "//a[@href='/subscriptions']"}))
-;;   (click {:xpath "//a[@href='/subscriptions']"})
-;;   (close))
+(defn set-user-language
+  [driver language]
+  (.. (WebDriverWait. driver 60)
+      (until
+       (ExpectedConditions/visibilityOfElementLocated
+        (By/id "content-user-name")))
+      click)
+  (.. (WebDriverWait. driver 60)
+      (until
+       (ExpectedConditions/visibilityOfElementLocated
+        (By/cssSelector "li.display-language-menu")))
+      click)
+  (.. (WebDriverWait. driver 60)
+      (until
+       (ExpectedConditions/visibilityOfElementLocated
+        (By/xpath
+         (format  "//select[@id='display-language-list']/option[@value='%s']"
+                  language))))
+      click)
+  (.. (WebDriverWait. driver 10)
+      (until
+       (ExpectedConditions/visibilityOfElementLocated
+        (By/xpath "//button[@id='display-language-select-button']")))
+      click))
+
+(defn log-user-in
+  [driver username password]
+  (.. (WebDriverWait. driver 10)
+      (until (ExpectedConditions/visibilityOfElementLocated
+              (By/id "login-user-input")))
+      (sendKeys (into-array [username])))
+  (.. (WebDriverWait. driver 10)
+      (until (ExpectedConditions/visibilityOfElementLocated
+              (By/id "login-password-input")))
+      (sendKeys (into-array [password])))
+  (.. (WebDriverWait. driver 10)
+      (until (ExpectedConditions/visibilityOfElementLocated
+              (By/id "login-button")))
+      click))
