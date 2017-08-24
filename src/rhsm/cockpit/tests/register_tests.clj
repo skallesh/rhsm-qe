@@ -76,6 +76,7 @@
         TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]}}
   register
   [ts driver run-command locale language]
+  (.. driver (switchTo) (defaultContent))
   (tasks/set-user-language driver language)
   (.. (WebDriverWait. driver 60)
       (until
