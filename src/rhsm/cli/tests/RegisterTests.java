@@ -962,16 +962,31 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 				Integer expectedExitCode = new Integer(0);
 				String expectedStdoutRegex = "The system has been registered with ID: [a-f,0-9,\\-]{36}";
 				String expectedStderrRegex = null;
-				if ((SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">="/*TODO CHANGE TO ">" after candlepin 2.1.2-1 is tagged*/, "2.1.1-1")) && (ConsumerType.candlepin.equals(type))) {	// candlepin commit 739b51a0d196d9d3153320961af693a24c0b826f Bug 1455361: Disallow candlepin consumers to be registered via Subscription Manager
-					//	FINE: ssh root@jsefler-rhel7.usersys.redhat.com subscription-manager register --username=testuser1 --password=password --org=admin --type=candlepin --name="candlepin_NAME"
-					//	FINE: Stdout: Registering to: jsefler-candlepin.usersys.redhat.com:8443/candlepin
-					//	FINE: Stderr: You may not create a manifest consumer via Subscription Manager.
-					//	FINE: ExitCode: 70
-					expectedStdoutRegex = null;
-					expectedStderrRegex = "You may not create a manifest consumer via Subscription Manager.";
-					expectedExitCode = Integer.valueOf(70);	
-
+				if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">="/*TODO CHANGE TO ">" after candlepin 2.1.2-1 is tagged*/, "2.1.1-1")) {	// candlepin commit 739b51a0d196d9d3153320961af693a24c0b826f Bug 1455361: Disallow candlepin consumers to be registered via Subscription Manager
+					if (ConsumerType.candlepin.equals(type) |
+						ConsumerType.headpin.equals(type) |
+						ConsumerType.katello.equals(type)) {
+						//	FINE: ssh root@jsefler-rhel7.usersys.redhat.com subscription-manager register --username=testuser1 --password=password --org=admin --type=candlepin --name="candlepin_NAME"
+						//	FINE: Stdout: Registering to: jsefler-candlepin.usersys.redhat.com:8443/candlepin
+						//	FINE: Stderr: You may not create a manifest consumer via Subscription Manager.
+						//	FINE: ExitCode: 70
+						expectedStdoutRegex = null;
+						expectedStderrRegex = "You may not create a manifest consumer via Subscription Manager.";
+						expectedExitCode = Integer.valueOf(70);
+					}
 				}
+				if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.1.1-1")) {	// candlepin commit 6976b7c45d48945d6d0bf1118bd1d8edebceb1f0
+					if (ConsumerType.share.equals(type)) {
+						//	FINE: ssh root@jsefler-rhel7.usersys.redhat.com subscription-manager register --username=testuser1 --password=password --org=admin --type=share --name="share_NAME"
+						//	FINE: Stdout: Registering to: jsefler-candlepin.usersys.redhat.com:8443/candlepin
+						//	FINE: Stderr: A unit type of "share" cannot have installed products
+						//	FINE: ExitCode: 70
+						expectedStdoutRegex = null;
+						//	Note: assuming there is at least one installed product since our client is a RHEL product afterall
+						expectedStderrRegex = "A unit type of \"share\" cannot have installed products";
+						expectedExitCode = Integer.valueOf(70);
+					}
+				}	
 				ll.add(Arrays.asList(new Object[]{null,  username,	password,	owner,	name,	type,	expectedExitCode,	expectedStdoutRegex,	expectedStderrRegex}));
 			} else {
 				String expectedStderrRegex = "No such consumer type: "+type;
@@ -982,7 +997,30 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 				ll.add(Arrays.asList(new Object[]{null,	username,	password,	owner,	name,	type,	expectedExitCode,	null,	expectedStderrRegex}));
 			}
 		}
-
+		
+		// process all of the rows and change the expected results due to 1461003: Deprecate --type option on register command
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.20.1-1"/*TODO change to "1.20.2-1"*/)) {	// post commit e0c34a729e9e347ab1e0f4f5fa656c8b20205fdf RFE Bug 1461003: Deprecate --type option on register command
+			for (List<Object> l : ll) {
+				BlockedByBzBug blockedByBzBug = (BlockedByBzBug) l.get(0);	// get the existing BlockedByBzBug
+				ConsumerType type = (ConsumerType) l.get(5);
+				if (!type.equals(ConsumerType.system) && !type.equals(ConsumerType.RHUI)) {
+					List<String> bugIds = blockedByBzBug==null?new ArrayList<String>():new ArrayList<String>(Arrays.asList(blockedByBzBug.getBugIds()));
+					bugIds.add("1461003");	// Bug 1461003 - [RFE] Remove --type option from subscription-manager register
+					blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
+					l.set(0, blockedByBzBug);
+					l.set(6, new Integer(64));	// EX_USAGE
+					l.set(7, "");	// stdout
+					l.set(8, "Error: The --type option has been deprecated and may not be used.");	// stderr
+				}
+				if (type.equals(ConsumerType.RHUI)) {
+					List<String> bugIds = blockedByBzBug==null?new ArrayList<String>():new ArrayList<String>(Arrays.asList(blockedByBzBug.getBugIds()));
+					bugIds.add("1485008");	// Bug 1485008 - subscription-manager register --type="RHUI" or --type="rhui" should both work as documented in various KBase articles
+					blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
+					l.set(0, blockedByBzBug);
+				}
+			}
+		}
+		
 		return ll;
 	}
 
