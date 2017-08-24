@@ -71,7 +71,7 @@
 (defn ^{Test {:groups ["register"
                        "cockpit"
                        "tier1"]
-              :dataProvider "client-with-webdriver-with-locale"
+              :dataProvider "client-with-webdriver-and-locale"
               :dependsOnMethods ["service_is_running"]}
         TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]}}
   register
