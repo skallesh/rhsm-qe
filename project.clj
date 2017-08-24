@@ -33,12 +33,11 @@
                  [postgresql/postgresql "8.4-701.jdbc4"]
                  [slingshot "0.8.0"]
                  [cheshire "5.7.0"]
-                 ;[test_clj.testng "1.0.1-SNAPSHOT"]
                  [test-clj.testng "1.1.0-SNAPSHOT"]
                  [levand/immuconf "0.1.0"]
                  [com.github.redhatqe.polarize/polarize "0.6.0-SNAPSHOT"]
                  [org.json/json "20160810"]
-                 [webica "3.0.0-beta2-clj0"]
+                 [org.seleniumhq.selenium/selenium-java "3.5.2"]
                  [http-kit "2.2.0"]
                  [mount "0.1.10"]]
   ;lein1
