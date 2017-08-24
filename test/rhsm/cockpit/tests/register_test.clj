@@ -10,7 +10,8 @@
 ;; ;; initialization of our testware
 (use-fixtures :once (fn [f]
                       (tests/startup nil)
-                      (f)))
+                      (f)
+                      (tests/cleanup nil)))
 
 (deftest package_is_installed-test
   (let [[[run-command]] (tests/provide_run_command nil)]
@@ -20,6 +21,17 @@
   (let [[[run-command]] (tests/provide_run_command nil)]
     (tests/service_is_running nil run-command)))
 
-(deftest register-test
-  (let [[[driver run-command]] (tests/webdriver nil)]
-    (tests/register nil driver run-command)))
+(deftest register-01-test
+  (let [[driver run-command locale lang]
+        (first (tests/webdriver_with_locale nil))]
+    (tests/register nil driver run-command locale lang)))
+
+(deftest register-02-test
+  (let [[driver run-command locale lang]
+        (second (tests/webdriver_with_locale nil))]
+    (tests/register nil driver run-command locale lang)))
+
+(deftest register-03-test
+  (let [[driver run-command locale lang]
+        (nth (tests/webdriver_with_locale nil) 2)]
+    (tests/register nil driver run-command locale lang)))
