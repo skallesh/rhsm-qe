@@ -2311,6 +2311,12 @@
       "parameters" : [ ]
     }
   },
+  "rhsm.cli.tests.DockerTests.testPullDockerImage" : {
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-55316",
+      "parameters" : [ "bugzilla", "dockerImage" ]
+    }
+  },
   "rhsm.cli.tests.DockerTests.testSubscriptionManagementCommandIsDisabledInContainerMode" : {
     "RHEL6" : {
       "id" : "RHEL6-26768",
