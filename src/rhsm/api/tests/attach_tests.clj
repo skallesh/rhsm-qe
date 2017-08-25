@@ -64,7 +64,7 @@ Then the response contains 'Attach' node
       ├─/com/redhat/RHSM1/Attach
       └─/com/redhat/RHSM1/RegisterServer
 "
-  (let [list-of-dbus-objects #spy/d (->> "busctl tree com.redhat.RHSM1"
+  (let [list-of-dbus-objects (->> "busctl tree com.redhat.RHSM1"
                                          (maybe-append-locale locale)
                                          tools/run-command
                                          :stdout
