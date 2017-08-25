@@ -42,6 +42,7 @@
         TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]}}
   package_is_installed
   [ts run-command]
+  (log/info "package_is_installed")
   (->> "rpm -qa | grep cockpit"
        run-command
        :stdout
@@ -62,6 +63,7 @@
   "[root@jstavel-rhel7-latest-server ~]# systemctl status cockpit.service
 ● cockpit.service - Cockpit Web Service
    Loaded: loaded (/usr/lib/systemd/system/cockpit.service; static; vendor preset: disabled)"
+  (log/info "service_is_running")
   (let [result (->> "systemctl status cockpit.service"
                     run-command
                     :stdout)]
@@ -76,6 +78,7 @@
         TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]}}
   register
   [ts driver run-command locale language]
+  (log/info "register test")
   (.. driver (switchTo) (defaultContent))
   (tasks/set-user-language driver language)
   (.. (WebDriverWait. driver 60)

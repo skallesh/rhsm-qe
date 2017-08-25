@@ -7,6 +7,7 @@
 
 (defn is-logged?
   [driver]
+  (log/info "is-logged?")
   (-> driver
       (.findElements (By/id  "content-user-name"))
       count
@@ -15,6 +16,7 @@
 
 (defn set-user-language
   [driver language]
+  (log/info "set-user-language")
   (.. (WebDriverWait. driver 60)
       (until
        (ExpectedConditions/visibilityOfElementLocated
@@ -40,6 +42,7 @@
 
 (defn log-user-in
   [driver username password]
+  (log/info "log-user-in")
   (.. (WebDriverWait. driver 10)
       (until (ExpectedConditions/visibilityOfElementLocated
               (By/id "login-user-input")))
