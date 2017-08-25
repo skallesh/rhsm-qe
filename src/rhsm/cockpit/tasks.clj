@@ -8,11 +8,11 @@
 (defn is-logged?
   [driver]
   (log/info "is-logged?")
-  (-> driver
-      (.findElements (By/id  "content-user-name"))
-      count
-      (= 0)
-      not))
+  (log/spy (-> driver
+               (.findElements (By/id  "content-user-name"))
+               count
+               (= 0)
+               not)))
 
 (defn set-user-language
   [driver language]
