@@ -43,6 +43,8 @@
 (defn log-user-in
   [driver username password]
   (log/info "log-user-in")
+  (println "username" username)
+  (println "password" password)
   (.. (WebDriverWait. driver 10)
       (until (ExpectedConditions/visibilityOfElementLocated
               (By/id "login-user-input")))
