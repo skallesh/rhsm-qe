@@ -6479,6 +6479,16 @@
       "parameters" : [ ]
     }
   },
+  "rhsm.cli.tests.ReposTests.testYumConfigManagerTransactionsWillNowGenerateRedhatRepo" : {
+    "RHEL6" : {
+      "id" : "RHEL6-47936",
+      "parameters" : [ ]
+    },
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-99418",
+      "parameters" : [ ]
+    }
+  },
   "rhsm.cli.tests.ReposTests.testYumRepoListPreservesAdditionalOptionsToRedhatReposUsingManualEdits" : {
     "RHEL6" : {
       "id" : "RHEL6-19974",

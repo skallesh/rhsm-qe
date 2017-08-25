@@ -62,6 +62,7 @@ public class SubscriptionManagerTasks {
 	public SSHCommandRunner sshCommandRunner = null;
 	public final String command				= "subscription-manager";
 	public final String redhatRepoFile		= "/etc/yum.repos.d/redhat.repo";
+	public final String redhatRepoServerValueFile	= "/var/lib/rhsm/repo_server_val/redhat.repo";
 	public final String rhsmConfFile		= "/etc/rhsm/rhsm.conf";
 	public final String rhsmLoggingConfFile	= "/etc/rhsm/logging.conf";	// NO LONGER EXISTS in subscription-manager-1.17.10-1	// RHEL7.3 commit d84b15f42c2e4521e130b939039960c0846b849c 1334916: Move logging configuration to rhsm.conf
 	public final String factsDir			= "/etc/rhsm/facts";
@@ -7205,6 +7206,26 @@ if (false) {
 		if (info!=null) return result.getStdout().split(":")[1].trim();
 		return result.getStdout().trim();
 	}
+	
+	
+	public void yumConfigManagerEnableRepos(List<String> repos, String options) {
+		
+		// use yum-config-manager to enable all the requested repos
+		if (options==null) options="";	// optional options like --disablerepo=beaker*
+		String command = "yum-config-manager "+options+" --enable";
+		for (String repo : repos) command += " "+repo;
+		SSHCommandResult result = sshCommandRunner.runCommandAndWait(command);
+		Assert.assertEquals(result.getExitCode(), Integer.valueOf(0), "ExitCode from command '"+command+"'.");
+		
+		if (this.isPackageVersion("subscription-manager", ">=", "1.20.1-1")) {	// commit afbc7fd31a27c7eba26fe4b0cc6840228678bfa8	RFE Bug 1329349: Add subscription-manager plugin to yum-config-manager
+			//	FINE: ssh root@jsefler-rhel7.usersys.redhat.com yum-config-manager  --enable rhel-7-server-openstack-7.0-tools-source-rpms rhel-7-server-optional-beta-rpms
+			//	FINE: Stdout: 
+			//	Loaded plugins: langpacks, product-id, subscription-manager
+			//	============
+			Assert.assertTrue(SubscriptionManagerCLITestScript.doesStringContainMatches(result.getStdout(),"Loaded plugins: .*subscription-manager"),"yum-config-manager loaded plugins includes subscription-manager");
+		}
+	}
+	
 	
 	/**
 	 * Disable all of the repos in /etc/yum.repos.d
