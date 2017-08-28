@@ -27,6 +27,16 @@
            [com.github.redhatqe.polarize.metadata TestDefinition]
            [com.github.redhatqe.polarize.metadata DefTypes$Project]))
 
+(defn ^{BeforeSuite {:groups ["setup"]}}
+  startup
+  [_]
+  "installs scripts usable for playing with a file /etc/rhsm/rhsm.conf"
+  (tools/run-command "mkdir -p ~/bin")
+  (tools/run-command "cd ~/bin && curl --insecure  https://rhsm-gitlab.usersys.redhat.com/rhsm-qe/scripts/raw/master/get-config-value.py > get-config-value.py")
+  (tools/run-command "cd ~/bin && curl --insecure  https://rhsm-gitlab.usersys.redhat.com/rhsm-qe/scripts/raw/master/set-config-value.py > set-config-value.py")
+  (tools/run-command "chmod 755 ~/bin/get-config-value.py")
+  (tools/run-command "chmod 755 ~/bin/set-config-value.py"))
+
 (defn ^{Test {:groups ["DBUS"
                        "API"
                        "tier2"]
@@ -184,7 +194,7 @@ and subscription-manager gives me the actual value.
            (a :guard #(< (Integer. %) 7 )) (throw (SkipException. "busctl is not available in RHEL6"))
            :else nil))
   (->> "subscription-manager unregister" tools/run-command)
-  (let [manage_config (-> "~/get-config-value.py /etc/rhsm/rhsm.conf rhsm manage_repos"
+  (let [manage_config (-> "~/bin/get-config-value.py /etc/rhsm/rhsm.conf rhsm manage_repos"
                           tools/run-command
                           :stdout
                           clojure.string/trim
@@ -196,14 +206,14 @@ and subscription-manager gives me the actual value.
         (verify (= stderr ""))
         (verify (= stdout ""))
         (verify (= exitcode 0))
-        (let [value (-> "~/get-config-value.py /etc/rhsm/rhsm.conf rhsm manage_repos"
+        (let [value (-> "~/bin/get-config-value.py /etc/rhsm/rhsm.conf rhsm manage_repos"
                         tools/run-command
                         :stdout
                         clojure.string/trim)]
           (verify (= value "10"))))
       (finally
         (tools/run-command
-         (str "~/set-config-value.py /etc/rhsm/rhsm.conf rhsm manage_repos "
+         (str "~/bin/set-config-value.py /etc/rhsm/rhsm.conf rhsm manage_repos "
               manage_config))))))
 
 (gen-class-testng)
