@@ -172,7 +172,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier3")
 	@Test(	description="subscription-manager: subscribe to a future pool and verify that NO content namespaces are represented in the repos list",
-			groups={"Tier3Tests","blockedByBug-768983","blockedByBug-1440180","unsubscribeAllBeforeThisTest"},
+			groups={"Tier3Tests","blockedByBug-768983","blockedByBug-1440180","testReposListReportsNoContentNamespacesAfterSubscribingToFuturePool"},
 			dataProvider="getAllFutureSystemSubscriptionPoolsData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -199,8 +199,12 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		
 		// TODO we may want to randomly unsubscribe from serial number without asserting to save some computation of the accumulating entitlement certs
 	}
-
-
+	@BeforeGroups(groups={"setup"}, value={"testReposListReportsNoContentNamespacesAfterSubscribingToFuturePool"})
+	public void unsubscribeAllBeforeGroups() {
+		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
+	}
+	
+	
 	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-20397", "RHEL7-51690"},
@@ -1537,11 +1541,6 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		currentProductCerts = clienttasks.getCurrentProductCerts();
 		if (clienttasks.getCurrentConsumerId()==null) clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, false, null, null, (String)null, null, null, null, true, false, null, null, null, null);
 		modifierSubscriptionData = getModifierSubscriptionDataAsListOfLists(null);
-	}
-	
-	@BeforeGroups(groups={"setup"}, value={"unsubscribeAllBeforeThisTest"})
-	public void unsubscribeAllBeforeGroups() {
-		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 	}
 	
 	@AfterMethod(groups={"setup"})
