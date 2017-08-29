@@ -1471,6 +1471,49 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	
 	
 	
+	@TestDefinition(update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-47937", "RHEL7-99476"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
+	@Test(	description="subscription-manager: manually enable (using sed) all yum repositories in redhat.repo and assert persistence in 'yum repolist enabled' (but make sure /var/lib/rhsm/repo_server_val/redhat.repo is truncated first).",
+			groups={"Tier1Tests","blockedByBug-1480659"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void testYumRepoListPreservesManuallyEnabledRedhatReposAfterDeletingVarLibRhsmRepoServerValRedHatRepo() throws JSONException, Exception {
+		
+		// STEP 1: ENSURE SYSTEM IS UNREGISTERED
+		clienttasks.unregister(null, null, null, null);
+		
+		// STEP 2: DELETE/TRUNCATE THE /var/lib/rhsm/repo_server_val/redhat.repo FILE
+		client.runCommandAndWait("truncate --size=0 "+clienttasks.redhatRepoServerValueFile);
+		
+		// STEP 3: REGISTER A RHEL SYSTEM WITH AUTO-ATTACH TO GET AN ENTITLEMENT TO ACCESS REPOS ON THE CDN
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, true, false, null, null, null, null);
+		
+		// get all the entitled yum repos that are disabled by default
+		List<YumRepo> subscribedYumRepos = clienttasks.getCurrentlySubscribedYumRepos();
+		if (subscribedYumRepos.isEmpty()) throw new SkipException("There are no entitled yum repos available for this test.");
+		List<YumRepo> disabledYumRepos = YumRepo.findAllInstancesWithMatchingFieldFromList("enabled", false, subscribedYumRepos);
+		if (disabledYumRepos.isEmpty()) throw new SkipException("Could not find any entitled yum repos that were disabled for this test.");
+		List<String> disabledRepos = new ArrayList<String>();
+		for (YumRepo disabledYumRepo : disabledYumRepos) disabledRepos.add(disabledYumRepo.id);
+		
+		// STEP 4: MANUALLY EDIT (USING sed OR vi) /etc/yum.repos.d/redhat.repo FILE TO ENABLE ONE OR MORE REPOS (NORMALLY DISABLED BY DEFAULT)
+		client.runCommandAndWait("sed -i 's/enabled\\s*=\\s*0/enabled = 1/' "+clienttasks.redhatRepoFile);
+		Assert.assertEquals(client.runCommandAndWait("egrep 'enabled\\s*=\\s*0' "+clienttasks.redhatRepoFile+" | wc -l").getStdout().trim(),"0", "The number of disabled repos in '"+clienttasks.redhatRepoFile+"' after using sed to enable all entitled repos.");
+		
+		// STEP 5: RUN yum repolist all AND VERIFY THAT ALL THE ENTITLED REPOS ARE ENABLED
+		ArrayList<String> yumRepoListEnabledRepos = clienttasks.getYumRepolist("enabled");
+		for (String disabledRepo : disabledRepos) {
+			Assert.assertTrue(yumRepoListEnabledRepos.contains(disabledRepo), "Entitled yum repo '"+disabledRepo+"' which was disabled by default, appears in 'yum repolist enabled' as enabled after using sed to manually enable it in '"+clienttasks.redhatRepoFile+"'.");
+		}
+	}
+	
+	
+	
 	
 	
 	

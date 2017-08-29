@@ -6519,6 +6519,16 @@
       "parameters" : [ ]
     }
   },
+  "rhsm.cli.tests.ReposTests.testYumRepoListPreservesManuallyEnabledRedhatReposAfterDeletingVarLibRhsmRepoServerValRedHatRepo" : {
+    "RHEL6" : {
+      "id" : "RHEL6-47937",
+      "parameters" : [ ]
+    },
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-99476",
+      "parameters" : [ ]
+    }
+  },
   "rhsm.cli.tests.ReposTests.testYumTransactionsAreNoLongerRequiredToTriggerUpdatesToRedhatRepo" : {
     "RHEL6" : {
       "id" : "RHEL6-19973",
