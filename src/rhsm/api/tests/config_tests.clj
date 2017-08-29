@@ -22,6 +22,8 @@
             AfterClass
             BeforeGroups
             AfterGroups
+            BeforeSuite
+            AfterSuite
             DataProvider]
            org.testng.SkipException
            [com.github.redhatqe.polarize.metadata TestDefinition]
