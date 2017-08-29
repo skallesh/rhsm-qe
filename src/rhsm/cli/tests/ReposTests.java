@@ -1471,7 +1471,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	
 	
 	
-	@TestDefinition(update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-47937", "RHEL7-99476"},
 			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
