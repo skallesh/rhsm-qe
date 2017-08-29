@@ -14,6 +14,13 @@
                      (= 0)
                      not)))
 
+(defmacro when-visible
+  [driver by block]
+  `(.. (WebDriverWait. ~driver 60)
+       (until
+        (ExpectedConditions/visibilityOfElementLocated ~by))
+       ~@block))
+
 (defn set-user-language
   [driver language]
   (log/info "set-user-language")

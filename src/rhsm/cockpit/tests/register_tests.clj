@@ -76,9 +76,9 @@
               :dataProvider "client-with-webdriver-and-locale"
               :dependsOnMethods ["service_is_running"]}
         TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]}}
-  register
+  subscription_status
   [ts driver run-command locale language]
-  (log/info "register test")
+  (log/info "status test")
   (.. driver (switchTo) (defaultContent))
   (tasks/set-user-language driver language)
   (.. (WebDriverWait. driver 60)
@@ -99,63 +99,66 @@
                       first)]
       (let [subscriptions-status (.. (WebDriverWait. driver 60)
                                      (until
-                                        (ExpectedConditions/visibilityOfElementLocated
-                                         (By/cssSelector "div.subscription-status-ct label")))
+                                      (ExpectedConditions/visibilityOfElementLocated
+                                       (By/cssSelector "div.subscription-status-ct label")))
                                      (getText))]
-        (is (= status subscriptions-status))
-        (let [subscriptions-action (.. (WebDriverWait. driver 60)
-                                       (until
-                                        (ExpectedConditions/visibilityOfElementLocated
-                                         (By/cssSelector "div.subscription-status-ct button")))
-                                       (getText))]
-          (if (.contains status "Unknown")
-            (is (= subscriptions-action "Register"))
-            (is (= subscriptions-action "Unregister")))
-          )
-        )
-      )
-    )
-  )
+        (is (= status subscriptions-status))))))
 
-
-;; (defn ^{Test {:groups ["register"
-;;                        "cockpit"
-;;                        "tier1"]
-;;               :dataProvider "client-with-webdriver-with-locale"
-;;               :dependsOnMethods ["service_is_running"]}
-;;         TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]}}
-;;   register
-;;   [ts driver run-command]
-;;   (let [subscriptions-link (.. (WebDriverWait. driver 60)
-;;                                (until
-;;                                 (ExpectedConditions/visibilityOfElementLocated
-;;                                  (by/xpath "//a[@href='/subscriptions']"))))]
-;;     (element/click subscriptions-link)
-;;     (let [subscriptions-iframe (.. (WebDriverWait. driver 60)
-;;                                    (until
-;;                                     (ExpectedConditions/visibilityOfElementLocated
-;;                                      (by/xpath "//iframe[@name='cockpit1:localhost/subscriptions' and @data-loaded=1]"))))]
-;;       (.. driver (switchTo) (defaultContent))
-;;       (.. driver (switchTo) (frame subscriptions-iframe))
-;;       (let [status (->> "subscription-manager status"
-;;                         run-command
-;;                         :stdout
-;;                         (re-find #"Status:[\ \t]+([^\n]+)")
-;;                         first)]
-;;         (let [subscriptions-status (.. (WebDriverWait. driver 60)
-;;                                        (until
-;;                                         (ExpectedConditions/visibilityOfElementLocated
-;;                                          (by/css-selector "div.subscription-status-ct label")))
-;;                                        (getText))]
-;;           (is (= status subscriptions-status))
-;;           (let [subscriptions-action (.. (WebDriverWait. driver 60)
-;;                                          (until
-;;                                           (ExpectedConditions/visibilityOfElementLocated
-;;                                            (by/css-selector "div.subscription-status-ct button")))
-;;                                          (getText))]
-;;             (if (.contains status "Unknown")
-;;               (is (= subscriptions-action "Register"))
-;;               (is (= subscriptions-action "Unregister")))))))))
+(defn ^{Test {:groups ["register"
+                       "cockpit"
+                       "tier1"]
+              :dataProvider "client-with-webdriver-and-locale"
+              :dependsOnMethods ["service_is_running"]}
+        TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]}}
+  register
+  [ts driver run-command locale language]
+  (log/info "register test")
+  (run-command "subscription-manager unregister")
+  (.. driver (switchTo) (defaultContent))
+  (tasks/set-user-language driver language)
+  (.. (WebDriverWait. driver 60)
+      (until
+       (ExpectedConditions/visibilityOfElementLocated
+        (By/xpath "//a[@href='/subscriptions']")))
+      click)
+  (let [subscriptions-iframe (.. (WebDriverWait. driver 60)
+                                 (until
+                                  (ExpectedConditions/visibilityOfElementLocated
+                                   (By/xpath "//iframe[@name='cockpit1:localhost/subscriptions' and @data-loaded=1]"))))]
+    (.. driver (switchTo) (defaultContent))
+    (.. driver (switchTo) (frame subscriptions-iframe))
+    (let [subscriptions-action (.. (WebDriverWait. driver 60)
+                                   (until
+                                    (ExpectedConditions/visibilityOfElementLocated
+                                     (By/cssSelector "div.subscription-status-ct button"))))]
+      (is (= (.. subscriptions-action getText) "Register"))
+      (.. subscriptions-action click)
+      (.. (WebDriverWait. driver 60)
+          (until
+           (ExpectedConditions/visibilityOfElementLocated
+            (By/id "subscription-register-username")))
+          (sendKeys (into-array [(@c/config :username)])))
+      (.. (WebDriverWait. driver 60)
+          (until
+           (ExpectedConditions/visibilityOfElementLocated
+            (By/id "subscription-register-password")))
+          (sendKeys (into-array [(@c/config :password)])))
+      (.. (WebDriverWait. driver 60)
+          (until
+           (ExpectedConditions/visibilityOfElementLocated
+            (By/xpath "//div[@class='modal-content']/div/button[contains(@class,'btn-primary')]")))
+          click)
+      ;; waiting till the dialog disappears
+      (.. (WebDriverWait. driver 60)
+          (until
+           (ExpectedConditions/invisibilityOfElementLocated
+            (By/xpath "//div[@class='modal-content']/div/button[contains(@class,'btn-primary')]"))))
+      (let [subscriptions-status (.. (WebDriverWait. driver 60)
+                                     (until
+                                      (ExpectedConditions/visibilityOfElementLocated
+                                       (By/cssSelector "div.subscription-status-ct label")))
+                                     (getText))]
+        (is (= subscriptions-status "Status: Invalid"))))))
 
 (defn run-command
   "Runs a given command on the client using SSHCommandRunner()."
@@ -192,20 +195,5 @@
        [@driver (partial run-command @c/clientcmd) "de_DE.UTF-8" "de-de"]
        [@driver (partial run-command @c/clientcmd) "fr_FR.UTF-8" "fr-fr"]]
       to-array-2d))
-
-;; (defn ^{DataProvider {:name "client-with-webdriver-and-locale"}}
-;;   webdriver
-;;   "It provides a running Chrome/Firefox instance."
-;;   [_]
-;;   (let [driver ;;(chrome/start-chrome)
-;;         (firefox/start-firefox)]
-;;     (log-user-in driver
-;;                  (@c/config :client-hostname)
-;;                  (@c/config :cockpit-username)
-;;                  (@c/config :cockpit-password))
-;;     (set-users-locale driver "es-es") ;; ja-ja, es-es en-us
-;;     (-> [driver (partial run-command @c/clientcmd)]
-;;         vector
-;;         to-array-2d)))
 
 (gen-class-testng)
