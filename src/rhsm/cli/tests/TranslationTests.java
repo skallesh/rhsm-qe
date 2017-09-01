@@ -1060,7 +1060,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
 	@Test(	description="verify that \"UnicodeDecodeError\" and \"Traceback\" errors do not occur when /usr/libexec/rhsmcertd-worker is executed",
-			groups={"Tier2Tests","blockedByBug-1480395","groupRhsmcertdworkerUsingLang"},
+			groups={"Tier2Tests","blockedByBug-1480395","blockedByBug-1484265","groupRhsmcertdworkerUsingLang"},
 			dataProvider="getSupportedLangsData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)

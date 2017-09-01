@@ -1432,7 +1432,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier1")
 	@Test(	description="verify that the subscription-manager yum plugin will be invoked by yum-config-manager thereby populating the redhat.repo file (eliminating the need to run a seemingly no-op yum repolist just to populate an empty/missing redhat.repo file.)  Reference RFE Bugzilla 1329349",
-			groups={"Tier1Tests","blockedByBug-1329349","blockedByBug-1480659"},
+			groups={"Tier1Tests","blockedByBug-1329349","blockedByBug-1486326","blockedByBug-1480659","blockedByBug-1486338"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void testYumConfigManagerTransactionsWillNowGenerateRedhatRepo() throws JSONException, Exception {
@@ -1483,7 +1483,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier1")
 	@Test(	description="subscription-manager: manually enable (using sed) all yum repositories in redhat.repo and assert persistence in 'yum repolist enabled' (but make sure /var/lib/rhsm/repo_server_val/redhat.repo is truncated first).",
-			groups={"Tier1Tests","blockedByBug-1480659"},
+			groups={"Tier1Tests","blockedByBug-1480659","blockedByBug-1486338"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void testYumRepoListPreservesManuallyEnabledRedhatReposAfterDeletingVarLibRhsmRepoServerValRedHatRepo() throws JSONException, Exception {
