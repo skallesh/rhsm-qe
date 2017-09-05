@@ -523,7 +523,7 @@ public class ManifestTests extends SubscriptionManagerCLITestScript {
 			if (manifestFile.getName().equals("manifest_SER0406.zip")) bugIds.add("1005430");
 			
 			// Bug 1388207 - [RFE] rct cat-manifest command should show derived products
-			//TODO UNCOMMENT WHEN RFE IS ON_QA if (manifestFile.getName().equals("manifest_RH00001.zip")) bugIds.add("1388207");
+			if (manifestFile.getName().equals("manifest_RH00001.zip")) bugIds.add("1388207");
 			
 			// Bug 1424614 - [RFE] Enhance the 'rct cat-manifest' command to show manifests with the Organization/Environment Content Access Flag
 			if (manifestFile.getName().equals("manifest_ORG_ENVIRONMENT.zip")) bugIds.add("1424614");
