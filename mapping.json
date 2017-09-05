@@ -5993,6 +5993,16 @@
       "parameters" : [ ]
     }
   },
+  "rhsm.cli.tests.ReleaseTests.testRateLimitExceededExceptionShouldNotAlterRedhatRepo" : {
+    "RHEL6" : {
+      "id" : "RHEL6-47938",
+      "parameters" : [ ]
+    },
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-99713",
+      "parameters" : [ ]
+    }
+  },
   "rhsm.cli.tests.ReleaseTests.testReleaseListExcludes60OnRHEL6System" : {
     "RHEL6" : {
       "id" : "RHEL6-20004",

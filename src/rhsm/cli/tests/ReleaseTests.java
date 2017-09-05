@@ -27,6 +27,7 @@ import com.redhat.qe.auto.bugzilla.BlockedByBzBug;
 import com.redhat.qe.auto.bugzilla.BugzillaAPIException;
 import com.redhat.qe.auto.bugzilla.BzChecker;
 import com.redhat.qe.auto.testng.TestNGUtils;
+import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 
 import com.github.redhatqe.polarize.metadata.DefTypes;
@@ -714,7 +715,71 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 		verifyReleaseListMatchesCDN(null,null,null,null);
 	}
 	
-
+	
+	
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-47938", "RHEL7-99713"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
+	@Test(	description="subscription-manager: after using the release module to pin the content set repos paths, use yum repolist to bombard the IT-Candlepin server with GET requests to /subscription/consumers/{uuid}/release so as to generate a RateLimitExceededException",
+			groups={"Tier1Tests","blockedByBug-1481384","blockedByBug-1486549"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void testRateLimitExceededExceptionShouldNotAlterRedhatRepo() throws JSONException, Exception {
+		
+		// register a new consumer and auto-subscribe to cover the installed RHEL product
+		clienttasks.unregister(null, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, null, false, null, null, null, null);
+		
+		// attach a RHEL subscription
+		if (!clienttasks.isRhelProductCertSubscribed()) throw new SkipException("This test requires attachment to a RHEL subscription for the installed RHEL product.");
+		
+		// assert that there are some occurrences of $releasever in redhat.repo
+		String sshCommandGreppingRedhatRepoForNumberReleaseverOccurrences = "grep '$releasever' "+clienttasks.redhatRepoFile+" | wc --lines";
+		Integer numberReleaseverOccurrences = Integer.valueOf(client.runCommandAndWait(sshCommandGreppingRedhatRepoForNumberReleaseverOccurrences).getStdout().trim());
+		Assert.assertTrue(numberReleaseverOccurrences>0, "The number of occurances ("+numberReleaseverOccurrences+") for '$releasever' in '"+clienttasks.redhatRepoFile+"' is greater than zero.");
+		
+		// are any releases available?
+		List<String> availableReleases = clienttasks.getCurrentlyAvailableReleases(null, null, null, null);
+		if (availableReleases.isEmpty()) throw new SkipException("When no releases are available, this test must be skipped.");
+		
+		// set a release
+		String release = availableReleases.get(0); // assume the first release is good enough for this test	
+		if (availableReleases.contains("7.3")) release = "7.3";
+		clienttasks.release(null, null, release, null, null, null, null, null);
+		
+		// assert that no occurrences of $releasever are in redhat.repo
+		Assert.assertEquals(client.runCommandAndWait(sshCommandGreppingRedhatRepoForNumberReleaseverOccurrences).getStdout().trim(), "0", "Number of occurances for \"$releasever\" in '"+clienttasks.redhatRepoFile+"' after setting the release to '"+release+"'.");
+		
+		// remember the number of available packages
+		Integer numPackagesAvailableBeforeExceedingRateLimit = clienttasks.getYumListAvailable(null).size();
+		
+		// now bombard the server with more than 60 hits to encounter a RateLimitExceededException
+		client.runCommandAndWait("for i in {1..60}; do yum repolist --quiet; done;");
+		String rhsmLogMarker = System.currentTimeMillis()+" testRateLimitExceededExceptionShouldNotAlterRedhatRepo...";
+		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, rhsmLogMarker);
+		Integer numPackagesAvailableAfterExceedingRateLimit = clienttasks.getYumListAvailable(null).size();
+		
+		// assert that there are still no occurrences of $releasever in redhat.repo
+		Assert.assertEquals(client.runCommandAndWait(sshCommandGreppingRedhatRepoForNumberReleaseverOccurrences).getStdout().trim(), "0", "Number of occurances for \"$releasever\" in '"+clienttasks.redhatRepoFile+"' after setting the release to '"+release+"' and then bombarding the server via the subscription-manager yum plugin via system invocations of yum repolist.");
+		
+		// assert that there is an ERROR in the rhsm.log for the RateLimitExceededException
+		String rhsmLogStatement = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, rhsmLogMarker, "ERROR").trim();
+		// 2017-09-01 16:16:47,199 [ERROR] yum:16448:MainThread @cache.py:235 - Access rate limit exceeded
+		if (!rhsmLogStatement.isEmpty()) log.warning(rhsmLogStatement);
+		String expectedErrorMsg = "Access rate limit exceeded";		// https://github.com/candlepin/subscription-manager/pull/1694	// commit abca9b07c0cbc852d015dc9316927f8e39d1ba0d 1481384: Do not update redhat.repo at RateLimitExceededException 
+		Assert.assertTrue(rhsmLogStatement.contains(expectedErrorMsg),"After bombarding the server to purposefully invoke a RateLimitExceededException, the '"+clienttasks.rhsmLogFile+"' reports expected ERROR '"+expectedErrorMsg+"'.");
+		
+		// assert that the number of available packages remains the same
+		Assert.assertEquals(numPackagesAvailableAfterExceedingRateLimit, numPackagesAvailableBeforeExceedingRateLimit, "The number of yum available packages after exceeding the rate limit ("+numPackagesAvailableAfterExceedingRateLimit+") matches the number before exceeding the rate limit ("+numPackagesAvailableBeforeExceedingRateLimit+").");
+	}
+	
+	
+	
+	
 	
 	
 	
