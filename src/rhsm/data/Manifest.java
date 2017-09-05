@@ -25,6 +25,7 @@ public class Manifest extends AbstractCommandLineData {
 	public String creator;
 	public String consumerName;
 	public String consumerUUID;
+	public String consumerContentAccessMode;	// added by RFE Bug 1424614
 	public String consumerType;
 	public List<ManifestSubscription> subscriptions;
 
@@ -48,6 +49,7 @@ public class Manifest extends AbstractCommandLineData {
 		if (creator != null)		string += String.format(" %s='%s'", "creator",creator);
 		if (consumerName != null)	string += String.format(" %s='%s'", "consumerName",consumerName);
 		if (consumerUUID != null)	string += String.format(" %s='%s'", "consumerUUID",consumerUUID);
+		if (consumerContentAccessMode != null)	string += String.format(" %s='%s'", "consumerContentAccessMode",consumerContentAccessMode);
 		if (consumerType != null)	string += String.format(" %s='%s'", "consumerType",consumerType);
 	
 		return string.trim();
@@ -106,6 +108,7 @@ public class Manifest extends AbstractCommandLineData {
 		//Consumer:
 		//	Name: jsefler
 		//	UUID: b2837b9a-d2d9-4b41-acd9-34bdcf72af66
+		//	Content Access Mode: entitlement             <==== Added by RFE Bug 1424614 - [RFE] Enhance the 'rct cat-manifest' command to show manifests with the Organization/Environment Content Access Flag
 		//	Type: sam
 		//
 		//Subscription:
@@ -161,7 +164,7 @@ public class Manifest extends AbstractCommandLineData {
 		//		/content/beta/rhel/power/5/$releasever/$basearch/highavailability/source/SRPMS
 		//		/content/beta/rhel/power/5/$releasever/$basearch/resilientstorage/debug
 		//		/content/beta/rhel/power/5/$releasever/$basearch/resilientstorage/os
-		
+
 		
 		Map<String,String> regexes = new HashMap<String,String>();
 		
@@ -172,6 +175,7 @@ public class Manifest extends AbstractCommandLineData {
 		regexes.put("creator",				"General:(?:(?:\\n.+)+)Creator: (.+)");
 		regexes.put("consumerName",			"Consumer:(?:(?:\\n.+)+)Name: (.+)");
 		regexes.put("consumerUUID",			"Consumer:(?:(?:\\n.+)+)UUID: (.+)");
+		regexes.put("consumerContentAccessMode",	"Consumer:(?:(?:\\n.+)+)Content Access Mode: (.+)");	// added by Bug 1424614 - [RFE] Enhance the 'rct cat-manifest' command to show manifests with the Organization/Environment Content Access Flag  // commit 41d5ee136e3e58800457124efcf6891b800a8485 1424614: Add support to rct to print contentAccessMode attribute     >= subscription-manager-1.19.6-1   
 		regexes.put("consumerType",			"Consumer:(?:(?:\\n.+)+)Type: (.+)");
 		
 		// split the rawManifests process each individual rawManifest

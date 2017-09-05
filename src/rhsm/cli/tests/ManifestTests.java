@@ -16,6 +16,7 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import rhsm.base.SubscriptionManagerCLITestScript;
+import rhsm.cli.tasks.SubscriptionManagerTasks;
 import rhsm.data.ContentNamespace;
 import rhsm.data.EntitlementCert;
 import rhsm.data.Manifest;
@@ -375,7 +376,15 @@ public class ManifestTests extends SubscriptionManagerCLITestScript {
 		String consumerUUIDRegex = "[a-f,0-9,\\-]{36}";
 		Assert.assertTrue(Pattern.compile(consumerUUIDRegex/*,Pattern.DOTALL*/).matcher(catManifest.consumerUUID).matches(),"Consumer UUID format matches the expected regex '"+consumerUUIDRegex+"'.");
 		Assert.assertNotNull(catManifest.consumerType, "Consumer Type value is not null.");
-		Assert.assertTrue(catManifest.consumerType.equals("sam")||catManifest.consumerType.equals("cloudforms")||catManifest.consumerType.equals("satellite"), "Known Consumer Type value equals 'sam' or 'cloudforms' or 'satellite'.");	// TODO learn why there is a type distinction
+		Assert.assertTrue(catManifest.consumerType.equals("sam")||catManifest.consumerType.equals("cloudforms")||catManifest.consumerType.equals("satellite"), "Actual Consumer Type value '"+catManifest.consumerType+"' equals \"sam\" or \"cloudforms' or \"satellite\".");	// TODO learn why there is a type distinction
+		//		Content Access Mode: entitlement
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.19.6-1")) {
+			Assert.assertNotNull(catManifest.consumerContentAccessMode, "Consumer Content Access Mode value is not null.");
+			Assert.assertTrue(catManifest.consumerContentAccessMode.equals("entitlement")||catManifest.consumerContentAccessMode.equals("org_environment"), "Actual Consumer Content Access Mode value '"+catManifest.consumerContentAccessMode+"' equals \"entitlement\" or \"org_environment\".");
+			if (SubscriptionManagerTasks.isVersion(catManifest.serverVersion, "<", "2.0.22-1")) {	// candlepin commit 18c20d0a1530910d5ca45fecb59f8f7db5e9a04f Golden Ticket
+				Assert.assertEquals(catManifest.consumerContentAccessMode, "entitlement", "Since this manifest was created by candlepin version prior to \"2.0.22-1\", the Consumer's Content Access Mode value must be the default value.");
+			}
+		}
 		}
 		//	
 		//	Subscription:
@@ -515,6 +524,9 @@ public class ManifestTests extends SubscriptionManagerCLITestScript {
 			
 			// Bug 1388207 - [RFE] rct cat-manifest command should show derived products
 			//TODO UNCOMMENT WHEN RFE IS ON_QA if (manifestFile.getName().equals("manifest_RH00001.zip")) bugIds.add("1388207");
+			
+			// Bug 1424614 - [RFE] Enhance the 'rct cat-manifest' command to show manifests with the Organization/Environment Content Access Flag
+			if (manifestFile.getName().equals("manifest_ORG_ENVIRONMENT.zip")) bugIds.add("1424614");
 			
 			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 			ll.add(Arrays.asList(new Object[] {blockedByBzBug, manifestFile}));				
