@@ -475,7 +475,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			smt.installZStreamUpdates(sm_yumInstallOptions, sm_yumInstallZStreamUpdatePackages, sm_yumInstallZStreamComposeUrl, sm_yumInstallZStreamBrewUrl, sm_ciMessage);
 		}
 		sm_rpmUpdateUrls.addAll(getRpmUpdateUrlsFromCiMessage(sm_ciMessage));
-		smt.installSubscriptionManagerRPMs(sm_rpmInstallUrls,sm_rpmUpdateUrls,sm_yumInstallOptions);
+		smt.installSubscriptionManagerRPMs(sm_rpmInstallUrls,sm_rpmUpdateUrls,sm_yumInstallOptions, jenkinsUsername,jenkinsPassword);
 		smt.initializeMsgStringsAfterInstallingSubscriptionManagerRPMs();
 		
 		// rewrite rhsmcertd.certFrequency -> rhsmcertd.certCheckInterval   see bug 882459

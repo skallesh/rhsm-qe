@@ -47,9 +47,10 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 	// DIFFICULTING LOADING THEM UNLESS THEY ARE DEFINED BY -Dsm.foo=bar
 	// SYNTAX ON THE java COMMAND LINE
 	
+	public final String jenkinsUsername			= getProperty("jenkins.username","");
+	public final String jenkinsPassword			= getProperty("jenkins.password","");
 	public final String sm_serverAdminUsername	= getProperty("sm.server.admin.username","");
 	public final String sm_serverAdminPassword	= getProperty("sm.server.admin.password","");
-
 
 	public String sm_serverSSHUser				= getProperty("sm.server.sshUser","root");
 	public String sm_serverInstallDir			= getProperty("sm.server.installDir","");

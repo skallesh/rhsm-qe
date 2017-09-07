@@ -896,7 +896,7 @@ if (false) {
 	
 	
 	
-	public void installSubscriptionManagerRPMs(List<String> rpmInstallUrls, List<String> rpmUpdateUrls, String installOptions) {
+	public void installSubscriptionManagerRPMs(List<String> rpmInstallUrls, List<String> rpmUpdateUrls, String installOptions, String jenkinsUsername, String jenkinsPassword) {
 		if (rpmInstallUrls==null) rpmInstallUrls = new ArrayList<String>();
 		if (rpmUpdateUrls==null) rpmUpdateUrls = new ArrayList<String>();
 		if (installOptions==null) installOptions = "";
@@ -988,7 +988,7 @@ if (false) {
 			
 			// install rpmUrl
 			log.info("Installing RPM from "+rpmUrl+"...");
-			RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"wget -nv -O "+rpmPath+" --no-check-certificate \""+rpmUrl.trim()+"\"",Integer.valueOf(0),null,"-> \""+rpmPath+"\"");
+			RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"wget -nv -O "+rpmPath+" --no-check-certificate "+(jenkinsUsername.isEmpty()?"":"--http-user="+jenkinsUsername)+" "+(jenkinsPassword.isEmpty()?"":"--http-password="+jenkinsPassword)+" \""+rpmUrl.trim()+"\"",Integer.valueOf(0),null,"-> \""+rpmPath+"\"");
 			Assert.assertEquals(sshCommandRunner.runCommandAndWait("yum -y localinstall "+rpmPath+" "+installOptions).getExitCode(), Integer.valueOf(0), "ExitCode from yum installed local rpm: "+rpmPath);
 			
 			// assert the local rpm is now installed

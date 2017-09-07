@@ -518,7 +518,7 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 		// install the requested docker packages
 		// good way of installing docker
 		if (false) {
-			clienttasks.installSubscriptionManagerRPMs(sm_dockerRpmInstallUrls, null, sm_yumInstallOptions);
+			clienttasks.installSubscriptionManagerRPMs(sm_dockerRpmInstallUrls, null, sm_yumInstallOptions, "", "");
 		}
 		
 		// better way of installing docker (useful on static clients)
@@ -531,7 +531,7 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 		dockerRpmInstallUrls.add(runLocalCommand("./scripts/get-brew-rpm docker --rpmname=docker-selinux   --version=1.6 --release=el7 --regress --arch="+clienttasks.arch).getStdout());	// --version=1.6 is the first build with docker-selinux	// avoid: Error response from daemon: Cannot start container fd39344bea2cf56e48467488745ac3b007eb904f185a240853103f112a87bdd3: permission denied
 		//dockerRpmInstallUrls.add(runLocalCommand("./scripts/get-brew-rpm docker --rpmname=docker-forward-journald  --release=el7 --regress --arch="+clienttasks.arch).getStdout());
 		//dockerRpmInstallUrls.add(runLocalCommand("./scripts/get-brew-rpm docker --rpmname=docker-common            --release=el7 --regress --arch="+clienttasks.arch).getStdout());
-		clienttasks.installSubscriptionManagerRPMs(dockerRpmInstallUrls, null, sm_yumInstallOptions);
+		clienttasks.installSubscriptionManagerRPMs(dockerRpmInstallUrls, null, sm_yumInstallOptions, "", "");
 		
 		// best way of updating docker (from a RHEL subscription) when possible - will give us the latest released version of docker
 		if (!sm_serverType.equals(CandlepinType.standalone)) {
