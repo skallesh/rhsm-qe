@@ -33,7 +33,8 @@
                                        cap))))
 
 (defn ^{AfterSuite {:groups ["cleanup"]}}
-  cleanup [_])
+  cleanup [_]
+  (.close @driver ))
 
 (defn ^{Test {:groups ["register"
                        "cockpit"
@@ -224,9 +225,12 @@
            (ExpectedConditions/visibilityOfElementLocated
             (By/xpath "//div[@class='modal-content']/div/button[contains(@class,'btn-primary')]")))
           click)
-      ;; wait for error message
-      ;; TODO
-      )))
+      (let [error-element (.. (WebDriverWait. driver 60)
+                              (until
+                               (ExpectedConditions/visibilityOfElementLocated
+                                (By/xpath "//div[@class='modal-footer']/div[contains(@class,'dialog-error')]"))))]
+        (is (= (.. error-element getText)
+               "Error: Login/password or activation key required to register."))))))
 
 (defn ^{Test {:groups ["register"
                        "cockpit"
@@ -282,9 +286,12 @@
            (ExpectedConditions/visibilityOfElementLocated
             (By/xpath "//div[@class='modal-content']/div/button[contains(@class,'btn-primary')]")))
           click)
-      ;; wait for error message
-      ;; TODO
-      )))
+      (let [error-element (.. (WebDriverWait. driver 60)
+                              (until
+                               (ExpectedConditions/visibilityOfElementLocated
+                                (By/xpath "//div[@class='modal-footer']/div[contains(@class,'dialog-error')]"))))]
+        (is (= (.. error-element getText)
+               "Error: Login/password or activation key required to register."))))))
 
 (defn ^{Test {:groups ["register"
                        "cockpit"
@@ -334,15 +341,18 @@
           (until
            (ExpectedConditions/visibilityOfElementLocated
             (By/id "subscription-register-password")))
-          clear)
+          (sendKeys (into-array ["some really wrong password"])))
       (.. (WebDriverWait. driver 60)
           (until
            (ExpectedConditions/visibilityOfElementLocated
             (By/xpath "//div[@class='modal-content']/div/button[contains(@class,'btn-primary')]")))
           click)
-      ;; wait for error message
-      ;; TODO
-      )))
+      (let [error-element (.. (WebDriverWait. driver 60)
+                              (until
+                               (ExpectedConditions/visibilityOfElementLocated
+                                (By/xpath "//div[@class='modal-footer']/div[contains(@class,'dialog-error')]"))))]
+        (is (= (.. error-element getText)
+               "Error: Invalid username or password (To create a login, please visit https://www.redhat.com/wapps/ugc/register.html Registering to: subscription.rhsm.stage.redhat.com:443/subscription)"))))))
 
 (defn ^{Test {:groups ["register"
                        "cockpit"
@@ -352,7 +362,7 @@
         TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]}}
   register_with_wrong_password_for_each_locale
   [ts driver run-command locale language]
-  (reqister_with_wrong_password ts driver run-command locale language))
+  (register_with_wrong_password ts driver run-command locale language))
 
 (defn ^{Test {:groups ["register"
                        "cockpit"
@@ -398,9 +408,12 @@
            (ExpectedConditions/visibilityOfElementLocated
             (By/xpath "//div[@class='modal-content']/div/button[contains(@class,'btn-primary')]")))
           click)
-      ;; wait for error message
-      ;; TODO
-      )))
+      (let [error-element (.. (WebDriverWait. driver 60)
+                              (until
+                               (ExpectedConditions/visibilityOfElementLocated
+                                (By/xpath "//div[@class='modal-footer']/div[contains(@class,'dialog-error')]"))))]
+        (is (= (.. error-element getText)
+               "Error: Login/password or activation key required to register."))))))
 
 (defn ^{Test {:groups ["register"
                        "cockpit"
@@ -410,7 +423,7 @@
         TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]}}
   register_with_empty_login_for_each_locale
   [ts driver run-command locale language]
-  (reqister_with_empty_login ts driver run-command locale language))
+  (register_with_empty_login ts driver run-command locale language))
 
 (defn ^{Test {:groups ["register"
                        "cockpit"
@@ -456,9 +469,12 @@
            (ExpectedConditions/visibilityOfElementLocated
             (By/xpath "//div[@class='modal-content']/div/button[contains(@class,'btn-primary')]")))
           click)
-      ;; wait for error message
-      ;; TODO
-      )))
+      (let [error-element (.. (WebDriverWait. driver 60)
+                              (until
+                               (ExpectedConditions/visibilityOfElementLocated
+                                (By/xpath "//div[@class='modal-footer']/div[contains(@class,'dialog-error')]"))))]
+        (is (= (.. error-element getText)
+               "Error: Invalid username or password (To create a login, please visit https://www.redhat.com/wapps/ugc/register.html Registering to: subscription.rhsm.stage.redhat.com:443/subscription)"))))))
 
 (defn ^{Test {:groups ["register"
                        "cockpit"
