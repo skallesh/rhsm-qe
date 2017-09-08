@@ -32,7 +32,7 @@ import rhsm.cli.tasks.CandlepinTasks;
 @Test(groups = {"AutoAttachDisabledByOwnerTests"})
 public class AutoAttachDisabledByOwnerTests extends SubscriptionManagerCLITestScript {
     List<String> ownerKey = new ArrayList<String>();
-    String owner = null;
+    String owner = "snowwhite";
 
     @TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 	    projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
