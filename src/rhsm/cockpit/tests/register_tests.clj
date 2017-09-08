@@ -76,7 +76,8 @@
                        "tier1"]
               :dataProvider "client-with-webdriver-and-english-locale"
               :dependsOnMethods ["service_is_running"]}
-        TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]}}
+        TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL7-99507"]}}
   subscription_status
   [ts driver run-command locale language]
   (log/info "status test")
@@ -110,7 +111,8 @@
                        "tier3"]
               :dataProvider "client-with-webdriver-and-locale"
               :dependsOnMethods ["service_is_running"]}
-        TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]}}
+        TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL7-99507"]}}
   subscription_status_for_each_locale
   [ts driver run-command locale language]
   (subscription_status ts driver run-command locale language))
@@ -120,7 +122,8 @@
                        "tier1"]
               :dataProvider "client-with-webdriver-and-english-locale"
               :dependsOnMethods ["service_is_running"]}
-        TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]}}
+        TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL7-99656"]}}
   register
   [ts driver run-command locale language]
   (log/info "register test")
@@ -169,14 +172,15 @@
                                       (ExpectedConditions/visibilityOfElementLocated
                                        (By/cssSelector "div.subscription-status-ct label")))
                                      (getText))]
-        (is (= subscriptions-status "Status: Invalid"))))))
+        (is (= "Status: Invalid" subscriptions-status))))))
 
 (defn ^{Test {:groups ["register"
                        "cockpit"
                        "tier3"]
               :dataProvider "client-with-webdriver-and-locale"
               :dependsOnMethods ["service_is_running"]}
-        TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]}}
+        TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL7-99656"]}}
   register_for_each_locale
   [ts driver run-command locale language]
   (register ts driver run-command locale language))
@@ -186,7 +190,8 @@
                        "tier1"]
               :dataProvider "client-with-webdriver-and-english-locale"
               :dependsOnMethods ["service_is_running"]}
-        TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]}}
+        TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL7-99656"]}}
   register_with_no_field_set
   [ts driver run-command locale language]
   (log/info "register with no field test")
@@ -229,15 +234,16 @@
                               (until
                                (ExpectedConditions/visibilityOfElementLocated
                                 (By/xpath "//div[@class='modal-footer']/div[contains(@class,'dialog-error')]"))))]
-        (is (= (.. error-element getText)
-               "Error: Login/password or activation key required to register."))))))
+        (is (= "Error: Login/password or activation key required to register."
+               (.. error-element getText)))))))
 
 (defn ^{Test {:groups ["register"
                        "cockpit"
                        "tier3"]
               :dataProvider "client-with-webdriver-and-locale"
               :dependsOnMethods ["service_is_running"]}
-        TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]}}
+        TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL7-99656"]}}
   register_with_no_field_set_for_each_locale
   [ts driver run-command locale language]
   (register_with_no_field_set ts driver run-command locale language))
@@ -247,7 +253,8 @@
                        "tier1"]
               :dataProvider "client-with-webdriver-and-english-locale"
               :dependsOnMethods ["service_is_running"]}
-        TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]}}
+        TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL7-99656"]}}
   register_with_empty_password
   [ts driver run-command locale language]
   (log/info "register with empty password test")
@@ -290,15 +297,16 @@
                               (until
                                (ExpectedConditions/visibilityOfElementLocated
                                 (By/xpath "//div[@class='modal-footer']/div[contains(@class,'dialog-error')]"))))]
-        (is (= (.. error-element getText)
-               "Error: Login/password or activation key required to register."))))))
+        (is (= "Error: Login/password or activation key required to register."
+               (.. error-element getText)))))))
 
 (defn ^{Test {:groups ["register"
                        "cockpit"
                        "tier3"]
               :dataProvider "client-with-webdriver-and-locale"
               :dependsOnMethods ["service_is_running"]}
-        TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]}}
+        TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL7-99656"]}}
   register_with_empty_password_for_each_locale
   [ts driver run-command locale language]
   (register_with_empty_password ts driver run-command locale language))
@@ -308,7 +316,8 @@
                        "tier1"]
               :dataProvider "client-with-webdriver-and-english-locale"
               :dependsOnMethods ["service_is_running"]}
-        TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]}}
+        TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL7-99656"]}}
   register_with_wrong_password
   [ts driver run-command locale language]
   (log/info "register with wrong password test")
@@ -351,15 +360,16 @@
                               (until
                                (ExpectedConditions/visibilityOfElementLocated
                                 (By/xpath "//div[@class='modal-footer']/div[contains(@class,'dialog-error')]"))))]
-        (is (= (.. error-element getText)
-               "Error: Invalid username or password (To create a login, please visit https://www.redhat.com/wapps/ugc/register.html Registering to: subscription.rhsm.stage.redhat.com:443/subscription)"))))))
+        (is (= "Error: Invalid username or password (To create a login, please visit https://www.redhat.com/wapps/ugc/register.html Registering to: subscription.rhsm.stage.redhat.com:443/subscription)"
+               (.. error-element getText)))))))
 
 (defn ^{Test {:groups ["register"
                        "cockpit"
                        "tier3"]
               :dataProvider "client-with-webdriver-and-locale"
               :dependsOnMethods ["service_is_running"]}
-        TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]}}
+        TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL7-99656"]}}
   register_with_wrong_password_for_each_locale
   [ts driver run-command locale language]
   (register_with_wrong_password ts driver run-command locale language))
@@ -412,15 +422,16 @@
                               (until
                                (ExpectedConditions/visibilityOfElementLocated
                                 (By/xpath "//div[@class='modal-footer']/div[contains(@class,'dialog-error')]"))))]
-        (is (= (.. error-element getText)
-               "Error: Login/password or activation key required to register."))))))
+        (is (= "Error: Login/password or activation key required to register."
+               (.. error-element getText)))))))
 
 (defn ^{Test {:groups ["register"
                        "cockpit"
                        "tier3"]
               :dataProvider "client-with-webdriver-and-locale"
               :dependsOnMethods ["service_is_running"]}
-        TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]}}
+        TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL7-99656"]}}
   register_with_empty_login_for_each_locale
   [ts driver run-command locale language]
   (register_with_empty_login ts driver run-command locale language))
@@ -430,7 +441,8 @@
                        "tier1"]
               :dataProvider "client-with-webdriver-and-english-locale"
               :dependsOnMethods ["service_is_running"]}
-        TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]}}
+        TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL7-99656"]}}
   register_with_wrong_login
   [ts driver run-command locale language]
   (log/info "register with wrong login test")
@@ -473,15 +485,16 @@
                               (until
                                (ExpectedConditions/visibilityOfElementLocated
                                 (By/xpath "//div[@class='modal-footer']/div[contains(@class,'dialog-error')]"))))]
-        (is (= (.. error-element getText)
-               "Error: Invalid username or password (To create a login, please visit https://www.redhat.com/wapps/ugc/register.html Registering to: subscription.rhsm.stage.redhat.com:443/subscription)"))))))
+        (is (= "Error: Invalid username or password (To create a login, please visit https://www.redhat.com/wapps/ugc/register.html Registering to: subscription.rhsm.stage.redhat.com:443/subscription)"
+               (.. error-element getText)))))))
 
 (defn ^{Test {:groups ["register"
                        "cockpit"
                        "tier3"]
               :dataProvider "client-with-webdriver-and-locale"
               :dependsOnMethods ["service_is_running"]}
-        TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]}}
+        TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL7-99656"]}}
   register_with_wrong_login_for_each_locale
   [ts driver run-command locale language]
   (register_with_wrong_login ts driver run-command locale language))
