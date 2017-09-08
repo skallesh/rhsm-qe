@@ -1020,9 +1020,9 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		
 		String matchesString;
 		List<SubscriptionPool> expectedPools,actualSubscriptionPoolMatches;
-		Boolean all = getRandomListItem(Arrays.asList(new Boolean[]{Boolean.TRUE,Boolean.FALSE}));
-		Boolean matchInstalled = getRandomListItem(Arrays.asList(new Boolean[]{Boolean.TRUE,Boolean.FALSE}));
-		Boolean noOverlap = getRandomListItem(Arrays.asList(new Boolean[]{Boolean.TRUE,Boolean.FALSE}));
+		Boolean all = getRandomBoolean();
+		Boolean matchInstalled = getRandomBoolean();
+		Boolean noOverlap = getRandomBoolean();
 ///*debugTesting*/ matchInstalled=false; all=false; noOverlap=false;
 		log.info("Testing with all="+all);
 		log.info("Testing with matchInstalled="+matchInstalled);
@@ -1181,9 +1181,9 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		
 		String matchesString;
 		List<SubscriptionPool> expectedPools,actualSubscriptionPoolMatches;
-		Boolean all = getRandomListItem(Arrays.asList(new Boolean[]{Boolean.TRUE,Boolean.FALSE}));
-		Boolean matchInstalled = getRandomListItem(Arrays.asList(new Boolean[]{Boolean.TRUE,Boolean.FALSE}));
-		Boolean noOverlap = getRandomListItem(Arrays.asList(new Boolean[]{Boolean.TRUE,Boolean.FALSE}));
+		Boolean all = getRandomBoolean();
+		Boolean matchInstalled = getRandomBoolean();
+		Boolean noOverlap = getRandomBoolean();
 ///*debugTesting*/ all=true; noOverlap=true; matchInstalled=false;	//  Bug 1301696 - getting unexpected hits on TESTDATA from subscription-manager list --available --matches=*os*
 ///*debugTesting*/ all=true; noOverlap=false; matchInstalled=false;
 		log.info("Testing with all="+all);
@@ -2153,9 +2153,9 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	public void testListAvailableWithPoolOnly() throws JSONException, Exception {
 		if (clienttasks.isPackageVersion("subscription-manager","<","1.13.8-1")) throw new SkipException("The list --pool-only function was not implemented in this version of subscription-manager.");	// commit 25cb581cb6ebe13063d0f78a5020715a2854d337 bug 1159974
 		
-		Boolean all = getRandomListItem(Arrays.asList(new Boolean[]{Boolean.TRUE,Boolean.FALSE}));
-		Boolean matchInstalled = getRandomListItem(Arrays.asList(new Boolean[]{Boolean.TRUE,Boolean.FALSE}));
-		Boolean noOverlap = getRandomListItem(Arrays.asList(new Boolean[]{Boolean.TRUE,Boolean.FALSE}));
+		Boolean all = getRandomBoolean();
+		Boolean matchInstalled = getRandomBoolean();
+		Boolean noOverlap = getRandomBoolean();
 		
 		if (clienttasks.getCurrentlyRegisteredOwnerKey() == null) {
 			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null, null);

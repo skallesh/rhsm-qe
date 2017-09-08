@@ -1775,9 +1775,9 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	public void testSubscribeWithFileOfPoolIds() throws JSONException, Exception {
 		if (clienttasks.isPackageVersion("subscription-manager","<","1.13.8-1")) throw new SkipException("The attach --file function was not implemented in this version of subscription-manager.");	// commit 3167333fc3a261de939f4aa0799b4283f2b9f4d2 bug 1159974
 		
-		Boolean all = false;	//getRandomListItem(Arrays.asList(new Boolean[]{Boolean.TRUE,Boolean.FALSE}));
-		Boolean matchInstalled = getRandomListItem(Arrays.asList(new Boolean[]{Boolean.TRUE,Boolean.FALSE}));
-		Boolean noOverlap = getRandomListItem(Arrays.asList(new Boolean[]{Boolean.TRUE,Boolean.FALSE}));
+		Boolean all = false;	//getRandomBoolean();
+		Boolean matchInstalled = getRandomBoolean();
+		Boolean noOverlap = getRandomBoolean();
 		
 		if (clienttasks.getCurrentlyRegisteredOwnerKey() == null) {
 			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null, null);
@@ -1865,9 +1865,9 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	public void testSubscribeWithFileOfPoolIdsFromStdin() throws JSONException, Exception {
 		if (clienttasks.isPackageVersion("subscription-manager","<","1.13.8-1")) throw new SkipException("The attach --file function was not implemented in this version of subscription-manager.");	// commit 3167333fc3a261de939f4aa0799b4283f2b9f4d2 bug 1159974
 		
-		Boolean all = false;	//getRandomListItem(Arrays.asList(new Boolean[]{Boolean.TRUE,Boolean.FALSE}));
-		Boolean matchInstalled = getRandomListItem(Arrays.asList(new Boolean[]{Boolean.TRUE,Boolean.FALSE}));
-		Boolean noOverlap = getRandomListItem(Arrays.asList(new Boolean[]{Boolean.TRUE,Boolean.FALSE}));
+		Boolean all = false;	//getRandomBoolean();
+		Boolean matchInstalled = getRandomBoolean();
+		Boolean noOverlap = getRandomBoolean();
 		
 		if (clienttasks.getCurrentlyRegisteredOwnerKey() == null) {
 			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null, null);

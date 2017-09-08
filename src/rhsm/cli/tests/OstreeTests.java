@@ -331,7 +331,7 @@ public class OstreeTests extends SubscriptionManagerCLITestScript {
 
 //MOVED TO SUBSEQUENT TEST
 //		// randomly choose to remove the ostree subscription and assert...
-//		if (getRandomListItem(Arrays.asList(new Boolean[]{Boolean.TRUE,Boolean.FALSE}))) {
+//		if (getRandomBoolean()) {
 //MOVED BACK
 			clienttasks.unsubscribe(null, clienttasks.getSerialNumberFromEntitlementCertFile(entitlementCert.file), null, null, null, null, null);
 			
