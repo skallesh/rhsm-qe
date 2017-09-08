@@ -5088,9 +5088,13 @@ if (false) {
 		SSHCommandResult sshCommandResult = list(null,null,Boolean.TRUE, null, null, null, null, null, null, null, null, null, null, null);
 		
 		List<File> entitlementCertFiles = getCurrentEntitlementCertFiles();
+		String expectedConsumedListMessage="No consumed subscription pools to list";
+		if (isPackageVersion("subscription-manager", ">=", "1.20.1-1")) { //commit b23e5017950a5d046be32e1695e9c48cee8786db
+		    expectedConsumedListMessage="No consumed subscription pools were found.";
+		}
 
 		if (entitlementCertFiles.isEmpty()) {
-			Assert.assertTrue(sshCommandResult.getStdout().trim().equals("No consumed subscription pools to list"), "No consumed subscription pools to list");
+			Assert.assertTrue(sshCommandResult.getStdout().trim().equals(expectedConsumedListMessage), "No consumed subscription pools to list");
 		} else {
 			String title = "Consumed Product Subscriptions";
 			title = "Consumed Subscriptions";	// changed in https://bugzilla.redhat.com/show_bug.cgi?id=806986#c10
@@ -6427,8 +6431,12 @@ if (false) {
 		unsubscribe(true, (BigInteger)null, null, null, null, null, null);
 
 		// assert that there are no product subscriptions consumed
+		String expectedConsumedListMessage="No consumed subscription pools to list";
+		if (isPackageVersion("subscription-manager", ">=", "1.20.1-1")) { //commit b23e5017950a5d046be32e1695e9c48cee8786db
+		    expectedConsumedListMessage="No consumed subscription pools were found.";
+		}
 		Assert.assertEquals(listConsumedProductSubscriptions().getStdout().trim(),
-				"No consumed subscription pools to list","Successfully unsubscribed from all consumed products.");
+			expectedConsumedListMessage,"Successfully unsubscribed from all consumed products.");
 		
 		// assert that there are no entitlement cert files
 		Assert.assertTrue(sshCommandRunner.runCommandAndWait("find "+entitlementCertDir+" -name '*.pem' | grep -v key.pem").getStdout().equals(""),
