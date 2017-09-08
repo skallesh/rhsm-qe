@@ -1205,6 +1205,13 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	}
 	
 	/**
+	 * @return a random Boolean.TRUE or Boolean.FALSE
+	 */
+	public static Boolean getRandomBoolean() {
+		return 	getRandomListItem(Arrays.asList(new Boolean[]{Boolean.TRUE,Boolean.FALSE}));
+	}
+	
+	/**
 	 * Randomize the input string case.  For example input="Hello World", output="HElLo wORlD"
 	 * @param string
 	 * @return

@@ -13,6 +13,7 @@ import java.util.regex.Pattern;
 import com.github.redhatqe.polarize.metadata.DefTypes.PosNeg;
 import com.github.redhatqe.polarize.metadata.DefTypes.Project;
 import com.github.redhatqe.polarize.metadata.DefTypes;
+import com.github.redhatqe.polarize.metadata.LinkedItem;
 import com.github.redhatqe.polarize.metadata.TestDefinition;
 import com.github.redhatqe.polarize.metadata.TestType;
 
@@ -25,6 +26,8 @@ import org.testng.annotations.Test;
 
 import com.redhat.qe.Assert;
 import com.redhat.qe.auto.bugzilla.BlockedByBzBug;
+import com.redhat.qe.auto.bugzilla.BugzillaAPIException;
+import com.redhat.qe.auto.bugzilla.BzChecker;
 import com.redhat.qe.auto.testng.TestNGUtils;
 
 import rhsm.base.SubscriptionManagerCLITestScript;
@@ -785,6 +788,197 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 		//clienttasks.config_(null, true, null, new String[]{"server","server_timeout"});	// will actually leave "server_timeout = 180" set in the rhsm.conf file
 		clienttasks.removeConfFileParameter(clienttasks.rhsmConfFile, "server_timeout");
 	}
+	
+	
+	
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-47939", "RHEL7-99807"},
+			linkedWorkItems= {
+//				@LinkedItem(
+//					workitemId= "RHEL6-?????",	// TODO
+//					project= Project.RHEL6,
+//					role= DefTypes.Role.VERIFIES),
+				@LinkedItem(
+					workitemId= "RHEL7-95149",	// RHEL7-95149 - RHSM-REQ : subscription-manager should automatically enable yum plugins
+					project= Project.RedHatEnterpriseLinux7,
+					role= DefTypes.Role.VERIFIES)},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags="Tier3")
+	@Test(	description="Verify that the yum plugins for /etc/yum/pluginconf.d/product-id.conf and /etc/yum/pluginconf.d/subscription-manager.conf are automatically enabled by any subscription-manager command when rhsm.auto_enable_yum_plugins is configured on.",
+			groups={"Tier3Tests","blockedByBug-1319927","testSubscriptionManagerShouldAutomaticallyEnableYumPluginsWhenAutoEnableIsOn"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void testSubscriptionManagerShouldAutomaticallyEnableYumPluginsWhenAutoEnableIsOn() throws IOException {
+		// this bug is specifically designed to test Bug 1319927 - [RFE] subscription-manager should automatically enable yum plugins
+		if (clienttasks.isPackageVersion("subscription-manager", "<", "1.20.2-1")) {  // commit 29a9a1db08a2ee920c43891daafdf858082e5d8b 	1319927: [RFE] sub-man automatically enables yum plugins
+			throw new SkipException("This test applies a newer version of subscription-manager that includes an implementation for RFE Bug 1319927 - subscription-manager should automatically enable yum plugins");
+		}
+		
+		resetDefaultConfigurationsForYumPluginsAndRhsmAutoEnableYumPlugins();
+		
+		// randomly decide to register with a random auto-attach option
+		if (getRandomBoolean()) {
+			clienttasks.unregister(null, null, null, null);
+			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, getRandomBoolean(), null, null, (String)null, null, null, null, null, false, null, null, null, null);
+		}
+		
+		// randomly disable one or both /etc/yum/pluginconf.d/product-id.conf and /etc/yum/pluginconf.d/subscription-manager.conf
+		if (getRandomBoolean()) {
+			clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForProductId, "enabled", "0");
+			clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForSubscriptionManager, "enabled", String.valueOf(getRandInt()%2)/* "0" or "1" */);
+		} else {
+			clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForSubscriptionManager, "enabled", "false");
+			clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForProductId, "enabled", "true");
+			// TEMPORARY WORKAROUND
+			boolean invokeWorkaroundWhileBugIsOpen = true;
+			String bugId="1489917"; // Bug 1489917 - disabling yum plugins using "false" (rather than "0") causes traceback: invalid literal for int() with base 10: 'false'
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
+			if (invokeWorkaroundWhileBugIsOpen) {
+				clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForSubscriptionManager, "enabled", "0");
+				clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForProductId, "enabled", "1");
+			}
+			// END OF WORKAROUND
+		}
+		
+		String yumPluginConfFileForProductIdEnabledString = clienttasks.getConfFileParameter(clienttasks.yumPluginConfFileForProductId, "enabled");
+		String yumPluginConfFileForSubscriptionManagerEnabledString = clienttasks.getConfFileParameter(clienttasks.yumPluginConfFileForSubscriptionManager, "enabled");
+		Boolean yumPluginConfFileForProductIdEnabled = Boolean.valueOf(yumPluginConfFileForProductIdEnabledString);
+		Boolean yumPluginConfFileForSubscriptionManagerEnabled = Boolean.valueOf(yumPluginConfFileForSubscriptionManagerEnabledString);
+		if (yumPluginConfFileForProductIdEnabledString.equals("1")) {yumPluginConfFileForProductIdEnabled = true;} else if (yumPluginConfFileForProductIdEnabledString.equals("0")) {yumPluginConfFileForProductIdEnabled = false;}
+		if (yumPluginConfFileForSubscriptionManagerEnabledString.equals("1")) {yumPluginConfFileForSubscriptionManagerEnabled = true;} else if (yumPluginConfFileForSubscriptionManagerEnabledString.equals("0")) {yumPluginConfFileForSubscriptionManagerEnabled = false;}
+		
+		// randomly run a subscription-manager module
+		String module = getRandomListItem(Arrays.asList(new String[]{"version","status","repos","list","release"}));
+		String command = clienttasks.command+" "+module;
+		SSHCommandResult results= client.runCommandAndWait(command);
+		
+		// assert the results contain the expected WARNING message
+		String expectedWarningMsg = "WARNING"+"\n\n"+"The yum plugins: PLUGINS were automatically enabled for the benefit of Red Hat Subscription Management. If not desired, use \"subscription-manager config --rhsm.auto_enable_yum_plugins=0\" to block this behavior.";
+		if (!yumPluginConfFileForSubscriptionManagerEnabled) expectedWarningMsg = expectedWarningMsg.replaceFirst("PLUGINS", clienttasks.yumPluginConfFileForSubscriptionManager+", PLUGINS");
+		if (!yumPluginConfFileForProductIdEnabled) expectedWarningMsg = expectedWarningMsg.replaceFirst("PLUGINS", clienttasks.yumPluginConfFileForProductId+", PLUGINS");
+		expectedWarningMsg = expectedWarningMsg.replaceFirst(", PLUGINS", "");	// strip out my regex substring
+		Assert.assertTrue(results.getStdout().startsWith(expectedWarningMsg),"The stdout from running '"+command+"' starts with the expected warning message '"+expectedWarningMsg+"' when at least one yum plugin is disabled and rhsm.auto_enable_yum_plugins is configured on.");
+		
+		// assert that both plugins were enabled
+		Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.yumPluginConfFileForProductId, "enabled"),"1","Enablement of yum config file '"+clienttasks.yumPluginConfFileForProductId+"' after running '"+command+"' with rhsm.auto_enable_yum_plugins configured on.");
+		Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.yumPluginConfFileForSubscriptionManager, "enabled"),"1","Enablement of yum config file '"+clienttasks.yumPluginConfFileForSubscriptionManager+"' after running '"+command+"' with rhsm.auto_enable_yum_plugins configured on.");
+		
+		// run the subscription-manager module again
+		results= client.runCommandAndWait(command);
+		
+		// assert that the results do NOT contain the WARNING message
+		expectedWarningMsg = expectedWarningMsg.replaceFirst("\n\n.*", "");	// WARNING
+		Assert.assertTrue(!results.getStdout().startsWith(expectedWarningMsg),"The stdout from a second run of '"+command+"' NO LONGER starts with message '"+expectedWarningMsg+"' because rhsm.auto_enable_yum_plugins is configured on.");
+	}
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-47940", "RHEL7-99808"},
+			linkedWorkItems= {
+//				@LinkedItem(
+//					workitemId= "RHEL6-?????",	// TODO
+//					project= Project.RHEL6,
+//					role= DefTypes.Role.VERIFIES),
+				@LinkedItem(
+					workitemId= "RHEL7-95149",	// RHEL7-95149 - RHSM-REQ : subscription-manager should automatically enable yum plugins
+					project= Project.RedHatEnterpriseLinux7,
+					role= DefTypes.Role.VERIFIES)},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags="Tier3")
+	@Test(	description="Verify that the yum plugins for /etc/yum/pluginconf.d/product-id.conf and /etc/yum/pluginconf.d/subscription-manager.conf are NOT automatically enabled by any subscription-manager command when rhsm.auto_enable_yum_plugins is configured off.",
+			groups={"Tier3Tests","blockedByBug-1319927","testSubscriptionManagerShouldNotAutomaticallyEnableYumPluginsWhenAutoEnableIsOff"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void testSubscriptionManagerShouldNotAutomaticallyEnableYumPluginsWhenAutoEnableIsOff() throws IOException {
+		// this bug is specifically designed to test Bug 1319927 - [RFE] subscription-manager should automatically enable yum plugins
+		if (clienttasks.isPackageVersion("subscription-manager", "<", "1.20.2-1")) {  // commit 29a9a1db08a2ee920c43891daafdf858082e5d8b 	1319927: [RFE] sub-man automatically enables yum plugins
+			throw new SkipException("This test applies a newer version of subscription-manager that includes an implementation for RFE Bug 1319927 - subscription-manager should automatically enable yum plugins");
+		}
+		
+		resetDefaultConfigurationsForYumPluginsAndRhsmAutoEnableYumPlugins();
+		
+		// randomly decide to register with a random auto-attach option
+		if (getRandomBoolean()) {
+			clienttasks.unregister(null, null, null, null);
+			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, getRandomBoolean(), null, null, (String)null, null, null, null, null, false, null, null, null, null);
+		}
+		
+		// turn off rhsm configuration for auto_enable_yum_plugins
+		clienttasks.config(false,false,true,new String[]{"rhsm","auto_enable_yum_plugins","0"});
+		
+		// randomly disable one or both /etc/yum/pluginconf.d/product-id.conf and /etc/yum/pluginconf.d/subscription-manager.conf
+		if (getRandomBoolean()) {
+			clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForProductId, "enabled", "0");
+			clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForSubscriptionManager, "enabled", String.valueOf(getRandInt()%2)/* "0" or "1" */);
+		} else {
+			clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForSubscriptionManager, "enabled", "false");
+			clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForProductId, "enabled", "true");
+			// TEMPORARY WORKAROUND
+			boolean invokeWorkaroundWhileBugIsOpen = true;
+			String bugId="1489917"; // Bug 1489917 - disabling yum plugins using "false" (rather than "0") causes traceback: invalid literal for int() with base 10: 'false'
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
+			if (invokeWorkaroundWhileBugIsOpen) {
+				clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForSubscriptionManager, "enabled", "0");
+				clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForProductId, "enabled", "1");
+			}
+			// END OF WORKAROUND
+		}
+		
+		String yumPluginConfFileForProductIdEnabledString = clienttasks.getConfFileParameter(clienttasks.yumPluginConfFileForProductId, "enabled");
+		String yumPluginConfFileForSubscriptionManagerEnabledString = clienttasks.getConfFileParameter(clienttasks.yumPluginConfFileForSubscriptionManager, "enabled");
+		Boolean yumPluginConfFileForProductIdEnabled = Boolean.valueOf(yumPluginConfFileForProductIdEnabledString);
+		Boolean yumPluginConfFileForSubscriptionManagerEnabled = Boolean.valueOf(yumPluginConfFileForSubscriptionManagerEnabledString);
+		if (yumPluginConfFileForProductIdEnabledString.equals("1")) {yumPluginConfFileForProductIdEnabled = true;} else if (yumPluginConfFileForProductIdEnabledString.equals("0")) {yumPluginConfFileForProductIdEnabled = false;}
+		if (yumPluginConfFileForSubscriptionManagerEnabledString.equals("1")) {yumPluginConfFileForSubscriptionManagerEnabled = true;} else if (yumPluginConfFileForSubscriptionManagerEnabledString.equals("0")) {yumPluginConfFileForSubscriptionManagerEnabled = false;}
+		
+		// randomly run a subscription-manager module
+		String module = getRandomListItem(Arrays.asList(new String[]{"version","status","repos","list","release"}));
+		String command = clienttasks.command+" "+module;
+		SSHCommandResult results= client.runCommandAndWait(command);
+		
+		// assert the results do NOT contain a WARNING message
+		String expectedWarningMsg = "WARNING";	// +"\n\n"+"The yum plugins: (PLUGINS) were automatically enabled for the benefit of Red Hat Subscription Management. If not desired, use \"subscription-manager config --rhsm.auto_enable_yum_plugins=0\" to block this behavior.";
+		Assert.assertTrue(!results.getStdout().startsWith(expectedWarningMsg),"The stdout from running '"+command+"' does NOT start with the expected warning message '"+expectedWarningMsg+"' when at least one yum plugin is disabled and rhsm.auto_enable_yum_plugins is configured off.");
+		
+		// assert that both plugins were untouched
+		Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.yumPluginConfFileForProductId, "enabled"),yumPluginConfFileForProductIdEnabledString,"Enablement of yum config file '"+clienttasks.yumPluginConfFileForProductId+"' should remain unchanged after running '"+command+"' with rhsm.auto_enable_yum_plugins configured off.");
+		Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.yumPluginConfFileForSubscriptionManager, "enabled"),yumPluginConfFileForSubscriptionManagerEnabledString,"Enablement of yum config file '"+clienttasks.yumPluginConfFileForSubscriptionManager+"' should remain unchanged after running '"+command+"' with rhsm.auto_enable_yum_plugins configured off.");
+		
+		// assert that the yum plugins are/not loaded
+		//	[root@jsefler-rhel7 ~]# yum repolist --disablerepo=*
+		//	Loaded plugins: langpacks, product-id, search-disabled-repos, subscription-manager
+		//	This system is not registered with an entitlement server. You can use subscription-manager to register.
+		//	repolist: 0
+		String plugin;
+		command = "yum repolist --disablerepo=*";
+		results= client.runCommandAndWait(command);
+		plugin="product-id";
+		if (yumPluginConfFileForProductIdEnabled) {
+			Assert.assertTrue(results.getStdout().contains(plugin),"The stdout from running '"+command+"' indicated that plugin '"+plugin+"' was loaded.");
+		} else {
+			Assert.assertTrue(!results.getStdout().contains(plugin),"The stdout from running '"+command+"' indicated that plugin '"+plugin+"' was NOT loaded.");
+		}
+		plugin="subscription-manager";
+		if (yumPluginConfFileForSubscriptionManagerEnabled) {
+			Assert.assertTrue(results.getStdout().contains(plugin),"The stdout from running '"+command+"' indicated that plugin '"+plugin+"' was loaded.");
+		} else {
+			Assert.assertTrue(!results.getStdout().contains(plugin),"The stdout from running '"+command+"' indicated that plugin '"+plugin+"' was NOT loaded.");
+		}
+	}
+	@AfterGroups(value={"testSubscriptionManagerShouldAutomaticallyEnableYumPluginsWhenAutoEnableIsOn", "testSubscriptionManagerShouldNotAutomaticallyEnableYumPluginsWhenAutoEnableIsOff"},groups={"setup"})
+	public void resetDefaultConfigurationsForYumPluginsAndRhsmAutoEnableYumPlugins() {
+		// make sure subscription-manager config auto_enable_yum_plugins is on
+		clienttasks.config(false,false,true,new String[]{"rhsm","auto_enable_yum_plugins","1"});
+		
+		// make sure yum plugins are enabled
+		clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForProductId, "enabled", "1");
+		clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForSubscriptionManager, "enabled", "1");
+	}
+	
 	
 	
 	// Candidates for an automated Test:
