@@ -710,8 +710,12 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 			Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(1), "The exit code from the subscribe command indicates that no entitlements were granted from this attempt to bind."); // new RHEL63 exitcode behavior from bug fix https://bugzilla.redhat.com/show_bug.cgi?id=689608
 			Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "Consumers of this type are not allowed to subscribe to the pool with id '"+personalPool.poolId+"'",
 					"Attempting to subscribe a system consumer to a personal pool is blocked.");
-			Assert.assertEquals(client1tasks.listConsumedProductSubscriptions().getStdout().trim(),"No consumed subscription pools to list",
-					"Because the subscribe attempt was blocked, there should still be 'No consumed subscription pools to list'.");
+			String expectedMsg = "No consumed subscription pools to list";
+			if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.20.1-1"/*TODO CHANGE TO 1.20.2-1 WHEN BUILD IS TAGGED*/)) {	// commit da72dfcbbb2c3a44393edb9e46e1583d05cc140a
+				expectedMsg="No consumed subscription pools were found.";
+			}
+			Assert.assertEquals(client1tasks.listConsumedProductSubscriptions().getStdout().trim(),expectedMsg,
+					"Because the subscribe attempt was blocked, there should still be '"+expectedMsg+"'.");
 		}
 	}
 	

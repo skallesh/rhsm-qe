@@ -184,7 +184,11 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		clienttasks.unregister(null, null, null, null);
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, null, false, null, null, null, null);
 		String consumedProductSubscription = clienttasks.listConsumedProductSubscriptions().getStdout();
-		Assert.assertContainsMatch(consumedProductSubscription, "No consumed subscription pools to list",
+		String expectedMsg = "No consumed subscription pools to list";
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.20.1-1"/*TODO CHANGE TO 1.20.2-1 WHEN BUILD IS TAGGED*/)) {	// commit da72dfcbbb2c3a44393edb9e46e1583d05cc140a
+			expectedMsg="No consumed subscription pools were found.";
+		}
+		Assert.assertContainsMatch(consumedProductSubscription, expectedMsg,
 				"No consumed subscription pools listed for '"+sm_clientUsername+"' after registering (without autosubscribe).");
 	}
 
@@ -582,7 +586,11 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		SSHCommandResult listResult = clienttasks.listConsumedProductSubscriptions();
 		
 		// assert redemption results
-		Assert.assertEquals(listResult.getStdout().trim(), "No consumed subscription pools to list","List consumed should NOT require that the system be registered.");
+		String expectedMsg = "No consumed subscription pools to list";
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.20.1-1"/*TODO CHANGE TO 1.20.2-1 WHEN BUILD IS TAGGED*/)) {	// commit da72dfcbbb2c3a44393edb9e46e1583d05cc140a
+			expectedMsg="No consumed subscription pools were found.";
+		}
+		Assert.assertEquals(listResult.getStdout().trim(), expectedMsg, "List consumed should NOT require that the system be registered.");
 		Assert.assertEquals(listResult.getExitCode(), Integer.valueOf(0),"Exit code from list consumed when executed without being registered.");
 	}
 

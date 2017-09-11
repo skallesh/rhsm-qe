@@ -5089,12 +5089,12 @@ if (false) {
 		
 		List<File> entitlementCertFiles = getCurrentEntitlementCertFiles();
 		String expectedConsumedListMessage="No consumed subscription pools to list";
-		if (isPackageVersion("subscription-manager", ">=", "1.20.1-1")) { //commit b23e5017950a5d046be32e1695e9c48cee8786db
-		    expectedConsumedListMessage="No consumed subscription pools were found.";
+		if (isPackageVersion("subscription-manager", ">=", "1.20.1-1"/*TODO CHANGE TO 1.20.2-1 WHEN BUILD IS TAGGED*/)) {	// commit da72dfcbbb2c3a44393edb9e46e1583d05cc140a
+			expectedConsumedListMessage="No consumed subscription pools were found.";
 		}
 
 		if (entitlementCertFiles.isEmpty()) {
-			Assert.assertTrue(sshCommandResult.getStdout().trim().equals(expectedConsumedListMessage), "No consumed subscription pools to list");
+			Assert.assertTrue(sshCommandResult.getStdout().trim().equals(expectedConsumedListMessage), "Expected message when there are no consumed subscription pools.");
 		} else {
 			String title = "Consumed Product Subscriptions";
 			title = "Consumed Subscriptions";	// changed in https://bugzilla.redhat.com/show_bug.cgi?id=806986#c10
@@ -6432,7 +6432,7 @@ if (false) {
 
 		// assert that there are no product subscriptions consumed
 		String expectedConsumedListMessage="No consumed subscription pools to list";
-		if (isPackageVersion("subscription-manager", ">=", "1.20.1-1")) { //commit b23e5017950a5d046be32e1695e9c48cee8786db
+		if (isPackageVersion("subscription-manager", ">=", "1.20.1-1"/*TODO CHANGE TO 1.20.2-1 WHEN BUILD IS TAGGED*/)) {	// commit da72dfcbbb2c3a44393edb9e46e1583d05cc140a
 		    expectedConsumedListMessage="No consumed subscription pools were found.";
 		}
 		Assert.assertEquals(listConsumedProductSubscriptions().getStdout().trim(),

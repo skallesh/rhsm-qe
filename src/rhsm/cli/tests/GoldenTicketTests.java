@@ -113,7 +113,10 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
 	SSHCommandResult listConsumedResult = clienttasks.list(null, null, true, null, null, null, null, null, null,
 		null, null, null, null, null);
 	String expectedMessageForListConsumed = "No consumed subscription pools to list";
-
+	if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.20.1-1"/*TODO CHANGE TO 1.20.2-1 WHEN BUILD IS TAGGED*/)) {	// commit da72dfcbbb2c3a44393edb9e46e1583d05cc140a
+		expectedMessageForListConsumed="No consumed subscription pools were found.";
+	}
+	
 	// TEMPORARY WORKAROUND FOR BUG
 	String bugId="1425438"; // Bug 1425438 - subscription-manager list --consumed shows the consumption of extra entitlement granted from the organization or environment.
 	boolean invokeWorkaroundWhileBugIsOpen = true;
