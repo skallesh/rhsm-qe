@@ -1533,11 +1533,16 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 				// is this an EUS content set?
 				if (label.contains("-eus-")) {	// only add rows for eus repo labels
 					if (label.contains("rhel-4")) {
-						log.info("Skiping this test for rhel-4 content set repository '"+label+"' because subscription-manager was never delivered on rhel-4.");
-						continue;	// skip RHEL4 REPOS 
+						log.info("Skipping this test for rhel-4 eus content set repository '"+label+"' because subscription-manager was never delivered on rhel-4.");
+						continue;	// skip RHEL4 REPOS
 					}
-					eusLabelToInfoMap.put(label, productId+","+productName+","+id+","+modifiedProductIds);
+					eusLabelToInfoMap.put(label, productId+";"+productName+";"+id+";"+modifiedProductIds);
 					Set<String> bugIds = new HashSet<String>();
+					
+					if (label.contains("-rhui-")) {
+						log.info("Skipping this test for rhui eus content set repository '"+label+"' because of a NEEDINFO on RHUI eng product 157 - How is RHUI special? There is no product cert 157 on rcm-metadata.git.");
+						continue;	// skip RHUI REPOS
+					}
 					
 					// Bug 1471998 - content set mappings for "Red Hat S-JIS Support (for RHEL Server) - Extended Update Support" is missing from cdn/cs_mappings-prod.csv
 					if (label.equals("rhel-sjis-for-rhel-6-server-eus-debug-rpms")) bugIds.add("1471998");
@@ -1551,6 +1556,8 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 					if (label.equals("rhel-rs-for-rhel-5-for-power-eus-debug-rpms")) bugIds.add("1472001");
 					if (label.equals("rhel-rs-for-rhel-5-for-power-eus-rpms")) bugIds.add("1472001");
 					if (label.equals("rhel-rs-for-rhel-5-for-power-eus-source-rpms")) bugIds.add("1472001");
+					if (label.equals("rhel-rs-for-rhel-5-server-eus-rpms")) bugIds.add("1472001");
+					if (label.equals("rhel-rs-for-rhel-6-server-eus-rpms")) bugIds.add("1472001");
 					if (label.equals("rhel-rs-for-rhel-7-server-eus-debug-rpms")) bugIds.add("1472001");
 					if (label.equals("rhel-rs-for-rhel-7-server-eus-rpms")) bugIds.add("1472001");
 					if (label.equals("rhel-rs-for-rhel-7-server-eus-source-rpms")) bugIds.add("1472001");
@@ -1559,6 +1566,8 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 					if (label.equals("rhel-ha-for-rhel-5-for-power-eus-debug-rpms")) bugIds.add("1472004");
 					if (label.equals("rhel-ha-for-rhel-5-for-power-eus-rpms")) bugIds.add("1472004");
 					if (label.equals("rhel-ha-for-rhel-5-for-power-eus-source-rpms")) bugIds.add("1472004");
+					if (label.equals("rhel-ha-for-rhel-5-server-eus-rpms")) bugIds.add("1472004");
+					if (label.equals("rhel-ha-for-rhel-6-server-eus-rpms")) bugIds.add("1472004");
 					if (label.equals("rhel-ha-for-rhel-7-server-eus-debug-rpms")) bugIds.add("1472004");
 					if (label.equals("rhel-ha-for-rhel-7-server-eus-rpms")) bugIds.add("1472004");
 					if (label.equals("rhel-ha-for-rhel-7-server-eus-source-rpms")) bugIds.add("1472004");
@@ -1582,12 +1591,14 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 					if (label.equals("rhel-5-server-eus-rhn-tools-debug-rpms")) bugIds.add("1472007");
 					if (label.equals("rhel-5-server-eus-rhn-tools-rpms")) bugIds.add("1472007");
 					if (label.equals("rhel-5-server-eus-rhn-tools-source-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-5-server-eus-rpms")) bugIds.add("1472007");
 					if (label.equals("rhel-5-server-eus-satellite-tools-6.1-debuginfo")) bugIds.add("1472007");
 					if (label.equals("rhel-5-server-eus-satellite-tools-6.1-rpms")) bugIds.add("1472007");
 					if (label.equals("rhel-5-server-eus-satellite-tools-6.1-source-rpms")) bugIds.add("1472007");
 					if (label.equals("rhel-6-server-eus-rhn-tools-debug-rpms")) bugIds.add("1472007");
 					if (label.equals("rhel-6-server-eus-rhn-tools-rpms")) bugIds.add("1472007");
 					if (label.equals("rhel-6-server-eus-rhn-tools-source-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-6-server-eus-rpms")) bugIds.add("1472007");
 					if (label.equals("rhel-6-server-eus-satellite-tools-6.1-debug-rpms")) bugIds.add("1472007");
 					if (label.equals("rhel-6-server-eus-satellite-tools-6.1-rpms")) bugIds.add("1472007");
 					if (label.equals("rhel-6-server-eus-satellite-tools-6.1-source-rpms")) bugIds.add("1472007");
@@ -1625,6 +1636,240 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 					if (label.equals("rhel-7-server-eus-supplementary-rpms")) bugIds.add("1472007");
 					if (label.equals("rhel-7-server-eus-supplementary-source-rpms")) bugIds.add("1472007");
 					
+					//	Bug 1491304 - content set mappings for "Oracle Java (for RHEL Compute Node) - Extended Update Support" is missing from cdn/cs_mappings-prod.csv
+					if (label.equals("rhel-7-hpc-node-eus-thirdparty-oracle-java-rpms")) bugIds.add("1491304");
+					if (label.equals("rhel-7-hpc-node-eus-thirdparty-oracle-java-source-rpms")) bugIds.add("1491304");
+					if (label.equals("rhel-hpc-node-6-eus-thirdparty-oracle-java-rpms")) bugIds.add("1491304");
+					if (label.equals("rhel-hpc-node-6-eus-thirdparty-oracle-java-source-rpms")) bugIds.add("1491304");
+					
+					//	Bug 1491308 - content set mappings for "Red Hat Developer Toolset (for RHEL Server EUS)" is missing from cdn/cs_mappings-prod.csv
+					if (label.equals("rhel-server-dts-5-eus-rpms")) bugIds.add("1491308");
+					if (label.equals("rhel-server-dts-6-eus-rpms")) bugIds.add("1491308");
+					if (label.equals("rhel-server-dts2-5-eus-debug-rpms")) bugIds.add("1491308");
+					if (label.equals("rhel-server-dts2-5-eus-rpms")) bugIds.add("1491308");
+					if (label.equals("rhel-server-dts2-5-eus-source-rpms")) bugIds.add("1491308");
+					if (label.equals("rhel-server-dts2-6-eus-debug-rpms")) bugIds.add("1491308");
+					if (label.equals("rhel-server-dts2-6-eus-rpms")) bugIds.add("1491308");
+					if (label.equals("rhel-server-dts2-6-eus-source-rpms")) bugIds.add("1491308");
+					
+					//	Bug 1491319 - content set mappings for "Red Hat Enterprise Linux EUS Compute Node" is missing from cdn/cs_mappings-prod.csv
+					if (label.equals("rhel-6-for-hpc-node-eus-satellite-tools-6.1-debug-rpms")) bugIds.add("1491319");
+					if (label.equals("rhel-6-for-hpc-node-eus-satellite-tools-6.1-rpms")) bugIds.add("1491319");
+					if (label.equals("rhel-6-for-hpc-node-eus-satellite-tools-6.1-source-rpms")) bugIds.add("1491319");
+					if (label.equals("rhel-6-for-hpc-node-eus-satellite-tools-6.2-debug-rpms")) bugIds.add("1491319");
+					if (label.equals("rhel-6-for-hpc-node-eus-satellite-tools-6.2-rpms")) bugIds.add("1491319");
+					if (label.equals("rhel-6-for-hpc-node-eus-satellite-tools-6.2-source-rpms")) bugIds.add("1491319");
+					if (label.equals("rhel-7-for-hpc-node-eus-rh-common-debug-rpms")) bugIds.add("1491319");
+					if (label.equals("rhel-7-for-hpc-node-eus-rh-common-rpms")) bugIds.add("1491319");
+					if (label.equals("rhel-7-for-hpc-node-eus-rh-common-source-rpms")) bugIds.add("1491319");
+					if (label.equals("rhel-7-for-hpc-node-eus-satellite-tools-6.1-debug-rpms")) bugIds.add("1491319");
+					if (label.equals("rhel-7-for-hpc-node-eus-satellite-tools-6.1-rpms")) bugIds.add("1491319");
+					if (label.equals("rhel-7-for-hpc-node-eus-satellite-tools-6.1-source-rpms")) bugIds.add("1491319");
+					if (label.equals("rhel-7-for-hpc-node-eus-satellite-tools-6.2-debug-rpms")) bugIds.add("1491319");
+					if (label.equals("rhel-7-for-hpc-node-eus-satellite-tools-6.2-rpms")) bugIds.add("1491319");
+					if (label.equals("rhel-7-for-hpc-node-eus-satellite-tools-6.2-source-rpms")) bugIds.add("1491319");
+					if (label.equals("rhel-7-hpc-node-eus-debug-rpms")) bugIds.add("1491319");
+					if (label.equals("rhel-7-hpc-node-eus-optional-debug-rpms")) bugIds.add("1491319");
+					if (label.equals("rhel-7-hpc-node-eus-optional-rpms")) bugIds.add("1491319");
+					if (label.equals("rhel-7-hpc-node-eus-optional-source-rpms")) bugIds.add("1491319");
+					if (label.equals("rhel-7-hpc-node-eus-rpms")) bugIds.add("1491319");
+					if (label.equals("rhel-7-hpc-node-eus-source-rpms")) bugIds.add("1491319");
+					if (label.equals("rhel-7-hpc-node-eus-supplementary-debug-rpms")) bugIds.add("1491319");
+					if (label.equals("rhel-7-hpc-node-eus-supplementary-rpms")) bugIds.add("1491319");
+					if (label.equals("rhel-7-hpc-node-eus-supplementary-source-rpms")) bugIds.add("1491319");
+					if (label.equals("rhel-hpc-node-6-eus-debug-rpms")) bugIds.add("1491319");
+					if (label.equals("rhel-hpc-node-6-eus-optional-debug-rpms")) bugIds.add("1491319");
+					if (label.equals("rhel-hpc-node-6-eus-optional-rpms")) bugIds.add("1491319");
+					if (label.equals("rhel-hpc-node-6-eus-optional-source-rpms")) bugIds.add("1491319");
+					if (label.equals("rhel-hpc-node-6-eus-rhn-tools-debug-rpms")) bugIds.add("1491319");
+					if (label.equals("rhel-hpc-node-6-eus-rhn-tools-rpms")) bugIds.add("1491319");
+					if (label.equals("rhel-hpc-node-6-eus-rhn-tools-source-rpms")) bugIds.add("1491319");
+					if (label.equals("rhel-hpc-node-6-eus-rpms")) bugIds.add("1491319");
+					if (label.equals("rhel-hpc-node-6-eus-source-rpms")) bugIds.add("1491319");
+					if (label.equals("rhel-hpc-node-6-eus-supplementary-debug-rpms")) bugIds.add("1491319");
+					if (label.equals("rhel-hpc-node-6-eus-supplementary-rpms")) bugIds.add("1491319");
+					if (label.equals("rhel-hpc-node-6-eus-supplementary-source-rpms")) bugIds.add("1491319");
+					if (label.equals("rhel-hpc-node-7-eus-rhn-tools-debug-rpms")) bugIds.add("1491319");
+					if (label.equals("rhel-hpc-node-7-eus-rhn-tools-rpms")) bugIds.add("1491319");
+					if (label.equals("rhel-hpc-node-7-eus-rhn-tools-source-rpms")) bugIds.add("1491319");
+					
+					//	Bug 1491325 - content set mappings for "Red Hat Enterprise Linux EUS Compute Node High Performance Networking" is missing from cdn/cs_mappings-prod.csv
+					if (label.equals("rhel-hpc-node-6-eus-hpn-debug-rpms")) bugIds.add("1491325");
+					if (label.equals("rhel-hpc-node-6-eus-hpn-rpms")) bugIds.add("1491325");
+					if (label.equals("rhel-hpc-node-6-eus-hpn-source-rpms")) bugIds.add("1491325");
+					
+					//	Bug 1491334 - content set mappings for "Red Hat Enterprise Linux EUS Compute Node Scalable File System" is missing from cdn/cs_mappings-prod.csv
+					if (label.equals("rhel-hpc-node-6-eus-sfs-debug-rpms")) bugIds.add("1491334");
+					if (label.equals("rhel-hpc-node-6-eus-sfs-rpms")) bugIds.add("1491334");
+					if (label.equals("rhel-hpc-node-6-eus-sfs-source-rpms")) bugIds.add("1491334");
+					
+					//	Bug 1491348 - content set mappings for "Red Hat Enterprise Linux for IBM z Systems - Extended Update Support" is missing from cdn/cs_mappings-prod.csv
+					if (label.equals("rhel-5-for-system-z-eus-rh-common-debuginfo")) bugIds.add("1491348");
+					if (label.equals("rhel-5-for-system-z-eus-rh-common-isos")) bugIds.add("1491348");
+					if (label.equals("rhel-5-for-system-z-eus-rh-common-rpms")) bugIds.add("1491348");
+					if (label.equals("rhel-5-for-system-z-eus-rh-common-source-rpms")) bugIds.add("1491348");
+					if (label.equals("rhel-5-for-system-z-eus-rhn-tools-debug-rpms")) bugIds.add("1491348");
+					if (label.equals("rhel-5-for-system-z-eus-rhn-tools-rpms")) bugIds.add("1491348");
+					if (label.equals("rhel-5-for-system-z-eus-rhn-tools-source-rpms")) bugIds.add("1491348");
+					if (label.equals("rhel-5-for-system-z-eus-rpms")) bugIds.add("1491348");
+					if (label.equals("rhel-5-for-system-z-eus-satellite-tools-6.1-debuginfo")) bugIds.add("1491348");
+					if (label.equals("rhel-5-for-system-z-eus-satellite-tools-6.1-rpms")) bugIds.add("1491348");
+					if (label.equals("rhel-5-for-system-z-eus-satellite-tools-6.1-source-rpms")) bugIds.add("1491348");
+					if (label.equals("rhel-6-for-system-z-eus-rhn-tools-debug-rpms")) bugIds.add("1491348");
+					if (label.equals("rhel-6-for-system-z-eus-rhn-tools-rpms")) bugIds.add("1491348");
+					if (label.equals("rhel-6-for-system-z-eus-rhn-tools-source-rpms")) bugIds.add("1491348");
+					if (label.equals("rhel-6-for-system-z-eus-rpms")) bugIds.add("1491348");
+					if (label.equals("rhel-6-for-system-z-eus-satellite-tools-6.1-debug-rpms")) bugIds.add("1491348");
+					if (label.equals("rhel-6-for-system-z-eus-satellite-tools-6.1-rpms")) bugIds.add("1491348");
+					if (label.equals("rhel-6-for-system-z-eus-satellite-tools-6.1-source-rpms")) bugIds.add("1491348");
+					if (label.equals("rhel-6-for-system-z-eus-satellite-tools-6.2-debug-rpms")) bugIds.add("1491348");
+					if (label.equals("rhel-6-for-system-z-eus-satellite-tools-6.2-rpms")) bugIds.add("1491348");
+					if (label.equals("rhel-6-for-system-z-eus-satellite-tools-6.2-source-rpms")) bugIds.add("1491348");
+					if (label.equals("rhel-7-for-system-z-eus-debug-rpms")) bugIds.add("1491348");
+					if (label.equals("rhel-7-for-system-z-eus-isos")) bugIds.add("1491348");
+					if (label.equals("rhel-7-for-system-z-eus-optional-debug-rpms")) bugIds.add("1491348");
+					if (label.equals("rhel-7-for-system-z-eus-optional-rpms")) bugIds.add("1491348");
+					if (label.equals("rhel-7-for-system-z-eus-optional-source-rpms")) bugIds.add("1491348");
+					if (label.equals("rhel-7-for-system-z-eus-rh-common-debug-rpms")) bugIds.add("1491348");
+					if (label.equals("rhel-7-for-system-z-eus-rh-common-rpms")) bugIds.add("1491348");
+					if (label.equals("rhel-7-for-system-z-eus-rh-common-source-rpms")) bugIds.add("1491348");
+					if (label.equals("rhel-7-for-system-z-eus-rhn-tools-debug-rpms")) bugIds.add("1491348");
+					if (label.equals("rhel-7-for-system-z-eus-rhn-tools-rpms")) bugIds.add("1491348");
+					if (label.equals("rhel-7-for-system-z-eus-rhn-tools-source-rpms")) bugIds.add("1491348");
+					if (label.equals("rhel-7-for-system-z-eus-rpms")) bugIds.add("1491348");
+					if (label.equals("rhel-7-for-system-z-eus-satellite-tools-6.1-debug-rpms")) bugIds.add("1491348");
+					if (label.equals("rhel-7-for-system-z-eus-satellite-tools-6.1-rpms")) bugIds.add("1491348");
+					if (label.equals("rhel-7-for-system-z-eus-satellite-tools-6.1-source-rpms")) bugIds.add("1491348");
+					if (label.equals("rhel-7-for-system-z-eus-satellite-tools-6.2-debug-rpms")) bugIds.add("1491348");
+					if (label.equals("rhel-7-for-system-z-eus-satellite-tools-6.2-rpms")) bugIds.add("1491348");
+					if (label.equals("rhel-7-for-system-z-eus-satellite-tools-6.2-source-rpms")) bugIds.add("1491348");
+					if (label.equals("rhel-7-for-system-z-eus-source-isos")) bugIds.add("1491348");
+					if (label.equals("rhel-7-for-system-z-eus-source-rpms")) bugIds.add("1491348");
+					if (label.equals("rhel-7-for-system-z-eus-supplementary-debuginfo")) bugIds.add("1491348");
+					if (label.equals("rhel-7-for-system-z-eus-supplementary-isos")) bugIds.add("1491348");
+					if (label.equals("rhel-7-for-system-z-eus-supplementary-rpms")) bugIds.add("1491348");
+					if (label.equals("rhel-7-for-system-z-eus-supplementary-source-rpms")) bugIds.add("1491348");
+					
+					//	Bug 1491351 - content set mappings for "Red Hat Enterprise Linux for Power, big endian - Extended Update Support" is missing from cdn/cs_mappings-prod.csv
+					if (label.equals("rhel-5-for-power-eus-debug-rpms")) bugIds.add("1491351");
+					if (label.equals("rhel-5-for-power-eus-isos")) bugIds.add("1491351");
+					if (label.equals("rhel-5-for-power-eus-rh-common-debuginfo")) bugIds.add("1491351");
+					if (label.equals("rhel-5-for-power-eus-rh-common-isos")) bugIds.add("1491351");
+					if (label.equals("rhel-5-for-power-eus-rh-common-rpms")) bugIds.add("1491351");
+					if (label.equals("rhel-5-for-power-eus-rh-common-source-rpms")) bugIds.add("1491351");
+					if (label.equals("rhel-5-for-power-eus-rhn-tools-debug-rpms")) bugIds.add("1491351");
+					if (label.equals("rhel-5-for-power-eus-rhn-tools-rpms")) bugIds.add("1491351");
+					if (label.equals("rhel-5-for-power-eus-rhn-tools-source-rpms")) bugIds.add("1491351");
+					if (label.equals("rhel-5-for-power-eus-rpms")) bugIds.add("1491351");
+					if (label.equals("rhel-5-for-power-eus-satellite-tools-6.1-debuginfo")) bugIds.add("1491351");
+					if (label.equals("rhel-5-for-power-eus-satellite-tools-6.1-rpms")) bugIds.add("1491351");
+					if (label.equals("rhel-5-for-power-eus-satellite-tools-6.1-source-rpms")) bugIds.add("1491351");
+					if (label.equals("rhel-5-for-power-eus-source-isos")) bugIds.add("1491351");
+					if (label.equals("rhel-5-for-power-eus-source-rpms")) bugIds.add("1491351");
+					if (label.equals("rhel-5-for-power-eus-supplementary-debuginfo")) bugIds.add("1491351");
+					if (label.equals("rhel-5-for-power-eus-supplementary-isos")) bugIds.add("1491351");
+					if (label.equals("rhel-5-for-power-eus-supplementary-rpms")) bugIds.add("1491351");
+					if (label.equals("rhel-5-for-power-eus-supplementary-source-rpms")) bugIds.add("1491351");
+					if (label.equals("rhel-6-for-power-eus-rhn-tools-debug-rpms")) bugIds.add("1491351");
+					if (label.equals("rhel-6-for-power-eus-rhn-tools-rpms")) bugIds.add("1491351");
+					if (label.equals("rhel-6-for-power-eus-rhn-tools-source-rpms")) bugIds.add("1491351");
+					if (label.equals("rhel-6-for-power-eus-rpms")) bugIds.add("1491351");
+					if (label.equals("rhel-6-for-power-eus-satellite-tools-6.1-debug-rpms")) bugIds.add("1491351");
+					if (label.equals("rhel-6-for-power-eus-satellite-tools-6.1-rpms")) bugIds.add("1491351");
+					if (label.equals("rhel-6-for-power-eus-satellite-tools-6.1-source-rpms")) bugIds.add("1491351");
+					if (label.equals("rhel-6-for-power-eus-satellite-tools-6.2-debug-rpms")) bugIds.add("1491351");
+					if (label.equals("rhel-6-for-power-eus-satellite-tools-6.2-rpms")) bugIds.add("1491351");
+					if (label.equals("rhel-6-for-power-eus-satellite-tools-6.2-source-rpms")) bugIds.add("1491351");
+					if (label.equals("rhel-7-for-power-eus-debug-rpms")) bugIds.add("1491351");
+					if (label.equals("rhel-7-for-power-eus-isos")) bugIds.add("1491351");
+					if (label.equals("rhel-7-for-power-eus-optional-debug-rpms")) bugIds.add("1491351");
+					if (label.equals("rhel-7-for-power-eus-optional-rpms")) bugIds.add("1491351");
+					if (label.equals("rhel-7-for-power-eus-optional-source-rpms")) bugIds.add("1491351");
+					if (label.equals("rhel-7-for-power-eus-rh-common-debug-rpms")) bugIds.add("1491351");
+					if (label.equals("rhel-7-for-power-eus-rh-common-rpms")) bugIds.add("1491351");
+					if (label.equals("rhel-7-for-power-eus-rh-common-source-rpms")) bugIds.add("1491351");
+					if (label.equals("rhel-7-for-power-eus-rhn-tools-debug-rpms")) bugIds.add("1491351");
+					if (label.equals("rhel-7-for-power-eus-rhn-tools-rpms")) bugIds.add("1491351");
+					if (label.equals("rhel-7-for-power-eus-rhn-tools-source-rpms")) bugIds.add("1491351");
+					if (label.equals("rhel-7-for-power-eus-rpms")) bugIds.add("1491351");
+					if (label.equals("rhel-7-for-power-eus-satellite-tools-6.1-debug-rpms")) bugIds.add("1491351");
+					if (label.equals("rhel-7-for-power-eus-satellite-tools-6.1-rpms")) bugIds.add("1491351");
+					if (label.equals("rhel-7-for-power-eus-satellite-tools-6.1-source-rpms")) bugIds.add("1491351");
+					if (label.equals("rhel-7-for-power-eus-satellite-tools-6.2-debug-rpms")) bugIds.add("1491351");
+					if (label.equals("rhel-7-for-power-eus-satellite-tools-6.2-rpms")) bugIds.add("1491351");
+					if (label.equals("rhel-7-for-power-eus-satellite-tools-6.2-source-rpms")) bugIds.add("1491351");
+					if (label.equals("rhel-7-for-power-eus-source-isos")) bugIds.add("1491351");
+					if (label.equals("rhel-7-for-power-eus-source-rpms")) bugIds.add("1491351");
+					if (label.equals("rhel-7-for-power-eus-supplementary-debuginfo")) bugIds.add("1491351");
+					if (label.equals("rhel-7-for-power-eus-supplementary-isos")) bugIds.add("1491351");
+					if (label.equals("rhel-7-for-power-eus-supplementary-rpms")) bugIds.add("1491351");
+					if (label.equals("rhel-7-for-power-eus-supplementary-source-rpms")) bugIds.add("1491351");
+					
+					//	Bug 1491356 - content set mappings for "Red Hat Enterprise Linux for Power, little endian - Extended Update Support" is missing from cdn/cs_mappings-prod.csv
+					if (label.equals("rhel-7-for-power-le-eus-debug-rpms")) bugIds.add("1491356");
+					if (label.equals("rhel-7-for-power-le-eus-isos")) bugIds.add("1491356");
+					if (label.equals("rhel-7-for-power-le-eus-optional-debug-rpms")) bugIds.add("1491356");
+					if (label.equals("rhel-7-for-power-le-eus-optional-rpms")) bugIds.add("1491356");
+					if (label.equals("rhel-7-for-power-le-eus-optional-source-rpms")) bugIds.add("1491356");
+					if (label.equals("rhel-7-for-power-le-eus-rhn-tools-debug-rpms")) bugIds.add("1491356");
+					if (label.equals("rhel-7-for-power-le-eus-rhn-tools-rpms")) bugIds.add("1491356");
+					if (label.equals("rhel-7-for-power-le-eus-rhn-tools-source-rpms")) bugIds.add("1491356");
+					if (label.equals("rhel-7-for-power-le-eus-rpms")) bugIds.add("1491356");
+					if (label.equals("rhel-7-for-power-le-eus-satellite-tools-6.1-debug-rpms")) bugIds.add("1491356");
+					if (label.equals("rhel-7-for-power-le-eus-satellite-tools-6.1-rpms")) bugIds.add("1491356");
+					if (label.equals("rhel-7-for-power-le-eus-satellite-tools-6.1-source-rpms")) bugIds.add("1491356");
+					if (label.equals("rhel-7-for-power-le-eus-satellite-tools-6.2-debug-rpms")) bugIds.add("1491356");
+					if (label.equals("rhel-7-for-power-le-eus-satellite-tools-6.2-rpms")) bugIds.add("1491356");
+					if (label.equals("rhel-7-for-power-le-eus-satellite-tools-6.2-source-rpms")) bugIds.add("1491356");
+					if (label.equals("rhel-7-for-power-le-eus-source-isos")) bugIds.add("1491356");
+					if (label.equals("rhel-7-for-power-le-eus-source-rpms")) bugIds.add("1491356");
+					if (label.equals("rhel-7-for-power-le-eus-supplementary-debug-rpms")) bugIds.add("1491356");
+					if (label.equals("rhel-7-for-power-le-eus-supplementary-rpms")) bugIds.add("1491356");
+					if (label.equals("rhel-7-for-power-le-eus-supplementary-source-rpms")) bugIds.add("1491356");
+					
+					//	Bug 1491359 - content set mappings for "Red Hat Enterprise Linux Load Balancer (for RHEL Server) - Extended Update Support" is missing from cdn/cs_mappings-prod.csv
+					if (label.equals("rhel-lb-for-rhel-6-server-eus-rpms")) bugIds.add("1491359");
+					
+					//	Bug 1491365 - content set mappings for "Red Hat Enterprise Linux Scalable File System (for RHEL Server) - Extended Update Support" is missing from cdn/cs_mappings-prod.csv
+					if (label.equals("rhel-scalefs-for-rhel-5-server-eus-rpms")) bugIds.add("1491365");
+					if (label.equals("rhel-sfs-for-rhel-6-server-eus-rpms")) bugIds.add("1491365");
+					
+					//	Bug 1491369 - content set mappings for "RHEL for SAP - Extended Update Support" is missing from cdn/cs_mappings-prod.csv
+					if (label.equals("rhel-sap-for-rhel-6-server-eus-debug-rpms")) bugIds.add("1491369");
+					if (label.equals("rhel-sap-for-rhel-6-server-eus-rpms")) bugIds.add("1491369");
+					if (label.equals("rhel-sap-for-rhel-6-server-eus-source-rpms")) bugIds.add("1491369");
+					if (label.equals("rhel-sap-for-rhel-7-server-eus-debug-rpms")) bugIds.add("1491369");
+					if (label.equals("rhel-sap-for-rhel-7-server-eus-rpms")) bugIds.add("1491369");
+					if (label.equals("rhel-sap-for-rhel-7-server-eus-source-rpms")) bugIds.add("1491369");
+					
+					//	Bug 1491373 - content set mappings for "RHEL for SAP Applications for Power BE EUS" is missing from cdn/cs_mappings-prod.csv
+					if (label.equals("rhel-sap-for-rhel-7-for-power-eus-debug-rpms")) bugIds.add("1491373");
+					if (label.equals("rhel-sap-for-rhel-7-for-power-eus-rpms")) bugIds.add("1491373");
+					if (label.equals("rhel-sap-for-rhel-7-for-power-eus-source-rpms")) bugIds.add("1491373");
+					
+					//	Bug 1491376 - content set mappings for "RHEL for SAP Applications for Power LE EUS" is missing from cdn/cs_mappings-prod.csv
+					if (label.equals("rhel-sap-for-rhel-7-for-power-le-eus-debug-rpms")) bugIds.add("1491376");
+					if (label.equals("rhel-sap-for-rhel-7-for-power-le-eus-rpms")) bugIds.add("1491376");
+					if (label.equals("rhel-sap-for-rhel-7-for-power-le-eus-source-rpms")) bugIds.add("1491376");
+					
+					//	Bug 1491380 - content set mappings for "RHEL for SAP Applications for System Z EUS" is missing from cdn/cs_mappings-prod.csv
+					if (label.equals("rhel-sap-for-rhel-7-for-system-z-eus-debug-rpms")) bugIds.add("1491380");
+					if (label.equals("rhel-sap-for-rhel-7-for-system-z-eus-rpms")) bugIds.add("1491380");
+					if (label.equals("rhel-sap-for-rhel-7-for-system-z-eus-source-rpms")) bugIds.add("1491380");
+					
+					//	Bug 1491382 - content set mappings for "RHEL for SAP HANA - Extended Update Support" is missing from cdn/cs_mappings-prod.csv
+					if (label.equals("rhel-sap-hana-for-rhel-6-server-eus-debug-rpms")) bugIds.add("1491382");
+					if (label.equals("rhel-sap-hana-for-rhel-6-server-eus-rpms")) bugIds.add("1491382");
+					if (label.equals("rhel-sap-hana-for-rhel-6-server-eus-source-rpms")) bugIds.add("1491382");
+					if (label.equals("rhel-sap-hana-for-rhel-7-server-eus-debug-rpms")) bugIds.add("1491382");
+					if (label.equals("rhel-sap-hana-for-rhel-7-server-eus-rpms")) bugIds.add("1491382");
+					if (label.equals("rhel-sap-hana-for-rhel-7-server-eus-source-rpms")) bugIds.add("1491382");
+					
+					//	Bug 1491384 - content set mappings for "RHEL for SAP HANA for Power LE EUS" is missing from cdn/cs_mappings-prod.csv
+					if (label.equals("rhel-sap-hana-for-rhel-7-for-power-le-eus-debug-rpms")) bugIds.add("1491384");
+					if (label.equals("rhel-sap-hana-for-rhel-7-for-power-le-eus-rpms")) bugIds.add("1491384");
+					if (label.equals("rhel-sap-hana-for-rhel-7-for-power-le-eus-source-rpms")) bugIds.add("1491384");
+					
 					
 					BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 					// Object bugzilla, String eusProductName, String eusProductId, String eusContentSetName, String eusContentSetId, String eusContentSetLabel, List<String> modifiedProductIds
@@ -1633,10 +1878,11 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 			}
 		}
 		
-		// logging a map of repo label to information for debugging purposes
+		// logging a semi-colon delimited map of repo label to information for debugging purposes importing into a spreadsheet
+		log.info(" (DELETE COLUMN);ContentSet/Repo Label;Eng Prod ID;Eng Product Name;Content Set ID;Actual: Modifies Eng Prod IDs\rAssert that this list is not empty;");
 		for (String key : eusLabelToInfoMap.keySet()) {
 			// eusRepoLabel, fromEngProductId, fromEngProductName, whoseContentIdIs, modifiesTheseEngProductIds
-			log.info(key+","+eusLabelToInfoMap.get(key));
+			log.info(";"+key+";"+eusLabelToInfoMap.get(key)+";");
 			// WAS IMPORTED TO: https://docs.google.com/a/redhat.com/spreadsheets/d/1oFCJ0KI2CjV1bOavNkKzZRJl-CZ6CopxngJi4EJbii0/edit?usp=sharing
 		}
 		return ll;
