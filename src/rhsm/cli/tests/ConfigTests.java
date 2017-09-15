@@ -82,9 +82,9 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
-			tags="Tier1")
+			tags="Tier1 Tier2")
 	@Test(	description="subscription-manager: use config to set each of the rhsm.conf parameter values and verify it is persisted to /etc/rhsm.rhsm.conf",
-			groups={"Tier1Tests"},
+			groups={"Tier1Tests","Tier2Tests"},
 			dataProvider="getConfigSectionNameData",
 			priority=10,
 			enabled=true)
@@ -107,9 +107,9 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags="Tier2")
 	@Test(	description="subscription-manager: use config module to list all of the currently set rhsm.conf parameter values",
-			groups={"Tier2Tests"},
+			groups={"debugTest","Tier2Tests"},
 			dataProvider="getConfigSectionNameData",
-			//dependsOnMethods={"testConfigSetSectionNameValue"}, alwaysRun=true,
+			dependsOnMethods={"testConfigSetSectionNameValue"}, alwaysRun=true,
 			priority=20,
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
