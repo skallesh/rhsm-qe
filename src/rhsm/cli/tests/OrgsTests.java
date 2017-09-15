@@ -206,7 +206,7 @@ public class OrgsTests extends SubscriptionManagerCLITestScript {
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
 	@Test(	description="subscription-manager: orgs with --serverurl",
-			dataProvider="getServerurl_TestData",
+			dataProvider="getServerurlData",
 			groups={"Tier2Tests","OrgsWithServerurl_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)

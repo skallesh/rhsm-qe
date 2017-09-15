@@ -1704,7 +1704,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier1")
 	@Test(	description="subscription-manager-cli: register with --serverurl; assert positive registrations persist the serverurl to rhsm.conf, negative registrations do not.",
-			dataProvider="getServerurl_TestData",
+			dataProvider="getServerurlData",
 			groups={"Tier1Tests","RegisterWithServerurl_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)

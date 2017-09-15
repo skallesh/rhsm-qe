@@ -1201,7 +1201,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier3")
 	@Test(	description="subscription-manager: service-level --list with --serverurl",
-			dataProvider="getServerurl_TestData",
+			dataProvider="getServerurlData",
 			groups={"Tier3Tests","ServiceLevelListWithServerurl_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
