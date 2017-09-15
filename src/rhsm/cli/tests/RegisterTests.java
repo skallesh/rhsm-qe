@@ -897,7 +897,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
 	@Test(	description="subscription-manager-cli: register with --name and --type",
-			dataProvider="getRegisterWithNameAndType_TestData",
+			dataProvider="getRegisterWithNameAndTypeData",
 			groups={"Tier2Tests"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -917,11 +917,11 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	
 
 	
-	@DataProvider(name="getRegisterWithNameAndType_TestData")
-	public Object[][] getRegisterWithNameAndType_TestDataAs2dArray() throws JSONException, Exception {
-		return TestNGUtils.convertListOfListsTo2dArray(getRegisterWithNameAndType_TestDataAsListOfLists());
+	@DataProvider(name="getRegisterWithNameAndTypeData")
+	public Object[][] getRegisterWithNameAndTypeDataAs2dArray() throws JSONException, Exception {
+		return TestNGUtils.convertListOfListsTo2dArray(getRegisterWithNameAndTypeDataAsListOfLists());
 	}
-	protected List<List<Object>> getRegisterWithNameAndType_TestDataAsListOfLists() throws JSONException, Exception {
+	protected List<List<Object>> getRegisterWithNameAndTypeDataAsListOfLists() throws JSONException, Exception {
 		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
 		String username=sm_clientUsername;
 		String password=sm_clientPassword;
@@ -933,6 +933,11 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 			JSONObject jsonConsumerType = (JSONObject) jsonConsumerTypes.get(i);
 			String consumerType = jsonConsumerType.getString("label");
 			registerableConsumerTypes.add(consumerType);
+		}
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.20.1-1"/*TODO change to "1.20.2-1"*/)) {	// post commit e0c34a729e9e347ab1e0f4f5fa656c8b20205fdf RFE Bug 1461003: Deprecate --type option on register command
+			// TODO I think the version check above should trigger on a server version commit not sub-man
+			// Allowing a RHUI type to register is now acceptable, but not advertised
+			if (!registerableConsumerTypes.contains(ConsumerType.RHUI.toString())) registerableConsumerTypes.add(ConsumerType.RHUI.toString());
 		}
 		
 		// iterate across all ConsumerType values and append rows to the dataProvider
