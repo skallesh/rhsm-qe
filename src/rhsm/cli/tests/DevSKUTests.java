@@ -113,7 +113,7 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, logMarker);
 		
 		// register with auto subscribe and force (to unregister anyone that is already registered)
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, true, null, null, null, null, null);
+		SSHCommandResult registerResult = clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, true, null, null, null, null, null);
 		
 		// get the tail of the marked rhsm.log file
 		String logTail = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, logMarker, null).trim();
@@ -135,12 +135,23 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 		//	  File "/usr/lib64/python2.6/site-packages/rhsm/connection.py", line 621, in validateResponse
 		//	    raise RestlibException(response['status'], error_msg, response.get('headers'))
 		//	RestlibException: Development units may only be used on hosted servers and with orgs that have active subscriptions.
-		String expectedError = "RestlibException: Development units may only be used on hosted servers and with orgs that have active subscriptions.";
+		String expectedStdError = "Development units may only be used on hosted servers and with orgs that have active subscriptions.";
+		String expectedLogError = "RestlibException: "+expectedStdError;
 		if (servertasks.statusStandalone) {
-			Assert.assertTrue(logTail.contains(expectedError), "When attempting to autosubscribe a consumer with a dev_sku fact against a candlepin.standalone=true server, an rhsm.log error is thrown stating '"+expectedError+"'.");
+			Assert.assertEquals(registerResult.getStderr().trim(), expectedStdError, "When attempting to autosubscribe a consumer with a dev_sku fact against a candlepin.standalone=true server, stderr reports '"+expectedStdError+"'.");
+			// TEMPORARY WORKAROUND
+			boolean invokeWorkaroundWhileBugIsOpen = true;
+			String bugId="1493299"; // Bug 1493299 - exception handling for a negative dev_sku test is no longer being logged to rhsm.log
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
+			if (invokeWorkaroundWhileBugIsOpen) {
+				throw new SkipException("Detected that candlepin status standalone=true.  DevSku support is only applicable when /etc/candlepin/candlepin candlepin.standalone=false  (typical of a hosted candlepin server), but skipped assertion that an rhsm.log error is thrown while bug '"+bugId+"' is open.");
+			} else
+			// END OF WORKAROUND
+			Assert.assertTrue(logTail.contains(expectedLogError), "When attempting to autosubscribe a consumer with a dev_sku fact against a candlepin.standalone=true server, an rhsm.log error is thrown stating '"+expectedLogError+"'.");
 			throw new SkipException("Detected that candlepin status standalone=true.  DevSku support is only applicable when /etc/candlepin/candlepin candlepin.standalone=false  (typical of a hosted candlepin server).");
 		} else {
-			Assert.assertTrue(!logTail.contains(expectedError), "When attempting to autosubscribe a consumer with a dev_sku fact against a candlepin.standalone=false server, an rhsm.log error is NOT thrown stating '"+expectedError+"'.");	
+			Assert.assertTrue(!registerResult.getStderr().trim().contains(expectedStdError), "When attempting to autosubscribe a consumer with a dev_sku fact against a candlepin.standalone=false server, stderr does NOT report '"+expectedStdError+"'.");	
+			Assert.assertTrue(!logTail.contains(expectedLogError), "When attempting to autosubscribe a consumer with a dev_sku fact against a candlepin.standalone=false server, an rhsm.log error is NOT thrown stating '"+expectedLogError+"'.");	
 		}
 		
 		// assert that unrecognized dev_skus are handled gracefully and no entitlements were attached
@@ -161,8 +172,18 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 		//	    raise RestlibException(response['status'], error_msg, response.get('headers'))
 		//	RestlibException: SKU product not available to this development unit: 'dev-mkt-product'
 		if (jsonDevSkuProduct.has("displayMessage")) {
-			expectedError = "RestlibException: SKU product not available to this development unit: '"+devSku+"'";
-			Assert.assertTrue(logTail.contains(expectedError), "When attempting to autosubscribe a consumer with an unknown dev_sku fact against a candlepin.standalone=false server, an rhsm.log error is thrown stating '"+expectedError+"'.");
+			expectedStdError = "SKU product not available to this development unit: '"+devSku+"'";
+			expectedLogError = "RestlibException: "+expectedStdError;
+			Assert.assertEquals(registerResult.getStderr().trim(), expectedStdError, "When attempting to autosubscribe a consumer with an unknown dev_sku fact against a candlepin.standalone=false server, stderr reports '"+expectedStdError+"'.");
+			// TEMPORARY WORKAROUND
+			boolean invokeWorkaroundWhileBugIsOpen = true;
+			String bugId="1493299"; // Bug 1493299 - exception handling for a negative dev_sku test is no longer being logged to rhsm.log
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
+			if (invokeWorkaroundWhileBugIsOpen) {
+				throw new SkipException("Detected that dev_sku '"+devSku+"' was unknown, but skipped verification that a graceful error was logged to rhsm.log while bug '"+bugId+"' is open.");
+			} else
+			// END OF WORKAROUND
+			Assert.assertTrue(logTail.contains(expectedLogError), "When attempting to autosubscribe a consumer with an unknown dev_sku fact against a candlepin.standalone=false server, an rhsm.log error is thrown stating '"+expectedLogError+"'.");
 			throw new SkipException("Detected that dev_sku '"+devSku+"' was unknown.  Verified that a graceful error was logged to rhsm.log.");
 		}
 		
