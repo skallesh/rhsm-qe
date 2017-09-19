@@ -3706,6 +3706,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@AfterGroups(groups = { "setup" }, value = {"VerifyCorruptIdentityCert"})
+	@AfterClass(groups = "setup")
 	protected void restoreOriginalTests() throws Exception {
 	
 	client.runCommandAndWait("mv -f /etc/pki/consumer/cert.pem.save /etc/pki/consumer/cert.pem");
