@@ -3691,16 +3691,26 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				+ " > /tmp/stdout; mv /tmp/stdout -f " + clienttasks.consumerCertFile(), 0);
 		SSHCommandResult result = clienttasks.list_(null, true, null, null, null, null, null, null, null, null, null,
 				null, null, null);
-		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.8-1")) { // post
+		 if(clienttasks.isPackageVersion("subscription-manager", ">=", "1.20.1-1")) {	// commit 79f86e4c043ee751677131ed4e3cf00affd13087
+			Assert.assertEquals(result.getStdout().trim(), "Consumer identity either does not exist or is corrupted. Try register --help", "stdout");
+			    
+		 }else if(clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.8-1")) { // post
 			// commit
 			// df95529a5edd0be456b3528b74344be283c4d258
 			Assert.assertEquals(result.getStderr().trim(), clienttasks.msg_ConsumerNotRegistered, "stderr");
-		} else {
+		 }else{
 			Assert.assertEquals(result.getStdout().trim(), clienttasks.msg_ConsumerNotRegistered, "stdout");
-		}
-		client.runCommandAndWait("mv -f /etc/pki/consumer/cert.pem.save /etc/pki/consumer/cert.pem");
+		 }
 
 	}
+	
+	
+	@AfterGroups(groups = { "setup" }, value = {"VerifyCorruptIdentityCert"})
+	protected void restoreOriginalTests() throws Exception {
+	
+	client.runCommandAndWait("mv -f /etc/pki/consumer/cert.pem.save /etc/pki/consumer/cert.pem");
+	}
+
 
 	/**
 	 * @author skallesh
