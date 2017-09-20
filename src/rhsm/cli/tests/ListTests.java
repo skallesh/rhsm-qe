@@ -684,7 +684,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
 	@Test(	description="subscription-manager: subcription manager list future subscription pools for a system",
-			groups={"Tier2Tests","blockedByBug-672562"},
+			groups={"Tier2Tests","blockedByBug-672562","blockedByBug-1493711"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
 	public void testListAllAvailableWithFutureOnDate() throws Exception {
@@ -821,7 +821,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
 	@Test(	description="subscription-manager: subcription manager list all with --match-installed option",
-			groups={"Tier2Tests","blockedByBug-654501"},
+			groups={"Tier2Tests","blockedByBug-654501","blockedByBug-1493711"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
 	public void testListAllAvailableWithMatchInstalled() throws JSONException, Exception {
@@ -868,7 +868,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
 	@Test(	description="subscription-manager: subcription manager list all with --match-installed option",
-			groups={"Tier2Tests","blockedByBug-654501","blockedByBug-1022622"/*rhel7*/,"blockedByBug-1114717"/*rhel6*/},
+			groups={"Tier2Tests","blockedByBug-654501","blockedByBug-1022622"/*rhel7*/,"blockedByBug-1114717"/*rhel6*/,"blockedByBug-1493711"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
 	public void testListAvailableWithNoOverlap() throws JSONException, Exception {
@@ -1019,7 +1019,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier1")
 	@Test(	description="subscription-manager: subcription manager list --available with exact --matches on Subscription Name, Provided Product Name, Contract Number, SKU, Service Level, Provided Product ID.  Note: exact match means no wildcards and is case insensitive.",
-			groups={"Tier1Tests","blockedByBug-1146125"},
+			groups={"Tier1Tests","blockedByBug-1146125","blockedByBug-1493711"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
 	public void testListAvailableWithExactMatches() throws JSONException, Exception {
@@ -1180,7 +1180,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier1")
 	@Test(	description="subscription-manager: subcription manager list --available with wildcard --matches on Subscription Name, Provided Product Name, Contract Number, SKU, Service Level, Provided Product ID.  Note: wildcard match means * matches zero or more char and ? matches one char and is case insensitive.",
-			groups={"Tier1Tests","blockedByBug-1146125","blockedByBug-1301696"},
+			groups={"Tier1Tests","blockedByBug-1146125","blockedByBug-1301696","blockedByBug-1493711"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
 	public void testListAvailableWithWildcardMatches() throws JSONException, Exception {
@@ -2024,7 +2024,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
 	@Test(	description="subscription-manager: subcription manager list --available with --matches='nothing'",
-			groups={"Tier2Tests","blockedByBug-1146125"},
+			groups={"Tier2Tests","blockedByBug-1146125","blockedByBug-1493711"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
 	public void testListAvailableWithMatchesNothing() throws JSONException, Exception {
@@ -2056,7 +2056,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
 	@Test(	description="subscription-manager: subcription manager list --consumed with --matches='nothing'",
-			groups={"Tier2Tests","blockedByBug-1146125"},
+			groups={"Tier2Tests","blockedByBug-1146125","blockedByBug-1493711"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
 	public void testListConsumedWithMatchesNothing() throws JSONException, Exception {
@@ -2118,7 +2118,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
 	@Test(	description="subscription-manager: subcription manager list --available --consumed --installed with --matches='nothing'",
-			groups={"Tier2Tests","blockedByBug-1146125"},
+			groups={"Tier2Tests","blockedByBug-1146125","blockedByBug-1493711"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
 	public void testListAvailableConsumedInstalledWithMatchesNothing() throws JSONException, Exception {
