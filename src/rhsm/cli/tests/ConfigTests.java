@@ -109,7 +109,7 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 	@Test(	description="subscription-manager: use config module to list all of the currently set rhsm.conf parameter values",
 			groups={"Tier2Tests"},
 			dataProvider="getConfigSectionNameData",
-			dependsOnMethods={"testConfigSetSectionNameValue"}, alwaysRun=true,
+			//dependsOnMethods={"testConfigSetSectionNameValue"}, alwaysRun=true,
 			priority=20,
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -176,7 +176,7 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 		Pattern pattern = Pattern.compile(regexForSectionNameExpectedValue, Pattern.MULTILINE);
 		Matcher matcher = pattern.matcher(sshCommandResultFromConfigGetSectionNameValue_Test.getStdout());
 
-		Assert.assertTrue(matcher.find(),"After executing subscription-manager config to set '"+section+"."+name+"', calling config --list includes the value just set.");
+		Assert.assertTrue(matcher.find(),"After executing subscription-manager config to set '"+section+"."+name+"="+expectedValue+"' in the prior testConfigSetSectionNameValue, calling config --list includes the value just set.");
 	}
 	protected SSHCommandResult sshCommandResultFromConfigGetSectionNameValue_Test = null;
 
@@ -357,6 +357,7 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 			tags="Tier2")
 	@Test(	description="subscription-manager: attempt to use config module to remove a non-existing-section parameter from /etc/rhsm/rhsm.conf (negative test)",
 			groups={"Tier2Tests","blockedByBug-747024","blockedByBug-746264"},
+			priority=100,
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void testConfigRemoveNonExistingSectionName() {
@@ -387,6 +388,7 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 			tags="Tier2")
 	@Test(	description="subscription-manager: attempt to use config module to remove a non-existing-parameter from a valid section in /etc/rhsm/rhsm.conf (negative test)",
 			groups={"Tier2Tests","blockedByBug-736784"},
+			priority=100,
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void testConfigRemoveNonExistingParameterFromValidSection() {
@@ -422,6 +424,7 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 	@Test(	description="subscription-manager: attempt to use config module to list together with set and/or remove option(s) for config parameters",
 			groups={"Tier2Tests","blockedByBug-730020"},
 			dataProvider="getNegativeConfigListSetRemoveData",
+			priority=100,
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void testConfigAttemptListWithSetAndRemoveOptions(Object blockedByBug, Boolean list, Boolean remove, Boolean set, String[] section_name_value) {
@@ -448,6 +451,7 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 			tags="Tier2")
 	@Test(	description="subscription-manager: config (without any options) should default to --list",
 			groups={"Tier2Tests","blockedByBug-811594"},
+			priority=100,
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void testConfigDefaultsToConfigList() {
@@ -474,6 +478,7 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 			tags="Tier2")
 	@Test(	description="subscription-manager: config for repo_ca_cert should interpolate the default value for ca_cert_dir",
 			groups={"Tier2Tests","blockedByBug-997194","ConfigForRepoCaCertUsesDefaultCaCertDir_Test"},
+			priority=100,
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void testConfigForRepoCaCertUsesDefaultCaCertDir() {
@@ -511,6 +516,7 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 			tags="Tier2")
 	@Test(	description="verify the default configurations for server hostname:port/prefix after running config removal",
 			groups={"Tier2Tests","blockedByBug-988085","blockedByBug-1223860","blockedByBug-1297337","VerifyDefaultsForServerHostnamePortPrefixAfterConfigRemoval_Test"},
+			priority=100,
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void testDefaultsForServerHostnamePortPrefixAfterConfigRemoval() {
@@ -564,6 +570,7 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 			tags="Tier2")
 	@Test(	description="verify that only the expected configration parameters are present in the rhsm config file; useful for detecting newly added configurations by the subscription-manager developers",
 			groups={"Tier2Tests"},
+			priority=100,
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void testExpectedConfigParameters() {
@@ -638,6 +645,7 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 			tags="Tier2")
 	@Test(	description="verify the [server]server_timeout can be configured and function properly when the server does not respond within the timeout seconds",
 			groups={"Tier2Tests","blockedByBug-1346417","VerifyConfigServerTimeouts_Test"},
+			priority=100,
 			enabled=true)
 	// TODO: Verifies: https://polarion.engineering.redhat.com/polarion/#/project/RHEL6/workitem?id=RHEL6-28580
 	//@ImplementsNitrateTest(caseId=)
@@ -809,6 +817,7 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 			tags="Tier3")
 	@Test(	description="Verify that the yum plugins for /etc/yum/pluginconf.d/product-id.conf and /etc/yum/pluginconf.d/subscription-manager.conf are automatically enabled by any subscription-manager command when rhsm.auto_enable_yum_plugins is configured on.",
 			groups={"Tier3Tests","blockedByBug-1319927","testSubscriptionManagerShouldAutomaticallyEnableYumPluginsWhenAutoEnableIsOn"},
+			priority=100,
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void testSubscriptionManagerShouldAutomaticallyEnableYumPluginsWhenAutoEnableIsOn() throws IOException {
@@ -891,6 +900,7 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 			tags="Tier3")
 	@Test(	description="Verify that the yum plugins for /etc/yum/pluginconf.d/product-id.conf and /etc/yum/pluginconf.d/subscription-manager.conf are NOT automatically enabled by any subscription-manager command when rhsm.auto_enable_yum_plugins is configured off.",
 			groups={"Tier3Tests","blockedByBug-1319927","testSubscriptionManagerShouldNotAutomaticallyEnableYumPluginsWhenAutoEnableIsOff"},
+			priority=100,
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void testSubscriptionManagerShouldNotAutomaticallyEnableYumPluginsWhenAutoEnableIsOff() throws IOException {
