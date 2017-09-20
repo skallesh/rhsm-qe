@@ -107,7 +107,7 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags="Tier2")
 	@Test(	description="subscription-manager: use config module to list all of the currently set rhsm.conf parameter values",
-			groups={"debugTest","Tier2Tests"},
+			groups={"Tier2Tests"},
 			dataProvider="getConfigSectionNameData",
 			dependsOnMethods={"testConfigSetSectionNameValue"}, alwaysRun=true,
 			priority=20,
