@@ -2798,7 +2798,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 			if (!(l.get(1).equals(sm_clientUsername) && l.get(2).equals(sm_clientPassword) && l.get(3)==sm_clientOrg)) continue;
 //			if (l.get(12)==nErrMsg) l.set(0,new BlockedByBzBug("838264"));
 //DELETEME	if (l.get(12)/*stdout*/==nErrMsg || l.get(13)/*stderr*/==nErrMsg) l.set(0,new BlockedByBzBug(new String[]{"838264","1345962"}));
-			if (l.get(12)/*stdout*/==nErrMsg || l.get(13)/*stderr*/==nErrMsg || l.get(13)/*stderr*/==pErr407Msg || l.get(13)/*stderr*/==pErrConMsg) l.set(0,new BlockedByBzBug(new String[]{"838264","1345962"}));
+			if (l.get(12)/*stdout*/==nErrMsg || l.get(13)/*stderr*/==nErrMsg || l.get(13)/*stderr*/==pErr407Msg) l.set(0,new BlockedByBzBug(new String[]{"838264","1345962"}));
 			
 			ll.add(l);
 		}
