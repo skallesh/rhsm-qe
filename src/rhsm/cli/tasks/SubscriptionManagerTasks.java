@@ -101,6 +101,7 @@ public class SubscriptionManagerTasks {
 	public String msg_RemoteErrorCheckConnection	= null;
 	public String msg_ProxyConnectionFailed			= null;
 	public String msg_ProxyConnectionFailed407		= null;
+	public String msg_ProxyErrorUnableToConnect             = null;
 	public String msg_ClockSkewDetection			= null;
 	public String msg_ContainerMode					= null;
 	public String msg_InteroperabilityWarning		= null;
@@ -1074,6 +1075,7 @@ if (false) {
 		msg_RemoteErrorCheckConnection	= "Remote server error. Please check the connection details, or see /var/log/rhsm/rhsm.log for more information.";
 		msg_ProxyConnectionFailed		= "Proxy connection failed, please check your settings.";
 		msg_ProxyConnectionFailed407	= "Proxy connection failed: 407";
+		msg_ProxyErrorUnableToConnect   = "Proxy error, unable to connect to proxy server.";
 
 		// TEMPORARY WORKAROUND FOR BUG 1335537 - typo in "Proxy connnection failed, please check your settings."
 		String bugId = "1335537"; boolean invokeWorkaroundWhileBugIsOpen = true;

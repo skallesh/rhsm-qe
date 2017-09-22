@@ -453,7 +453,12 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		if (!CandlepinTasks.isPoolProductConsumableByConsumerType(sm_clientUsername, sm_clientPassword, sm_serverUrl, poolId, ConsumerType.system)) {
 			String expectedStderr = String.format("Consumers of this type are not allowed to subscribe to the pool with id '%s'.", poolId);
 			if (!clienttasks.workaroundForBug876764(sm_serverType)) expectedStderr = String.format("Units of this type are not allowed to attach the pool with ID '%s'.", poolId);
-			if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">", "0.9.30-1")) {
+			if(SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">", "2.2.0-1")){
+			    String expectedStderrPriorTo2_2_0_1 =  "No activation key was applied successfully.";
+				log.info("Prior to candlepin version 2.2.0-1 , the expected feedback was: "+expectedStderrPriorTo2_2_0_1);
+				expectedStderr =  "None of the subscriptions on the activation key were available for attaching."; // commit 08bcd6829cb4c89f737b8b77cbfdb85600a47933   
+			}
+			else if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">", "0.9.30-1")) {
 				log.info("Prior to candlepin version 0.9.30-1, the expected feedback was: "+expectedStderr);
 				expectedStderr =  "No activation key was applied successfully.";	// Follows: candlepin-0.9.30-1	// https://github.com/candlepin/candlepin/commit/bcb4b8fd8ee009e86fc9a1a20b25f19b3dbe6b2a
 			}
@@ -800,7 +805,12 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		String expectedStderr = String.format("No entitlements are available from the pool with id '%s'.", jsonCurrentPool.getString("id"));
 		expectedStderr = String.format("No subscriptions are available from the pool with id '%s'.", jsonCurrentPool.getString("id"));	// string changed by bug 876758
 		if (!clienttasks.workaroundForBug876764(sm_serverType)) expectedStderr = String.format("No subscriptions are available from the pool with ID '%s'.", jsonCurrentPool.getString("id"));
-		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">", "0.9.30-1")) {
+		if(SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">", "2.2.0-1")){
+		    String expectedStderrPriorTo2_2_0_1 =  "No activation key was applied successfully.";
+			log.info("Prior to candlepin version 2.2.0-1 , the expected feedback was: "+expectedStderrPriorTo2_2_0_1);
+			expectedStderr =  "None of the subscriptions on the activation key were available for attaching."; // commit 08bcd6829cb4c89f737b8b77cbfdb85600a47933
+
+		}else if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">", "0.9.30-1")) {
 			log.info("Prior to candlepin version 0.9.30-1, the expected feedback was: "+expectedStderr);
 			expectedStderr =  "No activation key was applied successfully.";	// Follows: candlepin-0.9.30-1	// https://github.com/candlepin/candlepin/commit/bcb4b8fd8ee009e86fc9a1a20b25f19b3dbe6b2a
 		}
@@ -1590,7 +1600,12 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) expectedExitCode = new Integer(70);	// EX_SOFTWARE	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
 		Assert.assertEquals(result.getExitCode(), expectedExitCode, "The exit code from the register command indicates we could not register with activation key '"+keyName+"'.");
 		String expectedStderr = String.format("Service level '%s' is not available to units of organization admin.",expiredServiceLevel);
-		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">", "0.9.30-1")) {
+		if(SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">", "2.2.0-1")){
+		    String expectedStderrPriorTo2_2_0_1 =  "No activation key was applied successfully.";
+			log.info("Prior to candlepin version 2.2.0-1 , the expected feedback was: "+expectedStderrPriorTo2_2_0_1);
+			expectedStderr =  "None of the subscriptions on the activation key were available for attaching."; // commit 08bcd6829cb4c89f737b8b77cbfdb85600a47933
+
+		}else if(SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">", "0.9.30-1")) {
 			log.info("Prior to candlepin version 0.9.30-1, the expected feedback was: "+expectedStderr);
 			expectedStderr =  "No activation key was applied successfully.";	// Follows: candlepin-0.9.30-1	// https://github.com/candlepin/candlepin/commit/bcb4b8fd8ee009e86fc9a1a20b25f19b3dbe6b2a
 		}
