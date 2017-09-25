@@ -3944,6 +3944,12 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			expected += "   " + serialTwo + "\n";
 			expected += "2 local certificates have been deleted.";
 		}
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.2.0-1")) {
+		    	expected =  "2 local certificates have been deleted."+ "\n";
+			expected += "The entitlement server successfully removed these serial numbers:"+ "\n";
+			expected += "   " + serialOne + "\n";
+			expected += "   " + serialTwo;
+		}
 		Assert.assertEquals(result.trim(), expected);
 	}
 
