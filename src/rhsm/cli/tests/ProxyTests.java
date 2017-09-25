@@ -3051,6 +3051,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 			List<String> bugIds = blockedByBzBug==null?new ArrayList<String>():new ArrayList<String>(Arrays.asList(blockedByBzBug.getBugIds()));
 			bugIds.add("1345962");	// Bug 1345962 - unbound method endheaders() must be called with HTTPSConnection instance as first argument (got RhsmProxyHTTPSConnection instance instead)
 			if (l.get(13)==pErr407Msg)  bugIds.add("1419197");	// Bug 1419197 - subscription-manager status with bad proxy configurations should be using cache
+			if (l.get(13)==pErrConMsg)  bugIds.add("1495286");	// Bug 1495286 - subscription-manager status module is no longer using cache when rhsm.conf is configured with a bad proxy
 			blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 			
 			// when subscription-manager can not reach the server the actual status cannot be known; no cache will be used
