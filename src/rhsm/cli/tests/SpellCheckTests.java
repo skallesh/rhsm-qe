@@ -1252,6 +1252,7 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 		modifiedManPage = modifiedManPage.replaceAll("cloudforms.example.com", "cloud.forms.example.com");
 		modifiedManPage = modifiedManPage.replaceAll("newsubscription.example.com", "new.subscription.example.com");
 		modifiedManPage = modifiedManPage.replaceAll("sam.example.com", "subscription-asset-management.example.com");
+		modifiedManPage = modifiedManPage.replaceAll("sat6.example.com", "satellite-6.example.com");
 		modifiedManPage = modifiedManPage.replaceAll("--name=server1", "--name=server");
 		modifiedManPage = modifiedManPage.replaceAll(".git.28.5cd97a5.fc20", "");
 		modifiedManPage = modifiedManPage.replaceAll(".git.1.2f38ded.fc20", "");
