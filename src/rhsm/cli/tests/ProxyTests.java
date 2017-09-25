@@ -3124,15 +3124,11 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 			if (l.get(13)==pErr407Msg)  bugIds.add("1419197");	// Bug 1419197 - subscription-manager status with bad proxy configurations should be using cache
 			blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 			
-			// despite a Network Error, the version module should succeed with an Unknown server version
-			if (l.get(12)/*stdout*/==nErrMsg || l.get(13)/*stderr*/==nErrMsg) {
-				ll.add(Arrays.asList(new Object[]{	blockedByBzBug,	l.get(1),	l.get(2),	l.get(3),	l.get(4),	l.get(5),	l.get(6),	l.get(7),	l.get(8),	l.get(9),	l.get(10),	Integer.valueOf(0)/*exitCode*/,"subscription management server: Unknown"/*stdout*/,""/*stderr*/,	l.get(14),	l.get(15),	l.get(16)}));
-				continue;
-			}			
-			
-			// despite a Proxy 407 Error, the version module should succeed with an Unknown server version
-			// Note Bug 1419197 applies to both the status and version module
-			if (l.get(13)==pErr407Msg)  {
+			// despite a Network or Proxy error, the version module should succeed with an Unknown server version
+			if (l.get(12)/*stdout*/==nErrMsg ||
+				l.get(13)/*stderr*/==nErrMsg ||
+				l.get(13)/*stderr*/==pErr407Msg ||
+				l.get(13)/*stderr*/==pErrConMsg) {
 				ll.add(Arrays.asList(new Object[]{	blockedByBzBug,	l.get(1),	l.get(2),	l.get(3),	l.get(4),	l.get(5),	l.get(6),	l.get(7),	l.get(8),	l.get(9),	l.get(10),	Integer.valueOf(0)/*exitCode*/,"subscription management server: Unknown"/*stdout*/,""/*stderr*/,	l.get(14),	l.get(15),	l.get(16)}));
 				continue;
 			}
