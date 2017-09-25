@@ -3692,9 +3692,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		SSHCommandResult result = clienttasks.list_(null, true, null, null, null, null, null, null, null, null, null,
 				null, null, null);
 		 if(clienttasks.isPackageVersion("subscription-manager", ">=", "1.20.1-1")) {	// commit 79f86e4c043ee751677131ed4e3cf00affd13087
-			Assert.assertEquals(result.getStdout().trim(), "Consumer identity either does not exist or is corrupted. Try register --help", "stdout");
+			Assert.assertEquals(result.getStderr().trim(), "Consumer identity either does not exist or is corrupted. Try register --help", "stdout");
 			    
-		 }else if(clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.8-1")) { // post
+		 }else if((clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.8-1"))) { // post
 			// commit
 			// df95529a5edd0be456b3528b74344be283c4d258
 			Assert.assertEquals(result.getStderr().trim(), clienttasks.msg_ConsumerNotRegistered, "stderr");
@@ -3943,6 +3943,12 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			expected += "   " + serialOne + "\n";
 			expected += "   " + serialTwo + "\n";
 			expected += "2 local certificates have been deleted.";
+		}
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.2.0-1")) {
+		    	expected =  "2 local certificates have been deleted."+ "\n";
+			expected += "The entitlement server successfully removed these serial numbers:"+ "\n";
+			expected += "   " + serialOne + "\n";
+			expected += "   " + serialTwo;
 		}
 		Assert.assertEquals(result.trim(), expected);
 	}
@@ -5540,7 +5546,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.LOW, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier3")
 	@Test(	description= "subscription-manager: verify subscribe with --file=invalid file from stdin is handled properly",
-			groups= {"Tier3Tests","blockedByBug-1350402"},
+			groups= {"Tier3Tests","blockedByBug-1350402","testSubscribeWithInvalidFileFromStdin"},
 			enabled= true)
 	//@ImplementsNitrateTest(caseId=)
 	public void testSubscribeWithInvalidFileFromStdin() throws JSONException, Exception {
@@ -5568,9 +5574,15 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		SSHCommandResult stdinFileSubscribeCommandResult = client.runCommandAndWait(poolOnlyListCommand +"|" +stdinFileSubscribeCommand, (long) (3/*min*/*60*1000/*timeout*/));
 
 		//Assert the additional error messages no longer appear
-		Assert.assertEquals(stdinFileSubscribeCommandResult.getStderr(),"Error: The file \"/tmp/invalid.txt\" does not exist or cannot be read.");
-		Assert.assertEquals(stdinFileSubscribeCommandResult.getExitCode(),Integer.valueOf(64), "Exit Code comparison between the expected result of subscribing using a list of poolids from stdin along with a invalid file.");
+		Assert.assertEquals(stdinFileSubscribeCommandResult.getStderr().trim(),"Error: The file \"/tmp/invalid.txt\" does not exist or cannot be read.");
+		 if(clienttasks.isPackageVersion("subscription-manager", ">=", "1.20.1-1")) {	// commit 79f86e4c043ee751677131ed4e3cf00affd13087
+		     Assert.assertEquals(stdinFileSubscribeCommandResult.getExitCode(),Integer.valueOf(65), "Exit Code comparison between the expected result of subscribing using a list of poolids from stdin along with a invalid file.");
+		 }else {
+		     Assert.assertEquals(stdinFileSubscribeCommandResult.getExitCode(),Integer.valueOf(64), "Exit Code comparison between the expected result of subscribing using a list of poolids from stdin along with a invalid file.");
+ 		 }
 	}
+	
+	
 	@BeforeGroups(groups = "setup", value = {}, enabled = true)
 	public void unsubscribeBeforeGroup() {
 		clienttasks.unsubscribe(true, (BigInteger) null, null, null, null, null, null);
