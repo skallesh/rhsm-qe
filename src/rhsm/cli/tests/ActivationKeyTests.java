@@ -770,7 +770,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier3")
 	@Test(	description="create an activation key with a valid quantity and attempt to register with it when not enough entitlements remain",
-			groups={"Tier3Tests","testRegisterWithActivationKeyContainingPoolForWhichNotEnoughQuantityRemains"},
+			groups={"Tier3Tests"},
 			dataProvider="getAllMultiEntitlementJSONPoolsData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
