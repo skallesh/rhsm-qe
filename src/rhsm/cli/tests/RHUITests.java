@@ -83,7 +83,7 @@ public class RHUITests extends SubscriptionManagerCLITestScript {
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier1")
 	@Test(	description="register to the stage/prod environment as a RHUI consumer type",
-			groups={"Tier1Tests"},
+			groups={"Tier1Tests", "blockedByBug-1496550"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void testRegisterRHUIConsumer() {
