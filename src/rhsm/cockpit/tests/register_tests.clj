@@ -545,6 +545,17 @@
             (By/cssSelector "div.subscription-status-ct label")
             "Status: System isn't registered"))))))
 
+(defn ^{Test {:groups ["register"
+                       "cockpit"
+                       "tier3"]
+              :dataProvider "client-with-webdriver-and-locale"
+              :dependsOnMethods ["service_is_running"]}
+        TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL7-99656"]}}
+  unregister_for_each_locale
+  [ts driver run-command locale language]
+  (unregister ts driver run-command locale language))
+
 (defn run-command
   "Runs a given command on the client using SSHCommandRunner()."
   [runner command]
