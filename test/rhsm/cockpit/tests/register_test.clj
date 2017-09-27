@@ -11,8 +11,7 @@
 (use-fixtures :once (fn [f]
                       (tests/startup nil)
                       (f)
-                      (tests/cleanup nil)
-                      ))
+                      (tests/cleanup nil)))
 
 (deftest package_is_installed-test
   (let [[[run-command]] (tests/provide_run_command nil)]
@@ -61,3 +60,8 @@
   (let [[driver run-command locale lang]
         (first (tests/webdriver_with_locale nil))]
     (tests/register_with_wrong_login nil driver run-command locale lang)))
+
+(deftest unregister-test
+  (let [[driver run-command locale lang]
+        (first (tests/webdriver_with_locale nil))]
+    (tests/unregister nil driver run-command locale lang)))
