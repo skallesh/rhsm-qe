@@ -14,6 +14,7 @@
            [rhsm.base SubscriptionManagerCLITestScript]
            [com.github.redhatqe.polarize.metadata TestDefinition]
            [com.github.redhatqe.polarize.metadata DefTypes$Project]
+           [rhsm.base SubscriptionManagerCLITestScript]
            org.testng.SkipException
            ;; org.openqa.selenium.chrome.ChromeDriver
            org.openqa.selenium.remote.DesiredCapabilities
@@ -26,6 +27,7 @@
 
 (defn ^{BeforeSuite {:groups ["setup"]}}
   startup [_]
+  (.. (new SubscriptionManagerCLITestScript) setupBeforeSuite)
   (c/init)
   (reset! driver  (new FirefoxDriver (let [cap (DesiredCapabilities/firefox)]
                                        (.setCapability cap "acceptSslCerts" true)
@@ -498,6 +500,61 @@
   register_with_wrong_login_for_each_locale
   [ts driver run-command locale language]
   (register_with_wrong_login ts driver run-command locale language))
+
+(defn ^{Test {:groups ["register"
+                       "cockpit"
+                       "tier1"]
+              :dataProvider "client-with-webdriver-and-english-locale"
+              :dependsOnMethods ["service_is_running"]}
+        TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL7-99656"]}}
+  unregister
+  [ts driver run-command locale language]
+  (log/info "unregister test")
+  (let [output (->> (format "subscription-manager register --username=%s --password=%s --org=%s"
+                            (@c/config :username) (@c/config :password) (@c/config :owner-key))
+                    run-command
+                    :stdout) ]
+    (is (.contains output "Registering to:")))
+  (.. driver (switchTo) (defaultContent))
+  (tasks/set-user-language driver language)
+  (.. (WebDriverWait. driver 60)
+      (until
+       (ExpectedConditions/visibilityOfElementLocated
+        (By/xpath "//a[@href='/subscriptions']")))
+      click)
+  (let [subscriptions-iframe (.. (WebDriverWait. driver 60)
+                                 (until
+                                  (ExpectedConditions/visibilityOfElementLocated
+                                   (By/xpath "//iframe[@name='cockpit1:localhost/subscriptions' and @data-loaded=1]"))))]
+    (.. driver (switchTo) (defaultContent))
+    (.. driver (switchTo) (frame subscriptions-iframe))
+    (let [subscriptions-action (.. (WebDriverWait. driver 60)
+                                   (until
+                                    (ExpectedConditions/visibilityOfElementLocated
+                                     (By/cssSelector "div.subscription-status-ct button"))))]
+      (is (= (.. subscriptions-action getText) "Unregister"))
+      (.. subscriptions-action click)
+      (.. (WebDriverWait. driver 60)
+          (until
+           (ExpectedConditions/invisibilityOfElementLocated
+            (By/xpath "//div[@class='modal-content']/div/button[contains(@class,'btn-primary')]"))))
+      (.. (WebDriverWait. driver 60)
+          (until
+           (ExpectedConditions/textToBePresentInElementLocated
+            (By/cssSelector "div.subscription-status-ct label")
+            "Status: System isn't registered"))))))
+
+(defn ^{Test {:groups ["register"
+                       "cockpit"
+                       "tier3"]
+              :dataProvider "client-with-webdriver-and-locale"
+              :dependsOnMethods ["service_is_running"]}
+        TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL7-99656"]}}
+  unregister_for_each_locale
+  [ts driver run-command locale language]
+  (unregister ts driver run-command locale language))
 
 (defn run-command
   "Runs a given command on the client using SSHCommandRunner()."
