@@ -129,6 +129,9 @@ public class MultiClientTests extends SubscriptionManagerCLITestScript{
 	public void testMultiClientRegisterAsPerson() throws JSONException, Exception {
 		// test prerequisites
 		if (client2tasks==null) throw new SkipException("This multi-client test requires a second client.");
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.20.1-1"/*TODO change to "1.20.2-1"*/)) {	// post commit e0c34a729e9e347ab1e0f4f5fa656c8b20205fdf RFE Bug 1461003: Deprecate --type option on register command
+			throw new SkipException("This test is no longer applicable using subscription-manager version >= 1.20.2-1 due to RFE Bug 1461003 which deprecated the ability to register with --type.  Attempting to register with --type=person will yield an Error: The --type option has been deprecated and may not be used.");
+		}
 		unregisterMultiClientRegisterAsPersonAfterGroups();
 		
 		// decide what username and password to test with
