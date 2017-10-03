@@ -76,6 +76,13 @@ import rhsm.data.YumRepo;
  *   Bug 1184940 - Subscription Manager Container Plugin Requires Config / CA Cert Update
  *   Bug 1186386 - Docker unable to pull from CDN due to CA failure
  *   Bug 1328729 - Docker client doesn't link entitlements certs
+ *   
+ * Docker Repo:
+ *   rpm -q docker --changelog <== to search for bugzilla references
+ *   git clone git://pkgs.devel.redhat.com/rpms/docker
+ *   git remote show origin
+ *   git checkout extras-rhel-7.4
+ *   gitk <== to find commits
  */
 @Test(groups={"DockerTests"})
 public class DockerTests extends SubscriptionManagerCLITestScript {
@@ -456,6 +463,16 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 			//	2
 			String path = etcDockerCertsDir+registryHostname;
 			SSHCommandResult result = client.runCommandAndWait("ls "+path+"/*.crt");
+			if (registryHostname.equals("registry.access.redhat.com") && clienttasks.isPackageVersion("docker", ">=", "1.12.6-42")) {	// docker.spec commit 19a2d8d032bdeae68d0dc9dfe6cda40f0a50e89a from git clone git://pkgs.devel.redhat.com/rpms/docker git checkout extras-rhel-7.4	// /etc/docker/certs.d/registry.access.redhat.com/redhat-ca.crt symlink added, #1428142 https://bugzilla.redhat.com/show_bug.cgi?id=1428142#c11
+				//	[root@jsefler-rhel7server ~]# ls /etc/docker/certs.d/registry.access.redhat.com/*.crt
+				//	/etc/docker/certs.d/registry.access.redhat.com/redhat-ca.crt
+				//	[root@jsefler-rhel7server ~]# rpm -q --whatprovides /etc/docker/certs.d/registry.access.redhat.com/redhat-ca.crt
+				//	docker-1.12.6-61.git85d7426.el7.x86_64
+				String expectedCaCertFileForRegistryAccessRedhatCom = path+"/"+"redhat-ca.crt";
+				Assert.assertEquals(result.getExitCode(), Integer.valueOf(0), "Due to change from Bug 1428142, the exitCode above should indicate that there IS a ca.crt files installed in '"+path+"' (provided by the docker package). ");
+				Assert.assertEquals(result.getStdout().trim(), expectedCaCertFileForRegistryAccessRedhatCom, "Due to change from Bug 1428142, the stdout above should indicate that there IS a ca.crt file installed in '"+path+"' (provided by the docker package). ");
+				Assert.assertTrue(client.runCommandAndWait("rpm --whatprovides -q "+expectedCaCertFileForRegistryAccessRedhatCom).getStdout().trim().startsWith("docker"), "Due to change from Bug 1428142, '"+expectedCaCertFileForRegistryAccessRedhatCom+"' is provided by the docker package. ");
+			} else
 			Assert.assertEquals(result.getExitCode(), Integer.valueOf(2), "The exitCode above should indicate that there are no ca.crt files installed in '"+path+"'. ");
 		} else {
 			//	[root@jsefler-os7 ~]# ls /etc/docker/certs.d/cdn.redhat.com/*.crt
