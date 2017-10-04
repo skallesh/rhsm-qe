@@ -1112,7 +1112,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
 	@Test(	description="Attempt to unsubscribe from an valid pool id and serial",
-			groups={"Tier2Tests","blockedByBug-1198178"},
+			groups={"Tier2Tests","blockedByBug-1198178","blockedByBug-1498664"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void testUnsubscribeFromAValidPoolIdAndSerial() {
@@ -1139,14 +1139,19 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 
 		Integer expectedExitCode = new Integer(1);	// NOTE: why exitCode 1?  probably because we are attempting two removes on one entitlement cert causing the second remove to fail after the first succeeds.
 		String expectedStdout = "";
-		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.17.8-1")) { // commit f64d5a6b012f49bb4d6d6653441d4de9bf373660  1319678: Alter the return message for removing entitlements at server
-			expectedStdout += String.format("The entitlement server successfully removed these pools:\n   %s\n", productSubscription.poolId);
-			expectedStdout += String.format("The entitlement server successfully removed these serial numbers:\n   %s\n", productSubscription.serialNumber);
-		} else {
-			expectedStdout += String.format("Pools successfully removed at the server:\n   %s\n", productSubscription.poolId);
-			expectedStdout += String.format("Serial numbers successfully removed at the server:\n   %s\n", productSubscription.serialNumber);
-		}
+		expectedStdout  = String.format("Pools successfully removed at the server:\n   %s", productSubscription.poolId); expectedStdout += "\n";
+		expectedStdout += String.format("Serial numbers successfully removed at the server:\n   %s", productSubscription.serialNumber); expectedStdout += "\n";
 		expectedStdout += String.format("%d local certificate has been deleted.",1);
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.17.8-1")) { // commit f64d5a6b012f49bb4d6d6653441d4de9bf373660  1319678: Alter the return message for removing entitlements at server
+			expectedStdout  = String.format("The entitlement server successfully removed these pools:\n   %s", productSubscription.poolId); expectedStdout += "\n";
+			expectedStdout += String.format("The entitlement server successfully removed these serial numbers:\n   %s", productSubscription.serialNumber); expectedStdout += "\n";
+			expectedStdout += String.format("%d local certificate has been deleted.",1);
+		}
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.20.1-1"/*TODO change to "1.20.2-1"*/)) { // commit d88d09c7060a17fba34a138313e7efd21cc79d02  D-Bus service for removing entitlements (all/ID/serial num.)
+			expectedStdout  = String.format("%d local certificate has been deleted.",1); expectedStdout += "\n";
+			expectedStdout += String.format("The entitlement server successfully removed these pools:\n   %s", productSubscription.poolId); expectedStdout += "\n";
+			expectedStdout += String.format("The entitlement server successfully removed these serial numbers:\n   %s", productSubscription.serialNumber);
+		}
 		Assert.assertEquals(result.getExitCode(), expectedExitCode, "Asserting exit code when attempting to unsubscribe from a valid pool id and serial (corresponding to the same entitlement).");
 		Assert.assertEquals(result.getStdout().trim(), expectedStdout.trim(),"Stdout");
 		Assert.assertEquals(result.getStderr().trim(), "","Stderr");
@@ -1170,15 +1175,19 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		//	2 local certificates have been deleted.
 		
 		expectedExitCode = new Integer(0);
-		expectedStdout = "";
-		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.17.8-1")) { // commit f64d5a6b012f49bb4d6d6653441d4de9bf373660  1319678: Alter the return message for removing entitlements at server
-			expectedStdout += String.format("The entitlement server successfully removed these pools:\n   %s\n", productSubscription2.poolId);
-			expectedStdout += String.format("The entitlement server successfully removed these serial numbers:\n   %s\n   %s\n", productSubscription2.serialNumber, productSubscription1.serialNumber);
-		} else {
-			expectedStdout += String.format("Pools successfully removed at the server:\n   %s\n", productSubscription2.poolId);
-			expectedStdout += String.format("Serial numbers successfully removed at the server:\n   %s\n   %s\n", productSubscription2.serialNumber, productSubscription1.serialNumber);
-		}
+		expectedStdout  = String.format("Pools successfully removed at the server:\n   %s", productSubscription2.poolId); expectedStdout += "\n";
+		expectedStdout += String.format("Serial numbers successfully removed at the server:\n   %s\n   %s", productSubscription2.serialNumber, productSubscription1.serialNumber); expectedStdout += "\n";
 		expectedStdout += String.format("%d local certificates have been deleted.",2);
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.17.8-1")) { // commit f64d5a6b012f49bb4d6d6653441d4de9bf373660  1319678: Alter the return message for removing entitlements at server
+			expectedStdout  = String.format("The entitlement server successfully removed these pools:\n   %s", productSubscription2.poolId); expectedStdout += "\n";
+			expectedStdout += String.format("The entitlement server successfully removed these serial numbers:\n   %s\n   %s", productSubscription2.serialNumber, productSubscription1.serialNumber); expectedStdout += "\n";
+			expectedStdout += String.format("%d local certificates have been deleted.",2);
+		}
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.20.1-1"/*TODO change to "1.20.2-1"*/)) { // commit d88d09c7060a17fba34a138313e7efd21cc79d02  D-Bus service for removing entitlements (all/ID/serial num.)
+			expectedStdout  = String.format("%d local certificates have been deleted.",2); expectedStdout += "\n";
+			expectedStdout += String.format("The entitlement server successfully removed these pools:\n   %s", productSubscription2.poolId); expectedStdout += "\n";
+			expectedStdout += String.format("The entitlement server successfully removed these serial numbers:\n   %s\n   %s", productSubscription2.serialNumber, productSubscription1.serialNumber); expectedStdout += "\n";
+		}
 		Assert.assertEquals(result.getExitCode(), expectedExitCode, "Asserting exit code when attempting to unsubscribe from from a valid pool id and serial (corresponding to two different entitlements).");
 		Assert.assertEquals(result.getStdout().trim(), expectedStdout.trim(),"Stdout");
 		Assert.assertEquals(result.getStderr().trim(), "","Stderr");
