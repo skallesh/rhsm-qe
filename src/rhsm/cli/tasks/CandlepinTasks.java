@@ -4265,26 +4265,17 @@ schema generation failed
 
 		return httpResponse;
 	}
-
 	
+	@Deprecated
 	/**
-	 * @param authenticator
-	 * @param password
-	 * @param url
-	 * @param ownerKey
-	 * @param quantity
-	 * @param startingMinutesFromNow
-	 * @param endingMinutesFromNow
-	 * @param contractNumber
-	 * @param accountNumber
-	 * @param productId
-	 * @param providedProductIds
-	 * @param brandingMaps
-	 * @return JSONObject representing the pool corresponding to the subscription
-	 * @throws JSONException
-	 * @throws Exception
+	 * has been replaced by createSubscriptionPoolUsingRESTfulAPI(...) for candlepin >= 2.1.1-1
 	 */
 	public static JSONObject createSubscriptionAndRefreshPoolsUsingRESTfulAPI(String authenticator, String password, String url, String ownerKey, Integer quantity, int startingMinutesFromNow, int endingMinutesFromNow, Integer contractNumber, Integer accountNumber, String productId, List<String> providedProductIds, List<Map<String,String>> brandingMaps) throws JSONException, Exception  {
+		JSONObject jsonStatus = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(/*authenticator*/null,/*password*/null,url,"/status"));
+		if (SubscriptionManagerTasks.isVersion(jsonStatus.getString("version"), ">=", "2.1.1-1")) {	// candlepin commit 9c448315c843c0a20167236af7591359d895613a Discontinue ambiguous subscription resources in sharing world
+			// forward to newer task
+			return createSubscriptionPoolUsingRESTfulAPI(authenticator, password, url, ownerKey, quantity, startingMinutesFromNow, endingMinutesFromNow, contractNumber, accountNumber, productId, providedProductIds, brandingMaps);
+		}
 		
 		// set the start and end dates
 		Calendar endCalendar = new GregorianCalendar();
@@ -4330,6 +4321,53 @@ schema generation failed
 		log.info("The newly created subscription pool with id '"+poolId+"' will start '"+startingMinutesFromNow+"' minutes from now.");
 		log.info("The newly created subscription pool with id '"+poolId+"' will expire '"+endingMinutesFromNow+"' minutes from now.");
 		return jsonPool; // return first jsonPool found generated for the newly created subscription
+		
+	}
+	
+	/**
+	 * create a subscription pool under owner with for productId - this method replaces createSubscriptionAndRefreshPoolsUsingRESTfulAPI(...) for candlepin version >= 2.1.1-1
+	 * @param authenticator
+	 * @param password
+	 * @param url
+	 * @param ownerKey
+	 * @param quantity
+	 * @param startingMinutesFromNow
+	 * @param endingMinutesFromNow
+	 * @param contractNumber
+	 * @param accountNumber
+	 * @param productId
+	 * @param providedProductIds
+	 * @param brandingMaps
+	 * @return the master pool created
+	 * @throws JSONException
+	 * @throws Exception
+	 */
+	public static JSONObject createSubscriptionPoolUsingRESTfulAPI(String authenticator, String password, String url, String ownerKey, Integer quantity, int startingMinutesFromNow, int endingMinutesFromNow, Integer contractNumber, Integer accountNumber, String productId, List<String> providedProductIds, List<Map<String,String>> brandingMaps) throws JSONException, Exception  {
+		
+		// set the start and end dates
+		Calendar endCalendar = new GregorianCalendar();
+		endCalendar.add(Calendar.MINUTE, endingMinutesFromNow);
+		Date endDate = endCalendar.getTime();
+		Calendar startCalendar = new GregorianCalendar();
+		startCalendar.add(Calendar.MINUTE, startingMinutesFromNow);
+		Date startDate = startCalendar.getTime();
+		
+		// create the subscription pool
+		String requestBody = CandlepinTasks.createSubscriptionRequestBody(quantity, startDate, endDate, productId, contractNumber, accountNumber, providedProductIds, brandingMaps).toString();
+		// curl --stderr /dev/null --insecure --user admin:admin --request POST --data '{"product":{"id":"0-sockets"},"quantity":20,"providedProducts":[{"id":"90001"}],"endDate":"Tue, 15 Mar 2016 12:14:20 -0400","contractNumber":1021091971,"accountNumber":1131685727,"startDate":"Sun, 28 Feb 2016 11:14:20 -0500"}' --header 'accept: application/json' --header 'content-type: application/json' https://jsefler-f22-candlepin.usersys.redhat.com:8443/candlepin/owners/admin/subscriptions
+		JSONObject jsonPool = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(authenticator,password,url,"/owners/" + ownerKey + "/pools",requestBody));
+		
+		if (jsonPool.has("displayMessage")) {
+			//log.warning("Pool creation appears to have failed: "+jsonSubscription("displayMessage"));
+			Assert.fail("Pool creation appears to have failed: "+jsonPool.getString("displayMessage"));
+		}
+		
+// NOT NECESSARY
+//		// refresh the pools
+//		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(authenticator,password,url,ownerKey);
+//		jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(authenticator,password,url,jobDetail,"FINISHED", 5*1000, 1);
+		
+		return jsonPool; // return the newly created subscription pool
 		
 	}
 	
@@ -4383,8 +4421,17 @@ schema generation failed
 		
 	}
 	
+	@Deprecated
+	/**
+	 * has been replaced by deleteSubscriptionPoolsUsingRESTfulAPI(...) for candlepin >= 2.1.1-1
+	 */
 	public static void deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(String authenticator, String password, String url, String ownerKey, String productId) throws JSONException, Exception  {
 		JSONObject jsonStatus = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(/*authenticator*/null,/*password*/null,url,"/status"));
+		if (SubscriptionManagerTasks.isVersion(jsonStatus.getString("version"), ">=", "2.1.1-1")) {	// candlepin commit 9c448315c843c0a20167236af7591359d895613a Discontinue ambiguous subscription resources in sharing world
+			// forward to newer task
+			deleteSubscriptionPoolsUsingRESTfulAPI(authenticator, password, url, ownerKey, productId);
+			return;
+		}
 		
 		// delete all the subscriptions whose product/id matches productId
 		// process all of the subscriptions belonging to ownerKey
@@ -4411,6 +4458,44 @@ schema generation failed
 		// refresh the pools
 		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(authenticator,password,url,ownerKey);
 		jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(authenticator,password,url,jobDetail,"FINISHED", 5*1000, 1);		
+	}
+	
+	/**
+	 * delete all the pools under owner with a matching productId - this method replaces deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(...) for candlepin version >= 2.1.1-1
+	 * @param authenticator
+	 * @param password
+	 * @param url
+	 * @param ownerKey
+	 * @param productId
+	 * @throws JSONException
+	 * @throws Exception
+	 */
+	public static void deleteSubscriptionPoolsUsingRESTfulAPI(String authenticator, String password, String url, String ownerKey, String productId) throws JSONException, Exception  {
+		//JSONObject jsonStatus = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(/*authenticator*/null,/*password*/null,url,"/status"));
+		
+		// delete all the pools for "productId"
+		// process all of the pools belonging to ownerKey
+		JSONArray jsonPools = new JSONArray(getResourceUsingRESTfulAPI(authenticator,password,url,"/owners/"+ownerKey+"/pools"));	
+		for (int i = 0; i < jsonPools.length(); i++) {
+			JSONObject jsonPool = (JSONObject) jsonPools.get(i);
+			String id = jsonPool.getString("id");
+			//String productId = jsonPool.getString("productId");
+			String productName = jsonPool.getString("productName");
+			if (jsonPool.getString("productId").equals(productId)) {
+				// delete the pool
+				String response = deleteResourceUsingRESTfulAPI(authenticator, password, url, "/pools/"+id);
+				
+				// assert the deleted pool cannot be GET
+				String expectedDisplayMessage = String.format("Pool with id %s could not be found.",id);	// candlepin commit 9964eff403a9b3846ca696ee9ff6646c84bf07b8
+				jsonPool = new JSONObject(getResourceUsingRESTfulAPI(authenticator, password, url, "/pools/"+id));
+				Assert.assertTrue(jsonPool.has("displayMessage"),"Attempt to GET newly deleted pool '"+id+"' fails with a displayMessage.");
+				Assert.assertEquals(jsonPool.getString("displayMessage"),expectedDisplayMessage);
+			}
+		}
+// NOT NECESSARY		
+//		// refresh the pools
+//		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(authenticator,password,url,ownerKey);
+//		jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(authenticator,password,url,jobDetail,"FINISHED", 5*1000, 1);		
 	}
 	
 	public static JSONObject createActivationKeyUsingRESTfulAPI(String authenticator, String password, String url, String org, String name, List<String> poolIds, Integer quantity) throws JSONException, Exception  {
