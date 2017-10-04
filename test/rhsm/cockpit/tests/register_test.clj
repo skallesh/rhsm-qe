@@ -9,6 +9,7 @@
 
 ;; ;; initialization of our testware
 (use-fixtures :once (fn [f]
+                      ;;(TestScript.)
                       (tests/startup nil)
                       (f)
                       (tests/cleanup nil)))
@@ -26,15 +27,15 @@
         (first (tests/webdriver_with_locale nil))]
     (tests/register nil driver run-command locale lang)))
 
-(deftest register-02-test
-  (let [[driver run-command locale lang]
-        (second (tests/webdriver_with_locale nil))]
-    (tests/register nil driver run-command locale lang)))
+;; (deftest register-02-test
+;;   (let [[driver run-command locale lang]
+;;         (second (tests/webdriver_with_locale nil))]
+;;     (tests/register nil driver run-command locale lang)))
 
-(deftest register-03-test
-  (let [[driver run-command locale lang]
-        (nth (tests/webdriver_with_locale nil) 2)]
-    (tests/register nil driver run-command locale lang)))
+;; (deftest register-03-test
+;;   (let [[driver run-command locale lang]
+;;         (nth (tests/webdriver_with_locale nil) 2)]
+;;     (tests/register nil driver run-command locale lang)))
 
 (deftest register-with-no-field-set-01-test
   (let [[driver run-command locale lang]

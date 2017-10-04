@@ -4,14 +4,14 @@
   (:require [clojure.string :as string]
             [clojure.tools.logging :as log]
             [rhsm.gui.tasks.test-config :as c]
-            [rhsm.cockpit.tasks :as tasks]
-            )
+            [rhsm.cockpit.tasks :as tasks])
   (:import [org.testng.annotations
             BeforeSuite
             AfterSuite
             DataProvider
             Test]
            [rhsm.base SubscriptionManagerCLITestScript]
+           [com.redhat.qe.auto.testng TestScript]
            [com.github.redhatqe.polarize.metadata TestDefinition]
            [com.github.redhatqe.polarize.metadata DefTypes$Project]
            [rhsm.base SubscriptionManagerCLITestScript]
@@ -21,7 +21,8 @@
            org.openqa.selenium.By
            org.openqa.selenium.firefox.FirefoxDriver
            org.openqa.selenium.support.ui.ExpectedConditions
-           org.openqa.selenium.support.ui.WebDriverWait))
+           org.openqa.selenium.support.ui.WebDriverWait
+           java.util.logging.Level))
 
 (def driver (atom nil))
 
@@ -29,10 +30,11 @@
   startup [_]
   (.. (new SubscriptionManagerCLITestScript) setupBeforeSuite)
   (c/init)
-  (reset! driver  (new FirefoxDriver (let [cap (DesiredCapabilities/firefox)]
-                                       (.setCapability cap "acceptSslCerts" true)
-                                       (.setCapability cap "marionette" false)
-                                       cap))))
+  (.runCommandAndWait @c/clientcmd "yum -y install cockpit-system")
+  (reset! driver  (doto (new FirefoxDriver (doto (DesiredCapabilities/firefox)
+                                             (.setCapability "acceptSslCerts" true)
+                                             (.setCapability "marionette" false)))
+                    (.setLogLevel Level/INFO))))
 
 (defn ^{AfterSuite {:groups ["cleanup"]}}
   cleanup [_]
@@ -40,7 +42,9 @@
 
 (defn ^{Test {:groups ["register"
                        "cockpit"
-                       "tier1"]
+                       "tier1"
+                       "tier2"
+                       "tier3"]
               :dataProvider "run-command"}
         TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]}}
   package_is_installed
@@ -57,7 +61,9 @@
 
 (defn ^{Test {:groups ["register"
                        "cockpit"
-                       "tier1"]
+                       "tier1"
+                       "tier2"
+                       "tier3"]
               :dataProvider "run-command"
               :dependsOnMethods ["package_is_installed"]}
         TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]}}
@@ -159,6 +165,12 @@
            (ExpectedConditions/visibilityOfElementLocated
             (By/id "subscription-register-password")))
           (sendKeys (into-array [(@c/config :password)])))
+      (when-not (clojure.string/blank? (@c/config :owner-key))
+        (.. (WebDriverWait. driver 60)
+            (until
+             (ExpectedConditions/visibilityOfElementLocated
+              (By/id "subscription-register-org")))
+            (sendKeys (into-array [(@c/config :owner-key)]))))
       (.. (WebDriverWait. driver 60)
           (until
            (ExpectedConditions/visibilityOfElementLocated
@@ -169,12 +181,11 @@
           (until
            (ExpectedConditions/invisibilityOfElementLocated
             (By/xpath "//div[@class='modal-content']/div/button[contains(@class,'btn-primary')]"))))
-      (let [subscriptions-status (.. (WebDriverWait. driver 60)
-                                     (until
-                                      (ExpectedConditions/visibilityOfElementLocated
-                                       (By/cssSelector "div.subscription-status-ct label")))
-                                     (getText))]
-        (is (= "Status: Invalid" subscriptions-status))))))
+      (.. (WebDriverWait. driver 60)
+          (until
+           (ExpectedConditions/textToBePresentInElementLocated
+            (By/cssSelector "div.subscription-status-ct label")
+            "Status: System isn't registered"))))))
 
 (defn ^{Test {:groups ["register"
                        "cockpit"
@@ -221,6 +232,11 @@
           (until
            (ExpectedConditions/visibilityOfElementLocated
             (By/id "subscription-register-username")))
+          clear)
+      (.. (WebDriverWait. driver 60)
+          (until
+           (ExpectedConditions/visibilityOfElementLocated
+            (By/id "subscription-register-password")))
           clear)
       (.. (WebDriverWait. driver 60)
           (until
@@ -290,6 +306,12 @@
            (ExpectedConditions/visibilityOfElementLocated
             (By/id "subscription-register-password")))
           clear)
+      (when-not (clojure.string/blank? (@c/config :owner-key))
+        (.. (WebDriverWait. driver 60)
+            (until
+             (ExpectedConditions/visibilityOfElementLocated
+              (By/id "subscription-register-org")))
+            (sendKeys (into-array [(@c/config :owner-key)]))))
       (.. (WebDriverWait. driver 60)
           (until
            (ExpectedConditions/visibilityOfElementLocated
@@ -298,9 +320,13 @@
       (let [error-element (.. (WebDriverWait. driver 60)
                               (until
                                (ExpectedConditions/visibilityOfElementLocated
-                                (By/xpath "//div[@class='modal-footer']/div[contains(@class,'dialog-error')]"))))]
-        (is (= "Error: Login/password or activation key required to register."
-               (.. error-element getText)))))))
+                                (By/xpath "//div[@class='modal-footer']/div[contains(@class,'dialog-error')]"))))
+            error-text-01 "Error: Login/password or activation key required to register."
+            error-text-02 (format "Error: Invalid credentials (Registering to: %s:%s%s)"
+                                  (@c/config :server-hostname)
+                                  (@c/config :server-port)
+                                  (@c/config :server-prefix))]
+        (is (some #{(.. error-element getText)} [error-text-01 error-text-02]))))))
 
 (defn ^{Test {:groups ["register"
                        "cockpit"
@@ -353,6 +379,12 @@
            (ExpectedConditions/visibilityOfElementLocated
             (By/id "subscription-register-password")))
           (sendKeys (into-array ["some really wrong password"])))
+      (when-not (clojure.string/blank? (@c/config :owner-key))
+        (.. (WebDriverWait. driver 60)
+            (until
+             (ExpectedConditions/visibilityOfElementLocated
+              (By/id "subscription-register-org")))
+            (sendKeys (into-array [(@c/config :owner-key)]))))
       (.. (WebDriverWait. driver 60)
           (until
            (ExpectedConditions/visibilityOfElementLocated
@@ -361,9 +393,16 @@
       (let [error-element (.. (WebDriverWait. driver 60)
                               (until
                                (ExpectedConditions/visibilityOfElementLocated
-                                (By/xpath "//div[@class='modal-footer']/div[contains(@class,'dialog-error')]"))))]
-        (is (= "Error: Invalid username or password (To create a login, please visit https://www.redhat.com/wapps/ugc/register.html Registering to: subscription.rhsm.stage.redhat.com:443/subscription)"
-               (.. error-element getText)))))))
+                                (By/xpath "//div[@class='modal-footer']/div[contains(@class,'dialog-error')]"))))
+            error-text-01 (format "Error: Invalid username or password (To create a login, please visit https://www.redhat.com/wapps/ugc/register.html Registering to: %s:%s%s)"
+                                  (@c/config :server-hostname)
+                                  (@c/config :server-port)
+                                  (@c/config :server-prefix))
+            error-text-02 (format "Error: Invalid credentials (Registering to: %s:%s%s)"
+                                  (@c/config :server-hostname)
+                                  (@c/config :server-port)
+                                  (@c/config :server-prefix))]
+        (is (some #{(.. error-element getText)} [error-text-01 error-text-02]))))))
 
 (defn ^{Test {:groups ["register"
                        "cockpit"
@@ -486,9 +525,16 @@
       (let [error-element (.. (WebDriverWait. driver 60)
                               (until
                                (ExpectedConditions/visibilityOfElementLocated
-                                (By/xpath "//div[@class='modal-footer']/div[contains(@class,'dialog-error')]"))))]
-        (is (= "Error: Invalid username or password (To create a login, please visit https://www.redhat.com/wapps/ugc/register.html Registering to: subscription.rhsm.stage.redhat.com:443/subscription)"
-               (.. error-element getText)))))))
+                                (By/xpath "//div[@class='modal-footer']/div[contains(@class,'dialog-error')]"))))
+            error-text-01 (format "Error: Invalid username or password (To create a login, please visit https://www.redhat.com/wapps/ugc/register.html Registering to: %s:%s%s)"
+                                  (@c/config :server-hostname)
+                                  (@c/config :server-port)
+                                  (@c/config :server-prefix))
+            error-text-02 (format "Error: Invalid credentials (Registering to: %s:%s%s)"
+                                  (@c/config :server-hostname)
+                                  (@c/config :server-port)
+                                  (@c/config :server-prefix))]
+        (is (some #{(.. error-element getText)} [error-text-01 error-text-02]))))))
 
 (defn ^{Test {:groups ["register"
                        "cockpit"
@@ -511,10 +557,12 @@
   unregister
   [ts driver run-command locale language]
   (log/info "unregister test")
+  (run-command "subscription-manager unregister")
   (let [output (->> (format "subscription-manager register --username=%s --password=%s --org=%s"
                             (@c/config :username) (@c/config :password) (@c/config :owner-key))
                     run-command
                     :stdout) ]
+    (log/info (format "does a command output '%s' contain of 'Registering to:'?" output))
     (is (.contains output "Registering to:")))
   (.. driver (switchTo) (defaultContent))
   (tasks/set-user-language driver language)
