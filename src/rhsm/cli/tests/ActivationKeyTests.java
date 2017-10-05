@@ -449,7 +449,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		SSHCommandResult registerResult = clienttasks.register_(null, null, sm_clientOrg, null, null, null, null, null, null, null, jsonActivationKey.getString("name"), null, null, null, true, null, null, null, null, null);
 		
 		// handle the case when "Consumers of this type are not allowed to subscribe to the pool with id '"+poolId+"'."
-		ConsumerType type = null;
+		ConsumerType activationkeyPoolRequiresConsumerType = null;
 		if (!CandlepinTasks.isPoolProductConsumableByConsumerType(sm_clientUsername, sm_clientPassword, sm_serverUrl, poolId, ConsumerType.system)) {
 			String expectedStderr = String.format("Consumers of this type are not allowed to subscribe to the pool with id '%s'.", poolId);
 			if (!clienttasks.workaroundForBug876764(sm_serverType)) expectedStderr = String.format("Units of this type are not allowed to attach the pool with ID '%s'.", poolId);
@@ -468,13 +468,22 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 			Assert.assertNull(clienttasks.getCurrentConsumerCert(), "There should be no consumer cert on the system when register with activation key fails.");	// make sure there is no consumer cert - register with activation key should be 100% successful - if any one part fails, the whole operation fails
 
 			// now register with the same activation key using the needed ConsumerType
-			type = ConsumerType.valueOf(CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, poolId, "requires_consumer_type"));
-			registerResult = clienttasks.register_(null, null, sm_clientOrg, null, type, null, null, null, null, null, jsonActivationKey.getString("name"), null, null, null, false /*was already unregistered by force above*/, null, null, null, null, null);
+			activationkeyPoolRequiresConsumerType = ConsumerType.valueOf(CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, poolId, "requires_consumer_type"));
+			registerResult = clienttasks.register_(null, null, sm_clientOrg, null, activationkeyPoolRequiresConsumerType, null, null, null, null, null, jsonActivationKey.getString("name"), null, null, null, false /*was already unregistered by force above*/, null, null, null, null, null);
+			if (activationkeyPoolRequiresConsumerType != null) {
+				if (clienttasks.isPackageVersion("subscription-manager",">=","1.20.1-1"/*TODO change to "1.20.2-1"*/)) {	// post commit e0c34a729e9e347ab1e0f4f5fa656c8b20205fdf RFE Bug 1461003: Deprecate --type option on register command
+					expectedStderr = "Error: The --type option has been deprecated and may not be used.";
+					expectedExitCode = new Integer(64);
+					Assert.assertEquals(registerResult.getStderr().trim(), expectedStderr, "Registering a system consumer using an activationKey containing a pool that requires a non-system consumer type should fail.");
+					Assert.assertEquals(registerResult.getExitCode(), expectedExitCode, "The exitCode from registering a system consumer using an activationKey containing a pool that requires a non-system consumer type should fail.");
+					throw new SkipException("Due to RFE Bug 1461003, subscription-manager can no longer register with --type which prevents registration using an --activationkey for a pool that has attribute \"requires_consumer_type\":\""+activationkeyPoolRequiresConsumerType+"\"");
+				}
+			}
 		}
 		
 		// handle the case when "A consumer type of 'person' cannot be used with activation keys"
 		// resolution to: Bug 728721 - NullPointerException thrown when registering with an activation key bound to a pool that requires_consumer_type person
-		if (ConsumerType.person.equals(type)) {
+		if (ConsumerType.person.equals(activationkeyPoolRequiresConsumerType)) {
 			Assert.assertEquals(registerResult.getStderr().trim(), "A consumer type of 'person' cannot be used with activation keys", "Registering with an activationKey containing a pool that requires_consumer_type=person should fail.");
 			Assert.assertEquals(registerResult.getExitCode(), Integer.valueOf(255), "The exitCode from registering with an activationKey containing a pool that requires a person consumer should fail.");
 			Assert.assertNull(clienttasks.getCurrentConsumerCert(), "There should be no consumer cert on the system when register with activation key fails.");	// make sure there is no consumer cert - register with activation key should be 100% successful - if any one part fails, the whole operation fails
@@ -494,15 +503,6 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 			if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.2.0-1")) {	// candlepin commit 08bcd6829cb4c89f737b8b77cbfdb85600a47933   bug 1440924: Adjust message when activation key registration fails
 				log.info("Prior to candlepin version 2.2.0-1 , the expected feedback was: "+expectedStderr);
 				expectedStderr =  "None of the subscriptions on the activation key were available for attaching.";
-				if(clienttasks.isPackageVersion("subscription-manager", ">=", "1.20.1-1")) {//c5f5675add6ef42b0c7fc32f354d2bb6a4c2cb0b
-				    if(!(type.equals(null))) {
-					log.info("Prior to candlepin version 2.2.0-1 , the expected feedback was: "+expectedStderr);
-				    	expectedStderr =  "Error: The --type option has been deprecated and may not be used.";
-				    }else {
-					    log.info("Prior to candlepin version 2.2.0-1 , the expected feedback was: "+expectedStderr);
-					    expectedStderr =  "None of the subscriptions on the activation key were available for attaching.";
-				    }
-				}
 			}
 			Integer expectedExitCode = new Integer(255);
 			if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) expectedExitCode = new Integer(70);	// EX_SOFTWARE	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
@@ -800,6 +800,11 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		
 		// now consume an entitlement from the pool
 		String requires_consumer_type = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, jsonPool.getString("id"), "requires_consumer_type");
+		if (requires_consumer_type != null) {
+			if (clienttasks.isPackageVersion("subscription-manager",">=","1.20.1-1"/*TODO change to "1.20.2-1"*/)) {	// post commit e0c34a729e9e347ab1e0f4f5fa656c8b20205fdf RFE Bug 1461003: Deprecate --type option on register command
+				throw new SkipException("Due to RFE Bug 1461003, subscription-manager can no longer register with --type which prevents registration using an --activationkey for a pool that has attribute \"requires_consumer_type\":\""+requires_consumer_type+"\"");
+			}
+		}
 		ConsumerType consumerType = requires_consumer_type==null?null:ConsumerType.valueOf(requires_consumer_type);
 		String consumer1Id = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, consumerType, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null, null));
 		SubscriptionPool subscriptionPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", jsonPool.getString("id"), clienttasks.getCurrentlyAllAvailableSubscriptionPools());
@@ -833,14 +838,6 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.2.0-1")) {	// candlepin commit 08bcd6829cb4c89f737b8b77cbfdb85600a47933   bug 1440924: Adjust message when activation key registration fails
 			log.info("Prior to candlepin version 2.2.0-1 , the expected feedback was: "+expectedStderr);
 			expectedStderr =  "None of the subscriptions on the activation key were available for attaching.";
-			if(!(consumerType.equals(null))) {
-			    	log.info("Prior to candlepin version 2.2.0-1 , the expected feedback was: "+expectedStderr);
-			    	expectedStderr =  "Error: The --type option has been deprecated and may not be used.";
-			}else {
-			    	log.info("Prior to candlepin version 2.2.0-1 , the expected feedback was: "+expectedStderr);
-			    	expectedStderr =  "None of the subscriptions on the activation key were available for attaching.";
-			}	
-			
 		}
 		Integer expectedExitCode = new Integer(255);
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) expectedExitCode = new Integer(70);	// EX_SOFTWARE	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
@@ -1837,7 +1834,6 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 			}
 			systemConsumerIds.clear();
 		}
-//debugTest		clienttasks.restart_rhsmcertd(null,null,null);
 	}
 
 	@BeforeClass(groups="setup")
@@ -2040,9 +2036,9 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		for (List<Object> l : getAllJSONPoolsDataAsListOfLists()) {
 			JSONObject jsonPool = (JSONObject)l.get(0);
 			String keyName = String.format("ActivationKey%s_ForPool%s", System.currentTimeMillis(), jsonPool.getString("id"));
-		
+			
 			if (CandlepinTasks.isPoolProductMultiEntitlement(sm_clientUsername, sm_clientPassword, sm_serverUrl, jsonPool.getString("id"))) {
-
+				
 				// Object blockedByBug, JSONObject jsonPool)
 				ll.add(Arrays.asList(new Object[] {null, keyName, jsonPool}));
 				
