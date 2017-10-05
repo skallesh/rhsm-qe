@@ -494,6 +494,15 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 			if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.2.0-1")) {	// candlepin commit 08bcd6829cb4c89f737b8b77cbfdb85600a47933   bug 1440924: Adjust message when activation key registration fails
 				log.info("Prior to candlepin version 2.2.0-1 , the expected feedback was: "+expectedStderr);
 				expectedStderr =  "None of the subscriptions on the activation key were available for attaching.";
+				if(clienttasks.isPackageVersion("subscription-manager", ">=", "1.20.1-1")) {//c5f5675add6ef42b0c7fc32f354d2bb6a4c2cb0b
+				    if(!(type.equals(null))) {
+					log.info("Prior to candlepin version 2.2.0-1 , the expected feedback was: "+expectedStderr);
+				    	expectedStderr =  "Error: The --type option has been deprecated and may not be used.";
+				    }else {
+					    log.info("Prior to candlepin version 2.2.0-1 , the expected feedback was: "+expectedStderr);
+					    expectedStderr =  "None of the subscriptions on the activation key were available for attaching.";
+				    }
+				}
 			}
 			Integer expectedExitCode = new Integer(255);
 			if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) expectedExitCode = new Integer(70);	// EX_SOFTWARE	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
@@ -824,6 +833,14 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.2.0-1")) {	// candlepin commit 08bcd6829cb4c89f737b8b77cbfdb85600a47933   bug 1440924: Adjust message when activation key registration fails
 			log.info("Prior to candlepin version 2.2.0-1 , the expected feedback was: "+expectedStderr);
 			expectedStderr =  "None of the subscriptions on the activation key were available for attaching.";
+			if(!(consumerType.equals(null))) {
+			    	log.info("Prior to candlepin version 2.2.0-1 , the expected feedback was: "+expectedStderr);
+			    	expectedStderr =  "Error: The --type option has been deprecated and may not be used.";
+			}else {
+			    	log.info("Prior to candlepin version 2.2.0-1 , the expected feedback was: "+expectedStderr);
+			    	expectedStderr =  "None of the subscriptions on the activation key were available for attaching.";
+			}	
+			
 		}
 		Integer expectedExitCode = new Integer(255);
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) expectedExitCode = new Integer(70);	// EX_SOFTWARE	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688

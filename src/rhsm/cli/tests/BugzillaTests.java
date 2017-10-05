@@ -821,21 +821,32 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.unregister(null, null, null, null);
 		SSHCommandResult registerResult = clienttasks.register_(null, null, sm_clientOrg, null, null, null, null, null,
 				null, null, name, null, null, null, true, null, null, null, null, null);
+		List<ProductSubscription> consumedResult= clienttasks.getCurrentlyConsumedProductSubscriptions();
 		String expected_message = "Unable to attach pool with ID '" + expiringPoolId + "'.: Subscriptions for "
 				+ productId + " expired on: " + EndingDate + ".";
-		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">", "0.9.30-1"))
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.2.0-1")) {
+			Assert.assertContainsMatch(registerResult.getStdout().trim(),"The system has been registered with ID: [a-f,0-9,\\\\-]{36}", "stdout");
+			Assert.assertEquals(consumedResult.get(randomGenerator.nextInt(consumedResult.size())).statusDetails.toString(),"[Subscription is expired]","Attached subscription is in expired state");
+		}
+		if ((SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">", "0.9.30-1"))&&(SubscriptionManagerTasks.isVersion(servertasks.statusVersion,"<", "2.2.0-1"))) {
 			expected_message = "No activation key was applied successfully."; // Follows:
 		// candlepin-0.9.30-1
 		// //
 		// https://github.com/candlepin/candlepin/commit/bcb4b8fd8ee009e86fc9a1a20b25f19b3dbe6b2a
-		Assert.assertEquals(registerResult.getStderr().trim(), expected_message);
+			Assert.assertEquals(registerResult.getStderr().trim(), expected_message);
+
+		}
 		SSHCommandResult identityResult = clienttasks.identity_(null, null, null, null, null, null, null, null);
-		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.9-1")) { // post
+		if(clienttasks.isPackageVersion("subscription-manager", ">=", "1.20.1-1")) {	
+		    Assert.assertContainsMatch(identityResult.getStdout().trim(), "system identity: [a-f,0-9,\\\\\\\\-]{36}", "stdout");
+
+		}else if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.9-1")) { // post
 			// commit
 			// a695ef2d1da882c5f851fde90a24f957b70a63ad
-			Assert.assertEquals(identityResult.getStderr().trim(), clienttasks.msg_ConsumerNotRegistered, "stderr");
-		} else {
-			Assert.assertEquals(identityResult.getStdout().trim(), clienttasks.msg_ConsumerNotRegistered, "stdout");
+		    Assert.assertEquals(identityResult.getStderr().trim(), clienttasks.msg_ConsumerNotRegistered, "stderr");
+		}else {
+		    Assert.assertEquals(identityResult.getStdout().trim(), clienttasks.msg_ConsumerNotRegistered, "stdout");
+	    
 		}
 	}
 
@@ -1792,6 +1803,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			servertasks.updateConfFileParameter("log4j.logger.org.candlepin.policy.js.compliance", "INFO");
 			servertasks.updateConfFileParameter("log4j.logger.org.candlepin", "INFO");
 			servertasks.restartTomcat();
+			sleep(60);
 		}
 	}
 
@@ -4866,7 +4878,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,
 				consumerId);
 
-		String expiringPoolId = createTestPool(-60 * 24, 1,false);
+		int endingMinutesFromNow=1;
+		String expiringPoolId = createTestPool(-60 * 24, endingMinutesFromNow,false);
 		Calendar c1 = new GregorianCalendar();
 		clienttasks.subscribe(null, null, expiringPoolId, null, null, null, null, null, null, null, null, null, null);		
 		Calendar c2 = new GregorianCalendar();
@@ -4876,10 +4889,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		// some expensive test time
 		sleep(1 * 60 * 1000 - (c2.getTimeInMillis() - c1.getTimeInMillis()));
 		InstalledProduct productCertBeforeHealing = ProductCert.findFirstInstanceWithMatchingFieldFromList("status",
-				"Expired", clienttasks.getCurrentlyInstalledProducts());
-		
+				"Expired", clienttasks.getCurrentlyInstalledProducts());		
 		Assert.assertEquals(productCertBeforeHealing.status, "Expired");
-
 		clienttasks.run_rhsmcertd_worker(true);
 		InstalledProduct productCertAfterHealing = ProductCert.findFirstInstanceWithMatchingFieldFromList("productId",
 				productCertBeforeHealing.productId, clienttasks.getCurrentlyInstalledProducts());
