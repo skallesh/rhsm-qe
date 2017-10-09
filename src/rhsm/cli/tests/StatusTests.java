@@ -368,7 +368,7 @@ public class StatusTests extends SubscriptionManagerCLITestScript{
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier1")
 	@Test(	description="run subscription-manager status ondate (tomorrow and a future date after one of today's entitlements expire)",
-			groups={"Tier1Tests"},
+			groups={"Tier1Tests","blockedByBug-1500106"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
 	public void testStatusOnFutureDate() throws JSONException, Exception {
