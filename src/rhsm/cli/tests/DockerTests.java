@@ -463,7 +463,7 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 			//	2
 			String path = etcDockerCertsDir+registryHostname;
 			SSHCommandResult result = client.runCommandAndWait("ls "+path+"/*.crt");
-			if (registryHostname.equals("registry.access.redhat.com") && clienttasks.isPackageVersion("docker", ">=", "1.12.6-42")) {	// docker.spec commit 19a2d8d032bdeae68d0dc9dfe6cda40f0a50e89a from git clone git://pkgs.devel.redhat.com/rpms/docker git checkout extras-rhel-7.4	// /etc/docker/certs.d/registry.access.redhat.com/redhat-ca.crt symlink added, #1428142 https://bugzilla.redhat.com/show_bug.cgi?id=1428142#c11
+			if (registryHostname.equals("registry.access.redhat.com") && clienttasks.isPackageInstalled("docker") && clienttasks.isPackageVersion("docker", ">=", "1.12.6-42")) {	// docker.spec commit 19a2d8d032bdeae68d0dc9dfe6cda40f0a50e89a from git clone git://pkgs.devel.redhat.com/rpms/docker git checkout extras-rhel-7.4	// /etc/docker/certs.d/registry.access.redhat.com/redhat-ca.crt symlink added, #1428142 https://bugzilla.redhat.com/show_bug.cgi?id=1428142#c11
 				//	[root@jsefler-rhel7server ~]# ls /etc/docker/certs.d/registry.access.redhat.com/*.crt
 				//	/etc/docker/certs.d/registry.access.redhat.com/redhat-ca.crt
 				//	[root@jsefler-rhel7server ~]# rpm -q --whatprovides /etc/docker/certs.d/registry.access.redhat.com/redhat-ca.crt
