@@ -998,7 +998,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 			Assert.assertEquals(migrationProductCert.productNamespace.name, rhnDefinitionsProductCert.productNamespace.name, "Comparing productNamespace.name between '"+rhnDefinitionsProductCert.file+"' and '"+migrationProductCert.file+"'");
 			Assert.assertEquals(migrationProductCert.productNamespace.id, rhnDefinitionsProductCert.productNamespace.id, "Comparing productNamespace.id between '"+rhnDefinitionsProductCert.file+"' and '"+migrationProductCert.file+"'");
 			Assert.assertEquals(migrationProductCert.productNamespace.arch, rhnDefinitionsProductCert.productNamespace.arch, "Comparing productNamespace.arch between '"+rhnDefinitionsProductCert.file+"' and '"+migrationProductCert.file+"'");
-			Assert.assertEquals(migrationProductCert.productNamespace.providedTags, rhnDefinitionsProductCert.productNamespace.providedTags, "Comparing productNamespace.providedTags between '"+rhnDefinitionsProductCert.file+"' and '"+migrationProductCert.file+"'");
+			Assert.assertTrue(areTagsEquivalent(migrationProductCert.productNamespace.providedTags, rhnDefinitionsProductCert.productNamespace.providedTags), "The productNamespace.providedTags between '"+rhnDefinitionsProductCert.file+"' '"+rhnDefinitionsProductCert.productNamespace.providedTags+"' and '"+migrationProductCert.file+"' '"+migrationProductCert.productNamespace.providedTags+"' are equivalent.");
 			// TEMPORARY WORKAROUND
 			if (clienttasks.redhatReleaseXY.equals("7.4") && rhnDefinitionsProductCert.productNamespace.version.startsWith(clienttasks.redhatReleaseXY) && !migrationProductCert.productNamespace.version.equals(rhnDefinitionsProductCert.productNamespace.version)) {
 				boolean invokeWorkaroundWhileBugIsOpen = true;
@@ -1837,7 +1837,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 		rhnAvailableChildChannels.clear();
 		String serverUrl = sm_rhnHostname; if (!serverUrl.startsWith("http")) serverUrl="https://"+sm_rhnHostname;
 		String command = String.format("rhn-channels.py --username=%s --password=%s --serverurl=%s --basechannel=%s --no-custom --available", sm_rhnUsername, sm_rhnPassword, serverUrl, rhnBaseChannel);
-		//debugTesting if (true) command = "echo rhel-x86_64-server-5 && echo rhx-alfresco-enterprise-2.0-rhel-x86_64-server-5 && echo rhx-amanda-enterprise-backup-2.6-rhel-x86_64-server-5";
+///*debugTesting*/ if (true) command = "echo rhel-x86_64-server-5 && echo rhx-alfresco-enterprise-2.0-rhel-x86_64-server-5 && echo rhx-amanda-enterprise-backup-2.6-rhel-x86_64-server-5";
 		
 		SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(client, command, Integer.valueOf(0));
 		rhnChannels = new ArrayList<String>();
@@ -2244,6 +2244,9 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 		if (clienttasks==null) return ll;
 		
 			for (String rhnChannel : cdnProductCertsChannelMap.keySet()) {
+///*debugTesting*/ if (!rhnChannel.equals("rhel-x86_64-server-sap-7")) continue;
+///*debugTesting*/ if (!rhnChannel.equals("rhel-x86_64-server-rs-7")) continue;
+///*debugTesting*/ if (!rhnChannel.equals("rhel-x86_64-server-ha-7")) continue;
 				File productCertFile = cdnProductCertsChannelMap.get(rhnChannel);
 				String productId = getProductIdFromProductCertFilename(productCertFile.getPath());
 				
