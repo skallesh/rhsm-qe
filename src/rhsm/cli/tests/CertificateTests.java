@@ -539,7 +539,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
 	@Test(	description="assert the rct cat-cert tool does not traceback when run as non-root user.",
-			groups={"Tier2Tests","blockedByBug-1315901","VerifyConsumerCertsAreNotAccessibleByNonRootUserUsingRct_Test"},
+			groups={"debugTest","Tier2Tests","blockedByBug-1315901","VerifyConsumerCertsAreNotAccessibleByNonRootUserUsingRct_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void testConsumerCertsAreNotAccessibleByNonRootUserUsingRct() {

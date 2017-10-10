@@ -347,7 +347,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		SSHCommandResult result = clienttasks.unsubscribe(true, (BigInteger)null, null, null, null, null, null);
 		//String expectedStdoutRegex = String.format("This machine has been unsubscribed from %s subscriptions",pools.size());	// 10/18/2013 NOT SURE WHAT COMMIT/BUG CAUSED THIS CHANGE TO THE FOLLOWING...
 		String expectedStdoutRegex = String.format("%s subscriptions removed at the server."+"\n"+"%s local certificates have been deleted.",numberSubscriptionsConsumed,numberSubscriptionsConsumed);
-		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.20.1-1"/*TODO change to "1.20.2-1"*/)) expectedStdoutRegex = String.format("%s local certificates have been deleted."+"\n"+"%s subscriptions removed at the server.",numberSubscriptionsConsumed,numberSubscriptionsConsumed);	// commit d88d09c7060a17fba34a138313e7efd21cc79d02  D-Bus service for removing entitlements (all/ID/serial num.)
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.20.2-1")) expectedStdoutRegex = String.format("%s local certificates have been deleted."+"\n"+"%s subscriptions removed at the server.",numberSubscriptionsConsumed,numberSubscriptionsConsumed);	// commit d88d09c7060a17fba34a138313e7efd21cc79d02  D-Bus service for removing entitlements (all/ID/serial num.)
 		Assert.assertEquals(result.getStdout().trim(), expectedStdoutRegex,"Expected feedback when unsubscribing from all the currently consumed subscriptions.");
 		
 		// now attempt to unsubscribe from all again and assert 0 subscriptions are unsubscribed
@@ -867,7 +867,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		//Assert.assertEquals(result.getStdout().trim(),expectedStdout,"Stdout when attempting to unsubscribe from a valid pool id.");
 		String expectedStdoutRegex = String.format("Pools successfully removed at the server:\n   %s\nSerial numbers successfully removed at the server:\n   %s\n   %s\n%d local certificates have been deleted.", pool.poolId, "("+serials.get(0)+"|"+serials.get(1)+")", "("+serials.get(0)+"|"+serials.get(1)+")", serials.size());
 		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.17.8-1")) expectedStdoutRegex = String.format("The entitlement server successfully removed these pools:\n   %s\nThe entitlement server successfully removed these serial numbers:\n   %s\n   %s\n%d local certificates have been deleted.", pool.poolId, "("+serials.get(0)+"|"+serials.get(1)+")", "("+serials.get(0)+"|"+serials.get(1)+")", serials.size());	// commit f64d5a6b012f49bb4d6d6653441d4de9bf373660  1319678: Alter the return message for removing entitlements at server
-		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.20.1-1"/*TODO change to "1.20.2-1"*/)) expectedStdoutRegex = String.format("%d local certificates have been deleted.\nThe entitlement server successfully removed these pools:\n   %s\nThe entitlement server successfully removed these serial numbers:\n   %s\n   %s", serials.size(), pool.poolId, "("+serials.get(0)+"|"+serials.get(1)+")", "("+serials.get(0)+"|"+serials.get(1)+")");	// commit d88d09c7060a17fba34a138313e7efd21cc79d02  D-Bus service for removing entitlements (all/ID/serial num.)
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.20.2-1")) expectedStdoutRegex = String.format("%d local certificates have been deleted.\nThe entitlement server successfully removed these pools:\n   %s\nThe entitlement server successfully removed these serial numbers:\n   %s\n   %s", serials.size(), pool.poolId, "("+serials.get(0)+"|"+serials.get(1)+")", "("+serials.get(0)+"|"+serials.get(1)+")");	// commit d88d09c7060a17fba34a138313e7efd21cc79d02  D-Bus service for removing entitlements (all/ID/serial num.)
 		Assert.assertMatch(result.getStdout().trim(), expectedStdoutRegex);
 		Assert.assertEquals(result.getStderr(), "", "Stderr when attempting to unsubscribe from a valid pool id.");
 	}
@@ -1150,7 +1150,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 			expectedStdout += String.format("The entitlement server successfully removed these serial numbers:\n   %s", productSubscription.serialNumber); expectedStdout += "\n";
 			expectedStdout += String.format("%d local certificate has been deleted.",1);
 		}
-		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.20.1-1"/*TODO change to "1.20.2-1"*/)) { // commit d88d09c7060a17fba34a138313e7efd21cc79d02  D-Bus service for removing entitlements (all/ID/serial num.)
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.20.2-1")) { // commit d88d09c7060a17fba34a138313e7efd21cc79d02  D-Bus service for removing entitlements (all/ID/serial num.)
 			expectedStdout  = String.format("%d local certificate has been deleted.",1); expectedStdout += "\n";
 			expectedStdout += String.format("The entitlement server successfully removed these pools:\n   %s", productSubscription.poolId); expectedStdout += "\n";
 			expectedStdout += String.format("The entitlement server successfully removed these serial numbers:\n   %s", productSubscription.serialNumber);
@@ -1186,7 +1186,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 			expectedStdout += String.format("The entitlement server successfully removed these serial numbers:\n   %s\n   %s", productSubscription2.serialNumber, productSubscription1.serialNumber); expectedStdout += "\n";
 			expectedStdout += String.format("%d local certificates have been deleted.",2);
 		}
-		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.20.1-1"/*TODO change to "1.20.2-1"*/)) { // commit d88d09c7060a17fba34a138313e7efd21cc79d02  D-Bus service for removing entitlements (all/ID/serial num.)
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.20.2-1")) { // commit d88d09c7060a17fba34a138313e7efd21cc79d02  D-Bus service for removing entitlements (all/ID/serial num.)
 			expectedStdout  = String.format("%d local certificates have been deleted.",2); expectedStdout += "\n";
 			expectedStdout += String.format("The entitlement server successfully removed these pools:\n   %s", productSubscription2.poolId); expectedStdout += "\n";
 			expectedStdout += String.format("The entitlement server successfully removed these serial numbers:\n   %s\n   %s", productSubscription2.serialNumber, productSubscription1.serialNumber); expectedStdout += "\n";

@@ -471,7 +471,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 			activationkeyPoolRequiresConsumerType = ConsumerType.valueOf(CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, poolId, "requires_consumer_type"));
 			registerResult = clienttasks.register_(null, null, sm_clientOrg, null, activationkeyPoolRequiresConsumerType, null, null, null, null, null, jsonActivationKey.getString("name"), null, null, null, false /*was already unregistered by force above*/, null, null, null, null, null);
 			if (activationkeyPoolRequiresConsumerType != null) {
-				if (clienttasks.isPackageVersion("subscription-manager",">=","1.20.1-1"/*TODO change to "1.20.2-1"*/)) {	// post commit e0c34a729e9e347ab1e0f4f5fa656c8b20205fdf RFE Bug 1461003: Deprecate --type option on register command
+				if (clienttasks.isPackageVersion("subscription-manager",">=","1.20.2-1")) {	// post commit e0c34a729e9e347ab1e0f4f5fa656c8b20205fdf RFE Bug 1461003: Deprecate --type option on register command
 					expectedStderr = "Error: The --type option has been deprecated and may not be used.";
 					expectedExitCode = new Integer(64);
 					Assert.assertEquals(registerResult.getStderr().trim(), expectedStderr, "Registering a system consumer using an activationKey containing a pool that requires a non-system consumer type should fail.");
@@ -801,7 +801,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		// now consume an entitlement from the pool
 		String requires_consumer_type = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, jsonPool.getString("id"), "requires_consumer_type");
 		if (requires_consumer_type != null) {
-			if (clienttasks.isPackageVersion("subscription-manager",">=","1.20.1-1"/*TODO change to "1.20.2-1"*/)) {	// post commit e0c34a729e9e347ab1e0f4f5fa656c8b20205fdf RFE Bug 1461003: Deprecate --type option on register command
+			if (clienttasks.isPackageVersion("subscription-manager",">=","1.20.2-1")) {	// post commit e0c34a729e9e347ab1e0f4f5fa656c8b20205fdf RFE Bug 1461003: Deprecate --type option on register command
 				throw new SkipException("Due to RFE Bug 1461003, subscription-manager can no longer register with --type which prevents registration using an --activationkey for a pool that has attribute \"requires_consumer_type\":\""+requires_consumer_type+"\"");
 			}
 		}

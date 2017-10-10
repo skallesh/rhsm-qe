@@ -4787,7 +4787,7 @@ if (false) {
 			defaultNames.add("pluginDir");
 			defaultNames.add("pluginConfDir");
 			if (isPackageVersion("subscription-manager",">=","1.10.7-1")) defaultNames.add("full_refresh_on_yum");	// was added as part of RFE Bug 803746
-			if (isPackageVersion("subscription-manager",">=","1.20.1-1"/*TODO CHANGE TO "1.20.2-1"*/)) defaultNames.add("auto_enable_yum_plugins");	// commit 29a9a1db08a2ee920c43891daafdf858082e5d8b	// Bug 1319927 - [RFE] subscription-manager should automatically enable yum plugins
+			if (isPackageVersion("subscription-manager",">=","1.20.2-1")) defaultNames.add("auto_enable_yum_plugins");	// commit 29a9a1db08a2ee920c43891daafdf858082e5d8b	// Bug 1319927 - [RFE] subscription-manager should automatically enable yum plugins
 		}
 		if (section.equalsIgnoreCase("rhsmcertd")) {
 			defaultNames.add(/*"certFrequency" CHANGED BY BUG 882459 TO*/"certCheckInterval");
@@ -5092,7 +5092,7 @@ if (false) {
 		
 		List<File> entitlementCertFiles = getCurrentEntitlementCertFiles();
 		String expectedConsumedListMessage="No consumed subscription pools to list";
-		if (isPackageVersion("subscription-manager", ">=", "1.20.1-1"/*TODO CHANGE TO 1.20.2-1 WHEN BUILD IS TAGGED*/)) {	// commit da72dfcbbb2c3a44393edb9e46e1583d05cc140a
+		if (isPackageVersion("subscription-manager", ">=", "1.20.2-1")) {	// commit da72dfcbbb2c3a44393edb9e46e1583d05cc140a
 			expectedConsumedListMessage="No consumed subscription pools were found.";
 		}
 
@@ -6435,7 +6435,7 @@ if (false) {
 
 		// assert that there are no product subscriptions consumed
 		String expectedConsumedListMessage="No consumed subscription pools to list";
-		if (isPackageVersion("subscription-manager", ">=", "1.20.1-1"/*TODO CHANGE TO 1.20.2-1 WHEN BUILD IS TAGGED*/)) {	// commit da72dfcbbb2c3a44393edb9e46e1583d05cc140a
+		if (isPackageVersion("subscription-manager", ">=", "1.20.2-1")) {	// commit da72dfcbbb2c3a44393edb9e46e1583d05cc140a
 		    expectedConsumedListMessage="No consumed subscription pools were found.";
 		}
 		Assert.assertEquals(listConsumedProductSubscriptions().getStdout().trim(),

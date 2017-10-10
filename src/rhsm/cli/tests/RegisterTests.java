@@ -934,7 +934,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 			String consumerType = jsonConsumerType.getString("label");
 			registerableConsumerTypes.add(consumerType);
 		}
-		if (clienttasks.isPackageVersion("subscription-manager",">=","1.20.1-1"/*TODO change to "1.20.2-1"*/)) {	// post commit e0c34a729e9e347ab1e0f4f5fa656c8b20205fdf RFE Bug 1461003: Deprecate --type option on register command
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.20.2-1")) {	// post commit e0c34a729e9e347ab1e0f4f5fa656c8b20205fdf RFE Bug 1461003: Deprecate --type option on register command
 			// TODO I think the version check above should trigger on a server version commit not sub-man
 			// Allowing a RHUI type to register is now acceptable, but not advertised
 			if (!registerableConsumerTypes.contains(ConsumerType.RHUI.toString())) registerableConsumerTypes.add(ConsumerType.RHUI.toString());
@@ -1004,7 +1004,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		}
 		
 		// process all of the rows and change the expected results due to 1461003: Deprecate --type option on register command
-		if (clienttasks.isPackageVersion("subscription-manager",">=","1.20.1-1"/*TODO change to "1.20.2-1"*/)) {	// post commit e0c34a729e9e347ab1e0f4f5fa656c8b20205fdf RFE Bug 1461003: Deprecate --type option on register command
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.20.2-1")) {	// post commit e0c34a729e9e347ab1e0f4f5fa656c8b20205fdf RFE Bug 1461003: Deprecate --type option on register command
 			for (List<Object> l : ll) {
 				BlockedByBzBug blockedByBzBug = (BlockedByBzBug) l.get(0);	// get the existing BlockedByBzBug
 				ConsumerType type = (ConsumerType) l.get(5);

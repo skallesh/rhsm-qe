@@ -806,7 +806,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		options.add("--proxyuser=PROXY_USER");
 		options.add("--proxypassword=PROXY_PASSWORD");
 		if (clienttasks.isPackageVersion("python-rhsm", ">=", "1.19.4-1")) options.add("--noproxy=NO_PROXY");		// added by bug 1420533 commit bd8b0538d7b0be7ee1e666ad5a66df80962c67d9
-		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.20.1-1"/*TODO change to "1.20.2-1"*/)) options.remove("--type=UNITTYPE");		// removed by bug 1461003 commit e0c34a729e9e347ab1e0f4f5fa656c8b20205fdf
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.20.2-1")) options.remove("--type=UNITTYPE");		// removed by bug 1461003 commit e0c34a729e9e347ab1e0f4f5fa656c8b20205fdf
 		for (String smHelpCommand : new String[]{clienttasks.command+" -h "+module,clienttasks.command+" --help "+module}) {
 			List <String> usages = new ArrayList<String>();
 			String usage = String.format("Usage: %s %s [OPTIONS]",clienttasks.command,module);

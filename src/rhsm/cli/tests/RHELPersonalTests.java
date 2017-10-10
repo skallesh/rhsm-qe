@@ -711,7 +711,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 			Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "Consumers of this type are not allowed to subscribe to the pool with id '"+personalPool.poolId+"'",
 					"Attempting to subscribe a system consumer to a personal pool is blocked.");
 			String expectedMsg = "No consumed subscription pools to list";
-			if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.20.1-1"/*TODO CHANGE TO 1.20.2-1 WHEN BUILD IS TAGGED*/)) {	// commit da72dfcbbb2c3a44393edb9e46e1583d05cc140a
+			if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.20.2-1")) {	// commit da72dfcbbb2c3a44393edb9e46e1583d05cc140a
 				expectedMsg="No consumed subscription pools were found.";
 			}
 			Assert.assertEquals(client1tasks.listConsumedProductSubscriptions().getStdout().trim(),expectedMsg,

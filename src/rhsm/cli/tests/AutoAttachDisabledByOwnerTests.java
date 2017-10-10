@@ -49,7 +49,7 @@ public class AutoAttachDisabledByOwnerTests extends SubscriptionManagerCLITestSc
 	String resourcePath = "/owners/" + owner;
 	jsonData.put("autobindDisabled", "true");
 	String expectedConsumedPoolResult="No consumed subscription pools to list";
-	if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.20.1-1"/*TODO CHANGE TO 1.20.2-1 WHEN BUILD IS TAGGED*/)) {	// commit da72dfcbbb2c3a44393edb9e46e1583d05cc140a
+	if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.20.2-1")) {	// commit da72dfcbbb2c3a44393edb9e46e1583d05cc140a
 	    expectedConsumedPoolResult="No consumed subscription pools were found.";
 	}
 	CandlepinTasks.putResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,
