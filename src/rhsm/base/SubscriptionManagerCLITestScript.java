@@ -1265,6 +1265,27 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	}
 	
 	/**
+	 * Given two Strings representing a list of comma separated tags, return true if they are effectively equivalent.<br>
+	 * Example: "tag1,tag2" is equivalent to "tag2,tag1"<br>
+	 * Example: "tag1,tag2" is NOT equivalent to "tag1,tag2,tag3"<br>
+	 * @param requiredTagsAsString
+	 * @param providedTagsAsString
+	 * @return
+	 */
+	public boolean areTagsEquivalent(String requiredTagsAsString, String providedTagsAsString) {
+		if (requiredTagsAsString==null && providedTagsAsString==null) return true;
+		if (requiredTagsAsString==null && providedTagsAsString!=null &&  providedTagsAsString.isEmpty()) return true;
+		if (requiredTagsAsString==null && providedTagsAsString!=null && !providedTagsAsString.isEmpty()) return false;
+		if (providedTagsAsString==null && requiredTagsAsString!=null &&  requiredTagsAsString.isEmpty()) return true;
+		if (providedTagsAsString==null && requiredTagsAsString!=null && !requiredTagsAsString.isEmpty()) return false;
+		
+		List<String> requiredTags = Arrays.asList(requiredTagsAsString.split("\\s*,\\s*"));
+		List<String> providedTags = Arrays.asList(providedTagsAsString.split("\\s*,\\s*"));
+		
+		return (requiredTags.containsAll(providedTags) && providedTags.containsAll(requiredTags));
+	}
+	
+	/**
 	 * @param <T>
 	 * @param list1
 	 * @param list2
