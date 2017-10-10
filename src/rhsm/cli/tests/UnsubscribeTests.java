@@ -345,8 +345,10 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		
 		// unsubscribe from all and assert # subscriptions are unsubscribed
 		SSHCommandResult result = clienttasks.unsubscribe(true, (BigInteger)null, null, null, null, null, null);
-		//Assert.assertEquals(result.getStdout().trim(), String.format("This machine has been unsubscribed from %s subscriptions",pools.size()),"Expected feedback when unsubscribing from all the currently consumed subscriptions.");	// 10/18/2013 NOT SURE WHAT COMMIT/BUG CAUSED THIS CHANGE TO THE FOLLOWING...
-		Assert.assertEquals(result.getStdout().trim(), String.format("%s subscriptions removed at the server."+"\n"+"%s local certificates have been deleted.",numberSubscriptionsConsumed,numberSubscriptionsConsumed),"Expected feedback when unsubscribing from all the currently consumed subscriptions.");
+		//String expectedStdoutRegex = String.format("This machine has been unsubscribed from %s subscriptions",pools.size());	// 10/18/2013 NOT SURE WHAT COMMIT/BUG CAUSED THIS CHANGE TO THE FOLLOWING...
+		String expectedStdoutRegex = String.format("%s subscriptions removed at the server."+"\n"+"%s local certificates have been deleted.",numberSubscriptionsConsumed,numberSubscriptionsConsumed);
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.20.1-1"/*TODO change to "1.20.2-1"*/)) expectedStdoutRegex = String.format("%s local certificates have been deleted."+"\n"+"%s subscriptions removed at the server.",numberSubscriptionsConsumed,numberSubscriptionsConsumed);	// commit d88d09c7060a17fba34a138313e7efd21cc79d02  D-Bus service for removing entitlements (all/ID/serial num.)
+		Assert.assertEquals(result.getStdout().trim(), expectedStdoutRegex,"Expected feedback when unsubscribing from all the currently consumed subscriptions.");
 		
 		// now attempt to unsubscribe from all again and assert 0 subscriptions are unsubscribed
 		result = clienttasks.unsubscribe(true, (BigInteger)null, null, null, null, null, null);
