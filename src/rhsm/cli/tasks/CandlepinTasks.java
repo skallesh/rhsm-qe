@@ -4266,6 +4266,41 @@ schema generation failed
 		return httpResponse;
 	}
 	
+	public static String updateSubscriptionPoolDatesUsingRESTfulAPI(String authenticator, String password, String url, String poolId, Calendar startCalendar, Calendar endCalendar) throws JSONException, Exception  {
+Assert.fail("THIS METHIOD IS UNDER DEVELOPMENT.  Blocked by candlepin bugs 1500837 1500843");
+		// get the existing subscription pool for default values
+		JSONObject jsonPool = new JSONObject(getResourceUsingRESTfulAPI(authenticator, password, url, "/pools/"+poolId));
+		
+		// create a jsonOwner
+		JSONObject jsonOwner = new JSONObject();
+		jsonOwner.put("key", jsonPool.getJSONObject("owner").getString("key"));
+		
+		// create a jsonProduct
+//		JSONObject jsonProduct = new JSONObject();
+//		jsonProduct.put("id", jsonPool.getJSONObject("product").getString("id"));
+		
+		// create a requestBody
+		JSONObject requestBody = new JSONObject();
+		requestBody.put("id", poolId);
+		SimpleDateFormat sdf = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z");
+		if (startCalendar!=null)	requestBody.put("startDate", sdf.format(startCalendar.getTime())); else requestBody.put("startDate", jsonPool.getString("startDate"));
+		if (endCalendar!=null)		requestBody.put("endDate", sdf.format(endCalendar.getTime())); else requestBody.put("endDate", jsonPool.getString("endDate"));
+		requestBody.put("quantity",jsonPool.getInt("quantity"));
+		requestBody.put("owner",jsonOwner);
+//		requestBody.put("product",jsonProduct);
+		
+		
+		// update the subscription pool
+		String httpResponse = CandlepinTasks.putResourceUsingRESTfulAPI(authenticator,password,url,"/owners/"+jsonOwner.getString("key")+"/pools",requestBody);
+		// httpResponse will be null; not a string representation of the jsonSubscription!  
+		
+		// refresh the pools
+//		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(authenticator,password,url,jsonOwner.getString("key"));
+//		jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(authenticator,password,url,jobDetail,"FINISHED", 5*1000, 1);
+
+		return httpResponse;
+	}
+	
 	@Deprecated
 	/**
 	 * has been replaced by createSubscriptionPoolUsingRESTfulAPI(...) for candlepin >= 2.1.1-1
@@ -4325,7 +4360,7 @@ schema generation failed
 	}
 	
 	/**
-	 * create a subscription pool under owner with for productId - this method replaces createSubscriptionAndRefreshPoolsUsingRESTfulAPI(...) for candlepin version >= 2.1.1-1
+	 * create a subscription pool under owner for productId - this method replaces createSubscriptionAndRefreshPoolsUsingRESTfulAPI(...) for candlepin version >= 2.1.1-1
 	 * @param authenticator
 	 * @param password
 	 * @param url

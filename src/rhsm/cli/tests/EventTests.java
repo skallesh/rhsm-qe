@@ -208,7 +208,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 //testPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", "awesomeos-virt-4", pools);
 //testPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", "awesomeos-virt-unlimited", pools);
 //testPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", "awesomeos-server-basic-dc", pools);
-//testPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", "8a90879051a127080151a12847570758", pools);
+//testPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", "8a90860f5eed6282015eed64099a0193", pools);
 //testPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("contract", "", pools);
 //testPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("subscriptionType", "Standard (Temporary)", pools);
 
@@ -257,7 +257,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier3")
 	@Test(	description="subscription-manager: events: Pool Modified and Entitlement Modified is sent over an RSS atom feed.",
-			groups={"Tier3Tests","blockedByBug-721141","PoolModifiedAndEntitlementModified_Test","blockedByBug-645597","blockedByBug-1303242"},
+			groups={"Tier3Tests","blockedByBug-721141","PoolModifiedAndEntitlementModified_Test","blockedByBug-645597","blockedByBug-1303242","blockedByBug-1500837","blockedByBug-1500843"},
 			dependsOnGroups={"EntitlementCreated_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
@@ -292,7 +292,8 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,ownerKey);
 		jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,jobDetail,"FINISHED", 10*1000, 3);
 		} else
-		CandlepinTasks.updateSubscriptionDatesAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl, CandlepinTasks.getSubscriptionIdForPoolId(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl, testPool.poolId),newStartDate,null);
+/*OLD*/	CandlepinTasks.updateSubscriptionDatesAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl, CandlepinTasks.getSubscriptionIdForPoolId(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl, testPool.poolId),newStartDate,null);
+//NEW TODO CandlepinTasks.updateSubscriptionPoolDatesUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl, testPool.poolId,newStartDate,null);
 
 		// assert the consumer feed...
 		List<String> newEventTitles = new ArrayList<String>();
