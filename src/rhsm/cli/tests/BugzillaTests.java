@@ -1147,8 +1147,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 
 		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,
 				sm_clientOrg, name, productId, 1, attributes, null);
-		String requestBody = CandlepinTasks.createSubscriptionRequestBody(20, startDate, endDate, productId,
-				contractNumber, accountNumber, providedProductIds, null).toString();
+		String requestBody = CandlepinTasks.createSubscriptionRequestBody(sm_serverUrl, 20, startDate, endDate,
+				productId, contractNumber, accountNumber, providedProductIds, null).toString();
 		JSONObject jsonSubscription = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverAdminUsername,
 				sm_serverAdminPassword, sm_serverUrl, "/owners/" + ownerKey + "/subscriptions", requestBody));
 		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverAdminUsername,
@@ -1481,8 +1481,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 
 		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,
 				sm_clientOrg, name, productId, 1, attributes, null);
-		String requestBody = CandlepinTasks.createSubscriptionRequestBody(20, startDate, endDate, productId,
-				contractNumber, accountNumber, providedProductIds, null).toString();
+		String requestBody = CandlepinTasks.createSubscriptionRequestBody(sm_serverUrl, 20, startDate, endDate,
+				productId, contractNumber, accountNumber, providedProductIds, null).toString();
 		new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword,
 				sm_serverUrl, "/owners/" + ownerKey + "/subscriptions", requestBody));
 		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverAdminUsername,
@@ -2202,8 +2202,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,
 				sm_clientOrg, "Multi-Stackable", "multi-stackable", 1, attributes, null);
 		String requestBody = CandlepinTasks
-				.createSubscriptionRequestBody(20, todaysDate, futureDate, "multi-stackable",
-						Integer.valueOf(getRandInt()), Integer.valueOf(getRandInt()), providedProducts, null)
+				.createSubscriptionRequestBody(sm_serverUrl, 20, todaysDate, futureDate,
+						"multi-stackable", Integer.valueOf(getRandInt()), Integer.valueOf(getRandInt()), providedProducts, null)
 				.toString();
 		CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,
 				"/owners/" + ownerKey + "/subscriptions", requestBody);
@@ -2585,8 +2585,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,
 				sm_clientOrg, "Multi-Stackable for 100000000000002", "multi-stackable", 1, attributes, null);
 		String requestBody = CandlepinTasks
-				.createSubscriptionRequestBody(20, todaysDate, futureDate, "multi-stackable",
-						Integer.valueOf(getRandInt()), Integer.valueOf(getRandInt()), providedProducts, null)
+				.createSubscriptionRequestBody(sm_serverUrl, 20, todaysDate, futureDate,
+						"multi-stackable", Integer.valueOf(getRandInt()), Integer.valueOf(getRandInt()), providedProducts, null)
 				.toString();
 		CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,
 				"/owners/" + ownerKey + "/subscriptions", requestBody);

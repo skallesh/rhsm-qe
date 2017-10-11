@@ -362,7 +362,7 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 		List<String> providedProducts = null;
 		
 		// create the subscription
-		String requestBody = CandlepinTasks.createSubscriptionRequestBody(3, startDate, endDate, productId, contractNumber, accountNumber, providedProducts, null).toString();
+		String requestBody = CandlepinTasks.createSubscriptionRequestBody(sm_serverUrl, 3, startDate, endDate, productId, contractNumber, accountNumber, providedProducts, null).toString();
 		JSONObject jsonSubscription = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/owners/" + ownerKey + "/subscriptions", requestBody));
 		
 		// refresh the pools
