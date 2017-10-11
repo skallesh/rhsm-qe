@@ -5097,7 +5097,7 @@ if (false) {
 		}
 
 		if (entitlementCertFiles.isEmpty()) {
-			Assert.assertTrue(sshCommandResult.getStdout().trim().equals(expectedConsumedListMessage), "Expected message when there are no consumed subscription pools.");
+			Assert.assertEquals(sshCommandResult.getStdout().trim(),expectedConsumedListMessage, "Expected message when there are no consumed subscription pools.");
 		} else {
 			String title = "Consumed Product Subscriptions";
 			title = "Consumed Subscriptions";	// changed in https://bugzilla.redhat.com/show_bug.cgi?id=806986#c10
