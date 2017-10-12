@@ -149,6 +149,9 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "0.9.37-1"/*candlepin-common-1.0.17-1*/)) {	// commit bb1d2e6184a6cd9b80ff9c9d3045e9d780116226	// Only send Compliance event when compliance changes
 			newEventTitles = new String[]{"COMPLIANCE CREATED","CONSUMER CREATED"};
 		}
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.1.1-1"/*TODO change to the next tag 2.1.2-1 once it is added */)) {	// commit 1ad3fd6f338d9bbcedc8eba8361d4bc6c807f84d	1474443 compliance.created events now use UUID for 'consumerId' field
+			newEventTitles = new String[]{"CONSUMER CREATED"};
+		}
 		
 		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=721136 - jsefler 07/14/2011
 		boolean invokeWorkaroundWhileBugIsOpen = true;
@@ -242,7 +245,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		// assert the owner feed...
 		//assertTheNewOwnerFeed(ownerKey, oldOwnerFeed, newEventTitles.toArray(new String[]{}));	// worked prior to RHEL59
 		assertTheNewOwnerFeedIgnoringEventTitles(ownerKey, oldOwnerFeed, newEventTitles.toArray(new String[]{}), new HashSet<String>(){{add("CONSUMER MODIFIED");add("COMPLIANCE CREATED");}});	// TODO Using the IgnoringEventTitles is a workaround bug 838123#c2
-  
+		
 		// assert the feed...
 		//assertTheNewFeed(oldFeed, newEventTitles.toArray(new String[]{}));	// worked prior to RHEL59
 		assertTheNewFeedIgnoringEventTitles(oldFeed, newEventTitles.toArray(new String[]{}), new HashSet<String>(){{add("CONSUMER MODIFIED");add("COMPLIANCE CREATED");}});
@@ -383,6 +386,9 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 			// if this does not help, then we might try to alter the assertTheNew*() methods to IgnoreOrder of just call the assertTheNew**Contains() methods .. 
 			newEventTitles = new String[]{"ENTITLEMENT DELETED","COMPLIANCE CREATED"};	// switched the expected order; after discussions with vritant and crog who said the order of the expected new event titles may not be a guaranteed and apparently that's okay
 		}
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.1.1-1"/*TODO change to the next tag 2.1.2-1 once it is added */)) {	// commit 1ad3fd6f338d9bbcedc8eba8361d4bc6c807f84d	1474443 compliance.created events now use UUID for 'consumerId' field
+			newEventTitles = new String[]{"ENTITLEMENT DELETED"};
+		}
 		
 		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=721136 - jsefler 07/14/2011
 		boolean invokeWorkaroundWhileBugIsOpen = true;
@@ -392,11 +398,11 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 			newEventTitles = new String[]{clienttasks.hostname+" returned the subscription for "+testPool.subscriptionName};
 		}
 		// END OF WORKAROUND
-
+		
 		// assert the consumer feed...
         //assertTheNewConsumerFeed(ownerKey, consumerCert.consumerid, oldConsumerFeed, newEventTitles);
         assertTheNewConsumerFeedIgnoringEventTitles(ownerKey, consumerCert.consumerid, oldConsumerFeed, newEventTitles, new HashSet<String>(){{add("COMPLIANCE CREATED");}});
-
+        
         // adjust the expected events when the candlepin server is standalone and the pool has a non-zero virt_limit
         String virt_limit = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, testPool.poolId, "virt_limit");
         if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, "<", "2.0.16-1"))	// DO NOT INTERFERE WITH THE "switched the expected order" FROM ABOVE
@@ -407,7 +413,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		// assert the owner feed...
 		//assertTheNewOwnerFeed(ownerKey, oldOwnerFeed, newEventTitles);
 		assertTheNewOwnerFeedIgnoringEventTitles(ownerKey, oldOwnerFeed, newEventTitles, new HashSet<String>(){{add("COMPLIANCE CREATED");}});
-
+		
 		// assert the feed...
 		//assertTheNewFeed(oldFeed, newEventTitles);
 		assertTheNewFeedIgnoringEventTitles(oldFeed, newEventTitles, new HashSet<String>(){{add("COMPLIANCE CREATED");}});
@@ -443,15 +449,21 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		// FYI: Another way to fire a consumer modified event is to call CandlepinTasks.setAutohealForConsumer(authenticator, password, url, consumerid, autoheal);
 		String[] newEventTitles = new String[]{"CONSUMER MODIFIED"};
 		newEventTitles = new String[]{"COMPLIANCE CREATED","CONSUMER MODIFIED"};	// COMPLIANCE CREATED events were added to support gutterball
-
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.1.1-1"/*TODO change to the next tag 2.1.2-1 once it is added */)) {	// commit 1ad3fd6f338d9bbcedc8eba8361d4bc6c807f84d	1474443 compliance.created events now use UUID for 'consumerId' field
+			newEventTitles = new String[]{"CONSUMER MODIFIED"};
+		}
+		
 		// assert the consumer feed...
-        assertTheNewConsumerFeed(ownerKey, consumerCert.consumerid, oldConsumerFeed, newEventTitles);
-	
+        //assertTheNewConsumerFeed(ownerKey, consumerCert.consumerid, oldConsumerFeed, newEventTitles);
+        assertTheNewConsumerFeedIgnoringEventTitles(ownerKey, consumerCert.consumerid, oldConsumerFeed, newEventTitles, new HashSet<String>(){{add("COMPLIANCE CREATED");}});
+        
 		// assert the owner feed...
-		assertTheNewOwnerFeed(ownerKey, oldOwnerFeed, newEventTitles);
-       
+		//assertTheNewOwnerFeed(ownerKey, oldOwnerFeed, newEventTitles);
+		assertTheNewOwnerFeedIgnoringEventTitles(ownerKey, oldOwnerFeed, newEventTitles, new HashSet<String>(){{add("COMPLIANCE CREATED");}});
+		
 		// assert the feed...
-		assertTheNewFeed(oldFeed, newEventTitles);
+		//assertTheNewFeed(oldFeed, newEventTitles);
+		assertTheNewFeedIgnoringEventTitles(oldFeed, newEventTitles, new HashSet<String>(){{add("COMPLIANCE CREATED");}});
 	}
 
 
@@ -547,7 +559,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		
 		// get the owner and consumer feeds before we test the firing of a new event
 		SyndFeed oldFeed = CandlepinTasks.getSyndFeed(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
-
+		
         // do something that will fire a create product event
 		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) {
 			// candlepin 2.0 requires an owner key when creating products
@@ -555,13 +567,12 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		} else {
 			testJSONProduct = servertasks.createProductUsingCPC(testProductId, testProductId+" Test Product");	
 		}
-
 		
 		String[] newEventTitles = new String[]{"PRODUCT CREATED"};
 		
 		// WORKAROUND
 		if (true) throw new SkipException("09/02/2010 Events for PRODUCT CREATED are not yet dev complete.  Agilo Story: http://mgmt1.rhq.lab.eng.bos.redhat.com:8001/web/ticket/3737");
-
+		
 		// assert the feed...
 		assertTheNewFeed(oldFeed, newEventTitles);
 	}
@@ -737,7 +748,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		
 		// get the owner and consumer feeds before we test the firing of a new event
 		SyndFeed oldFeed = CandlepinTasks.getSyndFeed(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
-
+		
         // do something that will fire a delete product event
 		//servertasks.cpc_delete_product(testProduct.getString("id"));
 		String[] newEventTitles = new String[]{"PRODUCT DELETED"};
@@ -801,10 +812,10 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		
 		// assert the consumer feed...
 		assertTheNewConsumerFeed(ownerKey, consumerCert.consumerid, oldConsumerFeed, newEventTitles);
-
+		
 		// assert the owner feed...
 		assertTheNewOwnerFeed(ownerKey, oldOwnerFeed, newEventTitles);
-
+		
 		// assert the feed...
 		assertTheNewFeed(oldFeed, newEventTitles);
 	}
@@ -852,7 +863,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		//assertTheNewOwnerFeed(ownerKey, oldOwnerFeed, new String[]{"IMPORT CREATED", "POOL CREATED"});
 		//assertTheNewOwnerFeed(ownerKey, oldOwnerFeed, newEventTitles);
 		assertTheNewOwnerFeedIgnoringEventTitles(ownerKey, oldOwnerFeed, newEventTitles, new HashSet<String>(){{add("POOL CREATED");}});	// could have one or two "POOL CREATED" events, ignore them
-
+		
 		// assert the feed...
 		//assertTheNewFeed(oldFeed, new String[]{"IMPORT CREATED", "POOL CREATED", "SUBSCRIPTION CREATED"});
 		//assertTheNewFeed(oldFeed, newEventTitles);	// TODO 12/6/2012 several POOL MODIFIED may occur between new events POOL CREATED and SUBSCRIPTION CREATED.  Seems to happen when re-running the script after hours of other troubleshooting runs.  Redeploying candlepin and running EventTests does NOT encounter the extraneous POOL MODIFIED event.  We may want change this to...  assertTheNewFeedContains(oldFeed, Arrays.asList(newEventTitles));
@@ -896,7 +907,6 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		// assert the feed...
 		//assertTheNewFeed(oldFeed, newEventTitles);
 		assertTheNewFeedIgnoringEventTitles(oldFeed, newEventTitles, new HashSet<String>(){{add("POOL DELETED");}} );	// TODO 10/24/2013 don't yet understand why "POOL DELETED" sometimes occurs on script re-runs
-
 	}
 
 
