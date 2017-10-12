@@ -5899,9 +5899,10 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	protected String createTestPool(int startingMinutesFromNow, int endingMinutesFromNow, Boolean FuturePool)
 			throws JSONException, Exception {
 	    	String name = "BugzillaTestSubscription";
+	    	providedProduct.clear();
 		providedProduct.add("37060");
 	    	if(FuturePool){
-		name = "BugillaTestInactiveSubscription";
+	    	    name = "BugillaTestInactiveSubscription";
 	    	}
 		Map<String, String> attributes = new HashMap<String, String>();
 		attributes.clear();
