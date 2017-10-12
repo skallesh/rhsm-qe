@@ -872,8 +872,11 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(results.getStdout().startsWith(expectedWarningMsg),"The stdout from running '"+command+"' starts with the expected warning message '"+expectedWarningMsg+"' when at least one yum plugin is disabled and rhsm.auto_enable_yum_plugins is configured on.");
 		
 		// assert that both plugins were enabled
-		Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.yumPluginConfFileForProductId, "enabled"),"1","Enablement of yum config file '"+clienttasks.yumPluginConfFileForProductId+"' after running '"+command+"' with rhsm.auto_enable_yum_plugins configured on.");
-		Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.yumPluginConfFileForSubscriptionManager, "enabled"),"1","Enablement of yum config file '"+clienttasks.yumPluginConfFileForSubscriptionManager+"' after running '"+command+"' with rhsm.auto_enable_yum_plugins configured on.");
+		String enabledValue;
+		enabledValue = clienttasks.getConfFileParameter(clienttasks.yumPluginConfFileForProductId, "enabled");
+		Assert.assertTrue(enabledValue.toLowerCase().matches("1|true"),"Expecting yum config file '"+clienttasks.yumPluginConfFileForProductId+"' to be enabled after running '"+command+"' with rhsm.auto_enable_yum_plugins configured on.  Actual enabled="+enabledValue);
+		enabledValue = clienttasks.getConfFileParameter(clienttasks.yumPluginConfFileForSubscriptionManager, "enabled");
+		Assert.assertTrue(enabledValue.toLowerCase().matches("1|true"),"Expecting yum config file '"+clienttasks.yumPluginConfFileForSubscriptionManager+"' to be enabled after running '"+command+"' with rhsm.auto_enable_yum_plugins configured on.  Actual enabled="+enabledValue);
 		
 		// run the subscription-manager module again
 		results= client.runCommandAndWait(command);
