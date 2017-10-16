@@ -1285,6 +1285,8 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 		modifiedManPage = modifiedManPage.replaceAll("config([^u])", "configuration$1");
 		modifiedManPage = modifiedManPage.replaceAll("orgs", "organizations");
 		modifiedManPage = modifiedManPage.replaceAll("ORGS", "ORGANIZATIONS");
+		modifiedManPage = modifiedManPage.replaceAll("inotify", "i-notify");	// inode notify - is a Linux kernel subsystem that acts to extend filesystems to notice changes to the filesystem (files or directories), and report those changes to applications
+		modifiedManPage = modifiedManPage.replaceAll("Inotify", "I-notify");
 		modifiedManPage = modifiedManPage.replaceAll("preconfigured", "configured in advance");
 		modifiedManPage = modifiedManPage.replaceAll("ProductName:", "Product Name:");
 		modifiedManPage = modifiedManPage.replaceAll("YYYY-MM-DD", "YEAR-MONTH-DAY");
@@ -1312,6 +1314,7 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 		modifiedManPage = modifiedManPage.replaceAll("RPM", "Red Hat Package Manager");
 		modifiedManPage = modifiedManPage.replaceAll("rpm", "red-hat-package-manager");
 		modifiedManPage = modifiedManPage.replaceAll("SSL", "Secure Sockets Layer");
+		modifiedManPage = modifiedManPage.replaceAll("NFS", "Network File System");
 		modifiedManPage = modifiedManPage.replaceAll("GUI", "Graphical User Interface");
 		modifiedManPage = modifiedManPage.replaceAll("UI", "User Interface");
 		modifiedManPage = modifiedManPage.replaceAll("GPG", "GNU privacy guard");
