@@ -36,6 +36,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.testng.SkipException;
 import org.testng.annotations.AfterClass;
+import org.testng.annotations.AfterGroups;
 import org.testng.annotations.AfterSuite;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeSuite;
@@ -3950,6 +3951,22 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		
 		// make sure the rhnplugin conf is enabled
 		clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForRhn, "enabled","1");
+	}
+
+
+	@AfterGroups(
+			value = {"testSubscriptionManagerShouldAutomaticallyEnableYumPluginsWhenAutoEnableIsOn",
+					"testSubscriptionManagerShouldNotAutomaticallyEnableYumPluginsWhenAutoEnableIsOff",
+					"testRhnMigrateClassicToRhsmShouldAutomaticallyEnableYumPluginsWhenAutoEnableIsOn",
+					"testRhnMigrateClassicToRhsmShouldAutomaticallyEnableYumPluginsWhenAutoEnableIsOff"},
+			groups = {"setup"})
+	public void resetDefaultConfigurationsForYumPluginsAndRhsmAutoEnableYumPlugins() {
+		// make sure subscription-manager config auto_enable_yum_plugins is on
+		clienttasks.config(false,false,true,new String[]{"rhsm","auto_enable_yum_plugins","1"});
+		
+		// make sure yum plugins are enabled
+		clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForProductId, "enabled", "1");
+		clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForSubscriptionManager, "enabled", "1");
 	}
 
 

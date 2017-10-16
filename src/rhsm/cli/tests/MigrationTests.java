@@ -2546,6 +2546,289 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-47943", "RHEL7-109986"},
+//			linkedWorkItems= {
+//				@LinkedItem(
+//					workitemId= "RHEL6-?????",	// TODO
+//					project= Project.RHEL6,
+//					role= DefTypes.Role.VERIFIES),
+//				@LinkedItem(
+//					workitemId= "RHEL7-95162",	// RHEL7-95162 - RHSM-REQ : rhn-migrate-classic-to-rhsm should automatically enable yum plugins
+//					project= Project.RedHatEnterpriseLinux7,
+//					role= DefTypes.Role.VERIFIES)},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description="Verify that the yum plugins for /etc/yum/pluginconf.d/product-id.conf and /etc/yum/pluginconf.d/subscription-manager.conf are automatically enabled by an execution of rhn-migrate-classic-to-rhsm when rhsm.auto_enable_yum_plugins is configured on.",
+			groups={"Tier3Tests","blockedByBug-1466453","testRhnMigrateClassicToRhsmShouldAutomaticallyEnableYumPluginsWhenAutoEnableIsOn"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void testRhnMigrateClassicToRhsmShouldAutomaticallyEnableYumPluginsWhenAutoEnableIsOn() {
+		// this bug is specifically designed to test Bug 1466453 - [RFE] rhn-migrate-classic-to-rhsm should ensure subscription-manager yum plugin is enabled
+		if (clienttasks.isPackageVersion("subscription-manager", "<", "1.20.2-1")) {  // commit 7b2b89c7ba4fbf464dd988e12675b2b763007f2c 	1466453 - [RFE] rhn-migrate-classic-to-rhsm should ensure subscription-manager yum plugin is enabled
+			throw new SkipException("This test applies a newer version of subscription-manager that includes an implementation for Bug 1466453 - [RFE] rhn-migrate-classic-to-rhsm should ensure subscription-manager yum plugin is enabled");
+		}
+		
+		if (sm_rhnHostname.equals("")) throw new SkipException("This test requires access to RHN Classic or Satellite 5.");
+		clienttasks.unregister(null, null, null, null);
+		
+		resetDefaultConfigurationsForYumPluginsAndRhsmAutoEnableYumPlugins();
+		
+		// randomly disable one or both /etc/yum/pluginconf.d/product-id.conf and /etc/yum/pluginconf.d/subscription-manager.conf
+		if (getRandomBoolean()) {
+			clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForProductId, "enabled", "0");
+			clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForSubscriptionManager, "enabled", String.valueOf(getRandInt()%2)/* "0" or "1" */);
+		} else {
+			clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForSubscriptionManager, "enabled", "false");
+			clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForProductId, "enabled", "true");
+			// TEMPORARY WORKAROUND
+			boolean invokeWorkaroundWhileBugIsOpen = true;
+			String bugId="1489917"; // Bug 1489917 - disabling yum plugins using "false" (rather than "0") causes traceback: invalid literal for int() with base 10: 'false'
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
+			if (invokeWorkaroundWhileBugIsOpen) {
+				clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForSubscriptionManager, "enabled", "0");
+				clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForProductId, "enabled", "1");
+			}
+			// END OF WORKAROUND
+		}
+		
+		String yumPluginConfFileForProductIdEnabledString = clienttasks.getConfFileParameter(clienttasks.yumPluginConfFileForProductId, "enabled");
+		String yumPluginConfFileForSubscriptionManagerEnabledString = clienttasks.getConfFileParameter(clienttasks.yumPluginConfFileForSubscriptionManager, "enabled");
+		Boolean yumPluginConfFileForProductIdEnabled = Boolean.valueOf(yumPluginConfFileForProductIdEnabledString);
+		Boolean yumPluginConfFileForSubscriptionManagerEnabled = Boolean.valueOf(yumPluginConfFileForSubscriptionManagerEnabledString);
+		if (yumPluginConfFileForProductIdEnabledString.equals("1")) {yumPluginConfFileForProductIdEnabled = true;} else if (yumPluginConfFileForProductIdEnabledString.equals("0")) {yumPluginConfFileForProductIdEnabled = false;}
+		if (yumPluginConfFileForSubscriptionManagerEnabledString.equals("1")) {yumPluginConfFileForSubscriptionManagerEnabled = true;} else if (yumPluginConfFileForSubscriptionManagerEnabledString.equals("0")) {yumPluginConfFileForSubscriptionManagerEnabled = false;}
+		
+		// register to rhn classic
+		String rhnSystemId = clienttasks.registerToRhnClassic(sm_rhnUsername, sm_rhnPassword, sm_rhnHostname);
+		
+		// attempt to run rhn-migrate-classic-to-rhsm
+		String options = "";
+		SSHCommandResult sshCommandResult = executeRhnMigrateClassicToRhsm(options, sm_rhnUsername, sm_rhnPassword, sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null);
+		String command = "rhn-migrate-classic-to-rhsm";
+		
+		//	[root@jsefler-rhel7 ~]# rhn-migrate-classic-to-rhsm --legacy-user=rhsm-client --destination-user=testuser1
+		//	Legacy password: 
+		//	Destination password: 
+		//	Org: admin
+		//
+		//	Retrieving existing legacy subscription information...
+		//
+		//	+-----------------------------------------------------+
+		//	System is currently subscribed to these legacy channels:
+		//	+-----------------------------------------------------+
+		//	rhel-x86_64-server-7
+		//
+		//	+-----------------------------------------------------+
+		//	Installing product certificates for these legacy channels:
+		//	+-----------------------------------------------------+
+		//	rhel-x86_64-server-7
+		//
+		//	Product certificates installed successfully to /etc/pki/product.
+		//
+		//	Preparing to unregister system from legacy server...
+		//	System successfully unregistered from legacy server.
+		//	Stopping and disabling legacy services...
+		//	rhnsd.service is not a native service, redirecting to /sbin/chkconfig.
+		//	Executing /sbin/chkconfig rhnsd off
+		//
+		//	Attempting to register system to destination server...
+		//	WARNING
+		//
+		//	The yum plugins: /etc/yum/pluginconf.d/subscription-manager.conf were automatically enabled for the benefit of Red Hat Subscription Management. If not desired, use "subscription-manager config --rhsm.auto_enable_yum_plugins=0" to block this behavior.
+		//
+		//	Registering to: jsefler-candlepin.usersys.redhat.com:8443/candlepin
+		//	The system has been registered with ID: ed2d6c19-bde5-4e8c-b274-109d8d477723
+		//	The registered system name is: jsefler-rhel7.usersys.redhat.com
+		//	Installed Product Current Status:
+		//
+		//	Product Name: Red Hat Enterprise Linux Server
+		//	Status:       Not Subscribed
+		//
+		//	Unable to find available subscriptions for all your installed products.
+		//	System 'jsefler-rhel7.usersys.redhat.com' successfully registered.
+		//
+		//	[root@jsefler-rhel7 ~]# echo $?
+		//	0
+		
+		// verify the migration was successful
+		// WARNING: asserting this exit code is misleading because it is the exit code from the rhn-migrate-classic-to-rhsm.tcl script which is a wrapper to rhn-migrate-classic-to-rhsm which could exit with a different code
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "ExitCode from call to '"+rhnMigrateTool+"' after attempting to migrate with options '"+options+"'.");
+		
+		// verify that we are newly registered to RHSM
+		Assert.assertNotNull(clienttasks.getCurrentConsumerCert(),"Confirmed that the system is newly registered with Subscription Manager after migrating from RHN Classic using '"+rhnMigrateTool+"'.");
+		
+		// assert the results contain the expected WARNING message for enabling plugins
+		String expectedWarningMsg = "WARNING"+"\n\n"+"The yum plugins: PLUGINS were automatically enabled for the benefit of Red Hat Subscription Management. If not desired, use \"subscription-manager config --rhsm.auto_enable_yum_plugins=0\" to block this behavior.";
+		expectedWarningMsg = "\n"+expectedWarningMsg+"\n";	// ensure expectedWarningMsg appears on it's own line
+		if (!yumPluginConfFileForSubscriptionManagerEnabled) expectedWarningMsg = expectedWarningMsg.replaceFirst("PLUGINS", clienttasks.yumPluginConfFileForSubscriptionManager+", PLUGINS");
+		if (!yumPluginConfFileForProductIdEnabled) expectedWarningMsg = expectedWarningMsg.replaceFirst("PLUGINS", clienttasks.yumPluginConfFileForProductId+", PLUGINS");
+		expectedWarningMsg = expectedWarningMsg.replaceFirst(", PLUGINS", "");	// strip out my regex substring
+		Assert.assertTrue(sshCommandResult.getStdout().contains(expectedWarningMsg),"The stdout from running '"+command+"' contains the expected warning message '"+expectedWarningMsg+"' when at least one yum plugin is disabled and rhsm.auto_enable_yum_plugins is configured on.");
+		
+		// assert that both plugins were enabled
+		String enabledValue;
+		enabledValue = clienttasks.getConfFileParameter(clienttasks.yumPluginConfFileForProductId, "enabled");
+		Assert.assertTrue(enabledValue.toLowerCase().matches("1|true"),"Expecting yum config file '"+clienttasks.yumPluginConfFileForProductId+"' to be enabled after running '"+command+"' with rhsm.auto_enable_yum_plugins configured on.  Actual enabled="+enabledValue);
+		enabledValue = clienttasks.getConfFileParameter(clienttasks.yumPluginConfFileForSubscriptionManager, "enabled");
+		Assert.assertTrue(enabledValue.toLowerCase().matches("1|true"),"Expecting yum config file '"+clienttasks.yumPluginConfFileForSubscriptionManager+"' to be enabled after running '"+command+"' with rhsm.auto_enable_yum_plugins configured on.  Actual enabled="+enabledValue);
+	}
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-47942", "RHEL7-109985"},
+//			linkedWorkItems= {
+//				@LinkedItem(
+//					workitemId= "RHEL6-?????",	// TODO
+//					project= Project.RHEL6,
+//					role= DefTypes.Role.VERIFIES),
+//				@LinkedItem(
+//					workitemId= "RHEL7-95162",	// RHEL7-95162 - RHSM-REQ : rhn-migrate-classic-to-rhsm should automatically enable yum plugins
+//					project= Project.RedHatEnterpriseLinux7,
+//					role= DefTypes.Role.VERIFIES)},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description="Verify that the yum plugins for /etc/yum/pluginconf.d/product-id.conf and /etc/yum/pluginconf.d/subscription-manager.conf are NOT automatically enabled by an execution of rhn-migrate-classic-to-rhsm when rhsm.auto_enable_yum_plugins is configured off.",
+			groups={"Tier3Tests","blockedByBug-1466453","testRhnMigrateClassicToRhsmShouldAutomaticallyEnableYumPluginsWhenAutoEnableIsOn"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void testRhnMigrateClassicToRhsmShouldNotAutomaticallyEnableYumPluginsWhenAutoEnableIsOff() {
+		// this bug is specifically designed to test Bug 1466453 - [RFE] rhn-migrate-classic-to-rhsm should ensure subscription-manager yum plugin is enabled
+		if (clienttasks.isPackageVersion("subscription-manager", "<", "1.20.2-1")) {  // commit 7b2b89c7ba4fbf464dd988e12675b2b763007f2c 	1466453 - [RFE] rhn-migrate-classic-to-rhsm should ensure subscription-manager yum plugin is enabled
+			throw new SkipException("This test applies a newer version of subscription-manager that includes an implementation for Bug 1466453 - [RFE] rhn-migrate-classic-to-rhsm should ensure subscription-manager yum plugin is enabled");
+		}
+		
+		if (sm_rhnHostname.equals("")) throw new SkipException("This test requires access to RHN Classic or Satellite 5.");
+		clienttasks.unregister(null, null, null, null);
+		
+		resetDefaultConfigurationsForYumPluginsAndRhsmAutoEnableYumPlugins();
+		
+		// turn off rhsm configuration for auto_enable_yum_plugins
+		clienttasks.config(false,false,true,new String[]{"rhsm","auto_enable_yum_plugins","0"});
+		
+		// randomly disable one or both /etc/yum/pluginconf.d/product-id.conf and /etc/yum/pluginconf.d/subscription-manager.conf
+		if (getRandomBoolean()) {
+			clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForProductId, "enabled", "0");
+			clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForSubscriptionManager, "enabled", String.valueOf(getRandInt()%2)/* "0" or "1" */);
+		} else {
+			clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForSubscriptionManager, "enabled", "false");
+			clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForProductId, "enabled", "true");
+			// TEMPORARY WORKAROUND
+			boolean invokeWorkaroundWhileBugIsOpen = true;
+			String bugId="1489917"; // Bug 1489917 - disabling yum plugins using "false" (rather than "0") causes traceback: invalid literal for int() with base 10: 'false'
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
+			if (invokeWorkaroundWhileBugIsOpen) {
+				clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForSubscriptionManager, "enabled", "0");
+				clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForProductId, "enabled", "1");
+			}
+			// END OF WORKAROUND
+		}
+		
+		String yumPluginConfFileForProductIdEnabledString = clienttasks.getConfFileParameter(clienttasks.yumPluginConfFileForProductId, "enabled");
+		String yumPluginConfFileForSubscriptionManagerEnabledString = clienttasks.getConfFileParameter(clienttasks.yumPluginConfFileForSubscriptionManager, "enabled");
+		Boolean yumPluginConfFileForProductIdEnabled = Boolean.valueOf(yumPluginConfFileForProductIdEnabledString);
+		Boolean yumPluginConfFileForSubscriptionManagerEnabled = Boolean.valueOf(yumPluginConfFileForSubscriptionManagerEnabledString);
+		if (yumPluginConfFileForProductIdEnabledString.equals("1")) {yumPluginConfFileForProductIdEnabled = true;} else if (yumPluginConfFileForProductIdEnabledString.equals("0")) {yumPluginConfFileForProductIdEnabled = false;}
+		if (yumPluginConfFileForSubscriptionManagerEnabledString.equals("1")) {yumPluginConfFileForSubscriptionManagerEnabled = true;} else if (yumPluginConfFileForSubscriptionManagerEnabledString.equals("0")) {yumPluginConfFileForSubscriptionManagerEnabled = false;}
+		
+		// register to rhn classic
+		String rhnSystemId = clienttasks.registerToRhnClassic(sm_rhnUsername, sm_rhnPassword, sm_rhnHostname);
+		
+		// attempt to run rhn-migrate-classic-to-rhsm
+		String options = "";
+		SSHCommandResult sshCommandResult = executeRhnMigrateClassicToRhsm(options, sm_rhnUsername, sm_rhnPassword, sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null);
+		String command = "rhn-migrate-classic-to-rhsm";
+		
+		//	[root@jsefler-rhel7 ~]# rhn-migrate-classic-to-rhsm --legacy-user=rhsm-client --destination-user=testuser1
+		//	Legacy password: 
+		//	Destination password: 
+		//	Org: admin
+		//
+		//	Retrieving existing legacy subscription information...
+		//
+		//	+-----------------------------------------------------+
+		//	System is currently subscribed to these legacy channels:
+		//	+-----------------------------------------------------+
+		//	rhel-x86_64-server-7
+		//
+		//	+-----------------------------------------------------+
+		//	Installing product certificates for these legacy channels:
+		//	+-----------------------------------------------------+
+		//	rhel-x86_64-server-7
+		//
+		//	Product certificates installed successfully to /etc/pki/product.
+		//
+		//	Preparing to unregister system from legacy server...
+		//	System successfully unregistered from legacy server.
+		//	Stopping and disabling legacy services...
+		//	rhnsd.service is not a native service, redirecting to /sbin/chkconfig.
+		//	Executing /sbin/chkconfig rhnsd off
+		//
+		//	Attempting to register system to destination server...
+		//
+		//	Registering to: jsefler-candlepin.usersys.redhat.com:8443/candlepin
+		//	The system has been registered with ID: ed2d6c19-bde5-4e8c-b274-109d8d477723
+		//	The registered system name is: jsefler-rhel7.usersys.redhat.com
+		//	Installed Product Current Status:
+		//
+		//	Product Name: Red Hat Enterprise Linux Server
+		//	Status:       Not Subscribed
+		//
+		//	Unable to find available subscriptions for all your installed products.
+		//	System 'jsefler-rhel7.usersys.redhat.com' successfully registered.
+		//
+		//	[root@jsefler-rhel7 ~]# echo $?
+		//	0
+		
+		// verify the migration was successful
+		// WARNING: asserting this exit code is misleading because it is the exit code from the rhn-migrate-classic-to-rhsm.tcl script which is a wrapper to rhn-migrate-classic-to-rhsm which could exit with a different code
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "ExitCode from call to '"+rhnMigrateTool+"' after attempting to migrate with options '"+options+"'.");
+		
+		// verify that we are newly registered to RHSM
+		Assert.assertNotNull(clienttasks.getCurrentConsumerCert(),"Confirmed that the system is newly registered with Subscription Manager after migrating from RHN Classic using '"+rhnMigrateTool+"'.");		
+		
+		// assert the results do NOT contain a WARNING message
+		String expectedWarningMsg = "WARNING";	// +"\n\n"+"The yum plugins: (PLUGINS) were automatically enabled for the benefit of Red Hat Subscription Management. If not desired, use \"subscription-manager config --rhsm.auto_enable_yum_plugins=0\" to block this behavior.";
+		Assert.assertTrue(!sshCommandResult.getStdout().contains(expectedWarningMsg),"The stdout from running '"+command+"' does NOT contain the expected warning message '"+expectedWarningMsg+"' when at least one yum plugin is disabled and rhsm.auto_enable_yum_plugins is configured off.");
+		
+		// assert that both plugins were untouched
+		Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.yumPluginConfFileForProductId, "enabled"),yumPluginConfFileForProductIdEnabledString,"Enablement of yum config file '"+clienttasks.yumPluginConfFileForProductId+"' should remain unchanged after running '"+command+"' with rhsm.auto_enable_yum_plugins configured off.");
+		Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.yumPluginConfFileForSubscriptionManager, "enabled"),yumPluginConfFileForSubscriptionManagerEnabledString,"Enablement of yum config file '"+clienttasks.yumPluginConfFileForSubscriptionManager+"' should remain unchanged after running '"+command+"' with rhsm.auto_enable_yum_plugins configured off.");
+		
+		// assert that the yum plugins are/not loaded
+		//	[root@jsefler-rhel7 ~]# yum repolist --disablerepo=*
+		//	Loaded plugins: langpacks, product-id, search-disabled-repos, subscription-manager
+		//	This system is not registered with an entitlement server. You can use subscription-manager to register.
+		//	repolist: 0
+		String plugin;
+		command = "yum repolist --disablerepo=*";
+		sshCommandResult = client.runCommandAndWait(command);
+		plugin="product-id";
+		if (yumPluginConfFileForProductIdEnabled) {
+			Assert.assertTrue(sshCommandResult.getStdout().contains(plugin),"The stdout from running '"+command+"' indicated that plugin '"+plugin+"' was loaded.");
+		} else {
+			Assert.assertTrue(!sshCommandResult.getStdout().contains(plugin),"The stdout from running '"+command+"' indicated that plugin '"+plugin+"' was NOT loaded.");
+		}
+		plugin="subscription-manager";
+		if (yumPluginConfFileForSubscriptionManagerEnabled) {
+			Assert.assertTrue(sshCommandResult.getStdout().contains(plugin),"The stdout from running '"+command+"' indicated that plugin '"+plugin+"' was loaded.");
+		} else {
+			Assert.assertTrue(!sshCommandResult.getStdout().contains(plugin),"The stdout from running '"+command+"' indicated that plugin '"+plugin+"' was NOT loaded.");
+		}
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	// Candidates for an automated Test:
 	// TODO Bug 789007 - Migrate with normal user (non org admin) user . https://github.com/RedHatQE/rhsm-qe/issues/171
 	// TODO Bug 816377 - rhn-migrate-classic-to-rhsm throws traceback when subscription-manager-migration-data is not installed https://github.com/RedHatQE/rhsm-qe/issues/172

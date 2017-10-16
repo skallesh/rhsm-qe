@@ -982,15 +982,7 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 			Assert.assertTrue(!results.getStdout().contains(plugin),"The stdout from running '"+command+"' indicated that plugin '"+plugin+"' was NOT loaded.");
 		}
 	}
-	@AfterGroups(value={"testSubscriptionManagerShouldAutomaticallyEnableYumPluginsWhenAutoEnableIsOn", "testSubscriptionManagerShouldNotAutomaticallyEnableYumPluginsWhenAutoEnableIsOff"},groups={"setup"})
-	public void resetDefaultConfigurationsForYumPluginsAndRhsmAutoEnableYumPlugins() {
-		// make sure subscription-manager config auto_enable_yum_plugins is on
-		clienttasks.config(false,false,true,new String[]{"rhsm","auto_enable_yum_plugins","1"});
-		
-		// make sure yum plugins are enabled
-		clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForProductId, "enabled", "1");
-		clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForSubscriptionManager, "enabled", "1");
-	}
+	
 	
 	
 	

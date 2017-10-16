@@ -28,13 +28,13 @@
 
 (defn ^{BeforeSuite {:groups ["setup"]}}
   startup [_]
-  (.. (new SubscriptionManagerCLITestScript) setupBeforeSuite)
-  (c/init)
+  ;; (.. (new SubscriptionManagerCLITestScript) setupBeforeSuite)
+  ;; (c/init)
   (.runCommandAndWait @c/clientcmd "yum -y install cockpit-system")
   (reset! driver  (doto (new FirefoxDriver (doto (DesiredCapabilities/firefox)
                                              (.setCapability "acceptSslCerts" true)
                                              (.setCapability "marionette" false)))
-                    (.setLogLevel Level/INFO))))
+                    (.setLogLevel Level/OFF))))
 
 (defn ^{AfterSuite {:groups ["cleanup"]}}
   cleanup [_]

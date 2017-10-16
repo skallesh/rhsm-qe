@@ -4467,6 +4467,26 @@
       "parameters" : [ ]
     }
   },
+  "rhsm.cli.tests.MigrationTests.testRhnMigrateClassicToRhsmShouldAutomaticallyEnableYumPluginsWhenAutoEnableIsOn" : {
+    "RHEL6" : {
+      "id" : "RHEL6-47943",
+      "parameters" : [ ]
+    },
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-109986",
+      "parameters" : [ ]
+    }
+  },
+  "rhsm.cli.tests.MigrationTests.testRhnMigrateClassicToRhsmShouldNotAutomaticallyEnableYumPluginsWhenAutoEnableIsOff" : {
+    "RHEL6" : {
+      "id" : "RHEL6-47942",
+      "parameters" : [ ]
+    },
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-109985",
+      "parameters" : [ ]
+    }
+  },
   "rhsm.cli.tests.MigrationTests.testRhnMigrateClassicToRhsmUsingProxyServer" : {
     "RHEL6" : {
       "id" : "RHEL6-20108",
