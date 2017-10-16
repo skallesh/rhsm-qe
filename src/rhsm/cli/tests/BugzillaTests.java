@@ -1423,6 +1423,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@SuppressWarnings("deprecation")
 	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID = {"RHEL6-21987", "RHEL7-51849"},
@@ -1454,23 +1455,14 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		attributes.put("type", "SVC");
 		attributes.put("virt_only", "true");
 		providedProductIds.add("37060");
-		Integer contractNumber = getRandInt();
-		Integer accountNumber = getRandInt();
 		Calendar endCalendar = new GregorianCalendar();
 		endCalendar.set(Calendar.HOUR_OF_DAY, 0);
 		endCalendar.set(Calendar.MINUTE, 0);
 		endCalendar.set(Calendar.SECOND, 0); // avoid times in the middle of the
 		// day
-		endCalendar.add(Calendar.MINUTE, 15 * 24 * 60); // 15 days from today
-		Date endDate = endCalendar.getTime();
-		Calendar startCalendar = new GregorianCalendar();
-		startCalendar.set(Calendar.HOUR_OF_DAY, 0);
-		startCalendar.set(Calendar.MINUTE, 0);
-		startCalendar.set(Calendar.SECOND, 0); // avoid times in the middle of
-		// the day
-		startCalendar.add(Calendar.MINUTE, -1 * 24 * 60); // 1 day ago
-
-		Date startDate = startCalendar.getTime();
+	
+		int startingMinutesFromNow = -1 * 24 * 60;
+		int endingMinutesFromNow = 15 * 24 * 60;
 		CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword,
 				sm_serverUrl, sm_clientOrg, productId);
 		String resourcePath = "/products/" + productId;
@@ -1480,23 +1472,21 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				resourcePath);
 
 		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,
-				sm_clientOrg, name, productId, 1, attributes, null);
-		String requestBody = CandlepinTasks.createSubscriptionRequestBody(sm_serverUrl, 20, startDate, endDate,
-				productId, contractNumber, accountNumber, providedProductIds, null).toString();
-		new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword,
-				sm_serverUrl, "/owners/" + ownerKey + "/subscriptions", requestBody));
+			sm_clientOrg, name + " BITS", productId, 1, attributes, null);
+		
+		@SuppressWarnings("deprecation")
+		String poolId = CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername,
+			sm_serverAdminPassword, sm_serverUrl, ownerKey, 3, startingMinutesFromNow,endingMinutesFromNow ,
+			getRandInt(), getRandInt(), productId, providedProduct, null).getString("id");
 		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverAdminUsername,
-				sm_serverAdminPassword, sm_serverUrl, ownerKey);
+			sm_serverAdminPassword, sm_serverUrl, ownerKey);
 		jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword,
-				sm_serverUrl, jobDetail, "FINISHED", 5 * 1000, 1);
-		String poolid = CandlepinTasks.getPoolIdFromProductNameAndContractNumber(sm_serverAdminUsername,
-				sm_serverAdminPassword, sm_serverUrl, "admin", name, contractNumber.toString());
+			sm_serverUrl, jobDetail, "FINISHED", 5 * 1000, 1);
 		String isGuest = clienttasks.getFactValue("virt.is_guest");
 		if (isGuest.equalsIgnoreCase("true")) {
-
-			Assert.assertContainsMatch(clienttasks.getCurrentlyAllAvailableSubscriptionPools().toString(), poolid);
+		    Assert.assertContainsMatch(clienttasks.getCurrentlyAllAvailableSubscriptionPools().toString(), poolId);
 		} else if (isGuest.equalsIgnoreCase("False")) {
-			Assert.assertContainsNoMatch(clienttasks.getCurrentlyAllAvailableSubscriptionPools().toString(), poolid);
+		    Assert.assertContainsNoMatch(clienttasks.getCurrentlyAllAvailableSubscriptionPools().toString(), poolId);
 		}
 
 		// Note: After attaching this subscription in the
@@ -3088,6 +3078,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@SuppressWarnings("deprecation")
 	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID = {"RHEL6-21899", "RHEL7-51760"},
@@ -3133,6 +3124,10 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword,
 				sm_serverUrl, ownerKey, 20, -1 * 24 * 60/* 1 day ago */,
 				15 * 24 * 60/* 15 days from now */, getRandInt(), getRandInt(), productId, providedProductIds, null);
+		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverAdminUsername,
+			sm_serverAdminPassword, sm_serverUrl, ownerKey);
+		jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword,
+			sm_serverUrl, jobDetail, "FINISHED", 5 * 1000, 1);
 		String name = String.format("%s_%s-ActivationKey%s", sm_clientUsername, sm_clientOrg,
 				System.currentTimeMillis());
 		Map<String, String> mapActivationKeyRequest = new HashMap<String, String>();
