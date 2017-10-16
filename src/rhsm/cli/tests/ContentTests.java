@@ -1428,6 +1428,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		
 		// register and get the owner_key
 		clienttasks.unregister(null, null, null, null);
+		// NOTE: The most thorough way to test this is using an account with access to all products via the Employee SKU ES0113909
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, null, false, null, null, null, null);
 		getAllEUSProductContentSetDataAsListOfListsOwnerKey = clienttasks.getCurrentlyRegisteredOwnerKey();
 		Map<String,String> eusLabelToInfoMap = new HashMap<String,String>();
