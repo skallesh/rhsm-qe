@@ -1,7 +1,7 @@
 (ns rhsm.api.tests.activation-key-test
   (:require  [clojure.test :refer :all]
              [rhsm.api.tests.activation_key_tests :as tests]
-             [rhsm.gui.tasks.test-config :refer [config]]
+             [rhsm.gui.tasks.test-config :as c]
              [org.httpkit.client :as http]
              [rhsm.api.rest :as rest]
              [rhsm.gui.tests.base :as base]
@@ -12,11 +12,13 @@
 ;; lein test :only rhsm.rest.tests.activation-key-test/register-using-activation-key-test
 ;;
 
-;; ;; initialization of our testware
-;; (use-fixtures :once (fn [f]
-;;                       (base/startup nil)
-;;                       (f)
-;;                       (tests/delete_all_actually_created_activation_keys nil)))
+;; initialization of our testware
+(use-fixtures :once (fn [f]
+                      (c/init)
+                      (tests/setup nil)
+                      (f)
+                      (tests/delete_all_actually_created_activation_keys nil)
+                      (tests/set_inotify_to_1 nil)))
 
 ;; (deftest create-activation-key-test
 ;;   (tests/create_activation_key nil))
@@ -72,7 +74,12 @@
 ;;                  (format "ActivationKey with id %s could not be found." (-> activation-key :id)))))))))
 
 
-;; (deftest register-using-activation-key-by-dbus-test
-;;   (let [activation-key (-> (tests/new_activation_key nil) first first)]
-;;     (rest/activation-key-exists (-> activation-key :id))
-;;     (tests/register_with_activation_key_using_dbus nil activation-key)))
+(deftest register-using-activation-key-by-dbus-test
+  (let [activation-key (-> (tests/new_activation_key nil) first first)]
+    (rest/activation-key-exists (-> activation-key :id))
+    (tests/register_with_activation_key_using_dbus nil activation-key)))
+
+(deftest dbus-register-using-activation-key-reflects-identity-change-test
+  (let [activation-key (-> (tests/new_activation_key nil) first first)]
+    (rest/activation-key-exists (-> activation-key :id))
+    (tests/dbus_register_with_activation_key_reflects_identity_change nil activation-key)))
