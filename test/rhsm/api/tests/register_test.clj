@@ -37,9 +37,9 @@
   (let [socket (tests/register_socket nil)]
     (tests/register_using_dbus nil (-> socket first first))))
 
-(deftest dbus_register_reflects_identity_change-test
-  (let [socket (tests/register_socket nil)]
-    (tests/dbus_register_reflects_identity_change nil (-> socket first first))))
+;; (deftest dbus_register_reflects_identity_change-test
+;;   (let [socket (tests/register_socket nil)]
+;;     (tests/dbus_register_reflects_identity_change nil (-> socket first first))))
 
 ;; (deftest attach-subscriptions-even-wrong-org-was-used-before-test
 ;;   (tests/attach_subscriptions_even_wrong_org_was_used_before nil))

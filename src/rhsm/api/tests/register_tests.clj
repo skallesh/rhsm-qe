@@ -65,6 +65,7 @@ When I
            (a :guard #(< (Integer. %) 7 )) (throw (SkipException. "busctl is not available in RHEL6"))
            :else nil))
   (run-command "subscription-manager unregister")
+  (run-command "subscription-manager status")
   (let [response (-> (format "busctl --address=unix:abstract=%s call com.redhat.RHSM1 /com/redhat/RHSM1/Register com.redhat.RHSM1.Register Register 'sssa{sv}a{sv}' %s %s %s 0 0"
                              socket (@config :owner-key) (@config :username) (@config :password))
                      run-command)]
@@ -97,7 +98,7 @@ When I
               :dataProvider "register-socket"}
         TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]}}
   dbus_register_reflects_identity_change
-  [_ socket]
+  [ts socket]
   (let [[_ major minor] (re-find #"(\d)\.(\d)" (-> :true get-release :version))]
     (match major
            (a :guard #(< (Integer. %) 7 )) (throw (SkipException. "busctl is not available in RHEL6"))
@@ -106,27 +107,7 @@ When I
   (-> (format "subscription-manager register --username=%s --password=%s --org=%s"
                (@config :username) (@config :password) (@config :owner-key))
        run-command   :stdout  (.contains "Registering to:")  verify)
-  (run-command "subscription-manager unregister")
-  (let [response (-> (format "busctl --address=unix:abstract=%s call com.redhat.RHSM1 /com/redhat/RHSM1/Register com.redhat.RHSM1.Register Register 'sssa{sv}a{sv}' %s %s %s 0 0"
-                             socket (@config :owner-key) (@config :username) (@config :password))
-                     run-command)]
-    (let [[response-data rest-string] (-> response  :stdout (.trim) dbus/parse)]
-      (verify (->> rest-string (= ""))) ;; no string left unparsed
-      (assert (= (type response-data) java.lang.String))
-      (let [data (-> response-data (str/replace #"\\\"" "\"") json/read-str)]
-        (verify (-> data keys set
-                    (clojure.set/superset? #{"entitlementStatus"
-                                             "capabilities"
-                                             "owner"
-                                             "created"
-                                             "contentTags"
-                                             "contentAccessMode"
-                                             "id"
-                                             "autoheal"
-                                             "installedProducts"
-                                             "name"
-                                             "uuid"})))
-        ))))
+  (register_using_dbus ts socket))
 
 (defn ^{DataProvider {:name "register-socket"}}
   register_socket
