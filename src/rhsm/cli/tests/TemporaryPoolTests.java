@@ -561,7 +561,7 @@ public class TemporaryPoolTests extends SubscriptionManagerCLITestScript {
 		String parentPhysicalPoolId = null;
 		for (String poolId : poolIdsForSubscriptionId) {
 			if (!poolId.equals(derivedPoolId)) {
-				Assert.assertNull(parentPhysicalPoolId, "Found one parent Physical poolId corresponding to derived poolId '"+derivedPoolId+"' (we should find only one).");
+				Assert.assertNull(parentPhysicalPoolId, "Found one parent Physical poolId corresponding to derived poolId '"+derivedPoolId+"' (we should find only one; if this fails then more than one pool was found from all available pools with a subscriptionId='"+subscriptionId+"' that was not the UNMAPPED_GUEST pool).");
 				parentPhysicalPoolId = poolId;
 			}
 		}
