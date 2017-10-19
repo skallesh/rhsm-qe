@@ -2049,6 +2049,16 @@
       "parameters" : [ ]
     }
   },
+  "rhsm.cli.tests.ConfigTests.testSubscriptionManagerConfigModuleShouldNotAutomaticallyEnableYumPlugins" : {
+    "RHEL6" : {
+      "id" : "RHEL6-47947",
+      "parameters" : [ ]
+    },
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL7-110728",
+      "parameters" : [ ]
+    }
+  },
   "rhsm.cli.tests.ConfigTests.testSubscriptionManagerShouldAutomaticallyEnableYumPluginsWhenAutoEnableIsOn" : {
     "RHEL6" : {
       "id" : "RHEL6-47939",

@@ -4041,7 +4041,8 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			value = {"testSubscriptionManagerShouldAutomaticallyEnableYumPluginsWhenAutoEnableIsOn",
 					"testSubscriptionManagerShouldNotAutomaticallyEnableYumPluginsWhenAutoEnableIsOff",
 					"testRhnMigrateClassicToRhsmShouldAutomaticallyEnableYumPluginsWhenAutoEnableIsOn",
-					"testRhnMigrateClassicToRhsmShouldAutomaticallyEnableYumPluginsWhenAutoEnableIsOff"},
+					"testRhnMigrateClassicToRhsmShouldAutomaticallyEnableYumPluginsWhenAutoEnableIsOff",
+					"testSubscriptionManagerConfigModuleShouldNotAutomaticallyEnableYumPlugins"},
 			groups = {"setup"})
 	public void resetDefaultConfigurationsForYumPluginsAndRhsmAutoEnableYumPlugins() {
 		// make sure subscription-manager config auto_enable_yum_plugins is on

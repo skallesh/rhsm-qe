@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<testcase id="RHEL7-99808">
-    <title>RHSM-TC : rhsm.cli.tests.ConfigTests.testSubscriptionManagerShouldNotAutomaticallyEnableYumPluginsWhenAutoEnableIsOff</title>
-    <description>Verify that the yum plugins for /etc/yum/pluginconf.d/product-id.conf and /etc/yum/pluginconf.d/subscription-manager.conf are NOT automatically enabled by various subscription-manager commands when rhsm.auto_enable_yum_plugins is configured off.</description>
+<testcase id="RHEL6-47947">
+    <title>RHSM-TC : rhsm.cli.tests.ConfigTests.testSubscriptionManagerConfigModuleShouldNotAutomaticallyEnableYumPlugins</title>
+    <description>Verify that the yum plugins for /etc/yum/pluginconf.d/product-id.conf and /etc/yum/pluginconf.d/subscription-manager.conf are NOT automatically enabled when subscription-manager config module is used (in honor of special case bug 1501889).</description>
     <test-steps>
         <test-step>
             <test-step-column id="step"/>
@@ -18,7 +18,4 @@
         <custom-field id="subtype1" content="reliability"></custom-field>
         <custom-field id="subtype2" content="-"></custom-field>
     </custom-fields>
-    <linked-work-items>
-        <linked-work-item workitem-id="RHEL7-95149" role-id="verifies"/>
-    </linked-work-items>
 </testcase>

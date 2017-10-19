@@ -4465,11 +4465,12 @@ if (false) {
 	
 	
 	// config module tasks ************************************************************
-
+	
 	/**
-	 * config without asserting results
+	 * @param noproxy TODO
+	 * @return the command line syntax for calling this subscription-manager module with these options
 	 */
-	public SSHCommandResult config_(Boolean list, Boolean remove, Boolean set, List<String[]> listOfSectionNameValues) {
+	public String configCommand(Boolean list, Boolean remove, Boolean set, List<String[]> listOfSectionNameValues) {
 		
 		// assemble the command
 		String command = this.command;				command += " config";
@@ -4482,6 +4483,22 @@ if (false) {
 			if (remove!=null && remove)				command += String.format(" --remove=%s.%s", section_name_value[0],section_name_value[1]);  // expected format section.name
 			if (set!=null && set)					command += String.format(" --%s.%s=%s", section_name_value[0],section_name_value[1],section_name_value[2]);  // expected format section.name=value
 		}
+		
+		return command;
+	}
+	public String configCommand(Boolean list, Boolean remove, Boolean set, String[] section_name_value) {
+		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
+		if (section_name_value!=null) listOfSectionNameValues.add(section_name_value);
+		return configCommand(list, remove, set, listOfSectionNameValues);
+	}
+	
+	/**
+	 * config without asserting results
+	 */
+	public SSHCommandResult config_(Boolean list, Boolean remove, Boolean set, List<String[]> listOfSectionNameValues) {
+		
+		// assemble the command
+		String command = configCommand(list, remove, set, listOfSectionNameValues);
 		
 		// run command without asserting results
 		SSHCommandResult sshCommandResult = sshCommandRunner.runCommandAndWait(command);
