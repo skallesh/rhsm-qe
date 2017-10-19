@@ -746,21 +746,6 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 					SSHCommandResult sshSystemctlIsEnabledCommandResult = client.runCommandAndWait("systemctl is-enabled osad.service");
 					Assert.assertEquals(sshSystemctlIsEnabledCommandResult.getStdout().trim(),"disabled", "Expected stdout for systemctl is-enabled osad.service");
 					Assert.assertEquals(sshSystemctlIsEnabledCommandResult.getExitCode(),Integer.valueOf(1), "Expected exitCode for systemctl is-enabled osad.service");
-					//	[root@jsefler-rhel7 ~]# chkconfig --list osad
-					//
-					//	Note: This output shows SysV services only and does not include native
-					//	      systemd services. SysV configuration data might be overridden by native
-					//	      systemd configuration.
-					//
-					//	      If you want to list systemd services use 'systemctl list-unit-files'.
-					//	      To see services enabled on particular target use
-					//	      'systemctl list-dependencies [target]'.
-					//
-					//	osad          	0:off	1:off	2:off	3:off	4:off	5:off	6:off
-					SSHCommandResult sshChkconfigCommandResult = client.runCommandAndWait("chkconfig --list osad");
-					Assert.assertEquals(sshChkconfigCommandResult.getExitCode(),Integer.valueOf(0), "Expected exitCode for chkconfig --list osad");
-					String sshChkconfigRegex = "osad\\s+0:off\\s+1:off\\s+2:off\\s+3:off\\s+4:off\\s+5:off\\s+6:off";
-					Assert.assertTrue(sshChkconfigCommandResult.getStdout().trim().matches(sshChkconfigRegex), "Expected stdout for chkconfig --list osad to match regex '"+sshChkconfigRegex+"'.");
 					//	[root@jsefler-rhel7 ~]# systemctl is-active osad.service
 					//	unknown
 					//	[root@jsefler-rhel7 ~]# echo $?
@@ -2523,7 +2508,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue((sshCommandResult.getStderr()+sshCommandResult.getStdout()).trim().endsWith(expectedMsg), "The result from a call to '"+rhnMigrateTool+"' after already having called this tool with options '"+options+"' ends with: "+expectedMsg);
 	}
 	// Make sure the RHN Classic Packages are installed
-	List<String> legacyRHNClassicPackages = Arrays.asList(new String[]{"osad","rhn-check","rhn-client-tools","rhncfg","rhncfg-actions","rhncfg-client","rhncfg-management","rhn-setup","rhnpush","rhnsd","spacewalk-abrt","spacewalk-oscap","yum-rhn-plugin","rhn-setup-gnome"/*requires rhn-setup and rhn-client-tool and must be installed for subscription-manager-firstboot requires rhn-setup-gnome*/});	// taken from https://github.com/candlepin/subscription-manager/pull/1484/files
+	List<String> legacyRHNClassicPackages = Arrays.asList(new String[]{"osad","rhn-check","rhn-client-tools","rhncfg","rhncfg-actions","rhncfg-client","rhncfg-management","rhn-setup","rhnpush","rhnsd","spacewalk-abrt","spacewalk-oscap","yum-rhn-plugin","rhn-setup-gnome"/*requires rhn-setup and rhn-client-tools and must be installed for subscription-manager-firstboot requires rhn-setup-gnome*/});	// taken from https://github.com/candlepin/subscription-manager/pull/1484/files
 	@BeforeGroups(groups="setup",value={"RhnMigrateClassicToRhsmWithRemoveRhnPackages_Test"})
 	@AfterGroups(groups="setup",value={"RhnMigrateClassicToRhsmWithRemoveRhnPackages_Test"})
 	public void installRhnClassicPackages() throws IOException, JSONException {
