@@ -60,13 +60,15 @@ public class InstanceBasedTests extends SubscriptionManagerCLITestScript {
 		Boolean flag = false;
 		clienttasks.register_(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
-				(String) null, null, null, null, true, null, null, null, null, null);
+				(String) null, null, null, null, true, false, null, null, null, null);
 		if(clienttasks.getFactValue("virt.is_guest").equals("True")){
 			for (SubscriptionPool availList : clienttasks.getCurrentlyAllAvailableSubscriptionPools()) {
 				
 				if(CandlepinTasks.isPoolProductInstanceBased(sm_clientUsername, sm_clientPassword, sm_serverUrl,availList.poolId)){
 					flag=true;
-					SSHCommandResult result=clienttasks.subscribe(null, null, availList.poolId, null, null, "5", null, null, null, null, null, null, null);
+					String quantity=availList.quantity;
+					if (availList.quantity.equalsIgnoreCase("Unlimited")) quantity=String.valueOf(getRandInt());
+					SSHCommandResult result=clienttasks.subscribe(null, null, availList.poolId, null, null, quantity, null, null, null, null, null, null, null);
 					String expectedMessage="Successfully attached a subscription for: "+availList.subscriptionName;
 					Assert.assertEquals(result.getStdout().trim(), expectedMessage);
 					Assert.assertEquals(result.getExitCode(),  Integer.valueOf(0));
