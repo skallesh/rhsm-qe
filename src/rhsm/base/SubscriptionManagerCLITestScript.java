@@ -1183,10 +1183,14 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		for (int i = 0; i < jsonSubscriptionPools.length(); i++) {
 			JSONObject jsonSubscriptionPool = (JSONObject) jsonSubscriptionPools.get(i);
 			String productId = jsonSubscriptionPool.getString("productId");
-			String subscriptionSubKey = jsonSubscriptionPool.getString("subscriptionSubKey");	// master or derived
 			
 			// skip all subscription pools for productIds (a.k.a. SKUs) not on the list of secondarySkusToDelete
 			if (!secondarySkusToDelete.contains(productId)) continue;
+			
+			// skip all custom pools not originating from a subscription
+			if (jsonSubscriptionPool.isNull("subscriptionSubKey")) continue;
+			
+			String subscriptionSubKey = jsonSubscriptionPool.getString("subscriptionSubKey");	// master or derived
 			
 			// skip non-master subscription pools
 			if (!subscriptionSubKey.equals("master")) continue;
