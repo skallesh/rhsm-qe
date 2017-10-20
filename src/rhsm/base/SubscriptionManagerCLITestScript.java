@@ -1167,9 +1167,9 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 				"stackable-with-awesomeos-x86_64",
 				"stackable-with-awesomeos-x86_64",
 				"stackable-with-awesomeos-x86_64",
-				"storage-limited-256",
-				"storage-limited-256",
-				"storage-limited-256",
+//				"storage-limited-256",	// keep multiple pools to testAutoSubscribeStorageBandSubscription() and testAutoHealStorageBandSubscription()
+//				"storage-limited-256",
+//				"storage-limited-256",
 				"virt-awesomeos-i386",
 				"virt-awesomeos-i386",
 				"virt-awesomeos-i386",
