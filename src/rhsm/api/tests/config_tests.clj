@@ -192,7 +192,7 @@ as rhsm.conf consists of.
                tools/run-command)]
       (verify (= stderr ""))
       (verify (= exitcode 0))
-      (let [[response-data rest] #spy/d (-> stdout dbus/parse)
+      (let [[response-data rest] (-> stdout dbus/parse)
             keys-of-data (keys response-data)]
         (clojure.test/is (= rest ""))
         (clojure.test/is (= (type response-data) java.lang.String))
