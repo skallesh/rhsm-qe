@@ -17,7 +17,7 @@ import rhsm.data.SubscriptionPool;
 
 import com.redhat.qe.Assert;
 import com.redhat.qe.auto.testng.TestNGUtils;
-
+import com.redhat.qe.tools.SSHCommandResult;
 import com.github.redhatqe.polarize.metadata.DefTypes;
 import com.github.redhatqe.polarize.metadata.TestDefinition;
 import com.github.redhatqe.polarize.metadata.TestType;
@@ -125,13 +125,17 @@ public class StorageBandTests extends SubscriptionManagerCLITestScript{
 			enabled = true)
 	public void testAutoSubscribeStorageBandSubscription(Object Bugzilla,SubscriptionPool storagebandpool) throws JSONException, Exception{
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String) null, null, null, null, true, null, null, null, null, null);
+		log.info("To auto-attach this system to '"+bandStorageUsage+"'TB of storage entitlements, there must be more than one stackable pool for product SKU '"+storagebandpool.productId+"'.");
+		SSHCommandResult listResult=clienttasks.list(null, true, null, null, null, null, null, null, storagebandpool.productId, null, null, null, null, null);	// to troubleshoot the existance of multiple pools 
+		List<SubscriptionPool> availableStorageBandPools = SubscriptionPool.parse(listResult.getStdout());
+		String expectedStatus = availableStorageBandPools.size()>1 ? "Subscribed" : "Not Subscribed";
 		clienttasks.subscribe(true, null, (String)null, null, null, null, null, null, null, null, null, null, null);	
 		List<String> providedProductIds = CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, storagebandpool.poolId);
 		List<InstalledProduct> installedProducts = clienttasks.getCurrentlyInstalledProducts();
 		for (String providedProductId : providedProductIds) {
 			InstalledProduct installedProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", providedProductId, installedProducts);
 			if (installedProduct!=null) {
-				Assert.assertEquals(installedProduct.status.trim(),"Subscribed","Status of installed product '"+installedProduct.productName+"' provided for by Storage Band entitlement pools that covers only 256TB on a system using '"+bandStorageUsage+"'TBs (that has been autosubscribed)");
+				Assert.assertEquals(installedProduct.status.trim(),expectedStatus,"Status of installed product '"+installedProduct.productName+"' provided for by Storage Band entitlement pools that covers only 256TB on a system using '"+bandStorageUsage+"'TBs (that has been autosubscribed with '"+availableStorageBandPools.size()+"' available '"+storagebandpool.productId+"' pools)");	
 			}
 		}
 	}
@@ -153,6 +157,10 @@ public class StorageBandTests extends SubscriptionManagerCLITestScript{
 			enabled = true)
 	public void testAutoHealStorageBandSubscription(Object Bugzilla,SubscriptionPool storagebandpool) throws JSONException, Exception{
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String) null, null, null, null, true, null, null, null, null, null);
+		log.info("To auto-heal this system for '"+bandStorageUsage+"'TB of storage, there must be more than one stackable pool for product SKU '"+storagebandpool.productId+"'.");
+		SSHCommandResult listResult=clienttasks.list(null, true, null, null, null, null, null, null, storagebandpool.productId, null, null, null, null, null);	// to troubleshoot the existance of multiple pools 
+		List<SubscriptionPool> availableStorageBandPools = SubscriptionPool.parse(listResult.getStdout());
+		String expectedStatus = availableStorageBandPools.size()>1 ? "Subscribed" : "Not Subscribed";
 		clienttasks.autoheal(null, true, null, null, null, null, null);
 		clienttasks.run_rhsmcertd_worker(true);
 		List<String> providedProductIds = CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, storagebandpool.poolId);
@@ -160,7 +168,7 @@ public class StorageBandTests extends SubscriptionManagerCLITestScript{
 		for (String providedProductId : providedProductIds) {
 			InstalledProduct installedProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", providedProductId, installedProducts);
 			if (installedProduct!=null) {
-				Assert.assertEquals(installedProduct.status.trim(),"Subscribed","Status of installed product '"+installedProduct.productName+"' provided for by Storage Band entitlement pools that covers only 256TB on a system using '"+bandStorageUsage+"'TBs (that has been autohealed)");	
+				Assert.assertEquals(installedProduct.status.trim(),expectedStatus,"Status of installed product '"+installedProduct.productName+"' provided for by Storage Band entitlement pools that covers only 256TB on a system using '"+bandStorageUsage+"'TBs (that has been autohealed with '"+availableStorageBandPools.size()+"' available '"+storagebandpool.productId+"' pools)");	
 			}
 		}
 	}
