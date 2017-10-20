@@ -4208,6 +4208,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				"%d subscriptions removed at the server.\n%d local certificates have been deleted.",
 				activeProductSubscriptionSerials.size(),
 				activeProductSubscriptionSerials.size() + expiredProductSubscriptions.size());
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.20.2-1")) {	// commit d88d09c7060a17fba34a138313e7efd21cc79d02  D-Bus service for removing entitlements (all/ID/serial num.)
+			expected = String.format("%d local certificates have been deleted."+"\n"+"%d subscriptions removed at the server.", activeProductSubscriptionSerials.size()+expiredProductSubscriptions.size(), activeProductSubscriptionSerials.size());
+		}
 		if (activeProductSubscriptionSerials.size() + expiredProductSubscriptions.size() == 1)
 			expected = expected.replace("local certificates have been", "local certificate has been");
 		Assert.assertEquals(result.getStdout().trim(), expected);
