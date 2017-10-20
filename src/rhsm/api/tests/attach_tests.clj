@@ -41,7 +41,22 @@
 
 (defn ^{BeforeSuite {:groups ["setup"]}}
   startup [_]
-  (c/init))
+  "installs scripts usable for playing with a file /etc/rhsm/rhsm.conf"
+  (tools/run-command "mkdir -p ~/bin")
+  (tools/run-command "cd ~/bin && curl --insecure  https://rhsm-gitlab.usersys.redhat.com/rhsm-qe/scripts/raw/master/get-config-value.py > get-config-value.py")
+  (tools/run-command "cd ~/bin && curl --insecure  https://rhsm-gitlab.usersys.redhat.com/rhsm-qe/scripts/raw/master/set-config-value.py > set-config-value.py")
+  (tools/run-command "chmod 755 ~/bin/get-config-value.py")
+  (tools/run-command "chmod 755 ~/bin/set-config-value.py"))
+
+(defn ^{AfterClass {:groups ["cleanup"]
+                    :alwaysRun true}}
+  set_inotify_to_1
+  [ts]
+  "set a variable inotify to 1 in /etc/rhsm/rhsm.conf"
+  (log/info "set a variable inotify to 1 in /etc/rhsm/rhsm.conf")
+  (tools/run-command "~/bin/set-config-value.py /etc/rhsm/rhsm.conf rhsm inotify 1")
+  (tools/run-command "systemctl stop rhsm.service")
+  (tools/run-command "systemctl start rhsm.service"))
 
 (defn ^{Test {:groups ["DBUS"
                        "API"
@@ -99,7 +114,8 @@ Then the methods list contains of methods 'AutoAttach', 'PoolAttach'
 
 (defn ^{Test {:groups ["DBUS"
                        "API"
-                       "tier1"]
+                       "tier1"
+                       "blockedByBug-1477958"]
               :dataProvider "client-with-locales"
               :description "Given a system is registered without any attached pool
 When I call a DBus method 'PoolAttach' at com.redhat.RHSM1.Attach object
@@ -119,6 +135,7 @@ Then the response contains of list of json strings described attached pools
                    run-command
                    :stdout) ]
     (verify (.contains output "Registering to:")))
+  (Thread/sleep 3000)
   ;;(->> "subscription-manager remove --all" tools/run-command)
   (let [list-of-available-pools (rest/list-of-available-pools
                                  (ctasks/server-url)
@@ -147,6 +164,27 @@ Then the response contains of list of json strings described attached pools
                                        (map (fn [ent] (-> ent first (get "pool") (get "id"))))
                                        set)]
             (verify (= ids-from-response (set a-few-pool-ids)))))))))
+
+(defn ^{Test {:groups ["DBUS"
+                       "API"
+                       "tier1"
+                       "blockedByBug-1477958"]
+              :dataProvider "client-with-locales"
+              :description "Given a system is registered without any attached pool
+When I call a DBus method 'PoolAttach' at com.redhat.RHSM1.Attach object
+Then the response contains of list of json strings described attached pools
+"}
+        TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]}}
+  dbus_attach_pool_reflects_identity_change_even_inotify_is_zero
+  [ts run-command locale]
+  (let [[_ major minor] (re-find #"(\d)\.(\d)" (-> :true tools/get-release :version))]
+    (match major
+           (a :guard #(< (Integer. %) 7 )) (throw (SkipException. "busctl is not available in RHEL6"))
+           :else nil))
+  (run-command "~/bin/set-config-value.py /etc/rhsm/rhsm.conf rhsm inotify 0")
+  (run-command "systemctl stop rhsm.service")
+  (run-command "systemctl start rhsm.service")
+  (attach_pool_using_dbus ts run-command locale))
 
 (defn ^{Test {:groups ["DBUS"
                        "API"

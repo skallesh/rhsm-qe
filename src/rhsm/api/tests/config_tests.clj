@@ -39,6 +39,16 @@
   (tools/run-command "chmod 755 ~/bin/get-config-value.py")
   (tools/run-command "chmod 755 ~/bin/set-config-value.py"))
 
+(defn ^{AfterClass {:groups ["cleanup"]
+                    :alwaysRun true}}
+  set_inotify_to_1
+  [ts]
+  "set a variable inotify back to 1 in /etc/rhsm/rhsm.conf"
+  (log/info "set a variable inotify to 1 in /etc/rhsm/rhsm.conf")
+  (tools/run-command "~/bin/set-config-value.py /etc/rhsm/rhsm.conf rhsm inotify 1")
+  (tools/run-command "systemctl stop rhsm.service")
+  (tools/run-command "systemctl start rhsm.service"))
+
 (defn ^{Test {:groups ["DBUS"
                        "API"
                        "tier2"]
@@ -104,7 +114,6 @@ as rhsm.conf consists of.
     (match major
            (a :guard #(< (Integer. %) 7 )) (throw (SkipException. "busctl is not available in RHEL6"))
            :else nil))
-  (->> "subscription-manager unregister" tools/run-command)
   (let [{:keys [stdout stderr exitcode]}
         (->> (str "busctl call com.redhat.RHSM1 /com/redhat/RHSM1/Config com.redhat.RHSM1.Config GetAll")
              tools/run-command)]
@@ -139,7 +148,6 @@ as rhsm.conf consists of.
     (match major
            (a :guard #(< (Integer. %) 7 )) (throw (SkipException. "busctl is not available in RHEL6"))
            :else nil))
-  (->> "subscription-manager unregister" tools/run-command)
   (let [{:keys [stdout stderr exitcode]}
         (->> (str "busctl call com.redhat.RHSM1 /com/redhat/RHSM1/Config com.redhat.RHSM1.Config Get s rhsm.baseurl")
              tools/run-command)]
@@ -153,7 +161,68 @@ as rhsm.conf consists of.
 
 (defn ^{Test {:groups ["DBUS"
                        "API"
-                       "tier2"]
+                       "tier2"
+                       "blockedByBug-1477958"
+                       "blockedByBug-1504588"]
+              :description "Given a system is unregistered
+When I call a DBus method 'GetAll' at com.redhat.RHSM1.Config object
+Then the response contains of list of all configuration properties
+as rhsm.conf consists of.
+"}
+        TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]}}
+  dbus_get_actual_value_when_property_is_changed
+  [ts]
+  (let [[_ major minor] (re-find #"(\d)\.(\d)" (-> :true get-release :version))]
+    (match major
+           (a :guard #(< (Integer. %) 7 )) (throw (SkipException. "busctl is not available in RHEL6"))
+           :else nil))
+  (let [manage-repos (-> "~/bin/get-config-value.py /etc/rhsm/rhsm.conf rhsm manage_repos"
+                         tools/run-command
+                         :stdout
+                         str/trim
+                         Integer/parseInt)
+        new-manage-repos (if (> manage-repos 0) 0 1)]
+    (-> (format "~/bin/set-config-value.py /etc/rhsm/rhsm.conf rhsm manage_repos %d" new-manage-repos)
+        tools/run-command
+        :exitcode
+        (= 0)
+        assert)
+    (let [{:keys [stdout stderr exitcode]}
+          (->> (str "busctl call com.redhat.RHSM1 /com/redhat/RHSM1/Config com.redhat.RHSM1.Config Get s rhsm.manage_repos")
+               tools/run-command)]
+      (verify (= stderr ""))
+      (verify (= exitcode 0))
+      (let [[response-data rest] #spy/d (-> stdout dbus/parse)
+            keys-of-data (keys response-data)]
+        (clojure.test/is (= rest ""))
+        (clojure.test/is (= (type response-data) java.lang.String))
+        (verify (= (format "%d" new-manage-repos) response-data))))))
+
+(defn ^{Test {:groups ["DBUS"
+                       "API"
+                       "tier2"
+                       "blockedByBug-1477958"
+                       "blockedByBug-1504588"]
+              :description "Given a system is unregistered
+When I call a DBus method 'GetAll' at com.redhat.RHSM1.Config object
+Then the response contains of list of all configuration properties
+as rhsm.conf consists of.
+"}
+        TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]}}
+  dbus_get_actual_value_even_inotify_is_zero
+  [ts]
+  (run-command "~/bin/set-config-value.py /etc/rhsm/rhsm.conf rhsm inotify 0")
+  (run-command "systemctl stop rhsm.service")
+  (run-command "systemctl start rhsm.service")
+  (run-command "systemctl status rhsm.service -l")
+  (dbus_get_actual_value_when_property_is_changed ts))
+
+
+
+(defn ^{Test {:groups ["DBUS"
+                       "API"
+                       "tier2"
+                       "blockedByBug-1504588"]
               :description "Given a system is unregistered
 When I call a DBus method 'GetAll' at com.redhat.RHSM1.Config object
 Then the response contains of list of all configuration properties
@@ -166,7 +235,6 @@ as rhsm.conf consists of.
     (match major
            (a :guard #(< (Integer. %) 7 )) (throw (SkipException. "busctl is not available in RHEL6"))
            :else nil))
-  (->> "subscription-manager unregister" tools/run-command)
   (let [{:keys [stdout stderr exitcode]}
         (->> (str "busctl call com.redhat.RHSM1 /com/redhat/RHSM1/Config com.redhat.RHSM1.Config Get s rhsm")
              tools/run-command)]

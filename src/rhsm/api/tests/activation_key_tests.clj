@@ -281,7 +281,7 @@ Then the response contains of json structure with entitlement information"
                     :alwaysRun true}}
   set_inotify_to_1
   [ts]
-  "set a variable inotify to 1 in /etc/rhsm/rhsm.conf"
+  "set a variable inotify back to 1 in /etc/rhsm/rhsm.conf"
   (log/info "set a variable inotify to 1 in /etc/rhsm/rhsm.conf")
   (run-command "~/bin/set-config-value.py /etc/rhsm/rhsm.conf rhsm inotify 1")
   (run-command "systemctl stop rhsm.service")
