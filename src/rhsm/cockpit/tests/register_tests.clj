@@ -4,7 +4,9 @@
   (:require [clojure.string :as string]
             [clojure.tools.logging :as log]
             [rhsm.gui.tasks.test-config :as c]
-            [rhsm.cockpit.tasks :as tasks])
+            [rhsm.cockpit.tests.locales :as locales]
+            [rhsm.cockpit.tasks :as tasks]
+            [rhsm.cockpit.web :as web])
   (:import [org.testng.annotations
             BeforeSuite
             AfterSuite
@@ -91,28 +93,23 @@
   (log/info "status test")
   (.. driver (switchTo) (defaultContent))
   (tasks/set-user-language driver language)
-  (.. (WebDriverWait. driver 60)
-      (until
-       (ExpectedConditions/visibilityOfElementLocated
-        (By/xpath "//a[@href='/subscriptions']")))
-      click)
-  (let [subscriptions-iframe (.. (WebDriverWait. driver 60)
-                                 (until
-                                  (ExpectedConditions/visibilityOfElementLocated
-                                   (By/xpath "//iframe[@name='cockpit1:localhost/subscriptions' and @data-loaded=1]"))))]
-    (.. driver (switchTo) (defaultContent))
-    (.. driver (switchTo) (frame subscriptions-iframe))
-    (let [status (->> "subscription-manager status"
-                      run-command
-                      :stdout
-                      (re-find #"Status:[\ \t]+([^\n]+)")
-                      first)]
-      (let [subscriptions-status (.. (WebDriverWait. driver 60)
-                                     (until
-                                      (ExpectedConditions/visibilityOfElementLocated
-                                       (By/cssSelector "div.subscription-status-ct label")))
-                                     (getText))]
-        (is (= status subscriptions-status))))))
+  (.. (web/subscriptions-menu-link driver) click)
+  (.. driver (switchTo) (defaultContent))
+  (.. driver (switchTo) (frame (web/subscriptions-iframe driver)))
+  (let [status (->> "subscription-manager status"
+                    run-command
+                    :stdout
+                    (re-find #"Status:[\ \t]+([^\n]+)")
+                    first)]
+    (let [subscriptions-status (.. (web/subscription-status driver) (getText))]
+      ;;(is (= status subscriptions-status))
+      ))
+  (let [localization-status
+        {:register-button (locales/is-register-button-localized? ts driver run-command locale language)
+         :subscription-status (locales/is-subscription-status-localized? ts driver run-command locale language)
+         :list-of-products (locales/is-list-of-products-localized? ts driver run-command locale language)
+         }]
+    ))
 
 (defn ^{Test {:groups ["register"
                        "cockpit"
@@ -138,54 +135,25 @@
   (run-command "subscription-manager unregister")
   (.. driver (switchTo) (defaultContent))
   (tasks/set-user-language driver language)
+  (.. (web/subscriptions-menu-link driver) click)
+  (.. driver (switchTo) (defaultContent))
+  (.. driver (switchTo) (frame (web/subscriptions-iframe driver)))
+  (.. (web/register-button driver) click)
+  (.. (web/register-username driver) (sendKeys (into-array [(@c/config :username)])))
+  (.. (web/register-password driver) (sendKeys (into-array [(@c/config :password)])))
+  (when-not (clojure.string/blank? (@c/config :owner-key))
+    (.. (web/register-org driver) (sendKeys (into-array [(@c/config :owner-key)]))))
+  (.. (web/register-confirm-button driver) click)
+  ;; waiting till the dialog disappears
   (.. (WebDriverWait. driver 60)
       (until
-       (ExpectedConditions/visibilityOfElementLocated
-        (By/xpath "//a[@href='/subscriptions']")))
-      click)
-  (let [subscriptions-iframe (.. (WebDriverWait. driver 60)
-                                 (until
-                                  (ExpectedConditions/visibilityOfElementLocated
-                                   (By/xpath "//iframe[@name='cockpit1:localhost/subscriptions' and @data-loaded=1]"))))]
-    (.. driver (switchTo) (defaultContent))
-    (.. driver (switchTo) (frame subscriptions-iframe))
-    (let [subscriptions-action (.. (WebDriverWait. driver 60)
-                                   (until
-                                    (ExpectedConditions/visibilityOfElementLocated
-                                     (By/cssSelector "div.subscription-status-ct button"))))]
-      (is (= (.. subscriptions-action getText) "Register"))
-      (.. subscriptions-action click)
-      (.. (WebDriverWait. driver 60)
-          (until
-           (ExpectedConditions/visibilityOfElementLocated
-            (By/id "subscription-register-username")))
-          (sendKeys (into-array [(@c/config :username)])))
-      (.. (WebDriverWait. driver 60)
-          (until
-           (ExpectedConditions/visibilityOfElementLocated
-            (By/id "subscription-register-password")))
-          (sendKeys (into-array [(@c/config :password)])))
-      (when-not (clojure.string/blank? (@c/config :owner-key))
-        (.. (WebDriverWait. driver 60)
-            (until
-             (ExpectedConditions/visibilityOfElementLocated
-              (By/id "subscription-register-org")))
-            (sendKeys (into-array [(@c/config :owner-key)]))))
-      (.. (WebDriverWait. driver 60)
-          (until
-           (ExpectedConditions/visibilityOfElementLocated
-            (By/xpath "//div[@class='modal-content']/div/button[contains(@class,'btn-primary')]")))
-          click)
-      ;; waiting till the dialog disappears
-      (.. (WebDriverWait. driver 60)
-          (until
-           (ExpectedConditions/invisibilityOfElementLocated
-            (By/xpath "//div[@class='modal-content']/div/button[contains(@class,'btn-primary')]"))))
-      (.. (WebDriverWait. driver 60)
-          (until
-           (ExpectedConditions/textToBePresentInElementLocated
-            (By/cssSelector "div.subscription-status-ct label")
-            "Status: System isn't registered"))))))
+       (ExpectedConditions/invisibilityOfElementLocated
+        (By/xpath "//div[@class='modal-content']/div/button[contains(@class,'btn-primary')]"))))
+  (.. (WebDriverWait. driver 60)
+      (until
+       (ExpectedConditions/textToBePresentInElementLocated
+        (By/cssSelector "div.subscription-status-ct label")
+        "Status: System isn't registered"))))
 
 (defn ^{Test {:groups ["register"
                        "cockpit"
@@ -211,49 +179,17 @@
   (run-command "subscription-manager unregister")
   (.. driver (switchTo) (defaultContent))
   (tasks/set-user-language driver language)
-  (.. (WebDriverWait. driver 60)
-      (until
-       (ExpectedConditions/visibilityOfElementLocated
-        (By/xpath "//a[@href='/subscriptions']")))
-      click)
-  (let [subscriptions-iframe (.. (WebDriverWait. driver 60)
-                                 (until
-                                  (ExpectedConditions/visibilityOfElementLocated
-                                   (By/xpath "//iframe[@name='cockpit1:localhost/subscriptions' and @data-loaded=1]"))))]
-    (.. driver (switchTo) (defaultContent))
-    (.. driver (switchTo) (frame subscriptions-iframe))
-    (let [subscriptions-action (.. (WebDriverWait. driver 60)
-                                   (until
-                                    (ExpectedConditions/visibilityOfElementLocated
-                                     (By/cssSelector "div.subscription-status-ct button"))))]
-      (is (= (.. subscriptions-action getText) "Register"))
-      (.. subscriptions-action click)
-      (.. (WebDriverWait. driver 60)
-          (until
-           (ExpectedConditions/visibilityOfElementLocated
-            (By/id "subscription-register-username")))
-          clear)
-      (.. (WebDriverWait. driver 60)
-          (until
-           (ExpectedConditions/visibilityOfElementLocated
-            (By/id "subscription-register-password")))
-          clear)
-      (.. (WebDriverWait. driver 60)
-          (until
-           (ExpectedConditions/visibilityOfElementLocated
-            (By/id "subscription-register-password")))
-          clear)
-      (.. (WebDriverWait. driver 60)
-          (until
-           (ExpectedConditions/visibilityOfElementLocated
-            (By/xpath "//div[@class='modal-content']/div/button[contains(@class,'btn-primary')]")))
-          click)
-      (let [error-element (.. (WebDriverWait. driver 60)
-                              (until
-                               (ExpectedConditions/visibilityOfElementLocated
-                                (By/xpath "//div[@class='modal-footer']/div[contains(@class,'dialog-error')]"))))]
-        (is (= "Error: Login/password or activation key required to register."
-               (.. error-element getText)))))))
+  (.. (web/subscriptions-menu-link driver) click)
+  (.. driver (switchTo) (defaultContent))
+  (.. driver (switchTo) (frame (web/subscriptions-iframe driver)))
+  (is (= (.. (web/register-button driver) getText) "Register"))
+  (.. (web/register-button driver) click)
+  (.. (web/register-username driver) clear)
+  (.. (web/register-password driver) clear)
+  (.. (web/register-org driver) clear)
+  (.. (web/register-confirm-button driver) click)
+  (let [error-text (.. (web/register-error-box driver) getText)]
+    (is (= "Error: Login/password or activation key required to register." error-text))))
 
 (defn ^{Test {:groups ["register"
                        "cockpit"
@@ -279,54 +215,22 @@
   (run-command "subscription-manager unregister")
   (.. driver (switchTo) (defaultContent))
   (tasks/set-user-language driver language)
-  (.. (WebDriverWait. driver 60)
-      (until
-       (ExpectedConditions/visibilityOfElementLocated
-        (By/xpath "//a[@href='/subscriptions']")))
-      click)
-  (let [subscriptions-iframe (.. (WebDriverWait. driver 60)
-                                 (until
-                                  (ExpectedConditions/visibilityOfElementLocated
-                                   (By/xpath "//iframe[@name='cockpit1:localhost/subscriptions' and @data-loaded=1]"))))]
-    (.. driver (switchTo) (defaultContent))
-    (.. driver (switchTo) (frame subscriptions-iframe))
-    (let [subscriptions-action (.. (WebDriverWait. driver 60)
-                                   (until
-                                    (ExpectedConditions/visibilityOfElementLocated
-                                     (By/cssSelector "div.subscription-status-ct button"))))]
-      (is (= (.. subscriptions-action getText) "Register"))
-      (.. subscriptions-action click)
-      (.. (WebDriverWait. driver 60)
-          (until
-           (ExpectedConditions/visibilityOfElementLocated
-            (By/id "subscription-register-username")))
-          (sendKeys (into-array [(@c/config :username)])))
-      (.. (WebDriverWait. driver 60)
-          (until
-           (ExpectedConditions/visibilityOfElementLocated
-            (By/id "subscription-register-password")))
-          clear)
-      (when-not (clojure.string/blank? (@c/config :owner-key))
-        (.. (WebDriverWait. driver 60)
-            (until
-             (ExpectedConditions/visibilityOfElementLocated
-              (By/id "subscription-register-org")))
-            (sendKeys (into-array [(@c/config :owner-key)]))))
-      (.. (WebDriverWait. driver 60)
-          (until
-           (ExpectedConditions/visibilityOfElementLocated
-            (By/xpath "//div[@class='modal-content']/div/button[contains(@class,'btn-primary')]")))
-          click)
-      (let [error-element (.. (WebDriverWait. driver 60)
-                              (until
-                               (ExpectedConditions/visibilityOfElementLocated
-                                (By/xpath "//div[@class='modal-footer']/div[contains(@class,'dialog-error')]"))))
-            error-text-01 "Error: Login/password or activation key required to register."
-            error-text-02 (format "Error: Invalid credentials (Registering to: %s:%s%s)"
-                                  (@c/config :server-hostname)
-                                  (@c/config :server-port)
-                                  (@c/config :server-prefix))]
-        (is (some #{(.. error-element getText)} [error-text-01 error-text-02]))))))
+  (.. (web/subscriptions-menu-link driver) click)
+  (.. driver (switchTo) (defaultContent))
+  (.. driver (switchTo) (frame (web/subscriptions-iframe driver)))
+  (.. (web/register-button driver) click)
+  (.. (web/register-username driver) (sendKeys (into-array [(@c/config :username)])))
+  (.. (web/register-password driver) clear)
+  (when-not (clojure.string/blank? (@c/config :owner-key))
+    (.. (web/register-org driver) (sendKeys (into-array [(@c/config :owner-key)]))))
+  (.. (web/register-confirm-button driver) click)
+  (let [error-text (.. (web/register-error-box driver) getText)
+        error-text-01 "Error: Login/password or activation key required to register."
+        error-text-02 (format "Error: Invalid credentials (Registering to: %s:%s%s)"
+                              (@c/config :server-hostname)
+                              (@c/config :server-port)
+                              (@c/config :server-prefix))]
+    (is (some #{error-text} [error-text-01 error-text-02]))))
 
 (defn ^{Test {:groups ["register"
                        "cockpit"
@@ -352,57 +256,25 @@
   (run-command "subscription-manager unregister")
   (.. driver (switchTo) (defaultContent))
   (tasks/set-user-language driver language)
-  (.. (WebDriverWait. driver 60)
-      (until
-       (ExpectedConditions/visibilityOfElementLocated
-        (By/xpath "//a[@href='/subscriptions']")))
-      click)
-  (let [subscriptions-iframe (.. (WebDriverWait. driver 60)
-                                 (until
-                                  (ExpectedConditions/visibilityOfElementLocated
-                                   (By/xpath "//iframe[@name='cockpit1:localhost/subscriptions' and @data-loaded=1]"))))]
-    (.. driver (switchTo) (defaultContent))
-    (.. driver (switchTo) (frame subscriptions-iframe))
-    (let [subscriptions-action (.. (WebDriverWait. driver 60)
-                                   (until
-                                    (ExpectedConditions/visibilityOfElementLocated
-                                     (By/cssSelector "div.subscription-status-ct button"))))]
-      (is (= (.. subscriptions-action getText) "Register"))
-      (.. subscriptions-action click)
-      (.. (WebDriverWait. driver 60)
-          (until
-           (ExpectedConditions/visibilityOfElementLocated
-            (By/id "subscription-register-username")))
-          (sendKeys (into-array [(@c/config :username)])))
-      (.. (WebDriverWait. driver 60)
-          (until
-           (ExpectedConditions/visibilityOfElementLocated
-            (By/id "subscription-register-password")))
-          (sendKeys (into-array ["some really wrong password"])))
-      (when-not (clojure.string/blank? (@c/config :owner-key))
-        (.. (WebDriverWait. driver 60)
-            (until
-             (ExpectedConditions/visibilityOfElementLocated
-              (By/id "subscription-register-org")))
-            (sendKeys (into-array [(@c/config :owner-key)]))))
-      (.. (WebDriverWait. driver 60)
-          (until
-           (ExpectedConditions/visibilityOfElementLocated
-            (By/xpath "//div[@class='modal-content']/div/button[contains(@class,'btn-primary')]")))
-          click)
-      (let [error-element (.. (WebDriverWait. driver 60)
-                              (until
-                               (ExpectedConditions/visibilityOfElementLocated
-                                (By/xpath "//div[@class='modal-footer']/div[contains(@class,'dialog-error')]"))))
-            error-text-01 (format "Error: Invalid username or password (To create a login, please visit https://www.redhat.com/wapps/ugc/register.html Registering to: %s:%s%s)"
-                                  (@c/config :server-hostname)
-                                  (@c/config :server-port)
-                                  (@c/config :server-prefix))
-            error-text-02 (format "Error: Invalid credentials (Registering to: %s:%s%s)"
-                                  (@c/config :server-hostname)
-                                  (@c/config :server-port)
-                                  (@c/config :server-prefix))]
-        (is (some #{(.. error-element getText)} [error-text-01 error-text-02]))))))
+  (.. (web/subscriptions-menu-link driver) click)
+  (.. driver (switchTo) (defaultContent))
+  (.. driver (switchTo) (frame (web/subscriptions-iframe driver)))
+  (.. (web/register-button driver) click)
+  (.. (web/register-username driver) (sendKeys (into-array [(@c/config :username)])))
+  (.. (web/register-password driver) (sendKeys (into-array ["some really wrong password"])))
+  (when-not (clojure.string/blank? (@c/config :owner-key))
+    (.. (web/register-org driver) (sendKeys (into-array [(@c/config :owner-key)]))))
+  (.. (web/register-confirm-button driver) click)
+  (let [error-text (.. (web/register-error-box driver) getText)
+        error-text-01 (format "Error: Invalid username or password (To create a login, please visit https://www.redhat.com/wapps/ugc/register.html Registering to: %s:%s%s)"
+                              (@c/config :server-hostname)
+                              (@c/config :server-port)
+                              (@c/config :server-prefix))
+        error-text-02 (format "Error: Invalid credentials (Registering to: %s:%s%s)"
+                              (@c/config :server-hostname)
+                              (@c/config :server-port)
+                              (@c/config :server-prefix))]
+        (is (some #{error-text} [error-text-01 error-text-02]))))
 
 (defn ^{Test {:groups ["register"
                        "cockpit"
@@ -427,44 +299,21 @@
   (run-command "subscription-manager unregister")
   (.. driver (switchTo) (defaultContent))
   (tasks/set-user-language driver language)
-  (.. (WebDriverWait. driver 60)
-      (until
-       (ExpectedConditions/visibilityOfElementLocated
-        (By/xpath "//a[@href='/subscriptions']")))
-      click)
+  (.. (web/subscriptions-menu-link driver) click)
   (let [subscriptions-iframe (.. (WebDriverWait. driver 60)
                                  (until
                                   (ExpectedConditions/visibilityOfElementLocated
                                    (By/xpath "//iframe[@name='cockpit1:localhost/subscriptions' and @data-loaded=1]"))))]
     (.. driver (switchTo) (defaultContent))
     (.. driver (switchTo) (frame subscriptions-iframe))
-    (let [subscriptions-action (.. (WebDriverWait. driver 60)
-                                   (until
-                                    (ExpectedConditions/visibilityOfElementLocated
-                                     (By/cssSelector "div.subscription-status-ct button"))))]
-      (is (= (.. subscriptions-action getText) "Register"))
-      (.. subscriptions-action click)
-      (.. (WebDriverWait. driver 60)
-          (until
-           (ExpectedConditions/visibilityOfElementLocated
-            (By/id "subscription-register-username")))
-          clear)
-      (.. (WebDriverWait. driver 60)
-          (until
-           (ExpectedConditions/visibilityOfElementLocated
-            (By/id "subscription-register-password")))
-          (sendKeys (into-array [(@c/config :password)])))
-      (.. (WebDriverWait. driver 60)
-          (until
-           (ExpectedConditions/visibilityOfElementLocated
-            (By/xpath "//div[@class='modal-content']/div/button[contains(@class,'btn-primary')]")))
-          click)
-      (let [error-element (.. (WebDriverWait. driver 60)
-                              (until
-                               (ExpectedConditions/visibilityOfElementLocated
-                                (By/xpath "//div[@class='modal-footer']/div[contains(@class,'dialog-error')]"))))]
-        (is (= "Error: Login/password or activation key required to register."
-               (.. error-element getText)))))))
+    (.. (web/register-button driver) click)
+    (.. (web/register-username driver) clear)
+    (.. (web/register-password driver)
+        (sendKeys (into-array [(@c/config :password)])))
+    (.. (web/register-confirm-button driver) click)
+    (let [error-text (.. (web/register-error-box driver) getText)]
+      (is (= "Error: Login/password or activation key required to register."
+             error-text)))))
 
 (defn ^{Test {:groups ["register"
                        "cockpit"
@@ -490,51 +339,25 @@
   (run-command "subscription-manager unregister")
   (.. driver (switchTo) (defaultContent))
   (tasks/set-user-language driver language)
-  (.. (WebDriverWait. driver 60)
-      (until
-       (ExpectedConditions/visibilityOfElementLocated
-        (By/xpath "//a[@href='/subscriptions']")))
-      click)
-  (let [subscriptions-iframe (.. (WebDriverWait. driver 60)
-                                 (until
-                                  (ExpectedConditions/visibilityOfElementLocated
-                                   (By/xpath "//iframe[@name='cockpit1:localhost/subscriptions' and @data-loaded=1]"))))]
-    (.. driver (switchTo) (defaultContent))
-    (.. driver (switchTo) (frame subscriptions-iframe))
-    (let [subscriptions-action (.. (WebDriverWait. driver 60)
-                                   (until
-                                    (ExpectedConditions/visibilityOfElementLocated
-                                     (By/cssSelector "div.subscription-status-ct button"))))]
-      (is (= (.. subscriptions-action getText) "Register"))
-      (.. subscriptions-action click)
-      (.. (WebDriverWait. driver 60)
-          (until
-           (ExpectedConditions/visibilityOfElementLocated
-            (By/id "subscription-register-username")))
-          (sendKeys (into-array ["some wrong login"])))
-      (.. (WebDriverWait. driver 60)
-          (until
-           (ExpectedConditions/visibilityOfElementLocated
-            (By/id "subscription-register-password")))
-          (sendKeys (into-array [(@c/config :password)])))
-      (.. (WebDriverWait. driver 60)
-          (until
-           (ExpectedConditions/visibilityOfElementLocated
-            (By/xpath "//div[@class='modal-content']/div/button[contains(@class,'btn-primary')]")))
-          click)
-      (let [error-element (.. (WebDriverWait. driver 60)
-                              (until
-                               (ExpectedConditions/visibilityOfElementLocated
-                                (By/xpath "//div[@class='modal-footer']/div[contains(@class,'dialog-error')]"))))
-            error-text-01 (format "Error: Invalid username or password (To create a login, please visit https://www.redhat.com/wapps/ugc/register.html Registering to: %s:%s%s)"
-                                  (@c/config :server-hostname)
-                                  (@c/config :server-port)
-                                  (@c/config :server-prefix))
-            error-text-02 (format "Error: Invalid credentials (Registering to: %s:%s%s)"
-                                  (@c/config :server-hostname)
-                                  (@c/config :server-port)
-                                  (@c/config :server-prefix))]
-        (is (some #{(.. error-element getText)} [error-text-01 error-text-02]))))))
+  (.. (web/subscriptions-menu-link driver) click)
+  (.. driver (switchTo) (defaultContent))
+  (.. driver (switchTo) (frame (web/subscriptions-iframe driver)))
+  (.. (web/register-button driver) click)
+  (.. (web/register-username driver)
+      (sendKeys (into-array ["some wrong login"])))
+  (.. (web/register-password driver)
+      (sendKeys (into-array [(@c/config :password)])))
+  (.. (web/register-confirm-button driver) click)
+  (let [error-text (.. (web/register-error-box driver) getText)
+        error-text-01 (format "Error: Invalid username or password (To create a login, please visit https://www.redhat.com/wapps/ugc/register.html Registering to: %s:%s%s)"
+                              (@c/config :server-hostname)
+                              (@c/config :server-port)
+                              (@c/config :server-prefix))
+        error-text-02 (format "Error: Invalid credentials (Registering to: %s:%s%s)"
+                              (@c/config :server-hostname)
+                              (@c/config :server-port)
+                              (@c/config :server-prefix))]
+    (is (some #{error-text} [error-text-01 error-text-02]))))
 
 (defn ^{Test {:groups ["register"
                        "cockpit"
@@ -566,32 +389,15 @@
     (is (.contains output "Registering to:")))
   (.. driver (switchTo) (defaultContent))
   (tasks/set-user-language driver language)
+  (.. (web/subscriptions-menu-link driver) click)
+  (.. driver (switchTo) (defaultContent))
+  (.. driver (switchTo) (frame (web/subscriptions-iframe driver)))
+  (.. (web/register-button driver) click)
   (.. (WebDriverWait. driver 60)
       (until
-       (ExpectedConditions/visibilityOfElementLocated
-        (By/xpath "//a[@href='/subscriptions']")))
-      click)
-  (let [subscriptions-iframe (.. (WebDriverWait. driver 60)
-                                 (until
-                                  (ExpectedConditions/visibilityOfElementLocated
-                                   (By/xpath "//iframe[@name='cockpit1:localhost/subscriptions' and @data-loaded=1]"))))]
-    (.. driver (switchTo) (defaultContent))
-    (.. driver (switchTo) (frame subscriptions-iframe))
-    (let [subscriptions-action (.. (WebDriverWait. driver 60)
-                                   (until
-                                    (ExpectedConditions/visibilityOfElementLocated
-                                     (By/cssSelector "div.subscription-status-ct button"))))]
-      (is (= (.. subscriptions-action getText) "Unregister"))
-      (.. subscriptions-action click)
-      (.. (WebDriverWait. driver 60)
-          (until
-           (ExpectedConditions/invisibilityOfElementLocated
-            (By/xpath "//div[@class='modal-content']/div/button[contains(@class,'btn-primary')]"))))
-      (.. (WebDriverWait. driver 60)
-          (until
-           (ExpectedConditions/textToBePresentInElementLocated
-            (By/cssSelector "div.subscription-status-ct label")
-            "Status: System isn't registered"))))))
+       (ExpectedConditions/textToBePresentInElementLocated
+        (By/cssSelector "div.subscription-status-ct label")
+        "Status: System isn't registered"))))
 
 (defn ^{Test {:groups ["register"
                        "cockpit"

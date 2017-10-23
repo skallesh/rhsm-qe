@@ -1,6 +1,8 @@
 (ns rhsm.cockpit.tests.register-test
   (:require  [clojure.test :refer :all]
-             [rhsm.cockpit.tests.register-tests :as tests]))
+             [rhsm.cockpit.tests.register-tests :as tests]
+             [rhsm.gui.tasks.test-config :as c]
+             [rhsm.cockpit.tests.locales :as locales]))
 
 ;;
 ;; lein quickie rhsm.cockpit.tests.activation-key-test
@@ -9,10 +11,11 @@
 
 ;; ;; initialization of our testware
 (use-fixtures :once (fn [f]
-                      ;;(TestScript.)
+                      (c/init)
                       (tests/startup nil)
                       (f)
-                      (tests/cleanup nil)))
+                      (tests/cleanup nil)
+                      ))
 
 (deftest package_is_installed-test
   (let [[[run-command]] (tests/provide_run_command nil)]
@@ -21,6 +24,10 @@
 (deftest service_is_running-test
   (let [[[run-command]] (tests/provide_run_command nil)]
     (tests/service_is_running nil run-command)))
+
+(deftest is-register-button-localized-test
+  (let [[driver run-command locale lang] (second (tests/webdriver_with_locale nil))]
+    (tests/subscription_status nil driver run-command locale lang)))
 
 (deftest register-01-test
   (let [[driver run-command locale lang]
