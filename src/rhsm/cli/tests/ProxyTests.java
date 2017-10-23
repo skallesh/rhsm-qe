@@ -3356,10 +3356,8 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	protected List<List<Object>> getFactsAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists() {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		for (List<Object> l : getValidRegisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists()) {
-//			if (l.get(12)!=null) {
-//DELETEME	if (l.get(12)/*stdout*/==nErrMsg || l.get(13)/*stderr*/==nErrMsg) {
-			if (l.get(12)/*stdout*/==nErrMsg || l.get(13)/*stderr*/==nErrMsg || l.get(13)/*stderr*/==pErr407Msg) {
-//				ll.add(Arrays.asList(new Object[]{	l.get(0),	l.get(1),	l.get(2),	l.get(3),	l.get(4),	l.get(5),	l.get(6),	l.get(7),	l.get(8),	l.get(9),	l.get(10),	l.get(11),	null,	"Error updating system data, see /var/log/rhsm/rhsm.log for more details.",	l.get(14),	l.get(15),	l.get(16)}));
+			if (l.get(12)/*stdout*/==nErrMsg || l.get(13)/*stderr*/==nErrMsg || l.get(13)/*stderr*/==pErr407Msg || l.get(13)/*stderr*/==pErrConMsg) {
+//OLD				ll.add(Arrays.asList(new Object[]{	l.get(0),	l.get(1),	l.get(2),	l.get(3),	l.get(4),	l.get(5),	l.get(6),	l.get(7),	l.get(8),	l.get(9),	l.get(10),	l.get(11),	null,	"Error updating system data, see /var/log/rhsm/rhsm.log for more details.",	l.get(14),	l.get(15),	l.get(16)}));
 				ll.add(Arrays.asList(new Object[]{	l.get(0),	l.get(1),	l.get(2),	l.get(3),	l.get(4),	l.get(5),	l.get(6),	l.get(7),	l.get(8),	l.get(9),	l.get(10),	l.get(11),	null,	"Error updating system data on the server, see /var/log/rhsm/rhsm.log for more details.",	l.get(14),	l.get(15),	l.get(16)}));
 			} else {
 				ll.add(l);
