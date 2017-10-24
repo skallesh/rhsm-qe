@@ -1,10 +1,14 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <testcase id="RHEL7-99807">
     <title>RHSM-TC : rhsm.cli.tests.ConfigTests.testSubscriptionManagerShouldAutomaticallyEnableYumPluginsWhenAutoEnableIsOn</title>
-    <description>Verify that the yum plugins for /etc/yum/pluginconf.d/product-id.conf and /etc/yum/pluginconf.d/subscription-manager.conf are automatically enabled by various subscription-manager commands when rhsm.auto_enable_yum_plugins is configured on.</description>
+    <description>Verify that the yum plugins for /etc/yum/pluginconf.d/product-id.conf and /etc/yum/pluginconf.d/subscription-manager.conf are automatically enabled by various subscription-manager module commands when rhsm.auto_enable_yum_plugins is configured on.</description>
     <test-steps>
         <test-step>
-            <test-step-column id="step"/>
+            <test-step-column id="step">
+                <parameter name="blockedByBug" scope="local"/>
+                <parameter name="moduleCommand" scope="local"/>
+                <parameter name="moduleCommandRequiresRegistration" scope="local"/>
+            </test-step-column>
         </test-step>
     </test-steps>
     <custom-fields>

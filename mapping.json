@@ -2062,21 +2062,21 @@
   "rhsm.cli.tests.ConfigTests.testSubscriptionManagerShouldAutomaticallyEnableYumPluginsWhenAutoEnableIsOn" : {
     "RHEL6" : {
       "id" : "RHEL6-47939",
-      "parameters" : [ ]
+      "parameters" : [ "blockedByBug", "moduleCommand", "moduleCommandRequiresRegistration" ]
     },
     "RedHatEnterpriseLinux7" : {
       "id" : "RHEL7-99807",
-      "parameters" : [ ]
+      "parameters" : [ "blockedByBug", "moduleCommand", "moduleCommandRequiresRegistration" ]
     }
   },
   "rhsm.cli.tests.ConfigTests.testSubscriptionManagerShouldNotAutomaticallyEnableYumPluginsWhenAutoEnableIsOff" : {
     "RHEL6" : {
       "id" : "RHEL6-47940",
-      "parameters" : [ ]
+      "parameters" : [ "blockedByBug", "moduleCommand", "moduleCommandRequiresRegistration" ]
     },
     "RedHatEnterpriseLinux7" : {
       "id" : "RHEL7-99808",
-      "parameters" : [ ]
+      "parameters" : [ "blockedByBug", "moduleCommand", "moduleCommandRequiresRegistration" ]
     }
   },
   "rhsm.cli.tests.ContentTests.testArchRestrictedContentSetsEntitledAfterSubscribeAllSatisfiesTheSystemArch" : {
