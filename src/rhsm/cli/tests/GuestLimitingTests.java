@@ -409,6 +409,7 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 * @throws Exception
 	 */
+	@SuppressWarnings("deprecation")
 	protected String createTestPool(int startingMinutesFromNow, int endingMinutesFromNow,String guest_limit)
 			throws JSONException, Exception {
 	    String name = "Guest_limit_GlobalTestProduct";
