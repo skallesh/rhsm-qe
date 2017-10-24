@@ -426,6 +426,7 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript {
 		attributes.put("type", "MKT");
 		attributes.put("type", "SVC");
 		attributes.put("guest_limit", guest_limit);
+		providedProduct.clear();
 		providedProduct.add("37060");
 		CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword,
 				sm_serverUrl, sm_clientOrg, productId);
