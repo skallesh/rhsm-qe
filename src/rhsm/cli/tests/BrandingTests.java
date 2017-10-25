@@ -167,7 +167,7 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 		// tests for branding
 		Boolean verifiedSystemsExpectedBrandedNameAfterEvent = verifySystemsExpectedBrandedNameAfterEvent(brandNameBeforeRegisteringWithAutosubscribe,brandNameStatBeforeRegisteringWithAutosubscribe,prettyNameBeforeRegisteringWithAutosubscribe,"registering with autosubscribe");
 		if (verifiedSystemsExpectedBrandedNameAfterEvent==null || !verifiedSystemsExpectedBrandedNameAfterEvent) {
-			throw new SkipException("Could not verify the systems expected branded name after registering with autosubscribe.");
+			throw new SkipException("Could not verify the systems expected branded name after registering with autosubscribe.  Review warnings logged above for an explanation.");
 		}
 	}
 
@@ -200,7 +200,7 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 		// tests for branding
 		Boolean verifiedSystemsExpectedBrandedNameAfterEvent = verifySystemsExpectedBrandedNameAfterEvent(brandNameBeforeRunningRhsmcertdCheck,brandNameStatBeforeRunningRhsmcertdCheck,prettyNameBeforeRunningRhsmcertdCheck,"running the rhsmcertd-worker check");
 		if (verifiedSystemsExpectedBrandedNameAfterEvent==null || !verifiedSystemsExpectedBrandedNameAfterEvent) {
-			throw new SkipException("Could not verify the systems expected branded name after running the rhsmcertd-worker to restore the consumer's entitlements from the prior AutoSubscribeForFlexibleBranding_Test.");
+			throw new SkipException("Could not verify the systems expected branded name after running the rhsmcertd-worker to restore the consumer's entitlements from the prior testAutoSubscribeForFlexibleBranding.  Review warnings logged above for an explanation.");
 		}
 	}
 
@@ -236,7 +236,7 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 		// tests for branding
 		Boolean verifiedSystemsExpectedBrandedNameAfterEvent = verifySystemsExpectedBrandedNameAfterEvent(brandNameBeforeRunningRhsmcertdHealCheck,brandNameStatBeforeRunningRhsmcertdHealCheck,prettyNameBeforeRunningRhsmcertdHealCheck,"running the rhsmcertd-worker healing check");
 		if (verifiedSystemsExpectedBrandedNameAfterEvent==null || !verifiedSystemsExpectedBrandedNameAfterEvent) {
-			throw new SkipException("Could not verify the systems expected branded name after running the rhsmcertd-worker with healing.");
+			throw new SkipException("Could not verify the systems expected branded name after running the rhsmcertd-worker with healing.  Review warnings logged above for an explanation.");
 		}
 	}
 
@@ -427,6 +427,7 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 		//  - eligible brand names come from the currently entitled productNamespaces and are identified by a brandType = "OS"
 		//  - the corresponding productId must be among the currently installed product certs to be eligible
 		
+		Set<String> eligibleInstalledProductIdSet = new HashSet<String>();
 		Set<String> eligibleBrandNamesSet = new HashSet<String>();
 		List<String> eligibleBrandNamesList = new ArrayList<String>();
 		List<ProductCert> currentProductCerts = clienttasks.getCurrentProductCerts();
@@ -441,6 +442,7 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 							*/
 							eligibleBrandNamesList.add(productNamespace.brandName);
 							eligibleBrandNamesSet.add(productNamespace.brandName);
+							eligibleInstalledProductIdSet.add(productNamespace.id);
 						}
 					}
 				}
@@ -448,6 +450,12 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 		}
 		if (eligibleBrandNamesList.size() > eligibleBrandNamesSet.size()) {
 			log.warning("Currently there are multiple entitled OS brand products by the same name "+eligibleBrandNamesList+".  This can happen when multiple OS subscriptions have been stacked.");
+		}
+		if (eligibleInstalledProductIdSet.size() > 1) {
+			log.warning("Currently there are multiple entitled OS brand product ids installed "+eligibleInstalledProductIdSet+".  This is likely caused by a RHEL installation or redhat-release bug.  In this case a warning is logged to "+clienttasks.rhsmLogFile+" and no update is made to the branding file '"+brandingFile+"'.");
+			// 2017-10-25 13:56:44,700 [DEBUG] subscription-manager:26339:MainThread @certdirectory.py:217 - Installed product IDs: ['68', '69', '71', '76']
+			// 2017-10-25 13:56:44,772 [WARNING] subscription-manager:26339:MainThread @rhelentbranding.py:114 - More than one installed product with RHEL brand information is installed
+			eligibleBrandNamesSet.clear();
 		}
 		return eligibleBrandNamesSet;
 	}
@@ -550,7 +558,7 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 			log.info("There is only one eligible brand name based on the currently attached entitlements, therefore the actual brand name should be '"+expectedBrandNameAfterSubscribing+"'.");
 			flexibleBrandedSubscriptionsFound=true;
 		}
-	
+		
 		// verify the actualBrandNameAfterSubscribing = expectedBrandNameAfterSubscribing
 		String actualBrandNameAfterSubscribing = getCurrentBrandName();
 		Assert.assertEquals(actualBrandNameAfterSubscribing, expectedBrandNameAfterSubscribing, "The brand name contained within the first line of the brand file '"+brandingFile+"' after "+afterEventDescription);
