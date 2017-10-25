@@ -428,7 +428,7 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier1")
 	@Test(	description="register to a RHEL subscription and verify that release --list matches the expected CDN listing for this x-stream release of RHEL",
-			groups={"Tier1Tests","blockedByBug-818298","blockedByBug-820639","blockedByBug-844368","blockedByBug-893746","blockedByBug-904193"},
+			groups={"Tier1Tests","blockedByBug-818298","blockedByBug-820639","blockedByBug-844368","blockedByBug-893746","blockedByBug-904193","blockedByBug-1506271"},
 			dataProvider="getCredentialsToVerifyReleaseListMatchesCDN_Test",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
