@@ -154,12 +154,17 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 
 		// assert feedback from release --list 
 		SSHCommandResult result = clienttasks.release_(null,true,null,null,null, null, null, null);
-		Assert.assertEquals(result.getStdout().trim(), "", "stdout from release release --list without any entitlements");
-		Assert.assertEquals(result.getStderr().trim(), "No release versions available, please check subscriptions.", "stderr from release --list without any entitlements");
 		Integer expectedExitCode = new Integer(255);
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) expectedExitCode = new Integer(78);	// EX_CONFIG	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+		String rhelTag = "rhel-"+clienttasks.redhatReleaseX;
+		if (clienttasks.getCurrentProductCerts(rhelTag).size()>1) {	// Bug 1506271 - redhat-release is providing more than 1 variant specific product cert
+			Assert.assertEquals(result.getStdout().trim(), "", "stdout from release --list when more than one product cert with tag '"+rhelTag+"' is installed.");
+			Assert.assertEquals(result.getStderr().trim(), "Error: More than one release product certificate installed.", "stderr from release --list when more than one product cert with tag '"+rhelTag+"' is installed.");
+		} else {
+			Assert.assertEquals(result.getStdout().trim(), "", "stdout from release --list without any entitlements");
+			Assert.assertEquals(result.getStderr().trim(), "No release versions available, please check subscriptions.", "stderr from release --list without any entitlements");
+		}
 		Assert.assertEquals(result.getExitCode(), expectedExitCode, "exitCode from release --list without any entitlements");
-
 	}
 
 
@@ -182,10 +187,17 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 		// assert feedback from release --list 
 		String unavailableRelease = "Foo_1.0";
 		SSHCommandResult result = clienttasks.release_(null, null, unavailableRelease, null, null, null, null, null);
-		Assert.assertEquals(result.getStdout().trim(), "", "stdout from release release --set with an unavailable value");
-		Assert.assertEquals(result.getStderr().trim(), String.format("No releases match '%s'.  Consult 'release --list' for a full listing.", unavailableRelease), "stderr from release --set with an unavailable value");
 		Integer expectedExitCode = new Integer(255);
-		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) expectedExitCode = new Integer(65);	// EX_DATAERR	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+		String rhelTag = "rhel-"+clienttasks.redhatReleaseX;
+		if (clienttasks.getCurrentProductCerts(rhelTag).size()>1) {	// Bug 1506271 - redhat-release is providing more than 1 variant specific product cert
+			if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) expectedExitCode = new Integer(78);	// EX_CONFIG	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+			Assert.assertEquals(result.getStdout().trim(), "", "stdout from --set with an unavailable value when more than one product cert with tag '"+rhelTag+"' is installed.");
+			Assert.assertEquals(result.getStderr().trim(), "Error: More than one release product certificate installed.", "stderr from release --set with an unavailable value when more than one product cert with tag '"+rhelTag+"' is installed.");
+		} else {
+			if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) expectedExitCode = new Integer(65);	// EX_DATAERR	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+			Assert.assertEquals(result.getStdout().trim(), "", "stdout from release --set with an unavailable value");
+			Assert.assertEquals(result.getStderr().trim(), String.format("No releases match '%s'.  Consult 'release --list' for a full listing.", unavailableRelease), "stderr from release --set with an unavailable value");
+		}
 		Assert.assertEquals(result.getExitCode(), expectedExitCode, "exitCode from release --set with an unavailable value");
 	}
 
