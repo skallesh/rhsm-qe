@@ -2502,6 +2502,17 @@ if (false) {
 			}
 		}
 		
+		// TEMPORARY WORKAROUND
+		if (rhelProductCerts.size()>1) {
+			boolean invokeWorkaroundWhileBugIsOpen = true;
+			String bugId="1506271"; // Bug 1506271 - redhat-release is providing more than 1 variant specific product cert
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			if (invokeWorkaroundWhileBugIsOpen) {
+				throw new SkipException("The remainder of this test is blocked by bug '"+bugId+"' because multiple base RHEL product certs are installed.");
+			}
+		}
+		// END OF WORKAROUND
+		
 		// assert that only one rhel product cert is installed (after purging HTB and an untrumped product-default cert)
 		Assert.assertEquals(rhelProductCerts.size(), 1, "Only one product cert is installed that provides RHEL tag '"+providingTag+"' (this assert accounts for /etc/pki/product-default/ certs that are trumped by /etc/pki/product/ certs)");
 		
