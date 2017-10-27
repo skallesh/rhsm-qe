@@ -822,11 +822,13 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		SSHCommandResult registerResult = clienttasks.register_(null, null, sm_clientOrg, null, null, null, null, null,
 				null, null, name, null, null, null, true, null, null, null, null, null);
 		List<ProductSubscription> consumedResult= clienttasks.getCurrentlyConsumedProductSubscriptions();
+		SSHCommandResult consumedListResult= clienttasks.list(null, null, true, null, null, null, null, null, null, null, null, null, null, null);
+
 		String expected_message = "Unable to attach pool with ID '" + expiringPoolId + "'.: Subscriptions for "
 				+ productId + " expired on: " + EndingDate + ".";
 		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.2.0-1")) {
-			Assert.assertContainsMatch(registerResult.getStdout().trim(),"The system has been registered with ID: [a-f,0-9,\\\\-]{36}", "stdout");
-			Assert.assertEquals(consumedResult.get(randomGenerator.nextInt(consumedResult.size())).statusDetails.toString(),"[Subscription is expired]","Attached subscription is in expired state");
+			Assert.assertContainsMatch(registerResult.getStderr().trim(),"None of the subscriptions on the activation key were available for attaching.", "stderr");
+			Assert.assertEquals(consumedListResult.getStdout().trim(),"No consumed subscription pools were found.","Expired subscription cannot be attached to activationkey");
 		}
 		if ((SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">", "0.9.30-1"))&&(SubscriptionManagerTasks.isVersion(servertasks.statusVersion,"<", "2.2.0-1"))) {
 			expected_message = "No activation key was applied successfully."; // Follows:
@@ -834,13 +836,11 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		// //
 		// https://github.com/candlepin/candlepin/commit/bcb4b8fd8ee009e86fc9a1a20b25f19b3dbe6b2a
 			Assert.assertEquals(registerResult.getStderr().trim(), expected_message);
+			Assert.assertEquals(consumedResult.get(randomGenerator.nextInt(consumedResult.size()-1)).statusDetails.toString(),"[Subscription is expired]","Attached subscription is in expired state");
 
 		}
 		SSHCommandResult identityResult = clienttasks.identity_(null, null, null, null, null, null, null, null);
-		if(clienttasks.isPackageVersion("subscription-manager", ">=", "1.20.1-1")) {	
-		    Assert.assertContainsMatch(identityResult.getStdout().trim(), "system identity: [a-f,0-9,\\\\\\\\-]{36}", "stdout");
-
-		}else if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.9-1")) { // post
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.9-1")) { // post
 			// commit
 			// a695ef2d1da882c5f851fde90a24f957b70a63ad
 		    Assert.assertEquals(identityResult.getStderr().trim(), clienttasks.msg_ConsumerNotRegistered, "stderr");
@@ -5894,6 +5894,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 * @throws Exception
 	 */
+	@SuppressWarnings("deprecation")
 	protected String createTestPool(int startingMinutesFromNow, int endingMinutesFromNow, Boolean FuturePool)
 			throws JSONException, Exception {
 	    	String name = "BugzillaTestSubscription";
