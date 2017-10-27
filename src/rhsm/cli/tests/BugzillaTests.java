@@ -1097,6 +1097,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@SuppressWarnings("deprecation")
 	@Test(	description = "verify if refresh pools will not notice change in provided products",
 			groups = {"Tier3Tests","RefreshPoolAfterChangeInProvidedProducts", "blockedByBug-665118" },
 			enabled = false)
@@ -1147,6 +1148,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 
 		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,
 				sm_clientOrg, name, productId, 1, attributes, null);
+		@SuppressWarnings("deprecation")
 		String requestBody = CandlepinTasks.createSubscriptionRequestBody(sm_serverUrl, 20, startDate, endDate,
 				productId, contractNumber, accountNumber, providedProductIds, null).toString();
 		JSONObject jsonSubscription = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverAdminUsername,
@@ -1573,6 +1575,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@SuppressWarnings("deprecation")
 	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID = {"RHEL6-21905", "RHEL7-51766"},
@@ -1793,7 +1796,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			servertasks.updateConfFileParameter("log4j.logger.org.candlepin.policy.js.compliance", "INFO");
 			servertasks.updateConfFileParameter("log4j.logger.org.candlepin", "INFO");
 			servertasks.restartTomcat();
-			sleep(60);
+			sleep(100);
 		}
 	}
 
@@ -2533,6 +2536,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@SuppressWarnings("deprecation")
 	@Test(	description = "verify that system should not be compliant for an expired subscription",
 			groups = {"Tier3Tests","VerifySubscriptionOf"},
 			enabled = false)
@@ -2765,6 +2769,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
+	@SuppressWarnings("deprecation")
 	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID = {"RHEL6-21985","RHEL7-51847"},
@@ -5925,6 +5930,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				getRandInt(), getRandInt(), productId, providedProduct, null).getString("id");
 	}
 
+	@SuppressWarnings("deprecation")
 	@AfterClass(groups = { "setup" })
 	protected void DeleteTestPool() throws Exception {
 		if (CandlepinType.hosted.equals(sm_serverType))
