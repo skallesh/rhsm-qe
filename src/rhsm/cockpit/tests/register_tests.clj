@@ -1,12 +1,15 @@
 (ns rhsm.cockpit.tests.register-tests
   (:use [test-clj.testng :only [gen-class-testng]]
-        [clojure.test :only [is]])
+        [clojure.test :only [is]]
+        [com.redhat.qe.verify :only [verify]])
   (:require [clojure.string :as string]
             [clojure.tools.logging :as log]
             [rhsm.gui.tasks.test-config :as c]
-            [rhsm.cockpit.tests.locales :as locales]
+            [rhsm.cockpit.locales :as locales]
             [rhsm.cockpit.tasks :as tasks]
-            [rhsm.cockpit.web :as web])
+            [rhsm.cockpit.web :as web]
+            [rhsm.cockpit.cli :as cli]
+            [clojure.string :as str])
   (:import [org.testng.annotations
             BeforeSuite
             AfterSuite
@@ -32,6 +35,7 @@
   startup [_]
   ;; (.. (new SubscriptionManagerCLITestScript) setupBeforeSuite)
   ;; (c/init)
+  (locales/load-catalog)
   (.runCommandAndWait @c/clientcmd "yum -y install cockpit-system")
   (reset! driver  (doto (new FirefoxDriver (doto (DesiredCapabilities/firefox)
                                              (.setCapability "acceptSslCerts" true)
@@ -91,25 +95,30 @@
   subscription_status
   [ts driver run-command locale language]
   (log/info "status test")
+  (run-command "subscription-manager unregister")
   (.. driver (switchTo) (defaultContent))
   (tasks/set-user-language driver language)
   (.. (web/subscriptions-menu-link driver) click)
   (.. driver (switchTo) (defaultContent))
   (.. driver (switchTo) (frame (web/subscriptions-iframe driver)))
-  (let [status (->> "subscription-manager status"
-                    run-command
-                    :stdout
-                    (re-find #"Status:[\ \t]+([^\n]+)")
-                    first)]
-    (let [subscriptions-status (.. (web/subscription-status driver) (getText))]
-      ;;(is (= status subscriptions-status))
-      ))
-  (let [localization-status
-        {:register-button (locales/is-register-button-localized? ts driver run-command locale language)
-         :subscription-status (locales/is-subscription-status-localized? ts driver run-command locale language)
-         :list-of-products (locales/is-list-of-products-localized? ts driver run-command locale language)
-         }]
-    ))
+  ;; grab a text "Updating subscription status" - it is next to a rotating icon
+  (let [texts (->> (web/retrieving-subscription-status-text driver)
+                  str/split-lines
+                  (map str/trim)
+                  (into [locale]))]
+    ;; (is (= (cli/subscription-status run-command locale)
+    ;;        (.. (web/subscription-status driver) (getText))))
+
+    ;; is 'retrieving subscription status' translated?
+    (when (not= locale "en_US.UTF-8")
+      (verify (not= [locale "Retrieving subscription status..." "Updating"] texts)))
+    (let [[first-part second-part] texts]
+      (locales/verify-against-catalog "Retrieving subscription status..." first-part :locale locale)
+      (locales/verify-against-catalog "Updating"  second-part :locale locale))
+    (let [register-button-text (.. (web/register-button driver) getText)]
+      (when (not= locale "en_US.UTF-8")
+        (verify (not= "Register" register-button-text)))
+      (locales/verify-against-catalog "Register" register-button-text :locale locale ))))
 
 (defn ^{Test {:groups ["register"
                        "cockpit"
@@ -141,19 +150,35 @@
   (.. (web/register-button driver) click)
   (.. (web/register-username driver) (sendKeys (into-array [(@c/config :username)])))
   (.. (web/register-password driver) (sendKeys (into-array [(@c/config :password)])))
+
   (when-not (clojure.string/blank? (@c/config :owner-key))
     (.. (web/register-org driver) (sendKeys (into-array [(@c/config :owner-key)]))))
-  (.. (web/register-confirm-button driver) click)
-  ;; waiting till the dialog disappears
-  (.. (WebDriverWait. driver 60)
-      (until
-       (ExpectedConditions/invisibilityOfElementLocated
-        (By/xpath "//div[@class='modal-content']/div/button[contains(@class,'btn-primary')]"))))
-  (.. (WebDriverWait. driver 60)
-      (until
-       (ExpectedConditions/textToBePresentInElementLocated
-        (By/cssSelector "div.subscription-status-ct label")
-        "Status: System isn't registered"))))
+
+  (let [actual-status (log/spy :info (.getText (web/subscription-status driver)))]
+    ;; click to register
+    (.. (web/register-confirm-button driver) click)
+    ;; waiting till the dialog disappears
+    (.. (WebDriverWait. driver 60)
+        (until
+         (ExpectedConditions/invisibilityOfElementLocated
+          (By/xpath "//div[@class='modal-content']/div/button[contains(@class,'btn-primary')]"))))
+    ;; wait until the status is changed
+    (.. (WebDriverWait. driver 60)
+        (until
+         (ExpectedConditions/not
+          (ExpectedConditions/textToBePresentInElementLocated
+           (By/cssSelector "div.subscription-status-ct label")
+           actual-status)))))
+
+  (log/info "localization checks for locale:" locale)
+  ;; localization of the actual status
+  (let [phrase-status-invalid (locales/get-phrase "Status: Invalid" :locale locale)
+        phrase-status-valid   (locales/get-phrase "Status: Valid" :locale locale)
+        subscription-status (.. (web/subscription-status driver) getText) ]
+    (when (not= locale "en_US.UTF-8")
+      ;; status must not be any of english translations (ie. it is already translated)
+      (verify (not (some #{subscription-status} #{"Status: Invalid" "Status: Valid"}))))
+    (is (some #{subscription-status} #{phrase-status-invalid phrase-status-valid}))))
 
 (defn ^{Test {:groups ["register"
                        "cockpit"
@@ -454,9 +479,16 @@
 
   (-> [[@driver (partial run-command @c/clientcmd) "en_US.UTF-8" "en-us"]
        [@driver (partial run-command @c/clientcmd) "ja_JP.UTF-8" "ja-ja"]
-       [@driver (partial run-command @c/clientcmd) "es_ES.UTF-8" "es-es"]
+       [@driver (partial run-command @c/clientcmd) "ca_ES.UTF-8" "ca-es"]
+       [@driver (partial run-command @c/clientcmd) "da_DK.UTF-8" "da-dk"]
        [@driver (partial run-command @c/clientcmd) "de_DE.UTF-8" "de-de"]
-       [@driver (partial run-command @c/clientcmd) "fr_FR.UTF-8" "fr-fr"]]
+       [@driver (partial run-command @c/clientcmd) "es_ES.UTF-8" "es-es"]
+       [@driver (partial run-command @c/clientcmd) "fr_FR.UTF-8" "fr-fr"]
+       [@driver (partial run-command @c/clientcmd) "pl_PL.UTF-8" "pl-pl"]
+       [@driver (partial run-command @c/clientcmd) "pt_BR.UTF-8" "pt-br"]
+       [@driver (partial run-command @c/clientcmd) "tr_TR.UTF-8" "tr-tr"]
+       [@driver (partial run-command @c/clientcmd) "uk_UA.UTF-8" "uk-ua"]
+       [@driver (partial run-command @c/clientcmd) "zh_CN.UTF-8" "zh-cn"]]
       to-array-2d))
 
 (gen-class-testng)

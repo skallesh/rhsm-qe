@@ -1,8 +1,7 @@
 (ns rhsm.cockpit.tests.register-test
   (:require  [clojure.test :refer :all]
              [rhsm.cockpit.tests.register-tests :as tests]
-             [rhsm.gui.tasks.test-config :as c]
-             [rhsm.cockpit.tests.locales :as locales]))
+             [rhsm.gui.tasks.test-config :as c]))
 
 ;;
 ;; lein quickie rhsm.cockpit.tests.activation-key-test
@@ -25,8 +24,16 @@
   (let [[[run-command]] (tests/provide_run_command nil)]
     (tests/service_is_running nil run-command)))
 
+(deftest is-register-button-localized-english-version-test
+  (let [[driver run-command locale lang] (first (tests/webdriver_with_locale nil))]
+    (tests/subscription_status nil driver run-command locale lang)))
+
 (deftest is-register-button-localized-test
   (let [[driver run-command locale lang] (second (tests/webdriver_with_locale nil))]
+    (tests/subscription_status nil driver run-command locale lang)))
+
+(deftest is-register-button-localized-test
+  (doseq [[driver run-command locale lang] (tests/webdriver_with_locale nil)]
     (tests/subscription_status nil driver run-command locale lang)))
 
 (deftest register-01-test
@@ -34,15 +41,15 @@
         (first (tests/webdriver_with_locale nil))]
     (tests/register nil driver run-command locale lang)))
 
-;; (deftest register-02-test
-;;   (let [[driver run-command locale lang]
-;;         (second (tests/webdriver_with_locale nil))]
-;;     (tests/register nil driver run-command locale lang)))
+(deftest register-02-test
+  (let [[driver run-command locale lang]
+        (second (tests/webdriver_with_locale nil))]
+    (tests/register nil driver run-command locale lang)))
 
-;; (deftest register-03-test
-;;   (let [[driver run-command locale lang]
-;;         (nth (tests/webdriver_with_locale nil) 2)]
-;;     (tests/register nil driver run-command locale lang)))
+(deftest register-03-test
+  (let [[driver run-command locale lang]
+        (nth (tests/webdriver_with_locale nil) 2)]
+    (tests/register nil driver run-command locale lang)))
 
 (deftest register-with-no-field-set-01-test
   (let [[driver run-command locale lang]

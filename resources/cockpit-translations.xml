@@ -1,0 +1,317 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<translations>
+  <translation lang="en_US.UTF-8">
+    <block id="Subscriptions - Main Window">
+      <block id="Subscriptions - Status Window" occurrency="always">
+        <phrase occurrency="always" orig="Subscriptions">Subscriptions</phrase>
+        <phrase occurrency="sometimes" orig="Retrieving subscription status..." >Retrieving subscription status...</phrase>
+        <phrase occurrency="sometimes" orig="Updating" >Updating</phrase>
+        <phrase occurrency="sometimes" orig="Status: System isn't registered">Status: System isn't registered</phrase>
+        <phrase occurrency="sometimes" orig="Status: Invalid" >Status: Invalid</phrase>
+        <phrase occurrency="sometimes" orig="Status: Invalid" >Status: Invalid</phrase>
+        <phrase occurrency="sometimes" orig="Register">Register</phrase>
+        <phrase occurrency="sometimes" orig="Unregister" >Unregister</phrase>
+      </block>
+      <block id="Installed Products" occurrency="always">
+        <phrase occurrency="always" orig="Installed Products" >Installed Products</phrase>
+        <block id="A Product Detail" occurrency="always">
+          <phrase occurrency="always" orig="Details">Details</phrase>
+          <phrase occurrency="always" orig="Product name" >Product name</phrase>
+          <phrase occurrency="always" orig="Product ID" >Product ID</phrase>
+          <phrase occurrency="always" orig="Version" >Version</phrase>
+          <phrase occurrency="always" orig="Architecture" >Architecture</phrase>
+          <phrase occurrency="always" orig="Status" >Status</phrase>
+          <phrase occurrency="always" orig="Starts" >Starts</phrase>
+          <phrase occurrency="always" orig="Ends" >Ends</phrase>
+        </block>
+      </block>
+    </block>
+  </translation>
+
+  <translation lang="ca_ES.UTF-8">
+    <block id="Subscriptions - Main Window">
+      <block id="Subscriptions - Status Window" occurrency="always">
+        <phrase occurrency="always" orig="Subscriptions" >Subscripcions</phrase>
+        <phrase occurrency="sometimes" orig="Retrieving subscription status..." >Retrieving subscription status...</phrase>
+        <phrase occurrency="sometimes" orig="Updating" >Updating</phrase>
+        <phrase occurrency="sometimes" orig="Status: System isn't registered" >Estat: el sistema no està registrat</phrase>
+        <phrase occurrency="sometimes" orig="Status: Invalid" >Estat: Invalid</phrase>
+        <phrase occurrency="sometimes" orig="Register" ></phrase>
+        <phrase occurrency="sometimes" orig="Unregister" >Desregistra</phrase>
+      </block>
+      <block id="Installed Products" occurrency="always">
+        <phrase occurrency="always" orig="Installed Products" >Productes instal·lats</phrase>
+        <block id="A Product Detail" occurrency="always">
+          <phrase occurrency="always" orig="Details" >Detalls</phrase>
+          <phrase occurrency="always" orig="Product name" >Nom del producte</phrase>
+          <phrase occurrency="always" orig="Product ID" >Id. del producte</phrase>
+          <phrase occurrency="always" orig="Version" >Versió</phrase>
+          <phrase occurrency="always" orig="Architecture" >Arquitectura</phrase>
+          <phrase occurrency="always" orig="Status" >Estat</phrase>
+          <phrase occurrency="always" orig="Starts" >Comença</phrase>
+          <phrase occurrency="always" orig="Ends" >Acaba</phrase>
+        </block>
+      </block>
+    </block>
+  </translation>
+  <translation lang="da_DK.UTF-8">
+    <block id="Subscriptions - Main Window">
+      <block id="Subscriptions - Status Window" occurrency="always">
+        <phrase occurrency="always" orig="Subscriptions" ></phrase>
+        <phrase occurrency="sometimes" orig="Retrieving subscription status..." >Retrieving subscription status...</phrase>
+        <phrase occurrency="sometimes" orig="Updating" >Updating</phrase>
+        <phrase occurrency="sometimes" orig="Status: System isn't registered" ></phrase>
+        <phrase occurrency="sometimes" orig="Status: Invalid" >Tilstand</phrase>
+        <phrase occurrency="sometimes" orig="Register" ></phrase>
+        <phrase occurrency="sometimes" orig="Unregister" ></phrase>
+      </block>
+      <block id="Installed Products" occurrency="always">
+        <phrase occurrency="always" orig="Installed Products" ></phrase>
+        <block id="A Product Detail" occurrency="always">
+          <phrase occurrency="always" orig="Details" ></phrase>
+          <phrase occurrency="always" orig="Product name" ></phrase>
+          <phrase occurrency="always" orig="Product ID" ></phrase>
+          <phrase occurrency="always" orig="Version" ></phrase>
+          <phrase occurrency="always" orig="Architecture" ></phrase>
+          <phrase occurrency="always" orig="Status" ></phrase>
+          <phrase occurrency="always" orig="Starts" ></phrase>
+          <phrase occurrency="always" orig="Ends" ></phrase>
+        </block>
+      </block>
+    </block>
+  </translation>
+    <translation lang="de_DE.UTF-8">
+    <block id="Subscriptions - Main Window">
+      <block id="Subscriptions - Status Window" occurrency="always">
+        <phrase occurrency="always" orig="Subscriptions" ></phrase>
+        <phrase occurrency="sometimes" orig="Retrieving subscription status..." >Retrieving subscription status...</phrase>
+        <phrase occurrency="sometimes" orig="Updating" >Updating</phrase>
+        <phrase occurrency="sometimes" orig="Status: System isn't registered" >Status: System ist nicht registriert</phrase>
+        <phrase occurrency="sometimes" orig="Status: Invalid" ></phrase>
+        <phrase occurrency="sometimes" orig="Register" ></phrase>
+        <phrase occurrency="sometimes" orig="Unregister" ></phrase>
+      </block>
+      <block id="Installed Products" occurrency="always">
+        <phrase occurrency="always" orig="Installed Products" ></phrase>
+        <block id="A Product Detail" occurrency="always">
+          <phrase occurrency="always" orig="Details" ></phrase>
+          <phrase occurrency="always" orig="Product name" ></phrase>
+          <phrase occurrency="always" orig="Product ID" ></phrase>
+          <phrase occurrency="always" orig="Version" ></phrase>
+          <phrase occurrency="always" orig="Architecture" ></phrase>
+          <phrase occurrency="always" orig="Status" ></phrase>
+          <phrase occurrency="always" orig="Starts" >Startet</phrase>
+          <phrase occurrency="always" orig="Ends" ></phrase>
+        </block>
+      </block>
+    </block>
+  </translation>
+  <translation lang="es_ES.UTF-8">
+    <block id="Subscriptions - Main Window">
+      <block id="Subscriptions - Status Window" occurrency="always">
+        <phrase occurrency="always" orig="Subscriptions" >Suscripciones</phrase>
+        <phrase occurrency="sometimes" orig="Retrieving subscription status..." >Retrieving subscription status...</phrase>
+        <phrase occurrency="sometimes" orig="Updating" >Updating</phrase>
+        <phrase occurrency="sometimes" orig="Status: System isn't registered" ></phrase>
+        <phrase occurrency="sometimes" orig="Status: Invalid" ></phrase>
+        <phrase occurrency="sometimes" orig="Register" >Registrar</phrase>
+        <phrase occurrency="sometimes" orig="Unregister" ></phrase>
+      </block>
+      <block id="Installed Products" occurrency="always">
+        <phrase occurrency="always" orig="Installed Products" >Productos instalados</phrase>
+        <block id="A Product Detail" occurrency="always">
+          <phrase occurrency="always" orig="Details" >Detalles</phrase>
+          <phrase occurrency="always" orig="Product name" >Nombre del Producto</phrase>
+          <phrase occurrency="always" orig="Product ID" >ID del Producto</phrase>
+          <phrase occurrency="always" orig="Version" >Versión</phrase>
+          <phrase occurrency="always" orig="Architecture" >Arquitectura</phrase>
+          <phrase occurrency="always" orig="Status" >Estado</phrase>
+          <phrase occurrency="always" orig="Starts" ></phrase>
+          <phrase occurrency="always" orig="Ends" >Finales</phrase>
+        </block>
+      </block>
+    </block>
+  </translation>
+  <translation lang="fr_FR.UTF-8">
+    <block id="Subscriptions - Main Window">
+      <block id="Subscriptions - Status Window" occurrency="always">
+        <phrase occurrency="always" orig="Subscriptions" ></phrase>
+        <phrase occurrency="sometimes" orig="Retrieving subscription status..." >Retrieving subscription status...</phrase>
+        <phrase occurrency="sometimes" orig="Updating" >Updating</phrase>
+        <phrase occurrency="sometimes" orig="Status: System isn't registered" ></phrase>
+        <phrase occurrency="sometimes" orig="Status: Invalid" ></phrase>
+        <phrase occurrency="sometimes" orig="Register" ></phrase>
+        <phrase occurrency="sometimes" orig="Unregister" ></phrase>
+      </block>
+      <block id="Installed Products" occurrency="always">
+        <phrase occurrency="always" orig="Installed Products" ></phrase>
+        <block id="A Product Detail" occurrency="always">
+          <phrase occurrency="always" orig="Details" ></phrase>
+          <phrase occurrency="always" orig="Product name" ></phrase>
+          <phrase occurrency="always" orig="Product ID" ></phrase>
+          <phrase occurrency="always" orig="Version" ></phrase>
+          <phrase occurrency="always" orig="Architecture" ></phrase>
+          <phrase occurrency="always" orig="Status" ></phrase>
+          <phrase occurrency="always" orig="Starts" ></phrase>
+          <phrase occurrency="always" orig="Ends" ></phrase>
+        </block>
+      </block>
+    </block>
+  </translation>
+  <translation lang="ja_JP.UTF-8">
+    <block id="Subscriptions - Main Window">
+      <block id="Subscriptions - Status Window" occurrency="always">
+        <phrase occurrency="always" orig="Subscriptions" >サブスクリプション</phrase>
+        <phrase occurrency="sometimes" orig="Retrieving subscription status..." >サブスクリプションステータスを再取得中 ...</phrase>
+        <phrase occurrency="sometimes" orig="Updating" >更新中</phrase>
+        <phrase occurrency="sometimes" orig="Status: System isn't registered" >ステータス: システムが登録されていません</phrase>
+        <phrase occurrency="sometimes" orig="Status: Invalid" >ステータス: Invalid</phrase>
+        <phrase occurrency="sometimes" orig="Register" >登録</phrase>
+        <phrase occurrency="sometimes" orig="Unregister" >登録解除</phrase>
+      </block>
+      <block id="Installed Products" occurrency="always">
+        <phrase occurrency="always" orig="Installed Products" >インストールされた製品</phrase>
+        <block id="A Product Detail" occurrency="always">
+          <phrase occurrency="always" orig="Details" >詳細</phrase>
+          <phrase occurrency="always" orig="Product name" >製品名</phrase>
+          <phrase occurrency="always" orig="Product ID" >製品 ID</phrase>
+          <phrase occurrency="always" orig="Version" >バージョン</phrase>
+          <phrase occurrency="always" orig="Architecture" >アーキテクチャー</phrase>
+          <phrase occurrency="always" orig="Status" >状態</phrase>
+          <phrase occurrency="always" orig="Starts" >開始</phrase>
+          <phrase occurrency="always" orig="Ends" >終了</phrase>
+        </block>
+      </block>
+    </block>
+  </translation>
+  <translation lang="pl_PL.UTF-8">
+    <block id="Subscriptions - Main Window">
+      <block id="Subscriptions - Status Window" occurrency="always">
+        <phrase occurrency="always" orig="Subscriptions" >Subskrypcje</phrase>
+        <phrase occurrency="sometimes" orig="Retrieving subscription status..." >Retrieving subscription status...</phrase>
+        <phrase occurrency="sometimes" orig="Updating" >Updating</phrase>
+        <phrase occurrency="sometimes" orig="Status: System isn't registered" >Stan: system nie jest zarejestrowany</phrase>
+        <phrase occurrency="sometimes" orig="Status: Invalid" >Stan: Invalid</phrase>
+        <phrase occurrency="sometimes" orig="Register" >Zarejestruj</phrase>
+        <phrase occurrency="sometimes" orig="Unregister" >Wyrejestruj</phrase>
+      </block>
+      <block id="Installed Products" occurrency="always">
+        <phrase occurrency="always" orig="Installed Products" >Zainstalowane produkty</phrase>
+        <block id="A Product Detail" occurrency="always">
+          <phrase occurrency="always" orig="Details" >Szczegóły</phrase>
+          <phrase occurrency="always" orig="Product name" >Nazwa produktu</phrase>
+          <phrase occurrency="always" orig="Product ID" >Identyfikator produktu</phrase>
+          <phrase occurrency="always" orig="Version" >Wersja</phrase>
+          <phrase occurrency="always" orig="Architecture" >Architektura</phrase>
+          <phrase occurrency="always" orig="Status" >Stan</phrase>
+          <phrase occurrency="always" orig="Starts" >Zaczyna się</phrase>
+          <phrase occurrency="always" orig="Ends" >Kończy się</phrase>
+        </block>
+      </block>
+    </block>
+  </translation>
+  <translation lang="pt_BR_US.UTF-8">
+    <block id="Subscriptions - Main Window">
+      <block id="Subscriptions - Status Window" occurrency="always">
+        <phrase occurrency="always" orig="Subscriptions" >Assinaturas</phrase>
+        <phrase occurrency="sometimes" orig="Retrieving subscription status..." >Retrieving subscription status...</phrase>
+        <phrase occurrency="sometimes" orig="Updating" >Updating</phrase>
+        <phrase occurrency="sometimes" orig="Status: System isn't registered" >Status: O sistema não está registrado</phrase>
+        <phrase occurrency="sometimes" orig="Status: Invalid" ></phrase>
+        <phrase occurrency="sometimes" orig="Register" >Registrar</phrase>
+        <phrase occurrency="sometimes" orig="Unregister" >Cancelar o registro</phrase>
+      </block>
+      <block id="Installed Products" occurrency="always">
+        <phrase occurrency="always" orig="Installed Products" >Produtos instalados</phrase>
+        <block id="A Product Detail" occurrency="always">
+          <phrase occurrency="always" orig="Details" >Detalhes</phrase>
+          <phrase occurrency="always" orig="Product name" >Nome do produto</phrase>
+          <phrase occurrency="always" orig="Product ID" >ID do Produto</phrase>
+          <phrase occurrency="always" orig="Version" >Versão</phrase>
+          <phrase occurrency="always" orig="Architecture" >Arquitetura</phrase>
+          <phrase occurrency="always" orig="Status" >Estado</phrase>
+          <phrase occurrency="always" orig="Starts" >Começa</phrase>
+          <phrase occurrency="always" orig="Ends" >Finais</phrase>
+        </block>
+      </block>
+    </block>
+  </translation>
+  <translation lang="tr_TR.UTF-8">
+    <block id="Subscriptions - Main Window">
+      <block id="Subscriptions - Status Window" occurrency="always">
+        <phrase occurrency="always" orig="Subscriptions" ></phrase>
+        <phrase occurrency="sometimes" orig="Retrieving subscription status..." >Retrieving subscription status...</phrase>
+        <phrase occurrency="sometimes" orig="Updating" >Updating</phrase>
+        <phrase occurrency="sometimes" orig="Status: System isn't registered" ></phrase>
+        <phrase occurrency="sometimes" orig="Status: Invalid" ></phrase>
+        <phrase occurrency="sometimes" orig="Register" ></phrase>
+        <phrase occurrency="sometimes" orig="Unregister" ></phrase>
+      </block>
+      <block id="Installed Products" occurrency="always">
+        <phrase occurrency="always" orig="Installed Products" ></phrase>
+        <block id="A Product Detail" occurrency="sometimes">
+          <phrase occurrency="always" orig="Details" ></phrase>
+          <phrase occurrency="always" orig="Product name" ></phrase>
+          <phrase occurrency="always" orig="Product ID" ></phrase>
+          <phrase occurrency="always" orig="Version" ></phrase>
+          <phrase occurrency="always" orig="Architecture" ></phrase>
+          <phrase occurrency="always" orig="Status" ></phrase>
+          <phrase occurrency="always" orig="Starts" ></phrase>
+          <phrase occurrency="always" orig="Ends" ></phrase>
+        </block>
+      </block>
+    </block>
+  </translation>
+  <translation lang="uk_UA.UTF-8">
+    <block id="Subscriptions - Main Window">
+      <block id="Subscriptions - Status Window" occurrency="always">
+        <phrase occurrency="always" orig="Subscriptions" >Передплати</phrase>
+        <phrase occurrency="sometimes" orig="Retrieving subscription status..." >Retrieving subscription status...</phrase>
+        <phrase occurrency="sometimes" orig="Updating" >Updating</phrase>
+        <phrase occurrency="sometimes" orig="Status: System isn't registered" >Стан: систему не зареєстровано</phrase>
+        <phrase occurrency="sometimes" orig="Status: Invalid" >Стан: Invalid</phrase>
+        <phrase occurrency="sometimes" orig="Register" >Зареєструвати</phrase>
+        <phrase occurrency="sometimes" orig="Unregister" >Знятись з реєстрації</phrase>
+      </block>
+      <block id="Installed Products" occurrency="always">
+        <phrase occurrency="always" orig="Installed Products" >Встановлені продукти</phrase>
+        <block id="A Product Detail" occurrency="always">
+          <phrase occurrency="always" orig="Details" >Подробиці</phrase>
+          <phrase occurrency="always" orig="Product name" >Назва продукту</phrase>
+          <phrase occurrency="always" orig="Product ID" >Ід. продукту</phrase>
+          <phrase occurrency="always" orig="Version" >Версія</phrase>
+          <phrase occurrency="always" orig="Architecture" >Архітектура</phrase>
+          <phrase occurrency="always" orig="Status" >Стан</phrase>
+          <phrase occurrency="always" orig="Starts" >Починається</phrase>
+          <phrase occurrency="always" orig="Ends" >Завершується</phrase>
+        </block>
+      </block>
+    </block>
+  </translation>
+  <translation lang="zn_CN.UTF-8">
+    <block id="Subscriptions - Main Window">
+      <block id="Subscriptions - Status Window" occurrency="always">
+        <phrase occurrency="always" orig="Subscriptions" >订阅</phrase>
+        <phrase occurrency="sometimes" orig="Retrieving subscription status..." >Retrieving subscription status...</phrase>
+        <phrase occurrency="sometimes" orig="Updating" >Updating</phrase>
+        <phrase occurrency="sometimes" orig="Status: System isn't registered" >状态：系统未注册</phrase>
+        <phrase occurrency="sometimes" orig="Status: Invalid" >状态：Invalid</phrase>
+        <phrase occurrency="sometimes" orig="Register" >注册</phrase>
+        <phrase occurrency="sometimes" orig="Unregister" >注销</phrase>
+      </block>
+      <block id="Installed Products" occurrency="always">
+        <phrase occurrency="always" orig="Installed Products" >已安装的产品</phrase>
+        <block id="A Product Detail" occurrency="always">
+          <phrase occurrency="always" orig="Details" >详情</phrase>
+          <phrase occurrency="always" orig="Product name" >产品名</phrase>
+          <phrase occurrency="always" orig="Product ID" >产品 ID</phrase>
+          <phrase occurrency="always" orig="Version" >版本</phrase>
+          <phrase occurrency="always" orig="Architecture" >架构</phrase>
+          <phrase occurrency="always" orig="Status" >状态</phrase>
+          <phrase occurrency="always" orig="Starts" >开头</phrase>
+          <phrase occurrency="always" orig="Ends" >结尾</phrase>
+        </block>
+      </block>
+    </block>
+  </translation>
+</translations>

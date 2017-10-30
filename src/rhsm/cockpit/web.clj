@@ -17,6 +17,21 @@
        (ExpectedConditions/visibilityOfElementLocated
         (By/xpath "//iframe[@name='cockpit1:localhost/subscriptions' and @data-loaded=1]")))))
 
+(comment " a dynamic info 'Retrieving subscription status ...'
+<div class="curtains-ct blank-slate-pf">
+   <div class="blank-slate-pf-icon"><div class="spinner spinner-lg"></div></div>
+   <h1>Retrieving subscription status...</h1>
+    <p>Updating</p>
+</div>")
+
+(defn retrieving-subscription-status-text [driver]
+  (.. (WebDriverWait. driver 60)
+      (until
+       (ExpectedConditions/visibilityOfElementLocated
+        (By/cssSelector "#app div.curtains-ct")))
+      getText))
+
+
 (defn subscription-status [driver]
   (.. (WebDriverWait. driver 60)
       (until
