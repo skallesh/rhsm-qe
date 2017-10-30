@@ -4182,7 +4182,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			groups = {"Tier3Tests","VerifyUnsubscribeAllForExpiredSubscription", "blockedByBug-852630","blockedByBug-906550" },
 			enabled = true)
 	public void testUnsubscribeAllForExpiredSubscription() throws JSONException, Exception {
-
+	    	clienttasks.clean();
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null,
 				null, (String) null, null, null, null, true, false, null, null, null, null);
 		String consumerId = clienttasks.getCurrentConsumerId();
@@ -4943,7 +4943,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier3")
-	@Test(	description = /*TODO */"please provide a description",
+	@Test(	description = "Auto-heal for a system with preference Premium for a product with SLA Standard should fail",
 			groups = {"Tier3Tests","AutoHealFailForSLA" },
 			enabled = true)
 	public void testAutohealFailForSLA() throws JSONException, Exception {
@@ -4951,33 +4951,23 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		List<ProductCert> productCerts = clienttasks.getCurrentProductCerts();
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
 				null, (String) null, null, null, null, true, null, null, null, null, null);
-		List<String> availableServiceLevelData = clienttasks.getCurrentlyAvailableServiceLevels();
+		/*List<String> availableServiceLevelData = clienttasks.getCurrentlyAvailableServiceLevels();
 		String availableService = availableServiceLevelData
-				.get(randomGenerator.nextInt(availableServiceLevelData.size()));
-		clienttasks.service_level(null, null, availableService, null, null, null, null, null, null, null, null, null, null);
+				.get(randomGenerator.nextInt(availableServiceLevelData.size()));*/
+		clienttasks.service_level(null, null, "Standard", null, null, null, null, null, null, null, null, null, null);
 		clienttasks.unsubscribe(true, (BigInteger) null, null, null, null, null, null);
 		clienttasks.subscribe(true, null, (String) null, null, null, null, null, null, null, null, null, null, null);
-		for (InstalledProduct installedProduct : clienttasks.getCurrentlyInstalledProducts()) {
+		ProductCert productCert = ProductCert.findFirstInstanceWithMatchingFieldFromList("productId",
+						"32060", productCerts);
 
-			if ((!(installedProduct.status.equalsIgnoreCase("Subscribed")))
-					|| (!(installedProduct.status.equalsIgnoreCase("Partially Subscribed")))) {
+		configureTmpProductCertDirWithInstalledProductCerts(Arrays.asList(productCert));
 
-				ProductCert productCert = ProductCert.findFirstInstanceWithMatchingFieldFromList("productId",
-						installedProduct.productId, productCerts);
-
-				configureTmpProductCertDirWithInstalledProductCerts(Arrays.asList(productCert));
-
-				// moveProductCertFiles(productCert.file.getName());
-			}
-		}
 		clienttasks.unsubscribe(true, (BigInteger) null, null, null, null, null, null);
-		List<EntitlementCert> certsbeforeRHSMService = clienttasks.getCurrentEntitlementCerts();
-		log.info("cert contents are " + certsbeforeRHSMService);
+		clienttasks.service_level(null, null, "Premium", null, null, null, null, null, null, null, null, null, null);
 
 		clienttasks.run_rhsmcertd_worker(true);
 		List<ProductSubscription> consumed = clienttasks.getCurrentlyConsumedProductSubscriptions();
 		Assert.assertTrue((consumed.isEmpty()), "autoheal has failed");
-		List<EntitlementCert> certs = clienttasks.getCurrentEntitlementCerts();
 	}
 
 	/**
