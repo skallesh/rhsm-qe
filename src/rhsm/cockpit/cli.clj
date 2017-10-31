@@ -4,8 +4,8 @@
 
 (defn subscription-status
   ([run-command locale]
-   (let [localized-status #spy/d (-> (format "LANG=%s gettext rhsm 'Status'" locale)
-                                     run-command :stdout s/trim)]
+   (let [localized-status (-> (format "LANG=%s gettext rhsm 'Status'" locale)
+                              run-command :stdout s/trim)]
      (->> (format "LANG=%s subscription-manager status" locale)
           run-command
           :stdout
