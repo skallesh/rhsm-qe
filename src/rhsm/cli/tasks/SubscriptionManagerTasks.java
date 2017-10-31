@@ -965,10 +965,15 @@ if (false) {
 			log.info("Removing existing package "+pkg+"...");
 			if (pkg.startsWith("katello-ca-consumer")) {
 				sshCommandRunner.runCommandAndWait("yum -y remove $(rpm -qa | grep katello-ca-consumer) "+installOptions);
-			} else {
-				sshCommandRunner.runCommandAndWait("yum -y remove "+pkg+" "+installOptions);
-				RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"rpm -q "+pkg,Integer.valueOf(1),"package "+pkg+" is not installed",null);
+				continue;
 			}
+			// compatibility adjustment for python-rhsm* packages obsoleted by subscription-manager-rhsm* packages
+			if (pkg.startsWith("subscription-manager-rhsm")) {	// commit f445b6486a962d12185a5afe69e768d0a605e175 Move python-rhsm build into subscription-manager
+				String obsoletedPackage = pkg.replace("subscription-manager-rhsm", "python-rhsm");
+				sshCommandRunner.runCommandAndWait("yum -y remove "+obsoletedPackage+" "+installOptions);
+			}
+			sshCommandRunner.runCommandAndWait("yum -y remove "+pkg+" "+installOptions);
+			RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"rpm -q "+pkg,Integer.valueOf(1),"package "+pkg+" is not installed",null);
 		}
 		
 		// install new rpms
@@ -9829,6 +9834,12 @@ if (false) {
 		//	subscription-manager-migration-data-2.0.7-1.el7.noarch
 		//	subscription-manager-migration-data-1.11.3.2-1.el5
 		//	ntpdate-4.2.6p5-18.el7.x86_64
+		
+		// compatibility adjustment for python-rhsm* packages obsoleted by subscription-manager-rhsm* packages
+		if (packageName.startsWith("python-rhsm") && isPackageVersion("subscription-manager",">=","1.20.3-1")) {	// commit f445b6486a962d12185a5afe69e768d0a605e175 Move python-rhsm build into subscription-manager
+			log.fine("Adjusting query for isPackageVersion(\""+packageName+"\"...) to isPackageVersion(\""+packageName.replace("python-rhsm", "subscription-manager-rhsm")+"\"...) due to obsoleted package starting in version 1.20.3-1");
+			packageName = packageName.replace("python-rhsm", "subscription-manager-rhsm");
+		}
 		
 		// get the currently installed version of the packageName of the form subscription-manager-1.10.14-7.el7.x86_64
 		if (this.installedPackageVersionMap.get(packageName)==null) {
