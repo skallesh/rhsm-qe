@@ -5513,6 +5513,16 @@
       "parameters" : [ "blockedByBug", "username", "password", "org", "proxy", "proxyuser", "proxypassword", "proxy_hostnameConfig", "proxy_portConfig", "proxy_userConfig", "proxy_passwordConfig", "exitCode", "stdout", "stderr", "proxyRunner", "proxyLog", "proxyLogGrepPattern" ]
     }
   },
+  "rhsm.cli.tests.ProxyTests.testUnauthorizedResponseFromProxyServer" : {
+    "RHEL6" : {
+      "id" : "RHEL6-47949",
+      "parameters" : [ ]
+    },
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL-112431",
+      "parameters" : [ ]
+    }
+  },
   "rhsm.cli.tests.ProxyTests.testUnregisterAttemptsUsingProxyServer" : {
     "RHEL6" : {
       "id" : "RHEL6-21837",

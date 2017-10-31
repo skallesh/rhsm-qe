@@ -54,7 +54,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	
 	// REGISTER Test methods ***********************************************************************
 
-	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-21837", "RHEL7-51656"},
 			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
@@ -76,7 +76,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-21819", "RHEL7-51638"},
 			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
@@ -133,7 +133,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	
 	// UNREGISTER Test methods ***********************************************************************
 
-	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-21837", "RHEL7-51656"},
 			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
@@ -158,7 +158,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-21836", "RHEL7-51655"},
 			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
@@ -206,7 +206,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	
 	// IDENTITY Test methods ***********************************************************************
 
-	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-21811", "RHEL7-51628"},
 			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
@@ -230,7 +230,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-21810", "RHEL7-51627"},
 			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
@@ -277,7 +277,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	
 	// ORGS Test methods ***********************************************************************
 
-	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-21815", "RHEL7-51632"},
 			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
@@ -300,7 +300,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-21814", "RHEL7-51631"},
 			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
@@ -346,7 +346,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	
 	// SERVICE-LEVEL Test methods ***********************************************************************
 
-	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-21832", "RHEL7-51651"},
 			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
@@ -369,7 +369,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-21831", "RHEL7-51650"},
 			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
@@ -415,7 +415,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	
 	// ENVIRONMENTS Test methods ***********************************************************************
 
-	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-21807", "RHEL7-51624"},
 			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
@@ -438,7 +438,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-21806", "RHEL7-51623"},
 			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
@@ -484,7 +484,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	
 	// LIST Test methods ***********************************************************************
 
-	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-21813", "RHEL7-51630"},
 			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
@@ -509,7 +509,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-21823", "RHEL7-51642"},
 			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
@@ -557,7 +557,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	
 	// RELEASE Test methods ***********************************************************************
 
-	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-21822", "RHEL7-51641"},
 			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
@@ -582,7 +582,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-21821", "RHEL7-51640"},
 			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
@@ -628,7 +628,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 
 
 
-	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-21824", "RHEL7-51643"},
 			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
@@ -665,7 +665,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-21823", "RHEL7-51642"},
 			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
@@ -724,7 +724,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	
 	// AUTO-HEAL Test methods ***********************************************************************
 
-	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-21805", "RHEL7-51622"},
 			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
@@ -749,7 +749,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-21804", "RHEL7-51621"},
 			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
@@ -796,7 +796,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	
 	// STATUS Test methods ***********************************************************************
 
-	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-21834", "RHEL7-51653"},
 			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
@@ -832,7 +832,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-21833", "RHEL7-51652"},
 			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
@@ -889,7 +889,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	
 	// VERSION Test methods ***********************************************************************
 
-	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-25993", "RHEL7-51660"},
 			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
@@ -914,7 +914,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-25992", "RHEL7-51659"},
 			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
@@ -959,7 +959,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	
 	// REDEEM Test methods ***********************************************************************
 
-	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-26755", "RHEL7-51633"},
 			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
@@ -984,7 +984,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-26754", "RHEL7-55662"},
 			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
@@ -1032,7 +1032,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	
 	// FACTS Test methods ***********************************************************************
 
-	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-21809", "RHEL7-51626"},
 			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
@@ -1057,7 +1057,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-21808", "RHEL7-51625"},
 			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
@@ -1105,7 +1105,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	
 	// REFRESH Test methods ***********************************************************************
 
-	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-21817", "RHEL7-51635"},
 			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
@@ -1130,7 +1130,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-21816", "RHEL7-51634"},
 			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
@@ -1178,7 +1178,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	
 	// REPOS Test methods ***********************************************************************
 
-	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-21828", "RHEL7-51647"},
 			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
@@ -1218,7 +1218,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-21827", "RHEL7-51646"},
 			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
@@ -1310,7 +1310,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	
 	// REPO-OVERRIDE Test methods ***********************************************************************
 
-	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-21826", "RHEL7-51645"},
 			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
@@ -1338,7 +1338,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-21825", "RHEL7-51644"},
 			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
@@ -1389,7 +1389,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	
 	// SUBSCRIBE Test methods ***********************************************************************
 
-	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-21835", "RHEL7-51654"},
 			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
@@ -1416,7 +1416,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-21838", "RHEL7-51657"},
 			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
@@ -1466,7 +1466,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	
 	// UNSUBSCRIBE Test methods ***********************************************************************
 
-	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-21839", "RHEL7-51658"},
 			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
@@ -1491,7 +1491,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-21838", "RHEL7-51657"},
 			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
@@ -1539,7 +1539,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	
 	// RHSM-DEBUG SYSTEM Test methods ***********************************************************************
 
-	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-21830", "RHEL7-51649"},
 			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
@@ -1572,7 +1572,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-21829", "RHEL7-51648"},
 			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
@@ -1631,7 +1631,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	
 	// More Test methods ***********************************************************************
 
-	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-21820", "RHEL7-51639"},
 			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
@@ -1656,7 +1656,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-26756", "RHEL7-98223"},
 			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
@@ -1719,7 +1719,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-21818", "RHEL7-51637"},
 			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
@@ -1839,7 +1839,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 
 
 	@SuppressWarnings("unused")
-	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-22311", "RHEL7-51636"},
 			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
@@ -2146,7 +2146,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	
 	
 	
-	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-47906", "RHEL7-96744"},
 			linkedWorkItems= {
@@ -2234,7 +2234,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 			}
 		}
 	}
-	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-47907", "RHEL7-96745"},
 			linkedWorkItems= {
@@ -2389,6 +2389,100 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	
 	
 	
+	
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-47949", "RHEL-112431"},
+			linkedWorkItems= {
+//				@LinkedItem(
+//					workitemId= "",
+//					project= Project.RHEL6,
+//					role= DefTypes.Role.VERIFIES),
+				@LinkedItem(
+					workitemId= "RHEL7-95148",	// RHSM-REQ : Update 'invalid credentials' error to reflect a warning about network proxies
+					project= Project.RedHatEnterpriseLinux7,
+					role= DefTypes.Role.VERIFIES)},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.LOW, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description="When subscription-manager receives an 401 Unauthorized response while employing a proxy server, a more informative message than \"Invalid Credentials\" should be displayed pointing at a faulty proxy configuration.",
+			groups={"Tier3Tests","blockedByBug-1354667","testUnauthorizedResponseFromProxyServer"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)	
+	public void testUnauthorizedResponseFromProxyServer() {
+		if (clienttasks.isPackageVersion("python-rhsm", "<", "1.20.3-1")) { // commit 33dd2efec9fa0368fe39affdc3f6f19c893ff62c	Bug 1354667: Add identity cert detection to proxy error message generation
+			throw new SkipException("Support for this test does not exist in this version of python-rhsm.  See bugzilla 1354667.");
+		}
+		
+		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
+		
+		// configure a basic auth proxy
+		listOfSectionNameValues.clear();
+		listOfSectionNameValues.add(new String[]{"server", "proxy_hostname", sm_basicauthproxyHostname});
+		listOfSectionNameValues.add(new String[]{"server", "proxy_port",     sm_basicauthproxyPort});
+		listOfSectionNameValues.add(new String[]{"server", "proxy_user",     sm_basicauthproxyUsername});
+		listOfSectionNameValues.add(new String[]{"server", "proxy_password", sm_basicauthproxyPassword});
+		listOfSectionNameValues.add(new String[]{"server", "insecure", "0"});
+		clienttasks.config(null, null, true, listOfSectionNameValues);
+		
+		// register and remember the consumerId
+		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null, null));
+		
+		// get the current identity
+		SSHCommandResult identityResult = clienttasks.identity(null, null, null, null, null, null, null, null);
+		
+		// assert the identity result includes the consumerId
+		Assert.assertTrue(identityResult.getStdout().contains(consumerId), "The identity '"+consumerId+"' was retrieved while employing a basic auth proxy server.");
+		
+		// now let's try to get the identity through the intercepting proxy...
+		
+		// configure an intercepting unauthorized proxy
+		listOfSectionNameValues.clear();
+		listOfSectionNameValues.add(new String[]{"server", "proxy_hostname", sm_unauthproxyHostname});
+		listOfSectionNameValues.add(new String[]{"server", "proxy_port",     sm_unauthproxyPort});
+		listOfSectionNameValues.add(new String[]{"server", "proxy_user",     sm_unauthproxyUsername});
+		listOfSectionNameValues.add(new String[]{"server", "proxy_password", sm_unauthproxyPassword});
+		listOfSectionNameValues.add(new String[]{"server", "insecure", "1"});	// avoids the need to fetch a copy of myCA.pem from the intercepting proxy server into /etc/rhsm/ca/
+		clienttasks.config(null, null, true, listOfSectionNameValues);
+		
+		// pad the tail of proxyLog with a message
+		String logMarker = System.currentTimeMillis()+" Testing testUnauthorizedResponseFromProxyServer";
+		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, logMarker);
+
+		// attempt to get the identity through the intercepting proxy
+		identityResult = clienttasks.identity_(null, null, null, null, null, null, null, null);
+
+		// assert the newly improved message from RFE Bug 1354667 to help a system admin troubleshoot a
+		String expectedFeedback = "Unable to make a connection using SSL client certificate. Please review proxy configuration and connectivity.";
+		Assert.assertEquals(identityResult.getStdout().trim(), "", "Stdout from subscription-manager request through an intercepting proxy server.");
+		Assert.assertEquals(identityResult.getStderr().trim(), expectedFeedback, "Stderr from subscription-manager request through an intercepting proxy server.");
+		Assert.assertEquals(identityResult.getExitCode(), Integer.valueOf(70)/*EX_SOFTWARE=70*/, "ExitCode from subscription-manager request through an intercepting proxy server.");
+		// 2017-10-27 12:26:38,427 [DEBUG] subscription-manager:6926:MainThread @connection.py:500 - Using proxy: auto-services.usersys.redhat.com:3130
+		// 2017-10-27 12:26:38,427 [DEBUG] subscription-manager:6926:MainThread @connection.py:515 - Making request: GET /candlepin/consumers/342455a8-edf2-40cb-bea5-4623df44509b/owner
+		// 2017-10-27 12:26:38,742 [INFO] subscription-manager:6926:MainThread @connection.py:556 - Response: status=401, requestUuid=035c5bae-ab70-445e-b1d4-f6dbcc2fd59b, request="GET /candlepin/consumers/342455a8-edf2-40cb-bea5-4623df44509b/owner"
+		// 2017-10-27 12:26:38,745 [ERROR] subscription-manager:6926:MainThread @managercli.py:715 - Unable to make a connection using SSL client certificate. Please review proxy configuration and connectivity.
+		String logTail = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, logMarker, "Response");
+		Assert.assertTrue(logTail.contains("status=401"), "The '"+clienttasks.rhsmLogFile+"' reports an 401 Unauthorized response.");
+		logTail = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, logMarker, "ERROR");
+		Assert.assertTrue(logTail.contains(expectedFeedback), "The '"+clienttasks.rhsmLogFile+"' reports expected ERROR '"+expectedFeedback+"'.");
+		
+	}
+	@AfterGroups(value={"testUnauthorizedResponseFromProxyServer"}, groups={"setup"}, alwaysRun=true)
+	public void unsetProxyConfigAfterGroups () {
+		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
+		listOfSectionNameValues.add(new String[]{"server", "proxy_hostname", ""});
+		listOfSectionNameValues.add(new String[]{"server", "proxy_port", ""});
+		listOfSectionNameValues.add(new String[]{"server", "proxy_user", ""});
+		listOfSectionNameValues.add(new String[]{"server", "proxy_password", ""});
+		listOfSectionNameValues.add(new String[]{"server", "insecure", "0"});
+		clienttasks.config(null,null,true,listOfSectionNameValues);
+	}
+	
+	
+	
+	
+	
 	// Candidates for an automated Test:
 	// TODO Bug 744504 - [ALL LANG] [RHSM CLI] facts module - Run facts update with incorrect proxy url produces traceback. https://github.com/RedHatQE/rhsm-qe/issues/179
 	
@@ -2397,6 +2491,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	
 	public static SSHCommandRunner basicauthproxy = null;
 	public static SSHCommandRunner noauthproxy = null;
+	public static SSHCommandRunner unauthproxy = null;
 	public static String nErrMsg = null;
 	public static String pErrMsg = null;
 	public static String pErr407Msg = null;
@@ -2408,6 +2503,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	public void setupBeforeClass() throws IOException {
 		basicauthproxy = new SSHCommandRunner(sm_basicauthproxyHostname, sm_basicauthproxySSHUser, sm_sshKeyPrivate, sm_sshkeyPassphrase, null);
 		noauthproxy = new SSHCommandRunner(sm_noauthproxyHostname, sm_noauthproxySSHUser, sm_sshKeyPrivate, sm_sshkeyPassphrase, null);
+		unauthproxy = new SSHCommandRunner(sm_unauthproxyHostname, sm_unauthproxySSHUser, sm_sshKeyPrivate, sm_sshkeyPassphrase, null);
 		if (clienttasks!=null) nErrMsg = clienttasks.msg_NetworkErrorUnableToConnect;
 		if (clienttasks!=null) pErrMsg = clienttasks.msg_ProxyConnectionFailed;
 		if (clienttasks!=null) pErr407Msg = clienttasks.msg_ProxyConnectionFailed407;
