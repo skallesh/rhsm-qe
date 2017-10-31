@@ -953,23 +953,27 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 		
 		// assert that the yum plugins are/not loaded
 		//	[root@jsefler-rhel7 ~]# yum repolist --disablerepo=*
-		//	Loaded plugins: langpacks, product-id, search-disabled-repos, subscription-manager
+		//	Loaded plugins: langpacks, product-id, search-disabled-repos, subscription-
+		//		          : manager
 		//	This system is not registered with an entitlement server. You can use subscription-manager to register.
 		//	repolist: 0
 		String plugin;
 		String command = "yum repolist --disablerepo=*";
 		results= client.runCommandAndWait(command);
+		String stdout = results.getStdout();	// (first observed result)
+		stdout = stdout.replaceAll("-\\n\\s+:\\s", "-");	// join multiple lines of Loaded plugins (second observed result)
+		stdout = stdout.replaceAll(",\\n\\s+:\\s", ", ");	// join multiple lines of Loaded plugins (third observed result)
 		plugin="product-id";
 		if (yumPluginConfFileForProductIdEnabled) {
-			Assert.assertTrue(results.getStdout().contains(plugin),"The stdout from running '"+command+"' indicated that plugin '"+plugin+"' was loaded.");
+			Assert.assertTrue(stdout.contains(plugin),"The stdout from running '"+command+"' indicated that plugin '"+plugin+"' was loaded.");
 		} else {
-			Assert.assertTrue(!results.getStdout().contains(plugin),"The stdout from running '"+command+"' indicated that plugin '"+plugin+"' was NOT loaded.");
+			Assert.assertTrue(!stdout.contains(plugin),"The stdout from running '"+command+"' indicated that plugin '"+plugin+"' was NOT loaded.");
 		}
 		plugin="subscription-manager";
 		if (yumPluginConfFileForSubscriptionManagerEnabled) {
-			Assert.assertTrue(results.getStdout().contains(plugin),"The stdout from running '"+command+"' indicated that plugin '"+plugin+"' was loaded.");
+			Assert.assertTrue(stdout.contains(plugin),"The stdout from running '"+command+"' indicated that plugin '"+plugin+"' was loaded.");
 		} else {
-			Assert.assertTrue(!results.getStdout().contains(plugin),"The stdout from running '"+command+"' indicated that plugin '"+plugin+"' was NOT loaded.");
+			Assert.assertTrue(!stdout.contains(plugin),"The stdout from running '"+command+"' indicated that plugin '"+plugin+"' was NOT loaded.");
 		}
 	}
 	@DataProvider(name="getVariousModuleCommandsData")
@@ -1021,7 +1025,7 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags="Tier3")
 	@Test(	description="Verify that the yum plugins for /etc/yum/pluginconf.d/product-id.conf and /etc/yum/pluginconf.d/subscription-manager.conf are NOT automatically enabled when subscription-manager config module is used (in honor of special case bug 1501889).",
-			groups={"Tier3Tests","blockedByBug-1501889","testSubscriptionManagerConfigModuleShouldNotAutomaticallyEnableYumPlugins", "blockedByBug-1319927","blockedByBug-1489917"},
+			groups={"blockedByBug-1501889","testSubscriptionManagerConfigModuleShouldNotAutomaticallyEnableYumPlugins", "blockedByBug-1319927","blockedByBug-1489917"},
 			priority=100,
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
