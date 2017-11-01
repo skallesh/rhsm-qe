@@ -2270,7 +2270,6 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	public Object[][] getAvailableSystemSubscriptionPoolProductDataAs2dArray() throws Exception {
 		return TestNGUtils.convertListOfListsTo2dArray(getSystemSubscriptionPoolProductDataAsListOfLists(true, false));
 	}
-
 	/**
 	 * @param matchSystemHardware - make sure that atLeastOneProvidedProductSatisfiesArch
 	 * @param matchSystemSoftware - makes sure that atLeastOneProvidedProductIsInstalled
@@ -2278,6 +2277,8 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	 * @throws Exception
 	 */
 	protected List<List<Object>> getSystemSubscriptionPoolProductDataAsListOfLists(boolean matchSystemHardware, boolean matchSystemSoftware) throws Exception {
+		JSONObject jsonStatus = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(/*authenticator*/null,/*password*/null,sm_serverUrl,"/status"));
+		
 		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
 		List <String> productIdsAddedToSystemSubscriptionPoolProductData = new ArrayList<String>();
 		
@@ -2297,29 +2298,54 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		// get the currently installed product certs
 		List<ProductCert> productCerts = clienttasks.getCurrentProductCerts();
 		
-		// process all of the subscriptions belonging to ownerKey
-		/* 7/10/2015 devel consciously decided to drop @Verify(value = Owner.class, subResource = SubResource.SUBSCRIPTIONS) on this GET method starting with candlepin-2.0.
-		 * 7/10/2015 modifying this testware to simply raise the authentication credentials to admin
-		JSONArray jsonSubscriptions = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/owners/"+ownerKey+"/subscriptions"));
-		 */
-		JSONArray jsonSubscriptions = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,"/owners/"+ownerKey+"/subscriptions"));
-		for (int i = 0; i < jsonSubscriptions.length(); i++) {
-			JSONObject jsonSubscription = (JSONObject) jsonSubscriptions.get(i);
+		// process all of the subscriptions/pools belonging to ownerKey...
+		
+		// decide whether to loop through the subscription objects or pool objects
+		JSONArray jsonSubs;
+		if (SubscriptionManagerTasks.isVersion(jsonStatus.getString("version"), ">=", "2.1.1-1")) {	// candlepin commit 9c448315c843c0a20167236af7591359d895613a Discontinue ambiguous subscription resources in sharing world
+			jsonSubs = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,"/owners/"+ownerKey+"/pools?add_future=true"));	// /pools?add_future=true&include=productId;
+		} else {
+			/* 7/10/2015 devel consciously decided to drop @Verify(value = Owner.class, subResource = SubResource.SUBSCRIPTIONS) on this GET method starting with candlepin-2.0.
+			 * 7/10/2015 modifying this testware to simply raise the authentication credentials to admin
+			jsonSubs = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/owners/"+ownerKey+"/subscriptions"));
+			 */
+			jsonSubs = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,"/owners/"+ownerKey+"/subscriptions"));;
+		}
+		
+		// loop through all of the jsonSubs
+		for (int i = 0; i < jsonSubs.length(); i++) {
+			JSONObject jsonSub = (JSONObject) jsonSubs.get(i);
+			
+			// skip derived pools
+			if (jsonSub.has("subscriptionSubKey") && !jsonSub.isNull("subscriptionSubKey")) {	// null (custom pools not originating from a subscription)
+				if (jsonSub.getString("subscriptionSubKey").toLowerCase().equals("derived")) {	// master, derived, 
+					continue;
+				}
+			}
 			
 			// skip future subscriptions that are not valid today (at this time now)
-			Calendar startDate = parseISO8601DateString(jsonSubscription.getString("startDate"),"GMT");	// "startDate":"2012-02-08T00:00:00.000+0000"
-			Calendar endDate = parseISO8601DateString(jsonSubscription.getString("endDate"),"GMT");	// "endDate":"2013-02-07T00:00:00.000+0000"
+			Calendar startDate = parseISO8601DateString(jsonSub.getString("startDate"),"GMT");	// "startDate":"2012-02-08T00:00:00.000+0000"
+			Calendar endDate = parseISO8601DateString(jsonSub.getString("endDate"),"GMT");	// "endDate":"2013-02-07T00:00:00.000+0000"
 			if (!(startDate.before(now) && endDate.after(now))) continue;
 			
-			JSONObject jsonProduct = (JSONObject) jsonSubscription.getJSONObject("product");
-			String productId = jsonProduct.getString("id");
-			String productName = jsonProduct.getString("name");
+			// get the product id name and attributes
+			JSONArray jsonProductAttributes;
+			String productId;
+			String productName;
+			if (jsonSub.has("product")) {	// when jsonSub comes from /owners/{ownerKey}/subscriptions
+				productId = jsonSub.getJSONObject("product").getString("id");
+				productName = jsonSub.getJSONObject("product").getString("name");
+				jsonProductAttributes = jsonSub.getJSONObject("product").getJSONArray("attributes");
+			} else {	// when jsonSub comes from /owners/{ownerKey}/pools
+				productId = jsonSub.getString("productId");
+				productName = jsonSub.getString("productName");
+				jsonProductAttributes = jsonSub.getJSONArray("productAttributes");
+			}
 			
 			// skip subscriptions that have already been added to SystemSubscriptionPoolProductData
 			if (productIdsAddedToSystemSubscriptionPoolProductData.contains(productId)) continue;
 			
 			// process this subscription productId
-			JSONArray jsonProductAttributes = jsonProduct.getJSONArray("attributes");
 			boolean productAttributesPassRulesCheck = true; // assumed
 			String productAttributeSocketsValue = "";
 			List<String> productSupportedArches = new ArrayList<String>();
@@ -2423,14 +2449,20 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 				Boolean atLeastOneProvidedProductIsInstalled = false; // assumed
 				Boolean atLeastOneProvidedProductSatisfiesArch = false; // assumed
 				JSONArray jsonBundledProductData = new JSONArray();
-				JSONArray jsonProvidedProducts = (JSONArray) jsonSubscription.getJSONArray("providedProducts");
+				JSONArray jsonProvidedProducts = (JSONArray) jsonSub.getJSONArray("providedProducts");
 				if (jsonProvidedProducts.length()==0) atLeastOneProvidedProductIsInstalled = true;	// effectively true when no provided products are installed
 				if (jsonProvidedProducts.length()==0) atLeastOneProvidedProductSatisfiesArch = true;	// effectively true when no provided products are installed
 				for (int k = 0; k < jsonProvidedProducts.length(); k++) {
-					JSONObject jsonProvidedProduct = (JSONObject) jsonProvidedProducts.get(k);
+					
+					String providedProductId;
+					if (((JSONObject) jsonProvidedProducts.get(k)).has("id")) {	// when jsonSub comes from /owners/{ownerKey}/subscriptions
+						providedProductId = ((JSONObject) jsonProvidedProducts.get(k)).getString("id");
+					} else {	// when jsonSub comes from /owners/{ownerKey}/pools
+						providedProductId = ((JSONObject) jsonProvidedProducts.get(k)).getString("productId");
+					}
+					JSONObject jsonProvidedProduct = new JSONObject (CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,"/owners/"+ownerKey+"/products/"+providedProductId));
 					String providedProductName = jsonProvidedProduct.getString("name");
-					String providedProductId = jsonProvidedProduct.getString("id");
-
+					
 					// process this providedProducts attributes
 					JSONArray jsonProvidedProductAttributes = jsonProvidedProduct.getJSONArray("attributes");
 					boolean providedProductAttributesPassRulesCheck = true; // assumed
