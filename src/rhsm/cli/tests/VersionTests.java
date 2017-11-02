@@ -72,7 +72,7 @@ public class VersionTests extends SubscriptionManagerCLITestScript {
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
 	@Test(	description="assert that the installed version of python-rhsm is reported by the subscription-manager version module ",
-			groups={"Tier2Tests","blockedByBug-1284120"},
+			groups={"Tier2Tests","blockedByBug-1284120","blockedByBug-1508591"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void testVersionOfPythonRhsm() {
