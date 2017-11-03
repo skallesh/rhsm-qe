@@ -10,8 +10,18 @@
             AfterSuite
             DataProvider
             Test]
-           [com.github.redhatqe.polarize.metadata TestDefinition]
-           [com.github.redhatqe.polarize.metadata DefTypes$Project]
+           [com.github.redhatqe.polarize.metadata
+            TestDefinition
+            TestType
+            DefTypes
+            DefTypes$Project
+            DefTypes$TestTypes
+            DefTypes$Subtypes
+            DefTypes$Level
+            DefTypes$PosNeg
+            DefTypes$Importance
+            DefTypes$Automation
+            LinkedItem]
            [rhsm.base SubscriptionManagerCLITestScript]
            org.testng.SkipException
            org.openqa.selenium.remote.DesiredCapabilities
@@ -81,7 +91,14 @@
               :dataProvider "client-with-webdriver-and-english-locale"
               :dependsOnMethods ["auth_proxy_works" "service_is_running"]}
         TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]
-                        :testCaseID ["RHEL7-99668"]}}
+                        :testCaseID ["RHEL7-99668"]
+                        :level `DefTypes$Level/COMPONENT
+                        :testtype `TestType
+                        :component "subscription-manager"
+                        :tags ["Tier2"]
+                        :posneg `DefTypes$PosNeg/POSITIVE
+                        :importance `DefTypes$Importance/MEDIUM
+                        :automation `DefTypes$Automation/AUTOMATED}}
   register_with_auth_proxy
   [ts driver run-command locale language]
   (log/info "register with auth proxy test")
@@ -165,7 +182,14 @@
               :dataProvider "client-with-webdriver-and-locale"
               :dependsOnMethods ["auth_proxy_works" "service_is_running"]}
         TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]
-                        :testCaseID ["RHEL7-99668"]}}
+                        :testCaseID ["RHEL7-99668"]
+                        :level `DefTypes$Level/COMPONENT
+                        :testtype `TestType
+                        :component "subscription-manager"
+                        :tags ["Tier3"]
+                        :posneg `DefTypes$PosNeg/POSITIVE
+                        :importance `DefTypes$Importance/MEDIUM
+                        :automation `DefTypes$Automation/AUTOMATED}}
   register_with_auth_proxy_for_each_locale
   [ts driver run-command locale language]
   (register_with_auth_proxy ts driver run-command locale language))
@@ -177,7 +201,14 @@
               :dataProvider "client-with-webdriver-and-english-locale"
               :dependsOnMethods ["noauth_proxy_works" "service_is_running"]}
         TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]
-                        :testCaseID ["RHEL7-99668"]}}
+                        :testCaseID ["RHEL7-99668"]
+                        :level `DefTypes$Level/COMPONENT
+                        :testtype `TestType
+                        :component "subscription-manager"
+                        :tags ["Tier2"]
+                        :posneg `DefTypes$PosNeg/POSITIVE
+                        :importance `DefTypes$Importance/MEDIUM
+                        :automation `DefTypes$Automation/AUTOMATED}}
   register_with_noauth_proxy
   [ts driver run-command locale language]
   (log/info "register with noauth proxy test")
@@ -244,6 +275,24 @@
            (ExpectedConditions/textToBePresentInElementLocated
             (By/cssSelector "div.subscription-status-ct label")
             "Status: System isn't registered"))))))
+
+(defn ^{Test {:groups ["proxy"
+                       "cockpit"
+                       "tier3"]
+              :dataProvider "client-with-webdriver-and-locale"
+              :dependsOnMethods ["auth_proxy_works" "service_is_running"]}
+        TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL7-99668"]
+                        :level `DefTypes$Level/COMPONENT
+                        :testtype `TestType
+                        :component "subscription-manager"
+                        :tags ["Tier3"]
+                        :posneg `DefTypes$PosNeg/POSITIVE
+                        :importance `DefTypes$Importance/MEDIUM
+                        :automation `DefTypes$Automation/AUTOMATED}}
+  register_with_noauth_proxy_for_each_locale
+  [ts driver run-command locale language]
+  (register_with_noauth_proxy ts driver run-command locale language))
 
 (defn run-command
   "Runs a given command on the client using SSHCommandRunner()."

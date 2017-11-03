@@ -16,8 +16,18 @@
             DataProvider
             Test]
            [rhsm.base SubscriptionManagerCLITestScript]
-           [com.github.redhatqe.polarize.metadata TestDefinition]
-           [com.github.redhatqe.polarize.metadata DefTypes$Project]
+           [com.github.redhatqe.polarize.metadata
+            TestDefinition
+            TestType
+            DefTypes
+            DefTypes$Project
+            DefTypes$TestTypes
+            DefTypes$Subtypes
+            DefTypes$Level
+            DefTypes$PosNeg
+            DefTypes$Importance
+            DefTypes$Automation
+            LinkedItem]
            org.testng.SkipException
            ;; org.openqa.selenium.chrome.ChromeDriver
            org.openqa.selenium.remote.DesiredCapabilities
@@ -72,7 +82,14 @@
               :dataProvider "client-with-webdriver-and-activation-key-and-english-locale"
               :dependsOnMethods ["service_is_running"]}
         TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]
-                        :testCaseID ["RHEL7-99656"]}}
+                        :testCaseID ["RHEL7-99656"]
+                        :level `DefTypes$Level/COMPONENT
+                        :testtype `TestType
+                        :component "subscription-manager"
+                        :tags ["Tier1"]
+                        :posneg `DefTypes$PosNeg/POSITIVE
+                        :importance `DefTypes$Importance/HIGH
+                        :automation `DefTypes$Automation/AUTOMATED}}
   register_with_activation_key
   [ts driver run-command activation-key locale language]
   (log/info "register with activation key test")
@@ -129,7 +146,14 @@
               :dataProvider "client-with-webdriver-and-activation-key-and-locale"
               :dependsOnMethods ["service_is_running"]}
         TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]
-                        :testCaseID ["RHEL7-99656"]}}
+                        :testCaseID ["RHEL7-99656"]
+                        :level `DefTypes$Level/COMPONENT
+                        :testtype `TestType
+                        :component "subscription-manager"
+                        :tags ["Tier1"]
+                        :posneg `DefTypes$PosNeg/POSITIVE
+                        :importance `DefTypes$Importance/MEDIUM
+                        :automation `DefTypes$Automation/AUTOMATED}}
   register_with_activation_key_for_each_locale
   [ts driver run-command activation-key locale language]
   (register_with_activation_key ts driver run-command activation-key locale language))
