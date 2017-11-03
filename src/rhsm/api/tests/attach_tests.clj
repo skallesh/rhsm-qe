@@ -30,8 +30,18 @@
             AfterGroups
             DataProvider]
            org.testng.SkipException
-           [com.github.redhatqe.polarize.metadata TestDefinition]
-           [com.github.redhatqe.polarize.metadata DefTypes$Project]))
+           [com.github.redhatqe.polarize.metadata
+            TestDefinition
+            TestType
+            DefTypes
+            DefTypes$Project
+            DefTypes$TestTypes
+            DefTypes$Subtypes
+            DefTypes$Level
+            DefTypes$PosNeg
+            DefTypes$Importance
+            DefTypes$Automation
+            LinkedItem]))
 
 (defn maybe-append-locale
   [locale command]
@@ -66,7 +76,15 @@
 When I call 'tree' using busctl for com.redhat.RHSM1
 Then the response contains 'Attach' node
 "}
-        TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]}}
+        TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL7-112602"]
+                        :level `DefTypes$Level/COMPONENT
+                        :testtype `TestType
+                        :component "subscription-manager"
+                        :tags ["Tier2"] ;; from a subscription-manager perspective it is Tier2 test
+                        :posneg `DefTypes$PosNeg/POSITIVE
+                        :importance `DefTypes$Importance/MEDIUM
+                        :automation `DefTypes$Automation/AUTOMATED}}
   attach_object_is_available
   [ts run-command locale]
   "shell
@@ -98,7 +116,15 @@ When I call 'introspect' using busctl for com.redhat.RHSM1
    and an interface /com/redhat/RHSM1/Attach
 Then the methods list contains of methods 'AutoAttach', 'PoolAttach'
 "}
-        TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]}}
+        TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL7-112602"]
+                        :level `DefTypes$Level/COMPONENT
+                        :testtype `TestType
+                        :component "subscription-manager"
+                        :tags ["Tier2"] ;; from a subscription-manager perspective it is Tier2 test
+                        :posneg `DefTypes$PosNeg/POSITIVE
+                        :importance `DefTypes$Importance/MEDIUM
+                        :automation `DefTypes$Automation/AUTOMATED}}
   attach_methods
   [ts run-command locale]
   (let [methods-of-the-object
@@ -121,7 +147,15 @@ Then the methods list contains of methods 'AutoAttach', 'PoolAttach'
 When I call a DBus method 'PoolAttach' at com.redhat.RHSM1.Attach object
 Then the response contains of list of json strings described attached pools
 "}
-        TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]}}
+        TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL7-112602"]
+                        :level `DefTypes$Level/COMPONENT
+                        :testtype `TestType
+                        :component "subscription-manager"
+                        :tags ["Tier2"] ;; from a subscription-manager perspective it is Tier2 test
+                        :posneg `DefTypes$PosNeg/POSITIVE
+                        :importance `DefTypes$Importance/MEDIUM
+                        :automation `DefTypes$Automation/AUTOMATED}}
   attach_pool_using_dbus
   [ts run-command locale]
   (let [[_ major minor] (re-find #"(\d)\.(\d)" (-> :true tools/get-release :version))]
@@ -162,8 +196,9 @@ Then the response contains of list of json strings described attached pools
         (let [entitlements (map (fn [x] (-> x (str/replace #"\\\"" "\"") json/read-str)) response-data)]
           (let [ids-from-response (->> entitlements
                                        (map (fn [ent] (-> ent first (get "pool") (get "id"))))
-                                       set)]
-            (verify (= ids-from-response (set a-few-pool-ids)))))))))
+                                       set)
+                set-of-a-few-ids(set a-few-pool-ids)]
+            (verify (= ids-from-response set-of-a-few-ids))))))))
 
 (defn ^{Test {:groups ["DBUS"
                        "API"
@@ -174,7 +209,15 @@ Then the response contains of list of json strings described attached pools
 When I call a DBus method 'PoolAttach' at com.redhat.RHSM1.Attach object
 Then the response contains of list of json strings described attached pools
 "}
-        TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]}}
+        TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL7-112602"]
+                        :level `DefTypes$Level/COMPONENT
+                        :testtype `TestType
+                        :component "subscription-manager"
+                        :tags ["Tier2"] ;; from a subscription-manager perspective it is Tier2 test
+                        :posneg `DefTypes$PosNeg/POSITIVE
+                        :importance `DefTypes$Importance/MEDIUM
+                        :automation `DefTypes$Automation/AUTOMATED}}
   dbus_attach_pool_reflects_identity_change_even_inotify_is_zero
   [ts run-command locale]
   (let [[_ major minor] (re-find #"(\d)\.(\d)" (-> :true tools/get-release :version))]
@@ -194,9 +237,16 @@ Then the response contains of list of json strings described attached pools
 When I call a DBus method 'AutoAttach' at com.redhat.RHSM1.Attach object
 with the proper Service Level
 Then the response contains of keys ['status','overall_status','reasons']
-  and a value of 'status' is 1
-"}
-        TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]}}
+  and a value of 'status' is 1"}
+        TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL7-112602"]
+                        :level `DefTypes$Level/COMPONENT
+                        :testtype `TestType
+                        :component "subscription-manager"
+                        :tags ["Tier2"] ;; from a subscription-manager perspective it is Tier2 test
+                        :posneg `DefTypes$PosNeg/POSITIVE
+                        :importance `DefTypes$Importance/MEDIUM
+                        :automation `DefTypes$Automation/AUTOMATED}}
   autoattach_pool_using_dbus
   [ts run-command locale]
   (let [[_ major minor] (re-find #"(\d)\.(\d)" (-> :true tools/get-release :version))]
@@ -212,8 +262,8 @@ Then the response contains of keys ['status','overall_status','reasons']
                    run-command
                    :stdout)]
     (verify (.contains output "Registering to:")))
-
-  ;;(->> "subscription-manager remove --all" tools/run-command)
+  (verify (.contains (-> "subscription-manager list --consumed" run-command :stdout)
+                     "No consumed subscription pools were found."))
   (let [list-of-available-pools (rest/list-of-available-pools
                                  (ctasks/server-url)
                                  (@config :owner-key)
@@ -239,7 +289,38 @@ Then the response contains of keys ['status','overall_status','reasons']
                                                         (get "calculatedAttributes")
                                                         (get "compliance_type"))))
                                      set)]
-          (verify (= #{"Standard"} compliance-levels)))))))
+          (verify (some #{"Standard"} compliance-levels))))
+      (verify (not (.contains (-> "subscription-manager list --consumed" run-command :stdout)
+                              "No consumed subscription pools were found."))))))
+
+(defn ^{Test {:groups ["DBUS"
+                       "API"
+                       "tier1"
+                       "blockedByBug-1477958"]
+              :dataProvider "client-with-locales"
+              :description "Given a system is registered without any attached pool
+When I call a DBus method 'AutoAttach' at com.redhat.RHSM1.Attach object
+Then the response contains of list of json strings described attached pools
+"}
+        TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL7-112602"]
+                        :level `DefTypes$Level/COMPONENT
+                        :testtype `TestType
+                        :component "subscription-manager"
+                        :tags ["Tier2"] ;; from a subscription-manager perspective it is Tier2 test
+                        :posneg `DefTypes$PosNeg/POSITIVE
+                        :importance `DefTypes$Importance/MEDIUM
+                        :automation `DefTypes$Automation/AUTOMATED}}
+  dbus_autoattach_pool_reflects_identity_change_even_inotify_is_zero
+  [ts run-command locale]
+  (let [[_ major minor] (re-find #"(\d)\.(\d)" (-> :true tools/get-release :version))]
+    (match major
+           (a :guard #(< (Integer. %) 7 )) (throw (SkipException. "busctl is not available in RHEL6"))
+           :else nil))
+  (run-command "~/bin/set-config-value.py /etc/rhsm/rhsm.conf rhsm inotify 0")
+  (run-command "systemctl stop rhsm.service")
+  (run-command "systemctl start rhsm.service")
+  (autoattach_pool_using_dbus ts run-command locale))
 
 (defn run-command
   "Runs a given command on the client using SSHCommandRunner()."
@@ -252,13 +333,11 @@ Then the response contains of keys ['status','overall_status','reasons']
      :stderr err
      :exitcode exit}))
 
-(defn ^{DataProvider {:name "client-with-locales"}}
+(defn ^{DataProvider {:name "client-with-english-locales"}}
   client_with_locales
   "It provides a run-command for a locally run command. And locales dict to solve problems with locales."
   [_]
-  (-> [[(partial run-command @c/clientcmd) "en_US.UTF-8"]
-       [(partial run-command @c/clientcmd) "ja_JP.UTF-8"]
-       [(partial run-command @c/clientcmd) "it_IT.UTF-8"]]
+  (-> [[(partial run-command @c/clientcmd) "en_US.UTF-8"]]
       to-array-2d))
 
 (gen-class-testng)

@@ -216,9 +216,7 @@ Then the response contains of list of entitlements info
             (clojure.test/is (= list-of-pool-names-from-dbus
                                 list-of-pool-names-from-rest))
             (clojure.test/is (= list-of-pool-ids-from-dbus
-                                list-of-pool-ids-from-rest))
-            )
-          )))))
+                                list-of-pool-ids-from-rest))))))))
 
 (defn ^{Test {:groups ["REST"
                        "API"
@@ -239,7 +237,6 @@ Then the response contains of list of entitlements info
         options (assoc http-options :basic-auth [(@config :username) (@config :password)])]
     (let [response @(http/get url-of-owner-pools options)]
       ;;(spit "resources/rest-list-of-available-pools.json" response)
-      (println (keys response))
       (let [list-of-pools (-> response :body json/read-json)
             pool-ids (map :id list-of-pools)
             length-of-the-list (count list-of-pools)
@@ -254,10 +251,6 @@ Then the response contains of list of entitlements info
                                        :shared
                                        :quantity
                                        :derivedProductAttributes
-                                       :attributes} keys-of-pool))
-        )
-      )
-    )
-)
+                                       :attributes} keys-of-pool))))))
 
 (gen-class-testng)

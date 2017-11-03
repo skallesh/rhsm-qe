@@ -8,7 +8,6 @@
             [rhsm.cockpit.locales :as locales]
             [rhsm.cockpit.tasks :as tasks]
             [rhsm.cockpit.web :as web]
-            [rhsm.cockpit.cli :as cli]
             [clojure.string :as str])
   (:import [org.testng.annotations
             BeforeSuite
