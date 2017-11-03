@@ -108,14 +108,7 @@
               :dataProvider "client-with-webdriver-and-english-locale"
               :dependsOnMethods ["service_is_running"]}
         TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]
-                        :testCaseID ["RHEL7-99507"]
-                        :level `DefTypes$Level/COMPONENT
-                        :testtype `TestType
-                        :component "subscription-manager"
-                        :tags ["Tier1"]
-                        :posneg `DefTypes$PosNeg/POSITIVE
-                        :importance `DefTypes$Importance/HIGH
-                        :automation `DefTypes$Automation/AUTOMATED}}
+                        :testCaseID ["RHEL7-99507"]}}
   subscription_status
   [ts driver run-command locale language]
   (log/info "status test")
@@ -150,14 +143,7 @@
               :dataProvider "client-with-webdriver-and-locale"
               :dependsOnMethods ["service_is_running"]}
         TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]
-                        :testCaseID ["RHEL7-99507"]
-                        :level `DefTypes$Level/COMPONENT
-                        :testype `TestType
-                        :component "subscription-manager"
-                        :tags ["Tier3"]
-                        :posneg `DefTypes$PosNeg/POSITIVE
-                        :importance `DefTypes$Importance/HIGH
-                        :automation `DefTypes$Automation/AUTOMATED}}
+                        :testCaseID ["RHEL7-99507"]}}
   subscription_status_for_each_locale
   [ts driver run-command locale language]
   (subscription_status ts driver run-command locale language))
@@ -168,14 +154,7 @@
               :dataProvider "client-with-webdriver-and-english-locale"
               :dependsOnMethods ["service_is_running"]}
         TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]
-                        :testCaseID ["RHEL7-99656"]
-                        :level `DefTypes$Level/COMPONENT
-                        :testype `TestType
-                        :component "subscription-manager"
-                        :tags ["Tier1"]
-                        :posneg `DefTypes$PosNeg/POSITIVE
-                        :importance `DefTypes$Importance/HIGH
-                        :automation `DefTypes$Automation/AUTOMATED}}
+                        :testCaseID ["RHEL7-99656"]}}
   register
   [ts driver run-command locale language]
   (log/info "register test")
@@ -224,14 +203,7 @@
               :dataProvider "client-with-webdriver-and-locale"
               :dependsOnMethods ["service_is_running"]}
         TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]
-                        :testCaseID ["RHEL7-99656"]
-                        :level `DefTypes$Level/COMPONENT
-                        :testype `TestType
-                        :component "subscription-manager"
-                        :tags ["Tier3"]
-                        :posneg `DefTypes$PosNeg/POSITIVE
-                        :importance `DefTypes$Importance/MEDIUM
-                        :automation `DefTypes$Automation/AUTOMATED}}
+                        :testCaseID ["RHEL7-99656"]}}
   register_for_each_locale
   [ts driver run-command locale language]
   (register ts driver run-command locale language))
@@ -242,14 +214,7 @@
               :dataProvider "client-with-webdriver-and-english-locale"
               :dependsOnMethods ["service_is_running"]}
         TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]
-                        :testCaseID ["RHEL7-99656"]
-                        :level `DefTypes$Level/COMPONENT
-                        :testype `TestType
-                        :component "subscription-manager"
-                        :tags ["Tier1"]
-                        :posneg `DefTypes$PosNeg/NEGATIVE
-                        :importance `DefTypes$Importance/MEDIUM
-                        :automation `DefTypes$Automation/AUTOMATED}}
+                        :testCaseID ["RHEL7-99656"]}}
   register_with_no_field_set
   [ts driver run-command locale language]
   (log/info "register with no field test")
@@ -274,14 +239,7 @@
               :dataProvider "client-with-webdriver-and-locale"
               :dependsOnMethods ["service_is_running"]}
         TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]
-                        :testCaseID ["RHEL7-99656"]
-                        :level `DefTypes$Level/COMPONENT
-                        :testype `TestType
-                        :component "subscription-manager"
-                        :tags ["Tier3"]
-                        :posneg `DefTypes$PosNeg/NEGATIVE
-                        :importance `DefTypes$Importance/MEDIUM
-                        :automation `DefTypes$Automation/AUTOMATED}}
+                        :testCaseID ["RHEL7-99656"]}}
   register_with_no_field_set_for_each_locale
   [ts driver run-command locale language]
   (register_with_no_field_set ts driver run-command locale language))
@@ -292,14 +250,7 @@
               :dataProvider "client-with-webdriver-and-english-locale"
               :dependsOnMethods ["service_is_running"]}
         TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]
-                        :testCaseID ["RHEL7-99656"]
-                        :level `DefTypes$Level/COMPONENT
-                        :testype `TestType
-                        :component "subscription-manager"
-                        :tags ["Tier1"]
-                        :posneg `DefTypes$PosNeg/NEGATIVE
-                        :importance `DefTypes$Importance/MEDIUM
-                        :automation `DefTypes$Automation/AUTOMATED}}
+                        :testCaseID ["RHEL7-99656"]}}
   register_with_empty_password
   [ts driver run-command locale language]
   (log/info "register with empty password test")
@@ -329,14 +280,7 @@
               :dataProvider "client-with-webdriver-and-locale"
               :dependsOnMethods ["service_is_running"]}
         TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]
-                        :testCaseID ["RHEL7-99656"]
-                        :level `DefTypes$Level/COMPONENT
-                        :testype `TestType
-                        :component "subscription-manager"
-                        :tags ["Tier3"]
-                        :posneg `DefTypes$PosNeg/NEGATIVE
-                        :importance `DefTypes$Importance/MEDIUM
-                        :automation `DefTypes$Automation/AUTOMATED}}
+                        :testCaseID ["RHEL7-99656"]}}
   register_with_empty_password_for_each_locale
   [ts driver run-command locale language]
   (register_with_empty_password ts driver run-command locale language))
@@ -347,14 +291,7 @@
               :dataProvider "client-with-webdriver-and-english-locale"
               :dependsOnMethods ["service_is_running"]}
         TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]
-                        :testCaseID ["RHEL7-99656"]
-                        :level `DefTypes$Level/COMPONENT
-                        :testype `TestType
-                        :component "subscription-manager"
-                        :tags ["Tier1"]
-                        :posneg `DefTypes$PosNeg/NEGATIVE
-                        :importance `DefTypes$Importance/MEDIUM
-                        :automation `DefTypes$Automation/AUTOMATED}}
+                        :testCaseID ["RHEL7-99656"]}}
   register_with_wrong_password
   [ts driver run-command locale language]
   (log/info "register with wrong password test")
@@ -387,14 +324,7 @@
               :dataProvider "client-with-webdriver-and-locale"
               :dependsOnMethods ["service_is_running"]}
         TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]
-                        :testCaseID ["RHEL7-99656"]
-                        :level `DefTypes$Level/COMPONENT
-                        :testype `TestType
-                        :component "subscription-manager"
-                        :tags ["Tier3"]
-                        :posneg `DefTypes$PosNeg/NEGATIVE
-                        :importance `DefTypes$Importance/MEDIUM
-                        :automation `DefTypes$Automation/AUTOMATED}}
+                        :testCaseID ["RHEL7-99656"]}}
   register_with_wrong_password_for_each_locale
   [ts driver run-command locale language]
   (register_with_wrong_password ts driver run-command locale language))
@@ -405,14 +335,7 @@
               :dataProvider "client-with-webdriver-and-english-locale"
               :dependsOnMethods ["service_is_running"]}
         TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]
-                        :testCaseID ["RHEL7-99656"]
-                        :level `DefTypes$Level/COMPONENT
-                        :testype `TestType
-                        :component "subscription-manager"
-                        :tags ["Tier1"]
-                        :posneg `DefTypes$PosNeg/NEGATIVE
-                        :importance `DefTypes$Importance/MEDIUM
-                        :automation `DefTypes$Automation/AUTOMATED}}
+                        :testCaseID ["RHEL7-99656"]}}
   register_with_empty_login
   [ts driver run-command locale language]
   (log/info "register with empty login test")
@@ -441,14 +364,7 @@
               :dataProvider "client-with-webdriver-and-locale"
               :dependsOnMethods ["service_is_running"]}
         TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]
-                        :testCaseID ["RHEL7-99656"]
-                        :level `DefTypes$Level/COMPONENT
-                        :testype `TestType
-                        :component "subscription-manager"
-                        :tags ["Tier1"]
-                        :posneg `DefTypes$PosNeg/NEGATIVE
-                        :importance `DefTypes$Importance/MEDIUM
-                        :automation `DefTypes$Automation/AUTOMATED}}
+                        :testCaseID ["RHEL7-99656"]}}
   register_with_empty_login_for_each_locale
   [ts driver run-command locale language]
   (register_with_empty_login ts driver run-command locale language))
@@ -459,14 +375,7 @@
               :dataProvider "client-with-webdriver-and-english-locale"
               :dependsOnMethods ["service_is_running"]}
         TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]
-                        :testCaseID ["RHEL7-99656"]
-                        :level `DefTypes$Level/COMPONENT
-                        :testype `TestType
-                        :component "subscription-manager"
-                        :tags ["Tier1"]
-                        :posneg `DefTypes$PosNeg/NEGATIVE
-                        :importance `DefTypes$Importance/MEDIUM
-                        :automation `DefTypes$Automation/AUTOMATED}}
+                        :testCaseID ["RHEL7-99656"]}}
   register_with_wrong_login
   [ts driver run-command locale language]
   (log/info "register with wrong login test")
@@ -499,14 +408,7 @@
               :dataProvider "client-with-webdriver-and-locale"
               :dependsOnMethods ["service_is_running"]}
         TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]
-                        :testCaseID ["RHEL7-99656"]
-                        :level `DefTypes$Level/COMPONENT
-                        :testype `TestType
-                        :component "subscription-manager"
-                        :tags ["Tier3"]
-                        :posneg `DefTypes$PosNeg/NEGATIVE
-                        :importance `DefTypes$Importance/MEDIUM
-                        :automation `DefTypes$Automation/AUTOMATED}}
+                        :testCaseID ["RHEL7-99656"]}}
   register_with_wrong_login_for_each_locale
   [ts driver run-command locale language]
   (register_with_wrong_login ts driver run-command locale language))
@@ -517,14 +419,7 @@
               :dataProvider "client-with-webdriver-and-english-locale"
               :dependsOnMethods ["service_is_running"]}
         TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]
-                        :testCaseID ["RHEL7-99656"]
-                        :level `DefTypes$Level/COMPONENT
-                        :testype `TestType
-                        :component "subscription-manager"
-                        :tags ["Tier1"]
-                        :posneg `DefTypes$PosNeg/POSITIVE
-                        :importance `DefTypes$Importance/HIGH
-                        :automation `DefTypes$Automation/AUTOMATED}}
+                        :testCaseID ["RHEL7-99656"]}}
   unregister
   [ts driver run-command locale language]
   (log/info "unregister test")
@@ -553,14 +448,7 @@
               :dataProvider "client-with-webdriver-and-locale"
               :dependsOnMethods ["service_is_running"]}
         TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]
-                        :testCaseID ["RHEL7-99656"]
-                        :level `DefTypes$Level/COMPONENT
-                        :testype `TestType
-                        :component "subscription-manager"
-                        :tags ["Tier3"]
-                        :posneg `DefTypes$PosNeg/POSITIVE
-                        :importance `DefTypes$Importance/HIGH
-                        :automation `DefTypes$Automation/AUTOMATED}}
+                        :testCaseID ["RHEL7-99656"]}}
   unregister_for_each_locale
   [ts driver run-command locale language]
   (unregister ts driver run-command locale language))

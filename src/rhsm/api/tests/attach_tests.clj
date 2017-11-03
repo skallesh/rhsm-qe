@@ -77,14 +77,7 @@ When I call 'tree' using busctl for com.redhat.RHSM1
 Then the response contains 'Attach' node
 "}
         TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]
-                        :testCaseID ["RHEL7-112602"]
-                        :level `DefTypes$Level/COMPONENT
-                        :testtype `TestType
-                        :component "subscription-manager"
-                        :tags ["Tier2"] ;; from a subscription-manager perspective it is Tier2 test
-                        :posneg `DefTypes$PosNeg/POSITIVE
-                        :importance `DefTypes$Importance/MEDIUM
-                        :automation `DefTypes$Automation/AUTOMATED}}
+                        :testCaseID ["RHEL7-112602"]}}
   attach_object_is_available
   [ts run-command locale]
   "shell
@@ -117,14 +110,7 @@ When I call 'introspect' using busctl for com.redhat.RHSM1
 Then the methods list contains of methods 'AutoAttach', 'PoolAttach'
 "}
         TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]
-                        :testCaseID ["RHEL7-112602"]
-                        :level `DefTypes$Level/COMPONENT
-                        :testtype `TestType
-                        :component "subscription-manager"
-                        :tags ["Tier2"] ;; from a subscription-manager perspective it is Tier2 test
-                        :posneg `DefTypes$PosNeg/POSITIVE
-                        :importance `DefTypes$Importance/MEDIUM
-                        :automation `DefTypes$Automation/AUTOMATED}}
+                        :testCaseID ["RHEL7-112602"]}}
   attach_methods
   [ts run-command locale]
   (let [methods-of-the-object
@@ -148,14 +134,7 @@ When I call a DBus method 'PoolAttach' at com.redhat.RHSM1.Attach object
 Then the response contains of list of json strings described attached pools
 "}
         TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]
-                        :testCaseID ["RHEL7-112602"]
-                        :level `DefTypes$Level/COMPONENT
-                        :testtype `TestType
-                        :component "subscription-manager"
-                        :tags ["Tier2"] ;; from a subscription-manager perspective it is Tier2 test
-                        :posneg `DefTypes$PosNeg/POSITIVE
-                        :importance `DefTypes$Importance/MEDIUM
-                        :automation `DefTypes$Automation/AUTOMATED}}
+                        :testCaseID ["RHEL7-112602"]}}
   attach_pool_using_dbus
   [ts run-command locale]
   (let [[_ major minor] (re-find #"(\d)\.(\d)" (-> :true tools/get-release :version))]
@@ -210,14 +189,7 @@ When I call a DBus method 'PoolAttach' at com.redhat.RHSM1.Attach object
 Then the response contains of list of json strings described attached pools
 "}
         TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]
-                        :testCaseID ["RHEL7-112602"]
-                        :level `DefTypes$Level/COMPONENT
-                        :testtype `TestType
-                        :component "subscription-manager"
-                        :tags ["Tier2"] ;; from a subscription-manager perspective it is Tier2 test
-                        :posneg `DefTypes$PosNeg/POSITIVE
-                        :importance `DefTypes$Importance/MEDIUM
-                        :automation `DefTypes$Automation/AUTOMATED}}
+                        :testCaseID ["RHEL7-112602"]}}
   dbus_attach_pool_reflects_identity_change_even_inotify_is_zero
   [ts run-command locale]
   (let [[_ major minor] (re-find #"(\d)\.(\d)" (-> :true tools/get-release :version))]
@@ -239,14 +211,7 @@ with the proper Service Level
 Then the response contains of keys ['status','overall_status','reasons']
   and a value of 'status' is 1"}
         TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]
-                        :testCaseID ["RHEL7-112602"]
-                        :level `DefTypes$Level/COMPONENT
-                        :testtype `TestType
-                        :component "subscription-manager"
-                        :tags ["Tier2"] ;; from a subscription-manager perspective it is Tier2 test
-                        :posneg `DefTypes$PosNeg/POSITIVE
-                        :importance `DefTypes$Importance/MEDIUM
-                        :automation `DefTypes$Automation/AUTOMATED}}
+                        :testCaseID ["RHEL7-112602"]}}
   autoattach_pool_using_dbus
   [ts run-command locale]
   (let [[_ major minor] (re-find #"(\d)\.(\d)" (-> :true tools/get-release :version))]
@@ -303,14 +268,7 @@ When I call a DBus method 'AutoAttach' at com.redhat.RHSM1.Attach object
 Then the response contains of list of json strings described attached pools
 "}
         TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]
-                        :testCaseID ["RHEL7-112602"]
-                        :level `DefTypes$Level/COMPONENT
-                        :testtype `TestType
-                        :component "subscription-manager"
-                        :tags ["Tier2"] ;; from a subscription-manager perspective it is Tier2 test
-                        :posneg `DefTypes$PosNeg/POSITIVE
-                        :importance `DefTypes$Importance/MEDIUM
-                        :automation `DefTypes$Automation/AUTOMATED}}
+                        :testCaseID ["RHEL7-112602"]}}
   dbus_autoattach_pool_reflects_identity_change_even_inotify_is_zero
   [ts run-command locale]
   (let [[_ major minor] (re-find #"(\d)\.(\d)" (-> :true tools/get-release :version))]
