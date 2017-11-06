@@ -523,7 +523,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier1")
 	@Test(	description="Verify that the migration product certs support this system's RHEL release version",
-			groups={"Tier1Tests","blockedByBug-782208","blockedByBug-1006060","blockedByBug-1025338","blockedByBug-1080072","blockedByBug-1110863","blockedByBug-1148110","blockedByBug-1197864","blockedByBug-1300766","blockedByBug-1241221","blockedByBug-1328579","blockedByBug-1393573","blockedByBug-1436441"},
+			groups={"Tier1Tests","blockedByBug-782208","blockedByBug-1006060","blockedByBug-1025338","blockedByBug-1080072","blockedByBug-1110863","blockedByBug-1148110","blockedByBug-1197864","blockedByBug-1300766","blockedByBug-1241221","blockedByBug-1328579","blockedByBug-1393573","blockedByBug-1436441","blockedByBug-1510200"},
 			dependsOnMethods={"testChannelCertMapping"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=130940)
@@ -1323,7 +1323,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier1")
 	@Test(	description="Verify that the expected RHN base channels supporting this system's RHEL release version are mapped to product certs whose version matches this system's RHEL release",
-			groups={"Tier1Tests","blockedByBug-1110863","blockedByBug-1148110","blockedByBug-1197864","blockedByBug-1300766","blockedByBug-1222712","blockedByBug-1228387","blockedByBug-1241221","blockedByBug-1328579","blockedByBug-1328609","blockedByBug-1366747","blockedByBug-1393573","blockedByBug-1436441"},
+			groups={"Tier1Tests","blockedByBug-1110863","blockedByBug-1148110","blockedByBug-1197864","blockedByBug-1300766","blockedByBug-1222712","blockedByBug-1228387","blockedByBug-1241221","blockedByBug-1328579","blockedByBug-1328609","blockedByBug-1366747","blockedByBug-1393573","blockedByBug-1436441","blockedByBug-1510200"},
 			dependsOnMethods={"testChannelCertMapping"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -1433,7 +1433,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier1")
 	@Test(	description="Verify that the expected RHN RHEL channels supporting this system's RHEL release X.Y version are mapped to product certs whose version matches this system's RHEL release X.Y (also asserts beta channels to Beta product certs)",
-			groups={"Tier1Tests","blockedByBug-1080072","blockedByBug-1110863","blockedByBug-1148110","blockedByBug-1197864","blockedByBug-1300766","blockedByBug-1222712","blockedByBug-1241221","blockedByBug-1328579","blockedByBug-1393573","blockedByBug-1436441"},
+			groups={"Tier1Tests","blockedByBug-1080072","blockedByBug-1110863","blockedByBug-1148110","blockedByBug-1197864","blockedByBug-1300766","blockedByBug-1222712","blockedByBug-1241221","blockedByBug-1328579","blockedByBug-1393573","blockedByBug-1436441","blockedByBug-1510200"},
 			dataProvider="RhnRhelChannelsFromChannelMappingData",
 			dependsOnMethods={"testChannelCertMapping"},
 			enabled=true)
