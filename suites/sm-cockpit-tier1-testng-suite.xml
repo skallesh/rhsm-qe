@@ -2,7 +2,6 @@
 
 <!-- Running on the command line:  java -cp `lein classpath` org.testng.TestNG [testng options] [suitefile] -->
 <suite name="Cockpit Tier1 TestSuite">
-
 	<listeners>
 		<listener class-name="com.redhat.qe.auto.testng.TestNGListener" />
 		<listener class-name="com.redhat.qe.auto.bugzilla.BugzillaTestNGListener" />
@@ -16,14 +15,14 @@
     <classes>
       <class name="rhsm.base.SubscriptionManagerBaseTestScript"/>
       <class name="rhsm.cockpit.tests.register_tests" />
+      <class name="rhsm.gui.tests.base" />
     </classes>
     <groups>
       <run>
-        <include name="setup" />
+        <include name="setup"/>
         <include name="tier1"/>
-        <include name="cleanup" />
+        <include name="cleanup"/>
       </run>
     </groups>
   </test>
-
 </suite>

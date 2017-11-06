@@ -263,17 +263,17 @@
     (tasks/ui click :about)
     (tasks/ui waittillwindowexist :about-dialog 10)
     (let [get-gui-version (fn [k] (last (split (tasks/ui gettextvalue k) #" ")))
-          gui-pyrhsm (get-gui-version :python-rhsm-version)
+          ;;gui-pyrhsm (get-gui-version :python-rhsm-version)
           gui-rhsm (get-gui-version :rhsm-version)
           gui-rhsm-service (get-gui-version :rhsm-service-version)
           rpm-qi (fn [p s] (trim (:stdout
                                   (run-command
                                    (str "rpm -qi " p " | grep " s " | awk '{print $3}'")))))
           get-cli-version (fn [p] (str (rpm-qi p "Version") "-" (rpm-qi p "Release")))
-          cli-pyrhsm (trim (get-cli-version "python-rhsm"))
+          ;;cli-pyrhsm (trim (get-cli-version "python-rhsm"))
           cli-rhsm (trim (get-cli-version "subscription-manager-gui"))
           cli-rhsm-service (trim (ctasks/get-rhsm-service-version))]
-      (verify (= gui-pyrhsm cli-pyrhsm))
+      ;;(verify (= gui-pyrhsm cli-pyrhsm))
       (verify (= gui-rhsm cli-rhsm))
       (verify (= gui-rhsm-service cli-rhsm-service)))
     (finally (if (bool (tasks/ui guiexist :about-dialog))
@@ -297,17 +297,17 @@
     (tasks/ui click :about)
     (tasks/ui waittillwindowexist :about-dialog 10)
     (let [get-gui-version (fn [k] (last (split (tasks/ui gettextvalue k) #" ")))
-          gui-pyrhsm (get-gui-version :python-rhsm-version)
+          ;;gui-pyrhsm (get-gui-version :python-rhsm-version)
           gui-rhsm (get-gui-version :rhsm-version)
           gui-rhsm-service (get-gui-version :rhsm-service-version)
           rpm-qi (fn [p s] (trim (:stdout
                                   (run-command
                                    (str "rpm -qi " p " | grep " s " | awk '{print $3}'")))))
           get-cli-version (fn [p] (str (rpm-qi p "Version") "-" (rpm-qi p "Release")))
-          cli-pyrhsm (trim (get-cli-version "python-rhsm"))
+          ;;cli-pyrhsm (trim (get-cli-version "python-rhsm"))
           cli-rhsm (trim (get-cli-version "subscription-manager-gui"))
           cli-rhsm-service (trim (ctasks/get-rhsm-service-version))]
-      (verify (= gui-pyrhsm cli-pyrhsm))
+      ;;(verify (= gui-pyrhsm cli-pyrhsm))
       (verify (= gui-rhsm cli-rhsm))
       (verify (= gui-rhsm-service cli-rhsm-service)))
     (finally (if (bool (tasks/ui guiexist :about-dialog))

@@ -277,7 +277,7 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
        :redeem "Redeem"})
     (define-elements (windows :about-dialog)
       {;;these info fields are meant to be used by running gettext on them
-       :python-rhsm-version "python-rhsm version*"
+       ;;:python-rhsm-version "python-rhsm version*"
        :rhsm-service-version "subscription management service version*"
        :rhsm-version "subscription manager version*"
        :next-system-check "Next System Check-in*"

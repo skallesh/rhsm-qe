@@ -82,14 +82,7 @@
               :dataProvider "run-command"
               :dependsOnMethods ["package_is_installed"]}
         TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]
-                        :testCaseID ["RHEL7-99248"]
-                        :level `DefTypes$Level/COMPONENT
-                        :testtype `TestType
-                        :component "subscription-manager"
-                        :tags ["Tier1"]
-                        :posneg `DefTypes$PosNeg/POSITIVE
-                        :importance `DefTypes$Importance/HIGH
-                        :automation `DefTypes$Automation/AUTOMATED}}
+                        :testCaseID ["RHEL7-99248"]}}
   service_is_running
   [ts run-command]
   "[root@jstavel-rhel7-latest-server ~]# systemctl status cockpit.service
