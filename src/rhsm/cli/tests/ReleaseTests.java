@@ -529,6 +529,8 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 			providingTag = "rhsa-.*";
 			rhelProductCerts = clienttasks.getCurrentProductCerts(providingTag);
 		}
+		// TODO special case (rhel-alt) after the outcome of Bug 1510024 - RHEL-ALT 7.4 subscription manager is not able to list releases on Power-9
+		
 		/* 7/13/2015 no longer true now that /etc/pki/product-default may also provide a duplicate rhel product
 		Assert.assertEquals(rhelProductCerts.size(), 1, "Only one product cert is installed that provides RHEL tag '"+providingTag+"'");
 		instead, let's make sure they all cover the same product id... */
