@@ -28,6 +28,8 @@ import rhsm.data.ProductSubscription;
 import rhsm.data.SubscriptionPool;
 
 import com.redhat.qe.Assert;
+import com.redhat.qe.auto.bugzilla.BugzillaAPIException;
+import com.redhat.qe.auto.bugzilla.BzChecker;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.github.redhatqe.polarize.metadata.DefTypes.PosNeg;
 import com.github.redhatqe.polarize.metadata.DefTypes.Project;
@@ -90,7 +92,7 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 		List<SubscriptionPool> subscriptionPools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		SubscriptionPool brandedSubscriptionPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", brandedSubscriptionProductId, subscriptionPools);
 		subscriptionPools = getRandomSubsetOfList(subscriptionPools,10);	// randomly reduce the number of subscriptionPools tested
-		
+//debugTesting subscriptionPools.add(0, SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", "RH2501844", subscriptionPools));
 		// include the branded subscription pool for brandedSubscriptionProductId at the head of subscriptionPools
 		if (brandedSubscriptionPool!=null) subscriptionPools.add(0, brandedSubscriptionPool);
 		
@@ -458,6 +460,15 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 			// 2017-10-25 13:56:44,700 [DEBUG] subscription-manager:26339:MainThread @certdirectory.py:217 - Installed product IDs: ['68', '69', '71', '76']
 			// 2017-10-25 13:56:44,772 [WARNING] subscription-manager:26339:MainThread @rhelentbranding.py:114 - More than one installed product with RHEL brand information is installed
 			eligibleBrandNamesSet.clear();
+			
+			// TEMPORARY WORKAROUND
+			boolean invokeWorkaroundWhileBugIsOpen = true;
+			String bugId="1506271";	// Bug 1506271 - redhat-release is providing more than 1 variant specific product cert
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
+			if (invokeWorkaroundWhileBugIsOpen) {
+				throw new SkipException("Skipping this test while bug '"+bugId+"' is open.");
+			}
+			// END OF WORKAROUND
 		}
 		return eligibleBrandNamesSet;
 	}
