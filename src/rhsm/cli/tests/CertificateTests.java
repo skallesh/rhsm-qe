@@ -75,7 +75,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier1")
 	@Test(	description="Verify that no more than one RHEL product cert is ever installed.",
-			groups={"Tier1Tests","blockedByBug-854879","blockedByBug-904193"},
+			groups={"Tier1Tests","blockedByBug-854879","blockedByBug-904193","blockedByBug-1506271"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void testOnlyOneBaseRHELProductCertIsInstalled() {
