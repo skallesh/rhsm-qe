@@ -1414,7 +1414,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier1")
 	@Test(	description="When updating a RHEL package on a system with JBoss, verify that the JBoss productId is not deleted when calling yum update with --disablerepo=jb-eap-6-for-rhel-6-server-rpms",
-			groups={"Tier1Tests","VerifyYumUpdateWithDisabledRepoWillNotDeleteJBossProductId_Test","blockedByBug-1159163"},
+			groups={"Tier1Tests","VerifyYumUpdateWithDisabledRepoWillNotDeleteJBossProductId_Test","blockedByBug-1159163","blockedByBug-1512948"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void testYumUpdateWithDisabledRepoWillNotDeleteJBossProductId() throws JSONException, Exception {
