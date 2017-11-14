@@ -856,7 +856,7 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier1")
 	@Test(	description="execute subscription-manager modules and verify the expected ProductIdInstallTestPlugin hooks are called",
-			groups={"Tier1Tests","blockedByBug-859197", "blockedByBug-922871"/*, "blockedByBug-922882"*/},
+			groups={"Tier1Tests","blockedByBug-859197", "blockedByBug-922871"/*, "blockedByBug-922882"*/,"blockedByBug-1512948"},
 			priority=630, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void testEnabledProductIdInstallTestPluginHooksAreCalled() {
