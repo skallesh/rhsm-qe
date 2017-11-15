@@ -366,7 +366,7 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier1")
 	@Test(	description="verify that the search-disabled-repos plugin is not triggered when I attempt to install a package from a disabled repo (because search-disabled-repos plugin should only be triggered to resolve missing dependency packages)",
-			groups={"Tier1Tests"},
+			groups={"Tier1Tests","blockedByBug-1512948"},
 			dependsOnMethods={"testRhelSubscriptionBaseAndOptionalReposAreAvailable"},
 			priority=25, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -418,7 +418,7 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier1")
 	@Test(	description="verify yum usability message is presented when the default notify_only=1 is configured in /etc/yum/pluginconf.d/search-disabled-repos.conf",
-			groups={"Tier1Tests","blockedByBug-1232232","blockedByBug-1268376"},
+			groups={"Tier1Tests","blockedByBug-1232232","blockedByBug-1268376","blockedByBug-1512948"},
 			dependsOnMethods={"testRhelSubscriptionBaseAndOptionalReposAreAvailable"},
 			priority=30, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -493,7 +493,7 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier1")
 	@Test(	description="verify user is prompted to search disabled repos to complete an applicable yum install transaction when notify_only=0 is configured in /etc/yum/pluginconf.d/search-disabled-repos.conf and proceed with --assumeno responses",
-			groups={"Tier1Tests","blockedByBug-1232232","blockedByBug-1268376"},
+			groups={"Tier1Tests","blockedByBug-1232232","blockedByBug-1268376","blockedByBug-1512948"},
 			dependsOnMethods={"testRhelSubscriptionBaseAndOptionalReposAreAvailable"},
 			priority=40, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -587,7 +587,7 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier1")
 	@Test(	description="verify user is prompted to search disabled repos to complete an applicable yum install transaction when notify_only=0 is configured in /etc/yum/pluginconf.d/search-disabled-repos.conf and proceed with --assumeyes responses",
-			groups={"Tier1Tests","blockedByBug-1232232","blockedByBug-1268376"},
+			groups={"Tier1Tests","blockedByBug-1232232","blockedByBug-1268376","blockedByBug-1512948"},
 			dependsOnMethods={"testRhelSubscriptionBaseAndOptionalReposAreAvailable"},
 			priority=50, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -760,7 +760,7 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier1")
 	@Test(	description="verify user is prompted to search disabled repos to complete an applicable yum install transaction when notify_only=0 is configured in /etc/yum/pluginconf.d/search-disabled-repos.conf and proceed with yes response to search disabled repos and install followed by no response to keep repos enabled.",
-			groups={"Tier1Tests","blockedByBug-1232232","blockedByBug-1268376"},
+			groups={"Tier1Tests","blockedByBug-1232232","blockedByBug-1268376","blockedByBug-1512948"},
 			dependsOnMethods={"testRhelSubscriptionBaseAndOptionalReposAreAvailable"},
 			priority=60, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -1016,7 +1016,7 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier1")
 	@Test(	description="verify user is prompted to search disabled repos to complete an applicable yum install transaction when notify_only=0 is configured in /etc/yum/pluginconf.d/search-disabled-repos.conf and proceed with yes response to search disabled repos and no to the install prompt",
-			groups={"Tier1Tests","blockedByBug-1232232","blockedByBug-1268376"},
+			groups={"Tier1Tests","blockedByBug-1232232","blockedByBug-1268376","blockedByBug-1512948"},
 			dependsOnMethods={"testRhelSubscriptionBaseAndOptionalReposAreAvailable"},
 			priority=70, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
