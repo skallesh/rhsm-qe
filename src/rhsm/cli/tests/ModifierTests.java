@@ -56,7 +56,7 @@ public class ModifierTests extends SubscriptionManagerCLITestScript {
 ///*debugTesting*/ if (!label.equals("awesomeos-modifier")) Assert.fail("Contact automation maintainer to comment out this line of debugging.");
 		
 		// avoid throttling RateLimitExceededException from IT-Candlepin
-		if (!modifierPoolIds.contains(modifierPool.poolId) && CandlepinType.hosted.equals(sm_serverType)) {	// strategically get a new consumer to avoid 60 repeated API calls from the same consumer
+		if (/*!modifierPoolIds.contains(modifierPool.poolId) && WAS NOT AGRESSIVE ENOUGH*/ CandlepinType.hosted.equals(sm_serverType)) {	// strategically get a new consumer to avoid 60 repeated API calls from the same consumer
 			// re-register as a new consumer
 			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
 		}
@@ -119,7 +119,7 @@ public class ModifierTests extends SubscriptionManagerCLITestScript {
 		Assert.assertFalse(clienttasks.getYumRepolist("all").contains(label),
 				"Yum repolist now excludes label (repo id) '"+label+"' since we are not subscribed to anything.");
 		List<String> modifiedPoolIds = new ArrayList<String>();
-		if (poolsModified.isEmpty()) throw new SkipException("Cannot complete this test because it appears that there are no modifiable pools (e.g. EUS extended update subscription) available to this consumer's organization that can be modified by the modifier pool '"+modifierPool.subscriptionName+"'.");
+		if (poolsModified.isEmpty()) throw new SkipException("Cannot complete this test because it appears that there are no modifiable pools (providing products "+modifiedProductIds+") available to this consumer that can be modified by the modifier pool '"+modifierPool.subscriptionName+"'.");
 		for (SubscriptionPool pool : poolsModified) modifiedPoolIds.add(pool.poolId);
 		clienttasks.subscribe(null, null, modifiedPoolIds, null, null, null, null, null, null, null, null, null, null);
 		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(clienttasks.subscribeToSubscriptionPool(modifierPool,sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl));
@@ -135,7 +135,7 @@ public class ModifierTests extends SubscriptionManagerCLITestScript {
 				"After unsubscribing from the modifier pool, yum repolist all no longer includes (repo id) '"+label+"' from modifier productId '"+modifierPool.productId+"'.");
 		
 		if (!areAllRequiredTagsProvided) {
-			throw new SkipException("We cannot claim success on this test until 100% of the requiredTags '"+requiredTags+"' are provided by the currently install products.");
+			throw new SkipException("We cannot claim success on this test because 100% of the requiredTags '"+requiredTags+"' are not provided by the currently install products.");
 		}
 	}
 
