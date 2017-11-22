@@ -96,7 +96,8 @@ When I call 'GetStatus' using busctl and com.redhat.RHSM1.Entitlement object
 Then the response contains of keys ['status','overall_status','reasons']
   and a value of 'status' is 1
 "}
-        TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]}}
+        TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL-112591"]}}
   entitlement_status_of_invalid_subscription_using_dbus
   [ts]
   (let [[_ major minor] (re-find #"(\d)\.(\d)" (-> :true get-release :version))]

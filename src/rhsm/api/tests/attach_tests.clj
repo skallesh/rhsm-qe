@@ -143,10 +143,10 @@ Then the response contains of list of json strings described attached pools
            :else nil))
   (->> "subscription-manager unregister" run-command)
   (let [output (->> (format "subscription-manager register --username=%s --password=%s --org=%s"
-                           (@config :username) (@config :password) (@config :owner-key))
-                   (maybe-append-locale locale)
-                   run-command
-                   :stdout) ]
+                            (@config :username) (@config :password) (@config :owner-key))
+                    (maybe-append-locale locale)
+                    run-command
+                    :stdout) ]
     (verify (.contains output "Registering to:")))
   (Thread/sleep 3000)
   ;;(->> "subscription-manager remove --all" tools/run-command)

@@ -111,7 +111,6 @@
            (ExpectedConditions/visibilityOfElementLocated
             (By/id "subscription-register-key")))
           (sendKeys (into-array [(:name activation-key)])))
-      (println "Press Enter") (read-line)
       (.. (WebDriverWait. driver 60)
           (until
            (ExpectedConditions/visibilityOfElementLocated
