@@ -80,3 +80,13 @@
   (let [[driver run-command locale lang]
         (first (tests/webdriver_with_locale nil))]
     (tests/unregister nil driver run-command locale lang)))
+
+(deftest configuration_values_related_to_candlepin_server_are_shared_with_other_tools-test
+  (let [[driver run-command locale lang]
+        (first (tests/webdriver_with_locale nil))]
+    (tests/configuration_values_related_to_candlepin_server_are_shared_with_other_tools nil driver run-command locale lang)))
+
+(deftest default_url_should_load_the_hosted_entitlement_server-test
+  (let [[driver run-command locale lang]
+        (first (tests/webdriver_with_locale nil))]
+    (tests/default_url_should_load_the_hosted_entitlement_server nil driver run-command locale lang)))

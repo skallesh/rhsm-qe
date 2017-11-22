@@ -38,6 +38,12 @@
        (ExpectedConditions/visibilityOfElementLocated
         (By/cssSelector "div.subscription-status-ct label")))))
 
+(defn message-subscription-manager-is-not-installed [driver]
+  (.. (WebDriverWait. driver 60)
+      (until
+       (ExpectedConditions/visibilityOfElementLocated
+        (By/cssSelector "#app div.curtains-ct")))))
+
 (defn register-button [driver]
   (.. (WebDriverWait. driver 60)
       (until

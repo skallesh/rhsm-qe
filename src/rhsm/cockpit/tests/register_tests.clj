@@ -44,7 +44,14 @@
   startup [_]
   ;; (.. (new SubscriptionManagerCLITestScript) setupBeforeSuite)
   ;; (c/init)
-  (locales/load-catalog)
+  ;; (locales/load-catalog)
+  "installs scripts usable for playing with a file /etc/rhsm/rhsm.conf"
+  (.runCommandAndWait @c/clientcmd "mkdir -p ~/bin")
+  (.runCommandAndWait @c/clientcmd "cd ~/bin && curl --insecure  https://rhsm-gitlab.usersys.redhat.com/rhsm-qe/scripts/raw/master/get-config-value.py > get-config-value.py")
+  (.runCommandAndWait @c/clientcmd "cd ~/bin && curl --insecure  https://rhsm-gitlab.usersys.redhat.com/rhsm-qe/scripts/raw/master/set-config-value.py > set-config-value.py")
+  (.runCommandAndWait @c/clientcmd "chmod 755 ~/bin/get-config-value.py")
+  (.runCommandAndWait @c/clientcmd "chmod 755 ~/bin/set-config-value.py")
+  ;;-----------------------
   (.runCommandAndWait @c/clientcmd "yum -y install cockpit-system")
   (reset! driver  (doto (new FirefoxDriver (doto (DesiredCapabilities/firefox)
                                              (.setCapability "acceptSslCerts" true)
@@ -445,6 +452,87 @@
   unregister_for_each_locale
   [ts driver run-command locale language]
   (unregister ts driver run-command locale language))
+
+(defn ^{Test {:groups ["register" "cockpit" "tier2"]
+              :dataProvider "client-with-webdriver-and-english-locale"
+              :dependsOnMethods ["service_is_running"]}
+        TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL7-104119"]}}
+  configuration_values_related_to_candlepin_server_are_shared_with_other_tools
+  [ts driver run-command locale language]
+  (log/info "configuration values related to candlepin server are shared with other tools")
+  (run-command "subscription-manager unregister")
+  (let [a-hostname "some.redhat.com"]
+    (-> (format "~/bin/set-config-value.py /etc/rhsm/rhsm.conf server hostname %s" a-hostname)
+        run-command  :exitcode  (= 0) assert)
+    (.. driver (switchTo) (defaultContent))
+    (tasks/set-user-language driver language)
+    (.. (web/subscriptions-menu-link driver) click)
+    (.. driver (switchTo) (defaultContent))
+    (.. driver (switchTo) (frame (web/subscriptions-iframe driver)))
+    (.. (web/register-button driver) click)
+    (.. (WebDriverWait. driver 60)
+        (until
+         (ExpectedConditions/textToBePresentInElementLocated
+          (By/cssSelector "div.subscription-status-ct label")
+          "Status: System isn't registered")))
+
+    (let [register-url (.. (WebDriverWait. driver 60)
+                           (until
+                            (ExpectedConditions/visibilityOfElementLocated
+                             (By/cssSelector "#subscription-register-url button")))
+                           getText)]
+      (verify (= "Custom URL" register-url))
+      (let [hostname (.. (WebDriverWait. driver 60)
+                         (until
+                          (ExpectedConditions/visibilityOfElementLocated
+                           (By/cssSelector "#subscription-register-url-custom")))
+                         (getAttribute "value"))]
+        (verify (= a-hostname hostname))))))
+
+(defn ^{Test {:groups ["register" "cockpit" "tier2"]
+              :dataProvider "client-with-webdriver-and-english-locale"
+              :dependsOnMethods ["service_is_running"
+                                 "configuration_values_related_to_candlepin_server_are_shared_with_other_tools"]}
+        TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL7-109754"]}}
+  default_url_should_load_the_hosted_entitlement_server
+  [ts driver run-command locale language]
+  (log/info "configuration values related to candlepin server are shared with other tools")
+  (run-command "subscription-manager unregister")
+  (let [a-hostname "some.redhat.com"]
+    (-> (format "~/bin/set-config-value.py /etc/rhsm/rhsm.conf server hostname %s" a-hostname)
+        run-command  :exitcode  (= 0) assert)
+    (.. driver (switchTo) (defaultContent))
+    (tasks/set-user-language driver language)
+    (.. (web/subscriptions-menu-link driver) click)
+    (.. driver (switchTo) (defaultContent))
+    (.. driver (switchTo) (frame (web/subscriptions-iframe driver)))
+    (.. (web/register-button driver) click)
+    (.. (WebDriverWait. driver 60)
+        (until
+         (ExpectedConditions/textToBePresentInElementLocated
+          (By/cssSelector "div.subscription-status-ct label")
+          "Status: System isn't registered")))
+    (.. (WebDriverWait. driver 60)
+        (until
+         (ExpectedConditions/visibilityOfElementLocated
+          (By/cssSelector "#subscription-register-url button")))
+        click)
+    (.. (WebDriverWait. driver 60)
+        (until
+         (ExpectedConditions/visibilityOfElementLocated
+          (By/cssSelector "#subscription-register-url button")))
+        click)
+    (.. (WebDriverWait. driver 60)
+        (until
+         (ExpectedConditions/visibilityOfElementLocated
+          (By/cssSelector "#subscription-register-url ul.dropdown-menu li[data-data=\"custom\"]")))
+        click)
+    ;; Submit a form
+    ;; TODO verify that value stored in rhsm.conf is subscription.rhsm.redhat.com
+    )
+  )
 
 (defn run-command
   "Runs a given command on the client using SSHCommandRunner()."

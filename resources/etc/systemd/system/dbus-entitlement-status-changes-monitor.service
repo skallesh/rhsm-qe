@@ -1,0 +1,9 @@
+[Unit]
+Description=Monitor of Entitlement Status Changes
+
+[Service]
+Type=simple
+ExecStart=/root/bin/monitor-entitlement-status-changes.sh
+
+[Install]
+WantedBy=multi-user.target

@@ -105,7 +105,7 @@ Then the response contains of keys ['status','overall_status','reasons']
            :else nil))
   (run-command "subscription-manager unregister")
   (run-command (format "subscription-manager register  --username %s --password %s --org=%s" (@config :username) (@config :password) (@config :owner-key)))
-  (let [response (-> "busctl call com.redhat.RHSM1 /com/redhat/RHSM1/Entitlement com.redhat.RHSM1.Entitlement GetStatus"
+  (let [response (-> "busctl call com.redhat.RHSM1 /com/redhat/RHSM1/Entitlement com.redhat.RHSM1.Entitlement GetStatus s \"\""
                      run-command)]
     (verify (= (:exitcode response) 0))
     (verify (=  (:stderr response) ""))

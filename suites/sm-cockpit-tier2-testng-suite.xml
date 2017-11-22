@@ -11,6 +11,20 @@
 	</listeners>
 
   <!-- Cockpit TIER 2 TESTS -->
+  <test name="Cockpit: Status">
+    <classes>
+      <class name="rhsm.base.SubscriptionManagerBaseTestScript"/>
+      <class name="rhsm.cockpit.tests.status_tests" />
+      <class name="rhsm.gui.tests.base" />
+    </classes>
+    <groups>
+      <run>
+        <include name="setup"/>
+        <include name="tier1"/>
+        <include name="cleanup"/>
+      </run>
+    </groups>
+  </test>
 
   <test name="Cockpit: Register">
     <classes>
@@ -22,6 +36,36 @@
         <include name="setup" />
         <include name="tier2"/>
         <include name="cleanup" />
+      </run>
+    </groups>
+  </test>
+
+  <test name="Cockpit: Activation Key">
+    <classes>
+      <class name="rhsm.base.SubscriptionManagerBaseTestScript"/>
+      <class name="rhsm.cockpit.tests.activation_key_tests" />
+      <class name="rhsm.gui.tests.base" />
+    </classes>
+    <groups>
+      <run>
+        <include name="setup"/>
+        <include name="tier1"/>
+        <include name="cleanup"/>
+      </run>
+    </groups>
+  </test>
+
+  <test name="Cockpit: Proxy">
+    <classes>
+      <class name="rhsm.base.SubscriptionManagerBaseTestScript"/>
+      <class name="rhsm.cockpit.tests.proxy_tests" />
+      <class name="rhsm.gui.tests.base" />
+    </classes>
+    <groups>
+      <run>
+        <include name="setup"/>
+        <include name="tier1"/>
+        <include name="cleanup"/>
       </run>
     </groups>
   </test>
