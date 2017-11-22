@@ -13,7 +13,7 @@
                  [com.redhat.qe/json-java "20110202"]
                  [com.redhat.qe/jul.test.records "1.0.1"]
                  [com.redhat.qe/ssh-tools "1.0.3-SNAPSHOT"]
-                 [com.redhat.qe/testng-listeners "1.0.0" 
+                 [com.redhat.qe/testng-listeners "1.0.0"
                   :exclusions [com.redhat.qe/bugzilla-testng]]
                  [com.redhat.qe/verify-testng "1.0.0-SNAPSHOT"]
                  [com.redhat.qe/rhsm-dbus "0.9.1-SNAPSHOT"]
@@ -46,7 +46,7 @@
   ; regexp of namespaces that contains of tests of our tests. It is used by quickie.
   :test-matcher #"rhsm\..*-test$"
   :repositories [
-                 ["sonatype" {:url           "http://oss.sonatype.org/content/repositories/releases"
+                 ["sonatype" {:url           "https://oss.sonatype.org/content/repositories/releases"
                               ;; If a repository contains releases only setting
                               ;; :snapshots to false will speed up dependencies.
                               :snapshots     false
