@@ -1,6 +1,5 @@
 (defproject org.clojars.jsefler/sm "1.1.0-SNAPSHOT"
   :description "Automated tests for Red Hat Subsciption Manager CLI and GUI"
-  :java-source-path "src" ;lein1
   :java-source-paths ["src"]
   :main rhsm.runtestng
   :aot [#"^rhsm.gui.tests" #"^rhsm.api.tests" #"^rhsm.cockpit.tests" rhsm.runtestng] ;regex to find tests that testng will run
@@ -40,18 +39,13 @@
                  [org.seleniumhq.selenium/selenium-java "3.5.2"]
                  [http-kit "2.2.0"]
                  [mount "0.1.10"]]
-  ;lein1
-  :dev-dependencies [[fn.trace "1.3.2.0-SNAPSHOT"]
-                     [lein-eclipse "1.0.0"]]
-  ;lein2
   :profiles {:dev {:dependencies
                    [[fn.trace "1.3.2.0-SNAPSHOT"]]}}
   :plugins [[lein2-eclipse "2.0.0"]
             [quickie "0.4.1"]]
   ; regexp of namespaces that contains of tests of our tests. It is used by quickie.
   :test-matcher #"rhsm\..*-test$"
-  :repositories [["clojars.org" {:url       "http://clojars.org/repo"
-                                 :snapshots {:update :always}}]
+  :repositories [
                  ["sonatype" {:url           "http://oss.sonatype.org/content/repositories/releases"
                               ;; If a repository contains releases only setting
                               ;; :snapshots to false will speed up dependencies.
