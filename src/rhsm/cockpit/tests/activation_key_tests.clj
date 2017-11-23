@@ -80,7 +80,8 @@
                        "cockpit"
                        "tier1"]
               :dataProvider "client-with-webdriver-and-activation-key-and-english-locale"
-              :dependsOnMethods ["service_is_running"]}
+              ;;:dependsOnMethods ["service_is_running"]
+              }
         TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]
                         :testCaseID ["RHEL7-99656"]}}
   register_with_activation_key
@@ -136,7 +137,8 @@
                        "cockpit"
                        "tier3"]
               :dataProvider "client-with-webdriver-and-activation-key-and-locale"
-              :dependsOnMethods ["service_is_running"]}
+              ;;:dependsOnMethods ["service_is_running"]
+              }
         TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]
                         :testCaseID ["RHEL7-99656"]}}
   register_with_activation_key_for_each_locale
