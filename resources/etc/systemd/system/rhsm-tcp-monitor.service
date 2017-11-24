@@ -1,0 +1,9 @@
+[Unit]
+Description=Monitor of TCP communication with a server <HOST>
+
+[Service]
+Type=simple
+ExecStart=/root/bin/monitor-candlepin.sh <INTERFACE> <HOST> <PORT>
+
+[Install]
+WantedBy=multi-user.target

@@ -109,22 +109,24 @@ Then the response contains of keys ['status','overall_status','reasons']
   (let [response (-> "busctl call com.redhat.RHSM1 /com/redhat/RHSM1/Entitlement com.redhat.RHSM1.Entitlement GetStatus s \"\""
                      run-command)]
     (verify (= (:exitcode response) 0))
-    (verify (=  (:stderr response) ""))
-    (let [[parsed-response rest-of-the-string] (-> response :stdout (.trim) dbus/parse)
-          keys-of-the-parsed-response (-> parsed-response keys set)
-          status-of-the-response (-> parsed-response (get "status"))
-          overall-status (-> parsed-response (get "overall_status"))]
+    (verify (= (:stderr response) ""))
+    (let [[response-data rest-of-the-string] (-> response :stdout (.trim) dbus/parse)]
       (verify (= rest-of-the-string ""))
-      (verify (= keys-of-the-parsed-response #{"status" "overall_status" "reasons"}))
-      (verify (= status-of-the-response 1))
-      ;;(verify (= overall-status "Invalid"))
-      (let [reason-texts (-> parsed-response (get "reasons") vals)
-            num-of-not-supported-reasons
-            (count (filter (fn [s] (.contains s "Not supported by a valid subscription."))
-                           reason-texts))]
-        ;; more that a half o texts should be 'Not supported by a valid subscription."
-        ;;(verify (> num-of-not-supported-reasons (* 0.5 (count reason-texts))))
-        ))))
+      (verify (= (type response-data) java.lang.String))
+      (let [parsed (-> response-data (str/replace #"\\\"" "\"") json/read-str)
+            keys-of-the-response (-> parsed keys set)
+            status-of-the-response (-> parsed (get "status"))
+            valid (-> parsed (get "valid"))]
+        (verify (= keys-of-the-response #{"status" "valid" "reasons"}))
+        (verify (= status-of-the-response "Invalid"))
+        (verify (= valid false))
+        (let [reason-texts (-> parsed (get "reasons") vals)
+              num-of-not-supported-reasons
+              (count (filter (fn [s] (.contains s "Not supported by a valid subscription."))
+                             reason-texts))]
+          ;; more that a half o texts should be 'Not supported by a valid subscription."
+          (verify (> num-of-not-supported-reasons (* 0.5 (count reason-texts))))
+          )))))
 
 
 (defn ^{Test {:groups ["DBUS"
