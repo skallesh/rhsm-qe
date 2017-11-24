@@ -71,7 +71,7 @@
 (defn ^{Test {:groups ["DBUS"
                        "API"
                        "tier1"]
-              :dataProvider "client-with-locales"
+              :dataProvider "client-with-english-locales"
               :description "Given a dbus service rhsm is active
 When I call 'tree' using busctl for com.redhat.RHSM1
 Then the response contains 'Attach' node
@@ -128,7 +128,7 @@ Then the methods list contains of methods 'AutoAttach', 'PoolAttach'
                        "API"
                        "tier1"
                        "blockedByBug-1477958"]
-              :dataProvider "client-with-locales"
+              :dataProvider "client-with-english-locales"
               :description "Given a system is registered without any attached pool
 When I call a DBus method 'PoolAttach' at com.redhat.RHSM1.Attach object
 Then the response contains of list of json strings described attached pools
@@ -183,7 +183,7 @@ Then the response contains of list of json strings described attached pools
                        "API"
                        "tier1"
                        "blockedByBug-1477958"]
-              :dataProvider "client-with-locales"
+              :dataProvider "client-with-english-locales"
               :description "Given a system is registered without any attached pool
 When I call a DBus method 'PoolAttach' at com.redhat.RHSM1.Attach object
 Then the response contains of list of json strings described attached pools
@@ -204,7 +204,7 @@ Then the response contains of list of json strings described attached pools
 (defn ^{Test {:groups ["DBUS"
                        "API"
                        "tier1"]
-              :dataProvider "client-with-locales"
+              :dataProvider "client-with-english-locales"
               :description "Given a system is registered without any attached pool
 When I call a DBus method 'AutoAttach' at com.redhat.RHSM1.Attach object
 with the proper Service Level
@@ -262,7 +262,7 @@ Then the response contains of keys ['status','overall_status','reasons']
                        "API"
                        "tier1"
                        "blockedByBug-1477958"]
-              :dataProvider "client-with-locales"
+              :dataProvider "client-with-english-locales"
               :description "Given a system is registered without any attached pool
 When I call a DBus method 'AutoAttach' at com.redhat.RHSM1.Attach object
 Then the response contains of list of json strings described attached pools
@@ -292,7 +292,7 @@ Then the response contains of list of json strings described attached pools
      :exitcode exit}))
 
 (defn ^{DataProvider {:name "client-with-english-locales"}}
-  client_with_locales
+  client_with_english_locales
   "It provides a run-command for a locally run command. And locales dict to solve problems with locales."
   [_]
   (-> [[(partial run-command @c/clientcmd) "en_US.UTF-8"]]
