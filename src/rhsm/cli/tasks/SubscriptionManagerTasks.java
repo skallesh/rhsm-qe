@@ -868,7 +868,6 @@ if (false) {
 		if (Float.valueOf(redhatReleaseXY)>=7.2f) pkgs = new ArrayList<String>(Arrays.asList(new String[]{"python-rhsm", "subscription-manager", "subscription-manager-gui",   "subscription-manager-initial-setup-addon", "subscription-manager-migration", "subscription-manager-migration-data", "subscription-manager-plugin-ostree", "subscription-manager-plugin-container"}));
 		if (Float.valueOf(redhatReleaseXY)>=7.3f) pkgs = new ArrayList<String>(Arrays.asList(new String[]{"python-rhsm-certificates", "python-rhsm", "subscription-manager", "subscription-manager-gui",   "subscription-manager-initial-setup-addon", "subscription-manager-migration", "subscription-manager-migration-data", "subscription-manager-plugin-ostree", "subscription-manager-plugin-container"}));
 		if (Float.valueOf(redhatReleaseXY)>=7.5f) pkgs = new ArrayList<String>(Arrays.asList(new String[]{"subscription-manager-rhsm-certificates", "subscription-manager-rhsm", "subscription-manager", "subscription-manager-gui",   "subscription-manager-initial-setup-addon", "subscription-manager-migration", "subscription-manager-migration-data", "subscription-manager-plugin-ostree", "subscription-manager-plugin-container", "subscription-manager-cockpit"}));
-		if (Float.valueOf(redhatReleaseXY)>=6.0f) pkgs.add(0,"python-dateutil");	// dependency
 		pkgs.add(0,"expect");	// used for interactive cli prompting
 		pkgs.add(0,"sos");	// used to create an sosreport for debugging hardware
 		pkgs.add(0,"bash-completion");	// used in BashCompletionTests
@@ -877,6 +876,8 @@ if (false) {
 		pkgs.add(0,"policycoreutils-python");	// used for Docker testing - required by docker-selinux package 
 		pkgs.add(0,"net-tools");	// provides netstat which is used to know when vncserver is up
 		pkgs.add(0,"ntp");	// used to synchronize a computer's time with another reference time source.
+		if (Float.valueOf(redhatReleaseXY)>=6.0f) pkgs.add(0,"python-dateutil");	// dependency for python-rhsm
+		if (Float.valueOf(redhatReleaseXY)>=7.5f) pkgs.add(0,"cockpit");	// indirect dependency for subscription-manager-cockpit, but indirectly requires subscription-manager which means when subscription-manager is removed by yum, then cockpit is also removed
 		
 		// TEMPORARY WORKAROUND FOR BUG
 		String bugId = "790116"; boolean invokeWorkaroundWhileBugIsOpen = true;
@@ -973,7 +974,8 @@ if (false) {
 				String obsoletedPackage = pkg.replace("subscription-manager-rhsm", "python-rhsm");
 				sshCommandRunner.runCommandAndWait("yum -y remove "+obsoletedPackage+" "+installOptions);
 			}
-			sshCommandRunner.runCommandAndWait("yum -y remove "+pkg+" "+installOptions);
+			//sshCommandRunner.runCommandAndWait("yum -y remove "+pkg+" "+installOptions);	// inadvertently causes removal of cockpit-system which requires subscription-manager and then there is no way to get it back when subscription-manager-cockpit is installed; therefore let's use rpm --erase --no-deps
+			sshCommandRunner.runCommandAndWait("rpm --erase --nodeps "+pkg);
 			RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"rpm -q "+pkg,Integer.valueOf(1),"package "+pkg+" is not installed",null);
 		}
 		
