@@ -138,6 +138,61 @@ When I call 'GetPools' using busctl and com.redhat.RHSM1.Entitlement object
 Then the response contains of list of entitlements info
 "}
         TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]}}
+  get_pools_using_dbus
+  [ts]
+  (let [[_ major minor] (re-find #"(\d)\.(\d)" (-> :true get-release :version))]
+    (match major
+           (a :guard #(< (Integer. %) 7 )) (throw (SkipException. "busctl is not available in RHEL6"))
+           :else nil))
+  (run-command "subscription-manager unregister")
+  (run-command (format "subscription-manager register  --username %s --password %s --org=%s" (@config :username) (@config :password) (@config :owner-key)))
+  (run-command "subscription-manager attach --auto")
+  ;;(run-command "subscription-manager list --consumed")
+  (let [response (-> (str "busctl call com.redhat.RHSM1 "
+                          " /com/redhat/RHSM1/Entitlement"
+                          " com.redhat.RHSM1.Entitlement"
+                          " GetPools"
+                          " a{sv}a{sv} 0 0") run-command)]
+    (verify (= (:exitcode response) 0))
+    (verify (=  (:stderr response) ""))
+    (let [[response rest-of-the-string] (-> response :stdout (.trim) dbus/parse)]
+      (verify (= rest-of-the-string ""))
+      (verify (= java.lang.String (type response)))
+      (let [parsed-data (-> response (str/replace #"\\\"" "\"") json/read-str)]
+        (verify (= clojure.lang.PersistentArrayMap (type parsed-data)))
+        (let [keys-of-the-data (->> parsed-data keys (into #{}))]
+          (verify (= #{"installed" "consumed" "available"} keys-of-the-data))
+          (let [consumed-pools (get parsed-data "consumed")
+                num-of-consumed-pools (count consumed-pools)]
+            (verify (= clojure.lang.PersistentVector (type consumed-pools)))
+            (verify (< 0 num-of-consumed-pools))
+            (let [keys-of-the-pool (->> consumed-pools first keys (into #{}))]
+              (verify (clojure.set/subset? #{"provides_management"
+                                             "sku"
+                                             "system_type"
+                                             "serial"
+                                             "provides"
+                                             "subscription_name"
+                                             "pool_id"
+                                             "service_level"
+                                             "account"
+                                             "service_type"
+                                             "contract"
+                                             "starts"
+                                             "subscription_type"
+                                             "active"
+                                             "ends"
+                                             "quantity_used"} keys-of-the-pool)))))))))
+
+(defn ^{Test {:groups ["DBUS"
+                       "API"
+                       "tier1"]
+              :description "Given a system is registered
+and subscription-manager tells a status is 'Invalid'
+When I call 'GetPools' using busctl and com.redhat.RHSM1.Entitlement object
+Then the response contains of list of entitlements info
+"}
+        TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]}}
   get_consumed_pools_using_dbus
   [ts]
   (let [[_ major minor] (re-find #"(\d)\.(\d)" (-> :true get-release :version))]
@@ -148,32 +203,41 @@ Then the response contains of list of entitlements info
   (run-command (format "subscription-manager register  --username %s --password %s --org=%s" (@config :username) (@config :password) (@config :owner-key)))
   (run-command "subscription-manager attach --auto")
   ;;(run-command "subscription-manager list --consumed")
-  (let [response (-> "busctl call com.redhat.RHSM1 /com/redhat/RHSM1/Entitlement com.redhat.RHSM1.Entitlement GetPools" run-command)]
+  (let [response (-> (str "busctl call com.redhat.RHSM1 "
+                          " /com/redhat/RHSM1/Entitlement"
+                          " com.redhat.RHSM1.Entitlement"
+                          " GetPools"
+                          " a{sv}a{sv} 1 \"pool_subsets\" s \"consumed\" 0") run-command)]
     (verify (= (:exitcode response) 0))
     (verify (=  (:stderr response) ""))
-    (let [[parsed-response rest-of-the-string] (-> response :stdout (.trim) dbus/parse)]
+    (let [[response rest-of-the-string] (-> response :stdout (.trim) dbus/parse)]
       (verify (= rest-of-the-string ""))
-      (verify (= (type []) (type parsed-response)))
-      (let [first-pool (first parsed-response)]
-        (verify (= clojure.lang.PersistentHashMap (type first-pool)))
-        (let [keys-of-the-pool (keys first-pool)]
-          (verify (= #{"provides_management"
-                       "status_detail"
-                       "sku"
-                       "system_type"
-                       "serial"
-                       "provides"
-                       "subscription_name"
-                       "pool_id"
-                       "service_level"
-                       "account"
-                       "service_type"
-                       "contract"
-                       "starts"
-                       "subscription_type"
-                       "active"
-                       "ends"
-                       "quantity_used"} (into #{} keys-of-the-pool))))))))
+      (verify (= java.lang.String (type response)))
+      (let [parsed-data (-> response (str/replace #"\\\"" "\"") json/read-str)]
+        (verify (= clojure.lang.PersistentArrayMap (type parsed-data)))
+        (let [keys-of-the-data (->> parsed-data keys (into #{}))]
+          (verify (= #{"consumed"} keys-of-the-data))
+          (let [consumed-pools (get parsed-data "consumed")
+                num-of-consumed-pools (count consumed-pools)]
+            (verify (= clojure.lang.PersistentVector (type consumed-pools)))
+            (verify (< 0 num-of-consumed-pools))
+            (let [keys-of-the-pool (->> consumed-pools first keys (into #{}))]
+              (verify (clojure.set/subset? #{"provides_management"
+                                             "sku"
+                                             "system_type"
+                                             "serial"
+                                             "provides"
+                                             "subscription_name"
+                                             "pool_id"
+                                             "service_level"
+                                             "account"
+                                             "service_type"
+                                             "contract"
+                                             "starts"
+                                             "subscription_type"
+                                             "active"
+                                             "ends"
+                                             "quantity_used"} keys-of-the-pool)))))))))
 
 (defn ^{Test {:groups ["DBUS"
                        "API"
@@ -190,36 +254,41 @@ Then the response contains of list of entitlements info
     (match major
            (a :guard #(< (Integer. %) 7 )) (throw (SkipException. "busctl is not available in RHEL6"))
            :else nil))
-  ;;(run-command "subscription-manager unregister")
-  ;;(run-command (format "subscription-manager register  --username %s --password %s --org=%s" (@config :username) (@config :password) (@config :owner-key)))
-  ;;(run-command "subscription-manager attach --auto")
-  (run-command "subscription-manager list --available")
-  (let [response (-> "busctl call com.redhat.RHSM1 /com/redhat/RHSM1/Entitlement com.redhat.RHSM1.Entitlement GetPools" run-command)]
+  (run-command "subscription-manager unregister")
+  (run-command (format "subscription-manager register  --username %s --password %s --org=%s" (@config :username) (@config :password) (@config :owner-key)))
+  (run-command "subscription-manager attach --auto")
+    (let [response (-> (str "busctl call com.redhat.RHSM1 "
+                          " /com/redhat/RHSM1/Entitlement"
+                          " com.redhat.RHSM1.Entitlement"
+                          " GetPools"
+                          " a{sv}a{sv} 1 \"pool_subsets\" s \"available\" 0") run-command)]
     (verify (= (:exitcode response) 0))
-    (verify (= (:stderr response) ""))
-    (let [[parsed-response rest-of-the-string] (-> response :stdout (.trim) dbus/parse)
-          type-of-parsed-response (type parsed-response)]
+    (verify (=  (:stderr response) ""))
+    (let [[response rest-of-the-string] (-> response :stdout (.trim) dbus/parse)]
       (verify (= rest-of-the-string ""))
-      (verify (= (type []) type-of-parsed-response))
-      (let [first-pool (first parsed-response)]
-        (verify (= clojure.lang.PersistentHashMap (type first-pool)))
-        (let [keys-of-the-pool (-> first-pool keys set)]
-          (verify (= #{"provides_management" "sku" "system_type" "serial" "provides" "subscription_name" "pool_id" "service_level" "account" "service_type" "contract" "starts" "subscription_type" "active" "ends" "quantity_used"} keys-of-the-pool))
-          (let [list-of-pools-from-rest (rest/list-of-available-pools
-                                         (ctasks/server-url)
-                                         (@config :owner-key)
-                                         (@config :username)
-                                         (@config :password))
-                list-of-pool-ids-from-rest (-> (map :id list-of-pools-from-rest) set)
-                list-of-pool-ids-from-dbus (-> (map #(get % "pool_id") parsed-response) set)
-                list-of-pool-names-from-rest (->>  list-of-pools-from-rest (map :productName) set)
-                list-of-pool-names-from-dbus (->> parsed-response (map #(get % "subscription_name")) set)
-                ]
-            ;; (first list-of-pools-from-rest)
-            (clojure.test/is (= list-of-pool-names-from-dbus
-                                list-of-pool-names-from-rest))
-            (clojure.test/is (= list-of-pool-ids-from-dbus
-                                list-of-pool-ids-from-rest))))))))
+      (verify (= java.lang.String (type response)))
+      (let [parsed-data (-> response (str/replace #"\\\"" "\"") json/read-str)]
+        (verify (= clojure.lang.PersistentArrayMap (type parsed-data)))
+        (let [keys-of-the-data (->> parsed-data keys (into #{}))]
+          (verify (= #{"available"} keys-of-the-data))
+          (let [available-pools (get parsed-data "available")
+                num-of-pools (count available-pools)]
+            (verify (= clojure.lang.PersistentVector (type available-pools)))
+            (verify (< 0 num-of-pools))
+            (let [keys-of-the-pool (->> available-pools first keys (into #{}))]
+              (verify (clojure.set/subset? #{"contractNumber"
+                                             "providedProducts"
+                                             "productId"
+                                             "id"
+                                             "suggested"
+                                             "pool_type"
+                                             "quantity"
+                                             "productName"
+                                             "service_level"
+                                             "service_type"
+                                             "attributes"
+                                             "endDate"
+                                             "management_enabled"} keys-of-the-pool)))))))))
 
 (defn ^{Test {:groups ["REST"
                        "API"
