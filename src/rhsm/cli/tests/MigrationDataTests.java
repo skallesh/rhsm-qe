@@ -3086,6 +3086,23 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				bugIds.add("1435245");
 			}
 			
+			if (rhnAvailableChildChannel.startsWith("rhel-x86_64-server-7-cf-me-4")) {
+				// Bug 1519975 - rhel-x86_64-server-7-cf-me-4.* channel maps are absent from channel-cert-mapping.txt
+				bugIds.add("1519975");
+			}
+			
+			if (rhnAvailableChildChannel.equals("rhel-x86_64-server-7-ost-9") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-7-ost-10") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-7-ost-11") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-7-ost-12") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-7-ost-9-debuginfo") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-7-ost-10-debuginfo") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-7-ost-11-debuginfo") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-7-ost-12-debuginfo")) {
+				// Bug 1519979 - rhel-x86_64-server-7-ost-[9|10|11|12] channel maps are absent from channel-cert-mapping.txt
+				bugIds.add("1519979");
+			}
+			
 			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 			ll.add(Arrays.asList(new Object[]{blockedByBzBug,	rhnAvailableChildChannel}));
 		}
