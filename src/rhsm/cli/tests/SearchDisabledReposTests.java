@@ -125,7 +125,7 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 		//	Repo Name: Red Hat Enterprise Linux 7 Server for ARM Beta (RPMs)
 		//	Repo URL: https://cdn.redhat.com/content/beta/rhel/arm/7/$basearch/os
 		//	Enabled: 1
-		if (clienttasks.redhatReleaseX.equals("7") && clienttasks.variant.equals("Server") && clienttasks.arch.equals("aarch64")) {
+		if (clienttasks.redhatReleaseX.equals("7") && clienttasks.variant.equals("Server") && clienttasks.arch.equals("aarch64") && rhelProductCert.productId.equals("294")/*Red Hat Enterprise Linux Server for ARM*/) {
 			rhelBaseRepoId = "rhel-7-for-arm-rpms";
 		}
 		
@@ -139,9 +139,35 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 		//	Repo Name: Red Hat Enterprise Linux 7 for IBM Power LE - Optional (RPMs)
 		//	Repo URL: https://cdn.redhat.com/content/dist/rhel/power-le/7/$releasever/$basearch/optional/os
 		//	Enabled: 0
-		if (clienttasks.redhatReleaseX.equals("7") && clienttasks.variant.equals("Server") && clienttasks.arch.equals("ppc64le")) {
+		if (clienttasks.redhatReleaseX.equals("7") && clienttasks.variant.equals("Server") && clienttasks.arch.equals("ppc64le") && rhelProductCert.productId.equals("279")/*Red Hat Enterprise Linux for Power, little endian*/) {
 			rhelBaseRepoId = "rhel-7-for-power-le-rpms";
 		}
+
+//TODO NEED TO DETERMINE IF THIS IS CORRECT - SHOULD THE BETA PRODUCT 362 REALLY ACCESS THE SAME BASE REPO AS GA?  BOTH 362 and 420 PROVIDE THE SAME TAGS "rhel-alt-7,rhel-alt-7-power9" WHICH MEANS THEY CAN ACCESS THE SAME CONTENT.
+//		// PLATFORM=RedHatEnterpriseLinuxAlternateArchitectures7-Server-ppc64le
+//		//	Repo ID:   rhel-7-for-power-9-rpms
+//		//	Repo Name: Red Hat Enterprise Linux 7 for POWER9 (RPMs)
+//		//	Repo URL:  https://cdn.redhat.com/content/dist/rhel-alt/server/7/$releasever/power9/$basearch/os
+//		//	Enabled:   1
+//		//
+//		//	Repo ID:   rhel-7-for-power-9-optional-rpms
+//		//	Repo Name: Red Hat Enterprise Linux 7 for POWER9 - Optional (RPMs)
+//		//	Repo URL:  https://cdn.redhat.com/content/dist/rhel-alt/server/7/$releasever/power9/$basearch/optional/os
+//		//	Enabled:   0
+//		//
+//		//	Repo ID:   rhel-7-for-power-9-extras-rpms
+//		//	Repo Name: Red Hat Enterprise Linux 7 for POWER9 - Extras (RPMs)
+//		//	Repo URL:  https://cdn.redhat.com/content/dist/rhel-alt/server/7/$releasever/power9/$basearch/extras/os
+//		//	Enabled:   0
+//		//
+//		//	Repo ID:   rhel-7-for-power-9-beta-rpms
+//		//	Repo Name: Red Hat Enterprise Linux 7 for POWER9 Beta (RPMs)
+//		//	Repo URL:  https://cdn.redhat.com/content/beta/rhel-alt/server/7/7Server/power9/$basearch/os
+//		//	Enabled:   0
+//		if (clienttasks.redhatReleaseX.equals("7") && clienttasks.variant.equals("Server") && clienttasks.arch.equals("ppc64le") && (rhelProductCert.productId.equals("362")/*Red Hat Enterprise Linux for Power 9 Beta*/||rhelProductCert.productId.equals("420")/*Red Hat Enterprise Linux for Power 9*/)) {
+//			rhelBaseRepoId = "rhel-7-for-power-9-rpms";
+//		}
+
 		
 		// PLATFORM=RedHatEnterpriseLinux7-Server-ppc64
 		//	Repo ID: rhel-7-for-power-rpms
@@ -325,7 +351,7 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 			rhelBetaRepoId		= rhelBaseRepoId.replaceFirst("-rpms$", "-beta-rpms");
 			rhelHtbRepoId		= rhelBaseRepoId.replaceFirst("-rpms$", "-htb-rpms");
 		} else {
-			Assert.fail("Additional automation development is needed in this test to predict the name of the enabled base RHEL repo for RHEL"+clienttasks.redhatReleaseX+" "+clienttasks.variant+" "+clienttasks.arch);
+			Assert.fail("Additional automation development is needed in this test to predict the name of the enabled base RHEL repo for RHEL"+clienttasks.redhatReleaseX+" "+clienttasks.variant+" "+clienttasks.arch+"; Installed Product Cert: "+rhelProductCert);
 		}
 		
 		// assert the base rhel repo is enabled by default
