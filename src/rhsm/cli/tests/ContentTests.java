@@ -1871,6 +1871,11 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 					if (label.equals("rhel-sap-hana-for-rhel-7-for-power-le-eus-rpms")) bugIds.add("1491384");
 					if (label.equals("rhel-sap-hana-for-rhel-7-for-power-le-eus-source-rpms")) bugIds.add("1491384");
 					
+					// Bug 1521181 - content set mappings for "Red Hat Enterprise Linux High Availability (for IBM Power LE) - Extended Update Support" is missing from cdn/cs_mappings-prod.csv 
+					if (label.equals("rhel-ha-for-rhel-7-server-for-power-le-eus-debug-rpms")) bugIds.add("1521181");
+					if (label.equals("rhel-ha-for-rhel-7-server-for-power-le-eus-rpms")) bugIds.add("1521181");
+					if (label.equals("rhel-ha-for-rhel-7-server-for-power-le-eus-source-rpms")) bugIds.add("1521181");
+					
 					
 					BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 					// Object bugzilla, String eusProductName, String eusProductId, String eusContentSetName, String eusContentSetId, String eusContentSetLabel, List<String> modifiedProductIds
