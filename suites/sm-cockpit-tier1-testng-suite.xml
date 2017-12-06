@@ -15,7 +15,6 @@
     <classes>
       <class name="rhsm.base.SubscriptionManagerBaseTestScript"/>
       <class name="rhsm.cockpit.tests.status_tests" />
-      <class name="rhsm.gui.tests.base" />
     </classes>
     <groups>
       <run>
@@ -30,7 +29,6 @@
     <classes>
       <class name="rhsm.base.SubscriptionManagerBaseTestScript"/>
       <class name="rhsm.cockpit.tests.register_tests" />
-      <class name="rhsm.gui.tests.base" />
     </classes>
     <groups>
       <run>
@@ -45,7 +43,6 @@
     <classes>
       <class name="rhsm.base.SubscriptionManagerBaseTestScript"/>
       <class name="rhsm.cockpit.tests.activation_key_tests" />
-      <class name="rhsm.gui.tests.base" />
     </classes>
     <groups>
       <run>
@@ -60,7 +57,6 @@
     <classes>
       <class name="rhsm.base.SubscriptionManagerBaseTestScript"/>
       <class name="rhsm.cockpit.tests.proxy_tests" />
-      <class name="rhsm.gui.tests.base" />
     </classes>
     <groups>
       <run>
