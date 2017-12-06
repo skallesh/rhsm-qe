@@ -789,6 +789,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 		ignoreTheseExceptionalCases.add("list subscription-manager plugin hooks");
 		ignoreTheseExceptionalCases.add("list subscription-manager plugin slots");
 		ignoreTheseExceptionalCases.add("list subscription-manager plugins");
+		ignoreTheseExceptionalCases.add("Warning - subscription-manager plugins were automatically enabled");
 		
 		//for (File translationFile: translationFileMapForSubscriptionManager.keySet()) {	// use dataProvider="getTranslationFileData",
 			for (Translation translation: translationFileMapForSubscriptionManager.get(translationFile)) {
