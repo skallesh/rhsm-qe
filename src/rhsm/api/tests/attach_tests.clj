@@ -103,7 +103,7 @@ Then the response contains 'Attach' node
 (defn ^{Test {:groups ["DBUS"
                        "API"
                        "tier1"]
-              :dataProvider "client-with-locales"
+              :dataProvider "client-with-english-locales"
               :description "Given a dbus service rhsm is active
 When I call 'introspect' using busctl for com.redhat.RHSM1
    and an interface /com/redhat/RHSM1/Attach
