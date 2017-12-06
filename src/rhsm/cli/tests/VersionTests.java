@@ -83,6 +83,11 @@ public class VersionTests extends SubscriptionManagerCLITestScript {
 		// get the actual version results from subscription-manager
 		SSHCommandResult actualResult = clienttasks.version(null, null, null, null);
 
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.20.6-1")) {	// commit f8ac3291d7495be3d96ce5c2674429ffe342738c  1508591: Removed python-rhsm from subscription-manager version
+			Assert.assertTrue(!actualResult.getStdout().contains("python-rhsm"),"The version report NO LONGER includes the installed version of python-rhsm");
+			return;
+		}
+		
 		// assert results
 		Assert.assertTrue(actualResult.getStdout().contains(expectedReport),"The version report contains the expected string '"+expectedReport+"'");
 	}
