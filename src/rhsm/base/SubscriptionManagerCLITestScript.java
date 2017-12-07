@@ -520,9 +520,10 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		smt.initializeSystemComplianceAttributes();
 		smt.removeRhnSystemIdFile();
 		smt.installRepoCaCerts(sm_repoCaCertUrls);
+		smt.restartCockpitServices();
 		smt.setupRhnDefinitions(sm_rhnDefinitionsGitRepository);
 		smt.setupTranslateToolkitFromTarUrl(sm_translateToolkitTarUrl);
-
+		
 		// create a facts file that will tell candlepin what version of x509 entitlement certificates this client understands;  removeAllFacts() should be called before this block of code!
 		if (sm_clientCertificateVersion!=null) {
 			Map<String,String> map = new HashMap<String,String>();

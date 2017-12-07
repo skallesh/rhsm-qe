@@ -1148,6 +1148,28 @@ if (false) {
 		msg_InteroperabilityWarning = msg_InteroperabilityWarning.replaceAll(" +(\n|$)", "$1"); 
 	}
 	
+	public void restartCockpitServices() {
+		// skip when cockpit is not installed
+		if (!isPackageInstalled("cockpit")) return;
+		
+		// # systemctl restart cockpit.socket cockpit.service
+		sshCommandRunner.runCommandAndWait("systemctl restart cockpit.socket cockpit.service");
+		if (sshCommandRunner.getExitCode()!=0) log.warning("Encountered problems while restarting cockpit services.");
+		
+		// # firewall-cmd --query-service=cockpit
+		// no
+		sshCommandRunner.runCommandAndWait("firewall-cmd --query-service=cockpit");
+		if (sshCommandRunner.getStdout().trim().equalsIgnoreCase("no")) {
+			// # firewall-cmd --add-service=cockpit
+			// success
+			sshCommandRunner.runCommandAndWait("firewall-cmd --add-service=cockpit");
+			sshCommandRunner.runCommandAndWait("firewall-cmd --query-service=cockpit");
+		}
+		if (!sshCommandRunner.getStdout().trim().equalsIgnoreCase("yes")) log.warning("Encountered problems while adding firewall-cmd cockpit service.");
+		
+		// now open https://rhel7.usersys.redhat.com:9090/ in a browser and login with root credentials
+	}
+	
 	public void setupRhnDefinitions(String gitRepository) {
 		if (gitRepository.equals("")) return;
 		
