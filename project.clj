@@ -34,7 +34,9 @@
                  [cheshire "5.7.0"]
                  [test-clj.testng "1.1.0-SNAPSHOT"]
                  [levand/immuconf "0.1.0"]
-                 [com.github.redhatqe.polarize/polarize "0.7.1-SNAPSHOT"]
+                                        ;[com.github.redhatqe.polarize/polarize "0.7.1-SNAPSHOT"]
+                 [com.github.redhatqe.polarize/polarize-meta "0.1.0"]
+                 [com.github.redhatqe.polarizer/reporter "0.2.0"]
                  [org.json/json "20160810"]
                  [org.seleniumhq.selenium/selenium-java "3.5.2"]
                  [http-kit "2.2.0"]
@@ -43,7 +45,7 @@
                    [[fn.trace "1.3.2.0-SNAPSHOT"]]}}
   :plugins [[lein2-eclipse "2.0.0"]
             [quickie "0.4.1"]]
-  ; regexp of namespaces that contains of tests of our tests. It is used by quickie.
+  ; regexp of namespaces that contains of tests of our tesgit@github.com:RedHatQE/rhsm-qe.gitts. It is used by quickie.
   :test-matcher #"rhsm\..*-test$"
   :repositories [
                  ["sonatype" {:url           "https://oss.sonatype.org/content/repositories/releases"
@@ -71,7 +73,8 @@
                               :checksum      :warn
                               ;; How often should this repository be checked for
                               ;; snapshot updates? (:daily, :always, or :never)
-                              :update        :always}]
+                                    :update        :always}]
+                 ["jcenter" {:url "https://jcenter.bintray.com"}]
                  ]
   :javac-options ["-target" "1.8" "-source" "1.8" "-parameters"]
   ;; uncomment this to remote debug.  This is useful to debug annotation processing or xunit importing which can't be
