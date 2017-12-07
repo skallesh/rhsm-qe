@@ -11,6 +11,7 @@ import java.util.Set;
 import org.testng.SkipException;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeGroups;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
@@ -26,9 +27,12 @@ import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
-
+import com.github.redhatqe.polarize.metadata.DefTypes.PosNeg;
 import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.DefTypes;
+import com.github.redhatqe.polarize.metadata.LinkedItem;
 import com.github.redhatqe.polarize.metadata.TestDefinition;
+import com.github.redhatqe.polarize.metadata.TestType;
 
 /**
  * @author jsefler
@@ -83,19 +87,28 @@ import com.github.redhatqe.polarize.metadata.TestDefinition;
  *   {"displayMessage":"Product com UUID 'foo'  não foram encontrados.","requestUuid":"8ae81ad0-059e-46c7-9088-5db8425faef0"}
  *   
  **/
-@Test(groups={"TranslationTests","Tier2Tests"})
+@Test(groups={"TranslationTests"})
 public class TranslationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	// Test Methods ***********************************************************************
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21766", "RHEL7-32176"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21766", "RHEL7-32176"},
+			linkedWorkItems= {
+				@LinkedItem(project= Project.RHEL6, workitemId= "RHEL6-28564", role= DefTypes.Role.VERIFIES),	// RHSM-REQ : Translation
+				@LinkedItem(project= Project.RedHatEnterpriseLinux7, workitemId= "RHEL7-84942",role= DefTypes.Role.VERIFIES),	// RHSM-REQ : Translation
+			},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager-cli: assert help commands return translated text",
-			groups={"blockedByBug-756156","blockedByBug-906124","blockedByBug-919584"},
+			groups={"Tier2Tests","blockedByBug-756156","blockedByBug-906124","blockedByBug-919584"},
 			dataProvider="getTranslatedCommandLineHelpData")
 	//@ImplementsNitrateTest(caseId=)
-	public void TranslatedCommandLineHelp_Test(Object bugzilla, String lang, String command, Integer exitCode, List<String> stdoutRegexs) {
+	public void testTranslatedCommandLineHelp(Object bugzilla, String lang, String command, Integer exitCode, List<String> stdoutRegexs) {
 		// Bug 969608 - [kn_IN][mr_IN][fr_FR][as_IN] missing usage translations for rhsmcertd tool
 		if ((lang.equals("kn_IN")||lang.equals("mr_IN")||lang.equals("fr_FR")||lang.equals("as_IN")) && bugzilla!=null) {
 			if (Arrays.asList(((BlockedByBzBug)bugzilla).getBugIds()).contains("969608")) {
@@ -107,11 +120,24 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-19944", "RHEL7-68143"},
+			linkedWorkItems= {
+				@LinkedItem(project= Project.RHEL6, workitemId= "RHEL6-28564", role= DefTypes.Role.VERIFIES),	// RHSM-REQ : Translation
+				@LinkedItem(project= Project.RedHatEnterpriseLinux7, workitemId= "RHEL7-84942",role= DefTypes.Role.VERIFIES),	// RHSM-REQ : Translation
+				@LinkedItem(project= Project.RHEL6, workitemId= "RHEL6-28485", role= DefTypes.Role.VERIFIES),	// RHSM-REQ : subscription-manager cli registration and deregistration
+				@LinkedItem(project= Project.RedHatEnterpriseLinux7, workitemId= "RHEL7-84906",role= DefTypes.Role.VERIFIES),	// RHSM-REQ : subscription-manager cli registration and deregistration
+			},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="subscription-manager-cli: attempt to register to a Candlepin server using bogus credentials and check for localized strings results",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-919584"},
+			groups={"Tier1Tests","blockedByBug-919584"},
 			dataProvider="getInvalidRegistrationWithLocalizedStringsData")
 	@ImplementsNitrateTest(caseId=41691)
-	public void AttemptLocalizedRegistrationWithInvalidCredentials_Test(Object bugzilla, String lang, String username, String password, Integer exitCode, String stdoutRegex, String stderrRegex) {
+	public void testLocalizedRegistrationWithInvalidCredentials(Object bugzilla, String lang, String username, String password, Integer exitCode, String stdoutRegex, String stderrRegex) {
 
 		// ensure we are unregistered
 		clienttasks.unregister(null, null, null, null);
@@ -126,13 +152,24 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21765", "RHEL7-32170"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21765", "RHEL7-32170"},
+			linkedWorkItems= {
+				@LinkedItem(project= Project.RHEL6, workitemId= "RHEL6-28564", role= DefTypes.Role.VERIFIES),	// RHSM-REQ : Translation
+				@LinkedItem(project= Project.RedHatEnterpriseLinux7, workitemId= "RHEL7-84942",role= DefTypes.Role.VERIFIES),	// RHSM-REQ : Translation
+				@LinkedItem(project= Project.RHEL6, workitemId= "RHEL6-28485", role= DefTypes.Role.VERIFIES),	// RHSM-REQ : subscription-manager cli registration and deregistration
+				@LinkedItem(project= Project.RedHatEnterpriseLinux7, workitemId= "RHEL7-84906",role= DefTypes.Role.VERIFIES),	// RHSM-REQ : subscription-manager cli registration and deregistration
+			},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="verify subscription-manager register will succeed with fallback locale LANG=C; also verify the system.default_locale fact",
-			groups={"blockedByBug-729988"},
+			groups={"Tier2Tests","blockedByBug-729988"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void RegisterWithFallbackCLocale_Test() {
+	public void testRegisterWithFallbackCLocale() {
 		
 		// Bug 729988
 		//	[root@rhsm-compat-rhel61 ~]# LANG=C subscription-manager register --username stage_test_12 --password redhat 1>/tmp/stdout 2>/tmp/stderr
@@ -160,11 +197,24 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-47920", "RHEL7-97321"},
+			linkedWorkItems= {
+				@LinkedItem(project= Project.RHEL6, workitemId= "RHEL6-28564", role= DefTypes.Role.VERIFIES),	// RHSM-REQ : Translation
+				@LinkedItem(project= Project.RedHatEnterpriseLinux7, workitemId= "RHEL7-84942",role= DefTypes.Role.VERIFIES),	// RHSM-REQ : Translation
+				@LinkedItem(project= Project.RHEL6, workitemId= "RHEL6-28485", role= DefTypes.Role.VERIFIES),	// RHSM-REQ : subscription-manager cli registration and deregistration
+				@LinkedItem(project= Project.RedHatEnterpriseLinux7, workitemId= "RHEL7-84906",role= DefTypes.Role.VERIFIES),	// RHSM-REQ : subscription-manager cli registration and deregistration
+			},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="verify subscription-manager register will succeed with an unknown locale LANG=foo; also verify the system.default_locale fact reports Unknown",
-			groups={"blockedByBug-729988","blockedByBug-1449824"},
+			groups={"Tier2Tests","blockedByBug-729988","blockedByBug-1449824"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void RegisterWithUnknownLocale_Test() {
+	public void testRegisterWithUnknownLocale() {
 		
 		String lang="foo";
 		clienttasks.unregister(null, null, null, null);
@@ -184,12 +234,25 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-47921", "RHEL7-97322"},
+			linkedWorkItems= {
+				@LinkedItem(project= Project.RHEL6, workitemId= "RHEL6-28564", role= DefTypes.Role.VERIFIES),	// RHSM-REQ : Translation
+				@LinkedItem(project= Project.RedHatEnterpriseLinux7, workitemId= "RHEL7-84942",role= DefTypes.Role.VERIFIES),	// RHSM-REQ : Translation
+				@LinkedItem(project= Project.RHEL6, workitemId= "RHEL6-28485", role= DefTypes.Role.VERIFIES),	// RHSM-REQ : subscription-manager cli registration and deregistration
+				@LinkedItem(project= Project.RedHatEnterpriseLinux7, workitemId= "RHEL7-84906",role= DefTypes.Role.VERIFIES),	// RHSM-REQ : subscription-manager cli registration and deregistration
+			},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="Verify that registering with a LANG (without specifying a UTF-8 encoding) will succeed.  For example: LANG=fr_FR subscription-manager register",
-			groups={},
+			groups={"Tier2Tests"},
 			dataProvider="getSupportedLangsData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void RegisterWithDefaultEncoding_Test(Object bugzilla, String lang) {
+	public void testRegisterWithDefaultEncoding(Object bugzilla, String lang) {
 		lang = lang.replaceAll("\\.UTF-8", "");	// make sure lang does not have any encoding (no ".UTF-8" suffix)
 		clienttasks.unregister(null, null, null, null);
 		String registerCommandWithLang = String.format("%s %s","LANG="+lang, clienttasks.registerCommand(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (List<String>)null, null, null, null, null, null, null, null, null, null));
@@ -199,10 +262,10 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager: attempt redeem without --email option using LANG",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-766577"},
+			groups={"Tier1Tests","blockedByBug-766577"},
 			enabled=false)	// TODO PASSES ON THE COMMAND LINE BUT FAILS WHEN RUN THROUGH AUTOMATION - NOTE STDOUT DISPLAYS DOUBLE BYTE BUT NOT STDERR
 	//@ImplementsNitrateTest(caseId=)
-	public void AttemptRedeemWithoutEmailUsingLang_Test() {
+	public void testRedeemWithoutEmailUsingLang() {
 		
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
 		//SSHCommandResult redeemResult = clienttasks.redeem_(null,null,null,null,null)
@@ -230,25 +293,34 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="verify that rhsm.mo is installed for each of the supported locales",
-			groups={"AcceptanceTests","Tier1Tests"},
+			groups={"Tier1Tests"},
 			dataProvider="getSupportedLocalesData",
 			enabled=false)	// replaced by VerifyOnlyExpectedTranslationFilesAreInstalled_Test
 	@Deprecated
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyTranslationFileIsInstalled_Test_DEPRECATED(Object bugzilla, String locale) {
+	public void testTranslationFileIsInstalled_DEPRECATED(Object bugzilla, String locale) {
 		File localeFile = localeFile(locale);
 		Assert.assertTrue(RemoteFileTasks.testExists(client, localeFile.getPath()),"Supported locale file '"+localeFile+"' is installed.");
 		if (!translationFileMapForSubscriptionManager.keySet().contains(localeFile)) Assert.fail("Something went wrong in TranslationTests.buildTranslationFileMap().  File '"+localeFile+"' was not found in the translationFileMap.keySet().");
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-19945", "RHEL7-68144"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-19945", "RHEL7-68144"},
+			linkedWorkItems= {
+				@LinkedItem(project= Project.RHEL6, workitemId= "RHEL6-28564", role= DefTypes.Role.VERIFIES),	// RHSM-REQ : Translation
+				@LinkedItem(project= Project.RedHatEnterpriseLinux7, workitemId= "RHEL7-84942",role= DefTypes.Role.VERIFIES),	// RHSM-REQ : Translation
+			},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="verify that only the expected rhsm.mo tranlation files are installed for each of the supported locales",
-			groups={"AcceptanceTests","Tier1Tests", "blockedByBug-824100"},
+			groups={"Tier1Tests", "blockedByBug-824100"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyOnlyExpectedTranslationFilesAreInstalled_Test() {
+	public void testOnlyExpectedTranslationFilesAreInstalled() {
 		List<File> supportedTranslationFiles = new ArrayList<File>();
 		for (String supportedLocale : supportedLocales) supportedTranslationFiles.add(localeFile(supportedLocale));
 		log.info("Expected locales include: "+supportedLocales);
@@ -276,10 +348,19 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-25823", "RHEL7-68145"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-25823", "RHEL7-68145"},
+			linkedWorkItems= {
+				@LinkedItem(project= Project.RHEL6, workitemId= "RHEL6-28564", role= DefTypes.Role.VERIFIES),	// RHSM-REQ : Translation
+				@LinkedItem(project= Project.RedHatEnterpriseLinux7, workitemId= "RHEL7-84942",role= DefTypes.Role.VERIFIES),	// RHSM-REQ : Translation
+			},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="verify that only the expected rhsm.mo tranlation files are installed for each of the supported locales",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1057532",
+			groups={"Tier1Tests","blockedByBug-1057532",
 					"blockedByBug-1441739",	// Zanata translations for subscription-manager 1.19 are not 100%
 					"blockedByBug-1391681",	// Zanata translations for subscription-manager 1.18 are not 100%
 					"blockedByBug-1340135",	// Zanata translations for subscription-manager 1.17 are not 100%
@@ -296,7 +377,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 			dataProvider="getTranslationFileData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyTranslationFileContainsAllMsgids_Test(Object bugzilla, File translationFile) {
+	public void testTranslationFileContainsAllMsgids(Object bugzilla, File translationFile) {
 		List<Translation> translationList = translationFileMapForSubscriptionManager.get(translationFile);
 		boolean translationFilePassed=true;
 		for (String msgid : translationMsgidSetForSubscriptionManager) {
@@ -376,12 +457,12 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	@Test(	description="run pofilter translate tests on the translation file",
-			groups={},
+			groups={"Tier2Tests"},
 			dataProvider="getTranslationFilePofilterTestData",
 			enabled=false)	// 07/12/2012 this was the initial test created for the benefit of fsharath who further developed the test in PofilterTranslationTests.java; disabling this test in favor of his
 	@Deprecated	
 	//@ImplementsNitrateTest(caseId=)
-	public void pofilter_Test(Object bugzilla, String pofilterTest, File translationFile) {
+	public void testPofilter_DEPRECATED(Object bugzilla, String pofilterTest, File translationFile) {
 		log.info("For an explanation of pofilter test '"+pofilterTest+"', see: http://translate.sourceforge.net/wiki/toolkit/pofilter_tests");
 		File translationPoFile = new File(translationFile.getPath().replaceFirst(".mo$", ".po"));
 		
@@ -434,48 +515,84 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21768", "RHEL7-51284"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21768", "RHEL7-51284"},
+			linkedWorkItems= {
+				@LinkedItem(project= Project.RHEL6, workitemId= "RHEL6-28564", role= DefTypes.Role.VERIFIES),	// RHSM-REQ : Translation
+				@LinkedItem(project= Project.RedHatEnterpriseLinux7, workitemId= "RHEL7-84942",role= DefTypes.Role.VERIFIES),	// RHSM-REQ : Translation
+			},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.LOW, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="verify that msgid \"Deprecated, see attach\" did NOT translate the command line module \"attach\" for all languages",
-			groups={"blockedByBug-891375","blockedByBug-891378","blockedByBug-891380","blockedByBug-891383","blockedByBug-891384","blockedByBug-891386","blockedByBug-891391","blockedByBug-891394","blockedByBug-891398","blockedByBug-891402","blockedByBug-1061381"},
+			groups={"Tier3Tests","blockedByBug-891375","blockedByBug-891378","blockedByBug-891380","blockedByBug-891383","blockedByBug-891384","blockedByBug-891386","blockedByBug-891391","blockedByBug-891394","blockedByBug-891398","blockedByBug-891402","blockedByBug-1061381"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyMsgIdDeprecatedSeeAttach_Test() {
+	public void testMsgIdDeprecatedSeeAttach() {
 		verifyTranslatedMsgIdContainsSubStringForAllLangs("Deprecated, see attach","attach");
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21770", "RHEL7-51286"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21770", "RHEL7-51286"},
+			linkedWorkItems= {
+				@LinkedItem(project= Project.RHEL6, workitemId= "RHEL6-28564", role= DefTypes.Role.VERIFIES),	// RHSM-REQ : Translation
+				@LinkedItem(project= Project.RedHatEnterpriseLinux7, workitemId= "RHEL7-84942",role= DefTypes.Role.VERIFIES),	// RHSM-REQ : Translation
+			},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.LOW, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="verify that msgid \"Deprecated, see remove\" did NOT translate the command line module \"remove\" for all languages",
-			groups={"blockedByBug-891375","blockedByBug-891378","blockedByBug-891380","blockedByBug-891383","blockedByBug-891384","blockedByBug-891386","blockedByBug-891391","blockedByBug-891394","blockedByBug-891398","blockedByBug-891402"},
+			groups={"Tier3Tests","blockedByBug-891375","blockedByBug-891378","blockedByBug-891380","blockedByBug-891383","blockedByBug-891384","blockedByBug-891386","blockedByBug-891391","blockedByBug-891394","blockedByBug-891398","blockedByBug-891402"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyMsgIdDeprecatedSeeRemove_Test() {
+	public void testMsgIdDeprecatedSeeRemove() {
 		verifyTranslatedMsgIdContainsSubStringForAllLangs("Deprecated, see remove","remove");
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21769", "RHEL7-51285"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21769", "RHEL7-51285"},
+			linkedWorkItems= {
+				@LinkedItem(project= Project.RHEL6, workitemId= "RHEL6-28564", role= DefTypes.Role.VERIFIES),	// RHSM-REQ : Translation
+				@LinkedItem(project= Project.RedHatEnterpriseLinux7, workitemId= "RHEL7-84942",role= DefTypes.Role.VERIFIES),	// RHSM-REQ : Translation
+			},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.LOW, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="verify that msgid \"deprecated, see auto-attach-interval\" did NOT translate the command line option \"auto-attach-interval\" for all languages",
-			groups={"blockedByBug-891375","blockedByBug-891434","blockedByBug-891377","blockedByBug-928073","blockedByBug-928082"},
+			groups={"Tier3Tests","blockedByBug-891375","blockedByBug-891434","blockedByBug-891377","blockedByBug-928073","blockedByBug-928082"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyMsgIdDeprecatedSeeAutoAttachInterval_Test() {
+	public void testMsgIdDeprecatedSeeAutoAttachInterval() {
 		//verifyTranslatedMsgIdContainsSubStringForAllLangs("deprecated, see auto-attach-interval","auto-attach-interval");	// was valid prior to bug 891377 implementation
 		verifyTranslatedMsgIdContainsSubStringForAllLangs("deprecated, see --auto-attach-interval","--auto-attach-interval");	// now that bug 891377 is fixed, this test is effectively now a duplicate of pofilter -t options
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36513", "RHEL7-32165"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36513", "RHEL7-32165"},
+			linkedWorkItems= {
+				@LinkedItem(project= Project.RHEL6, workitemId= "RHEL6-28564", role= DefTypes.Role.VERIFIES),	// RHSM-REQ : Translation
+				@LinkedItem(project= Project.RedHatEnterpriseLinux7, workitemId= "RHEL7-84942",role= DefTypes.Role.VERIFIES),	// RHSM-REQ : Translation
+			},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="verify that translation msgstr does NOT contain paragraph character ¶ unless also in msgid",
-			groups={},
+			groups={"Tier2Tests"},
 			dataProvider="getTranslationFileDataForVerifyTranslationsDoNotUseParagraphCharacter_Test",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyTranslationsDoNotUseParagraphCharacter_Test(Object bugzilla, File translationFile) {
+	public void testTranslationsDoNotUseParagraphCharacter(Object bugzilla, File translationFile) {
 		boolean warningsFound = false;
 		String paragraphChar = "¶";
 		//for (File translationFile: translationFileMapForSubscriptionManager.keySet()) {	// use dataProvider="getTranslationFileData",
@@ -516,14 +633,23 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21771", "RHEL7-32172"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21771", "RHEL7-32172"},
+			linkedWorkItems= {
+				@LinkedItem(project= Project.RHEL6, workitemId= "RHEL6-28564", role= DefTypes.Role.VERIFIES),	// RHSM-REQ : Translation
+				@LinkedItem(project= Project.RedHatEnterpriseLinux7, workitemId= "RHEL7-84942",role= DefTypes.Role.VERIFIES),	// RHSM-REQ : Translation
+			},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.MEDIUM, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="verify that translation msgstr does NOT contain over-escaped newline character \\n (should be \n)",
-			groups={},
+			groups={"Tier3Tests"},
 			dataProvider="getTranslationFileDataForVerifyTranslationsDoNotContainOverEscapedNewlineCharacter_Test",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyTranslationsDoNotContainOverEscapedNewlineCharacter_Test(Object bugzilla, File translationFile) {
+	public void testTranslationsDoNotContainOverEscapedNewlineCharacter(Object bugzilla, File translationFile) {
 		boolean warningsFound = false;
 		String overEscapedNewlineChar = "\\\n";
 		//for (File translationFile: translationFileMapForSubscriptionManager.keySet()) {	// use dataProvider="getTranslationFileData",
@@ -556,14 +682,19 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21767", "RHEL7-51283"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21767", "RHEL7-51283"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.LOW, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="verify that candlepin translation msgstr does NOT contain unescaped single quotes in the msgid",
-			groups={},
+			groups={"Tier3Tests"},
 			dataProvider="getTranslationFileDataForVerifyCandlepinTranslationsDoNotContainUnescapedSingleQuotes_Test",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyCandlepinTranslationsDoNotContainUnescapedSingleQuotes_Test(Object bugzilla, File translationFile) {
+	public void testCandlepinTranslationsDoNotContainUnescapedSingleQuotes(Object bugzilla, File translationFile) {
 		boolean warningsFound = false;
 		//for (File translationFile: translationFileMapForCandlepin.keySet()) {	// use dataProvider="getTranslationFileData",
 			for (Translation translation: translationFileMapForCandlepin.get(translationFile)) {
@@ -621,14 +752,23 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21772", "RHEL7-32178"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21772", "RHEL7-32178"},
+			linkedWorkItems= {
+				@LinkedItem(project= Project.RHEL6, workitemId= "RHEL6-28564", role= DefTypes.Role.VERIFIES),	// RHSM-REQ : Translation
+				@LinkedItem(project= Project.RedHatEnterpriseLinux7, workitemId= "RHEL7-84942",role= DefTypes.Role.VERIFIES),	// RHSM-REQ : Translation
+			},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="verify that Red Hat product names (e.g. 'Red Hat','RHN') remain untranslated",
-			groups={},
+			groups={"Tier2Tests"},
 			dataProvider="getTranslationFileDataForVerifyTranslationsDoNotTranslateSubStrings_Test",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyTranslationsDoNotTranslateSubStrings_Test(Object bugzilla, File translationFile) {
+	public void testTranslationsDoNotTranslateSubStrings(Object bugzilla, File translationFile) {
 		boolean warningsFound = false;
 		List<String> doNotTranslateSubStrings =  new ArrayList<String>();
 		doNotTranslateSubStrings.add("Red Hat");
@@ -649,6 +789,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 		ignoreTheseExceptionalCases.add("list subscription-manager plugin hooks");
 		ignoreTheseExceptionalCases.add("list subscription-manager plugin slots");
 		ignoreTheseExceptionalCases.add("list subscription-manager plugins");
+		ignoreTheseExceptionalCases.add("Warning - subscription-manager plugins were automatically enabled");
 		
 		//for (File translationFile: translationFileMapForSubscriptionManager.keySet()) {	// use dataProvider="getTranslationFileData",
 			for (Translation translation: translationFileMapForSubscriptionManager.get(translationFile)) {
@@ -828,14 +969,25 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-19946", "RHEL7-55158"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-19946", "RHEL7-55158"},
+			linkedWorkItems= {
+				@LinkedItem(project= Project.RHEL6, workitemId= "RHEL6-28564", role= DefTypes.Role.VERIFIES),	// RHSM-REQ : Translation
+				@LinkedItem(project= Project.RedHatEnterpriseLinux7, workitemId= "RHEL7-84942",role= DefTypes.Role.VERIFIES),	// RHSM-REQ : Translation
+				@LinkedItem(project= Project.RHEL6, workitemId= "RHEL6-28563", role= DefTypes.Role.RELATES_TO),	// RHSM-REQ : Yum installation of entitled content and product certificates
+				@LinkedItem(project= Project.RedHatEnterpriseLinux7, workitemId= "RHEL7-84940",role= DefTypes.Role.RELATES_TO),	// RHSM-REQ : Yum installation of entitled content and product certificates
+			},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="verify that \"'ascii' codec can't decode byte\" errors do not occur with yum search",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1199597","VerifyYumSearchDoesNotThrowAsciiCodecError_Test"},
+			groups={"Tier1Tests","blockedByBug-1199597","VerifyYumSearchDoesNotThrowAsciiCodecError_Test"},
 			dataProvider="getSupportedLangsData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyYumSearchDoesNotThrowAsciiCodecError_Test(Object bugzilla, String lang) {
+	public void testYumSearchDoesNotThrowAsciiCodecError(Object bugzilla, String lang) {
 		// skip the test when we do not have access to RHEL content
 		if (!isRhelProductCertSubscribedForVerifyYumSearchDoesNotThrowAsciiCodecError) throw new SkipException("Cannot perform this test until an available RHEL subscription has been attached.");
 
@@ -882,7 +1034,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(!result.getStderr().toLowerCase().contains(errorMsg.toLowerCase()), "Stderr from running '"+command+"' in locale '"+lang+"' does not contain error '"+errorMsg+"'.");
 	}
 	@BeforeGroups(groups="setup",value={"VerifyYumSearchDoesNotThrowAsciiCodecError_Test"})
-	public void beforeVerifyYumSearchDoesNotThrowAsciiCodecError_Test() {
+	public void beforeTestYumSearchDoesNotThrowAsciiCodecError() {
 		if (clienttasks==null) return;
 		// register with auto-subscribe
 		SSHCommandResult result = clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, true, false, null, null, null, null);
@@ -895,6 +1047,56 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	}
 	protected boolean isRhelProductCertSubscribedForVerifyYumSearchDoesNotThrowAsciiCodecError = false;
 	
+	
+	
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-47934", "RHEL7-98520"},
+			linkedWorkItems= {
+				@LinkedItem(project= Project.RHEL6, workitemId= "RHEL6-28564", role= DefTypes.Role.VERIFIES),	// RHSM-REQ : Translation
+				@LinkedItem(project= Project.RedHatEnterpriseLinux7, workitemId= "RHEL7-84942",role= DefTypes.Role.VERIFIES),	// RHSM-REQ : Translation
+			},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
+	@Test(	description="verify that \"UnicodeDecodeError\" and \"Traceback\" errors do not occur when /usr/libexec/rhsmcertd-worker is executed",
+			groups={"Tier2Tests","blockedByBug-1480395","blockedByBug-1484265","groupRhsmcertdworkerUsingLang"},
+			dataProvider="getSupportedLangsData",
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void testRhsmcertdworkerUsingLang(Object bugzilla, String lang) {
+		String command = clienttasks.rhsmCertDWorker;
+		SSHCommandResult result = clienttasks.runCommandWithLang(lang, clienttasks.rhsmCertDWorker);
+		//	201708171549:54.571 - FINE: ssh root@jsefler-rhel7.usersys.redhat.com LANG=de_DE.UTF-8 /usr/libexec/rhsmcertd-worker
+		//	201708171549:55.810 - FINE: Stdout: 
+		//	Berechtigungszertifikate & Repositorys aktualisieren
+		//	Berechtigungszertifikate und Repositorys konnten nicht aktualisiert werden
+		//	 (com.redhat.qe.tools.SSHCommandRunner.runCommandAndWait)
+		//	201708171549:55.812 - FINE: Stderr: 
+		//	Traceback (most recent call last):
+		//	  File "/usr/lib64/python2.7/logging/__init__.py", line 851, in emit
+		//	    msg = self.format(record)
+		//	  File "/usr/lib64/python2.7/logging/__init__.py", line 724, in format
+		//	    return fmt.format(record)
+		//	  File "/usr/lib64/python2.7/logging/__init__.py", line 467, in format
+		//	    s = self._fmt % record.__dict__
+		//	UnicodeDecodeError: 'ascii' codec can't decode byte 0xc3 in position 117: ordinal not in range(128)
+		//	Logged from file repolib.py, line 328
+		//	201708171549:55.817 - FINE: ExitCode: 255
+		String errorMsg = "Traceback";
+		Assert.assertTrue(!result.getStdout().toLowerCase().contains(errorMsg.toLowerCase()), "Stdout from running '"+command+"' in locale '"+lang+"' does not contain error '"+errorMsg+"'.");
+		Assert.assertTrue(!result.getStderr().toLowerCase().contains(errorMsg.toLowerCase()), "Stderr from running '"+command+"' in locale '"+lang+"' does not contain error '"+errorMsg+"'.");
+		Assert.assertEquals(result.getExitCode(), Integer.valueOf(0), "ExitCode from running '"+command+"' in locale '"+lang+"'.");
+		errorMsg = "UnicodeDecodeError";
+		Assert.assertTrue(!result.getStdout().toLowerCase().contains(errorMsg.toLowerCase()), "Stdout from running '"+command+"' in locale '"+lang+"' does not contain error '"+errorMsg+"'.");
+		Assert.assertTrue(!result.getStderr().toLowerCase().contains(errorMsg.toLowerCase()), "Stderr from running '"+command+"' in locale '"+lang+"' does not contain error '"+errorMsg+"'.");
+	}
+	@BeforeGroups(groups="setup",value={"groupRhsmcertdworkerUsingLang"})
+	public void beforeGroupRhsmcertdworkerUsingLang() {
+		if (clienttasks==null) return;
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
+	}
 	
 	
 	

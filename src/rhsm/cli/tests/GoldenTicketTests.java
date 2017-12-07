@@ -17,6 +17,12 @@ import org.testng.annotations.BeforeClass;
 
 import org.testng.annotations.Test;
 
+import com.github.redhatqe.polarize.metadata.DefTypes;
+import com.github.redhatqe.polarize.metadata.LinkedItem;
+import com.github.redhatqe.polarize.metadata.TestDefinition;
+import com.github.redhatqe.polarize.metadata.TestType;
+import com.github.redhatqe.polarize.metadata.DefTypes.PosNeg;
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
 import com.redhat.qe.auto.bugzilla.BugzillaAPIException;
 import com.redhat.qe.auto.bugzilla.BzChecker;
 import com.redhat.qe.tools.SSHCommandResult;
@@ -36,7 +42,7 @@ import rhsm.data.SubscriptionPool;
  *         References:https://docs.google.com/document/d/1h-CeEV_FEu885JhZNkydzQQsDkAQ-WtZ5cisCxj4Lao/edit?ts=5873bb00
  */
 
-@Test(groups = { "GoldenTicketTests", "Tier3Tests" })
+@Test(groups = {"GoldenTicketTests"})
 public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
     protected String attributeName = "contentAccessMode";
     protected String attributeValue = "org_environment";
@@ -44,10 +50,26 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
     public static String subscriptionPoolProductId =null;
     private String subscriptionPoolId;
     
-    
-    @Test(description = "Verify golden ticket entitlement is granted when system is registered to an org that has contentaccessmode set", groups = {
-    "VerifyGoldenTicketfunctionality" /*"blockedByBug-1425438"*/}, enabled = true)
-    public void VerifyGoldenTicketfunctionality() throws Exception {
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-47902", "RHEL7-96740"},
+			linkedWorkItems= {
+				@LinkedItem(
+					workitemId= "RHEL6-47900",	// RHSM-REQ : Org/Environment Level Content Access
+					project= Project.RHEL6,
+					role= DefTypes.Role.VERIFIES),
+				@LinkedItem(
+					workitemId= "RHEL7-85127",	// RHSM-REQ : Org/Environment Level Content Access
+					project= Project.RedHatEnterpriseLinux7,
+					role= DefTypes.Role.VERIFIES)},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+    @Test(	description = "Verify golden ticket entitlement is granted when system is registered to an org that has contentAccessMode set",
+			groups = {"Tier3Tests","blockedByBug-1425438"},
+			enabled = true)
+    public void testGoldenTicketFunctionality() throws Exception {
 
 	CandlepinTasks.setAttributeForOrg(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, org,
 		attributeName, attributeValue);
@@ -91,7 +113,10 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
 	SSHCommandResult listConsumedResult = clienttasks.list(null, null, true, null, null, null, null, null, null,
 		null, null, null, null, null);
 	String expectedMessageForListConsumed = "No consumed subscription pools to list";
-
+	if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.20.2-1")) {	// commit da72dfcbbb2c3a44393edb9e46e1583d05cc140a
+		expectedMessageForListConsumed="No consumed subscription pools were found.";
+	}
+	
 	// TEMPORARY WORKAROUND FOR BUG
 	String bugId="1425438"; // Bug 1425438 - subscription-manager list --consumed shows the consumption of extra entitlement granted from the organization or environment.
 	boolean invokeWorkaroundWhileBugIsOpen = true;
@@ -156,10 +181,26 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
 
 
 
-
-    @Test(description = "Verify golden ticket entitlement is granted when system is registered using an activationkey that belongs org that has contentaccessmode set", groups = {
-    "GoldenTicketEntitlementIsGrantedWhenRegisteredUsingActivationKey" },enabled = true)
-    public void ExtraEntitlementIsGrantedWhenRegisteredUsingActivationKey() throws JSONException, Exception {
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-47903", "RHEL7-96741"},
+			linkedWorkItems= {
+				@LinkedItem(
+					workitemId= "RHEL6-47900",	// RHSM-REQ : Org/Environment Level Content Access
+					project= Project.RHEL6,
+					role= DefTypes.Role.VERIFIES),
+				@LinkedItem(
+					workitemId= "RHEL7-85127",	// RHSM-REQ : Org/Environment Level Content Access
+					project= Project.RedHatEnterpriseLinux7,
+					role= DefTypes.Role.VERIFIES)},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "Verify golden ticket entitlement is granted when system is registered using an activationkey belonging to an org that has a contentAccessMode set",
+			groups = {"Tier3Tests"},
+			enabled = true)
+    public void testGoldenTicketIsGrantedWhenRegisteredUsingActivationKey() throws JSONException, Exception {
 
 	// verify registering the system to activation key belonging to owner(contentAccessmode set) with auto-attach false has access to golden ticket
 	CandlepinTasks.setAttributeForOrg(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, org,
@@ -175,15 +216,13 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
 
 	clienttasks.register(null, null, org, null, null, null, null, null, null, null, activationKeyName, null, null,
 		null, true, null, null, null, null, null);
-	// verify only the extra entitlement cert granted by or/environment is
-	// present
+	// verify only the golden entitlement cert granted by org/environment is present
 	List<EntitlementCert> entitlementCertsAfterRegisteringToactivationKeyFalse = clienttasks
 		.getCurrentEntitlementCerts();
 	Assert.assertTrue(entitlementCertsAfterRegisteringToactivationKeyFalse.size() == 1,
 		"Only extra entitlement granted by the org/environment is present");
 
 	// verify registering the system to activation key belonging to owner (contentAccessmode set) with auto-attach true also has access to golden ticket
-
 	String activationKeyNameTrue = String.format("%s_%s-ActivationKey%s", sm_clientUsername, org,
 		System.currentTimeMillis());
 	Map<String, String> mapActivationKeyTrueRequest = new HashMap<String, String>();
@@ -196,14 +235,13 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
 	clienttasks.register(null, null, org, null, null, null, null, null, null, null, activationKeyNameTrue, null,
 		null, null, true, null, null, null, null, null);
 
-	// verify the extra entitlement cert granted by or/environment is present along with other ent certs granted by auto-attach process
-
+	// verify the golden entitlement cert granted by org/environment is present along with other ent certs granted by auto-attach process
 	Assert.assertTrue(clienttasks.getCurrentEntitlementCerts().size() > 1,
 		"extra entitlement granted by owner is present along with other entitlements attached by auto-attach");
 
 	List<EntitlementCert> extraEntitlementCerts = EntitlementCert.findAllInstancesWithMatchingFieldFromList(
 		"poolId", "Not Available", clienttasks.getCurrentEntitlementCerts());
-	// verify the extra entitlement cert granted by or/environment is present
+	// verify the golden entitlement cert granted by org/environment is present
 	Assert.assertTrue(extraEntitlementCerts.size() == 1,
 		"extra entitlement granted by owner is present along with other entitlements attached by auto-attach");
     }
@@ -211,10 +249,26 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
 
 
 
-
-    @Test(description = "Verify revoking contentAccessMode set on the owner removes extra entitlement", groups = {
-    "revokingcontentAccessModeOnOwnerRemovesEntitlement","blockedByBug-1448855" }, enabled = true)
-    public void revokingcontentAccessModeOnOwnerRemovesEntitlement() throws Exception {
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-47905", "RHEL7-96743"},
+			linkedWorkItems= {
+				@LinkedItem(
+					workitemId= "RHEL6-47900",	// RHSM-REQ : Org/Environment Level Content Access
+					project= Project.RHEL6,
+					role= DefTypes.Role.VERIFIES),
+				@LinkedItem(
+					workitemId= "RHEL7-85127",	// RHSM-REQ : Org/Environment Level Content Access
+					project= Project.RedHatEnterpriseLinux7,
+					role= DefTypes.Role.VERIFIES)},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "Verify revoking contentAccessMode set on the owner removes extra entitlement",
+			groups = {"Tier3Tests","blockedByBug-1448855" },
+			enabled = true)
+    public void testRevokingContentAccessModeOnOwnerRemovesEntitlement() throws Exception {
 
 	CandlepinTasks.setAttributeForOrg(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, org,
 		attributeName, attributeValue);
@@ -237,14 +291,14 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
 		"Only extra entitlement granted by the org/environment is present");
 	// now revoke the contentAccessMode set on the owner
 	CandlepinTasks.setAttributeForOrg(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, org,
-		attributeName, "");
+		attributeName, "entitlement");
 	clienttasks.refresh(null, null, null, null);
 
 	repoResult = clienttasks.repos(false, false, true, (String) null, null, null, null, null, null);
 	String ExpectedRepoMsgAfterRevoke = "This system has no repositories available through subscriptions.";
 	Assert.assertEquals(repoResult.getStdout().toString().trim(), ExpectedRepoMsgAfterRevoke);
 	List<EntitlementCert> entitlementCertsAfterRevoke = clienttasks.getCurrentEntitlementCerts();
-	//Assert that extra entitlement is now revoked
+	// assert that extra entitlement is now revoked
 	Assert.assertTrue(entitlementCertsAfterRevoke.size() == 0,
 		"No extra entitlement granted by the org/environment is present");
     }
@@ -252,15 +306,33 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
 
 
 
-
-    @Test(description = "Verify SKU level contentOverride is given priority over default golden ticket one", groups = {
-	    "reporoverridePreference" ,"blockedByBug-1427069"},enabled = true)
-
-    public void reporoverridePreference() throws Exception {
-
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-47904", "RHEL7-96742"},
+			linkedWorkItems= {
+				@LinkedItem(
+					workitemId= "RHEL6-47900",	// RHSM-REQ : Org/Environment Level Content Access
+					project= Project.RHEL6,
+					role= DefTypes.Role.VERIFIES),
+				@LinkedItem(
+					workitemId= "RHEL7-85127",	// RHSM-REQ : Org/Environment Level Content Access
+					project= Project.RedHatEnterpriseLinux7,
+					role= DefTypes.Role.VERIFIES)},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.MEDIUM, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+    @Test(	description = "Verify SKU level contentOverride is given priority over default golden ticket one",
+    		groups = {"Tier3Tests","blockedByBug-1427069"},
+    		enabled = true)
+    public void testRepoOverridePreference() throws Exception {
+	List<Repo> availableRepos= new ArrayList<Repo>();
+	List<String> repoIdsDisabledByDefault = new ArrayList<String>();
+	Map<String, String> attributesMap = new HashMap<String, String>();
+	String resourcePath = null;
+	String ExpectedRepoMsg = "There were no available repositories matching the specified criteria.";
 	CandlepinTasks.setAttributeForOrg(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, org,
 		attributeName, attributeValue);
-	String resourcePath = null;
 	String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null,
 		null, null, (String) null, null, null, null, true, null, null, null, null, null));
 	String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_clientUsername, sm_clientPassword, sm_serverUrl,
@@ -268,13 +340,16 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
 	for (SubscriptionPool availsubscriptions : clienttasks.getAvailableSubscriptionsMatchingInstalledProducts()) {
 	    subscriptionPoolProductId=availsubscriptions.productId; 
 	    subscriptionPoolId= availsubscriptions.poolId;
-	    break;
+	    clienttasks.subscribe(null, null,subscriptionPoolId, null, null, null, null, null, null, null, null, null, null);
+	    SSHCommandResult repoResult = clienttasks.repos(true, false, false, (String) null, null, null, null, null, null);
+	    if(!(repoResult.getStdout().trim().equals("This system has no repositories available through subscriptions."))){
+		    break;
+	    }
 	}
-	clienttasks.subscribe(null, null,subscriptionPoolId, null, null, null, null, null, null, null, null, null, null);
-	List<Repo> availableRepos = clienttasks.getCurrentlySubscribedRepos();
-	List<String> repoIdsDisabledByDefault = new ArrayList<String>();
-	Map<String, String> attributesMap = new HashMap<String, String>();
-	String ExpectedRepoMsg = "There were no available repositories matching the specified criteria.";
+	//clienttasks.subscribe(null, null,subscriptionPoolId, null, null, null, null, null, null, null, null, null, null);
+	//List<Repo> 
+	
+	availableRepos =  clienttasks.getCurrentlySubscribedRepos();
 	SSHCommandResult repoResult = clienttasks.repos(false, false, true, (String) null, null, null, null, null, null);
 	Assert.assertNotEquals(repoResult.getStdout().toString().trim(), ExpectedRepoMsg);
 	SSHCommandResult enabledResult = clienttasks.repos(false, true, false, (String) null, null, null, null, null, null);

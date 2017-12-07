@@ -25,8 +25,11 @@ import rhsm.cli.tasks.SubscriptionManagerTasks;
 import rhsm.data.Repo;
 import rhsm.data.SubscriptionPool;
 
-import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.DefTypes;
 import com.github.redhatqe.polarize.metadata.TestDefinition;
+import com.github.redhatqe.polarize.metadata.TestType;
+import com.github.redhatqe.polarize.metadata.DefTypes.PosNeg;
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
 
 /**
  * @author skallesh
@@ -37,15 +40,21 @@ import com.github.redhatqe.polarize.metadata.TestDefinition;
  *         RedHatEnterpriseLinux7/wiki/RHSMQE/RHSM_SKU%20level%20content%
  *         20override?sidebar=approvals
  */
-@Test(groups = { "SKULevelContentOverrideTests", "Tier3Tests" })
+@Test(groups={"SKULevelContentOverrideTests"})
 public class SKULevelContentOverrideTests extends SubscriptionManagerCLITestScript {
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-37020", "RHEL7-54835"})
-	@Test(description = "Verify content can be overriden at SKU level,content overriden at sku level can be enabled/disabled by using subscription-manager repos --enable/--disable commands and enabled repo is given prefrence over disabled repo", groups = {
-			"OverrideAtSKULevelTest", "blockedByBug-1403160" }, dataProvider = "getSubscriptions", enabled = true)
-	public void OverrideAtSKULevelTest(Object Bugzilla, SubscriptionPool subscriptionpool)
-			throws JSONException, Exception {
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-37020", "RHEL7-54835"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "Verify content can be overriden at SKU level,content overriden at sku level can be enabled/disabled by using subscription-manager repos --enable/--disable commands and enabled repo is given prefrence over disabled repo",
+			groups = {"Tier3Tests","OverrideAtSKULevelTest", "blockedByBug-1403160" },
+			dataProvider = "getSubscriptions",
+			enabled = true)
+	public void testContentOverrideAtSKULevel(Object Bugzilla, SubscriptionPool subscriptionpool) throws JSONException, Exception {
 		String resourcePath = null;
 		String requestBody = null;
 		String consumerId = clienttasks.getCurrentConsumerId(
@@ -73,10 +82,9 @@ public class SKULevelContentOverrideTests extends SubscriptionManagerCLITestScri
 			}
 		}
 
-		// VERIFICATION 1: Verify that adding a content id for a default
-		// disabled repo to a content_override_enabled attribute at the SKU
-		// level will make the repo enabled for the consumer
-		/* To override(enable) a disabled repo */
+		log.info("VERIFICATION 1: Verify that adding a content id for a default disabled"
+			+ " repo to a content_override_enabled attribute at the SKU level will make the repo enabled for the consumer"
+			+ "To override(enable) a disabled repo");
 		if (repoIdsDisabledByDefault.isEmpty()) {
 			requestBody = CandlepinTasks.createContentRequestBody("fooname (DisabledByDefault)", contentIDToEnable,
 					"foolabel_DisabledByDefault", "yum", "Foo Vendor", "/foo/path", "/foo/path/gpg", null, null, null,
@@ -139,12 +147,10 @@ public class SKULevelContentOverrideTests extends SubscriptionManagerCLITestScri
 						+ "' which contains a content_override_enabled for repoId '" + repoIdToEnable + "' (contentid='"
 						+ contentIdToEnable + "'), it now appears in the list of enabled subscription-manager repos.");
 
-		// VERIFICATION 2: Verify that the SKU level content_override_enabled
-		// repo can be overridden back to disabled at on the consumer level
-		/*
-		 * verify repo overridden at sku level can be overridden with
-		 * subscription-manager repos --disable command
-		 */
+		log.info("VERIFICATION 2: Verify that the SKU level content_override_enabled"
+			+ "repo can be overridden back to disabled at on the consumer level"
+			+ " verify repo overridden at sku level can be overridden with subscription-manager repos --disable command");
+		 
 		clienttasks.repos(null, null, null, null, repoIdToEnable, null, null, null, null);
 		Assert.assertTrue(
 				clienttasks.repos_(null, null, true, (String) null, null, null, null, null, null).getStdout()
@@ -155,10 +161,8 @@ public class SKULevelContentOverrideTests extends SubscriptionManagerCLITestScri
 						+ "'), it can be overriden again (at the consumer level) using subscription-manager repos --disable '"
 						+ repoIdToEnable + "'.");
 
-		// VERIFICATION 3: Verify that adding a content id for a default enabled
-		// repo to a content_override_disabled attribute at the SKU level will
-		// make the repo disabled for the consumer
-		/* To override(disable) a enabled repo */
+		log.info("VERIFICATION 3: Verify that adding a content id for a default enabled repo to a content_override_disabled "
+			+ "attribute at the SKU level will make the repo disabled for the consumerTo override(disable) a enabled repo ");
 		if (repoIdsEnabledbyDefault.isEmpty()) {
 			requestBody = CandlepinTasks.createContentRequestBody("fooname (EnabledByDefault)", contentIDToDisable,
 					"foolabel_EnabledByDefault", "yum", "Foo Vendor", "/foo/path", "/foo/path/gpg", null, null, null,
@@ -224,8 +228,8 @@ public class SKULevelContentOverrideTests extends SubscriptionManagerCLITestScri
 						+ "' (contentid='" + contentIdToDisable
 						+ "'), it now appears in the list of disabled subscription-manager repos.");
 
-		// VERIFICATION 4: Verify that the SKU level content_override_enabled
-		// repo can be overridden back to enabled at on the consumer level
+		log.info("VERIFICATION 4: Verify that the SKU level content_override_enabled repo can"
+			+ " be overridden back to enabled at on the consumer level");
 		/*
 		 * verify repo overridden at sku level can be overridden with
 		 * subscription-manager repos --enable command
@@ -244,9 +248,8 @@ public class SKULevelContentOverrideTests extends SubscriptionManagerCLITestScri
 		// them before proceeding to the next verification...
 		clienttasks.repo_override(null, true, (String) null, (String) null, null, null, null, null, null);
 
-		// VERIFICATION 5: Verify that when the same content id exists on both
-		// the SKU level content_override_enabled and content_override_disabled
-		// list, the enabled value takes precedence
+		log.info("VERIFICATION 5: Verify that when the same content id exists on both the SKU level content_override_enabled "
+			+ "and content_override_disabled list, the enabled value takes precedence");
 		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		clienttasks.subscribe(null, null, subscriptionpool.poolId, null, null, null, null, null, null, null, null,
 				null, null);
@@ -300,17 +303,17 @@ public class SKULevelContentOverrideTests extends SubscriptionManagerCLITestScri
 						+ "' which contains a content_override_enabed for repoId '" + repoIdToDisable + "' (contentid='"
 						+ contentIdToDisable + "'), it now appears in the list of enabled subscription-manager repos.");
 
-		// VERIFICATION 6: Verify that the content_override_enabled and
-		// content_override_disabled list can specify a comma delimited string
-		// of content ids
+		log.info("VERIFICATION 6: Verify that the content_override_enabled and content_override_disabled "
+			+ "list can specify a comma delimited string of content ids");
 		String RepoId1 = null;
 		String RepoId2 = null;
 		String contentId1 = null;
 		String contentId2 = null;
-		if (!(repoIdsDisabledByDefault.isEmpty()) && repoIdsDisabledByDefault.size() >= 2) {
+		if (!(repoIdsDisabledByDefault.isEmpty()) && repoIdsDisabledByDefault.size() >= 1) {
 			requestBody = CandlepinTasks.createContentRequestBody("fooname (DisabledByDefault_1)", contentIDToEnable,
 					"foolabel_DisabledByDefault_1", "yum", "Foo Vendor", "/foo/path", "/foo/path/gpg", null, null, null,
 					null).toString();
+			System.out.println("inside verification six if condition");
 			resourcePath = "/content";
 			if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0"))
 				resourcePath = "/owners/" + ownerKey + resourcePath;
@@ -382,7 +385,6 @@ public class SKULevelContentOverrideTests extends SubscriptionManagerCLITestScri
 		String path = "/pools/" + subscriptionpool.poolId + "?include=productAttributes";
 		String result = CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword,
 				sm_serverUrl, path);
-		System.out.println(result + "    result is ");
 		Assert.assertTrue(result.contains(contentId1) && result.contains(contentId2),
 				"After overriding the content at SKU level '" + contentId2 + "' and '" + contentId2
 						+ "'are present in the product attribute list of the pool");

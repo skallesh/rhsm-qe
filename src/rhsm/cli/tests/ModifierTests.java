@@ -21,34 +21,42 @@ import rhsm.cli.tasks.CandlepinTasks;
 import rhsm.data.EntitlementCert;
 import rhsm.data.SubscriptionPool;
 
-import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.DefTypes;
 import com.github.redhatqe.polarize.metadata.TestDefinition;
+import com.github.redhatqe.polarize.metadata.TestType;
+import com.github.redhatqe.polarize.metadata.DefTypes.PosNeg;
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
 
 /**
  * @author jsefler
  * </BR>
  * Design Reference: https://engineering.redhat.com/trac/Entitlement/wiki/EUSDesign
  */
-@Test(groups={"ModifierTests","Tier2Tests"})
+@Test(groups={"ModifierTests"})
 public class ModifierTests extends SubscriptionManagerCLITestScript {
 
 	
 	// Test methods ***********************************************************************
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21728", "RHEL7-51102"})
-	@Test(	description="verify content label for modifier subscription (EUS) is only available in yum repolist after providing subscriptions are entitled",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-804227","blockedByBug-871146","blockedByBug-905546","blockedByBug-958182"},
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21728", "RHEL7-51102"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags="Tier1")
+	@Test(	description="verify content label for modifier subscriptions (e.g. EUS Subscriptions) is only available in yum repolist after providing subscriptions are entitled",
+			groups={"Tier1Tests","blockedByBug-804227","blockedByBug-871146","blockedByBug-905546","blockedByBug-958182"},
 			dependsOnGroups={},
 			dataProvider="getModifierSubscriptionData",
 			enabled=true)
-	public void VerifyContentLabelForModifierSubscriptionIsOnlyAvailableInYumRepoListAfterTheModifiesPoolIsSubscribed_Test(SubscriptionPool modifierPool, String label, List<String> modifiedProductIds, String requiredTags, List<SubscriptionPool> poolsModified) throws JSONException, Exception {
+	public void testContentLabelForModifierSubscriptionIsOnlyAvailableInYumRepoListAfterTheModifiesPoolIsSubscribed(SubscriptionPool modifierPool, String label, List<String> modifiedProductIds, String requiredTags, List<SubscriptionPool> poolsModified) throws JSONException, Exception {
 ///*debugTesting*/ if (!label.equals("rhel-6-server-eus-optional-rpms")) Assert.fail("Contact automation maintainer to comment out this line of debugging.");
 ///*debugTesting*/ if (!label.equals("rhel-6-server-eus-supplementary-isos")) Assert.fail("Contact automation maintainer to comment out this line of debugging.");
 ///*debugTesting*/ if (!label.equals("awesomeos-modifier")) Assert.fail("Contact automation maintainer to comment out this line of debugging.");
 		
 		// avoid throttling RateLimitExceededException from IT-Candlepin
-		if (!modifierPoolIds.contains(modifierPool.poolId) && CandlepinType.hosted.equals(sm_serverType)) {	// strategically get a new consumer to avoid 60 repeated API calls from the same consumer
+		if (/*!modifierPoolIds.contains(modifierPool.poolId) && WAS NOT AGRESSIVE ENOUGH*/ CandlepinType.hosted.equals(sm_serverType)) {	// strategically get a new consumer to avoid 60 repeated API calls from the same consumer
 			// re-register as a new consumer
 			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
 		}
@@ -111,7 +119,7 @@ public class ModifierTests extends SubscriptionManagerCLITestScript {
 		Assert.assertFalse(clienttasks.getYumRepolist("all").contains(label),
 				"Yum repolist now excludes label (repo id) '"+label+"' since we are not subscribed to anything.");
 		List<String> modifiedPoolIds = new ArrayList<String>();
-		if (poolsModified.isEmpty()) throw new SkipException("Cannot complete this test because it appears that there are no modifiable pools (e.g. EUS extended update subscription) available to this consumer's organization that can be modified by the modifier pool '"+modifierPool.subscriptionName+"'.");
+		if (poolsModified.isEmpty()) throw new SkipException("Cannot complete this test because it appears that there are no modifiable pools (providing products "+modifiedProductIds+") available to this consumer that can be modified by the modifier pool '"+modifierPool.subscriptionName+"'.");
 		for (SubscriptionPool pool : poolsModified) modifiedPoolIds.add(pool.poolId);
 		clienttasks.subscribe(null, null, modifiedPoolIds, null, null, null, null, null, null, null, null, null, null);
 		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(clienttasks.subscribeToSubscriptionPool(modifierPool,sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl));
@@ -127,7 +135,7 @@ public class ModifierTests extends SubscriptionManagerCLITestScript {
 				"After unsubscribing from the modifier pool, yum repolist all no longer includes (repo id) '"+label+"' from modifier productId '"+modifierPool.productId+"'.");
 		
 		if (!areAllRequiredTagsProvided) {
-			throw new SkipException("We cannot claim success on this test until 100% of the requiredTags '"+requiredTags+"' are provided by the currently install products.");
+			throw new SkipException("We cannot claim success on this test because 100% of the requiredTags '"+requiredTags+"' are not provided by the currently install products.");
 		}
 	}
 

@@ -44,8 +44,12 @@ import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 import com.redhat.qe.tools.SSHCommandRunner;
 
+import com.github.redhatqe.polarize.metadata.DefTypes.PosNeg;
 import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.DefTypes;
+import com.github.redhatqe.polarize.metadata.LinkedItem;
 import com.github.redhatqe.polarize.metadata.TestDefinition;
+import com.github.redhatqe.polarize.metadata.TestType;
 
 /**
  * @author jsefler
@@ -96,7 +100,7 @@ import com.github.redhatqe.polarize.metadata.TestDefinition;
  *     search for the Channel Entitlement by the name of the channel (e.g. Red Hat Enterprise Linux Server (v. 7))
  *     see the Regular Available and Available Flex Guests to get a count
  */
-@Test(groups={"MigrationTests","Tier3Tests"})
+@Test(groups={"MigrationTests"})
 public class MigrationTests extends SubscriptionManagerCLITestScript {
 
 	// Test methods ***********************************************************************
@@ -105,15 +109,16 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	
 	// install-num-migrate-to-rhsm Test methods ***********************************************************************
 	
+	@TestDefinition(projectID={/*Project.RHEL5*/},testCaseID={})
 	@Test(	description="Execute migration tool install-num-migrate-to-rhsm with a known instnumber and assert the expected productCerts are copied",
-			groups={"AcceptanceTests","Tier1Tests","InstallNumMigrateToRhsmWithInstNumber_Test","blockedByBug-853187"},
+			groups={"Tier1Tests","InstallNumMigrateToRhsmWithInstNumber_Test","blockedByBug-853187"},
 			dependsOnMethods={},
 			dataProvider="InstallNumMigrateToRhsmData",
 			enabled=true)
 	@ImplementsNitrateTest(caseId=131567)
 	//@ImplementsNitrateTest(caseId=130760)
 	//@ImplementsNitrateTest(caseId=130758)
-	public void InstallNumMigrateToRhsmWithInstNumber_Test(Object bugzilla, String instNumber) throws JSONException {
+	public void testInstallNumMigrateToRhsmWithInstNumber(Object bugzilla, String instNumber) throws JSONException {
 		InstallNumMigrateToRhsmWithInstNumber(instNumber);
 	}
 	protected SSHCommandResult InstallNumMigrateToRhsmWithInstNumber(String instNumber) throws JSONException {
@@ -216,14 +221,13 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-26761", "RHEL7-55204"})
+	@TestDefinition(projectID={/*Project.RHEL5*/},testCaseID={})
 	@Test(	description="Execute migration tool install-num-migrate-to-rhsm with install-num used to provision this machine",
-			groups={"AcceptanceTests","Tier1Tests","InstallNumMigrateToRhsm_Test","blockedByBug-854879"},
+			groups={"Tier1Tests","InstallNumMigrateToRhsm_Test","blockedByBug-854879"},
 			dependsOnMethods={},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=130760)
-	public void InstallNumMigrateToRhsm_Test() throws JSONException {
+	public void testInstallNumMigrateToRhsm() throws JSONException {
 		if (!clienttasks.redhatReleaseX.equals("5")) throw new SkipException("This test is applicable to RHEL5 only.");
 		if (clienttasks.isPackageVersion("subscription-manager-migration", ">", "1.11.3-4") && clienttasks.redhatReleaseX.equals("5")) {
 			throw new SkipException("Due to bug 1092754, the migration tool '"+installNumTool+"' has been removed from RHEL5.");
@@ -278,12 +282,13 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
+	@TestDefinition(projectID={/*Project.RHEL5*/},testCaseID={})
 	@Test(	description="Execute migration tool install-num-migrate-to-rhsm with a non-default rhsm.productcertdir configured",
-			groups={"blockedByBug-773707","blockedByBug-840415","InstallNumMigrateToRhsmWithNonDefaultProductCertDir_Test"},
+			groups={"Tier3Tests","blockedByBug-773707","blockedByBug-840415","InstallNumMigrateToRhsmWithNonDefaultProductCertDir_Test"},
 			dependsOnMethods={},
 			dataProvider="InstallNumMigrateToRhsmData",
 			enabled=true)
-	public void InstallNumMigrateToRhsmWithNonDefaultProductCertDir_Test(Object bugzilla, String instNumber) throws JSONException {
+	public void testInstallNumMigrateToRhsmWithNonDefaultProductCertDir(Object bugzilla, String instNumber) throws JSONException {
 		if (!clienttasks.redhatReleaseX.equals("5")) throw new SkipException("This test is applicable to RHEL5 only.");
 		if (clienttasks.isPackageVersion("subscription-manager-migration", ">", "1.11.3-4") && clienttasks.redhatReleaseX.equals("5")) {
 			throw new SkipException("Due to bug 1092754, the migration tool '"+installNumTool+"' has been removed from RHEL5.");
@@ -308,17 +313,18 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		
 		// NOTE: The configNonDefaultRhsmProductCertDir will handle the configuration setting
 		Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsm", "productCertDir"), nonDefaultProductCertDir,"A non-default rhsm.productCertDir has been configured.");
-		InstallNumMigrateToRhsmWithInstNumber_Test(bugzilla,instNumber);
+		testInstallNumMigrateToRhsmWithInstNumber(bugzilla,instNumber);
 	}
 	
 	
+	@TestDefinition(projectID={/*Project.RHEL5*/},testCaseID={})
 	@Test(	description="Execute migration tool install-num-migrate-to-rhsm with a bad length install-num (expecting 16 chars long)",
-			groups={},
+			groups={"Tier3Tests"},
 			dependsOnMethods={},
 			dataProvider="InstallNumMigrateToRhsmWithInvalidInstNumberData",
 			enabled=true)
 	@ImplementsNitrateTest(caseId=130760)
-	public void InstallNumMigrateToRhsmWithInvalidInstNumber_Test(Object bugzilla, String command, Integer expectedExitCode, String expectedStdout, String expectedStderr) {
+	public void testInstallNumMigrateToRhsmWithInvalidInstNumber(Object bugzilla, String command, Integer expectedExitCode, String expectedStdout, String expectedStderr) {
 		if (!clienttasks.redhatReleaseX.equals("5")) throw new SkipException("This test is applicable to RHEL5 only.");
 		if (clienttasks.isPackageVersion("subscription-manager-migration", ">", "1.11.3-4") && clienttasks.redhatReleaseX.equals("5")) {
 			throw new SkipException("Due to bug 1092754, the migration tool '"+installNumTool+"' has been removed from RHEL5.");
@@ -341,13 +347,12 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6}
-			       , testCaseID = {"RHEL6-26760"})
+	@TestDefinition(projectID={/*Project.RHEL5*/},testCaseID={})
 	@Test(	description="Execute migration tool install-num-migrate-to-rhsm with no install-num found on machine",
-			groups={},
+			groups={"Tier3Tests"},
 			dependsOnMethods={},
 			enabled=true)
-	public void InstallNumMigrateToRhsmWithMissingInstNumber_Test() {
+	public void testInstallNumMigrateToRhsmWithMissingInstNumber() {
 		if (!clienttasks.redhatReleaseX.equals("5")) throw new SkipException("This test is applicable to RHEL5 only.");
 		if (clienttasks.isPackageVersion("subscription-manager-migration", ">", "1.11.3-4") && clienttasks.redhatReleaseX.equals("5")) {
 			throw new SkipException("Due to bug 1092754, the migration tool '"+installNumTool+"' has been removed from RHEL5.");
@@ -357,17 +362,22 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			log.info("Backing up the rhn install-num file...");
 			client.runCommandAndWait("mv -f "+machineInstNumberFile+" "+backupMachineInstNumberFile);
 		}
-		InstallNumMigrateToRhsmWithInvalidInstNumber_Test(null, installNumTool,1,"Could not read installation number from "+machineInstNumberFile+".  Aborting.","");
+		testInstallNumMigrateToRhsmWithInvalidInstNumber(null, installNumTool,1,"Could not read installation number from "+machineInstNumberFile+".  Aborting.","");
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21885", "RHEL7-51740"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21885", "RHEL7-51740"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.LOW, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="Assert that install-num-migrate-to-rhsm is only installed on RHEL5",
-			groups={"blockedByBug-790205","blockedByBug-1092754"},
+			groups={"Tier3Tests","blockedByBug-790205","blockedByBug-1092754"},
 			dependsOnMethods={},
 			enabled=true)
-	public void InstallNumMigrateToRhsmShouldOnlyBeInstalledOnRHEL5_Test() {
+	public void testInstallNumMigrateToRhsmShouldOnlyBeInstalledOnRHEL5() {
 		// make sure subscription-manager-migration is installed on RHEL5
 		SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(client, "rpm -ql "+clienttasks.command+"-migration", 0);
 		if (clienttasks.isPackageVersion("subscription-manager-migration", ">", "1.11.3-4") && clienttasks.redhatReleaseX.equals("5")) {
@@ -382,15 +392,20 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	
 	// rhn-migrate-classic-to-rhsm Test methods ***********************************************************************
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20111", "RHEL7-51115"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20111", "RHEL7-51115"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="Register system using RHN Classic and then Execute migration tool rhn-migrate-classic-to-rhsm with options after adding RHN Channels",
-			groups={"AcceptanceTests","Tier1Tests","RhnMigrateClassicToRhsm_Test","blockedByBug-966745","blockedByBug-840169","blockedbyBug-878986","blockedByBug-1052297","blockedByBug-1111258"},
+			groups={"Tier1Tests","RhnMigrateClassicToRhsm_Test","blockedByBug-966745","blockedByBug-840169","blockedbyBug-878986","blockedByBug-1052297","blockedByBug-1111258","blockedByBug-1512948","blockedByBug-1516832"},
 			dependsOnMethods={},
 			dataProvider="RhnMigrateClassicToRhsmData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=130764,130762) // TODO some expected yum repo assertions are not yet automated
-	public void RhnMigrateClassicToRhsm_Test(Object bugzilla, String rhnreg_ksUsername, String rhnreg_ksPassword, String rhnHostname, List<String> rhnChannelsToAdd, String options, String rhnUsername, String rhnPassword, String rhsmUsername, String rhsmPassword, String rhsmOrg, Integer serviceLevelIndex, String serviceLevelExpected) throws JSONException {
+	public void testRhnMigrateClassicToRhsm(Object bugzilla, String rhnreg_ksUsername, String rhnreg_ksPassword, String rhnHostname, List<String> rhnChannelsToAdd, String options, String rhnUsername, String rhnPassword, String rhsmUsername, String rhsmPassword, String rhsmOrg, Integer serviceLevelIndex, String serviceLevelExpected) throws JSONException {
 		if (sm_rhnHostname.equals("")) throw new SkipException("This test requires access to RHN Classic or Satellite 5.");
 		if (Integer.valueOf(clienttasks.redhatReleaseX)>=7 && clienttasks.arch.equals("ppc64le")) throw new SkipException("Use of rhn-migrate-classic-to-rhsm is not necessary on RHEL '"+client1tasks.redhatReleaseX+"' arch '"+clienttasks.arch+"' since this product was not released on RHN Classic.");
 		if (Integer.valueOf(clienttasks.redhatReleaseX)>=7 && clienttasks.arch.equals("aarch64")) throw new SkipException("Use of rhn-migrate-classic-to-rhsm is not necessary on RHEL '"+client1tasks.redhatReleaseX+"' arch '"+clienttasks.arch+"' since this product was not released on RHN Classic.");
@@ -731,21 +746,6 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 					SSHCommandResult sshSystemctlIsEnabledCommandResult = client.runCommandAndWait("systemctl is-enabled osad.service");
 					Assert.assertEquals(sshSystemctlIsEnabledCommandResult.getStdout().trim(),"disabled", "Expected stdout for systemctl is-enabled osad.service");
 					Assert.assertEquals(sshSystemctlIsEnabledCommandResult.getExitCode(),Integer.valueOf(1), "Expected exitCode for systemctl is-enabled osad.service");
-					//	[root@jsefler-rhel7 ~]# chkconfig --list osad
-					//
-					//	Note: This output shows SysV services only and does not include native
-					//	      systemd services. SysV configuration data might be overridden by native
-					//	      systemd configuration.
-					//
-					//	      If you want to list systemd services use 'systemctl list-unit-files'.
-					//	      To see services enabled on particular target use
-					//	      'systemctl list-dependencies [target]'.
-					//
-					//	osad          	0:off	1:off	2:off	3:off	4:off	5:off	6:off
-					SSHCommandResult sshChkconfigCommandResult = client.runCommandAndWait("chkconfig --list osad");
-					Assert.assertEquals(sshChkconfigCommandResult.getExitCode(),Integer.valueOf(0), "Expected exitCode for chkconfig --list osad");
-					String sshChkconfigRegex = "osad\\s+0:off\\s+1:off\\s+2:off\\s+3:off\\s+4:off\\s+5:off\\s+6:off";
-					Assert.assertTrue(sshChkconfigCommandResult.getStdout().trim().matches(sshChkconfigRegex), "Expected stdout for chkconfig --list osad to match regex '"+sshChkconfigRegex+"'.");
 					//	[root@jsefler-rhel7 ~]# systemctl is-active osad.service
 					//	unknown
 					//	[root@jsefler-rhel7 ~]# echo $?
@@ -986,15 +986,20 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20108", "RHEL7-51113"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20108", "RHEL7-51113"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="With a proxy configured in rhn/up2date, register system using RHN Classic and then Execute migration tool rhn-migrate-classic-to-rhsm with options after adding RHN Channels",
-			groups={"AcceptanceTests","Tier1Tests","RhnMigrateClassicToRhsm_Test","RhnMigrateClassicToRhsmUsingProxyServer_Test","blockedbyBug-798015","blockedbyBug-861693","blockedbyBug-878986","blockedbyBug-912776","blockedByBug-1052297","blockedByBug-1111258","blockedByBug-1345962"},
+			groups={"Tier1Tests","RhnMigrateClassicToRhsm_Test","RhnMigrateClassicToRhsmUsingProxyServer_Test","blockedbyBug-798015","blockedbyBug-861693","blockedbyBug-878986","blockedbyBug-912776","blockedByBug-1052297","blockedByBug-1111258","blockedByBug-1345962","blockedByBug-1512948","blockedByBug-1516832"},
 			dependsOnMethods={},
 			dataProvider="RhnMigrateClassicToRhsmUsingProxyServerData",
 			enabled=true)
 	@ImplementsNitrateTest(caseId=130763)
-	public void RhnMigrateClassicToRhsmUsingProxyServer_Test(Object bugzilla, String rhnreg_ksUsername, String rhnreg_ksPassword, String rhnHostname, List<String> rhnChannelsToAdd, String options, String rhnUsername, String rhnPassword, String rhsmUsername, String rhsmPassword, String rhsmOrg, String proxy_hostnameConfig, String proxy_portConfig, String proxy_userConfig, String proxy_passwordConfig, Integer exitCode, String stdout, String stderr, SSHCommandRunner proxyRunner, String proxyLog, String proxyLogRegex) {
+	public void testRhnMigrateClassicToRhsmUsingProxyServer(Object bugzilla, String rhnreg_ksUsername, String rhnreg_ksPassword, String rhnHostname, List<String> rhnChannelsToAdd, String options, String rhnUsername, String rhnPassword, String rhsmUsername, String rhsmPassword, String rhsmOrg, String proxy_hostnameConfig, String proxy_portConfig, String proxy_userConfig, String proxy_passwordConfig, Integer exitCode, String stdout, String stderr, SSHCommandRunner proxyRunner, String proxyLog, String proxyLogRegex) {
 		if (sm_rhnHostname.equals("")) throw new SkipException("This test requires access to RHN Classic or Satellite 5.");
 		if (Integer.valueOf(clienttasks.redhatReleaseX)>=7 && clienttasks.arch.equals("ppc64le")) throw new SkipException("Use of rhn-migrate-classic-to-rhsm is not necessary on RHEL '"+client1tasks.redhatReleaseX+"' arch '"+clienttasks.arch+"' since this product was not released on RHN Classic.");
 		if (Integer.valueOf(clienttasks.redhatReleaseX)>=7 && clienttasks.arch.equals("aarch64")) throw new SkipException("Use of rhn-migrate-classic-to-rhsm is not necessary on RHEL '"+client1tasks.redhatReleaseX+"' arch '"+clienttasks.arch+"' since this product was not released on RHN Classic.");
@@ -1221,27 +1226,37 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21895", "RHEL7-51751"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21895", "RHEL7-51751"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="Execute migration tool rhn-migrate-classic-to-rhsm with a non-default rhsm.productcertdir configured",
-			groups={"RhnMigrateClassicToRhsmWithNonDefaultProductCertDir_Test","blockedbyBug-878986","blockedByBug-966745","blockedByBug-1111258"},
+			groups={"Tier3Tests","RhnMigrateClassicToRhsmWithNonDefaultProductCertDir_Test","blockedbyBug-878986","blockedByBug-966745","blockedByBug-1111258"},
 			dependsOnMethods={},
 			dataProvider="RhnMigrateClassicToRhsmWithNonDefaultProductCertDirData",	// dataProvider="RhnMigrateClassicToRhsmData",  IS TOO TIME CONSUMING
 			enabled=true)
 	@ImplementsNitrateTest(caseId=130765)
-	public void RhnMigrateClassicToRhsmWithNonDefaultProductCertDir_Test(Object bugzilla, String rhnreg_ksUsername, String rhnreg_ksPassword, String rhnServer, List<String> rhnChannelsToAdd, String options, String rhnUsername, String rhnPassword, String rhsmUsername, String rhsmPassword, String rhsmOrg, Integer serviceLevelIndex, String serviceLevelExpected) throws JSONException {
+	public void testRhnMigrateClassicToRhsmWithNonDefaultProductCertDir(Object bugzilla, String rhnreg_ksUsername, String rhnreg_ksPassword, String rhnServer, List<String> rhnChannelsToAdd, String options, String rhnUsername, String rhnPassword, String rhsmUsername, String rhsmPassword, String rhsmOrg, Integer serviceLevelIndex, String serviceLevelExpected) throws JSONException {
 		// NOTE: The configNonDefaultRhsmProductCertDir will handle the configuration setting
 		Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsm", "productCertDir"), nonDefaultProductCertDir,"A non-default rhsm.productCertDir has been configured.");
-		RhnMigrateClassicToRhsm_Test(bugzilla,rhnreg_ksUsername,rhnreg_ksPassword,rhnServer,rhnChannelsToAdd,options,rhnUsername,rhnPassword,rhsmUsername,rhsmPassword,rhsmOrg,serviceLevelIndex,serviceLevelExpected);
+		testRhnMigrateClassicToRhsm(bugzilla,rhnreg_ksUsername,rhnreg_ksPassword,rhnServer,rhnChannelsToAdd,options,rhnUsername,rhnPassword,rhsmUsername,rhsmPassword,rhsmOrg,serviceLevelIndex,serviceLevelExpected);
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20109", "RHEL7-51742"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20109", "RHEL7-51742"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="Execute migration tool rhn-migrate-classic-to-rhsm with a valid activation-key (and a good org)",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1154375"},
+			groups={"Tier1Tests","blockedByBug-1154375","blockedByBug-1512948","blockedByBug-1516832"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=130765)
-	public void RhnMigrateClassicToRhsmWithActivationKey_Test() throws Exception {
+	public void testRhnMigrateClassicToRhsmWithActivationKey() throws Exception {
 		if (clienttasks.isPackageVersion("subscription-manager","<","1.14.1-1")) throw new SkipException("The --activation-key option was not implemented in this version of subscription-manager.");
 		
 		// create a valid activation key
@@ -1260,12 +1275,12 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		boolean invokeWorkaroundWhileBugIsOpen = true;
 		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
 		if (invokeWorkaroundWhileBugIsOpen) {
-			RhnMigrateClassicToRhsm_Test(null,sm_rhnUsername,sm_rhnPassword,sm_rhnHostname,new ArrayList<String>(),"--activation-key="+activationKeyName+" "+"--org="+clientOrgKey, sm_rhnUsername,sm_rhnPassword,sm_clientUsername,sm_clientPassword,null,null,null);
+			testRhnMigrateClassicToRhsm(null,sm_rhnUsername,sm_rhnPassword,sm_rhnHostname,new ArrayList<String>(),"--activation-key="+activationKeyName+" "+"--org="+clientOrgKey, sm_rhnUsername,sm_rhnPassword,sm_clientUsername,sm_clientPassword,null,null,null);
 		} else	// call RhnMigrateClassicToRhsm_Test with rhsmUsername=null and rhsmPassword=null
 		// END OF WORKAROUND
 		
 		// migrate from RHN Classic to RHSM using the activation key 
-		RhnMigrateClassicToRhsm_Test(null,sm_rhnUsername,sm_rhnPassword,sm_rhnHostname,new ArrayList<String>(),"--activation-key="+activationKeyName+" "+"--org="+clientOrgKey, sm_rhnUsername,sm_rhnPassword,null,null,null,null,null);
+		testRhnMigrateClassicToRhsm(null,sm_rhnUsername,sm_rhnPassword,sm_rhnHostname,new ArrayList<String>(),"--activation-key="+activationKeyName+" "+"--org="+clientOrgKey, sm_rhnUsername,sm_rhnPassword,null,null,null,null,null);
 		
 		// assert that the system is consuming the pool from the activation key.
 		List<ProductSubscription> consumedProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
@@ -1274,13 +1289,18 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21887", "RHEL7-51743"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21887", "RHEL7-51743"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="Execute migration tool rhn-migrate-classic-to-rhsm with a bad activation-key (and a good org)",
-			groups={"blockedByBug-1154375"},
+			groups={"Tier3Tests","blockedByBug-1154375"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=130765)
-	public void RhnMigrateClassicToRhsmWithBadActivationKey_Test() throws Exception {
+	public void testRhnMigrateClassicToRhsmWithBadActivationKey() throws Exception {
 		if (clienttasks.isPackageVersion("subscription-manager","<","1.14.1-1")) throw new SkipException("The --activation-key option was not implemented in this version of subscription-manager.");
 		
 		if (sm_rhnHostname.equals("")) throw new SkipException("This test requires access to RHN Classic or Satellite 5.");
@@ -1354,13 +1374,18 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21888", "RHEL7-51744"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21888", "RHEL7-51744"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="Execute migration tool rhn-migrate-classic-to-rhsm with valid comma separated keys (and a good org)",
-			groups={"blockedByBug-1154375"},
+			groups={"Tier3Tests","blockedByBug-1154375"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=130765)
-	public void RhnMigrateClassicToRhsmWithCommaSeparatedActivationKeys_Test() throws Exception {
+	public void testRhnMigrateClassicToRhsmWithCommaSeparatedActivationKeys() throws Exception {
 		if (clienttasks.isPackageVersion("subscription-manager","<","1.14.1-1")) throw new SkipException("The --activation-key option was not implemented in this version of subscription-manager.");
 		
 		// create valid activation keys
@@ -1383,12 +1408,12 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		boolean invokeWorkaroundWhileBugIsOpen = true;
 		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
 		if (invokeWorkaroundWhileBugIsOpen) {
-			RhnMigrateClassicToRhsm_Test(null,sm_rhnUsername,sm_rhnPassword,sm_rhnHostname,new ArrayList<String>(),"--activation-key="+name+" "+"--org="+clientOrgKey, sm_rhnUsername,sm_rhnPassword,sm_clientUsername,sm_clientPassword,clientOrgKey,null,null);
+			testRhnMigrateClassicToRhsm(null,sm_rhnUsername,sm_rhnPassword,sm_rhnHostname,new ArrayList<String>(),"--activation-key="+name+" "+"--org="+clientOrgKey, sm_rhnUsername,sm_rhnPassword,sm_clientUsername,sm_clientPassword,clientOrgKey,null,null);
 		} else	// call RhnMigrateClassicToRhsm_Test with rhsmUsername=null and rhsmPassword=null
 		// END OF WORKAROUND
 		
 		// migrate from RHN Classic to RHSM using the activation key 
-		RhnMigrateClassicToRhsm_Test(null,sm_rhnUsername,sm_rhnPassword,sm_rhnHostname,new ArrayList<String>(),"--activation-key="+name+" "+"--org="+clientOrgKey, sm_rhnUsername,sm_rhnPassword,null,null,clientOrgKey,null,null);
+		testRhnMigrateClassicToRhsm(null,sm_rhnUsername,sm_rhnPassword,sm_rhnHostname,new ArrayList<String>(),"--activation-key="+name+" "+"--org="+clientOrgKey, sm_rhnUsername,sm_rhnPassword,null,null,clientOrgKey,null,null);
 		
 		// assert that the system is consuming the pools from the activation key.
 		List<ProductSubscription> consumedProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
@@ -1400,13 +1425,18 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21893", "RHEL7-51749"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21893", "RHEL7-51749"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="Execute migration tool rhn-migrate-classic-to-rhsm with multiple --activation-key options specified",
-			groups={"blockedByBug-1154375"},
+			groups={"Tier3Tests","blockedByBug-1154375"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=130765)
-	public void RhnMigrateClassicToRhsmWithMultipleActivationKeys_Test() throws Exception {
+	public void testRhnMigrateClassicToRhsmWithMultipleActivationKeys() throws Exception {
 		if (clienttasks.isPackageVersion("subscription-manager","<","1.14.1-1")) throw new SkipException("The --activation-key option was not implemented in this version of subscription-manager.");
 		
 		// create valid activation keys
@@ -1429,10 +1459,10 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		boolean invokeWorkaroundWhileBugIsOpen = true;
 		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
 		if (invokeWorkaroundWhileBugIsOpen) {
-			RhnMigrateClassicToRhsm_Test(null,sm_rhnUsername,sm_rhnPassword,sm_rhnHostname,new ArrayList<String>(),"--activation-key="+name1+" "+"--activation-key="+name2,sm_rhnUsername,sm_rhnPassword,sm_clientUsername,sm_clientPassword,clientOrgKey,null,null);
+			testRhnMigrateClassicToRhsm(null,sm_rhnUsername,sm_rhnPassword,sm_rhnHostname,new ArrayList<String>(),"--activation-key="+name1+" "+"--activation-key="+name2,sm_rhnUsername,sm_rhnPassword,sm_clientUsername,sm_clientPassword,clientOrgKey,null,null);
 		} else	// call RhnMigrateClassicToRhsm_Test with rhsmUsername=null and rhsmPassword=null
 		// END OF WORKAROUND
-		RhnMigrateClassicToRhsm_Test(null,sm_rhnUsername,sm_rhnPassword,sm_rhnHostname,new ArrayList<String>(),"--activation-key="+name1+" "+"--activation-key="+name2+" "+"--org="+clientOrgKey,sm_rhnUsername,sm_rhnPassword,null,null,null,null,null);
+		testRhnMigrateClassicToRhsm(null,sm_rhnUsername,sm_rhnPassword,sm_rhnHostname,new ArrayList<String>(),"--activation-key="+name1+" "+"--activation-key="+name2+" "+"--org="+clientOrgKey,sm_rhnUsername,sm_rhnPassword,null,null,null,null,null);
 		
 		// assert that the system is consuming the pools from the activation key.
 		List<ProductSubscription> consumedProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
@@ -1442,13 +1472,18 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-26764", "RHEL7-55205"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-26764", "RHEL7-55205"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="migrating a RHEL5 Client - Desktop versus Workstation",
-			groups={"RhnMigrateClassicToRhsm_Test","AcceptanceTests","Tier1Tests","blockedByBug-786257","blockedByBug-853233","blockedByBug-1111258"},
+			groups={"Tier1Tests","RhnMigrateClassicToRhsm_Test","blockedByBug-786257","blockedByBug-853233","blockedByBug-1111258"},
 			dependsOnMethods={},
 			enabled=true)
-	public void RhnMigrateClassicToRhsm_Rhel5ClientDesktopVersusWorkstation_Test() throws JSONException {
+	public void testRhnMigrateClassicToRhsm_Rhel5ClientDesktopVersusWorkstation() throws JSONException {
 		if (sm_rhnHostname.equals("")) throw new SkipException("This test requires access to RHN Classic or Satellite 5.");
 		
 		log.info("Red Hat Enterprise Linux Desktop (productId=68) corresponds to the base RHN Channel (rhel-ARCH-client-5) for a 5Client system where ARCH=i386,x86_64.");
@@ -1610,7 +1645,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		rhnChannelsToAddForDesktop.add(String.format("rhel-%s-client-supplementary-5-beta",arch));
 		rhnChannelsToAddForDesktop.add(String.format("rhel-%s-client-supplementary-5-beta-debuginfo",arch));
 		rhnChannelsToAddForDesktop.add(String.format("rhel-%s-client-supplementary-5-debuginfo",arch));
-		RhnMigrateClassicToRhsm_Test(null,	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnChannelsToAddForDesktop, "--no-auto", sm_rhnUsername,sm_rhnPassword,rhsmUsername,rhsmPassword,rhsmOrg,null, null);		
+		testRhnMigrateClassicToRhsm(null,	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnChannelsToAddForDesktop, "--no-auto", sm_rhnUsername,sm_rhnPassword,rhsmUsername,rhsmPassword,rhsmOrg,null, null);		
 		List<ProductCert> productCertsMigrated = clienttasks.getCurrentProductCerts();
 		String productIdForDesktop = "68";
 		for (ProductCert productCert : productCertsMigrated) {
@@ -1630,7 +1665,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		rhnChannelsToAddForWorkstation.add(String.format("rhel-%s-client-workstation-5-beta",arch));
 		rhnChannelsToAddForWorkstation.add(String.format("rhel-%s-client-workstation-5-beta-debuginfo",arch));
 		rhnChannelsToAddForWorkstation.add(String.format("rhel-%s-client-workstation-5-debuginfo",arch));
-		RhnMigrateClassicToRhsm_Test(null,	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnChannelsToAddForWorkstation, "--no-auto", sm_rhnUsername,sm_rhnPassword,rhsmUsername,rhsmPassword,rhsmOrg,null, null);		
+		testRhnMigrateClassicToRhsm(null,	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnChannelsToAddForWorkstation, "--no-auto", sm_rhnUsername,sm_rhnPassword,rhsmUsername,rhsmPassword,rhsmOrg,null, null);		
 		productCertsMigrated = clienttasks.getCurrentProductCerts();
 		String productIdForWorkstation = "71";
 		for (ProductCert productCert : productCertsMigrated) {
@@ -1645,7 +1680,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		rhnChannelsToAddForVirtualization.add(String.format("rhel-%s-client-vt-5-beta",arch));
 		rhnChannelsToAddForVirtualization.add(String.format("rhel-%s-client-vt-5-beta-debuginfo",arch));
 		rhnChannelsToAddForVirtualization.add(String.format("rhel-%s-client-vt-5-debuginfo",arch));
-		RhnMigrateClassicToRhsm_Test(null,	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnChannelsToAddForVirtualization, "--no-auto", sm_rhnUsername,sm_rhnPassword,rhsmUsername,rhsmPassword,rhsmOrg,null, null);		
+		testRhnMigrateClassicToRhsm(null,	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnChannelsToAddForVirtualization, "--no-auto", sm_rhnUsername,sm_rhnPassword,rhsmUsername,rhsmPassword,rhsmOrg,null, null);		
 		productCertsMigrated = clienttasks.getCurrentProductCerts();
 		/*String*/ productIdForWorkstation = "71";
 		for (ProductCert productCert : productCertsMigrated) {
@@ -1657,7 +1692,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		rhnChannelsToAddForBoth.addAll(rhnChannelsToAddForDesktop);
 		rhnChannelsToAddForBoth.addAll(rhnChannelsToAddForWorkstation);
 		rhnChannelsToAddForBoth.addAll(rhnChannelsToAddForVirtualization);
-		RhnMigrateClassicToRhsm_Test(null,	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnChannelsToAddForBoth, "--no-auto", sm_rhnUsername,sm_rhnPassword,rhsmUsername,rhsmPassword,rhsmOrg,null, null);		
+		testRhnMigrateClassicToRhsm(null,	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnChannelsToAddForBoth, "--no-auto", sm_rhnUsername,sm_rhnPassword,rhsmUsername,rhsmPassword,rhsmOrg,null, null);		
 		productCertsMigrated = clienttasks.getCurrentProductCerts();
 		for (ProductCert productCert : productCertsMigrated) {
 			Assert.assertEquals(productCert.productId, productIdForWorkstation, "Migration tool "+rhnMigrateTool+" should only install product certificate id '"+productIdForWorkstation+"' when consuming RHN Child Channels "+rhnChannelsToAddForBoth);
@@ -1665,13 +1700,19 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6}
-			       , testCaseID = {"RHEL6-21897"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21897", "RHEL7-98222"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="when more than one JBoss Application Enterprise Platform (JBEAP) RHN Channel is currently being consumed classically, rhn-migrate-to-rhsm should abort",
-			groups={"blockedByBug-852894","blockedByBug-1052297","RhnMigrateClassicToRhsm_Test"},
+			groups={"Tier3Tests","blockedByBug-852894","blockedByBug-1052297","RhnMigrateClassicToRhsm_Test"},
 			dependsOnMethods={},
 			enabled=true)
-	public void RhnMigrateClassicToRhsm_MultipleVersionsOfJBEAP_Test() {
+	public void testRhnMigrateClassicToRhsm_MultipleVersionsOfJBEAP
+	() {
 		if (sm_rhnHostname.equals("")) throw new SkipException("This test requires access to RHN Classic or Satellite 5.");
 
 		log.info("JBoss Enterprise Application Platform (productId=183) is currently provided in 3 versions: 4.3.0, 5.0, 6.0");
@@ -1754,14 +1795,19 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6}
-			       , testCaseID = {"RHEL6-26763"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-26763", "RHEL7-98220"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="Execute migration tool rhn-migrate-classic-to-rhsm with invalid credentials",
-			groups={"blockedByBug-789008","blockedByBug-807477","blockedByBug-1052297"},
+			groups={"Tier3Tests","blockedByBug-789008","blockedByBug-807477","blockedByBug-1052297"},
 			dependsOnMethods={},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=136404)
-	public void RhnMigrateClassicToRhsmWithInvalidCredentials_Test() {
+	public void testRhnMigrateClassicToRhsmWithInvalidCredentials() {
 		if (clienttasks.isPackageVersion("subscription-manager-migration", ">=", "1.14.3-1")) throw new SkipException("This test was implemented for subscription-manager-migration < 1.14.3-1.  See replacement RhnMigrateClassicToRhsmWithInvalidRhsmCredentials_Test.");
 
 		clienttasks.unregister(null,null,null, null);
@@ -1774,14 +1820,19 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(sshCommandResult.getStdout().trim().endsWith(expectedStdout), "The expected stdout result from call to '"+rhnMigrateTool+"' with invalid credentials ended with: "+expectedStdout);
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21890", "RHEL7-51746"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21890", "RHEL7-51746"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="Execute migration tool rhn-migrate-classic-to-rhsm with invalid RHSM credentials, but valid RHN credentials",
-			groups={"blockedByBug-789008","blockedByBug-807477","blockedByBug-1052297"},
+			groups={"Tier3Tests","blockedByBug-789008","blockedByBug-807477","blockedByBug-1052297"},
 			dependsOnMethods={},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=136404)
-	public void RhnMigrateClassicToRhsmWithInvalidRhsmCredentials_Test() {
+	public void testRhnMigrateClassicToRhsmWithInvalidRhsmCredentials() {
 		if (clienttasks.isPackageVersion("subscription-manager-migration", "<", "1.14.3-1")) throw new SkipException("This test is implemented for subscription-manager-migration >= 1.14.3-1.  See former RhnMigrateClassicToRhsmWithInvalidCredentials_Test.");
 	
 		clienttasks.unregister(null,null,null, null);
@@ -1799,14 +1850,19 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21889", "RHEL7-51745"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21889", "RHEL7-51745"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="Execute migration tool rhn-migrate-classic-to-rhsm with invalid RHN credentials, but valid RHSM credentials",
-			groups={"blockedByBug-1052297"},
+			groups={"Tier3Tests","blockedByBug-1052297"},
 			dependsOnMethods={},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void RhnMigrateClassicToRhsmWithInvalidRhnCredentials_Test() {
+	public void testRhnMigrateClassicToRhsmWithInvalidRhnCredentials() {
 		if (sm_serverType.equals(CandlepinType.hosted)) throw new SkipException("This test requires that your candlepin server NOT be a hosted RHN Classic system.");
 
 		clienttasks.unregister(null,null,null, null);
@@ -1847,13 +1903,18 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20110", "RHEL7-51114"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20110", "RHEL7-51114"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="Execute migration tool rhn-migrate-classic-to-rhsm without having registered to classic (no /etc/sysconfig/rhn/systemid)",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-807477","blockedByBug-1052297","blockedByBug-1111258","blockedByBug-1212515"},
+			groups={"Tier1Tests","blockedByBug-807477","blockedByBug-1052297","blockedByBug-1111258","blockedByBug-1212515"},
 			dependsOnMethods={},
 			enabled=true)
-	public void RhnMigrateClassicToRhsmWithMissingSystemIdFile_Test() {
+	public void testRhnMigrateClassicToRhsmWithMissingSystemIdFile() {
 	    removeProxyServerConfigurations();	// cleanup from prior tests
 		if (Integer.valueOf(clienttasks.redhatReleaseX)>=7 && clienttasks.arch.equals("ppc64le")) throw new SkipException("Use of rhn-migrate-classic-to-rhsm is not necessary on RHEL '"+client1tasks.redhatReleaseX+"' arch '"+clienttasks.arch+"' since this product was not released on RHN Classic.");
 		if (Integer.valueOf(clienttasks.redhatReleaseX)>=7 && clienttasks.arch.equals("aarch64")) throw new SkipException("Use of rhn-migrate-classic-to-rhsm is not necessary on RHEL '"+client1tasks.redhatReleaseX+"' arch '"+clienttasks.arch+"' since this product was not released on RHN Classic.");
@@ -1893,14 +1954,19 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21894", "RHEL7-51750"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21894", "RHEL7-51750"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="Attempt to execute migration tool rhn-migrate-classic-to-rhsm with --no-auto and --service-level",
-			groups={"blockedByBug-850920","blockedByBug-1052297","blockedByBug-1149007"},
+			groups={"Tier3Tests","blockedByBug-850920","blockedByBug-1052297","blockedByBug-1149007"},
 			dependsOnMethods={},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void RhnMigrateClassicToRhsmWithNoAutoAndServiceLevel_Test() {
+	public void testRhnMigrateClassicToRhsmWithNoAutoAndServiceLevel() {
 		clienttasks.unregister(null,null,null, null);
 		
 		SSHCommandResult sshCommandResult = executeRhnMigrateClassicToRhsm("--no-auto --servicelevel=foo", sm_rhnUsername, sm_rhnPassword,null,null,null,null, null);
@@ -1913,13 +1979,18 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21886", "RHEL7-51741"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21886", "RHEL7-51741"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="Execute migration tool rhn-migrate-classic-to-rhsm while already registered to RHSM",
-			groups={"blockedByBug-807477","blockedByBug-1052297","blockedByBug-1212515"},
+			groups={"Tier3Tests","blockedByBug-807477","blockedByBug-1052297","blockedByBug-1212515"},
 			dependsOnMethods={},
 			enabled=true)
-	public void RhnMigrateClassicToRhsmWhileAlreadyRegisteredToRhsm_Test() {
+	public void testRhnMigrateClassicToRhsmWhileAlreadyRegisteredToRhsm() {
 		// register to RHN Classic
 		String rhnSystemId = clienttasks.registerToRhnClassic(sm_rhnUsername, sm_rhnPassword, sm_rhnHostname);
 		Assert.assertTrue(clienttasks.isRhnSystemIdRegistered(sm_rhnUsername, sm_rhnPassword, sm_rhnHostname, rhnSystemId),"Confirmed that rhn systemId '"+rhnSystemId+"' is currently registered.");
@@ -1960,13 +2031,18 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6}
-			       , testCaseID = {"RHEL6-26762"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-26762", "RHEL7-55930"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="attempt to execute migration tool rhn-migrate-classic-to-rhsm while while under attack by a man-in-the-middle security vulnerability",
-			groups={"blockedByBug-966745","blockedByBug-885130","blockedByBug-918967","blockedByBug-918968","blockedByBug-918969","blockedByBug-918970","blockedByBug-1052297","RhnMigrateClassicToRhsmCertificateVerification_Test"},
+			groups={"Tier3Tests","blockedByBug-966745","blockedByBug-885130","blockedByBug-918967","blockedByBug-918968","blockedByBug-918969","blockedByBug-918970","blockedByBug-1052297","RhnMigrateClassicToRhsmCertificateVerification_Test"},
 			dependsOnMethods={},
 			enabled=true)
-	public void RhnMigrateClassicToRhsmCertificateVerification_Test() {
+	public void testRhnMigrateClassicToRhsmCertificateVerification() {
 		if (sm_rhnHostname.equals("")) throw new SkipException("This test requires access to RHN Classic or Satellite 5.");
 		clienttasks.unregister(null, null, null, null);
 		// Steps: are outlined in https://bugzilla.redhat.com/show_bug.cgi?id=918967#c1 EMBARGOED CVE-2012-6137 subscription-manager (rhn-migrate-classic-to-rhsm): Absent certificate verification
@@ -2037,13 +2113,18 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21896", "RHEL7-51752"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21896", "RHEL7-51752"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="attempt to execute migration tool rhn-migrate-classic-to-rhsm when subscription-manager-migration-data is not installed",
-			groups={"blockedByBug-967863","blockedByBug-1052297","RhnMigrateClassicToRhsmWithoutDataInstalled_Test"},
+			groups={"Tier3Tests","blockedByBug-967863","blockedByBug-1052297","RhnMigrateClassicToRhsmWithoutDataInstalled_Test"},
 			dependsOnMethods={},
 			enabled=true)
-	public void RhnMigrateClassicToRhsmWithoutDataInstalled_Test() {
+	public void testRhnMigrateClassicToRhsmWithoutDataInstalled() {
 		if (sm_rhnHostname.equals("")) throw new SkipException("This test requires access to RHN Classic or Satellite 5.");
 		clienttasks.unregister(null, null, null, null);
 		
@@ -2080,14 +2161,19 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21892", "RHEL7-51748"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21892", "RHEL7-51748"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="Attempt to execute migration tool rhn-migrate-classic-to-rhsm with --keep classic which implies that we do not want to deregister from classic which will result in dual interoperability registration.",
-			groups={"blockedByBug-1180273"},
+			groups={"Tier3Tests","blockedByBug-1180273"},
 			dependsOnMethods={},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void RhnMigrateClassicToRhsmWithKeepClassic_Test() {
+	public void testRhnMigrateClassicToRhsmWithKeepClassic() {
 		if (clienttasks.isPackageVersion("subscription-manager-migration", "<", "1.14.3")) throw new SkipException("This version of subscription-manager does not support 1180273 - [RFE] rhn-migrate-classic-to-rhsm should allow the user to migrate a system without requiring credentials on RHN Classic");	// commit 5df7aaaa69a22b9e3f771971f1aa4e58657c8377
 		
 		String options = "--registration-state=keep";
@@ -2197,14 +2283,19 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(sshCommandResult.getStdout().trim().contains(clienttasks.msg_InteroperabilityWarning), "The expected stdout result from a call to '"+rhnMigrateTool+"' with the option to keep the classic registration should warn the user with the interoperability message: "+clienttasks.msg_InteroperabilityWarning);
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21891", "RHEL7-51747"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21891", "RHEL7-51747"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="Attempt to execute migration tool rhn-migrate-classic-to-rhsm with --keep-classic AND unnecessary classic credentials --legacy-user/--legacy-password (unnecessary because --keep-classic implies that we do NOT want to deregister from classic)",
-			groups={"blockedByBug-1180273"},
+			groups={"Tier3Tests","blockedByBug-1180273"},
 			dependsOnMethods={},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void RhnMigrateClassicToRhsmWithKeepClassicAndLegacyCredentials_Test() {
+	public void testRhnMigrateClassicToRhsmWithKeepClassicAndLegacyCredentials() {
 		if (clienttasks.isPackageVersion("subscription-manager-migration", "<", "1.14.3")) throw new SkipException("This version of subscription-manager does not support 1180273 - [RFE] rhn-migrate-classic-to-rhsm should allow the user to migrate a system without requiring credentials on RHN Classic");	// commit 5df7aaaa69a22b9e3f771971f1aa4e58657c8377
 		
 		String options = "--registration-state=keep";
@@ -2285,15 +2376,20 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6}
-			       , testCaseID = {"RHEL6-38191"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-38191", "RHEL7-98219"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="Attempt to execute migration tool rhn-migrate-classic-to-rhsm with --remove-rhn-packages which should disable some classic services and remove several classic packages. As a result, subsequent attempts to migrate will be halted with a friendly message.",
-			groups={"blockedByBug-1185914","blockedByBug-1432642","RhnMigrateClassicToRhsmWithRemoveRhnPackages_Test"},
+			groups={"Tier3Tests","blockedByBug-1185914","blockedByBug-1432642","RhnMigrateClassicToRhsmWithRemoveRhnPackages_Test"},
 			dependsOnMethods={},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	// TODO WARNING: This test will inadvertently remove package subscription-manager-firstboot and not restore it.
-	public void RhnMigrateClassicToRhsmWithRemoveRhnPackages_Test() {
+	public void testRhnMigrateClassicToRhsmWithRemoveRhnPackages() {
 		if (clienttasks.isPackageVersion("subscription-manager-migration", "<", "1.18.2-1")) throw new SkipException("This version of subscription-manager does not support Bug 1185914 - [RFE] rhn-migrate-classic-to-rhsm should give the option to remove RHN Classic related packages / daemons");	// commit 871264dbb0cc091d3eaefabfdfd2e51d6bbc0a3c
 		
 		String options = "--remove-rhn-packages";
@@ -2412,7 +2508,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue((sshCommandResult.getStderr()+sshCommandResult.getStdout()).trim().endsWith(expectedMsg), "The result from a call to '"+rhnMigrateTool+"' after already having called this tool with options '"+options+"' ends with: "+expectedMsg);
 	}
 	// Make sure the RHN Classic Packages are installed
-	List<String> legacyRHNClassicPackages = Arrays.asList(new String[]{"osad","rhn-check","rhn-client-tools","rhncfg","rhncfg-actions","rhncfg-client","rhncfg-management","rhn-setup","rhnpush","rhnsd","spacewalk-abrt","spacewalk-oscap","yum-rhn-plugin","rhn-setup-gnome"/*requires rhn-setup and rhn-client-tool and must be installed for subscription-manager-firstboot requires rhn-setup-gnome*/});	// taken from https://github.com/candlepin/subscription-manager/pull/1484/files
+	List<String> legacyRHNClassicPackages = Arrays.asList(new String[]{"osad","rhn-check","rhn-client-tools","rhncfg","rhncfg-actions","rhncfg-client","rhncfg-management","rhn-setup","rhnpush","rhnsd","spacewalk-abrt","spacewalk-oscap","yum-rhn-plugin","rhn-setup-gnome"/*requires rhn-setup and rhn-client-tools and must be installed for subscription-manager-firstboot requires rhn-setup-gnome*/});	// taken from https://github.com/candlepin/subscription-manager/pull/1484/files
 	@BeforeGroups(groups="setup",value={"RhnMigrateClassicToRhsmWithRemoveRhnPackages_Test"})
 	@AfterGroups(groups="setup",value={"RhnMigrateClassicToRhsmWithRemoveRhnPackages_Test"})
 	public void installRhnClassicPackages() throws IOException, JSONException {
@@ -2433,6 +2529,289 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		//  also need to restore the up2date configurations
 		updateSslCaCertConfigInRhnUp2dateFile();
 	}
+	
+	
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-47943", "RHEL7-109986"},
+//			linkedWorkItems= {
+//				@LinkedItem(
+//					workitemId= "RHEL6-?????",	// TODO
+//					project= Project.RHEL6,
+//					role= DefTypes.Role.VERIFIES),
+//				@LinkedItem(
+//					workitemId= "RHEL7-95162",	// RHEL7-95162 - RHSM-REQ : rhn-migrate-classic-to-rhsm should automatically enable yum plugins
+//					project= Project.RedHatEnterpriseLinux7,
+//					role= DefTypes.Role.VERIFIES)},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description="Verify that the yum plugins for /etc/yum/pluginconf.d/product-id.conf and /etc/yum/pluginconf.d/subscription-manager.conf are automatically enabled by an execution of rhn-migrate-classic-to-rhsm when rhsm.auto_enable_yum_plugins is configured on.",
+			groups={"Tier3Tests","blockedByBug-1466453","testRhnMigrateClassicToRhsmShouldAutomaticallyEnableYumPluginsWhenAutoEnableIsOn"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void testRhnMigrateClassicToRhsmShouldAutomaticallyEnableYumPluginsWhenAutoEnableIsOn() {
+		// this bug is specifically designed to test Bug 1466453 - [RFE] rhn-migrate-classic-to-rhsm should ensure subscription-manager yum plugin is enabled
+		if (clienttasks.isPackageVersion("subscription-manager", "<", "1.20.2-1")) {  // commit 7b2b89c7ba4fbf464dd988e12675b2b763007f2c 	1466453 - [RFE] rhn-migrate-classic-to-rhsm should ensure subscription-manager yum plugin is enabled
+			throw new SkipException("This test applies a newer version of subscription-manager that includes an implementation for Bug 1466453 - [RFE] rhn-migrate-classic-to-rhsm should ensure subscription-manager yum plugin is enabled");
+		}
+		
+		if (sm_rhnHostname.equals("")) throw new SkipException("This test requires access to RHN Classic or Satellite 5.");
+		clienttasks.unregister(null, null, null, null);
+		
+		resetDefaultConfigurationsForYumPluginsAndRhsmAutoEnableYumPlugins();
+		
+		// randomly disable one or both /etc/yum/pluginconf.d/product-id.conf and /etc/yum/pluginconf.d/subscription-manager.conf
+		if (getRandomBoolean()) {
+			clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForProductId, "enabled", "0");
+			clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForSubscriptionManager, "enabled", String.valueOf(getRandInt()%2)/* "0" or "1" */);
+		} else {
+			clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForSubscriptionManager, "enabled", "false");
+			clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForProductId, "enabled", "true");
+			// TEMPORARY WORKAROUND
+			boolean invokeWorkaroundWhileBugIsOpen = true;
+			String bugId="1489917"; // Bug 1489917 - disabling yum plugins using "false" (rather than "0") causes traceback: invalid literal for int() with base 10: 'false'
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
+			if (invokeWorkaroundWhileBugIsOpen) {
+				clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForSubscriptionManager, "enabled", "0");
+				clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForProductId, "enabled", "1");
+			}
+			// END OF WORKAROUND
+		}
+		
+		String yumPluginConfFileForProductIdEnabledString = clienttasks.getConfFileParameter(clienttasks.yumPluginConfFileForProductId, "enabled");
+		String yumPluginConfFileForSubscriptionManagerEnabledString = clienttasks.getConfFileParameter(clienttasks.yumPluginConfFileForSubscriptionManager, "enabled");
+		Boolean yumPluginConfFileForProductIdEnabled = Boolean.valueOf(yumPluginConfFileForProductIdEnabledString);
+		Boolean yumPluginConfFileForSubscriptionManagerEnabled = Boolean.valueOf(yumPluginConfFileForSubscriptionManagerEnabledString);
+		if (yumPluginConfFileForProductIdEnabledString.equals("1")) {yumPluginConfFileForProductIdEnabled = true;} else if (yumPluginConfFileForProductIdEnabledString.equals("0")) {yumPluginConfFileForProductIdEnabled = false;}
+		if (yumPluginConfFileForSubscriptionManagerEnabledString.equals("1")) {yumPluginConfFileForSubscriptionManagerEnabled = true;} else if (yumPluginConfFileForSubscriptionManagerEnabledString.equals("0")) {yumPluginConfFileForSubscriptionManagerEnabled = false;}
+		
+		// register to rhn classic
+		String rhnSystemId = clienttasks.registerToRhnClassic(sm_rhnUsername, sm_rhnPassword, sm_rhnHostname);
+		
+		// attempt to run rhn-migrate-classic-to-rhsm
+		String options = "";
+		SSHCommandResult sshCommandResult = executeRhnMigrateClassicToRhsm(options, sm_rhnUsername, sm_rhnPassword, sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null);
+		String command = "rhn-migrate-classic-to-rhsm";
+		
+		//	[root@jsefler-rhel7 ~]# rhn-migrate-classic-to-rhsm --legacy-user=rhsm-client --destination-user=testuser1
+		//	Legacy password: 
+		//	Destination password: 
+		//	Org: admin
+		//
+		//	Retrieving existing legacy subscription information...
+		//
+		//	+-----------------------------------------------------+
+		//	System is currently subscribed to these legacy channels:
+		//	+-----------------------------------------------------+
+		//	rhel-x86_64-server-7
+		//
+		//	+-----------------------------------------------------+
+		//	Installing product certificates for these legacy channels:
+		//	+-----------------------------------------------------+
+		//	rhel-x86_64-server-7
+		//
+		//	Product certificates installed successfully to /etc/pki/product.
+		//
+		//	Preparing to unregister system from legacy server...
+		//	System successfully unregistered from legacy server.
+		//	Stopping and disabling legacy services...
+		//	rhnsd.service is not a native service, redirecting to /sbin/chkconfig.
+		//	Executing /sbin/chkconfig rhnsd off
+		//
+		//	Attempting to register system to destination server...
+		//	WARNING
+		//
+		//	The yum plugins: /etc/yum/pluginconf.d/subscription-manager.conf were automatically enabled for the benefit of Red Hat Subscription Management. If not desired, use "subscription-manager config --rhsm.auto_enable_yum_plugins=0" to block this behavior.
+		//
+		//	Registering to: jsefler-candlepin.usersys.redhat.com:8443/candlepin
+		//	The system has been registered with ID: ed2d6c19-bde5-4e8c-b274-109d8d477723
+		//	The registered system name is: jsefler-rhel7.usersys.redhat.com
+		//	Installed Product Current Status:
+		//
+		//	Product Name: Red Hat Enterprise Linux Server
+		//	Status:       Not Subscribed
+		//
+		//	Unable to find available subscriptions for all your installed products.
+		//	System 'jsefler-rhel7.usersys.redhat.com' successfully registered.
+		//
+		//	[root@jsefler-rhel7 ~]# echo $?
+		//	0
+		
+		// verify the migration was successful
+		// WARNING: asserting this exit code is misleading because it is the exit code from the rhn-migrate-classic-to-rhsm.tcl script which is a wrapper to rhn-migrate-classic-to-rhsm which could exit with a different code
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "ExitCode from call to '"+rhnMigrateTool+"' after attempting to migrate with options '"+options+"'.");
+		
+		// verify that we are newly registered to RHSM
+		Assert.assertNotNull(clienttasks.getCurrentConsumerCert(),"Confirmed that the system is newly registered with Subscription Manager after migrating from RHN Classic using '"+rhnMigrateTool+"'.");
+		
+		// assert the results contain the expected WARNING message for enabling plugins
+		String expectedWarningMsg = "WARNING"+"\n\n"+"The yum plugins: PLUGINS were automatically enabled for the benefit of Red Hat Subscription Management. If not desired, use \"subscription-manager config --rhsm.auto_enable_yum_plugins=0\" to block this behavior.";
+		expectedWarningMsg = "\n"+expectedWarningMsg+"\n";	// ensure expectedWarningMsg appears on it's own line
+		if (!yumPluginConfFileForSubscriptionManagerEnabled) expectedWarningMsg = expectedWarningMsg.replaceFirst("PLUGINS", clienttasks.yumPluginConfFileForSubscriptionManager+", PLUGINS");
+		if (!yumPluginConfFileForProductIdEnabled) expectedWarningMsg = expectedWarningMsg.replaceFirst("PLUGINS", clienttasks.yumPluginConfFileForProductId+", PLUGINS");
+		expectedWarningMsg = expectedWarningMsg.replaceFirst(", PLUGINS", "");	// strip out my regex substring
+		Assert.assertTrue(sshCommandResult.getStdout().contains(expectedWarningMsg),"The stdout from running '"+command+"' contains the expected warning message '"+expectedWarningMsg+"' when at least one yum plugin is disabled and rhsm.auto_enable_yum_plugins is configured on.");
+		
+		// assert that both plugins were enabled
+		String enabledValue;
+		enabledValue = clienttasks.getConfFileParameter(clienttasks.yumPluginConfFileForProductId, "enabled");
+		Assert.assertTrue(enabledValue.toLowerCase().matches("1|true"),"Expecting yum config file '"+clienttasks.yumPluginConfFileForProductId+"' to be enabled after running '"+command+"' with rhsm.auto_enable_yum_plugins configured on.  Actual enabled="+enabledValue);
+		enabledValue = clienttasks.getConfFileParameter(clienttasks.yumPluginConfFileForSubscriptionManager, "enabled");
+		Assert.assertTrue(enabledValue.toLowerCase().matches("1|true"),"Expecting yum config file '"+clienttasks.yumPluginConfFileForSubscriptionManager+"' to be enabled after running '"+command+"' with rhsm.auto_enable_yum_plugins configured on.  Actual enabled="+enabledValue);
+	}
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-47942", "RHEL7-109985"},
+//			linkedWorkItems= {
+//				@LinkedItem(
+//					workitemId= "RHEL6-?????",	// TODO
+//					project= Project.RHEL6,
+//					role= DefTypes.Role.VERIFIES),
+//				@LinkedItem(
+//					workitemId= "RHEL7-95162",	// RHEL7-95162 - RHSM-REQ : rhn-migrate-classic-to-rhsm should automatically enable yum plugins
+//					project= Project.RedHatEnterpriseLinux7,
+//					role= DefTypes.Role.VERIFIES)},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description="Verify that the yum plugins for /etc/yum/pluginconf.d/product-id.conf and /etc/yum/pluginconf.d/subscription-manager.conf are NOT automatically enabled by an execution of rhn-migrate-classic-to-rhsm when rhsm.auto_enable_yum_plugins is configured off.",
+			groups={"Tier3Tests","blockedByBug-1466453","testRhnMigrateClassicToRhsmShouldAutomaticallyEnableYumPluginsWhenAutoEnableIsOn"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void testRhnMigrateClassicToRhsmShouldNotAutomaticallyEnableYumPluginsWhenAutoEnableIsOff() {
+		// this bug is specifically designed to test Bug 1466453 - [RFE] rhn-migrate-classic-to-rhsm should ensure subscription-manager yum plugin is enabled
+		if (clienttasks.isPackageVersion("subscription-manager", "<", "1.20.2-1")) {  // commit 7b2b89c7ba4fbf464dd988e12675b2b763007f2c 	1466453 - [RFE] rhn-migrate-classic-to-rhsm should ensure subscription-manager yum plugin is enabled
+			throw new SkipException("This test applies a newer version of subscription-manager that includes an implementation for Bug 1466453 - [RFE] rhn-migrate-classic-to-rhsm should ensure subscription-manager yum plugin is enabled");
+		}
+		
+		if (sm_rhnHostname.equals("")) throw new SkipException("This test requires access to RHN Classic or Satellite 5.");
+		clienttasks.unregister(null, null, null, null);
+		
+		resetDefaultConfigurationsForYumPluginsAndRhsmAutoEnableYumPlugins();
+		
+		// turn off rhsm configuration for auto_enable_yum_plugins
+		clienttasks.config(false,false,true,new String[]{"rhsm","auto_enable_yum_plugins","0"});
+		
+		// randomly disable one or both /etc/yum/pluginconf.d/product-id.conf and /etc/yum/pluginconf.d/subscription-manager.conf
+		if (getRandomBoolean()) {
+			clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForProductId, "enabled", "0");
+			clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForSubscriptionManager, "enabled", String.valueOf(getRandInt()%2)/* "0" or "1" */);
+		} else {
+			clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForSubscriptionManager, "enabled", "false");
+			clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForProductId, "enabled", "true");
+			// TEMPORARY WORKAROUND
+			boolean invokeWorkaroundWhileBugIsOpen = true;
+			String bugId="1489917"; // Bug 1489917 - disabling yum plugins using "false" (rather than "0") causes traceback: invalid literal for int() with base 10: 'false'
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
+			if (invokeWorkaroundWhileBugIsOpen) {
+				clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForSubscriptionManager, "enabled", "0");
+				clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForProductId, "enabled", "1");
+			}
+			// END OF WORKAROUND
+		}
+		
+		String yumPluginConfFileForProductIdEnabledString = clienttasks.getConfFileParameter(clienttasks.yumPluginConfFileForProductId, "enabled");
+		String yumPluginConfFileForSubscriptionManagerEnabledString = clienttasks.getConfFileParameter(clienttasks.yumPluginConfFileForSubscriptionManager, "enabled");
+		Boolean yumPluginConfFileForProductIdEnabled = Boolean.valueOf(yumPluginConfFileForProductIdEnabledString);
+		Boolean yumPluginConfFileForSubscriptionManagerEnabled = Boolean.valueOf(yumPluginConfFileForSubscriptionManagerEnabledString);
+		if (yumPluginConfFileForProductIdEnabledString.equals("1")) {yumPluginConfFileForProductIdEnabled = true;} else if (yumPluginConfFileForProductIdEnabledString.equals("0")) {yumPluginConfFileForProductIdEnabled = false;}
+		if (yumPluginConfFileForSubscriptionManagerEnabledString.equals("1")) {yumPluginConfFileForSubscriptionManagerEnabled = true;} else if (yumPluginConfFileForSubscriptionManagerEnabledString.equals("0")) {yumPluginConfFileForSubscriptionManagerEnabled = false;}
+		
+		// register to rhn classic
+		String rhnSystemId = clienttasks.registerToRhnClassic(sm_rhnUsername, sm_rhnPassword, sm_rhnHostname);
+		
+		// attempt to run rhn-migrate-classic-to-rhsm
+		String options = "";
+		SSHCommandResult sshCommandResult = executeRhnMigrateClassicToRhsm(options, sm_rhnUsername, sm_rhnPassword, sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null);
+		String command = "rhn-migrate-classic-to-rhsm";
+		
+		//	[root@jsefler-rhel7 ~]# rhn-migrate-classic-to-rhsm --legacy-user=rhsm-client --destination-user=testuser1
+		//	Legacy password: 
+		//	Destination password: 
+		//	Org: admin
+		//
+		//	Retrieving existing legacy subscription information...
+		//
+		//	+-----------------------------------------------------+
+		//	System is currently subscribed to these legacy channels:
+		//	+-----------------------------------------------------+
+		//	rhel-x86_64-server-7
+		//
+		//	+-----------------------------------------------------+
+		//	Installing product certificates for these legacy channels:
+		//	+-----------------------------------------------------+
+		//	rhel-x86_64-server-7
+		//
+		//	Product certificates installed successfully to /etc/pki/product.
+		//
+		//	Preparing to unregister system from legacy server...
+		//	System successfully unregistered from legacy server.
+		//	Stopping and disabling legacy services...
+		//	rhnsd.service is not a native service, redirecting to /sbin/chkconfig.
+		//	Executing /sbin/chkconfig rhnsd off
+		//
+		//	Attempting to register system to destination server...
+		//
+		//	Registering to: jsefler-candlepin.usersys.redhat.com:8443/candlepin
+		//	The system has been registered with ID: ed2d6c19-bde5-4e8c-b274-109d8d477723
+		//	The registered system name is: jsefler-rhel7.usersys.redhat.com
+		//	Installed Product Current Status:
+		//
+		//	Product Name: Red Hat Enterprise Linux Server
+		//	Status:       Not Subscribed
+		//
+		//	Unable to find available subscriptions for all your installed products.
+		//	System 'jsefler-rhel7.usersys.redhat.com' successfully registered.
+		//
+		//	[root@jsefler-rhel7 ~]# echo $?
+		//	0
+		
+		// verify the migration was successful
+		// WARNING: asserting this exit code is misleading because it is the exit code from the rhn-migrate-classic-to-rhsm.tcl script which is a wrapper to rhn-migrate-classic-to-rhsm which could exit with a different code
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "ExitCode from call to '"+rhnMigrateTool+"' after attempting to migrate with options '"+options+"'.");
+		
+		// verify that we are newly registered to RHSM
+		Assert.assertNotNull(clienttasks.getCurrentConsumerCert(),"Confirmed that the system is newly registered with Subscription Manager after migrating from RHN Classic using '"+rhnMigrateTool+"'.");		
+		
+		// assert the results do NOT contain a WARNING message
+		String expectedWarningMsg = "WARNING";	// +"\n\n"+"The yum plugins: (PLUGINS) were automatically enabled for the benefit of Red Hat Subscription Management. If not desired, use \"subscription-manager config --rhsm.auto_enable_yum_plugins=0\" to block this behavior.";
+		Assert.assertTrue(!sshCommandResult.getStdout().contains(expectedWarningMsg),"The stdout from running '"+command+"' does NOT contain the expected warning message '"+expectedWarningMsg+"' when at least one yum plugin is disabled and rhsm.auto_enable_yum_plugins is configured off.");
+		
+		// assert that both plugins were untouched
+		Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.yumPluginConfFileForProductId, "enabled"),yumPluginConfFileForProductIdEnabledString,"Enablement of yum config file '"+clienttasks.yumPluginConfFileForProductId+"' should remain unchanged after running '"+command+"' with rhsm.auto_enable_yum_plugins configured off.");
+		Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.yumPluginConfFileForSubscriptionManager, "enabled"),yumPluginConfFileForSubscriptionManagerEnabledString,"Enablement of yum config file '"+clienttasks.yumPluginConfFileForSubscriptionManager+"' should remain unchanged after running '"+command+"' with rhsm.auto_enable_yum_plugins configured off.");
+		
+		// assert that the yum plugins are/not loaded
+		//	[root@jsefler-rhel7 ~]# yum repolist --disablerepo=*
+		//	Loaded plugins: langpacks, product-id, search-disabled-repos, subscription-manager
+		//	This system is not registered with an entitlement server. You can use subscription-manager to register.
+		//	repolist: 0
+		String plugin;
+		command = "yum repolist --disablerepo=*";
+		sshCommandResult = client.runCommandAndWait(command);
+		plugin="product-id";
+		if (yumPluginConfFileForProductIdEnabled) {
+			Assert.assertTrue(sshCommandResult.getStdout().contains(plugin),"The stdout from running '"+command+"' indicated that plugin '"+plugin+"' was loaded.");
+		} else {
+			Assert.assertTrue(!sshCommandResult.getStdout().contains(plugin),"The stdout from running '"+command+"' indicated that plugin '"+plugin+"' was NOT loaded.");
+		}
+		plugin="subscription-manager";
+		if (yumPluginConfFileForSubscriptionManagerEnabled) {
+			Assert.assertTrue(sshCommandResult.getStdout().contains(plugin),"The stdout from running '"+command+"' indicated that plugin '"+plugin+"' was loaded.");
+		} else {
+			Assert.assertTrue(!sshCommandResult.getStdout().contains(plugin),"The stdout from running '"+command+"' indicated that plugin '"+plugin+"' was NOT loaded.");
+		}
+	}
+	
+	
+	
+	
+	
+	
+	
 	
 	
 	// Candidates for an automated Test:
@@ -3340,16 +3719,12 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		// Note: To avoid redundant prompting for credentials, rhn-migrate-classic-to-rhsm will NOT prompt for rhsm Username/Password/Org when the rhsm server matches subscription\.rhn\.(.+\.)*redhat\.com
 		// This causes a testing problem when migrating from a satellite server to rhsm hosted - adding a valid --serverurl to the options is a good workaround
 		String rhsmServerUrlOption="";
-//		if (sm_rhnHostname.startsWith("http") { 	// indicates that we are migrating from a non-hosted rhn server - as opposed to rhn.code.stage.redhat.com (stage) or rhn.redhat.com (production)
-//		if (!doesStringContainMatches(sm_rhnHostname, "rhn\\.(.+\\.)*redhat\\.com")) {	// indicates that we are migrating from a non-hosted rhn server - as opposed to rhn.code.stage.redhat.com (stage) or rhn.redhat.com (production)
 		if (!doesStringContainMatches(sm_rhnHostname, "(rhn|rhsm)\\.(.+\\.)*redhat\\.com")) {	// indicates that we are migrating from a non-hosted rhn server - as opposed to rhn.code.stage.redhat.com (stage) or rhn.redhat.com (production)
-//			if (doesStringContainMatches(sm_serverHostname, "subscription\\.rhn\\.(.+\\.)*redhat\\.com")) {
 			if (doesStringContainMatches(sm_serverHostname, "subscription\\.(rhn|rhsm)\\.(.+\\.)*redhat\\.com")) {
 				// force a valid --serverurl
 				rhsmServerUrlOption = " --serverurl="+"https://"+originalServerHostname+":"+originalServerPort+originalServerPrefix;
 			}
 		} else {// we are migrating from rhn hosted...
-//			if (doesStringContainMatches(sm_serverHostname, "subscription\\.rhn\\.(.+\\.)*redhat\\.com")) {
 			if (doesStringContainMatches(sm_serverHostname, "subscription\\.(rhn|rhsm)\\.(.+\\.)*redhat\\.com")) {
 				// and we are migrating to rhsm hosted...
 				// hence we will not be prompted for rhsm credentials,

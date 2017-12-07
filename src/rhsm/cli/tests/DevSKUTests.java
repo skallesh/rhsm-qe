@@ -10,8 +10,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.DefTypes;
 import com.github.redhatqe.polarize.metadata.TestDefinition;
+import com.github.redhatqe.polarize.metadata.TestType;
+import com.github.redhatqe.polarize.metadata.DefTypes.PosNeg;
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -70,19 +73,24 @@ import rhsm.data.SubscriptionPool;
  *   http://etherpad.corp.redhat.com/8D1JQhUxc0
  *       
  */
-@Test(groups={"DevSKUTests","Tier3Tests","AcceptanceTests","Tier1Tests"})
+@Test(groups={"DevSKUTests"})
 public class DevSKUTests extends SubscriptionManagerCLITestScript {
 	
 	// Test methods ***********************************************************************
 	
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-25335", "RHEL7-52092"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-25335", "RHEL7-52092"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="given an available SKU, configure the system with custom facts dev_sku=SKU, register the system with auto-attach and verify several requirements of the attached entitlement",
-			groups={},
+			groups={"Tier1Tests"},
 			dataProvider="getDevSkuData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyDevSku_Test(Object bugzilla, String devSku, String devPlatform) throws JSONException, Exception {
+	public void testDevSku(Object bugzilla, String devSku, String devPlatform) throws JSONException, Exception {
 		
 		// get the JSON product representation of the devSku 
 		String resourcePath = "/products/"+devSku;
@@ -105,7 +113,7 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, logMarker);
 		
 		// register with auto subscribe and force (to unregister anyone that is already registered)
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, true, null, null, null, null, null);
+		SSHCommandResult registerResult = clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, true, null, null, null, null, null);
 		
 		// get the tail of the marked rhsm.log file
 		String logTail = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, logMarker, null).trim();
@@ -127,12 +135,23 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 		//	  File "/usr/lib64/python2.6/site-packages/rhsm/connection.py", line 621, in validateResponse
 		//	    raise RestlibException(response['status'], error_msg, response.get('headers'))
 		//	RestlibException: Development units may only be used on hosted servers and with orgs that have active subscriptions.
-		String expectedError = "RestlibException: Development units may only be used on hosted servers and with orgs that have active subscriptions.";
+		String expectedStdError = "Development units may only be used on hosted servers and with orgs that have active subscriptions.";
+		String expectedLogError = "RestlibException: "+expectedStdError;
 		if (servertasks.statusStandalone) {
-			Assert.assertTrue(logTail.contains(expectedError), "When attempting to autosubscribe a consumer with a dev_sku fact against a candlepin.standalone=true server, an rhsm.log error is thrown stating '"+expectedError+"'.");
+			Assert.assertEquals(registerResult.getStderr().trim(), expectedStdError, "When attempting to autosubscribe a consumer with a dev_sku fact against a candlepin.standalone=true server, stderr reports '"+expectedStdError+"'.");
+			// TEMPORARY WORKAROUND
+			boolean invokeWorkaroundWhileBugIsOpen = true;
+			String bugId="1493299"; // Bug 1493299 - exception handling for a negative dev_sku test is no longer being logged to rhsm.log
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
+			if (invokeWorkaroundWhileBugIsOpen) {
+				throw new SkipException("Detected that candlepin status standalone=true.  DevSku support is only applicable when /etc/candlepin/candlepin candlepin.standalone=false  (typical of a hosted candlepin server), but skipped assertion that an rhsm.log error is thrown while bug '"+bugId+"' is open.");
+			} else
+			// END OF WORKAROUND
+			Assert.assertTrue(logTail.contains(expectedLogError), "When attempting to autosubscribe a consumer with a dev_sku fact against a candlepin.standalone=true server, an rhsm.log error is thrown stating '"+expectedLogError+"'.");
 			throw new SkipException("Detected that candlepin status standalone=true.  DevSku support is only applicable when /etc/candlepin/candlepin candlepin.standalone=false  (typical of a hosted candlepin server).");
 		} else {
-			Assert.assertTrue(!logTail.contains(expectedError), "When attempting to autosubscribe a consumer with a dev_sku fact against a candlepin.standalone=false server, an rhsm.log error is NOT thrown stating '"+expectedError+"'.");	
+			Assert.assertTrue(!registerResult.getStderr().trim().contains(expectedStdError), "When attempting to autosubscribe a consumer with a dev_sku fact against a candlepin.standalone=false server, stderr does NOT report '"+expectedStdError+"'.");	
+			Assert.assertTrue(!logTail.contains(expectedLogError), "When attempting to autosubscribe a consumer with a dev_sku fact against a candlepin.standalone=false server, an rhsm.log error is NOT thrown stating '"+expectedLogError+"'.");	
 		}
 		
 		// assert that unrecognized dev_skus are handled gracefully and no entitlements were attached
@@ -153,8 +172,18 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 		//	    raise RestlibException(response['status'], error_msg, response.get('headers'))
 		//	RestlibException: SKU product not available to this development unit: 'dev-mkt-product'
 		if (jsonDevSkuProduct.has("displayMessage")) {
-			expectedError = "RestlibException: SKU product not available to this development unit: '"+devSku+"'";
-			Assert.assertTrue(logTail.contains(expectedError), "When attempting to autosubscribe a consumer with an unknown dev_sku fact against a candlepin.standalone=false server, an rhsm.log error is thrown stating '"+expectedError+"'.");
+			expectedStdError = "SKU product not available to this development unit: '"+devSku+"'";
+			expectedLogError = "RestlibException: "+expectedStdError;
+			Assert.assertEquals(registerResult.getStderr().trim(), expectedStdError, "When attempting to autosubscribe a consumer with an unknown dev_sku fact against a candlepin.standalone=false server, stderr reports '"+expectedStdError+"'.");
+			// TEMPORARY WORKAROUND
+			boolean invokeWorkaroundWhileBugIsOpen = true;
+			String bugId="1493299"; // Bug 1493299 - exception handling for a negative dev_sku test is no longer being logged to rhsm.log
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
+			if (invokeWorkaroundWhileBugIsOpen) {
+				throw new SkipException("Detected that dev_sku '"+devSku+"' was unknown, but skipped verification that a graceful error was logged to rhsm.log while bug '"+bugId+"' is open.");
+			} else
+			// END OF WORKAROUND
+			Assert.assertTrue(logTail.contains(expectedLogError), "When attempting to autosubscribe a consumer with an unknown dev_sku fact against a candlepin.standalone=false server, an rhsm.log error is thrown stating '"+expectedLogError+"'.");
 			throw new SkipException("Detected that dev_sku '"+devSku+"' was unknown.  Verified that a graceful error was logged to rhsm.log.");
 		}
 		
@@ -278,13 +307,18 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20116", "RHEL7-51857"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20116", "RHEL7-51857"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="configure the system with custom facts for a dev_sku, register the system with auto-subscribe verify the attached entitlement can be removed and re-autoattached",
-			groups={},
+			groups={"Tier1Tests"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyDevSkuEntitlementCanBeRemovedAndReAttached_Test() throws JSONException, Exception {
+	public void testDevSkuEntitlementCanBeRemovedAndReAttached() throws JSONException, Exception {
 		
 		// get a valid dev_sku to test with
 		List<Object> l = getRandomValidDevSkuData();
@@ -331,13 +365,18 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-22313", "RHEL7-51859"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-22313", "RHEL7-51859"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="configure the system with custom facts for a dev_sku, register the system with auto-subscribe and verify that an attempt to redundantly autosubscribed will re-issue a replacement entitlement (remove the old and attach a new).",
-			groups={"blockedByBug-1292877"},
+			groups={"Tier1Tests","blockedByBug-1292877"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyRedundantAutosubscribesForDevSkuEntitlementWillReissueNewEntitlement_Test() throws JSONException, Exception {
+	public void testRedundantAutosubscribesForDevSkuEntitlementWillReissueNewEntitlement() throws JSONException, Exception {
 
 		// get a valid dev_sku to test with
 		List<Object> l = getRandomValidDevSkuData();
@@ -386,13 +425,18 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-26779", "RHEL7-51858"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-26779", "RHEL7-51858"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="configure the system with custom facts for a dev_sku, register the system with auto-subscribe and verify that a cost-based subscription can be manually attached without affecting the devSku entitlement",
-			groups={"blockedByBug-1298577"},
+			groups={"Tier1Tests","blockedByBug-1298577"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyManualSubscribesWhileConsumingDevSkuEntitlement_Test() throws JSONException, Exception {
+	public void testManualSubscribesWhileConsumingDevSkuEntitlement() throws JSONException, Exception {
 
 		// get a valid dev_sku to test with
 		List<Object> l = getRandomValidDevSkuData();
@@ -437,19 +481,27 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21993", "RHEL7-51855"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21993", "RHEL7-51855"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="configure the system with custom facts for a dev_sku, register the system with auto-subscribe, alter the dev_sku facts, re-autosubscribe, and verify the initial entitlement was purged",
-			groups={"blockedByBug-1295452"},
+			groups={"Tier1Tests","blockedByBug-1295452"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyAutosubscribeAfterChangingDevSkuFacts_Test() throws JSONException, Exception {
+	public void testAutosubscribeAfterChangingDevSkuFacts() throws JSONException, Exception {
+		
+		boolean isGuest = Boolean.valueOf(clienttasks.getFactValue("virt.is_guest"));
 		
 		// register with force to get a fresh consumer
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg,null,null,null,null,false,null,null,(List)null,null,null,null,true,false,null,null,null, null);
 		
 		// find two value SKUs that can be used as a dev_sku
 		List <SubscriptionPool> subscriptionPools = clienttasks.getCurrentlyAvailableSubscriptionPools();
+///*debugTesting*/subscriptionPools = SubscriptionPool.findAllInstancesWithMatchingFieldFromList("productId", "awesomeos-virt-datacenter", subscriptionPools);
 		String devSku1=null, devSku2=null;
 		for (SubscriptionPool subscriptionPool : getRandomList(subscriptionPools)) {
 			// TEMPORARY WORKAROUND
@@ -471,6 +523,12 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 				log.info("Excluding subscription '"+subscriptionPool.productId+"' as a dev_sku candidate because its suggested quantity '"+subscriptionPool.suggested+"' is not 1 which is NOT indicative of a realistic dev_sku subscription.  Reference https://bugzilla.redhat.com/show_bug.cgi?id=1463320#c1");
 				continue;
 			}
+			// avoid "Unable to attach subscription for the product 'awesomeos-virt-datacenter': rulefailed.physical.only.
+			if (isGuest && CandlepinTasks.isPoolProductPhysicalOnly(sm_clientUsername, sm_clientPassword, subscriptionPool.poolId, sm_serverUrl)) {
+				log.info("Excluding subscription '"+subscriptionPool.productId+"' as a dev_sku candidate because its physical_only productAttribute is NOT indicative of a realistic dev_sku subscription.");
+				continue;
+			}
+			
 			if (devSku1==null) devSku1=subscriptionPool.productId;
 			if (devSku2==null && devSku1!=null && devSku1!=subscriptionPool.productId) devSku2=subscriptionPool.productId;
 			if (devSku2!=null && devSku1!=null) break;
@@ -521,13 +579,18 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21994", "RHEL7-51856"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21994", "RHEL7-51856"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="configure the system with custom facts for a dev_sku, register the system with auto-subscribe, alter the dev_sku facts, re-autosubscribe, and verify the initial entitlement was purged",
-			groups={"blockedByBug-1294465","VerifyAutosubscribedDevSkuWithAnUnknownProductInstalled_Test"},
+			groups={"Tier1Tests","blockedByBug-1294465","VerifyAutosubscribedDevSkuWithAnUnknownProductInstalled_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyAutosubscribedDevSkuWithAnUnknownProductInstalled_Test() throws JSONException, Exception {
+	public void testAutosubscribedDevSkuWithAnUnknownProductInstalled() throws JSONException, Exception {
 		// unregister to get rid of current consumer
 		clienttasks.unregister(null, null, null, null);
 		

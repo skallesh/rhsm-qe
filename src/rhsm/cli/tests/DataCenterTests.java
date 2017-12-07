@@ -7,8 +7,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.DefTypes;
 import com.github.redhatqe.polarize.metadata.TestDefinition;
+import com.github.redhatqe.polarize.metadata.TestType;
+import com.github.redhatqe.polarize.metadata.DefTypes.PosNeg;
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -37,19 +40,24 @@ import com.redhat.qe.auto.testng.TestNGUtils;
  * https://engineering.redhat.com/trac/Entitlement/wiki/DataCenterSkuDesign
  * More Information :: https://docspace.corp.redhat.com/docs/DOC-145057
  */
-@Test(groups={"DataCenterTests","Tier2Tests"})
+@Test(groups={"DataCenterTests"})
 public class DataCenterTests extends SubscriptionManagerCLITestScript {
 	
 	// Test methods ***********************************************************************
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-19987", "RHEL7-33089"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-19987", "RHEL7-33089"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="given an available data center pool, consume it and assert that a pool for the derivedProduct is generated and available only to its guests",
-			groups={"AcceptanceTests","Tier1Tests","VerifyAvailabilityOfDerivedProductSubpools_Test"},
+			groups={"Tier1Tests","VerifyAvailabilityOfDerivedProductSubpools_Test"},
 			dataProvider="getAvailableDataCenterSubscriptionPoolsData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyAvailabilityOfDerivedProductSubpools_Test(Object bugzilla, /*Boolean systemIsGuest, Integer systemSockets,*/ SubscriptionPool pool) throws NumberFormatException, JSONException, Exception {
+	public void testAvailabilityOfDerivedProductSubpools(Object bugzilla, /*Boolean systemIsGuest, Integer systemSockets,*/ SubscriptionPool pool) throws NumberFormatException, JSONException, Exception {
 		String expectedTemporaryPoolIndicator = " (Temporary)";
 		
 		// make sure we are unsubscribed from all subscriptions

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<testcase id="RHEL7-51545">
+    <title>RHSM-TC : rhsm.cli.tests.FlexibleBrandingTests.testBrandNameFileShouldNotBeCreatedWithoutProduct</title>
+    <description>verify if brandname file is created without product cert</description>
+    <test-steps>
+        <test-step>
+            <test-step-column id="step"/>
+        </test-step>
+    </test-steps>
+    <custom-fields>
+        <custom-field id="caseautomation" content="automated"></custom-field>
+        <custom-field id="caseimportance" content="high"></custom-field>
+        <custom-field id="caselevel" content="component"></custom-field>
+        <custom-field id="caseposneg" content="negative"></custom-field>
+        <custom-field id="tags" content="Tier2"></custom-field>
+        <custom-field id="casecomponent" content="subscription-manager"></custom-field>
+        <custom-field id="testtype" content="functional"></custom-field>
+        <custom-field id="subtype1" content="reliability"></custom-field>
+        <custom-field id="subtype2" content="-"></custom-field>
+    </custom-fields>
+</testcase>

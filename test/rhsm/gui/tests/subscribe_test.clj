@@ -112,6 +112,6 @@
   (tests/changes_when_consumer_is_purged nil))
 
 (deftest check_unlimited_quantities-test
-  (let [pools #spy/d (tests/get_unlimited_pools nil :debug true)]
+  (let [pools (tests/get_unlimited_pools nil :debug true)]
     (doseq [pool pools]
       (tests/check_unlimited_quantities nil (first pool) (second pool)))))

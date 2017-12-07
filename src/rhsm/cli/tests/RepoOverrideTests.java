@@ -23,26 +23,34 @@ import com.redhat.qe.auto.bugzilla.BzChecker;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 
-import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.DefTypes;
 import com.github.redhatqe.polarize.metadata.TestDefinition;
+import com.github.redhatqe.polarize.metadata.TestType;
+import com.github.redhatqe.polarize.metadata.DefTypes.PosNeg;
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
 
 /**
  *  @author jsefler
  *
  */
-@Test(groups={"RepoOverrideTests","Tier3Tests"})
+@Test(groups={"RepoOverrideTests"})
 public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 	
 	
 	// Test Methods ***********************************************************************
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21858", "RHEL7-51706"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21858", "RHEL7-51706"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="when subscription-manager repos-override is run with no args, it should default to --list option",
-			groups={"blockedByBug-1034396"},
+			groups={"Tier3Tests","blockedByBug-1034396"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
-	public void ListRepoOverridesIsTheDefault_Test() {
+	public void testListRepoOverridesIsTheDefault() {
 		
 		// register
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
@@ -71,13 +79,18 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(listResult.getExitCode(), Integer.valueOf(0), "ExitCode from repo-override --list without any overrides.");
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-19979", "RHEL7-51705"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-19979", "RHEL7-51705"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="attempt to override a baseurl using subscription-manager repos-override",
-			groups={"blockedByBug-1030604", "AcceptanceTests","Tier1Tests"},
+			groups={"Tier1Tests","blockedByBug-1030604"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
-	public void AttemptToOverrideBaseurl_Test() {
+	public void testOverrideBaseurl() {
 		
 		// register
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
@@ -112,13 +125,18 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 		}
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-19978", "RHEL7-51704"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-19978", "RHEL7-51704"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="attempt to override a bASeUrL (note the case) using subscription-manager repos-override",
-			groups={"blockedByBug-1030604","blockedByBug-1034375","AcceptanceTests","Tier1Tests"},
+			groups={"Tier1Tests","blockedByBug-1030604","blockedByBug-1034375"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
-	public void AttemptToOverrideBaseurlInMixedCases_Test() {
+	public void testOverrideBaseurlInMixedCases() {
 		
 		// register
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
@@ -198,13 +216,18 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(/*1*/0), "ExitCode from repo-override --list after attempts to add baseurl overrides.");
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21855", "RHEL7-51701"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21855", "RHEL7-51701"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="attempt to add an override for a name baseurl and label using subscription-manager repos-override",
-			groups={"blockedByBug-1030604","blockedByBug-1034396"},
+			groups={"Tier3Tests","blockedByBug-1030604","blockedByBug-1034396"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
-	public void AttemptToAddOverrideForBaseurlNameAndLabel_Test() {
+	public void testAddOverrideForBaseurlNameAndLabel() {
 		
 		// register
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
@@ -259,13 +282,18 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 		}
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21857", "RHEL7-51703"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21857", "RHEL7-51703"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="attempt to add an override for a name and value that exceed 255 chars",
-			groups={"blockedByBug-1034396","blockedByBug-1033583","blockedByBug-1049001"},
+			groups={"Tier3Tests","blockedByBug-1034396","blockedByBug-1033583","blockedByBug-1049001"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
-	public void AttemptToAddOverridesExceeding255Chars_Test() {
+	public void testAddOverridesExceeding255Chars() {
 		
 		// register
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
@@ -330,13 +358,18 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 		}
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21854", "RHEL7-51700"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21854", "RHEL7-51700"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="attempt to add an override to a non-existant repo (while NOT consuming entitlements)",
-			groups={"blockedByBug-1032673","blockedByBug-1034396"},
+			groups={"Tier3Tests","blockedByBug-1032673","blockedByBug-1034396"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
-	public void AddOverrideWithoutEntitlementsAttached_Test() {
+	public void testAddOverrideWithoutEntitlementsAttached() {
 		
 		// register
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
@@ -369,13 +402,18 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 		Assert.assertTrue(clienttasks.getCurrentlyConsumedProductSubscriptions().isEmpty(), "No entitlements should be attached.");
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21853", "RHEL7-51699"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21853", "RHEL7-51699"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="attempt to add an override to a non-existant repo (while consuming entitlements)",
-			groups={"blockedByBug-1032673"},
+			groups={"Tier3Tests","blockedByBug-1032673"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
-	public void AddOverrideToNonExistantRepo_Test() {
+	public void testAddOverrideToNonExistantRepo() {
 		
 		// register
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
@@ -396,13 +434,18 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(0), "The exit code from the repo-override command indicates a success.");
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21856", "RHEL7-51702"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21856", "RHEL7-51702"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="attempt to add overrides in mixed cases - add parameters should be lowercased - repoid names can be mixed case",
-			groups={"blockedByBug-1034375"},
+			groups={"Tier3Tests","blockedByBug-1034375"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
-	public void AttemptToAddOverrideInMixedCases_Test() {
+	public void testAddOverrideInMixedCases() {
 		
 		// register
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
@@ -439,13 +482,18 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 		}	
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-19976", "RHEL7-51015"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-19976", "RHEL7-51015"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="add yum repo overrides, verify they persist, and remove them one repo at a time",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1069230","blockedByBug-1034396"},
+			groups={"Tier1Tests","blockedByBug-1069230","blockedByBug-1034396"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
-	public void AddAndRemoveRepoOverridesOneRepoAtATime_Test() {
+	public void testAddAndRemoveRepoOverridesOneRepoAtATime() {
 
 		// register
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
@@ -540,13 +588,18 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 		verifyCurrentYumReposReflectRepoOverrides(originalYumRepos,repoOverridesMapOfMaps, false);
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-19977", "RHEL7-33077"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-19977", "RHEL7-33077"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="add yum repo overrides, verify they persist, and remove them across multiple repo ids simultaneously (use multiple --repo args)",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1069230","blockedByBug-1034396"},
+			groups={"Tier1Tests","blockedByBug-1069230","blockedByBug-1034396"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
-	public void AddAndRemoveRepoOverridesUsingMultipleRepos_Test() {
+	public void testAddAndRemoveRepoOverridesUsingMultipleRepos() {
 		
 		// register
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
@@ -625,13 +678,18 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21860", "RHEL7-51708"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21860", "RHEL7-51708"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="verify that the rhsm.full_refresh_on_yum is working properly",
-			groups={"VerifyRhsmConfigurationForFullRefreshOnYum_Test"},
+			groups={"Tier3Tests","VerifyRhsmConfigurationForFullRefreshOnYum_Test"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
-	public void VerifyRhsmConfigurationForFullRefreshOnYum_Test() {
+	public void testRhsmConfigurationForFullRefreshOnYum() {
 		
 		// There is a new rhsm.conf parameter called full_refresh_on_yum = 0 (default) or 1 that is a boolean for
 		// telling the subscription-manager yum plugin whether or not to use the repo overrides defined in
@@ -716,13 +774,18 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 	protected String rhsmFullRefreshOnYumConfigured = null;
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21859", "RHEL7-51707"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21859", "RHEL7-51707"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="subscription-manager: repos --list should provide feedback when config rhsm.manage_repos is off.",
-			groups={"ReposOverridesWhenManageReposIsOff_Test","blockedByBug-1257943"},
+			groups={"Tier3Tests","ReposOverridesWhenManageReposIsOff_Test","blockedByBug-1257943"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ReposOverridesWhenManageReposIsOff_Test(){
+	public void testReposOverridesWhenManageReposIsOff(){
 		// register
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
 		

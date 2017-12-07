@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<testcase id="RHEL6-36595">
+    <title>RHSM-TC : rhsm.cli.tests.UnsubscribeTests.testUnsubscribeFromAllSerialsIncludingRevokedSerials</title>
+    <description>Verify the feedback after unsubscribing from all consumed subscriptions (including revoked serials) using unsubscribe --serial SERIAL1 --serial SERIAL2 --serial SERIAL3 etc.</description>
+    <test-steps>
+        <test-step>
+            <test-step-column id="step"/>
+        </test-step>
+    </test-steps>
+    <custom-fields>
+        <custom-field id="caseautomation" content="automated"></custom-field>
+        <custom-field id="caseimportance" content="high"></custom-field>
+        <custom-field id="caselevel" content="component"></custom-field>
+        <custom-field id="caseposneg" content="positive"></custom-field>
+        <custom-field id="tags" content="Tier2"></custom-field>
+        <custom-field id="casecomponent" content="subscription-manager"></custom-field>
+        <custom-field id="testtype" content="functional"></custom-field>
+        <custom-field id="subtype1" content="reliability"></custom-field>
+        <custom-field id="subtype2" content="-"></custom-field>
+    </custom-fields>
+    <linked-work-items>
+        <linked-work-item workitem-id="RHEL6-28489" role-id="verifies"/>
+    </linked-work-items>
+</testcase>

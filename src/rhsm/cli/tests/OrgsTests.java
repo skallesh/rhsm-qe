@@ -25,27 +25,35 @@ import com.redhat.qe.auto.bugzilla.BlockedByBzBug;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.tools.SSHCommandResult;
 
-import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.DefTypes;
 import com.github.redhatqe.polarize.metadata.TestDefinition;
+import com.github.redhatqe.polarize.metadata.TestType;
+import com.github.redhatqe.polarize.metadata.DefTypes.PosNeg;
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
 
 /**
  * @author jsefler
  *
  *
  */
-@Test(groups={"OrgsTests","Tier2Tests"})
+@Test(groups={"OrgsTests"})
 public class OrgsTests extends SubscriptionManagerCLITestScript {
 
 	// Test methods ***********************************************************************
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-27119", "RHEL7-51361"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-27119", "RHEL7-51361"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager: run the orgs module with valid user credentials and verify the expected organizations are listed",
-			groups={"blockedByBug-719739","blockedByBug-1254353"/*is a duplicate of*/,"blockedByBug-1254349"},
+			groups={"Tier2Tests","blockedByBug-719739","blockedByBug-1254353"/*is a duplicate of*/,"blockedByBug-1254349"},
 			dataProvider="getCredentialsForOrgsData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void OrgsWithCredentials_Test(String username, String password, List<Org> expectedOrgs) {
+	public void testOrgsWithCredentials(String username, String password, List<Org> expectedOrgs) {
 		log.info("Testing subscription-manager orgs module using username="+username+" password="+password+" and expecting orgs="+expectedOrgs+" ...");
 		
 		// use subscription-manager to get the organizations for which the user has access
@@ -68,14 +76,19 @@ public class OrgsTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36575", "RHEL7-51376"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36575", "RHEL7-51376"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager: run the orgs module with invalid user credentials",
-			groups={"blockedByBug-1254353"/*is a duplicate of*/,"blockedByBug-1254349"},
+			groups={"Tier2Tests","blockedByBug-1254353"/*is a duplicate of*/,"blockedByBug-1254349"},
 			dataProvider="getInvalidCredentialsForOrgsData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void OrgsWithInvalidCredentials_Test(String username, String password) {
+	public void testOrgsWithInvalidCredentials(String username, String password) {
 		log.info("Testing subscription-manager orgs module using username="+username+" password="+password+" ...");
 		
 		// use subscription-manager to get the organizations for which the user has access
@@ -90,14 +103,19 @@ public class OrgsTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36574", "RHEL7-51375"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36574", "RHEL7-51375"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager: run the orgs module while prompting for user credentials interactively",
-			groups={"blockedbyBug-878986"},
+			groups={"Tier2Tests","blockedbyBug-878986"},
 			dataProvider = "getInteractiveCredentialsForOrgsData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void OrgsWithInteractivePromptingForCredentials_Test(Object bugzilla, String promptedUsername, String promptedPassword, String commandLineUsername, String commandLinePassword, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex) {
+	public void testOrgsWithInteractivePromptingForCredentials(Object bugzilla, String promptedUsername, String promptedPassword, String commandLineUsername, String commandLinePassword, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex) {
 
 		// call orgs while providing a valid username at the interactive prompt
 		String command;
@@ -137,13 +155,18 @@ public class OrgsTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36571", "RHEL7-51359"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36571", "RHEL7-51359"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager: attempt to get a bogus owner via the candlepin api",
-			groups={"blockedByBug-729780","blockedByBug-796468"},
+			groups={"Tier2Tests","blockedByBug-729780","blockedByBug-796468"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void AttemptToGetABogusOwnerViaCandlepinApi_Test() throws Exception {
+	public void testAttemptToGetABogusOwnerViaCandlepinApi() throws Exception {
 		String bogusOwner = "bogusOwner";
 		JSONObject jsonResponse = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/owners/"+bogusOwner));
 		
@@ -175,14 +198,19 @@ public class OrgsTests extends SubscriptionManagerCLITestScript {
 		server_prefix	= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "prefix");
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36576", "RHEL7-51377"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36576", "RHEL7-51377"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager: orgs with --serverurl",
-			dataProvider="getServerurl_TestData",
-			groups={"OrgsWithServerurl_Test"},
+			dataProvider="getServerurlData",
+			groups={"Tier2Tests","OrgsWithServerurl_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void OrgsWithServerurl_Test(Object bugzilla, String serverurl, String expectedHostname, String expectedPort, String expectedPrefix, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrMatch) {
+	public void testOrgsWithServerurl(Object bugzilla, String serverurl, String expectedHostname, String expectedPort, String expectedPrefix, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrMatch) {
 		// get original server at the beginning of this test
 		String hostnameBeforeTest	= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "hostname");
 		String portBeforeTest		= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "port");
@@ -228,13 +256,18 @@ public class OrgsTests extends SubscriptionManagerCLITestScript {
 		rhsm_ca_cert_dir	= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsm", "ca_cert_dir");
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36573", "RHEL7-51374"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36573", "RHEL7-51374"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager: orgs with --insecure",
-			groups={"OrgsWithInsecure_Test","blockedByBug-844411","blockedByBug-993202","blockedByBug-1254353"/*is a duplicate of*/,"blockedByBug-1254349"},
+			groups={"Tier2Tests","OrgsWithInsecure_Test","blockedByBug-844411","blockedByBug-993202","blockedByBug-1254353"/*is a duplicate of*/,"blockedByBug-1254349"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void OrgsWithInsecure_Test() {
+	public void testOrgsWithInsecure() {
 		SSHCommandResult sshCommandResult;
 		
 		// calling orgs without insecure should pass
@@ -280,16 +313,21 @@ public class OrgsTests extends SubscriptionManagerCLITestScript {
 		// alternative to dependsOnGroups={"RegisterWithCredentials_Test"}
 		// This allows us to satisfy a dependency on registrationDataList making TestNG add unwanted Test results.
 		// This also allows us to individually run this Test Class on Hudson.
-		RegisterWithCredentials_Test(); // needed to populate registrationDataList
+		testRegisterWithCredentials(); // needed to populate registrationDataList
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36570", "RHEL7-51358"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36570", "RHEL7-51358"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="consumers should NOT be able to attach subscriptions from other orgs",
-			groups={"AttemptToAttachSubscriptionsFromOtherOrgs_Test","blockedByBug-994711"},
+			groups={"Tier2Tests","AttemptToAttachSubscriptionsFromOtherOrgs_Test","blockedByBug-994711"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void AttemptToAttachSubscriptionsFromOtherOrgs_Test() throws JSONException, Exception {
+	public void testAttemptToAttachSubscriptionsFromOtherOrgs() throws JSONException, Exception {
 		boolean skipTest = true;
 		Set<String> poolIdsTested = new HashSet<String>();
 		
@@ -314,13 +352,18 @@ public class OrgsTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36572", "RHEL7-51360"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36572", "RHEL7-51360"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="create an owner via the candlepin api and then update fields on the owner",
-			groups={"CreateAnOwnerAndSetAttributesOnTheOwner_Test"},
+			groups={"Tier2Tests","CreateAnOwnerAndSetAttributesOnTheOwner_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void CreateAnOwnerAndSetAttributesOnTheOwner_Test() throws Exception {
+	public void testCreateAnOwnerAndSetAttributesOnTheOwner() throws Exception {
 		String mother="mother", daughter="daughter";
 		String result;
 		JSONObject jsonOwner;

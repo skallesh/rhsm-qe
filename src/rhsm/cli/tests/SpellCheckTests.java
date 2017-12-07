@@ -24,8 +24,11 @@ import com.redhat.qe.auto.bugzilla.BzChecker;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 
-import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.DefTypes;
 import com.github.redhatqe.polarize.metadata.TestDefinition;
+import com.github.redhatqe.polarize.metadata.TestType;
+import com.github.redhatqe.polarize.metadata.DefTypes.PosNeg;
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
 
 /**
  * @author jsefler
@@ -51,19 +54,24 @@ import com.github.redhatqe.polarize.metadata.TestDefinition;
  *   [root@jsefler-7 ~]# 
  *   
  **/
-@Test(groups={"SpellCheckTests","Tier3Tests"})
+@Test(groups={"SpellCheckTests"})
 public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 	
 	
 	// Test Methods ***********************************************************************
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21777", "RHEL7-51594"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21777", "RHEL7-51594"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="check the subscription-manager msgid strings for misspelled words and typos",
-			groups={},
+			groups={"Tier3Tests"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void SpellCheckAllMsgidsForSubscriptionManager_Test() throws IOException {
+	public void testSpellingOfAllMsgidsForSubscriptionManager() throws IOException {
 		File remoteFile = new File("/tmp/sm-modifiedMsgIdsForSubscriptionManager.txt");
 		File localFile = new File((getProperty("automation.dir", "/tmp")+"/tmp/"+remoteFile.getName()).replace("tmp/tmp", "tmp"));
 		
@@ -391,13 +399,18 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21499", "RHEL7-51593"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21499", "RHEL7-51593"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="check the candlepin msgid strings for misspelled words and typos",
-			groups={},
+			groups={"Tier3Tests"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void SpellCheckAllMsgidsForCandlepin_Test() throws IOException {
+	public void testSpellingOfAllMsgidsForCandlepin() throws IOException {
 		if (server==null) throw new SkipException("This test requires am ssh connection to the server to retrieve all the candlepin translated po files.");
 		File remoteFile = new File("/tmp/sm-modifiedMsgIdsForCandlepin.txt");
 		File localFile = new File((getProperty("automation.dir", "/tmp")+"/tmp/"+remoteFile.getName()).replace("tmp/tmp", "tmp"));
@@ -505,13 +518,18 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21785", "RHEL7-51602"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21785", "RHEL7-51602"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="check the subscription-manager man page for misspelled words and typos",
-			groups={},
+			groups={"Tier3Tests"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void SpellCheckManPageForSubscriptionManager_Test() throws IOException {
+	public void testSpellingsOnManPageForSubscriptionManager() throws IOException {
 		if (clienttasks==null) throw new SkipException("A client connection is needed for this test.");
 		String tool = clienttasks.command;	// "subscription-manager";
 		SSHCommandResult manPageResult = client.runCommandAndWait("man "+tool);
@@ -629,13 +647,18 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			, testCaseID = {"RHEL6-21784", "RHEL7-51601"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21784", "RHEL7-51601"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="check the subscription-manager-gui man page for misspelled words and typos",
-			groups={},
+			groups={"Tier3Tests"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void SpellCheckManPageForSubscriptionManagerGui_Test() throws IOException {
+	public void testSpellingsOnManPageForSubscriptionManagerGui() throws IOException {
 		if (clienttasks==null) throw new SkipException("A client connection is needed for this test.");
 		String tool = "subscription-manager-gui";
 		SSHCommandResult manPageResult = client.runCommandAndWait("man "+tool);
@@ -674,13 +697,18 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21784", "RHEL7-51601"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21779", "RHEL7-51596"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="check the rhn-migrate-classic-to-rhsm man page for misspelled words and typos",
-			groups={/*blockedByBug-1390712*/},
+			groups={"Tier3Tests","blockedByBug-1390712"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void SpellCheckManPageForRhnMigrateClassicToRhsm_Test() throws IOException {
+	public void testSpellingsOnManPageForRhnMigrateClassicToRhsm() throws IOException {
 		if (clienttasks==null) throw new SkipException("A client connection is needed for this test.");
 		String tool = "rhn-migrate-classic-to-rhsm";
 		SSHCommandResult manPageResult = client.runCommandAndWait("man "+tool);
@@ -730,11 +758,13 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(getSpellCheckFailuresForModifiedManPage(tool,manPageResult.getStdout(),modifiedManPage).size(),0,"There are zero unexpected hunspell check failures in the man page for '"+tool+"'.");
 	}
 
+
+	@TestDefinition(projectID={/*Project.RHEL5*/},testCaseID={})
 	@Test(	description="check the install-num-migrate-to-rhsm man page for misspelled words and typos",
-			groups={},
+			groups={"Tier3Tests"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void SpellCheckManPageForInstallNumMigrateToRhsm_Test() throws IOException {
+	public void testSpellingsOnManPageForInstallNumMigrateToRhsm() throws IOException {
 		if (!clienttasks.redhatReleaseX.equals("5")) throw new SkipException("This test is applicable to RHEL5 only.");
 		if (clienttasks.isPackageVersion("subscription-manager-migration", ">", "1.11.3-4") && clienttasks.redhatReleaseX.equals("5")) {
 			throw new SkipException("Due to bug 1092754, the migration tool '"+rhsm.cli.tests.MigrationTests.installNumTool+"' has been removed from RHEL5.");
@@ -743,13 +773,18 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21780", "RHEL7-51597"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21780", "RHEL7-51597"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="check the rhsm.conf man page for misspelled words and typos",
-			groups={},
+			groups={"Tier3Tests"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void SpellCheckManPageForRhsmConf_Test() throws IOException {
+	public void testSpellingsOnManPageForRhsmConf() throws IOException {
 		if (clienttasks==null) throw new SkipException("A client connection is needed for this test.");
 		String tool = "rhsm.conf";
 		SSHCommandResult manPageResult = client.runCommandAndWait("man "+tool);
@@ -808,13 +843,18 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21778", "RHEL7-51595"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21778", "RHEL7-51595"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="check the rct man page for misspelled words and typos",
-			groups={},
+			groups={"Tier3Tests"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void SpellCheckManPageForRct_Test() throws IOException {
+	public void testSpellingsOnManPageForRct() throws IOException {
 		if (clienttasks==null) throw new SkipException("A client connection is needed for this test.");
 		String tool = "rct";
 		SSHCommandResult manPageResult = client.runCommandAndWait("man "+tool);
@@ -851,13 +891,18 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21783", "RHEL7-51600"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21783", "RHEL7-51600"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="check the rhsmcertd man page for misspelled words and typos",
-			groups={},
+			groups={"Tier3Tests"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void SpellCheckManPageForRhsmcertd_Test() throws IOException {
+	public void testSpellingsOnManPageForRhsmcertd() throws IOException {
 		if (clienttasks==null) throw new SkipException("A client connection is needed for this test.");
 		String tool = "rhsmcertd";
 		SSHCommandResult manPageResult = client.runCommandAndWait("man "+tool);
@@ -900,13 +945,18 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21782", "RHEL7-51599"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21782", "RHEL7-51599"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="check the rhsm-icon man page for misspelled words and typos",
-			groups={},
+			groups={"Tier3Tests"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void SpellCheckManPageForRhsmIcon_Test() throws IOException {
+	public void testSpellingsOnManPageForRhsmIcon() throws IOException {
 		if (clienttasks==null) throw new SkipException("A client connection is needed for this test.");
 		String tool = "rhsm-icon";
 		SSHCommandResult manPageResult = client.runCommandAndWait("man "+tool);
@@ -922,13 +972,18 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21781", "RHEL7-51598"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21781", "RHEL7-51598"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="check the rhsm-debug man page for misspelled words and typos",
-			groups={},
+			groups={"Tier3Tests"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void SpellCheckManPageForRhsmDebug_Test() throws IOException {
+	public void testSpellingsOnManPageForRhsmDebug() throws IOException {
 		if (clienttasks==null) throw new SkipException("A client connection is needed for this test.");
 		String tool = "rhsm-debug";
 		SSHCommandResult manPageResult = client.runCommandAndWait("man "+tool);
@@ -1197,6 +1252,7 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 		modifiedManPage = modifiedManPage.replaceAll("cloudforms.example.com", "cloud.forms.example.com");
 		modifiedManPage = modifiedManPage.replaceAll("newsubscription.example.com", "new.subscription.example.com");
 		modifiedManPage = modifiedManPage.replaceAll("sam.example.com", "subscription-asset-management.example.com");
+		modifiedManPage = modifiedManPage.replaceAll("sat6.example.com", "satellite-6.example.com");
 		modifiedManPage = modifiedManPage.replaceAll("--name=server1", "--name=server");
 		modifiedManPage = modifiedManPage.replaceAll(".git.28.5cd97a5.fc20", "");
 		modifiedManPage = modifiedManPage.replaceAll(".git.1.2f38ded.fc20", "");
@@ -1229,6 +1285,8 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 		modifiedManPage = modifiedManPage.replaceAll("config([^u])", "configuration$1");
 		modifiedManPage = modifiedManPage.replaceAll("orgs", "organizations");
 		modifiedManPage = modifiedManPage.replaceAll("ORGS", "ORGANIZATIONS");
+		modifiedManPage = modifiedManPage.replaceAll("inotify", "i-notify");	// inode notify - is a Linux kernel subsystem that acts to extend filesystems to notice changes to the filesystem (files or directories), and report those changes to applications
+		modifiedManPage = modifiedManPage.replaceAll("Inotify", "I-notify");
 		modifiedManPage = modifiedManPage.replaceAll("preconfigured", "configured in advance");
 		modifiedManPage = modifiedManPage.replaceAll("ProductName:", "Product Name:");
 		modifiedManPage = modifiedManPage.replaceAll("YYYY-MM-DD", "YEAR-MONTH-DAY");
@@ -1256,6 +1314,7 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 		modifiedManPage = modifiedManPage.replaceAll("RPM", "Red Hat Package Manager");
 		modifiedManPage = modifiedManPage.replaceAll("rpm", "red-hat-package-manager");
 		modifiedManPage = modifiedManPage.replaceAll("SSL", "Secure Sockets Layer");
+		modifiedManPage = modifiedManPage.replaceAll("NFS", "Network File System");
 		modifiedManPage = modifiedManPage.replaceAll("GUI", "Graphical User Interface");
 		modifiedManPage = modifiedManPage.replaceAll("UI", "User Interface");
 		modifiedManPage = modifiedManPage.replaceAll("GPG", "GNU privacy guard");

@@ -20,8 +20,11 @@ import rhsm.data.SubscriptionPool;
 
 import com.redhat.qe.Assert;
 
-import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.DefTypes;
 import com.github.redhatqe.polarize.metadata.TestDefinition;
+import com.github.redhatqe.polarize.metadata.TestType;
+import com.github.redhatqe.polarize.metadata.DefTypes.PosNeg;
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
 
 /**
  * @author skallesh
@@ -29,12 +32,11 @@ import com.github.redhatqe.polarize.metadata.TestDefinition;
  *
  */
 
-@Test(groups={ "RAMTests","Tier2Tests"})
+@Test(groups={"RAMTests"})
 public class RAMTests extends SubscriptionManagerCLITestScript {
 	Map<String, String> factsMap = new HashMap<String, String>();
 	protected String productId = "RamTest-product";
 	protected List<String> providedProduct = new ArrayList<String>();
-	protected String ownerKey = "";
 	// Test methods ***********************************************************************
 	
 	
@@ -43,11 +45,17 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36684", "RHEL7-51529"})
-	@Test(description = "verify status of partially covered Ram based products", 
-			groups = {"PartiallySubscribedRamBasedProducts"}, enabled = true)
-	public void PartiallySubscribedRamBasedProducts() throws JSONException,Exception {
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36684", "RHEL7-51529"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
+	@Test(	description = "verify status of partially covered Ram based products", 
+			groups = {"Tier2Tests","PartiallySubscribedRamBasedProducts"},
+			enabled = true)
+	public void testPartiallySubscribedRamBasedProducts() throws JSONException,Exception {
 		Integer ram = 20; //GB
 		factsMap.clear();
 		factsMap.put("uname.machine", "x86_64");
@@ -57,9 +65,6 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, null, null, null,
 				(String) null, null, null, null, true, null, null, null, null, null);
-		String consumerId = clienttasks.getCurrentConsumerId();
-		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,
-			consumerId);
 		clienttasks.autoheal(null, null, true, null, null, null, null);
 		
 		List<String> ramSubscriptionNames = new ArrayList<String>();
@@ -78,12 +83,18 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36682", "RHEL7-51527"})
-	@Test(description = "verify healing of partially subscribed RAM products covered by stackable RAM-based subscriptions", 
-			groups = { "HealingPartiallySubscribedRamBasedProducts","blockedByBug-907638"}, enabled = true)
-	public void HealingPartiallySubscribedRamBasedProducts() throws JSONException,Exception {
-		PartiallySubscribedRamBasedProducts();
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36682", "RHEL7-51527"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
+	@Test(	description = "verify healing of partially subscribed RAM products covered by stackable RAM-based subscriptions", 
+			groups = {"Tier2Tests","HealingPartiallySubscribedRamBasedProducts","blockedByBug-907638"},
+			enabled = true)
+	public void testHealingPartiallySubscribedRamBasedProducts() throws JSONException,Exception {
+		testPartiallySubscribedRamBasedProducts();
 		clienttasks.autoheal(null, true, null, null, null, null, null);
 		clienttasks.run_rhsmcertd_worker(true);
 		
@@ -97,9 +108,10 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@Test(description = "verify Ram Subscription with disabled certv3 from candlepin ", 
-			groups = { "DisableCertV3ForRamBasedSubscription"}, enabled = false)
-	public void DisableCertV3ForRamBasedSubscription() throws JSONException,Exception {
+	@Test(	description = "verify Ram Subscription with disabled certv3 from candlepin ", 
+			groups = {"Tier2Tests","DisableCertV3ForRamBasedSubscription"},
+			enabled = false)
+	public void testDisableCertV3ForRamBasedSubscription() throws JSONException,Exception {
 		
 		servertasks.updateConfFileParameter("candlepin.enable_cert_v3", "false");
 		servertasks.restartTomcat();
@@ -118,11 +130,17 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36680", "RHEL7-51525"})
-	@Test(description = "verify Auto Heal for Ram subscription .", 
-			groups = { "AutoHealRamBasedSubscription","blockedByBug-907638","blockedByBug-976867"}, enabled = true)
-	public void AutoHealRamBasedSubscription() throws JSONException,Exception {
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36680", "RHEL7-51525"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
+	@Test(	description = "verify Auto Heal for Ram subscription .", 
+			groups = {"Tier2Tests","AutoHealRamBasedSubscription","blockedByBug-907638","blockedByBug-976867"},
+			enabled = true)
+	public void testAutoHealRamBasedSubscription() throws JSONException,Exception {
 		factsMap.clear();
 		factsMap.put("uname.machine", "x86_64");
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
@@ -144,11 +162,17 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36681", "RHEL7-51526"})
-	@Test(description = "verify Auto-attach for Ram based subscription", 
-			groups = { "AutoSubscribeRamBasedProducts"}, enabled = true)
-	public void AutoSubscribeRamBasedProducts() throws JSONException,Exception {
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36681", "RHEL7-51526"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
+	@Test(	description = "verify Auto-attach for Ram based subscription", 
+			groups = {"Tier2Tests","AutoSubscribeRamBasedProducts"},
+			enabled = true)
+	public void testAutoSubscribeRamBasedProducts() throws JSONException,Exception {
 		factsMap.clear();
 		factsMap.put("uname.machine", "x86_64");
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
@@ -168,12 +192,18 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36683", "RHEL7-51528"})
-	@Test(description = "verify Partial subscription of Ram subscription. ", 
-			groups = { "PartialSubscriptionOfRamBasedSubscription"}, enabled = true)
-	public void PartialSubscriptionOfRamBasedSubscription() throws JSONException,Exception {
-		AutoSubscribeRamBasedProducts();
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36683", "RHEL7-51528"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
+	@Test(	description = "verify Partial subscription of Ram subscription. ", 
+			groups = {"Tier2Tests","PartialSubscriptionOfRamBasedSubscription"},
+			enabled = true)
+	public void testPartialSubscriptionOfRamBasedSubscription() throws JSONException,Exception {
+		testAutoSubscribeRamBasedProducts();
 		int ram = 100; //GB
 		factsMap.put("memory.memtotal", String.valueOf(GBToKBConverter(ram)));
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
@@ -189,11 +219,17 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36685", "RHEL7-51530"})
-	@Test(description = "verify Ram info in product and entitlement certificate", 
-			groups = { "RamBasedSubscriptionInfoInEntitlementCert"}, enabled = true)
-	public void RamBasedSubscriptionInfoInEntitlementCert() throws JSONException,Exception {
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36685", "RHEL7-51530"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
+	@Test(	description = "verify Ram info in product and entitlement certificate", 
+			groups = {"Tier2Tests","RamBasedSubscriptionInfoInEntitlementCert"},
+			enabled = true)
+	public void testRamBasedSubscriptionInfoInEntitlementCert() throws JSONException,Exception {
 		factsMap.clear();
 		factsMap.put("uname.machine", "x86_64");
 		factsMap.put("cpu.core(s)_per_socket", "1");
@@ -219,11 +255,17 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36686", "RHEL7-51531"})
-	@Test(description = "verify subscription of Ram based subscription", 
-			groups = { "SubscribeToRamBasedSubscription","blockedByBug-907315"}, enabled = true)
-	public void SubscribeToRamBasedSubscription() throws JSONException,Exception {
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36686", "RHEL7-51531"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
+	@Test(	description = "verify subscription of Ram based subscription", 
+			groups = {"Tier2Tests","SubscribeToRamBasedSubscription","blockedByBug-907315"},
+			enabled = true)
+	public void testSubscribeToRamBasedSubscription() throws JSONException,Exception {
 
 		factsMap.clear();
 		factsMap.put("uname.machine", "x86_64");
@@ -334,6 +376,7 @@ public class RAMTests extends SubscriptionManagerCLITestScript {
 				resourcePath);
 			CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,
 				sm_clientOrg, name + " BITS", productId, 1, attributes, null);
+			String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, clienttasks.getCurrentConsumerId());
 			return CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername,
 				sm_serverAdminPassword, sm_serverUrl, ownerKey, 10, startingMinutesFromNow, endingMinutesFromNow,
 				getRandInt(), getRandInt(), productId, providedProduct, null).getString("id");

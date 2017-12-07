@@ -38,29 +38,37 @@ import rhsm.data.YumRepo;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 
-import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.DefTypes;
 import com.github.redhatqe.polarize.metadata.TestDefinition;
+import com.github.redhatqe.polarize.metadata.TestType;
+import com.github.redhatqe.polarize.metadata.DefTypes.PosNeg;
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
 
 /**
  * @author jsefler
  *
  *
  */
-@Test(groups={"ReposTests","Tier3Tests"})
+@Test(groups={"ReposTests"})
 public class ReposTests extends SubscriptionManagerCLITestScript {
 
 	
 	// Test methods ***********************************************************************
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-19972", "RHEL7-51011"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-19972", "RHEL7-51011"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="subscription-manager: subscribe to a pool and verify that the newly entitled content namespaces are represented in the repos list",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-807407","blockedByBug-962520","blockedByBug-1034649"},
+			groups={"Tier1Tests","blockedByBug-807407","blockedByBug-962520","blockedByBug-1034649"},
 			//dataProvider="getAvailableSubscriptionPoolsData",	// very thorough, but takes too long to execute and rarely finds more bugs
 			dataProvider="getRandomSubsetOfAvailableSubscriptionPoolsData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ReposListReportsGrantedContentNamespacesAfterSubscribingToPool_Test(SubscriptionPool pool) throws JSONException, Exception {
+	public void testReposListReportsGrantedContentNamespacesAfterSubscribingToPool(SubscriptionPool pool) throws JSONException, Exception {
 
 		log.info("Following is a list of previously subscribed repos...");
 		List<Repo> priorRepos = clienttasks.getCurrentlySubscribedRepos();
@@ -156,14 +164,19 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	protected Set<String> priorSubscribedPoolIds=new HashSet<String>();
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20295", "RHEL7-51691"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20295", "RHEL7-51691"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="subscription-manager: subscribe to a future pool and verify that NO content namespaces are represented in the repos list",
-			groups={"blockedByBug-768983","blockedByBug-1440180","unsubscribeAllBeforeThisTest"},
+			groups={"Tier3Tests","blockedByBug-768983","blockedByBug-1440180","testReposListReportsNoContentNamespacesAfterSubscribingToFuturePool"},
 			dataProvider="getAllFutureSystemSubscriptionPoolsData",
 			enabled=true)
-			//@ImplementsNitrateTest(caseId=)
-	public void ReposListReportsNoContentNamespacesAfterSubscribingToFuturePool_Test(SubscriptionPool pool) throws Exception {
+	//@ImplementsNitrateTest(caseId=)
+	public void testReposListReportsNoContentNamespacesAfterSubscribingToFuturePool(SubscriptionPool pool) throws Exception {
 //if (!pool.productId.equals("awesomeos-virt-unlmtd-phys")) throw new SkipException("debugTesting productId="+pool.productId);
 		
 		// subscribe to the future SubscriptionPool
@@ -186,27 +199,41 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		
 		// TODO we may want to randomly unsubscribe from serial number without asserting to save some computation of the accumulating entitlement certs
 	}
-
-
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20397", "RHEL7-51690"})
+	@BeforeGroups(groups={"setup"}, value={"testReposListReportsNoContentNamespacesAfterSubscribingToFuturePool"})
+	public void unsubscribeAllBeforeGroups() {
+		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
+	}
+	
+	
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20397", "RHEL7-51690"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="subscription-manager: after subscribing to all pools, verify that manual edits to enable repos in redhat.repo are preserved.",
-			groups={"blockedByBug-905546","blockedByBug-1098891","blockedByBug-1101571","blockedByBug-1101584"},
+			groups={"Tier3Tests","blockedByBug-905546","blockedByBug-1098891","blockedByBug-1101571","blockedByBug-1101584"},
 			dataProvider="getRandomSubsetOfYumReposData",	// dataProvider="getYumReposData", takes too long to execute
 			enabled=true)	// with the implementation of RFE Bug 803746, manual edits to the enablement of redhat repos is now forbidden.  This test is being disabled in favor of ManualEditsToEnablementOfRedhatReposIsForbidden_Test
 	//@ImplementsNitrateTest(caseId=)
-	public void ReposListPreservesManualEditsToEnablementOfRedhatRepos_Test(YumRepo yumRepo){
+	public void testReposListPreservesManualEditsToEnablementOfRedhatRepos(YumRepo yumRepo){
 		verifyTogglingTheEnablementOfRedhatRepo(yumRepo,true);
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20379", "RHEL7-51674"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20379", "RHEL7-51674"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="subscription-manager: verify that manual edits to enable repos in redhat.repo are forbidden by documented warning.",
-			groups={"blockedByBug-1032243"},
+			groups={"Tier3Tests","blockedByBug-1032243"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ManualEditsToEnablementOfRedhatReposIsForbidden_Test(){	// replacement for ReposListPreservesManualEditsToEnablementOfRedhatRepos_Test
+	public void testManualEditsToEnablementOfRedhatReposIsDiscouraged(){	// replacement for ReposListPreservesManualEditsToEnablementOfRedhatRepos_Test
 		// register
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null, null);
 		clienttasks.yumClean("all");	// to trip the subscription-manager yum plugin
@@ -233,25 +260,35 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20386", "RHEL7-51689"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20386", "RHEL7-51689"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="subscription-manager: after subscribing to all pools, verify that edits (using subscription-manager --enable --disable options) to repos in redhat.repo are preserved.",
-			groups={"blockedByBug-905546"},
+			groups={"Tier3Tests","blockedByBug-905546"},
 			dataProvider="getRandomSubsetOfYumReposData",	// dataProvider="getYumReposData", takes too long to execute
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ReposListPreservesEnablementOfRedhatRepos_Test(YumRepo yumRepo){
+	public void testReposListPreservesEnablementOfRedhatRepos(YumRepo yumRepo){
 		verifyTogglingTheEnablementOfRedhatRepo(yumRepo,false);
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-19971", "RHEL7-51010"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-19971", "RHEL7-51010"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="subscription-manager: after subscribing to all pools, verify that edits (using subscription-manager --enable --disable options specified multiple times in a single call) to repos in redhat.repo are preserved.",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-843915","blockedByBug-962520","blockedByBug-1034649","blockedByBug-1121272","blockedByBug-1366301"},
+			groups={"Tier1Tests","blockedByBug-843915","blockedByBug-962520","blockedByBug-1034649","blockedByBug-1121272","blockedByBug-1366301"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ReposListPreservesSimultaneousEnablementOfRedhatRepos_Test(){
+	public void testReposListPreservesSimultaneousEnablementOfRedhatRepos(){
 		
 		// register
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
@@ -311,25 +348,35 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20396", "RHEL7-51687"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20396", "RHEL7-51687"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="subscription-manager: repos --list reports no entitlements when not registered",
-			groups={"blockedByBug-724809","blockedByBug-807360","blockedByBug-837447"},
+			groups={"Tier3Tests","blockedByBug-724809","blockedByBug-807360","blockedByBug-837447"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ReposListIsEmptyWhenNotRegistered_Test(){
+	public void testReposListIsEmptyWhenNotRegistered(){
 		clienttasks.unregister(null,null,null, null);		
 		Assert.assertEquals(clienttasks.getCurrentlySubscribedRepos().size(),0, "No repos are reported by subscription-manager repos --list when not registered.");
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20371", "RHEL7-51694"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20371", "RHEL7-51694"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="subscription-manager: repos --list reports no entitlements when not registered",
-			groups={"blockedByBug-837447"},
+			groups={"Tier3Tests","blockedByBug-837447"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ReposListWhenNotRegistered_Test(){
+	public void testReposListWhenNotRegistered(){
 		clienttasks.unregister(null,null,null, null);
 		SSHCommandResult result = clienttasks.repos(true, null, null, (String)null, (String)null, null, null, null, null);
 		//Assert.assertEquals(result.getStdout().trim(), "The system is not entitled to use any repositories.");
@@ -337,13 +384,18 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20366", "RHEL7-51692"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20366", "RHEL7-51692"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="subscription-manager: repos --list should not fail when config rhsm.manage_repos is blank.",
-			groups={"ReposListWhenManageReposIsBlank_Test","blockedByBug-1251853"},
+			groups={"Tier3Tests","ReposListWhenManageReposIsBlank_Test","blockedByBug-1251853"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ReposListWhenManageReposIsBlank_Test(){
+	public void testReposListWhenManageReposIsBlank(){
 		// register
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
 		
@@ -366,13 +418,18 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20365", "RHEL7-51693"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20365", "RHEL7-51693"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="subscription-manager: repos --list should provide feedback when config rhsm.manage_repos is off.",
-			groups={"ReposListWhenManageReposIsOff_Test"},
+			groups={"Tier3Tests","ReposListWhenManageReposIsOff_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ReposListWhenManageReposIsOff_Test(){
+	public void testReposListWhenManageReposIsOff(){
 		// register
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
 		
@@ -387,13 +444,18 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20378", "RHEL7-51695"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20378", "RHEL7-51695"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="subscription-manager: repos (without any options) reports no entitlements when not registered (rhel63 and rhel58 previously reported 'Error: No options provided. Please see the help comand.')",
-			groups={"blockedByBug-837447"},
+			groups={"Tier3Tests","blockedByBug-837447"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ReposWhenNotRegistered_Test(){
+	public void testReposWhenNotRegistered(){
 		clienttasks.unregister(null,null,null, null);
 		SSHCommandResult result = clienttasks.repos(null, null, null, (String)null, (String)null, null, null, null, null); // defaults to --list behavior starting in rhel59
 		//Assert.assertEquals(result.getStdout().trim(), "The system is not entitled to use any repositories.");
@@ -401,13 +463,18 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-19970", "RHEL7-51009"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-19970", "RHEL7-51009"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="subscription-manager: set manage_repos to 0 and assert redhat.repo is removed.",
-			groups={"ManageReposTests","AcceptanceTests","Tier1Tests","blockedByBug-767620","blockedByBug-797996","blockedByBug-895462","blockedByBug-1034649"},
+			groups={"Tier1Tests","ManageReposTests","blockedByBug-767620","blockedByBug-797996","blockedByBug-895462","blockedByBug-1034649"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ReposListIsDisabledByConfigurationAfterRhsmManageReposIsConfiguredOff_Test() throws JSONException, Exception{
+	public void testReposListIsDisabledByConfigurationAfterRhsmManageReposIsConfiguredOff() throws JSONException, Exception{
 		
 		// manually set the manage_repos to 1
 		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "manage_repos", "1");
@@ -453,13 +520,18 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20377", "RHEL7-51688"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20377", "RHEL7-51688"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="subscription-manager: set manage_repos to 1 and assert redhat.repo is restored.",
-			groups={"blockedByBug-767620","blockedByBug-797996","blockedByBug-895462","ManageReposTests"},
+			groups={"Tier3Tests","blockedByBug-767620","blockedByBug-797996","blockedByBug-895462","ManageReposTests"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ReposListIsEnabledByConfigurationAfterRhsmManageReposIsConfiguredOn_Test() throws JSONException, Exception{
+	public void testReposListIsEnabledByConfigurationAfterRhsmManageReposIsConfiguredOn() throws JSONException, Exception{
 		
 		// manually set the manage_repos to 0
 		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "manage_repos", "0");
@@ -500,13 +572,18 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20375", "RHEL7-51681"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20375", "RHEL7-51681"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="subscription-manager: attempt to enable an invalid repo id",
-			groups={"blockedByBug-846207"},
+			groups={"Tier3Tests","blockedByBug-846207"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ReposEnableInvalidRepo_Test(){
+	public void testReposEnableInvalidRepo(){
 		String invalidRepo = "invalid-repo-id";
 		SSHCommandResult result = clienttasks.repos_(null, null, null, invalidRepo, null, null, null, null, null);
 		//Assert.assertEquals(result.getExitCode(), new Integer(0), "ExitCode from an attempt to enable an invalid-repo-id.");	// valid in RHEL59
@@ -521,13 +598,18 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20372", "RHEL7-51675"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20372", "RHEL7-51675"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="subscription-manager: attempt to disable an invalid repo id",
-			groups={"blockedByBug-846207"},
+			groups={"Tier3Tests","blockedByBug-846207"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ReposDisableInvalidRepo_Test(){
+	public void testReposDisableInvalidRepo(){
 		String invalidRepo = "invalid-repo-id";
 		SSHCommandResult result = clienttasks.repos_(null, null, null, null, invalidRepo, null, null, null, null);
 		//Assert.assertEquals(result.getExitCode(), new Integer(0), "ExitCode from an attempt to disable an invalid-repo-id.");	// valid in RHEL59
@@ -542,13 +624,18 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20382", "RHEL7-51678"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20382", "RHEL7-51678"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="subscription-manager: attempt multiple enable/disable invalid repo ids",
-			groups={"blockedByBug-846207","blockedByBug-918746"},
+			groups={"Tier3Tests","blockedByBug-846207","blockedByBug-918746"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ReposEnableDisableMultipleInvalidRepo_Test(){
+	public void testReposEnableDisableMultipleInvalidRepos(){
 		//	[root@jsefler-6 ~]# subscription-manager repos --enable=invalid-repo-A --enable=invalid-repo-B --disable=invalid-repo-C --disable=invalid-repo-D
 		//	Error: invalid-repo-A is not a valid repo ID. Use --list option to see valid repos.
 		//	Error: invalid-repo-B is not a valid repo ID. Use --list option to see valid repos.
@@ -583,13 +670,18 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20395", "RHEL7-51677"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20395", "RHEL7-51677"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="subscription-manager: attempt enable/disable all repos (using wildcard *)",
-			groups={},
+			groups={"Tier3Tests"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ReposEnableDisableAllReposUsingWildcard_Test() throws JSONException, Exception{
+	public void testReposEnableDisableAllReposUsingWildcard() throws JSONException, Exception{
 		//	[root@jsefler-6 ~]# subscription-manager repos --enable=* --disable=*
 		//	Repo awesomeos is enabled for this system.
 		//	Repo awesomeos-x86_64 is enabled for this system.
@@ -668,13 +760,18 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20370", "RHEL7-51680"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20370", "RHEL7-51680"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="subscription-manager: attempt enable/disable some repos (using wildcard ?)",
-			groups={},
+			groups={"Tier3Tests"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ReposEnableDisableSomeReposUsingWildcard_Test() throws JSONException, Exception{
+	public void testReposEnableDisableSomeReposUsingWildcard() throws JSONException, Exception{
 		//	[root@jsefler-os6 ~]# subscription-manager repos --disable=awesomeos-i???
 		//	Repository 'awesomeos-i686' is disabled for this system.
 		//	Repository 'awesomeos-ia64' is disabled for this system.
@@ -745,13 +842,18 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20387", "RHEL7-51679"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20387", "RHEL7-51679"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="subscription-manager: attempt enable/disable/enable/disable repos in an order",
-			groups={"blockedByBug-1115499"},
+			groups={"Tier3Tests","blockedByBug-1115499"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ReposEnableDisableReposInOrder_Test() throws JSONException, Exception{
+	public void testReposEnableDisableReposInOrder() throws JSONException, Exception{
 		//	[root@jsefler-6 ~]# subscription-manager repos --enable=awesomeos-ppc64 --enable=awesomeos-x86_64 --disable=awesomeos-x86_64 --disable=awesomeos-ia64 --enable=awesomeos-ia64 --disable=awesomeos-ppc64
 		//	Repo 'awesomeos-ppc64' is disabled for this system.
 		//	Repo 'awesomeos-x86_64' is disabled for this system.
@@ -799,13 +901,18 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 * @throws Exception
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20369", "RHEL7-51682"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20369", "RHEL7-51682"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="subscription-manager: enable a repo.",
 			enabled=true,
-			groups={})
+			groups={"Tier3Tests"})
 	//@ImplementsNitrateTest(caseId=)
-	public void ReposEnable_Test() throws JSONException, Exception {
+	public void testReposEnable() throws JSONException, Exception {
 		
 		// register
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
@@ -824,13 +931,18 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20388", "RHEL7-51676"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20388", "RHEL7-51676"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="subscription-manager: disable a repo.",
-			groups={},
+			groups={"Tier3Tests"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ReposDisable_Test() throws JSONException, Exception {
+	public void testReposDisable() throws JSONException, Exception {
 		
 		// register
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
@@ -849,13 +961,18 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-19974", "RHEL7-51013"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-19974", "RHEL7-51013"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="subscription-manager: manually add more yum repository options to redhat.repo and assert persistence.",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-845349","blockedByBug-834806","blockedByBug-1098891","blockedByBug-1101571","blockedByBug-1101584","blockedByBug-1366301"},
+			groups={"Tier1Tests","blockedByBug-845349","blockedByBug-834806","blockedByBug-1098891","blockedByBug-1101571","blockedByBug-1101584","blockedByBug-1366301"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void YumRepoListPreservesAdditionalOptionsToRedhatReposUsingManualEdits_Test() throws JSONException, Exception {
+	public void testYumRepoListPreservesAdditionalOptionsToRedhatReposUsingManualEdits() throws JSONException, Exception {
 		
 		// register
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
@@ -916,13 +1033,18 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-19975", "RHEL7-51014"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-19975", "RHEL7-51014"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="subscription-manager: add more yum repository options to redhat.repo and assert persistence using repo-override module.",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-845349","blockedByBug-834806","blockedByBug-803746","blockedByBug-1086316","blockedByBug-1069230","blockedByBug-1366301"},
+			groups={"Tier1Tests","blockedByBug-845349","blockedByBug-834806","blockedByBug-803746","blockedByBug-1086316","blockedByBug-1069230","blockedByBug-1366301"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void YumRepoListPreservesAdditionalOptionsToRedhatReposUsingRepoOverride_Test() throws JSONException, Exception {
+	public void testYumRepoListPreservesAdditionalOptionsToRedhatReposUsingRepoOverride() throws JSONException, Exception {
 		
 		// register
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
@@ -992,13 +1114,18 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20298", "RHEL7-51698"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20298", "RHEL7-51698"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="subscription-manager: verify that overrides take precedence to manually edited repository options in redhat.repo and assert persistence.",
-			groups={"blockedByBug-1098891","blockedByBug-1101571","blockedByBug-1101584"},
+			groups={"Tier3Tests","blockedByBug-1098891","blockedByBug-1101571","blockedByBug-1101584"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void YumRepoListPreservesAdditionalOptionsToRedhatReposUsingManualEditsButRepoOverridesTakePrecedence_Test() throws JSONException, Exception {
+	public void testYumRepoListPreservesAdditionalOptionsToRedhatReposUsingManualEditsButRepoOverridesTakePrecedence() throws JSONException, Exception {
 		
 		// register
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
@@ -1038,13 +1165,18 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-19973", "RHEL7-51012"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-19973", "RHEL7-51012"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="Verify that the redhat.repo file is refreshed with changes to the entitlements (yum transactions are no longer required to update the redhat.repo)",
-			enabled=true,
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1008016","blockedByBug-1090206","blockedByBug-1034429"})	// TODO: review all tests and tasks that issue yum transactions simply to re-populate the redhat.repo
+			groups={"Tier1Tests","blockedByBug-1008016","blockedByBug-1090206","blockedByBug-1034429"},	// TODO: review all tests and tasks that issue yum transactions simply to re-populate the redhat.repo
+			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyYumTransactionsAreNoLongerRequiredToTriggerUpdatesToRedhatRepo_Test() {
+	public void testYumTransactionsAreNoLongerRequiredToTriggerUpdatesToRedhatRepo() {
 		
 		// register
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null, null);
@@ -1079,13 +1211,18 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20381", "RHEL7-51697"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20381", "RHEL7-51697"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="Verify that redhat.repo file is unnecessarily re-written with every yum transaction",
-			groups={"blockedByBug-1035440"/*,"blockedByBug-1090206","blockedByBug-1008016"*/,"blockedByBug-1104731","blockedByBug-1104777"},
+			groups={"Tier3Tests","blockedByBug-1035440"/*,"blockedByBug-1090206","blockedByBug-1008016"*/,"blockedByBug-1104731","blockedByBug-1104777"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyYumTransactionsDoNotCauseUnnessarilyRewritesOfRedHatRepoFile_Test() {
+	public void testYumTransactionsDoNotCauseUnnessarilyRewritesOfRedHatRepoFile() {
 		clienttasks.register_(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, true, null, null, null, null, null);
 		clienttasks.autoheal_(null, null, true, null, null, null, null);
 		List<Repo> repos = clienttasks.getCurrentlySubscribedRepos();
@@ -1117,13 +1254,18 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20385", "RHEL7-51686"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20385", "RHEL7-51686"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="subscription-manager: subscribe to a pool and verify that repos list --list-enabled reports only the enabled repos from the newly entitled content namespaces",
-			groups={"blockedByBug-1119648"},
+			groups={"Tier3Tests","blockedByBug-1119648"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ReposListEnabledReportsOnlyEnabledContentNamespaces_Test() throws JSONException, Exception {
+	public void testReposListEnabledReportsOnlyEnabledContentNamespaces() throws JSONException, Exception {
 		if (clienttasks.isPackageVersion("subscription-manager", "<", "1.13.4-1")) throw new SkipException("The repos --list-enabled function was not implemented until version subscription-manager-1.13.4-1");
 		
 		// register
@@ -1146,13 +1288,18 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20368", "RHEL7-51684"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20368", "RHEL7-51684"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="subscription-manager: subscribe to a pool and verify that repos list --list-disabled reports only the disabled repos from the newly entitled content namespaces",
-			groups={"blockedByBug-1119648"},
+			groups={"Tier3Tests","blockedByBug-1119648"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ReposListDisabledReportsOnlyDisabledContentNamespaces_Test() throws JSONException, Exception {
+	public void testReposListDisabledReportsOnlyDisabledContentNamespaces() throws JSONException, Exception {
 		if (clienttasks.isPackageVersion("subscription-manager", "<", "1.13.4-1")) throw new SkipException("The repos --list-disabled function was not implemented until version subscription-manager-1.13.4-1");
 		
 		// register
@@ -1175,13 +1322,18 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20300", "RHEL7-51683"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20300", "RHEL7-51683"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="subscription-manager: repos --list-disabled should give feedback when there are no disabled repos",
-			groups={"blockedByBug-1151925"},
+			groups={"Tier3Tests","blockedByBug-1151925"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ReposListDisabledReportsNoMatchesFoundWhenNoThereAreNoDisabledRepos_Test() throws JSONException, Exception {
+	public void testReposListDisabledReportsNoMatchesFoundWhenNoThereAreNoDisabledRepos() throws JSONException, Exception {
 		if (clienttasks.isPackageVersion("subscription-manager", "<", "1.13.4-1")) throw new SkipException("The repos --list-disabled function was not implemented until version subscription-manager-1.13.4-1");
 		
 		// register
@@ -1204,13 +1356,18 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20389", "RHEL7-51685"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20389", "RHEL7-51685"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="subscription-manager: repos --list-enabled should give feedback when there are no enabled repos",
-			groups={"blockedByBug-1151925"},
+			groups={"Tier3Tests","blockedByBug-1151925"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ReposListEnabledReportsNoMatchesFoundWhenNoThereAreNoEnabledRepos_Test() throws JSONException, Exception {
+	public void testReposListEnabledReportsNoMatchesFoundWhenNoThereAreNoEnabledRepos() throws JSONException, Exception {
 		if (clienttasks.isPackageVersion("subscription-manager", "<", "1.13.4-1")) throw new SkipException("The repos --list-enabled function was not implemented until version subscription-manager-1.13.4-1");
 		
 		// register
@@ -1233,13 +1390,18 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20398", "RHEL7-51696"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20398", "RHEL7-51696"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="Verify that RepoActionInvoker.is_managed('some_repo') returns False when 'some_repo' does not exist and True when it is entitled",
-			groups={"blockedByBug-1223038"},
+			groups={"Tier3Tests","blockedByBug-1223038"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerificationFixForBug1223038_Test() throws JSONException, Exception {
+	public void testFixForBug1223038() throws JSONException, Exception {
 		if (clienttasks.isPackageVersion("subscription-manager", "<", "1.14.9-1")) throw new SkipException("The fix for this bug was not implemented until version subscription-manager-1.14.9-1");
 		
 		// copy the ismanagedtest.py script to the client
@@ -1260,6 +1422,110 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	
 	
 	
+	
+	
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-47936", "RHEL7-99418"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
+	@Test(	description="verify that the subscription-manager yum plugin will be invoked by yum-config-manager thereby populating the redhat.repo file (eliminating the need to run a seemingly no-op yum repolist just to populate an empty/missing redhat.repo file.)  Reference RFE Bugzilla 1329349",
+			groups={"Tier1Tests","blockedByBug-1329349","blockedByBug-1486326","blockedByBug-1480659","blockedByBug-1486338"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void testYumConfigManagerTransactionsWillNowGenerateRedhatRepo() throws JSONException, Exception {
+		
+		// register with auto-subscribe to get an entitlement to at least one yum repo
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, true, false, null, null, null, null);
+		List<YumRepo> subscribedYumRepos = clienttasks.getCurrentlySubscribedYumRepos();
+		if (subscribedYumRepos.isEmpty()) throw new SkipException("There are no entitled yum repos available for this test.");
+		
+		// get all the disabled yum repos for this test
+		List<YumRepo> disabledYumRepos = YumRepo.findAllInstancesWithMatchingFieldFromList("enabled", false, subscribedYumRepos);
+		if (disabledYumRepos.isEmpty()) throw new SkipException("Could not find any entitled yum repos that were disabled for this test.");
+		List<String> disabledRepos = new ArrayList<String>();
+		for (YumRepo disabledYumRepo : disabledYumRepos) disabledRepos.add(disabledYumRepo.id);
+		
+		// manually delete or truncate the redhat.repo files
+		client.runCommandAndWait("rm -f "+clienttasks.redhatRepoFile);
+		client.runCommandAndWait("rm -f "+clienttasks.redhatRepoServerValueFile);
+		Assert.assertTrue(!RemoteFileTasks.testExists(client, clienttasks.redhatRepoFile));
+		
+		// use yum-config-manager to enable the repos that were disabled by default
+		clienttasks.yumConfigManagerEnableRepos(disabledRepos, null);
+		
+		// assert that the redhat.repo was regenerated by the new subscription-manager plugin to yum-config-manager (blocked by RFE Bug 1329349)
+		Assert.assertTrue(RemoteFileTasks.testExists(client, clienttasks.redhatRepoFile),"File '"+clienttasks.redhatRepoFile+"' has been automatically generated by a subscription-manager plugin to yum-config-manager.");
+		
+		// assert that the yum repos within redhat.repo are now enabled
+		subscribedYumRepos = clienttasks.getCurrentlySubscribedYumRepos();
+		for (String disabledRepo : disabledRepos) {
+			YumRepo yumRepo = YumRepo.findFirstInstanceWithMatchingFieldFromList("id", disabledRepo, subscribedYumRepos);
+			Assert.assertTrue(yumRepo.enabled, "Entitled yum repo '"+disabledRepo+"' (which was disabled by default) appears in '"+clienttasks.redhatRepoFile+"' as enabled after using yum-config-manager to enable it.");
+		}
+		
+		// run yum repolist enabled and assert that all the repos are enabled (blocked by Bug 1480659)
+		ArrayList<String> yumRepoListEnabledRepos = clienttasks.getYumRepolist("enabled");
+		for (String disabledRepo : disabledRepos) {
+			Assert.assertTrue(yumRepoListEnabledRepos.contains(disabledRepo), "Entitled yum repo '"+disabledRepo+"' which was disabled by default, appears in 'yum repolist enabled' as enabled after using yum-config-manager to enable it.");
+		}
+	}
+	
+	
+	
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-47937", "RHEL7-99476"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
+	@Test(	description="subscription-manager: manually enable (using sed) all yum repositories in redhat.repo and assert persistence in 'yum repolist enabled' (but make sure /var/lib/rhsm/repo_server_val/redhat.repo is truncated first).",
+			groups={"Tier1Tests","blockedByBug-1480659","blockedByBug-1486338"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void testYumRepoListPreservesManuallyEnabledRedhatReposAfterDeletingVarLibRhsmRepoServerValRedHatRepo() throws JSONException, Exception {
+		
+		// STEP 1: ENSURE SYSTEM IS UNREGISTERED
+		clienttasks.unregister(null, null, null, null);
+		
+		// STEP 2: DELETE/TRUNCATE THE /var/lib/rhsm/repo_server_val/redhat.repo FILE
+		client.runCommandAndWait("truncate --size=0 "+clienttasks.redhatRepoServerValueFile);
+		
+		// STEP 3: REGISTER A RHEL SYSTEM WITH AUTO-ATTACH TO GET AN ENTITLEMENT TO ACCESS REPOS ON THE CDN
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, true, false, null, null, null, null);
+		
+		// get all the entitled yum repos that are disabled by default
+		List<YumRepo> subscribedYumRepos = clienttasks.getCurrentlySubscribedYumRepos();
+		if (subscribedYumRepos.isEmpty()) throw new SkipException("There are no entitled yum repos available for this test.");
+		List<YumRepo> disabledYumRepos = YumRepo.findAllInstancesWithMatchingFieldFromList("enabled", false, subscribedYumRepos);
+		if (disabledYumRepos.isEmpty()) throw new SkipException("Could not find any entitled yum repos that were disabled for this test.");
+		List<String> disabledRepos = new ArrayList<String>();
+		for (YumRepo disabledYumRepo : disabledYumRepos) disabledRepos.add(disabledYumRepo.id);
+		
+		// STEP 4: MANUALLY EDIT (USING sed OR vi) /etc/yum.repos.d/redhat.repo FILE TO ENABLE ONE OR MORE REPOS (NORMALLY DISABLED BY DEFAULT)
+		client.runCommandAndWait("sed -i 's/enabled\\s*=\\s*0/enabled = 1/' "+clienttasks.redhatRepoFile);
+		Assert.assertEquals(client.runCommandAndWait("egrep 'enabled\\s*=\\s*0' "+clienttasks.redhatRepoFile+" | wc -l").getStdout().trim(),"0", "The number of disabled repos in '"+clienttasks.redhatRepoFile+"' after using sed to enable all entitled repos.");
+		
+		// STEP 5: RUN yum repolist all AND VERIFY THAT ALL THE ENTITLED REPOS ARE ENABLED
+		ArrayList<String> yumRepoListEnabledRepos = clienttasks.getYumRepolist("enabled");
+		for (String disabledRepo : disabledRepos) {
+			Assert.assertTrue(yumRepoListEnabledRepos.contains(disabledRepo), "Entitled yum repo '"+disabledRepo+"' which was disabled by default, appears in 'yum repolist enabled' as enabled after using sed to manually enable it in '"+clienttasks.redhatRepoFile+"'.");
+		}
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	// Candidates for an automated Test:
 	// TODO Bug 797243 - manual changes to redhat.repo are too sticky https://github.com/RedHatQE/rhsm-qe/issues/188
 	// TODO	Bug 846207 - multiple specifications of --enable doesnot throw error when repo id is invalid https://github.com/RedHatQE/rhsm-qe/issues/189
@@ -1275,11 +1541,6 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		currentProductCerts = clienttasks.getCurrentProductCerts();
 		if (clienttasks.getCurrentConsumerId()==null) clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, false, null, null, (String)null, null, null, null, true, false, null, null, null, null);
 		modifierSubscriptionData = getModifierSubscriptionDataAsListOfLists(null);
-	}
-	
-	@BeforeGroups(groups={"setup"}, value={"unsubscribeAllBeforeThisTest"})
-	public void unsubscribeAllBeforeGroups() {
-		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 	}
 	
 	@AfterMethod(groups={"setup"})

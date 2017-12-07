@@ -8,7 +8,7 @@ package rhsm.base;
  * 
  * @author jsefler
  */
-public enum ConsumerType  { system, person, candlepin, domain, hypervisor, RHUI }
+public enum ConsumerType  { system, person, candlepin, domain, hypervisor, RHUI, headpin, katello, share }
 
 
 //System (a machine)

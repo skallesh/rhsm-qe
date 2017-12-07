@@ -47,9 +47,10 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 	// DIFFICULTING LOADING THEM UNLESS THEY ARE DEFINED BY -Dsm.foo=bar
 	// SYNTAX ON THE java COMMAND LINE
 	
+	public final String jenkinsUsername			= getProperty("jenkins.username","");
+	public final String jenkinsPassword			= getProperty("jenkins.password","");
 	public final String sm_serverAdminUsername	= getProperty("sm.server.admin.username","");
 	public final String sm_serverAdminPassword	= getProperty("sm.server.admin.password","");
-
 
 	public String sm_serverSSHUser				= getProperty("sm.server.sshUser","root");
 	public String sm_serverInstallDir			= getProperty("sm.server.installDir","");
@@ -125,14 +126,24 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 	public String sm_dbPassword					= getProperty("sm.server.db.password","");
 	
 	public String sm_productCertValidityDuration	= getProperty("sm.client.productCertValidityDuration", "");
-
+	
+	// a basicauth proxy requires a username and password
 	public String sm_basicauthproxySSHUser		= getProperty("sm.basicauthproxy.sshUser","root");
 	public String sm_basicauthproxyHostname		= getProperty("sm.basicauthproxy.hostname", "");
 	public String sm_basicauthproxyPort			= getProperty("sm.basicauthproxy.port", "");
 	public String sm_basicauthproxyUsername		= getProperty("sm.basicauthproxy.username", "");
 	public String sm_basicauthproxyPassword		= getProperty("sm.basicauthproxy.password", "");
 	public String sm_basicauthproxyLog			= getProperty("sm.basicauthproxy.log", "");
-	
+
+	// an unauth proxy will return a 401 Unauthorized response
+	public String sm_unauthproxySSHUser			= getProperty("sm.unauthproxy.sshUser","root");
+	public String sm_unauthproxyHostname		= getProperty("sm.unauthproxy.hostname", "");
+	public String sm_unauthproxyPort			= getProperty("sm.unauthproxy.port", "");
+	public String sm_unauthproxyUsername		= getProperty("sm.unauthproxy.username", "");
+	public String sm_unauthproxyPassword		= getProperty("sm.unauthproxy.password", "");
+	public String sm_unauthproxyLog				= getProperty("sm.unauthproxy.log", "");
+
+	// a noauth proxy does not require any username and password
 	public String sm_noauthproxySSHUser			= getProperty("sm.noauthproxy.sshUser","root");
 	public String sm_noauthproxyHostname		= getProperty("sm.noauthproxy.hostname", "");
 	public String sm_noauthproxyPort			= getProperty("sm.noauthproxy.port", "");

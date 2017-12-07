@@ -10,6 +10,8 @@ import java.util.Set;
 
 import com.github.redhatqe.polarize.metadata.DefTypes;
 import com.github.redhatqe.polarize.metadata.TestDefinition;
+import com.github.redhatqe.polarize.metadata.TestType;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.testng.SkipException;
@@ -26,8 +28,10 @@ import rhsm.data.ProductSubscription;
 import rhsm.data.SubscriptionPool;
 
 import com.redhat.qe.Assert;
+import com.redhat.qe.auto.bugzilla.BugzillaAPIException;
+import com.redhat.qe.auto.bugzilla.BzChecker;
 import com.redhat.qe.tools.RemoteFileTasks;
-
+import com.github.redhatqe.polarize.metadata.DefTypes.PosNeg;
 import com.github.redhatqe.polarize.metadata.DefTypes.Project;
 
 /**
@@ -50,26 +54,33 @@ import com.github.redhatqe.polarize.metadata.DefTypes.Project;
  * [root@jsefler-7 ~]# tail -f /var/log/messages | grep brandbot
  * Dec  4 14:23:59 jsefler-7 systemd: brandbot.service start request repeated too quickly, refusing to start.
  * Dec  4 14:23:59 jsefler-7 systemd: Unit brandbot.service entered failed state.
+ * 
+ * Beware of future "[Bug 1357648] Brandbot cannot be disabled" which may impact these tests
  */
-@Test(groups = {"BrandingTests","Tier2Tests"})
+@Test(groups = {"BrandingTests"})
 public class BrandingTests extends SubscriptionManagerCLITestScript {
 
 	@Test(	description="assert that brandbot service is running",
-			groups={"AcceptanceTests","Tier1Tests"},
+			groups={"Tier1Tests"},
 			enabled=false)	// TODO not sure how this works... the status of this service is inactive, yet it appears to be automatically started/stopped as needed NEEDINFO from notting
-	public void BrandbotServiceShouldBeRunning_Test() {
+	public void testBrandbotServiceShouldBeRunning() {
 		if (Integer.valueOf(clienttasks.redhatReleaseX)<7) throw new SkipException("Brandbot is an initscripts tool feature of Flexible Branding in RHEL7.");	// initscripts-9.49.17-1.el7
 		RemoteFileTasks.runCommandAndAssert(client, "systemctl is-active brandbot.service", Integer.valueOf(0), "^active$", null);
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-19955", "RHEL7-51004"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-19955", "RHEL7-51004"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="incrementally attach all available subscriptions and verify tests for Flexible Branding",
-			groups={"AttachSubscriptionsForFlexibleBranding_Test","AcceptanceTests","Tier1Tests","blockedByBug-884290"},
+			groups={"Tier1Tests","AttachSubscriptionsForFlexibleBranding_Test","blockedByBug-884290"},
 			priority=100,
 			enabled=true)
-	public void AttachSubscriptionsForFlexibleBranding_Test() throws JSONException, Exception {
+	public void testAttachSubscriptionsForFlexibleBranding() throws JSONException, Exception {
 		// register
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null,(List<String>)null, null, null, null, true, false, null, null, null, null);
 		
@@ -81,7 +92,7 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 		List<SubscriptionPool> subscriptionPools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		SubscriptionPool brandedSubscriptionPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", brandedSubscriptionProductId, subscriptionPools);
 		subscriptionPools = getRandomSubsetOfList(subscriptionPools,10);	// randomly reduce the number of subscriptionPools tested
-		
+//debugTesting subscriptionPools.add(0, SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", "RH2501844", subscriptionPools));
 		// include the branded subscription pool for brandedSubscriptionProductId at the head of subscriptionPools
 		if (brandedSubscriptionPool!=null) subscriptionPools.add(0, brandedSubscriptionPool);
 		
@@ -98,7 +109,7 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 			if (verifiedSystemsExpectedBrandedNameAfterEvent==null) {
 				// unentitle the system to clear the undefined case of multiple installed OS products
 				//clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null);
-				RemoveSubscriptionsForFlexibleBranding_Test();
+				testRemoveSubscriptionsForFlexibleBranding();
 			} else if (verifiedSystemsExpectedBrandedNameAfterEvent) flexibleBrandedSubscriptionsFound=true; 
 		}
 		
@@ -106,14 +117,19 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 		if (!flexibleBrandedSubscriptionsFound) throw new SkipException("No branding subscriptions were found among the available subscriptions that will brand one of the currently installed OS products.");
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-19956", "RHEL7-51005"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-19956", "RHEL7-51005"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="incrementally remove attached subscriptions and verify tests for Flexible Branding",
-			//depend on priority instead of dependsOnMethods={"AttachSubscriptionsForFlexibleBranding_Test"},
+			//depend on priority instead of dependsOnMethods={"testAttachSubscriptionsForFlexibleBranding"},
 			priority=101,
-			groups={"AcceptanceTests","Tier1Tests"},
+			groups={"Tier1Tests"},
 			enabled=true)
-	public void RemoveSubscriptionsForFlexibleBranding_Test() {
+	public void testRemoveSubscriptionsForFlexibleBranding() {
 		
 		// loop through all the attached subscriptions and remove them while running tests for branding
 		for (ProductSubscription productSubscription : clienttasks.getCurrentlyConsumedProductSubscriptions()) {
@@ -127,14 +143,19 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-19957", "RHEL7-55161"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-19957", "RHEL7-55161"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="autosubscribe and verify tests for Flexible Branding",
 			dependsOnGroups={},
 			priority=200,
-			groups={"AcceptanceTests","Tier1Tests","AutoSubscribeForFlexibleBranding_Test"},
+			groups={"Tier1Tests","AutoSubscribeForFlexibleBranding_Test"},
 			enabled=true)
-	public void AutoSubscribeForFlexibleBranding_Test() {
+	public void testAutoSubscribeForFlexibleBranding() {
 		// we will start out by unregistering and removing the current brand name.
 		clienttasks.unregister(null, null, null, null);
 		client.runCommandAndWait("rm -f "+brandingFile);
@@ -150,19 +171,24 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 		// tests for branding
 		Boolean verifiedSystemsExpectedBrandedNameAfterEvent = verifySystemsExpectedBrandedNameAfterEvent(brandNameBeforeRegisteringWithAutosubscribe,brandNameStatBeforeRegisteringWithAutosubscribe,prettyNameBeforeRegisteringWithAutosubscribe,"registering with autosubscribe");
 		if (verifiedSystemsExpectedBrandedNameAfterEvent==null || !verifiedSystemsExpectedBrandedNameAfterEvent) {
-			throw new SkipException("Could not verify the systems expected branded name after registering with autosubscribe.");
+			throw new SkipException("Could not verify the systems expected branded name after registering with autosubscribe.  Review warnings logged above for an explanation.");
 		}
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-19958", "RHEL7-55162"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-19958", "RHEL7-55162"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="run an rhsmcertd event and verify tests for Flexible Branding",
-			//depend on priority instead of dependsOnMethods={"AutoSubscribeForFlexibleBranding_Test"},
+			//depend on priority instead of dependsOnMethods={"testAutoSubscribeForFlexibleBranding"},
 			priority=201,
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1038664"},
+			groups={"Tier1Tests","blockedByBug-1038664"},
 			enabled=true)
-	public void RhsmcertdCheckForFlexibleBranding_Test() {
+	public void testRhsmcertdCheckForFlexibleBranding() {
 		// we will start out by removing the current brand name and the current entitlements.
 		clienttasks.removeAllCerts(false, true, false);
 		client.runCommandAndWait("rm -f "+brandingFile);
@@ -178,19 +204,24 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 		// tests for branding
 		Boolean verifiedSystemsExpectedBrandedNameAfterEvent = verifySystemsExpectedBrandedNameAfterEvent(brandNameBeforeRunningRhsmcertdCheck,brandNameStatBeforeRunningRhsmcertdCheck,prettyNameBeforeRunningRhsmcertdCheck,"running the rhsmcertd-worker check");
 		if (verifiedSystemsExpectedBrandedNameAfterEvent==null || !verifiedSystemsExpectedBrandedNameAfterEvent) {
-			throw new SkipException("Could not verify the systems expected branded name after running the rhsmcertd-worker to restore the consumer's entitlements from the prior AutoSubscribeForFlexibleBranding_Test.");
+			throw new SkipException("Could not verify the systems expected branded name after running the rhsmcertd-worker to restore the consumer's entitlements from the prior testAutoSubscribeForFlexibleBranding.  Review warnings logged above for an explanation.");
 		}
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-19959", "RHEL7-55163"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-19959", "RHEL7-55163"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="run an rhsmcertd healing event and verify tests for Flexible Branding",
-			//depend on priority instead of dependsOnMethods={"AutoSubscribeForFlexibleBranding_Test"},
+			//depend on priority instead of dependsOnMethods={"testAutoSubscribeForFlexibleBranding"},
 			priority=202,
-			groups={"AcceptanceTests","Tier1Tests"},
+			groups={"Tier1Tests"},
 			enabled=true)
-	public void RhsmcertdHealingUpdateForFlexibleBranding_Test() {
+	public void testRhsmcertdHealingUpdateForFlexibleBranding() {
 		// we will start out by removing the current brand name and removing the current entitlements.
 		clienttasks.unsubscribe(true, (BigInteger)null, null, null, null, null, null);
 		client.runCommandAndWait("rm -f "+brandingFile);
@@ -209,17 +240,22 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 		// tests for branding
 		Boolean verifiedSystemsExpectedBrandedNameAfterEvent = verifySystemsExpectedBrandedNameAfterEvent(brandNameBeforeRunningRhsmcertdHealCheck,brandNameStatBeforeRunningRhsmcertdHealCheck,prettyNameBeforeRunningRhsmcertdHealCheck,"running the rhsmcertd-worker healing check");
 		if (verifiedSystemsExpectedBrandedNameAfterEvent==null || !verifiedSystemsExpectedBrandedNameAfterEvent) {
-			throw new SkipException("Could not verify the systems expected branded name after running the rhsmcertd-worker with healing.");
+			throw new SkipException("Could not verify the systems expected branded name after running the rhsmcertd-worker with healing.  Review warnings logged above for an explanation.");
 		}
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36539", "RHEL7-51312"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-36539", "RHEL7-51312"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="assert that brandbot only reads the first line of the branding file",
-			groups={"blockedByBug-1031490"},
+			groups={"Tier2Tests","blockedByBug-1031490"},
 			enabled=true)
-	public void BrandbotShouldHandleMultiLineBrandingFile_Test() {
+	public void testBrandbotShouldHandleMultiLineBrandingFile() {
 		if (Integer.valueOf(clienttasks.redhatReleaseX)<7) throw new SkipException("Brandbot is an initscripts tool feature of Flexible Branding in RHEL7.");	// initscripts-9.49.17-1.el7
 		
 		String actualBrandName,actualPrettyName;
@@ -241,12 +277,17 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 	}
 	
 
-	@TestDefinition( projectID = {Project.RedHatEnterpriseLinux7}
-	               , testCaseID = {"RHEL7-51314"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL7-51314"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="assert that brandbot trims white space from the first line of the branding file",
-			groups={},
+			groups={"Tier2Tests"},
 			enabled=true)
-	public void BrandbotShouldTrimWhiteSpaceFromBrandingFile_Test() {
+	public void testBrandbotShouldTrimWhiteSpaceFromBrandingFile() {
 		if (Integer.valueOf(clienttasks.redhatReleaseX)<7) throw new SkipException("Brandbot is an initscripts tool feature of Flexible Branding in RHEL7.");	// initscripts-9.49.17-1.el7
 		
 		String actualBrandName,actualPrettyName;
@@ -260,12 +301,17 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 	}
 	
 
-	@TestDefinition( projectID = {Project.RedHatEnterpriseLinux7}
-	               , testCaseID = {"RHEL7-51313"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL7-51313"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="assert that brandbot does nothing when the brand file is removed",	//  Brandbot SHOULD handle /var/lib/rhsm/branded_name not existing.
-			groups={},
+			groups={"Tier2Tests"},
 			enabled=true)
-	public void BrandbotShouldHandleNonExistantBrandingFile_Test() {
+	public void testBrandbotShouldHandleNonExistantBrandingFile() {
 		if (Integer.valueOf(clienttasks.redhatReleaseX)<7) throw new SkipException("Brandbot is an initscripts tool feature of Flexible Branding in RHEL7.");	// initscripts-9.49.17-1.el7
 		
 		//	> If /var/lib/rhsm/branded_name is removed, what should PRETTY_NAME be? In
@@ -294,12 +340,17 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36538", "RHEL7-51311"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-36538", "RHEL7-51311"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="assert that brandbot removes PRETTY_NAME when the first line of the branding file is empty",	//  Brandbot SHOULD handle /var/lib/rhsm/branded_name being empty.
-			groups={"blockedByBug-1031490"},
+			groups={"Tier2Tests","blockedByBug-1031490"},
 			enabled=true)
-	public void BrandbotShouldHandleEmptyBrandingFile_Test() {
+	public void testBrandbotShouldHandleEmptyBrandingFile() {
 		if (Integer.valueOf(clienttasks.redhatReleaseX)<7) throw new SkipException("Brandbot is an initscripts tool feature of Flexible Branding in RHEL7.");	// initscripts-9.49.17-1.el7
 		
 		//	> If /var/lib/rhsm/branded_name is an empty file, what should PRETTY_NAME
@@ -317,22 +368,43 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 		//
 		//	Bill
 		
+		String messagesLogMarker = System.currentTimeMillis()+" Testing BrandbotShouldHandleEmptyBrandingFile_Test...";
+		RemoteFileTasks.markFile(client, clienttasks.messagesLogFile, messagesLogMarker);
 		String actualBrandName,actualPrettyName;
 		log.info("Testing an empty branding file...");
-		sleep(5000); // before echo to avoid tail -f /var/log/messages | grep brandbot...   systemd: brandbot.service start request repeated too quickly, refusing to start.
-		RemoteFileTasks.runCommandAndAssert(client, "rm -f "+brandingFile+" && touch "+brandingFile, 0);
+		// Note: If /var/lib/rhsm/branded_name is written too quickly, this will be found in the rhsm.log...
+		// Jul 10 11:42:39 jsefler-rhel7 systemd: start request repeated too quickly for brandbot.service
+		// Jul 10 11:42:39 jsefler-rhel7 systemd: brandbot.service failed.
+		sleep(5000); // will help avoid  systemd: brandbot.service start request repeated too quickly, refusing to start.
+		RemoteFileTasks.runCommandAndAssert(client, "truncate --size=0 "+brandingFile, 0);	//RemoteFileTasks.runCommandAndAssert(client, "rm -f "+brandingFile+" && touch "+brandingFile, 0);
 		actualBrandName = getCurrentBrandName();
 		Assert.assertEquals(actualBrandName, "", "The brand name contained within the first line of the brand file '"+brandingFile+"' (should be an empty string).");
+//debugTesting the following loop will force /var/log/messages systemd: start request repeated too quickly for brandbot.service
+//for(int i=0; i<6; i++) RemoteFileTasks.runCommandAndAssert(client, "echo `date` >> "+brandingFile, 0);
 		actualPrettyName = getCurrentPrettyName();
+		if (actualPrettyName!=null) {
+			// most likely... systemd: start request repeated too quickly for brandbot.service
+			String rhsmLogStatement = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.messagesLogFile, messagesLogMarker, "brandbot").trim();
+			if (!rhsmLogStatement.isEmpty()) log.warning(rhsmLogStatement);
+		}
 		Assert.assertNull(actualPrettyName, "The PRETTY_NAME contained within the os-release file '"+osReleaseFile+"' (should NOT be present when the brand file is empty).");
 		
 		log.info("Testing a non-empty branding file, but the first line is empty...");
-		sleep(5000); // before echo to avoid tail -f /var/log/messages | grep brandbot...   systemd: brandbot.service start request repeated too quickly, refusing to start.
+		// Note: If /var/lib/rhsm/branded_name is written too quickly, this will be found in the rhsm.log...
+		// Jul 10 11:42:39 jsefler-rhel7 systemd: start request repeated too quickly for brandbot.service
+		// Jul 10 11:42:39 jsefler-rhel7 systemd: brandbot.service failed.
+		sleep(5000); // will help avoid  systemd: brandbot.service start request repeated too quickly, refusing to start.
 		RemoteFileTasks.runCommandAndAssert(client, "echo '' >> "+brandingFile, 0);
+		sleep(5000);
 		RemoteFileTasks.runCommandAndAssert(client, "echo 'RHEL SubBranded OS (second line)' >> "+brandingFile, 0);
 		actualBrandName = getCurrentBrandName();
 		Assert.assertEquals(actualBrandName, "", "The brand name contained within the first line of the brand file '"+brandingFile+"' (should be an empty string).");
 		actualPrettyName = getCurrentPrettyName();
+		if (actualPrettyName!=null) {
+			// most likely... systemd: start request repeated too quickly for brandbot.service
+			String rhsmLogStatement = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.messagesLogFile, messagesLogMarker, "brandbot").trim();
+			if (!rhsmLogStatement.isEmpty()) log.warning(rhsmLogStatement);
+		}
 		Assert.assertNull(actualPrettyName, "The PRETTY_NAME contained within the os-release file '"+osReleaseFile+"' (should NOT be present when the first line of the brand file is empty).");
 	}
 	
@@ -359,6 +431,7 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 		//  - eligible brand names come from the currently entitled productNamespaces and are identified by a brandType = "OS"
 		//  - the corresponding productId must be among the currently installed product certs to be eligible
 		
+		Set<String> eligibleInstalledProductIdSet = new HashSet<String>();
 		Set<String> eligibleBrandNamesSet = new HashSet<String>();
 		List<String> eligibleBrandNamesList = new ArrayList<String>();
 		List<ProductCert> currentProductCerts = clienttasks.getCurrentProductCerts();
@@ -373,6 +446,7 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 							*/
 							eligibleBrandNamesList.add(productNamespace.brandName);
 							eligibleBrandNamesSet.add(productNamespace.brandName);
+							eligibleInstalledProductIdSet.add(productNamespace.id);
 						}
 					}
 				}
@@ -380,6 +454,21 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 		}
 		if (eligibleBrandNamesList.size() > eligibleBrandNamesSet.size()) {
 			log.warning("Currently there are multiple entitled OS brand products by the same name "+eligibleBrandNamesList+".  This can happen when multiple OS subscriptions have been stacked.");
+		}
+		if (eligibleInstalledProductIdSet.size() > 1) {
+			log.warning("Currently there are multiple entitled OS brand product ids installed "+eligibleInstalledProductIdSet+".  This is likely caused by a RHEL installation or redhat-release bug.  In this case a warning is logged to "+clienttasks.rhsmLogFile+" and no update is made to the branding file '"+brandingFile+"'.");
+			// 2017-10-25 13:56:44,700 [DEBUG] subscription-manager:26339:MainThread @certdirectory.py:217 - Installed product IDs: ['68', '69', '71', '76']
+			// 2017-10-25 13:56:44,772 [WARNING] subscription-manager:26339:MainThread @rhelentbranding.py:114 - More than one installed product with RHEL brand information is installed
+			eligibleBrandNamesSet.clear();
+			
+			// TEMPORARY WORKAROUND
+			boolean invokeWorkaroundWhileBugIsOpen = true;
+			String bugId="1506271";	// Bug 1506271 - redhat-release is providing more than 1 variant specific product cert
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
+			if (invokeWorkaroundWhileBugIsOpen) {
+				throw new SkipException("Skipping this test while bug '"+bugId+"' is open.");
+			}
+			// END OF WORKAROUND
 		}
 		return eligibleBrandNamesSet;
 	}
@@ -482,7 +571,7 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 			log.info("There is only one eligible brand name based on the currently attached entitlements, therefore the actual brand name should be '"+expectedBrandNameAfterSubscribing+"'.");
 			flexibleBrandedSubscriptionsFound=true;
 		}
-	
+		
 		// verify the actualBrandNameAfterSubscribing = expectedBrandNameAfterSubscribing
 		String actualBrandNameAfterSubscribing = getCurrentBrandName();
 		Assert.assertEquals(actualBrandNameAfterSubscribing, expectedBrandNameAfterSubscribing, "The brand name contained within the first line of the brand file '"+brandingFile+"' after "+afterEventDescription);
@@ -530,7 +619,7 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 			return;	
 		}
 		
-		// Subscription with an branding
+		// Subscription with a branding
 		String productId = brandedSubscriptionProductId;
 		List<String> providedProductIds = new ArrayList<String>();
 		providedProductIds.add("99010");

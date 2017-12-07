@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<testcase id="RHEL7-51498">
+    <title>RHSM-TC : rhsm.cli.tests.RolesTests.testUserRoleOrgPermissionAccess</title>
+    <description>for the given user credentials, verify that the permission access (READ_ONLY,ALL) are obeyed by attempting to register</description>
+    <test-steps>
+        <test-step>
+            <test-step-column id="step">
+                <parameter name="username" scope="local"/>
+                <parameter name="password" scope="local"/>
+                <parameter name="roleName" scope="local"/>
+                <parameter name="orgKey" scope="local"/>
+                <parameter name="access" scope="local"/>
+            </test-step-column>
+        </test-step>
+    </test-steps>
+    <custom-fields>
+        <custom-field id="caseautomation" content="automated"></custom-field>
+        <custom-field id="caseimportance" content="high"></custom-field>
+        <custom-field id="caselevel" content="component"></custom-field>
+        <custom-field id="caseposneg" content="positive"></custom-field>
+        <custom-field id="tags" content="Tier2"></custom-field>
+        <custom-field id="casecomponent" content="subscription-manager"></custom-field>
+        <custom-field id="testtype" content="functional"></custom-field>
+        <custom-field id="subtype1" content="reliability"></custom-field>
+        <custom-field id="subtype2" content="-"></custom-field>
+    </custom-fields>
+</testcase>

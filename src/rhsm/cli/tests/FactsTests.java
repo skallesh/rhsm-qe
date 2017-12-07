@@ -7,8 +7,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.github.redhatqe.polarize.metadata.DefTypes.PosNeg;
 import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.DefTypes;
+import com.github.redhatqe.polarize.metadata.LinkedItem;
 import com.github.redhatqe.polarize.metadata.TestDefinition;
+import com.github.redhatqe.polarize.metadata.TestType;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -60,7 +64,7 @@ cpu.cpu_socket(s)
 --mstead
  
  */
-@Test(groups={"FactsTests","Tier2Tests"})
+@Test(groups={"FactsTests"})
 public class FactsTests extends SubscriptionManagerCLITestScript{
 	
 	
@@ -69,12 +73,17 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	/**
 	 * @author skallesh
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36614", "RHEL7-51424"})
-	@Test(    description="subscription-manager: facts --update (when registered)",
-			            groups={"MyTestFacts","blockedByBug-707525"},
-			            enabled=true)
-	public void FactsUpdateWhenRegistered_Test() {
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36614", "RHEL7-51424"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
+	@Test(  description="subscription-manager: facts --update (when registered)",
+			groups={"Tier2Tests","MyTestFacts","blockedByBug-707525"},
+			enabled=true)
+	public void testFactsUpdateWhenRegistered() {
 			                       
 		 clienttasks.register(sm_clientUsername, sm_clientPassword,sm_clientOrg, null, null, null, null, null, null, null, (List<String>)null, null,null, null, false, null, null, null, null, null);
 		 SSHCommandResult result = clienttasks.facts(null, true,null, null, null, null);
@@ -82,13 +91,18 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36613", "RHEL7-51423"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36613", "RHEL7-51423"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager: facts --update (when not registered)",
-			groups={"blockedByBug-654429"},
+			groups={"Tier2Tests","blockedByBug-654429"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void FactsUpdateWhenNotRegistered_Test() {
+	public void testFactsUpdateWhenNotRegistered() {
 		
 		// make sure we are not registered
 		clienttasks.unregister(null, null, null, null);
@@ -105,13 +119,18 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36612", "RHEL7-51422"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36612", "RHEL7-51422"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager: facts --list (when not registered)",
-			groups={"blockedByBug-654429","blockedByBug-661329","blockedByBug-666544"},
+			groups={"Tier2Tests","blockedByBug-654429","blockedByBug-661329","blockedByBug-666544"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void FactsListWhenNotRegistered_Test() {
+	public void testFactsListWhenNotRegistered() {
 		
 		// make sure we are not registered
 		clienttasks.unregister(null, null, null, null);
@@ -126,11 +145,11 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager: facts (without --list or --update)",
-			groups={"blockedByBug-654429"},
+			groups={"Tier2Tests","blockedByBug-654429"},
 			enabled=false)	// was enabled before Bug 811594 - [RFE] facts command should default to list; replaced by FactsDefaultsToFactsList_Test()
 	@Deprecated
 	//@ImplementsNitrateTest(caseId=)
-	public void FactsWithoutListOrUpdate_Test_DEPRECATED() {
+	public void testFactsWithoutListOrUpdate_DEPRECATED() {
 		
 		log.info("Assert that one need one must specify --list or --update...");		
 		SSHCommandResult result = clienttasks.facts_(false, false, null, null, null, null);
@@ -140,13 +159,18 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 				"stdout from facts without --list or --update");
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36611", "RHEL7-51421"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36611", "RHEL7-51421"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager: facts (without --list or --update) should default to --list",
-			groups={"blockedByBug-811594"},
+			groups={"Tier2Tests","blockedByBug-811594"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void FactsDefaultsToFactsList_Test() {
+	public void testFactsDefaultsToFactsList() {
 		
 		SSHCommandResult listResult = clienttasks.facts(true, null, null, null, null, null);
 		SSHCommandResult defaultResult = clienttasks.facts(null, null, null, null, null, null);
@@ -172,14 +196,19 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20020", "RHEL7-51037"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20020", "RHEL7-51037"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="subscription-manager: facts and rules: consumer facts list",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1017299"}, dependsOnGroups={},
+			groups={"Tier1Tests","blockedByBug-1017299"}, dependsOnGroups={},
 			dataProvider="getClientsData",
 			enabled=true)
 	@ImplementsNitrateTest(caseId=56386)
-	public void ConsumerFactsList_Test(SubscriptionManagerTasks smt) {
+	public void testConsumerFactsList(SubscriptionManagerTasks smt) {
 		
 		// start with fresh registrations using the same clientusername user
 		smt.unregister(null, null, null, null);
@@ -190,13 +219,18 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36610", "RHEL7-59318"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36610", "RHEL7-59318"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager: facts and rules: fact check RHEL distribution",
-			groups={"blockedByBug-666540"}, dependsOnGroups={},
+			groups={"Tier2Tests","blockedByBug-666540"}, dependsOnGroups={},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=56329)
-	public void FactCheckRhelDistribution_Test() {
+	public void testFactCheckRhelDistribution() {
 		
 		// skip if client1 and client2 are not a Server and Workstation distributions
 		SSHCommandRunner workClient = null,servClient = null;
@@ -243,14 +277,19 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36606", "RHEL7-51418"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36606", "RHEL7-51418"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager: facts and rules: check sockets",
-			groups={}, dependsOnGroups={},
+			groups={"Tier2Tests"}, dependsOnGroups={},
 			dataProvider="getClientsData",
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void AssertPoolsWithSocketsGreaterThanSystemsCpuSocketAreNotAvailable_Test(SubscriptionManagerTasks smt) throws Exception {
+	public void testPoolsWithSocketsGreaterThanSystemsCpuSocketAreNotAvailable(SubscriptionManagerTasks smt) throws Exception {
 		smt.unregister(null, null, null, null);
 		String consumerId = smt.getCurrentConsumerId(smt.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null, null, null, null, (String)null, null, null, null, null, false, null, null, null, null));
 		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerId);
@@ -328,14 +367,19 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		Assert.assertTrue(foundPoolWithSocketAttributes,"At least one Subscription Pool was found for which we could attempt this test.");
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36605", "RHEL7-51417"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36605", "RHEL7-51417"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager: facts and rules: check arch",
-			groups={}, dependsOnGroups={},
+			groups={"Tier2Tests"}, dependsOnGroups={},
 			dataProvider="getClientsData",
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void AssertPoolsWithAnArchDifferentThanSystemsArchitectureAreNotAvailable_Test(SubscriptionManagerTasks smt) throws Exception {
+	public void testPoolsWithAnArchDifferentThanSystemsArchitectureAreNotAvailable(SubscriptionManagerTasks smt) throws Exception {
 		smt.unregister(null, null, null, null);
 		String consumerId = smt.getCurrentConsumerId(smt.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null, null, null, null, (String)null, null, null, null, null, false, null, null, null, null));
 		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerId);
@@ -398,14 +442,14 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	@Test(	description="subscription-manager: facts and rules: bypass rules due to type",
-			groups={"blockedByBug-641027"}, dependsOnGroups={},
+			groups={"Tier2Tests","blockedByBug-641027"}, dependsOnGroups={},
 			enabled=false)	// 9/17/2013 this test has been disabled in favor of new BypassRulesDueToTypeAndCapabilities_Test
 							// 9/17/2013 jsefler: as originally written, this test is deficient because a new "capabilities"
 							// attribute has been added to the consumer object to help the creation of manifests for downstream
 							// candlepins that may not be new enough to handle subscriptions with an attribute of:
 							// cores, ram, instance_multiplier, derived_product
 	@ImplementsNitrateTest(caseId=56331)
-	public void BypassRulesDueToType_Test() throws Exception {
+	public void testBypassRulesDueToType() throws Exception {
 		// determine which client is a RHEL Workstation
 		SSHCommandRunner client = null;
 		SubscriptionManagerTasks clienttasks = null;
@@ -445,13 +489,18 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36607", "RHEL7-51419"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36607", "RHEL7-51419"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager: facts and rules: bypass rules due to candlepin type and capabilities",
-			groups={"blockedByBug-641027","BypassRulesDueToTypeAndCapabilities_Test"}, dependsOnGroups={},
+			groups={"Tier2Tests","blockedByBug-641027","BypassRulesDueToTypeAndCapabilities_Test"}, dependsOnGroups={},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=56331)
-	public void BypassRulesDueToTypeAndCapabilities_Test() throws Exception {
+	public void testBypassRulesDueToTypeAndCapabilities() throws Exception {
 				
 		// this list will grow in time as candlepins are programmed to handle more subscription types (I got this list from the dev team)
 		//List<String> allCapabilities = Arrays.asList(new String[]{"cores", "ram", "instance_multiplier", "derived_product", "cert_v3"});
@@ -467,7 +516,15 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
 		
 		// register (as type candlepin)
-		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, ConsumerType.candlepin, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null));
+		String consumerId;
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">="/*TODO CHANGE TO ">" after candlepin 2.1.2-1 is tagged*/, "2.1.1-1")) {	// candlepin commit 739b51a0d196d9d3153320961af693a24c0b826f Bug 1455361: Disallow candlepin consumers to be registered via Subscription Manager
+		    clienttasks.unregister(null, null, null, null);
+		    clienttasks.registerCandlepinConsumer(sm_clientUsername,sm_clientPassword,sm_clientOrg,sm_serverUrl,"candlepin");
+		    consumerId = clienttasks.getCurrentConsumerId();
+		} else {
+			consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, ConsumerType.candlepin, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null));
+		}
+		
 		
 		// by default, this consumer starts out with no capabilities
 		JSONObject jsonConsumer = (JSONObject) new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/consumers/"+consumerId));
@@ -576,10 +633,17 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6}
-			       , testCaseID = {"RHEL6-36365"})
-	@Test (description = "Verify the FQDN in facts list ", groups= {"Tier1Tests","blockedByBug-1367128"}, enabled = true)
-	public void VerifyFullyQualifiedDomainNameInFacts_Test()throws JSONException,Exception{
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36365", "RHEL7-87611"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
+	@Test(	description = "Verify the FQDN in facts list ",
+			groups= {"Tier1Tests","blockedByBug-1367128"},
+			enabled = true)
+	public void testFullyQualifiedDomainNameInFacts()throws JSONException,Exception{
 		if (clienttasks.isPackageVersion("subscription-manager","<","1.18.3-1")){
 			//subscription-manager commit
 			//9012212d4340d992f7567855bc88ad2a4db257be 1367128, 1367126: Add network.fqdn fact
@@ -605,24 +669,34 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(factValue,fqdn,"System fact '"+fact+"' matches the system value from command '"+command+"'.");
 	}
 	
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20019", "RHEL7-51036"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20019", "RHEL7-51036"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="subscription-manager: assert presence of the new fact cpu.topology_source use to tell us what algorithm subscription-manager employed",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-978466"}, dependsOnGroups={},
+			groups={"Tier1Tests","blockedByBug-978466"}, dependsOnGroups={},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void AssertFactForCpuTopology_Test() {
+	public void testFactForCpuTopology() {
 		String cpuTopologyFact = "cpu.topology_source";	// this fact was invented as a result of the fix for Bug 978466 - subscription-manager fact 'cpu.cpu_socket(s)' is missing in ppc64 and s390x
 		Assert.assertNotNull(clienttasks.getFactValue(cpuTopologyFact), "The '"+cpuTopologyFact+"' is set by subscription-manager to tell us what algorthm was used to determine the facts for cpu.cpu_socket(s) and cpu.core(s)_per_socket.");
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20018", "RHEL7-51035"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20018", "RHEL7-51035"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="subscription-manager: assert that the cpu.cpu_socket(s) fact matches lscpu.socket(s)",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-707292"/*,"blockedByBug-751205","blockedByBug-978466"*//*,"blockedByBug-844532"*//*,"blockedByBug-1070908"*/}, dependsOnGroups={},
+			groups={"Tier1Tests","blockedByBug-707292"/*,"blockedByBug-751205","blockedByBug-978466"*//*,"blockedByBug-844532"*//*,"blockedByBug-1070908"*/}, dependsOnGroups={},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void AssertCpuCpuSocketsMatchLscpuSockets_Test() {
+	public void testCpuCpuSocketsMatchLscpuSockets() {
 		boolean assertedSockets = false;
 		clienttasks.deleteFactsFileWithOverridingValues();
 		
@@ -736,13 +810,18 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20017", "RHEL7-51034"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20017", "RHEL7-51034"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="subscription-manager: assert that the cores calculation using facts cpu.cpu_socket(s)*cpu.core(s)_per_socket matches the cores calculation using lscpu facts",
-			groups={"AcceptanceTests","Tier1Tests"/*,"blockedByBug-751205","blockedByBug-978466"*//*,"blockedByBug-1070908"*/}, dependsOnGroups={},
+			groups={"Tier1Tests"/*,"blockedByBug-751205","blockedByBug-978466"*//*,"blockedByBug-1070908"*/}, dependsOnGroups={},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void AssertCoresCalculatedUsingCpuFactsMatchCoresCalculatedUsingLscpu_Test() {
+	public void testCoresCalculatedUsingCpuFactsMatchCoresCalculatedUsingLscpu() {
 		boolean assertedCores = false;
 		clienttasks.deleteFactsFileWithOverridingValues();
 		
@@ -989,13 +1068,18 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36604", "RHEL7-51416"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36604", "RHEL7-51416"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="when registering to an existing consumerid, the facts for the system should be updated automatically upon registering",
-			groups={"blockedByBug-810236"}, dependsOnGroups={},
+			groups={"Tier2Tests","blockedByBug-810236"}, dependsOnGroups={},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void AssertFactsUpdateWhenRegisteringWithConsumerId_Test() throws JSONException, Exception {
+	public void testFactsUpdateWhenRegisteringWithConsumerId() throws JSONException, Exception {
 		if (client1==null || client2==null) throw new SkipException("This test requires two clients.");
 
 		// give client1 a custom fact
@@ -1029,10 +1113,10 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		client2tasks.createFactsFileWithOverridingValues(customFactsMap);
 		
 		// register client2 to the existing consumerid and get the facts from client2
-		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.16.2-1")) {	// commit f14d2618ea94c18a0295ae3a5526a2ff252a3f99 Doesnt allow using --force with --consumerid
+		if (client2tasks.isPackageVersion("subscription-manager", ">=", "1.16.2-1")) {	// commit f14d2618ea94c18a0295ae3a5526a2ff252a3f99 Doesnt allow using --force with --consumerid
 			//	[root@jsefler-6 ~]# subscription-manager register --username=testuser1 --password=password --consumerid=fc1b9613-2793-4017-8b9f-a8ab85c5ba96 --force
 			//	Error: Can not force registration while attempting to recover registration with consumerid. Please use --force without --consumerid to re-register or use the clean command and try again without --force.
-			clienttasks.clean();
+			client2tasks.clean();
 			Assert.assertEquals(client2tasks.getCurrentConsumerId(client2tasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, consumerId, null, null, null, (String)null, null, null, null, false, null, null, null, null, null)), consumerId, "Registering to an existing consumerId should return the same consumerId.");
 
 		} else {
@@ -1051,13 +1135,18 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36603", "RHEL7-51415"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36603", "RHEL7-51415"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="the facts for net.interface.sit0.mac_address and net.interface.lo.mac_address should not be listed",
-			groups={"blockedByBug-838123","blockedByBug-866645"}, dependsOnGroups={},
+			groups={"Tier2Tests","blockedByBug-838123","blockedByBug-866645"}, dependsOnGroups={},
 			enabled=true)	// TODO re-implement this test after fix for Bug 866645
 	//@ImplementsNitrateTest(caseId=)
-	public void AssertFactsForNetInterfaceMacAddress_Test() {
+	public void testFactsForNetInterfaceMacAddress() {
 		
 		Map<String,String> clientFactsMap = clienttasks.getFacts();
 		for (String macAddressFact : new String[]{"net.interface.sit0.mac_address","net.interface.lo.mac_address"}) {
@@ -1066,14 +1155,19 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36364", "RHEL7-57875"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36364", "RHEL7-57875"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="assert the addition of new facts collected to capture multiple IPs per network interface device - net.interface.<device>.ipv<4|6>_<addressinfo>_list",
-			groups={"blockedByBug-874735","AcceptanceTests","Tier1Tests"}, dependsOnGroups={},
+			groups={"Tier1Tests","blockedByBug-874735"}, dependsOnGroups={},
 			enabled=true)
 	// Polarion RHEL7-55562 RHSM-TC : facts collection of interfaces with multiple addresses
 	//@ImplementsNitrateTest(caseId=)
-	public void AssertNewFactsAreCollectedForMultipleIPsPerNetworkInterface_Test() {
+	public void testNewFactsAreCollectedForMultipleIPsPerNetworkInterface() {
 		if (clienttasks.isPackageVersion("subscription-manager", "<", "1.17.8-1")) {  // subscription-manager commit e3121cb1a426ab02440810cbbf38c3a2e228f079: 874735: Support fact collection of multiple ips per interface
 			throw new SkipException("This test applies a newer version of subscription manager that includes fixes for bugs 1297493 and 1297485.");
 		}
@@ -1147,13 +1241,18 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		rhsm_report_package_profile	= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsm", "report_package_profile");
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36609", "RHEL7-59317"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36609", "RHEL7-59317"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager: assert the ability to enable/disable the reporting of the consumers package profile",
-			groups={"EnablementOfReportPackageProfile_Test","blockedByBug-905922"},
+			groups={"Tier2Tests","EnablementOfReportPackageProfile_Test","blockedByBug-905922"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void EnablementOfReportPackageProfile_Test() throws JSONException, Exception {
+	public void testEnablementOfReportPackageProfile() throws JSONException, Exception {
 		boolean isPackagesSupported = servertasks.isPackagesSupported(sm_clientUsername, sm_clientPassword, sm_serverUrl);
 		String packagesNotSupportedLogMsg = "Server does not support packages, skipping profile upload.";
 		String reportPackageProfileOffLogMsg = "Skipping package profile upload due to report_package_profile setting.";
@@ -1198,13 +1297,18 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36602", "RHEL7-51414"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36602", "RHEL7-51414"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="verify the fact value for system.certificate_version which tells the candlepin server the maximum entitlement certificate version this system knows how to consume. ",
-			groups={"blockedByBug-957218"}, dependsOnGroups={},
+			groups={"Tier2Tests","blockedByBug-957218"}, dependsOnGroups={},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void AssertFactForSystemCertificateVersion_Test() {
+	public void testFactForSystemCertificateVersion() {
 		String actualSystemCertificateVersion = clienttasks.getFactValue("system.certificate_version");
 		String expectedSystemCertificateVersion = "3.2";
 		
@@ -1224,13 +1328,18 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36615", "RHEL7-51425"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36615", "RHEL7-51425"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager: subscription-manager should handle malformed custom facts with grace",
-			groups={"MalformedCustomFacts_Test","blockedByBug-966747","blockedByBug-1112326","blockedByBug-1435771"},
+			groups={"Tier2Tests","MalformedCustomFacts_Test","blockedByBug-966747","blockedByBug-1112326","blockedByBug-1435771"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void MalformedCustomFacts_Test() {
+	public void testMalformedCustomFacts() {
 		File malformedFactsFile = new File(clienttasks.factsDir+File.separatorChar+malformedFactsFilename);
 		
 		// mark the rhsm.log file
@@ -1277,13 +1386,18 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	private final String malformedFactsFilename = "malformed.facts";
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36608", "RHEL7-51420"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36608", "RHEL7-51420"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager: subscription-manager should handle empty custom facts with grace",
-			groups={"EmptyCustomFacts_Test","blockedByBug-966747","blockedByBug-1112326","blockedByBug-1435771"},
+			groups={"Tier2Tests","EmptyCustomFacts_Test","blockedByBug-966747","blockedByBug-1112326","blockedByBug-1435771"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void EmptyCustomFacts_Test() {
+	public void testEmptyCustomFacts() {
 		File emptyFactsFile = new File(clienttasks.factsDir+File.separatorChar+emptyFactsFilename);
 		
 		// create empty facts
@@ -1328,13 +1442,18 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	private final String emptyFactsFilename = "empty.facts";
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36616", "RHEL7-51426"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36616", "RHEL7-51426"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="verify that the facts --list of name keys is independent of LANG/LC_ALL...  For example when LC_ALL=fr_FR.UTF-8 subscription-manager facts --list, EXPECTED: lscpu.virtualization_type: full  ACTUAL(failed): lscpu.type_de_virtualisation: complet",
-			groups={"blockedByBug-1225435","blockedByBug-1450210"},
+			groups={"Tier2Tests","blockedByBug-1225435","blockedByBug-1450210"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyFactKeyNamesListedIsLangIndependent_Test() {
+	public void testFactKeyNamesListedIsLangIndependent() {
 		
 		// this is the list of base facts in English
 		Map<String,String> baseFacts = clienttasks.getFacts();
@@ -1359,11 +1478,26 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		Assert.assertTrue(allBaseFactKeyAreLangIndependent, "All the fact keys are independent of lang.  If this fails, see the warnings logged above.");
 	}
 	
-	
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-47898", "RHEL7-96739"},
+			linkedWorkItems= {
+				@LinkedItem(
+					workitemId= "RHEL6-28536",	// RHSM-REQ : subscription-manager cli facts collection, reporting, and updating
+					project= Project.RHEL6,
+					role= DefTypes.Role.VERIFIES),
+				@LinkedItem(
+					workitemId= "RHEL7-84925",	// RHSM-REQ : subscription-manager cli facts collection, reporting, and updating
+					project= Project.RedHatEnterpriseLinux7,
+					role= DefTypes.Role.VERIFIES)},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.LOW, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description = "Verify the system.default_locale is included in facts list and resolves to the actual LANG of the shell",
-			groups = {"blockedByBug-1425922" },
+			groups = {"Tier2Tests","blockedByBug-1425922" },
 			enabled = true)
-	public void VerifySystemDefaultLocaleInFacts_Test() {
+	public void testSystemDefaultLocaleInFacts() {
 		if (clienttasks.isPackageVersion("python-rhsm", "<", "1.19.3-1")) {	// commit 0670d70540a24a8e173d347e2240dcfb7535608a Bug 1425922: System locale in facts
 			throw new SkipException("This test applies a newer version of subscription manager that includes an implementation for RFE Bug 1425922.");
 		}
@@ -1392,13 +1526,18 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-22221", "RHEL7-51427"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-22221", "RHEL7-51427"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="Verify proc_cpuinfo facts are now collected on subscription-manager-1.16.8-2+.  On ppc64 systems, also verify that a virt.uuid is collected on a pSeries platform.",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1300805","blockedByBug-1300816"},
+			groups={"Tier1Tests","blockedByBug-1300805","blockedByBug-1300816"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyProcCpuInfoCollection_Test() {
+	public void testProcCpuInfoCollection() {
 		// Reference: https://github.com/RedHatQE/rhsm-qe/issues/527
 		
 		if (clienttasks.isPackageVersion("subscription-manager", "<", "1.16.8-2")) {	// subscription-manager commit f8416137a3b426aa54608116e005df7273abfada 1300805: Add support for ppc64 virt.uuid

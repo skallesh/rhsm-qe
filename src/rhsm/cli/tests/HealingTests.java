@@ -8,7 +8,10 @@ import rhsm.base.SubscriptionManagerCLITestScript;
 import rhsm.cli.tasks.CandlepinTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 
+import com.github.redhatqe.polarize.metadata.DefTypes;
 import com.github.redhatqe.polarize.metadata.TestDefinition;
+import com.github.redhatqe.polarize.metadata.TestType;
+import com.github.redhatqe.polarize.metadata.DefTypes.PosNeg;
 import com.github.redhatqe.polarize.metadata.DefTypes.Project;
 
 /**
@@ -16,18 +19,23 @@ import com.github.redhatqe.polarize.metadata.DefTypes.Project;
  *
  *
  */
-@Test(groups={"HealingTests","Tier2Tests"})
+@Test(groups={"HealingTests"})
 public class HealingTests extends SubscriptionManagerCLITestScript {
 	
 	// Test methods ***********************************************************************
-    @TestDefinition(projectID={Project.RHEL6, Project.RedHatEnterpriseLinux7},
-			        testCaseID={"RHEL6-21583", "RHEL7-51500"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21583", "RHEL7-51500"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags="Tier2")
 	@Test(	description="a new system consumer's autoheal attribute defaults to true (on)",
-			groups={},
+			groups={"Tier2Tests"},
 			priority=100,
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyAutohealAttributeDefaultsToTrueForNewSystemConsumer_Test() throws Exception {
+	public void testAutohealAttributeDefaultsToTrueForNewSystemConsumer() throws Exception {
 		
 		// register a new consumer
 		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null,null,null, true, null, null, null, null, null));
@@ -35,15 +43,21 @@ public class HealingTests extends SubscriptionManagerCLITestScript {
 		JSONObject jsonConsumer = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword, sm_serverUrl, "/consumers/"+consumerId));
 		Assert.assertTrue(jsonConsumer.getBoolean("autoheal"), "A new system consumer's autoheal attribute value defaults to true.");
 	}
-
-	@TestDefinition(projectID={Project.RHEL6, Project.RedHatEnterpriseLinux7},
-	                testCaseID={"RHEL6-21584", "RHEL7-51501"})
+	
+	
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21584", "RHEL7-51501"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags="Tier2")
 	@Test(	description="using the candlepin api, a consumer's autoheal attribute can be toggled off/on",
-			groups={},
-			priority=200, dependsOnMethods={"VerifyAutohealAttributeDefaultsToTrueForNewSystemConsumer_Test"},
+			groups={"Tier2Tests"},
+			priority=200, dependsOnMethods={"testAutohealAttributeDefaultsToTrueForNewSystemConsumer"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyAutohealAttributeCanBeToggledOffForConsumerUsingCandlepinAPI_Test() throws Exception {
+	public void testAutohealAttributeCanBeToggledOffForConsumerUsingCandlepinAPI() throws Exception {
 		
 		// get the current registered consumer's id
 		String consumerId = clienttasks.getCurrentConsumerId();
@@ -53,14 +67,20 @@ public class HealingTests extends SubscriptionManagerCLITestScript {
 		jsonConsumer = CandlepinTasks.setAutohealForConsumer(sm_clientUsername,sm_clientPassword, sm_serverUrl, consumerId,true);
 		Assert.assertTrue(jsonConsumer.getBoolean("autoheal"), "A consumer's autoheal attribute value can be toggled on (expected value=true).");
 	}
-
-	@TestDefinition(projectID={Project.RHEL6, Project.RedHatEnterpriseLinux7},
-	                testCaseID={"RHEL6-20096", "RHEL7-51103"})
+	
+	
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20096", "RHEL7-51103"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags="Tier1")
 	@Test(	description="using autoheal module, a consumer's autoheal attribute can be toggled off/on",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-976867"},
+			groups={"Tier1Tests","blockedByBug-976867"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyAutohealAttributeCanBeToggledOffForConsumerUsingCLI_Test() throws Exception {
+	public void testAutohealAttributeCanBeToggledOffForConsumerUsingCLI() throws Exception {
 		SSHCommandResult result;
 		JSONObject jsonConsumer;
 		
@@ -89,14 +109,20 @@ public class HealingTests extends SubscriptionManagerCLITestScript {
 		result = clienttasks.autoheal(true, null, null, null, null, null, null);
 		Assert.assertEquals(result.getStdout().trim(), "Auto-attach preference: enabled", "Stdout from the auto-attach --show.");
 	}
-
-	@TestDefinition(projectID={Project.RHEL6, Project.RedHatEnterpriseLinux7},
-	                testCaseID={"RHEL6-21582", "RHEL7-51499"})
+	
+	
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21582", "RHEL7-51499"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags="Tier2")
 	@Test(	description="run auto-attach module without being registered",
-			groups={"blockedByBug-976867"},
+			groups={"Tier2Tests","blockedByBug-976867"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyAutohealWithoutBeingRegistered_Test() throws Exception {
+	public void testAutohealWithoutBeingRegistered() throws Exception {
 		
 		// unregister
 		clienttasks.unregister(null, null, null, null);

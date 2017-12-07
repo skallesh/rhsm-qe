@@ -10,8 +10,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.DefTypes;
 import com.github.redhatqe.polarize.metadata.TestDefinition;
+import com.github.redhatqe.polarize.metadata.TestType;
+import com.github.redhatqe.polarize.metadata.DefTypes.PosNeg;
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -111,19 +114,24 @@ MESSAGES.put("ACTIVATIONKEYDELETED",
  */
 
 
-@Test(groups={"EventTests","Tier3Tests"})
+@Test(groups={"EventTests"})
 public class EventTests extends SubscriptionManagerCLITestScript{
 
 	// Test methods ***********************************************************************
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21840", "RHEL7-51661"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21840", "RHEL7-51661"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="subscription-manager: events: Consumer Created is sent over an RSS atom feed.",
-			groups={"ConsumerCreated_Test"},
+			groups={"Tier3Tests","ConsumerCreated_Test"},
 			dependsOnGroups={},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void ConsumerCreated_Test() throws Exception {
+	public void testConsumerCreated() throws Exception {
 		if (sm_serverAdminUsername.equals("")||sm_serverAdminPassword.equals("")) throw new SkipException("This test requires the candlepin server admin username and password credentials.");
 
 		// start fresh by unregistering
@@ -140,6 +148,9 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		newEventTitles = new String[]{"COMPLIANCE CREATED","COMPLIANCE CREATED","CONSUMER CREATED"};	// COMPLIANCE CREATED events were added to support gutterball
 		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "0.9.37-1"/*candlepin-common-1.0.17-1*/)) {	// commit bb1d2e6184a6cd9b80ff9c9d3045e9d780116226	// Only send Compliance event when compliance changes
 			newEventTitles = new String[]{"COMPLIANCE CREATED","CONSUMER CREATED"};
+		}
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.1.1-1"/*TODO change to the next tag 2.1.2-1 once it is added */)) {	// commit 1ad3fd6f338d9bbcedc8eba8361d4bc6c807f84d	1474443 compliance.created events now use UUID for 'consumerId' field
+			newEventTitles = new String[]{"CONSUMER CREATED"};
 		}
 		
 		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=721136 - jsefler 07/14/2011
@@ -167,14 +178,19 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21842", "RHEL7-51663"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21842", "RHEL7-51663"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="subscription-manager: events: Enitlement Created is sent over an RSS atom feed.",
-			groups={"EntitlementCreated_Test"},
+			groups={"Tier3Tests","EntitlementCreated_Test"},
 			dependsOnGroups={"ConsumerCreated_Test"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=50403)
-	public void EntitlementCreated_Test() throws Exception {
+	public void testEntitlementCreated() throws Exception {
 		
 		// test prerequisites
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
@@ -195,7 +211,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 //testPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", "awesomeos-virt-4", pools);
 //testPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", "awesomeos-virt-unlimited", pools);
 //testPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", "awesomeos-server-basic-dc", pools);
-//testPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", "8a90879051a127080151a12847570758", pools);
+//testPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", "8a90860f5eed6282015eed64099a0193", pools);
 //testPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("contract", "", pools);
 //testPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("subscriptionType", "Standard (Temporary)", pools);
 
@@ -229,21 +245,26 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		// assert the owner feed...
 		//assertTheNewOwnerFeed(ownerKey, oldOwnerFeed, newEventTitles.toArray(new String[]{}));	// worked prior to RHEL59
 		assertTheNewOwnerFeedIgnoringEventTitles(ownerKey, oldOwnerFeed, newEventTitles.toArray(new String[]{}), new HashSet<String>(){{add("CONSUMER MODIFIED");add("COMPLIANCE CREATED");}});	// TODO Using the IgnoringEventTitles is a workaround bug 838123#c2
-  
+		
 		// assert the feed...
 		//assertTheNewFeed(oldFeed, newEventTitles.toArray(new String[]{}));	// worked prior to RHEL59
 		assertTheNewFeedIgnoringEventTitles(oldFeed, newEventTitles.toArray(new String[]{}), new HashSet<String>(){{add("CONSUMER MODIFIED");add("COMPLIANCE CREATED");}});
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-	               , testCaseID = {"RHEL6-26757", "RHEL7-52091"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-26757", "RHEL7-52091"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="subscription-manager: events: Pool Modified and Entitlement Modified is sent over an RSS atom feed.",
-			groups={"blockedByBug-721141","PoolModifiedAndEntitlementModified_Test","blockedByBug-645597","blockedByBug-1303242"},
+			groups={"Tier3Tests","blockedByBug-721141","PoolModifiedAndEntitlementModified_Test","blockedByBug-645597","blockedByBug-1303242","blockedByBug-1500837","blockedByBug-1500843"},
 			dependsOnGroups={"EntitlementCreated_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void PoolModifiedAndEntitlementModified_Test() throws Exception {
+	public void testPoolModifiedAndEntitlementModified() throws Exception {
 		if (server==null) throw new SkipException("This test requires an SSH connection to the candlepin server."); 
 
 		// get the owner and consumer feeds before we test the firing of a new event
@@ -274,7 +295,8 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,ownerKey);
 		jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,jobDetail,"FINISHED", 10*1000, 3);
 		} else
-		CandlepinTasks.updateSubscriptionDatesAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl, CandlepinTasks.getSubscriptionIdForPoolId(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl, testPool.poolId),newStartDate,null);
+/*OLD*/	CandlepinTasks.updateSubscriptionDatesAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl, CandlepinTasks.getSubscriptionIdForPoolId(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl, testPool.poolId),newStartDate,null);
+//NEW TODO CandlepinTasks.updateSubscriptionPoolDatesUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl, testPool.poolId,newStartDate,null);
 
 		// assert the consumer feed...
 		List<String> newEventTitles = new ArrayList<String>();
@@ -329,14 +351,19 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-	               , testCaseID = {"RHEL6-21844", "RHEL7-51665"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21844", "RHEL7-51665"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="subscription-manager: events: Entitlement Deleted is sent over an RSS atom feed.",
-			groups={"EnititlementDeleted_Test"},
+			groups={"Tier3Tests","EnititlementDeleted_Test"},
 			dependsOnGroups={"PoolModifiedAndEntitlementModified_Test"},
 			enabled=true, alwaysRun=true)
 	//@ImplementsTCMS(id="")
-	public void EnititlementDeleted_Test() throws Exception {
+	public void testEnititlementDeleted() throws Exception {
 		if (sm_serverAdminUsername.equals("")||sm_serverAdminPassword.equals("")) throw new SkipException("This test requires the candlepin server admin username and password credentials.");
 
 		// get the owner and consumer feeds before we test the firing of a new event
@@ -359,6 +386,9 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 			// if this does not help, then we might try to alter the assertTheNew*() methods to IgnoreOrder of just call the assertTheNew**Contains() methods .. 
 			newEventTitles = new String[]{"ENTITLEMENT DELETED","COMPLIANCE CREATED"};	// switched the expected order; after discussions with vritant and crog who said the order of the expected new event titles may not be a guaranteed and apparently that's okay
 		}
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.1.1-1"/*TODO change to the next tag 2.1.2-1 once it is added */)) {	// commit 1ad3fd6f338d9bbcedc8eba8361d4bc6c807f84d	1474443 compliance.created events now use UUID for 'consumerId' field
+			newEventTitles = new String[]{"ENTITLEMENT DELETED"};
+		}
 		
 		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=721136 - jsefler 07/14/2011
 		boolean invokeWorkaroundWhileBugIsOpen = true;
@@ -368,11 +398,11 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 			newEventTitles = new String[]{clienttasks.hostname+" returned the subscription for "+testPool.subscriptionName};
 		}
 		// END OF WORKAROUND
-
+		
 		// assert the consumer feed...
         //assertTheNewConsumerFeed(ownerKey, consumerCert.consumerid, oldConsumerFeed, newEventTitles);
         assertTheNewConsumerFeedIgnoringEventTitles(ownerKey, consumerCert.consumerid, oldConsumerFeed, newEventTitles, new HashSet<String>(){{add("COMPLIANCE CREATED");}});
-
+        
         // adjust the expected events when the candlepin server is standalone and the pool has a non-zero virt_limit
         String virt_limit = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, testPool.poolId, "virt_limit");
         if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, "<", "2.0.16-1"))	// DO NOT INTERFERE WITH THE "switched the expected order" FROM ABOVE
@@ -383,20 +413,25 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		// assert the owner feed...
 		//assertTheNewOwnerFeed(ownerKey, oldOwnerFeed, newEventTitles);
 		assertTheNewOwnerFeedIgnoringEventTitles(ownerKey, oldOwnerFeed, newEventTitles, new HashSet<String>(){{add("COMPLIANCE CREATED");}});
-
+		
 		// assert the feed...
 		//assertTheNewFeed(oldFeed, newEventTitles);
 		assertTheNewFeedIgnoringEventTitles(oldFeed, newEventTitles, new HashSet<String>(){{add("COMPLIANCE CREATED");}});
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-	               , testCaseID = {"RHEL6-21845", "RHEL7-51666"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21845", "RHEL7-51666"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="subscription-manager: events: Consumer Modified is sent over an RSS atom feed.",
-			groups={"blockedByBug-721141","ConsumerModified_Test"}, dependsOnGroups={"EnititlementDeleted_Test"},
+			groups={"Tier3Tests","blockedByBug-721141","ConsumerModified_Test"}, dependsOnGroups={"EnititlementDeleted_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void ConsumerModified_Test() throws Exception {
+	public void testConsumerModified() throws Exception {
 		
 		// get the owner and consumer feeds before we test the firing of a new event
 		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
@@ -414,25 +449,36 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		// FYI: Another way to fire a consumer modified event is to call CandlepinTasks.setAutohealForConsumer(authenticator, password, url, consumerid, autoheal);
 		String[] newEventTitles = new String[]{"CONSUMER MODIFIED"};
 		newEventTitles = new String[]{"COMPLIANCE CREATED","CONSUMER MODIFIED"};	// COMPLIANCE CREATED events were added to support gutterball
-
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.1.1-1"/*TODO change to the next tag 2.1.2-1 once it is added */)) {	// commit 1ad3fd6f338d9bbcedc8eba8361d4bc6c807f84d	1474443 compliance.created events now use UUID for 'consumerId' field
+			newEventTitles = new String[]{"CONSUMER MODIFIED"};
+		}
+		
 		// assert the consumer feed...
-        assertTheNewConsumerFeed(ownerKey, consumerCert.consumerid, oldConsumerFeed, newEventTitles);
-	
+        //assertTheNewConsumerFeed(ownerKey, consumerCert.consumerid, oldConsumerFeed, newEventTitles);
+        assertTheNewConsumerFeedIgnoringEventTitles(ownerKey, consumerCert.consumerid, oldConsumerFeed, newEventTitles, new HashSet<String>(){{add("COMPLIANCE CREATED");}});
+        
 		// assert the owner feed...
-		assertTheNewOwnerFeed(ownerKey, oldOwnerFeed, newEventTitles);
-       
+		//assertTheNewOwnerFeed(ownerKey, oldOwnerFeed, newEventTitles);
+		assertTheNewOwnerFeedIgnoringEventTitles(ownerKey, oldOwnerFeed, newEventTitles, new HashSet<String>(){{add("COMPLIANCE CREATED");}});
+		
 		// assert the feed...
-		assertTheNewFeed(oldFeed, newEventTitles);
+		//assertTheNewFeed(oldFeed, newEventTitles);
+		assertTheNewFeedIgnoringEventTitles(oldFeed, newEventTitles, new HashSet<String>(){{add("COMPLIANCE CREATED");}});
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-	               , testCaseID = {"RHEL6-21846", "RHEL7-51667"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21846", "RHEL7-51667"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="subscription-manager: events: Consumer Deleted is sent over an RSS atom feed.",
-			groups={"ConsumerDeleted_Test"}, dependsOnGroups={"ConsumerModified_Test","NegativeConsumerUserPassword_Test"},
+			groups={"Tier3Tests","ConsumerDeleted_Test"}, dependsOnGroups={"ConsumerModified_Test","NegativeConsumerUserPassword_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void ConsumerDeleted_Test() throws Exception {
+	public void testConsumerDeleted() throws Exception {
 		
 		// get the owner and consumer feeds before we test the firing of a new event
 		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
@@ -458,13 +504,18 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-	               , testCaseID = {"RHEL6-21847", "RHEL7-51668"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21847", "RHEL7-51668"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="subscription-manager: events: Owner Created is sent over an RSS atom feed.",
-			groups={"OwnerCreated_Test"}, dependsOnGroups={"ConsumerDeleted_Test"},
+			groups={"Tier3Tests","OwnerCreated_Test"}, dependsOnGroups={"ConsumerDeleted_Test"},
 			enabled=true, alwaysRun=true)
 	//@ImplementsTCMS(id="")
-	public void OwnerCreated_Test() throws Exception {
+	public void testOwnerCreated() throws Exception {
 		if (server==null) throw new SkipException("This test requires an SSH connection to the candlepin server.");
 		if (sm_serverAdminUsername.equals("")||sm_serverAdminPassword.equals("")) throw new SkipException("This test requires the candlepin server admin username and password credentials.");
 		
@@ -492,18 +543,23 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6}
-			       , testCaseID = {"RHEL6-26758"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6},
+			testCaseID= {"RHEL6-26758"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="subscription-manager: events: Product Created is sent over an RSS atom feed.",
-			groups={"ProductCreated_Test"}, dependsOnGroups={"OwnerCreated_Test"},
+			groups={"Tier3Tests","ProductCreated_Test"}, dependsOnGroups={"OwnerCreated_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void ProductCreated_Test() throws JSONException, IllegalArgumentException, IOException, FeedException {
+	public void testProductCreated() throws JSONException, IllegalArgumentException, IOException, FeedException {
 		if (server==null) throw new SkipException("This test requires an SSH connection to the candlepin server."); 
 		
 		// get the owner and consumer feeds before we test the firing of a new event
 		SyndFeed oldFeed = CandlepinTasks.getSyndFeed(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
-
+		
         // do something that will fire a create product event
 		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) {
 			// candlepin 2.0 requires an owner key when creating products
@@ -511,25 +567,29 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		} else {
 			testJSONProduct = servertasks.createProductUsingCPC(testProductId, testProductId+" Test Product");	
 		}
-
 		
 		String[] newEventTitles = new String[]{"PRODUCT CREATED"};
 		
 		// WORKAROUND
 		if (true) throw new SkipException("09/02/2010 Events for PRODUCT CREATED are not yet dev complete.  Agilo Story: http://mgmt1.rhq.lab.eng.bos.redhat.com:8001/web/ticket/3737");
-
+		
 		// assert the feed...
 		assertTheNewFeed(oldFeed, newEventTitles);
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21848", "RHEL7-51669"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21848", "RHEL7-51669"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="subscription-manager: events: Pool Created is sent over an RSS atom feed.",
-			groups={"PoolCreated_Test"}, dependsOnGroups={"ProductCreated_Test"},
+			groups={"Tier3Tests","PoolCreated_Test"}, dependsOnGroups={"ProductCreated_Test"},
 			enabled=true, alwaysRun=true)
 	//@ImplementsTCMS(id="")
-	public void PoolCreated_Test() throws Exception {
+	public void testPoolCreated() throws Exception {
 		if (server==null) throw new SkipException("This test requires an SSH connection to the candlepin server."); 
 		if (sm_serverAdminUsername.equals("")||sm_serverAdminPassword.equals("")) throw new SkipException("This test requires the candlepin server admin username and password credentials.");
 
@@ -593,13 +653,18 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21849", "RHEL7-51670"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21849", "RHEL7-51670"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="subscription-manager: events: Pool Deleted is sent over an RSS atom feed.",
-			groups={"PoolDeleted_Test"}, dependsOnGroups={"PoolCreated_Test"},
+			groups={"Tier3Tests","PoolDeleted_Test"}, dependsOnGroups={"PoolCreated_Test"},
 			enabled=true, alwaysRun=true)
 	//@ImplementsTCMS(id="")
-	public void PoolDeleted_Test() throws Exception {
+	public void testPoolDeleted() throws Exception {
 		if (server==null) throw new SkipException("This test requires an SSH connection to the candlepin server."); 
 		if (sm_serverAdminUsername.equals("")||sm_serverAdminPassword.equals("")) throw new SkipException("This test requires the candlepin server admin username and password credentials.");
 
@@ -656,13 +721,18 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6}
-			       , testCaseID = {"RHEL6-26759"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6},
+			testCaseID= {"RHEL6-26759"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="subscription-manager: events: Product Deleted is sent over an RSS atom feed.",
-			groups={"ProductDeleted_Test"}, dependsOnGroups={"PoolDeleted_Test"},
+			groups={"Tier3Tests","ProductDeleted_Test"}, dependsOnGroups={"PoolDeleted_Test"},
 			enabled=true, alwaysRun=true)
 	//@ImplementsTCMS(id="")
-	public void ProductDeleted_Test() throws JSONException, IllegalArgumentException, IOException, FeedException {
+	public void testProductDeleted() throws JSONException, IllegalArgumentException, IOException, FeedException {
 		if (sm_serverAdminUsername.equals("")||sm_serverAdminPassword.equals("")) throw new SkipException("This test requires the candlepin server admin username and password credentials.");
 
 //		IRC CHAT ON 9/3/2010
@@ -678,7 +748,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		
 		// get the owner and consumer feeds before we test the firing of a new event
 		SyndFeed oldFeed = CandlepinTasks.getSyndFeed(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
-
+		
         // do something that will fire a delete product event
 		//servertasks.cpc_delete_product(testProduct.getString("id"));
 		String[] newEventTitles = new String[]{"PRODUCT DELETED"};
@@ -688,21 +758,31 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21850", "RHEL7-51671"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21850", "RHEL7-51671"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="subscription-manager: events: Export Created is sent over an RSS atom feed.",
-			groups={"ExportCreated_Test"}, dependsOnGroups={"ProductDeleted_Test"},
+			groups={"Tier3Tests","ExportCreated_Test"}, dependsOnGroups={"ProductDeleted_Test"},
 			enabled=true, alwaysRun=true)
 	//@ImplementsTCMS(id="")
-	public void ExportCreated_Test() throws Exception {
+	public void testExportCreated() throws Exception {
 		if (sm_serverAdminUsername.equals("")||sm_serverAdminPassword.equals("")) throw new SkipException("This test requires the candlepin server admin username and password credentials.");
-
+		
 		// start fresh by unregistering
 		clienttasks.unregister(null, null, null, null);
 		
 		// register a type=candlepin consumer and subscribe to get an entitlement
 		// NOTE: Without the subscribe, this bugzilla is thrown: 
-		SSHCommandResult result = clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,ConsumerType.candlepin,null,null, null, null, null, (String)null, null, null, null, null, false, null, null, null, null);
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">="/*TODO CHANGE TO ">" after candlepin 2.1.2-1 is tagged*/, "2.1.1-1")) {	// candlepin commit 739b51a0d196d9d3153320961af693a24c0b826f Bug 1455361: Disallow candlepin consumers to be registered via Subscription Manager
+		    clienttasks.registerCandlepinConsumer(sm_clientUsername,sm_clientPassword,sm_clientOrg,sm_serverUrl,"candlepin");
+		} else {
+		    clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,ConsumerType.candlepin,null,null, null, null, null, (String)null, null, null, null, null, false, null, null, null, null);
+		}
+		
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		pools.remove( SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", "mktProductId-93x2", pools));	// avoid "Too many content sets..." from Issue/Bug 1455361 - strange pool availability and bind behavior for consumer of type candlepin
 		pools.remove( SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", "mktProductId-186", pools));	// avoid "Too many content sets..." from Issue/Bug 1455361 - strange pool availability and bind behavior for consumer of type candlepin
@@ -732,22 +812,27 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		
 		// assert the consumer feed...
 		assertTheNewConsumerFeed(ownerKey, consumerCert.consumerid, oldConsumerFeed, newEventTitles);
-
+		
 		// assert the owner feed...
 		assertTheNewOwnerFeed(ownerKey, oldOwnerFeed, newEventTitles);
-
+		
 		// assert the feed...
 		assertTheNewFeed(oldFeed, newEventTitles);
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21851", "RHEL7-51672"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21851", "RHEL7-51672"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="subscription-manager: events: Import Created is sent over an RSS atom feed.",
-			groups={"blockedByBug-891334","ImportCreated_Test"}, dependsOnGroups={"ExportCreated_Test","OwnerCreated_Test"},
+			groups={"Tier3Tests","blockedByBug-891334","ImportCreated_Test"}, dependsOnGroups={"ExportCreated_Test","OwnerCreated_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void ImportCreated_Test() throws Exception {
+	public void testImportCreated() throws Exception {
 		
 		// get the owner and consumer feeds before we test the firing of a new event
 		String ownerKey = testJSONOwner.getString("key");
@@ -778,7 +863,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		//assertTheNewOwnerFeed(ownerKey, oldOwnerFeed, new String[]{"IMPORT CREATED", "POOL CREATED"});
 		//assertTheNewOwnerFeed(ownerKey, oldOwnerFeed, newEventTitles);
 		assertTheNewOwnerFeedIgnoringEventTitles(ownerKey, oldOwnerFeed, newEventTitles, new HashSet<String>(){{add("POOL CREATED");}});	// could have one or two "POOL CREATED" events, ignore them
-
+		
 		// assert the feed...
 		//assertTheNewFeed(oldFeed, new String[]{"IMPORT CREATED", "POOL CREATED", "SUBSCRIPTION CREATED"});
 		//assertTheNewFeed(oldFeed, newEventTitles);	// TODO 12/6/2012 several POOL MODIFIED may occur between new events POOL CREATED and SUBSCRIPTION CREATED.  Seems to happen when re-running the script after hours of other troubleshooting runs.  Redeploying candlepin and running EventTests does NOT encounter the extraneous POOL MODIFIED event.  We may want change this to...  assertTheNewFeedContains(oldFeed, Arrays.asList(newEventTitles));
@@ -786,13 +871,18 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21852", "RHEL7-51673"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21852", "RHEL7-51673"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="subscription-manager: events: Owner Deleted is sent over an RSS atom feed.",
-			groups={"OwnerDeleted_Test"}, dependsOnGroups={"ImportCreated_Test"},
+			groups={"Tier3Tests","OwnerDeleted_Test"}, dependsOnGroups={"ImportCreated_Test"},
 			enabled=true, alwaysRun=true)
 	//@ImplementsTCMS(id="")
-	public void OwnerDeleted_Test() throws IllegalArgumentException, IOException, FeedException, JSONException {
+	public void testOwnerDeleted() throws IllegalArgumentException, IOException, FeedException, JSONException {
 		if (server==null) throw new SkipException("This test requires an SSH connection to the candlepin server."); 
 		if (sm_serverAdminUsername.equals("")||sm_serverAdminPassword.equals("")) throw new SkipException("This test requires the candlepin server admin username and password credentials.");
 
@@ -817,18 +907,21 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		// assert the feed...
 		//assertTheNewFeed(oldFeed, newEventTitles);
 		assertTheNewFeedIgnoringEventTitles(oldFeed, newEventTitles, new HashSet<String>(){{add("POOL DELETED");}} );	// TODO 10/24/2013 don't yet understand why "POOL DELETED" sometimes occurs on script re-runs
-
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21841", "RHEL7-51662"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21841", "RHEL7-51662"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="subscription-manager: events: negative test for super user/password.",
-			groups={"NegativeSuperUserPassword_Test"}, dependsOnGroups={},
-			
+			groups={"Tier3Tests","NegativeSuperUserPassword_Test"}, dependsOnGroups={},
 			enabled=true, alwaysRun=true)
 	@ImplementsNitrateTest(caseId=50404)
-	public void NegativeSuperUserPassword_Test() throws IllegalArgumentException, IOException, FeedException {
+	public void testNegativeSuperUserPassword() throws IllegalArgumentException, IOException, FeedException {
 		if (sm_serverAdminUsername.equals("")||sm_serverAdminPassword.equals("")) throw new SkipException("This test requires the candlepin server admin username and password credentials.");
 
 		String authuser="",authpwd="";
@@ -862,13 +955,18 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21843", "RHEL7-51664"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21843", "RHEL7-51664"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="subscription-manager: events: negative test for consumer user/password.",
-			groups={"NegativeConsumerUserPassword_Test"}, dependsOnGroups={"ConsumerCreated_Test"},
+			groups={"Tier3Tests","NegativeConsumerUserPassword_Test"}, dependsOnGroups={"ConsumerCreated_Test"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=50404)
-	public void NegativeConsumerUserPassword_Test() throws JSONException, Exception {
+	public void testNegativeConsumerUserPassword() throws JSONException, Exception {
 		String authuser="",authpwd="";
 		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
 		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, consumerCert.consumerid);

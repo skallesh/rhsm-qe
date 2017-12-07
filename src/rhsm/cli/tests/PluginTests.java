@@ -27,8 +27,11 @@ import com.redhat.qe.auto.bugzilla.BzChecker;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 
-import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.DefTypes;
 import com.github.redhatqe.polarize.metadata.TestDefinition;
+import com.github.redhatqe.polarize.metadata.TestType;
+import com.github.redhatqe.polarize.metadata.DefTypes.PosNeg;
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
 
 /**
  * @author jsefler
@@ -40,7 +43,7 @@ import com.github.redhatqe.polarize.metadata.TestDefinition;
  * Design Document:
  * https://engineering.redhat.com/trac/Entitlement/wiki/SubscriptionManagerPlugins
  */
-@Test(groups={"PluginTests","AcceptanceTests","Tier1Tests"})
+@Test(groups={"PluginTests"})
 public class PluginTests extends SubscriptionManagerCLITestScript {
 	
 	// Test methods ***********************************************************************
@@ -48,13 +51,18 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 	
 	// UninstalledPlugin Tests ************************************************************
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20038", "RHEL7-51047"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20038", "RHEL7-51047"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="execute subscription-manager plugins --listslots",
-			groups={},
+			groups={"Tier1Tests"},
 			priority=10, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void verifyPluginsListslots_Test() {
+	public void testPluginsListslots() {
 		List<String> actualSlots = Arrays.asList(clienttasks.plugins(null,true,null,null).getStdout().trim().split("\n"));
 		Assert.assertTrue(actualSlots.containsAll(slots), "All of these expected slots are listed: "+slots);
 		Assert.assertTrue(slots.containsAll(actualSlots), "Only these expected slots are listed: "+slots);
@@ -62,25 +70,35 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(actualSlots.containsAll(slots)&&slots.containsAll(actualSlots), "Including --verbose option should produce the same list of slots.");
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20039", "RHEL7-51048"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20039", "RHEL7-51048"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="execute subscription-manager plugins --list (with no plugins installed)",
-			groups={},
+			groups={"Tier1Tests"},
 			priority=20, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void verifyPluginsListWithNoPluginsInstalled_Test() {
+	public void testPluginsListWithNoPluginsInstalled() {
 		Assert.assertEquals(clienttasks.plugins(null,null,null,null).getStdout().trim(), "", "Stdout from the plugins command indicates no plugins are installed.");
 		Assert.assertEquals(clienttasks.plugins(true,null,null,null).getStdout().trim(), "", "Stdout from the plugins --list command indicates no plugins are installed.");
 		Assert.assertEquals(clienttasks.plugins(null,null,null,true).getStdout().trim(), "", "Stdout from the plugins command indicates no plugins are installed (--verbose has no affect).");
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20040", "RHEL7-51049"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20040", "RHEL7-51049"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="execute subscription-manager plugins --listhooks (with no plugins installed)",
-			groups={},
+			groups={"Tier1Tests"},
 			priority=30, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void verifyPluginsListhooksWithNoPluginsInstalled_Test() {
+	public void testPluginsListhooksWithNoPluginsInstalled() {
 		List<String> plugins_listslots			= Arrays.asList(clienttasks.plugins(null,true,null,null).getStdout().trim().split("\n"));
 		List<String> plugins_listhooks			= Arrays.asList(clienttasks.plugins(null,null,true,null).getStdout().trim().split("\n"));
 		List<String> plugins_listhooks_verbose	= Arrays.asList(clienttasks.plugins(null,null,true,true).getStdout().trim().split("\n"));
@@ -95,13 +113,18 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 	
 	// DisabledPlugin Tests ***************************************************************
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20041", "RHEL7-51050"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20041", "RHEL7-51050"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="execute subscription-manager plugins --list (with plugins installed and disabled)",
-			groups={"DisabledPluginTests"},
+			groups={"Tier1Tests","DisabledPluginTests"},
 			priority=110, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void verifyPluginsListWithDisabledPluginsInstalled_Test() {
+	public void testPluginsListWithDisabledPluginsInstalled() {
 		if (installedPlugins.isEmpty()) throw new SkipException("There are no plugins installed to test.");
 		
 		// assert each of the installed plugins is reported as disabled
@@ -122,13 +145,18 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20042", "RHEL7-51051"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20042", "RHEL7-51051"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="execute subscription-manager plugins --listhooks (with plugins installed and disabled)",
-			groups={"DisabledPluginTests"},
+			groups={"Tier1Tests","DisabledPluginTests"},
 			priority=120, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void verifyPluginsListhooksWithDisabledPluginsInstalled_Test() {
+	public void testPluginsListhooksWithDisabledPluginsInstalled() {
 		List<String> plugins_listslots			= Arrays.asList(clienttasks.plugins(null,true,null,null).getStdout().trim().split("\n"));
 		List<String> plugins_listhooks			= Arrays.asList(clienttasks.plugins(null,null,true,null).getStdout().trim().split("\n"));
 		List<String> plugins_listhooks_verbose	= Arrays.asList(clienttasks.plugins(null,null,true,true).getStdout().trim().split("\n"));
@@ -143,13 +171,18 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 	
 	// RegisterConsumerTestPlugin Tests ***************************************************
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20043", "RHEL7-51052"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20043", "RHEL7-51052"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="enable the RegisterConsumerTestPlugin and assert the plugins list reports enablement",
-			groups={},
+			groups={"Tier1Tests"},
 			priority=210, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void verifyPluginsListWithEnabledRegisterConsumerTestPlugin_Test1() {
+	public void testPluginsListWithEnabledRegisterConsumerTestPlugin_Test1() {
 		
 		// find the plugin from the list of installed plugins
 		Plugin installedPlugin = getPlugin("register_consumer_test1.RegisterConsumerTestPlugin");
@@ -159,13 +192,18 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		enableTestPluginAndVerifyListReport(installedPlugin);
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20044", "RHEL7-51053"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20044", "RHEL7-51053"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="verify plugins listhooks reports all of the expected hooks for RegisterConsumerTestPlugin",
-			groups={},
+			groups={"Tier1Tests"},
 			priority=220, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void verifyPluginsListhooksWithEnabledRegisterConsumerTestPlugin_Test1() {
+	public void testPluginsListhooksWithEnabledRegisterConsumerTestPlugin_Test1() {
 		// find the plugin from the list of installed plugins
 		Plugin installedPlugin = getPlugin("register_consumer_test1.RegisterConsumerTestPlugin");
 		Assert.assertTrue(installedPlugin!=null, "The RegisterConsumerTestPlugin 1 is installed.");
@@ -190,13 +228,18 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		}
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20045", "RHEL7-51054"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20045", "RHEL7-51054"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="execute subscription-manager modules and verify the expected RegisterConsumerTestPlugin hooks are called",
-			groups={},
+			groups={"Tier1Tests"},
 			priority=230, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void verifyEnabledRegisterConsumerTestPluginHooksAreCalled_Test1() {
+	public void testEnabledRegisterConsumerTestPluginHooksAreCalled_Test1() {
 		truncateRhsmLog();
 		
 		// get the pre-registered facts on the system
@@ -243,13 +286,18 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(logTail.replaceAll("\n","").matches(".*"+joinListToString(expectedLogInfo,".*")+".*"), "The '"+clienttasks.rhsmLogFile+"' reports expected log messages: "+expectedLogInfo);
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20046", "RHEL7-51055"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20046", "RHEL7-51055"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="enable another RegisterConsumerTestPlugin and assert the plugins list reports enablement",
-			groups={},
+			groups={"Tier1Tests"},
 			priority=240, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void verifyPluginsListWithEnabledRegisterConsumerTestPlugin_Test2() {
+	public void testPluginsListWithEnabledRegisterConsumerTestPlugin_Test2() {
 		
 		// find the plugin from the list of installed plugins
 		Plugin installedPlugin = getPlugin("register_consumer_test2.RegisterConsumerTestPlugin");
@@ -259,13 +307,18 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		enableTestPluginAndVerifyListReport(installedPlugin);
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20047", "RHEL7-51056"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20047", "RHEL7-51056"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="verify plugins listhooks reports all of the expected hooks for another RegisterConsumerTestPlugin",
-			groups={},
+			groups={"Tier1Tests"},
 			priority=250, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void verifyPluginsListhooksWithEnabledRegisterConsumerTestPlugin_Test2() {
+	public void testPluginsListhooksWithEnabledRegisterConsumerTestPlugin_Test2() {
 		// find the plugin from the list of installed plugins
 		Plugin installedPlugin = getPlugin("register_consumer_test2.RegisterConsumerTestPlugin");
 		Assert.assertTrue(installedPlugin!=null, "The RegisterConsumerTestPlugin is installed.");
@@ -282,13 +335,18 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(actualPostRegisterConsumerHooks.contains(expectedPostRegisterConsumerHook),"The plugins listhooks report expected post_register_consumer hook '"+expectedPostRegisterConsumerHook+"'.");
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20048", "RHEL7-51057"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20048", "RHEL7-51057"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="execute subscription-manager modules and verify the expected RegisterConsumerTestPlugin hooks are called",
-			groups={},
+			groups={"Tier1Tests"},
 			priority=260, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void verifyEnabledRegisterConsumerTestPluginHooksAreCalled_Test2() {
+	public void testEnabledRegisterConsumerTestPluginHooksAreCalled_Test2() {
 		truncateRhsmLog();
 		
 		// get the pre-registered facts on the system
@@ -342,13 +400,18 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 	
 	// FactsCollectionTestPlugin Tests ****************************************************
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20049", "RHEL7-51058"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20049", "RHEL7-51058"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="enable FactsCollectionTestPlugin and assert the plugins list reports enablement",
-			groups={},
+			groups={"Tier1Tests"},
 			priority=310, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void verifyPluginsListWithEnabledFactsCollectionTestPlugin_Test() {
+	public void testPluginsListWithEnabledFactsCollectionTestPlugin() {
 		
 		// find the plugin from the list of installed plugins
 		Plugin installedPlugin = getPlugin("facts_collection_test.FactsCollectionTestPlugin");
@@ -358,13 +421,18 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		enableTestPluginAndVerifyListReport(installedPlugin);
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20050", "RHEL7-51059"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20050", "RHEL7-51059"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="verify plugins listhooks reports all of the expected hooks for FactsCollectionTestPlugin",
-			groups={},
+			groups={"Tier1Tests"},
 			priority=320, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void verifyPluginsListhooksWithEnabledFactsCollectionTestPlugin_Test() {
+	public void testPluginsListhooksWithEnabledFactsCollectionTestPlugin() {
 		// find the plugin from the list of installed plugins
 		Plugin installedPlugin = getPlugin("facts_collection_test.FactsCollectionTestPlugin");
 		Assert.assertTrue(installedPlugin!=null, "The FactsCollectionTestPlugin is installed.");
@@ -378,13 +446,18 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(actualPostRegisterConsumerHooks.contains(expectedPostFactsCollectionHook),"The plugins listhooks report expected post_facts_collection hook '"+expectedPostFactsCollectionHook+"'.");
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20051", "RHEL7-51060"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20051", "RHEL7-51060"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="execute subscription-manager modules and verify the expected FactsCollectionTestPlugin hooks are called",
-			groups={},
+			groups={"Tier1Tests"},
 			priority=330, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void verifyEnabledFactsCollectionTestPluginHooksAreCalled_Test() {
+	public void testEnabledFactsCollectionTestPluginHooksAreCalled() {
 		truncateRhsmLog();
 		
 		// get the pre-registered facts on the system
@@ -444,13 +517,18 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 	
 	// SubscribeTestPlugin Tests ********************************************************
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20052", "RHEL7-51061"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20052", "RHEL7-51061"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="enable SubscribeTestPlugin and assert the plugins list reports enablement",
-			groups={},
+			groups={"Tier1Tests"},
 			priority=410, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void verifyPluginsListWithEnabledSubscribeTestPlugin_Test() {
+	public void testPluginsListWithEnabledSubscribeTestPlugin() {
 		
 		// find the plugin from the list of installed plugins
 		Plugin installedPlugin = getPlugin("subscribe_test.SubscribeTestPlugin");
@@ -460,13 +538,18 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		enableTestPluginAndVerifyListReport(installedPlugin);
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20053", "RHEL7-33083"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20053", "RHEL7-33083"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="verify plugins listhooks reports all of the expected hooks for SubscribeTestPlugin",
-			groups={},
+			groups={"Tier1Tests"},
 			priority=420, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void verifyPluginsListhooksWithEnabledSubscribeTestPlugin_Test() {
+	public void testPluginsListhooksWithEnabledSubscribeTestPlugin() {
 		// find the plugin from the list of installed plugins
 		Plugin installedPlugin = getPlugin("subscribe_test.SubscribeTestPlugin");
 		Assert.assertTrue(installedPlugin!=null, "The SubscribeTestPlugin is installed.");
@@ -484,13 +567,18 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(actualPostHooks.contains(expectedPostHook),"The plugins listhooks report expected post_subscribe hook '"+expectedPostHook+"'.");
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20054", "RHEL7-51062"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20054", "RHEL7-51062"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="execute subscription-manager modules and verify the expected SubscribeTestPlugin hooks are called",
-			groups={},
+			groups={"Tier1Tests"},
 			priority=430, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void verifyEnabledSubscribeTestPluginHooksAreCalled_Test() throws JSONException, Exception {
+	public void testEnabledSubscribeTestPluginHooksAreCalled() throws JSONException, Exception {
 		truncateRhsmLog();
 		
 		// get the pre-registered facts on the system
@@ -551,13 +639,18 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 	
 	// AutoAttachTestPlugin Tests ********************************************************
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20055", "RHEL7-51063"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20055", "RHEL7-51063"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="enable AutoAttachTestPlugin and assert the plugins list reports enablement",
-			groups={},
+			groups={"Tier1Tests"},
 			priority=510, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void verifyPluginsListWithEnabledAutoAttachTestPlugin_Test() {
+	public void testPluginsListWithEnabledAutoAttachTestPlugin() {
 		
 		// find the plugin from the list of installed plugins
 		Plugin installedPlugin = getPlugin("auto_attach_test.AutoAttachTestPlugin");
@@ -567,13 +660,18 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		enableTestPluginAndVerifyListReport(installedPlugin);
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20056", "RHEL7-51064"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20056", "RHEL7-51064"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="verify plugins listhooks reports all of the expected hooks for AutoAttachTestPlugin",
-			groups={},
+			groups={"Tier1Tests"},
 			priority=520, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void verifyPluginsListhooksWithEnabledAutoAttachTestPlugin_Test() {
+	public void testPluginsListhooksWithEnabledAutoAttachTestPlugin() {
 		// find the plugin from the list of installed plugins
 		Plugin installedPlugin = getPlugin("auto_attach_test.AutoAttachTestPlugin");
 		Assert.assertTrue(installedPlugin!=null, "The AutoAttachTestPlugin is installed.");
@@ -607,13 +705,18 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile,"productCertDir",productCertDirForAutoAttachTestPluginHooks);	
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20057", "RHEL7-51065"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20057", "RHEL7-51065"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="execute subscription-manager modules and verify the expected AutoAttachTestPlugin hooks are called",
-			groups={"verifyEnabledAutoAttachTestPluginHooksAreCalled_Test"},
+			groups={"Tier1Tests","verifyEnabledAutoAttachTestPluginHooksAreCalled_Test"},
 			priority=530, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void verifyEnabledAutoAttachTestPluginHooksAreCalled_Test() {
+	public void testEnabledAutoAttachTestPluginHooksAreCalled() {
 		truncateRhsmLog();
 		
 		// get the pre-registered facts on the system
@@ -695,13 +798,18 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 	
 	// ProductIdInstallTestPlugin Tests ***************************************************
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20058", "RHEL7-51066"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20058", "RHEL7-51066"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="enable ProductIdInstallTestPlugin and assert the plugins list reports enablement",
-			groups={},
+			groups={"Tier1Tests"},
 			priority=610, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void verifyPluginsListWithEnabledProductIdInstallTestPlugin_Test() {
+	public void testPluginsListWithEnabledProductIdInstallTestPlugin() {
 		
 		// find the plugin from the list of installed plugins
 		Plugin installedPlugin = getPlugin("product_id_install_test.ProductIdInstallTestPlugin");
@@ -711,13 +819,18 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		enableTestPluginAndVerifyListReport(installedPlugin);
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20059", "RHEL7-51067"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20059", "RHEL7-51067"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="verify plugins listhooks reports all of the expected hooks for ProductIdInstallTestPlugin",
-			groups={},
+			groups={"Tier1Tests"},
 			priority=620, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void verifyPluginsListhooksWithEnabledProductIdInstallTestPlugin_Test() {
+	public void testPluginsListhooksWithEnabledProductIdInstallTestPlugin() {
 		// find the plugin from the list of installed plugins
 		Plugin installedPlugin = getPlugin("product_id_install_test.ProductIdInstallTestPlugin");
 		Assert.assertTrue(installedPlugin!=null, "The ProductIdInstallTestPlugin is installed.");
@@ -735,13 +848,18 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(actualPostHooks.contains(expectedPostHook),"The plugins listhooks report expected post_facts_collection hook '"+expectedPostHook+"'.");
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20060", "RHEL7-55177"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20060", "RHEL7-55177"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="execute subscription-manager modules and verify the expected ProductIdInstallTestPlugin hooks are called",
-			groups={"blockedByBug-859197", "blockedByBug-922871"/*, "blockedByBug-922882"*/},
+			groups={"Tier1Tests","blockedByBug-859197", "blockedByBug-922871"/*, "blockedByBug-922882"*/,"blockedByBug-1512948"},
 			priority=630, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void verifyEnabledProductIdInstallTestPluginHooksAreCalled_Test() {
+	public void testEnabledProductIdInstallTestPluginHooksAreCalled() {
 		if (clienttasks.getCurrentProductCertFiles().isEmpty()) throw new SkipException("This test will install a layered RHEL product which requires a base RHEL product cert to be installed.  Skipping this test because no RHEL product is installed.");
 		truncateRhsmLog();
 		
@@ -816,6 +934,17 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		//  "updated": "2015-06-17T10:55:58.000+0000", 
 		//	"value": "x86_64,ppc64,ia64,ppc,x86"
 		
+		// INFO: rhel-ha-for-rhel-7-server-rpms/7Server/x86_64 is enabled by default
+		// NOT ANYMORE, WE NOW NEED TO ENABLE THE ADDON REPO (A GOOD CHANGE BY REL-ENG DURING THE RHEL7.4 TEST PHASE)
+		if (clienttasks.redhatReleaseX.equals("7") && clienttasks.arch.equals("x86_64")) {
+			clienttasks.repos(null, null, null, "rhel-ha-for-rhel-7-server-rpms", null, null, null, null, null);
+		}
+		
+		// INFO: rhel-ha-for-rhel-7-for-system-z-rpms/7Server/s390x is NOT enabled by default
+		if (clienttasks.redhatReleaseX.equals("7") && clienttasks.arch.equals("s390x")) {
+			clienttasks.repos(null, null, null, "rhel-ha-for-rhel-7-for-system-z-rpms", null, null, null, null, null);
+		}
+		
 		// mark the rhsm.log file
 		logMarker = System.currentTimeMillis()+" Testing verifyEnabledProductIdInstallTestPluginHooksAreCalled_Test...";
 		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, logMarker);
@@ -846,13 +975,18 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 	
 	// TODO ProductIdRemoveTestPlugin Tests ***************************************************
 	// CURRENTLY BLOCKED BY BUGZILLA 922882
-	@TestDefinition( projectID = {Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL7-55178"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL7-55178"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="enable ProductIdRemoveTestPlugin and assert the plugins list reports enablement",
-			groups={"blockedByBug-922882"},
+			groups={"Tier1Tests","blockedByBug-922882"},
 			priority=710, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void verifyPluginsListWithEnabledProductIdRemoveTestPlugin_Test() {
+	public void testPluginsListWithEnabledProductIdRemoveTestPlugin() {
 		
 		String haProductId = "83"; // Red Hat Enterprise Linux High Availability (for RHEL Server)
 		if (clienttasks.arch.startsWith("s390")) haProductId = "300"; // Red Hat Enterprise Linux High Availability (for IBM z Systems)
@@ -890,13 +1024,18 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 
 	// AllSlotsTestPlugin Tests ********************************************************
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20061", "RHEL7-33087"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20061", "RHEL7-33087"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="enable AllSlotsTestPlugin and assert the plugins list reports enablement",
-			groups={},
+			groups={"Tier1Tests"},
 			priority=810, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void verifyPluginsListWithEnabledAllSlotsTestPlugin_Test() {
+	public void testPluginsListWithEnabledAllSlotsTestPlugin() {
 		
 		// find the plugin from the list of installed plugins
 		Plugin installedPlugin = getPlugin("all_slots_test.AllSlotsTestPlugin");
@@ -906,13 +1045,18 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		enableTestPluginAndVerifyListReport(installedPlugin);
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20062", "RHEL7-51068"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20062", "RHEL7-51068"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="verify plugins listhooks reports all of the expected hooks for AllSlotsTestPlugin",
-			groups={},
+			groups={"Tier1Tests"},
 			priority=820, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void verifyPluginsListhooksWithEnabledAllSlotsTestPlugin_Test() {
+	public void testPluginsListhooksWithEnabledAllSlotsTestPlugin() {
 		// find the plugin from the list of installed plugins
 		Plugin installedPlugin = getPlugin("all_slots_test.AllSlotsTestPlugin");
 		Assert.assertTrue(installedPlugin!=null, "The AllSlotsTestPlugin is installed.");
@@ -926,13 +1070,18 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		}
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20063", "RHEL7-51069"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20063", "RHEL7-51069"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="execute subscription-manager modules and verify the expected AllSlotsTestPlugin hooks are called",
-			groups={},
+			groups={"Tier1Tests"},
 			priority=830, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void verifyEnabledAllSlotsTestPluginHooksAreCalled_Test() throws JSONException, Exception {
+	public void testEnabledAllSlotsTestPluginHooksAreCalled() throws JSONException, Exception {
 		truncateRhsmLog();
 		
 		// get the pre-registered facts on the system

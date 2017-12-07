@@ -13,8 +13,11 @@ import rhsm.cli.tasks.SubscriptionManagerTasks;
 
 import com.redhat.qe.tools.RemoteFileTasks;
 
-import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.DefTypes;
 import com.github.redhatqe.polarize.metadata.TestDefinition;
+import com.github.redhatqe.polarize.metadata.TestType;
+import com.github.redhatqe.polarize.metadata.DefTypes.PosNeg;
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
 
 /**
  * @author jsefler
@@ -106,18 +109,23 @@ restorecon:  Warning no default label for /tmp/product-default/69.pem
 And then the altered files should be deleted because the will still have the context from the workaround
 [root@jsefler-rhel7 ~]# rm -rf /tmp/product-default
  */
-@Test(groups={"SELinuxTests","AcceptanceTests","Tier1Tests","Tier2Tests","Tier3Tests","FipsTests"})
+@Test(groups={"SELinuxTests"})
 public class SELinuxTests extends SubscriptionManagerCLITestScript {
 
 	// Test methods ***********************************************************************
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20117", "RHEL7-51117"})
-	@Test(	description="assert that no SELinux denials were logged during this TestSuite",
-			groups={"blockedByBug-694879", "blockedByBug-822402"},
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20117", "RHEL7-51117"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1 Tier2 Tier3")
+	@Test(	description="assert that no SELinux denials were logged during this TestSuite (this test should be executed at the end of all test run/suites)",
+			groups={"Tier1Tests","Tier2Tests","Tier3Tests","FipsTests","blockedByBug-694879", "blockedByBug-822402"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void verifyNoSELinuxDenialsWereLogged_Test() {
+	public void testAssertThatNoSELinuxDenialsWereLogged() {
 		log.info("Assuming this test is being executed last in the TestNG Suite...");
 
 		// AUTOMATORS NOTE: This test only differs with verifyNoSELinuxDenialsWereLoggedAfterClass() by the value of the marker sent to RemoteFileTasks.getTailFromMarkedFile(...)

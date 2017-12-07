@@ -16,27 +16,35 @@ import rhsm.data.ProductSubscription;
 import rhsm.data.SubscriptionPool;
 import com.redhat.qe.tools.RemoteFileTasks;
 
-import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.DefTypes;
 import com.github.redhatqe.polarize.metadata.TestDefinition;
+import com.github.redhatqe.polarize.metadata.TestType;
+import com.github.redhatqe.polarize.metadata.DefTypes.PosNeg;
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
 
 /**
  * @author jsefler
  *
  *
  */
-@Test(groups={"RefreshTests","Tier2Tests"})
+@Test(groups={"RefreshTests"})
 public class RefreshTests extends SubscriptionManagerCLITestScript {
 
 	
 	// Test methods ***********************************************************************
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36530", "RHEL7-51303"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20023", "RHEL7-51040"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags="Tier1")
 	@Test(	description="subscription-manager-cli: refresh and verify entitlements are updated",
-			groups={"AcceptanceTests","Tier1Tests","RefreshEntitlements_Test","blockedByBug-907638","blockedByBug-962520","blockedByBug-1366301"},
+			groups={"Tier1Tests","RefreshEntitlements_Test","blockedByBug-907638","blockedByBug-962520","blockedByBug-1366301"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=64182)	// http://gibson.usersys.redhat.com/agilo/ticket/4022
-	public void RefreshEntitlements_Test() {
+	public void testRefreshEntitlements() {
 		
 		// Start fresh by unregistering and registering...
 		log.info("Start fresh by unregistering and registering...");
@@ -122,13 +130,18 @@ public class RefreshTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36619", "RHEL7-51430"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36619", "RHEL7-51430"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags="Tier2")
 	@Test(	description="[abrt] subscription-manager-0.95.17-1.el6_1: Process /usr/bin/rhsmcertd was killed by signal 11 (SIGSEGV)",
-			groups={"blockedByBug-725535","blockedByBug-907638","VerificationFixForBug725535_Test"},
+			groups={"Tier2Tests","blockedByBug-725535","blockedByBug-907638","VerificationFixForBug725535_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	// http://gibson.usersys.redhat.com/agilo/ticket/4022
-	public void VerificationFixForBug725535_Test() {
+	public void testFixForBug725535() {
 		
 		// assert that rhsmcertd restart successfully before actually running this test
 		clienttasks.restart_rhsmcertd(null,null,null);

@@ -12,8 +12,11 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
-import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.DefTypes;
 import com.github.redhatqe.polarize.metadata.TestDefinition;
+import com.github.redhatqe.polarize.metadata.TestType;
+import com.github.redhatqe.polarize.metadata.DefTypes.PosNeg;
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -41,16 +44,21 @@ import com.redhat.qe.tools.abstraction.AbstractCommandLineData;
  * @author jsefler
  *
  */
-@Test(groups={"CRLTests","Tier3Tests"})
+@Test(groups={"CRLTests"})
 public class CRLTests extends SubscriptionManagerCLITestScript{
 	String ownerKey = null;
 
 	// Test Methods ***********************************************************************
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-27133", "RHEL7-51947"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-27133", "RHEL7-51947"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="subscription-manager-cli: change subscription pool start/end dates and refresh subscription pools",
-			groups={"ChangeSubscriptionPoolStartEndDatesAndRefreshSubscriptionPools_Test"},
+			groups={"Tier3Tests","ChangeSubscriptionPoolStartEndDatesAndRefreshSubscriptionPools_Test"},
 			dependsOnGroups={},
 			//dataProvider="getAvailableSubscriptionPoolsData",	// very thorough, but takes too long to execute and rarely finds more bugs
 			//dataProvider="getRandomSubsetOfAvailableSubscriptionPoolsData",
@@ -58,7 +66,7 @@ public class CRLTests extends SubscriptionManagerCLITestScript{
 			dataProvider="getRandomSubsetOfAvailableNonTemporarySubscriptionPoolsData",
 			enabled=true)
 	@ImplementsNitrateTest(caseId=56025)
-	public void ChangeSubscriptionPoolStartEndDatesAndRefreshSubscriptionPools_Test(SubscriptionPool originalPool) throws Exception {
+	public void testChangeToSubscriptionPoolStartEndDatesAndRefreshSubscriptionPools(SubscriptionPool originalPool) throws Exception {
 ///*debugTesting*/if (!originalPool.productId.equals("awesomeos-instancebased")) throw new SkipException("DebugTesting");
 		//		https://tcms.engineering.redhat.com/case/56025/?from_plan=2634
 		//		Actions:
@@ -220,12 +228,17 @@ public class CRLTests extends SubscriptionManagerCLITestScript{
 	protected List<String> alreadySubscribedProductIdsInChangeSubscriptionPoolStartEndDatesAndRefreshSubscriptionPools_Test = new ArrayList<String>();
 
 
-	@TestDefinition( projectID = {Project.RHEL6}
-			       , testCaseID = {"RHEL6-39302"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-39302","RHEL7-97554"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description="verify that candlepin's crl file does not contain duplicate serials otherwise it may be growing out of control",
-			groups = {"blockedByBug-1399356"},
+			groups = {"Tier3Tests","blockedByBug-1399356"},
 			enabled=true)
-	public void VerifyCandlepinCrlForDuplicates_Test() {
+	public void testCandlepinCRLForDuplicates() {
 		if (sm_serverType.equals(CandlepinType.hosted)) throw new SkipException("This test requires that your candlepin server NOT be a hosted RHN Classic system.");
 		
 		// TODO

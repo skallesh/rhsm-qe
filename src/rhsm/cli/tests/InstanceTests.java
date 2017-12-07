@@ -26,8 +26,11 @@ import com.redhat.qe.auto.bugzilla.BzChecker;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.tools.SSHCommandResult;
 
-import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.DefTypes;
 import com.github.redhatqe.polarize.metadata.TestDefinition;
+import com.github.redhatqe.polarize.metadata.TestType;
+import com.github.redhatqe.polarize.metadata.DefTypes.PosNeg;
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
 
 /**
  * @author jsefler
@@ -35,19 +38,24 @@ import com.github.redhatqe.polarize.metadata.TestDefinition;
  * Reference Design Doc:
  * https://engineering.redhat.com/trac/Entitlement/wiki/InstanceBasedDesign
  */
-@Test(groups={"InstanceTests","Tier2Tests"})
+@Test(groups={"InstanceTests"})
 public class InstanceTests extends SubscriptionManagerCLITestScript {
 	
 	// Test methods ***********************************************************************
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-19986", "RHEL7-51020"})
-	@Test(	description="test compliance using variations on sockets and system type when subscribing to an instance-based subscription",
-			groups={"AcceptanceTests","Tier1Tests","QuantityNeededToAchieveSocketCompliance_Test","blockedByBug-979492"},
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-19986", "RHEL7-51020"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
+	@Test(	description="test compliance using variations on sockets and system type when subscribing to an Instance-Based subscription",
+			groups={"Tier1Tests","QuantityNeededToAchieveSocketCompliance_Test","blockedByBug-979492"},
 			dataProvider="getAvailableInstanceBasedSubscriptionPoolsData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void QuantityNeededToAchieveSocketCompliance_Test(Object bugzilla, Boolean systemIsGuest, Integer systemSockets, SubscriptionPool pool) throws NumberFormatException, JSONException, Exception {
+	public void testQuantityNeededToAchieveSocketCompliance(Object bugzilla, Boolean systemIsGuest, Integer systemSockets, SubscriptionPool pool) throws NumberFormatException, JSONException, Exception {
 ///*debugTest*/if (!pool.productId.equals("RH00003")) throw new SkipException("debugTesting");/*debugTest*/if (systemIsGuest) throw new SkipException("debugTesting");
 
 		// avoid throttling RateLimitExceededException from IT-Candlepin

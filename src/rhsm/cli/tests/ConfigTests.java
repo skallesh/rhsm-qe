@@ -10,8 +10,13 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.github.redhatqe.polarize.metadata.DefTypes.PosNeg;
 import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.DefTypes;
+import com.github.redhatqe.polarize.metadata.LinkedItem;
 import com.github.redhatqe.polarize.metadata.TestDefinition;
+import com.github.redhatqe.polarize.metadata.TestType;
+
 import org.testng.SkipException;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterGroups;
@@ -21,6 +26,8 @@ import org.testng.annotations.Test;
 
 import com.redhat.qe.Assert;
 import com.redhat.qe.auto.bugzilla.BlockedByBzBug;
+import com.redhat.qe.auto.bugzilla.BugzillaAPIException;
+import com.redhat.qe.auto.bugzilla.BzChecker;
 import com.redhat.qe.auto.testng.TestNGUtils;
 
 import rhsm.base.SubscriptionManagerCLITestScript;
@@ -43,19 +50,24 @@ import com.redhat.qe.tools.SSHCommandRunner;
 "subscription-manager config --[section.name] [value]" sets the value for an attribute by the section. Only existing attribute names are allowed. Adding new attribute names would not be useful anyway as the python code would be in need of altering to use it.
 
  */
-@Test(groups={"ConfigTests","Tier2Tests"})
+@Test(groups={"ConfigTests"})
 public class ConfigTests extends SubscriptionManagerCLITestScript {
 
 	// Test methods ***********************************************************************
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36675", "RHEL7-51520"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-36675", "RHEL7-51520"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags="Tier2")
 	@Test(	description="subscription-manager: use config --list to get the value of /etc/rhsm.rhsm.conf [server]ca_cert_dir (should not exist)",
-			groups={"blockedByBug-993202"},
+			groups={"Tier2Tests","blockedByBug-993202"},
 			priority=5,
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void GetCaCertDirValue_Test() {
+	public void testGetCaCertDirValue() {
 		String section, parameter="ca_cert_dir";
 		section="server";
 		Assert.assertNull(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, section, parameter), "Config file '"+clienttasks.rhsmConfFile+"' section '"+section+"' parameter '"+parameter+"' should NOT be set.");
@@ -64,15 +76,20 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20113", "RHEL7-33091"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-20113", "RHEL7-33091"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags="Tier1 Tier2")
 	@Test(	description="subscription-manager: use config to set each of the rhsm.conf parameter values and verify it is persisted to /etc/rhsm.rhsm.conf",
-			groups={"AcceptanceTests","Tier1Tests"},
+			groups={"Tier1Tests","Tier2Tests"},
 			dataProvider="getConfigSectionNameData",
 			priority=10,
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ConfigSetSectionNameValue_Test(Object bugzilla, String section, String name, String setValue) {
+	public void testConfigSetSectionNameValue(Object bugzilla, String section, String name, String setValue) {
 		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
 		listOfSectionNameValues.add(new String[]{section, name.toLowerCase(), setValue});	// the config options require lowercase for --section.name=value, but the value written to conf.file may not be lowercase
 		clienttasks.config(null,null,true,listOfSectionNameValues);
@@ -82,16 +99,21 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36676", "RHEL7-51521"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-36676", "RHEL7-51521"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags="Tier2")
 	@Test(	description="subscription-manager: use config module to list all of the currently set rhsm.conf parameter values",
-			groups={},
+			groups={"Tier2Tests"},
 			dataProvider="getConfigSectionNameData",
-			//dependsOnMethods={"ConfigSetSectionNameValue_Test"}, alwaysRun=true,
+			//dependsOnMethods={"testConfigSetSectionNameValue"}, alwaysRun=true,
 			priority=20,
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ConfigGetSectionNameValue_Test(Object bugzilla, String section, String name, String expectedValue) {
+	public void testConfigGetSectionNameValue(Object bugzilla, String section, String name, String expectedValue) {
 
 		// get a the config list (only once to save some unnecessary logging)
 		// SSHCommandResult sshCommandResultFromConfigGetSectionNameValue_Test = clienttasks.config(true,null,null,(String[])null);
@@ -154,21 +176,26 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 		Pattern pattern = Pattern.compile(regexForSectionNameExpectedValue, Pattern.MULTILINE);
 		Matcher matcher = pattern.matcher(sshCommandResultFromConfigGetSectionNameValue_Test.getStdout());
 
-		Assert.assertTrue(matcher.find(),"After executing subscription-manager config to set '"+section+"."+name+"', calling config --list includes the value just set.");
+		Assert.assertTrue(matcher.find(),"After executing subscription-manager config to set '"+section+"."+name+"="+expectedValue+"' in the prior testConfigSetSectionNameValue, calling config --list includes the value just set.");
 	}
 	protected SSHCommandResult sshCommandResultFromConfigGetSectionNameValue_Test = null;
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36677", "RHEL7-51522"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-36677", "RHEL7-51522"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags="Tier2")
 	@Test(	description="subscription-manager: use config module to remove each of the rhsm.conf parameter values from /etc/rhsm/rhsm.conf",
-			groups={"blockedByBug-1223860"},
+			groups={"Tier2Tests","blockedByBug-1223860"},
 			dataProvider="getConfigSectionNameData",
-			//dependsOnMethods={"ConfigGetSectionNameValue_Test"}, alwaysRun=true,
+			//dependsOnMethods={"testConfigGetSectionNameValue"}, alwaysRun=true,
 			priority=30,
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ConfigRemoveSectionNameValue_Test(Object bugzilla, String section, String name, String value) {
+	public void testConfigRemoveSectionNameValue(Object bugzilla, String section, String name, String value) {
 		
 		// use config to remove the section name value
 		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
@@ -193,16 +220,21 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36678", "RHEL7-51523"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-36678", "RHEL7-51523"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags="Tier2")
 	@Test(	description="subscription-manager: after having removed all the config parameters using the config module, assert that the config list shows the default values in use by wrapping them in [] and the others are simply blanked.",
-			groups={},
+			groups={"Tier2Tests"},
 			dataProvider="getConfigSectionNameData",
-			//dependsOnMethods={"ConfigRemoveSectionNameValue_Test"}, alwaysRun=true,
+			//dependsOnMethods={"testConfigRemoveSectionNameValue"}, alwaysRun=true,
 			priority=40,
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ConfigGetSectionNameValueAndVerifyDefault_Test(Object bugzilla, String section, String name, String ignoreValue) {
+	public void testConfigGetSectionNameValueAndVerifyDefault(Object bugzilla, String section, String name, String ignoreValue) {
 
 		// get the config list (only once to save some unnecessary logging)
 		// SSHCommandResult sshCommandResultFromConfigGetSectionNameValue_Test = clienttasks.config(true,null,null,(String[])null);
@@ -262,15 +294,20 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 	protected SSHCommandResult sshCommandResultFromConfigGetSectionNameValueAndVerifyDefault_Test = null;
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36679", "RHEL7-51524"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-36679", "RHEL7-51524"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags="Tier2")
 	@Test(	description="subscription-manager: use config module to simultaneously remove multiple rhsm.conf parameter values from /etc/rhsm/rhsm.conf",
-			groups={"blockedByBug-735695","blockedByBug-927350","blockedByBug-1297337"},
-			//dependsOnMethods={"ConfigGetSectionNameValueAndVerifyDefault_Test"}, alwaysRun=true,
+			groups={"Tier2Tests","blockedByBug-735695","blockedByBug-927350","blockedByBug-1297337"},
+			//dependsOnMethods={"testConfigGetSectionNameValueAndVerifyDefault"}, alwaysRun=true,
 			priority=50,
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ConfigRemoveMultipleSectionNameValues_Test() {
+	public void testConfigRemoveMultipleSectionNameValues() {
 		
 		// not necessary but adds a little more to the test
 		// restore the backup rhsm.conf file
@@ -311,13 +348,19 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36671", "RHEL7-51517"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-36671", "RHEL7-51517"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags="Tier2")
 	@Test(	description="subscription-manager: attempt to use config module to remove a non-existing-section parameter from /etc/rhsm/rhsm.conf (negative test)",
-			groups={"blockedByBug-747024","blockedByBug-746264"},
+			groups={"Tier2Tests","blockedByBug-747024","blockedByBug-746264"},
+			priority=100,
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ConfigRemoveNonExistingSectionName_Test() {
+	public void testConfigRemoveNonExistingSectionName() {
 		String section = "non-existing-section";
 		String name = "non-existing-parameter";
 		String value = "non-existing-value";
@@ -336,13 +379,19 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36670", "RHEL7-51516"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-36670", "RHEL7-51516"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags="Tier2")
 	@Test(	description="subscription-manager: attempt to use config module to remove a non-existing-parameter from a valid section in /etc/rhsm/rhsm.conf (negative test)",
-			groups={"blockedByBug-736784"},
+			groups={"Tier2Tests","blockedByBug-736784"},
+			priority=100,
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ConfigRemoveNonExistingParameterFromValidSection_Test() {
+	public void testConfigRemoveNonExistingParameterFromValidSection() {
 		String section = "server";
 		String name = "non-existing-parameter";
 		String value = "value";
@@ -365,14 +414,20 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36667", "RHEL7-51513"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-36667", "RHEL7-51513"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags="Tier2")
 	@Test(	description="subscription-manager: attempt to use config module to list together with set and/or remove option(s) for config parameters",
-			groups={"blockedByBug-730020"},
+			groups={"Tier2Tests","blockedByBug-730020"},
 			dataProvider="getNegativeConfigListSetRemoveData",
+			priority=100,
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ConfigAttemptListWithSetAndRemoveOptions_Test(Object blockedByBug, Boolean list, Boolean remove, Boolean set, String[] section_name_value) {
+	public void testConfigAttemptListWithSetAndRemoveOptions(Object blockedByBug, Boolean list, Boolean remove, Boolean set, String[] section_name_value) {
 		
 		SSHCommandResult configResult = clienttasks.config_(list,remove,set,section_name_value);
 
@@ -387,13 +442,19 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36668", "RHEL7-51514"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-36668", "RHEL7-51514"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags="Tier2")
 	@Test(	description="subscription-manager: config (without any options) should default to --list",
-			groups={"blockedByBug-811594"},
+			groups={"Tier2Tests","blockedByBug-811594"},
+			priority=100,
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ConfigDefaultsToConfigList_Test() {
+	public void testConfigDefaultsToConfigList() {
 		
 		SSHCommandResult listResult = clienttasks.config(true, null, null, (String[])null);
 		SSHCommandResult defaultResult = clienttasks.config(null, null, null, (String[])null);
@@ -408,13 +469,19 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36669", "RHEL7-51515"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-36669", "RHEL7-51515"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags="Tier2")
 	@Test(	description="subscription-manager: config for repo_ca_cert should interpolate the default value for ca_cert_dir",
-			groups={"blockedByBug-997194","ConfigForRepoCaCertUsesDefaultCaCertDir_Test"},
+			groups={"Tier2Tests","blockedByBug-997194","ConfigForRepoCaCertUsesDefaultCaCertDir_Test"},
+			priority=100,
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ConfigForRepoCaCertUsesDefaultCaCertDir_Test() {
+	public void testConfigForRepoCaCertUsesDefaultCaCertDir() {
 		
 		// this bug is specifically designed to test Bug 997194 - repo_ca_cert configuration ignored using older configuration
 		
@@ -440,13 +507,19 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 	protected String repoCaCertConfigured = null;
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36673", "RHEL7-51518"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-36673", "RHEL7-51518"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags="Tier2")
 	@Test(	description="verify the default configurations for server hostname:port/prefix after running config removal",
-			groups={"blockedByBug-988085","blockedByBug-1223860","blockedByBug-1297337","VerifyDefaultsForServerHostnamePortPrefixAfterConfigRemoval_Test"},
+			groups={"Tier2Tests","blockedByBug-988085","blockedByBug-1223860","blockedByBug-1297337","VerifyDefaultsForServerHostnamePortPrefixAfterConfigRemoval_Test"},
+			priority=100,
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyDefaultsForServerHostnamePortPrefixAfterConfigRemoval_Test() {
+	public void testDefaultsForServerHostnamePortPrefixAfterConfigRemoval() {
 		
 		// this bug is specifically designed to test Bug 988085 - After running subscription-manager config --remove server.hostname, different default values available from GUI and CLI
 
@@ -488,13 +561,19 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 	protected String serverPrefixConfigured = null;
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36674", "RHEL7-51519"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-36674", "RHEL7-51519"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags="Tier2")
 	@Test(	description="verify that only the expected configration parameters are present in the rhsm config file; useful for detecting newly added configurations by the subscription-manager developers",
-			groups={},
+			groups={"Tier2Tests"},
+			priority=100,
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyExpectedConfigParameters_Test() {
+	public void testExpectedConfigParameters() {
 		
 		SSHCommandResult rawConfigList = clienttasks.config(true, null, null, (String[])null);
 		//	[root@jsefler-7 ~]# subscription-manager config --list
@@ -557,14 +636,20 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36672", "RHEL7-57876"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-36672", "RHEL7-57876"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags="Tier2")
 	@Test(	description="verify the [server]server_timeout can be configured and function properly when the server does not respond within the timeout seconds",
-			groups={"blockedByBug-1346417","VerifyConfigServerTimeouts_Test"},
+			groups={"Tier2Tests","blockedByBug-1346417","VerifyConfigServerTimeouts_Test"},
+			priority=100,
 			enabled=true)
 	// TODO: Verifies: https://polarion.engineering.redhat.com/polarion/#/project/RHEL6/workitem?id=RHEL6-28580
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyConfigServerTimeouts_Test() throws IOException {
+	public void testConfigServerTimeouts() throws IOException {
 		// this bug is specifically designed to test Bug 1346417 - [RFE] Allow users to set socket timeout.
 		if (clienttasks.isPackageVersion("python-rhsm", "<", "1.17.3-1")) {  // python-rhsm commit 5780140650a59d45a03372a0390f92fd7c3301eb Allow users to set socket timeout.
 			throw new SkipException("This test applies a newer version of python-rhsm that includes an implementation for RFE Bug 1346417 - Allow users to set socket timeout.");
@@ -710,6 +795,278 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 		if (serverPortConfigured!=null) clienttasks.config(null,null,true, new String[]{"server","port",serverPortConfigured});
 		//clienttasks.config_(null, true, null, new String[]{"server","server_timeout"});	// will actually leave "server_timeout = 180" set in the rhsm.conf file
 		clienttasks.removeConfFileParameter(clienttasks.rhsmConfFile, "server_timeout");
+	}
+	
+	
+	
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-47939", "RHEL7-99807"},
+			linkedWorkItems= {
+//				@LinkedItem(
+//					workitemId= "RHEL6-?????",	// TODO
+//					project= Project.RHEL6,
+//					role= DefTypes.Role.VERIFIES),
+				@LinkedItem(
+					workitemId= "RHEL7-95149",	// RHEL7-95149 - RHSM-REQ : subscription-manager should automatically enable yum plugins
+					project= Project.RedHatEnterpriseLinux7,
+					role= DefTypes.Role.VERIFIES)},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags="Tier3")
+	@Test(	description="Verify that the yum plugins for /etc/yum/pluginconf.d/product-id.conf and /etc/yum/pluginconf.d/subscription-manager.conf are automatically enabled by various subscription-manager module commands when rhsm.auto_enable_yum_plugins is configured on.",
+			groups={"Tier3Tests","blockedByBug-1319927","testSubscriptionManagerShouldAutomaticallyEnableYumPluginsWhenAutoEnableIsOn"},
+			dataProvider="getVariousModuleCommandsData",
+			priority=100,
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void testSubscriptionManagerShouldAutomaticallyEnableYumPluginsWhenAutoEnableIsOn(Object blockedByBug, String moduleCommand, Boolean moduleCommandRequiresRegistration) throws IOException {
+		
+		resetDefaultConfigurationsForYumPluginsAndRhsmAutoEnableYumPlugins();
+		
+		// decide to register with a random auto-attach option
+		if (moduleCommandRequiresRegistration) {
+			clienttasks.unregister(null, null, null, null);
+			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, getRandomBoolean(), null, null, (String)null, null, null, null, null, false, null, null, null, null);
+		}
+		
+		// randomly disable one or both /etc/yum/pluginconf.d/product-id.conf and /etc/yum/pluginconf.d/subscription-manager.conf
+		if (getRandomBoolean()) {
+			clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForProductId, "enabled", "0");
+			clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForSubscriptionManager, "enabled", String.valueOf(getRandInt()%2)/* "0" or "1" */);
+		} else {
+			clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForSubscriptionManager, "enabled", "false");
+			clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForProductId, "enabled", "true");
+			// TEMPORARY WORKAROUND
+			boolean invokeWorkaroundWhileBugIsOpen = true;
+			String bugId="1489917"; // Bug 1489917 - disabling yum plugins using "false" (rather than "0") causes traceback: invalid literal for int() with base 10: 'false'
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
+			if (invokeWorkaroundWhileBugIsOpen) {
+				clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForSubscriptionManager, "enabled", "0");
+				clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForProductId, "enabled", "1");
+			}
+			// END OF WORKAROUND
+		}
+		
+		String yumPluginConfFileForProductIdEnabledString = clienttasks.getConfFileParameter(clienttasks.yumPluginConfFileForProductId, "enabled");
+		String yumPluginConfFileForSubscriptionManagerEnabledString = clienttasks.getConfFileParameter(clienttasks.yumPluginConfFileForSubscriptionManager, "enabled");
+		Boolean yumPluginConfFileForProductIdEnabled = Boolean.valueOf(yumPluginConfFileForProductIdEnabledString);
+		Boolean yumPluginConfFileForSubscriptionManagerEnabled = Boolean.valueOf(yumPluginConfFileForSubscriptionManagerEnabledString);
+		if (yumPluginConfFileForProductIdEnabledString.equals("1")) {yumPluginConfFileForProductIdEnabled = true;} else if (yumPluginConfFileForProductIdEnabledString.equals("0")) {yumPluginConfFileForProductIdEnabled = false;}
+		if (yumPluginConfFileForSubscriptionManagerEnabledString.equals("1")) {yumPluginConfFileForSubscriptionManagerEnabled = true;} else if (yumPluginConfFileForSubscriptionManagerEnabledString.equals("0")) {yumPluginConfFileForSubscriptionManagerEnabled = false;}
+		
+		// run a subscription-manager moduleCommand
+		SSHCommandResult results= client.runCommandAndWait(moduleCommand);
+		
+		// assert the results contain the expected WARNING message
+		String expectedWarningMsg = "WARNING"+"\n\n"+"The yum plugins: PLUGINS were automatically enabled for the benefit of Red Hat Subscription Management. If not desired, use \"subscription-manager config --rhsm.auto_enable_yum_plugins=0\" to block this behavior.";
+		if (!yumPluginConfFileForSubscriptionManagerEnabled) expectedWarningMsg = expectedWarningMsg.replaceFirst("PLUGINS", clienttasks.yumPluginConfFileForSubscriptionManager+", PLUGINS");
+		if (!yumPluginConfFileForProductIdEnabled) expectedWarningMsg = expectedWarningMsg.replaceFirst("PLUGINS", clienttasks.yumPluginConfFileForProductId+", PLUGINS");
+		expectedWarningMsg = expectedWarningMsg.replaceFirst(", PLUGINS", "");	// strip out my regex substring
+		Assert.assertTrue(results.getStdout().contains(expectedWarningMsg),"The stdout from running '"+moduleCommand+"' contains the expected warning message '"+expectedWarningMsg+"' when at least one yum plugin is disabled and rhsm.auto_enable_yum_plugins is configured on.");
+		
+		// assert that both plugins were enabled
+		String enabledValue;
+		enabledValue = clienttasks.getConfFileParameter(clienttasks.yumPluginConfFileForProductId, "enabled");
+		Assert.assertTrue(enabledValue.toLowerCase().matches("1|true"),"Expecting yum config file '"+clienttasks.yumPluginConfFileForProductId+"' to be enabled after running '"+moduleCommand+"' with rhsm.auto_enable_yum_plugins configured on.  Actual enabled="+enabledValue);
+		enabledValue = clienttasks.getConfFileParameter(clienttasks.yumPluginConfFileForSubscriptionManager, "enabled");
+		Assert.assertTrue(enabledValue.toLowerCase().matches("1|true"),"Expecting yum config file '"+clienttasks.yumPluginConfFileForSubscriptionManager+"' to be enabled after running '"+moduleCommand+"' with rhsm.auto_enable_yum_plugins configured on.  Actual enabled="+enabledValue);
+		
+		// run the subscription-manager module again
+		results= client.runCommandAndWait(moduleCommand);
+		
+		// assert that the results do NOT contain the WARNING message
+		expectedWarningMsg = expectedWarningMsg.replaceFirst("\n\n.*", "");	// WARNING
+		Assert.assertTrue(!results.getStdout().contains(expectedWarningMsg),"The stdout from a second run of '"+moduleCommand+"' NO LONGER contains message '"+expectedWarningMsg+"' because rhsm.auto_enable_yum_plugins is configured on.");
+	}
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-47940", "RHEL7-99808"},
+			linkedWorkItems= {
+//				@LinkedItem(
+//					workitemId= "RHEL6-?????",	// TODO
+//					project= Project.RHEL6,
+//					role= DefTypes.Role.VERIFIES),
+				@LinkedItem(
+					workitemId= "RHEL7-95149",	// RHEL7-95149 - RHSM-REQ : subscription-manager should automatically enable yum plugins
+					project= Project.RedHatEnterpriseLinux7,
+					role= DefTypes.Role.VERIFIES)},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags="Tier3")
+	@Test(	description="Verify that the yum plugins for /etc/yum/pluginconf.d/product-id.conf and /etc/yum/pluginconf.d/subscription-manager.conf are NOT automatically enabled by various subscription-manager module commands when rhsm.auto_enable_yum_plugins is configured off.",
+			groups={"Tier3Tests","blockedByBug-1319927","testSubscriptionManagerShouldNotAutomaticallyEnableYumPluginsWhenAutoEnableIsOff"},
+			dataProvider="getVariousModuleCommandsData",
+			priority=100,
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void testSubscriptionManagerShouldNotAutomaticallyEnableYumPluginsWhenAutoEnableIsOff(Object blockedByBug, String moduleCommand, Boolean moduleCommandRequiresRegistration) throws IOException {
+		
+		resetDefaultConfigurationsForYumPluginsAndRhsmAutoEnableYumPlugins();
+		
+		// decide to register with a random auto-attach option
+		if (moduleCommandRequiresRegistration) {
+			clienttasks.unregister(null, null, null, null);
+			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, getRandomBoolean(), null, null, (String)null, null, null, null, null, false, null, null, null, null);
+		}
+		
+		// turn off rhsm configuration for auto_enable_yum_plugins
+		clienttasks.config(false,false,true,new String[]{"rhsm","auto_enable_yum_plugins","0"});
+		
+		// randomly disable one or both /etc/yum/pluginconf.d/product-id.conf and /etc/yum/pluginconf.d/subscription-manager.conf
+		if (getRandomBoolean()) {
+			clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForProductId, "enabled", "0");
+			clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForSubscriptionManager, "enabled", String.valueOf(getRandInt()%2)/* "0" or "1" */);
+		} else {
+			clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForSubscriptionManager, "enabled", "false");
+			clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForProductId, "enabled", "true");
+			// TEMPORARY WORKAROUND
+			boolean invokeWorkaroundWhileBugIsOpen = true;
+			String bugId="1489917"; // Bug 1489917 - disabling yum plugins using "false" (rather than "0") causes traceback: invalid literal for int() with base 10: 'false'
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
+			if (invokeWorkaroundWhileBugIsOpen) {
+				clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForSubscriptionManager, "enabled", "0");
+				clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForProductId, "enabled", "1");
+			}
+			// END OF WORKAROUND
+		}
+		
+		String yumPluginConfFileForProductIdEnabledString = clienttasks.getConfFileParameter(clienttasks.yumPluginConfFileForProductId, "enabled");
+		String yumPluginConfFileForSubscriptionManagerEnabledString = clienttasks.getConfFileParameter(clienttasks.yumPluginConfFileForSubscriptionManager, "enabled");
+		Boolean yumPluginConfFileForProductIdEnabled = Boolean.valueOf(yumPluginConfFileForProductIdEnabledString);
+		Boolean yumPluginConfFileForSubscriptionManagerEnabled = Boolean.valueOf(yumPluginConfFileForSubscriptionManagerEnabledString);
+		if (yumPluginConfFileForProductIdEnabledString.equals("1")) {yumPluginConfFileForProductIdEnabled = true;} else if (yumPluginConfFileForProductIdEnabledString.equals("0")) {yumPluginConfFileForProductIdEnabled = false;}
+		if (yumPluginConfFileForSubscriptionManagerEnabledString.equals("1")) {yumPluginConfFileForSubscriptionManagerEnabled = true;} else if (yumPluginConfFileForSubscriptionManagerEnabledString.equals("0")) {yumPluginConfFileForSubscriptionManagerEnabled = false;}
+		
+		// run a subscription-manager moduleCommand
+		SSHCommandResult results= client.runCommandAndWait(moduleCommand);
+		
+		// assert the results do NOT contain a WARNING message
+		String expectedWarningMsg = "WARNING";	// +"\n\n"+"The yum plugins: (PLUGINS) were automatically enabled for the benefit of Red Hat Subscription Management. If not desired, use \"subscription-manager config --rhsm.auto_enable_yum_plugins=0\" to block this behavior.";
+		Assert.assertTrue(!results.getStdout().contains(expectedWarningMsg),"The stdout from running '"+moduleCommand+"' does NOT contain the expected warning message '"+expectedWarningMsg+"' when at least one yum plugin is disabled and rhsm.auto_enable_yum_plugins is configured off.");
+		
+		// assert that both plugins were untouched
+		Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.yumPluginConfFileForProductId, "enabled"),yumPluginConfFileForProductIdEnabledString,"Enablement of yum config file '"+clienttasks.yumPluginConfFileForProductId+"' should remain unchanged after running '"+moduleCommand+"' with rhsm.auto_enable_yum_plugins configured off.");
+		Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.yumPluginConfFileForSubscriptionManager, "enabled"),yumPluginConfFileForSubscriptionManagerEnabledString,"Enablement of yum config file '"+clienttasks.yumPluginConfFileForSubscriptionManager+"' should remain unchanged after running '"+moduleCommand+"' with rhsm.auto_enable_yum_plugins configured off.");
+		
+		// assert that the yum plugins are/not loaded
+		//	[root@jsefler-rhel7 ~]# yum repolist --disablerepo=*
+		//	Loaded plugins: langpacks, product-id, search-disabled-repos, subscription-
+		//		          : manager
+		//	This system is not registered with an entitlement server. You can use subscription-manager to register.
+		//	repolist: 0
+		String plugin;
+		String command = "yum repolist --disablerepo=*";
+		results= client.runCommandAndWait(command);
+		String stdout = results.getStdout();	// (first observed result)
+		stdout = stdout.replaceAll("-\\n\\s+:\\s", "-");	// join multiple lines of Loaded plugins (second observed result)
+		stdout = stdout.replaceAll(",\\n\\s+:\\s", ", ");	// join multiple lines of Loaded plugins (third observed result)
+		plugin="product-id";
+		if (yumPluginConfFileForProductIdEnabled) {
+			Assert.assertTrue(stdout.contains(plugin),"The stdout from running '"+command+"' indicated that plugin '"+plugin+"' was loaded.");
+		} else {
+			Assert.assertTrue(!stdout.contains(plugin),"The stdout from running '"+command+"' indicated that plugin '"+plugin+"' was NOT loaded.");
+		}
+		plugin="subscription-manager";
+		if (yumPluginConfFileForSubscriptionManagerEnabled) {
+			Assert.assertTrue(stdout.contains(plugin),"The stdout from running '"+command+"' indicated that plugin '"+plugin+"' was loaded.");
+		} else {
+			Assert.assertTrue(!stdout.contains(plugin),"The stdout from running '"+command+"' indicated that plugin '"+plugin+"' was NOT loaded.");
+		}
+	}
+	@DataProvider(name="getVariousModuleCommandsData")
+	public Object[][] getVariousModuleCommandsDataAs2dArray() {
+		return TestNGUtils.convertListOfListsTo2dArray(getVariousModuleCommandsDataAsListOfLists());
+	}
+	protected List<List<Object>> getVariousModuleCommandsDataAsListOfLists(){
+		List<List<Object>> ll = new ArrayList<List<Object>>();
+		
+		// this bug is specifically designed to test Bug 1319927 - [RFE] subscription-manager should automatically enable yum plugins
+		if (clienttasks.isPackageVersion("subscription-manager", "<", "1.20.2-1")) {  // commit 29a9a1db08a2ee920c43891daafdf858082e5d8b 	1319927: [RFE] sub-man automatically enables yum plugins
+			log.warning("This test applies a newer version of subscription-manager that includes an implementation for RFE Bug 1319927 - subscription-manager should automatically enable yum plugins");
+			return ll;	// an empty list
+		}
+		
+		// Object blockedByBug, String moduleCommand, Boolean moduleCommandRequiresRegistration
+		// commands that require regist
+		ll.add(Arrays.asList(new Object[]{null,	clienttasks.command+" "+"unregister", true}));
+		ll.add(Arrays.asList(new Object[]{null,	clienttasks.command+" "+"refresh", true}));
+		ll.add(Arrays.asList(new Object[]{null,	clienttasks.command+" "+"remove --all", true}));
+		ll.add(Arrays.asList(new Object[]{null,	clienttasks.command+" "+"service-level --show", true}));
+		ll.add(Arrays.asList(new Object[]{null,	clienttasks.command+" "+"repo-override --list", true}));
+		ll.add(Arrays.asList(new Object[]{null,	clienttasks.command+" "+"auto-attach --show", true}));
+		ll.add(Arrays.asList(new Object[]{null,	clienttasks.command+" "+"version", false}));
+		ll.add(Arrays.asList(new Object[]{null,	clienttasks.command+" "+"status", false}));
+		ll.add(Arrays.asList(new Object[]{null,	clienttasks.command+" "+"list --installed", false}));
+		ll.add(Arrays.asList(new Object[]{null,	clienttasks.command+" "+"repos --list", false}));
+		ll.add(Arrays.asList(new Object[]{null,	clienttasks.command+" "+"plugins --list", false}));
+		ll.add(Arrays.asList(new Object[]{null,	clienttasks.command+" "+"facts --list", false}));
+		ll.add(Arrays.asList(new Object[]{null,	clienttasks.command+" "+"clean", false}));
+		
+		return ll;
+	}
+	
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-47947", "RHEL7-110728"},
+			linkedWorkItems= {
+//				@LinkedItem(
+//					workitemId= "RHEL6-?????",	// TODO
+//					project= Project.RHEL6,
+//					role= DefTypes.Role.VERIFIES),
+				@LinkedItem(
+					workitemId= "RHEL7-95149",	// RHEL7-95149 - RHSM-REQ : subscription-manager should automatically enable yum plugins
+					project= Project.RedHatEnterpriseLinux7,
+					role= DefTypes.Role.VERIFIES)},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags="Tier3")
+	@Test(	description="Verify that the yum plugins for /etc/yum/pluginconf.d/product-id.conf and /etc/yum/pluginconf.d/subscription-manager.conf are NOT automatically enabled when subscription-manager config module is used (in honor of special case bug 1501889).",
+			groups={"blockedByBug-1501889","testSubscriptionManagerConfigModuleShouldNotAutomaticallyEnableYumPlugins", "blockedByBug-1319927","blockedByBug-1489917"},
+			priority=100,
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void testSubscriptionManagerConfigModuleShouldNotAutomaticallyEnableYumPlugins() throws IOException {
+		// this bug is specifically designed to test Bug 1501889
+		if (clienttasks.isPackageVersion("subscription-manager", "<", "1.20.2-1")) {  // commit 29a9a1db08a2ee920c43891daafdf858082e5d8b 	1319927: [RFE] sub-man automatically enables yum plugins
+			throw new SkipException("This test applies a newer version of subscription-manager that includes an implementation for RFE Bug 1319927 - subscription-manager should automatically enable yum plugins");
+		}
+		
+		resetDefaultConfigurationsForYumPluginsAndRhsmAutoEnableYumPlugins();
+		
+		// make sure the default rhsm.config for auto_enable_yum_plugins=1
+		clienttasks.config(null, null, true, new String[]{"rhsm","auto_enable_yum_plugins", "1"});
+		
+		// disable both /etc/yum/pluginconf.d/product-id.conf and /etc/yum/pluginconf.d/subscription-manager.conf
+		clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForProductId, "enabled", "0");
+		clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForSubscriptionManager, "enabled", "false");
+		
+		// Demonstration of Bug 1501889
+		//	[root@jsefler-rhel7 ~]# subscription-manager config --rhsm.auto_enable_yum_plugins 0
+		//	WARNING
+		//
+		//	The yum plugins: /etc/yum/pluginconf.d/subscription-manager.conf, /etc/yum/pluginconf.d/product-id.conf
+		//  were automatically enabled for the benefit of Red Hat Subscription Management.
+		//  If not desired, use "subscription-manager config --rhsm.auto_enable_yum_plugins=0" to block this behavior.
+		String warningMsg = "WARNING"+"\n\n"+"The yum plugins: "+clienttasks.yumPluginConfFileForSubscriptionManager+", "+clienttasks.yumPluginConfFileForProductId+" were automatically enabled for the benefit of Red Hat Subscription Management. If not desired, use \"subscription-manager config --rhsm.auto_enable_yum_plugins=0\" to block this behavior.";
+		warningMsg = warningMsg.replaceFirst("\n\n.*", "");	// WARNING
+		
+		// now call the rhsm config module to disable auto_enable_yum_plugins and block this behavior
+		String command =  clienttasks.configCommand(null, null, true, new String[]{"rhsm","auto_enable_yum_plugins", "0"});
+		SSHCommandResult results = client.runCommandAndWait(command);
+		
+		// assert that the config was a success
+		Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsm", "auto_enable_yum_plugins"),"0","The disablement of auto_enable_yum_plugins configuration in config file '"+clienttasks.rhsmConfFile+"'.");
+		
+		// assert that no WARNING was presented
+		Assert.assertTrue(!results.getStdout().contains(warningMsg),"In honor of bug 1501889, the stdout from running '"+command+"' does NOT contain the warning message '"+warningMsg+"' when at least one yum plugin is disabled and rhsm.auto_enable_yum_plugins is configured off.");
+		
+		// assert that both plugins were untouched
+		Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.yumPluginConfFileForProductId, "enabled"),"0","Enablement of yum config file '"+clienttasks.yumPluginConfFileForProductId+"' should remain unchanged after running '"+command+"'.");
+		Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.yumPluginConfFileForSubscriptionManager, "enabled"),"false","Enablement of yum config file '"+clienttasks.yumPluginConfFileForSubscriptionManager+"' should remain unchanged after running '"+command+"'.");
 	}
 	
 	

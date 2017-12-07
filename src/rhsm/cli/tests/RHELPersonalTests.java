@@ -115,21 +115,19 @@ https://engineering.redhat.com/trac/Entitlement/wiki/RHPersonalDevTools
  * https://engineering.redhat.com/trac/IntegratedMgmtQE/wiki/RH-Personal_dev_testplan
  * https://engineering.redhat.com/trac/Entitlement/wiki/RHPersonalDevTools
  */
-@Test(groups={"RHELPersonalTests","Tier2Tests"})
+@Test(groups={"RHELPersonalTests"},enabled=false)	// registered consumers type of "person" was originally intended for entitling people to training.  Red Hat Learning Management systems never made use if it, and candlepin has no active requirements for it.  Disabling the personal tests...  Reference CLOSED WONTFIX BUG https://bugzilla.redhat.com/show_bug.cgi?id=967160#c1
 public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 	
 	
 	// Test Methods ***********************************************************************
 	
 	@Test(	description="subscription-manager-cli: Ensure RHEL Personal Bits are available and unlimited after a person has subscribed to RHEL Personal",
-			groups={"EnsureSubPoolIsAvailableAfterRegisteredPersonSubscribesToRHELPersonal_Test", "RHELPersonal", "blockedByBug-624816", "blockedByBug-641155", "blockedByBug-643405", "blockedByBug-967160"},
+			groups={"Tier2Tests","EnsureSubPoolIsAvailableAfterRegisteredPersonSubscribesToRHELPersonal_Test", "RHELPersonal", "blockedByBug-624816", "blockedByBug-641155", "blockedByBug-643405", "blockedByBug-967160"},
 			priority=100,
-			enabled=true)
+			enabled=false)	// registered consumers type of "person" was originally intended for entitling people to training.  Red Hat Learning Management systems never made use if it, and candlepin has no active requirements for it.  Disabling the personal tests...  Reference CLOSED WONTFIX BUG https://bugzilla.redhat.com/show_bug.cgi?id=967160#c1
 	@ImplementsNitrateTest(caseId=55702)
 //	@ImplementsNitrateTest(caseId={55702,55718})
-	public void EnsureSubPoolIsAvailableAfterRegisteredPersonSubscribesToRHELPersonal_Test() throws JSONException {
-		if (true) throw new SkipException("Support for the RHELPersonalTests was yanked in favor of new DataCenter SKUs.  These RHELPersonalTests are obsolete.  Reference: CLOSED WONTFIX Bugzilla https://bugzilla.redhat.com/show_bug.cgi?id=967160#c1");
-//		if (!isServerOnPremises) throw new SkipException("Currently this test is designed only for on-premises.");	//TODO Make this work for IT too.  jsefler 8/12/2010 
+	public void testSubPoolIsAvailableAfterRegisteredPersonSubscribesToRHELPersonal() throws JSONException {
 		if (client2tasks==null) throw new SkipException("These tests are designed to use a second client.");
 		if (username.equals(sm_serverAdminUsername)) throw new SkipException("This test requires that the client user ("+username+") is NOT "+sm_serverAdminUsername);
 		
@@ -188,13 +186,13 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 	}
 	 
 	@Test(	description="subscription-manager-cli: Ensure RHEL Personal Bits are consumable after a person has subscribed to RHEL Personal",
-			groups={"EnsureSubPoolIsConsumableAfterRegisteredPersonSubscribesToRHELPersonal_Test","RHELPersonal"},
+			groups={"Tier2Tests","EnsureSubPoolIsConsumableAfterRegisteredPersonSubscribesToRHELPersonal_Test","RHELPersonal"},
 			priority=110,//dependsOnGroups={"EnsureSubPoolIsAvailableAfterRegisteredPersonSubscribesToRHELPersonal_Test"},
-			dependsOnMethods={"EnsureSubPoolIsAvailableAfterRegisteredPersonSubscribesToRHELPersonal_Test"},
-			enabled=true)
+			dependsOnMethods={"testSubPoolIsAvailableAfterRegisteredPersonSubscribesToRHELPersonal"},
+			enabled=false)	// registered consumers type of "person" was originally intended for entitling people to training.  Red Hat Learning Management systems never made use if it, and candlepin has no active requirements for it.  Disabling the personal tests...  Reference CLOSED WONTFIX BUG https://bugzilla.redhat.com/show_bug.cgi?id=967160#c1
 	@ImplementsNitrateTest(caseId=55702)
 //	@ImplementsNitrateTest(caseId={55702,55718})
-	public void EnsureSubPoolIsConsumableAfterRegisteredPersonSubscribesToRHELPersonal_Test() throws JSONException {
+	public void testSubPoolIsConsumableAfterRegisteredPersonSubscribesToRHELPersonal() throws JSONException {
 				
 		for (int j=0; j<sm_personSubscriptionPoolProductData.length(); j++) {
 			JSONObject poolProductDataAsJSONObject = (JSONObject) sm_personSubscriptionPoolProductData.get(j);
@@ -232,12 +230,12 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager-cli: Ensure that availability of RHEL Personal Bits is revoked once the person unsubscribes from RHEL Personal",
-			groups={"EnsureAvailabilityOfSubPoolIsRevokedOncePersonUnsubscribesFromRHELPersonal_Test","RHELPersonal"},
+			groups={"Tier2Tests","EnsureAvailabilityOfSubPoolIsRevokedOncePersonUnsubscribesFromRHELPersonal_Test","RHELPersonal"},
 			priority=120,//dependsOnGroups={"EnsureSubPoolIsConsumableAfterRegisteredPersonSubscribesToRHELPersonal_Test"},
-			dependsOnMethods={"EnsureSubPoolIsConsumableAfterRegisteredPersonSubscribesToRHELPersonal_Test"},
-			enabled=true)
+			dependsOnMethods={"testSubPoolIsConsumableAfterRegisteredPersonSubscribesToRHELPersonal"},
+			enabled=false)	// registered consumers type of "person" was originally intended for entitling people to training.  Red Hat Learning Management systems never made use if it, and candlepin has no active requirements for it.  Disabling the personal tests...  Reference CLOSED WONTFIX BUG https://bugzilla.redhat.com/show_bug.cgi?id=967160#c1
 	//@ImplementsTCMS(id="")
-	public void EnsureAvailabilityOfSubPoolIsRevokedOncePersonUnsubscribesFromRHELPersonal_Test() throws JSONException {
+	public void testAvailabilityOfSubPoolIsRevokedOncePersonUnsubscribesFromRHELPersonal() throws JSONException {
 		
 		log.info("Unsubscribe client2 (already registered as a system under username '"+username+"') from all currently consumed product subscriptions...");
 		client2tasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
@@ -262,12 +260,12 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 
 	
 	@Test(	description="subscription-manager-cli: Ensure that multiple (unlimited) systems can subscribe to subpool",
-			groups={"SubscribeMultipleSystemsToSubPool_Test","RHELPersonal"/*, "blockedByBug-661130"*/},
+			groups={"Tier2Tests","SubscribeMultipleSystemsToSubPool_Test","RHELPersonal"/*, "blockedByBug-661130"*/},
 			priority=130,//dependsOnGroups={"EnsureAvailabilityOfSubPoolIsRevokedOncePersonUnsubscribesFromRHELPersonal_Test"},
-			dependsOnMethods={"EnsureSubPoolIsAvailableAfterRegisteredPersonSubscribesToRHELPersonal_Test"},
-			enabled=true)
+			dependsOnMethods={"testSubPoolIsAvailableAfterRegisteredPersonSubscribesToRHELPersonal"},
+			enabled=false)	// registered consumers type of "person" was originally intended for entitling people to training.  Red Hat Learning Management systems never made use if it, and candlepin has no active requirements for it.  Disabling the personal tests...  Reference CLOSED WONTFIX BUG https://bugzilla.redhat.com/show_bug.cgi?id=967160#c1
 	//@ImplementsTCMS(id="")
-	public void SubscribeMultipleSystemsToSubPool_Test() throws JSONException {
+	public void testSubscribeMultipleSystemsToSubPool() throws JSONException {
 		log.info("Making sure the clients are not subscribed to anything...");
 //		client2tasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 //		client2tasks.unregister();
@@ -327,13 +325,13 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager-cli: Ensure person consumer cannot unsubscribe while subpools are consumed",
-			groups={"EnsurePersonCannotUnsubscribeWhileSubpoolsAreConsumed_Test","RHELPersonal", "blockedByBug-624063", "blockedByBug-639434", "blockedByBug-658283", "blockedByBug-658683", "blockedByBug-675473", "blockedByBug-738448"},
+			groups={"Tier2Tests","EnsurePersonCannotUnsubscribeWhileSubpoolsAreConsumed_Test","RHELPersonal", "blockedByBug-624063", "blockedByBug-639434", "blockedByBug-658283", "blockedByBug-658683", "blockedByBug-675473", "blockedByBug-738448"},
 			priority=140,//dependsOnGroups={"SubscribeMultipleSystemsToSubPool_Test"},
-			dependsOnMethods={"SubscribeMultipleSystemsToSubPool_Test"},
-			enabled=true)
+			dependsOnMethods={"testSubscribeMultipleSystemsToSubPool"},
+			enabled=false)	// registered consumers type of "person" was originally intended for entitling people to training.  Red Hat Learning Management systems never made use if it, and candlepin has no active requirements for it.  Disabling the personal tests...  Reference CLOSED WONTFIX BUG https://bugzilla.redhat.com/show_bug.cgi?id=967160#c1
 	@ImplementsNitrateTest(caseId=58898)
 	// 1) unsubscribe person from personal pool while systems are subscribed to subpool (scenario from calfanso@redhat.com)
-	public void EnsurePersonCannotUnsubscribeWhileSubpoolsAreConsumed_Test() {
+	public void testPersonCannotUnsubscribeWhileSubpoolsAreConsumed() {
 		log.info("Assuming that multiple systems have subscribed to a personal subpool in prior testcase...");
 	
 		log.info("Now, attempt to unsubscribe the person on client 1 from the "+personSubscriptionName+" pool and assert the unsubscribe is blocked.");
@@ -397,12 +395,12 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager-cli: Ensure person consumer cannot unregister while subpools are consumed",
-			groups={"EnsurePersonCannotUnregisterWhileSubpoolsAreConsumed_Test","RHELPersonal", "blockedByBug-624063", "blockedByBug-639434", "blockedByBug-658683", "blockedByBug-661130", "blockedByBug-738448"},
+			groups={"Tier2Tests","EnsurePersonCannotUnregisterWhileSubpoolsAreConsumed_Test","RHELPersonal", "blockedByBug-624063", "blockedByBug-639434", "blockedByBug-658683", "blockedByBug-661130", "blockedByBug-738448"},
 			priority=150,//dependsOnGroups={"SubscribeMultipleSystemsToSubPool_Test"},
-			dependsOnMethods={"SubscribeMultipleSystemsToSubPool_Test"},
-			enabled=true)
+			dependsOnMethods={"testSubscribeMultipleSystemsToSubPool"},
+			enabled=false)	// registered consumers type of "person" was originally intended for entitling people to training.  Red Hat Learning Management systems never made use if it, and candlepin has no active requirements for it.  Disabling the personal tests...  Reference CLOSED WONTFIX BUG https://bugzilla.redhat.com/show_bug.cgi?id=967160#c1
 	//@ImplementsTCMS(id="")
-	public void EnsurePersonCannotUnregisterWhileSubpoolsAreConsumed_Test() {
+	public void testPersonCannotUnregisterWhileSubpoolsAreConsumed() {
 		log.info("Assuming that multiple systems have subscribed to a personal subpool in prior testcase...");
 	
 		log.info("Now, attempt to unregister the person on client 1 from the "+personSubscriptionName+" pool and assert the unregister is blocked.");
@@ -471,7 +469,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 	
 // DUE TO BEHAVIOR CHNAGE, THIS TEST WAS REPLACED BY EnsurePersonCannotUnsubscribeWhileSubpoolsAreConsumed_Test
 //	@Test(	description="subscription-manager-cli: Ensure that the entitlement certs for subscribed subpool is revoked once the person unsubscribes from RHEL Personal",
-//			groups={"EnsureEntitlementCertForSubPoolIsRevokedOncePersonUnsubscribesFromRHELPersonal_Test","RHELPersonal","blockedByBug-639434"},
+//			groups={"Tier2Tests","EnsureEntitlementCertForSubPoolIsRevokedOncePersonUnsubscribesFromRHELPersonal_Test","RHELPersonal","blockedByBug-639434"},
 //			dependsOnGroups={"SubscribeMultipleSystemsToSubPool_Test","EnsurePersonCannotUnsubscribeWhileSubpoolsAreConsumed_Test","EnsurePersonCannotUnregisterWhileSubpoolsAreConsumed_Test"},
 ////			dataProvider="getRHELPersonalData",
 //			enabled=true)
@@ -497,13 +495,13 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager-cli: Ensure that unsubscribing system from subpool while other systems are subscribed to subpool does not cause subpool to go away",
-			groups={"EnsureEntitlementCertForSubPoolIsNotRevokedOnceAnotherSystemUnsubscribesFromSubPool_Test","RHELPersonal", "blockedByBug-643405"},
+			groups={"Tier2Tests","EnsureEntitlementCertForSubPoolIsNotRevokedOnceAnotherSystemUnsubscribesFromSubPool_Test","RHELPersonal", "blockedByBug-643405"},
 			priority=160,//dependsOnGroups={"SubscribeMultipleSystemsToSubPool_Test","EnsurePersonCannotUnsubscribeWhileSubpoolsAreConsumed_Test","EnsurePersonCannotUnregisterWhileSubpoolsAreConsumed_Test"},
-			dependsOnMethods={"SubscribeMultipleSystemsToSubPool_Test"},
-			enabled=true)
+			dependsOnMethods={"testSubscribeMultipleSystemsToSubPool"},
+			enabled=false)	// registered consumers type of "person" was originally intended for entitling people to training.  Red Hat Learning Management systems never made use if it, and candlepin has no active requirements for it.  Disabling the personal tests...  Reference CLOSED WONTFIX BUG https://bugzilla.redhat.com/show_bug.cgi?id=967160#c1
 	@ImplementsNitrateTest(caseId=58899)
 	// 2) unsubscribe system from subpool while other systems are subscribed to subpool, make sure the subpool doesn't go away (scenario from calfanso@redhat.com)
-	public void EnsureEntitlementCertForSubPoolIsNotRevokedOnceAnotherSystemUnsubscribesFromSubPool_Test() throws JSONException {
+	public void testEntitlementCertForSubPoolIsNotRevokedOnceAnotherSystemUnsubscribesFromSubPool() throws JSONException {
 		
 		log.info("Now start unsubscribing each system from the consumed product(s) and assert the personal sub pool is still available...");
 		for (String consumerId : systemConsumerIds) {
@@ -535,13 +533,13 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager-cli: Ensure that after unsubscribing all systems from a subpool, the subpool should not get deleted",
-			groups={"EnsureSubPoolIsNotDeletedAfterAllOtherSystemsUnsubscribeFromSubPool_Test","RHELPersonal"},
+			groups={"Tier2Tests","EnsureSubPoolIsNotDeletedAfterAllOtherSystemsUnsubscribeFromSubPool_Test","RHELPersonal"},
 			priority=170,//dependsOnGroups={"EnsureEntitlementCertForSubPoolIsNotRevokedOnceAnotherSystemUnsubscribesFromSubPool_Test"},
-			dependsOnMethods={"EnsureEntitlementCertForSubPoolIsNotRevokedOnceAnotherSystemUnsubscribesFromSubPool_Test"},
-			enabled=true)
+			dependsOnMethods={"testEntitlementCertForSubPoolIsNotRevokedOnceAnotherSystemUnsubscribesFromSubPool"},
+			enabled=false)	// registered consumers type of "person" was originally intended for entitling people to training.  Red Hat Learning Management systems never made use if it, and candlepin has no active requirements for it.  Disabling the personal tests...  Reference CLOSED WONTFIX BUG https://bugzilla.redhat.com/show_bug.cgi?id=967160#c1
 	@ImplementsNitrateTest(caseId=58907)
 	// 3) unsubscribe system from subpool as the last system subscribed, make sure the subpool doesn't get deleted (scenario from calfanso@redhat.com)
-	public void EnsureSubPoolIsNotDeletedAfterAllOtherSystemsUnsubscribeFromSubPool_Test() throws JSONException {
+	public void testSubPoolIsNotDeletedAfterAllOtherSystemsUnsubscribeFromSubPool() throws JSONException {
 		log.info("After having unsubscribed all systems from product subscriptions in the prior testcase , we will now verify that the personal subpool has not been deleted and that all systems can still subscribe to it ...");
 
 		for (String consumerId : systemConsumerIds) {
@@ -574,13 +572,12 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager-cli: Ensure system autosubscribe consumes subpool RHEL Personal Bits",
-			groups={"EnsureSystemAutosubscribeConsumesSubPool_Test", "blockedByBug-637937", "blockedByBug-737762"},
-//			dependsOnGroups={"EnsureSubPoolIsNotDeletedAfterAllOtherSystemsUnsubscribeFromSubPool_Test"},
-			priority=200,
-			dependsOnMethods={"EnsureSubPoolIsConsumableAfterRegisteredPersonSubscribesToRHELPersonal_Test"},
-			enabled=true)
+			groups={"Tier2Tests","EnsureSystemAutosubscribeConsumesSubPool_Test", "blockedByBug-637937", "blockedByBug-737762"},
+			priority=200,//dependsOnGroups={"EnsureSubPoolIsNotDeletedAfterAllOtherSystemsUnsubscribeFromSubPool_Test"},
+			dependsOnMethods={"testSubPoolIsConsumableAfterRegisteredPersonSubscribesToRHELPersonal"},
+			enabled=false)	// registered consumers type of "person" was originally intended for entitling people to training.  Red Hat Learning Management systems never made use if it, and candlepin has no active requirements for it.  Disabling the personal tests...  Reference CLOSED WONTFIX BUG https://bugzilla.redhat.com/show_bug.cgi?id=967160#c1
 	//@ImplementsTCMS(id="")
-	public void EnsureSystemAutosubscribeConsumesSubPool_Test() throws JSONException {
+	public void testSystemAutosubscribeConsumesSubPool() throws JSONException {
 		if (client2tasks==null) throw new SkipException("A second client system is required for this test.");
 //		unsubscribeAndUnregisterMultipleSystemsAfterGroups();
 		
@@ -635,13 +632,12 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager-cli: No consumer created by any other user in the same owner can see the sub pool",
-			groups={"EnsureUsersSubPoolIsNotAvailableToSystemsRegisterByAnotherUsernameUnderSameOwner_Test", "blockedByBug-643405"},
-//			dependsOnGroups={"EnsureSubPoolIsNotDeletedAfterAllOtherSystemsUnsubscribeFromSubPool_Test"},
-			priority=210,
-			dependsOnMethods={"EnsureSubPoolIsConsumableAfterRegisteredPersonSubscribesToRHELPersonal_Test"},
-			enabled=true)
+			groups={"Tier2Tests","EnsureUsersSubPoolIsNotAvailableToSystemsRegisterByAnotherUsernameUnderSameOwner_Test", "blockedByBug-643405"},
+			priority=210,//dependsOnGroups={"EnsureSubPoolIsNotDeletedAfterAllOtherSystemsUnsubscribeFromSubPool_Test"},
+			dependsOnMethods={"testSubPoolIsConsumableAfterRegisteredPersonSubscribesToRHELPersonal"},
+			enabled=false)	// registered consumers type of "person" was originally intended for entitling people to training.  Red Hat Learning Management systems never made use if it, and candlepin has no active requirements for it.  Disabling the personal tests...  Reference CLOSED WONTFIX BUG https://bugzilla.redhat.com/show_bug.cgi?id=967160#c1
 	@ImplementsNitrateTest(caseId=61126)
-	public void EnsureUsersSubPoolIsNotAvailableToSystemsRegisterByAnotherUsernameUnderSameOwner_Test() throws JSONException {
+	public void testUsersSubPoolIsNotAvailableToSystemsRegisterByAnotherUsernameUnderSameOwner() throws JSONException {
 		if (client2tasks==null) throw new SkipException("A second client system is required for this test.");
 //		unsubscribeAndUnregisterMultipleSystemsAfterGroups();
 		
@@ -679,13 +675,11 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager-cli: Ensure a system cannot subscribe to a personal subscription pool",
-			groups={"EnsureSystemCannotSubscribeToPersonalPool_Test"},
-//			dependsOnGroups={"EnsureSubPoolIsNotDeletedAfterAllOtherSystemsUnsubscribeFromSubPool_Test"},
-			priority=220,
-			enabled=true)
+			groups={"Tier2Tests","EnsureSystemCannotSubscribeToPersonalPool_Test"},
+			priority=220,//dependsOnGroups={"EnsureSubPoolIsNotDeletedAfterAllOtherSystemsUnsubscribeFromSubPool_Test"},
+			enabled=false)	// registered consumers type of "person" was originally intended for entitling people to training.  Red Hat Learning Management systems never made use if it, and candlepin has no active requirements for it.  Disabling the personal tests...  Reference CLOSED WONTFIX BUG https://bugzilla.redhat.com/show_bug.cgi?id=967160#c1
 	//@ImplementsNitrateTest(caseId=)
-	public void EnsureSystemCannotSubscribeToPersonalPool_Test() throws JSONException {
-		if (true) throw new SkipException("Support for the RHELPersonalTests was yanked in favor of new DataCenter SKUs.  These RHELPersonalTests are obsolete.  Reference: CLOSED WONTFIX Bugzilla https://bugzilla.redhat.com/show_bug.cgi?id=967160#c1");
+	public void testSystemCannotSubscribeToPersonalPool() throws JSONException {
 //		unsubscribeAndUnregisterMultipleSystemsAfterGroups();
 				
 		for (int j=0; j<sm_personSubscriptionPoolProductData.length(); j++) {
@@ -716,8 +710,12 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 			Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(1), "The exit code from the subscribe command indicates that no entitlements were granted from this attempt to bind."); // new RHEL63 exitcode behavior from bug fix https://bugzilla.redhat.com/show_bug.cgi?id=689608
 			Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "Consumers of this type are not allowed to subscribe to the pool with id '"+personalPool.poolId+"'",
 					"Attempting to subscribe a system consumer to a personal pool is blocked.");
-			Assert.assertEquals(client1tasks.listConsumedProductSubscriptions().getStdout().trim(),"No consumed subscription pools to list",
-					"Because the subscribe attempt was blocked, there should still be 'No consumed subscription pools to list'.");
+			String expectedMsg = "No consumed subscription pools to list";
+			if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.20.2-1")) {	// commit da72dfcbbb2c3a44393edb9e46e1583d05cc140a
+				expectedMsg="No consumed subscription pools were found.";
+			}
+			Assert.assertEquals(client1tasks.listConsumedProductSubscriptions().getStdout().trim(),expectedMsg,
+					"Because the subscribe attempt was blocked, there should still be '"+expectedMsg+"'.");
 		}
 	}
 	
@@ -740,7 +738,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 		// alternative to dependsOnGroups={"RegisterWithCredentials_Test"}
 		// This allows us to satisfy a dependency on registrationDataList making TestNG add unwanted Test results.
 		// This also allows us to individually run this Test Class on Hudson.
-		RegisterWithCredentials_Test(); // needed to populate registrationDataList
+		testRegisterWithCredentials(); // needed to populate registrationDataList
 		
 		// find anotherConsumerUsername under the same owner as consumerUsername
 		List<RegistrationData> registrationData = findGoodRegistrationData(false,username,true,owner);

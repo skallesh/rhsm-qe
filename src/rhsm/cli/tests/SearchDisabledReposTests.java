@@ -22,8 +22,11 @@ import rhsm.data.InstalledProduct;
 import rhsm.data.ProductCert;
 import rhsm.data.Repo;
 
-import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.DefTypes;
 import com.github.redhatqe.polarize.metadata.TestDefinition;
+import com.github.redhatqe.polarize.metadata.TestType;
+import com.github.redhatqe.polarize.metadata.DefTypes.PosNeg;
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
 
 /**
  * @author jsefler
@@ -33,19 +36,24 @@ import com.github.redhatqe.polarize.metadata.TestDefinition;
  * 		Bug 1268376 - [RFE] Provide API call to enable/disable yum repositories  (RHEL6.8)
  * 		http://etherpad.corp.redhat.com/yum-search-disabled-repos-plugin-Testcases
  */
-@Test(groups={"SearchDisabledReposTests","AcceptanceTests","Tier1Tests"})
+@Test(groups={"SearchDisabledReposTests"})
 public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 
 	
 	// Test methods ***********************************************************************
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20088", "RHEL7-51100"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20088", "RHEL7-51100"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="verify default configuration for /etc/yum/pluginconf.d/search-disabled-repos.conf; enabled=1 notify_only=1",
-			groups={"blockedByBug-1232232","blockedByBug-1268376"},
+			groups={"Tier1Tests","blockedByBug-1232232","blockedByBug-1268376"},
 			priority=10, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyDefaultConfiguration_Test() {
+	public void testDefaultConfiguration() {
 		
 		//	[root@jsefler-7 ~]# cat /etc/yum/pluginconf.d/search-disabled-repos.conf
 		//	[main]
@@ -73,13 +81,18 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20089", "RHEL7-55192"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20089", "RHEL7-55192"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="Verify that we can register with auto-subscribe to cover the base RHEL product cert; assert enablement of base rhel and optional repo",
-			groups={},
+			groups={"Tier1Tests"},
 			priority=20, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyRhelSubscriptionBaseAndOptionalReposAreAvailable_Test() throws JSONException, Exception {
+	public void testRhelSubscriptionBaseAndOptionalReposAreAvailable() throws JSONException, Exception {
 		
 		// get the currently installed RHEL product cert
 		ProductCert rhelProductCert = clienttasks.getCurrentRhelProductCert();
@@ -112,7 +125,7 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 		//	Repo Name: Red Hat Enterprise Linux 7 Server for ARM Beta (RPMs)
 		//	Repo URL: https://cdn.redhat.com/content/beta/rhel/arm/7/$basearch/os
 		//	Enabled: 1
-		if (clienttasks.redhatReleaseX.equals("7") && clienttasks.variant.equals("Server") && clienttasks.arch.equals("aarch64")) {
+		if (clienttasks.redhatReleaseX.equals("7") && clienttasks.variant.equals("Server") && clienttasks.arch.equals("aarch64") && rhelProductCert.productId.equals("294")/*Red Hat Enterprise Linux Server for ARM*/) {
 			rhelBaseRepoId = "rhel-7-for-arm-rpms";
 		}
 		
@@ -126,9 +139,35 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 		//	Repo Name: Red Hat Enterprise Linux 7 for IBM Power LE - Optional (RPMs)
 		//	Repo URL: https://cdn.redhat.com/content/dist/rhel/power-le/7/$releasever/$basearch/optional/os
 		//	Enabled: 0
-		if (clienttasks.redhatReleaseX.equals("7") && clienttasks.variant.equals("Server") && clienttasks.arch.equals("ppc64le")) {
+		if (clienttasks.redhatReleaseX.equals("7") && clienttasks.variant.equals("Server") && clienttasks.arch.equals("ppc64le") && rhelProductCert.productId.equals("279")/*Red Hat Enterprise Linux for Power, little endian*/) {
 			rhelBaseRepoId = "rhel-7-for-power-le-rpms";
 		}
+
+//TODO NEED TO DETERMINE IF THIS IS CORRECT - SHOULD THE BETA PRODUCT 362 REALLY ACCESS THE SAME BASE REPO AS GA?  BOTH 362 and 420 PROVIDE THE SAME TAGS "rhel-alt-7,rhel-alt-7-power9" WHICH MEANS THEY CAN ACCESS THE SAME CONTENT.
+//		// PLATFORM=RedHatEnterpriseLinuxAlternateArchitectures7-Server-ppc64le
+//		//	Repo ID:   rhel-7-for-power-9-rpms
+//		//	Repo Name: Red Hat Enterprise Linux 7 for POWER9 (RPMs)
+//		//	Repo URL:  https://cdn.redhat.com/content/dist/rhel-alt/server/7/$releasever/power9/$basearch/os
+//		//	Enabled:   1
+//		//
+//		//	Repo ID:   rhel-7-for-power-9-optional-rpms
+//		//	Repo Name: Red Hat Enterprise Linux 7 for POWER9 - Optional (RPMs)
+//		//	Repo URL:  https://cdn.redhat.com/content/dist/rhel-alt/server/7/$releasever/power9/$basearch/optional/os
+//		//	Enabled:   0
+//		//
+//		//	Repo ID:   rhel-7-for-power-9-extras-rpms
+//		//	Repo Name: Red Hat Enterprise Linux 7 for POWER9 - Extras (RPMs)
+//		//	Repo URL:  https://cdn.redhat.com/content/dist/rhel-alt/server/7/$releasever/power9/$basearch/extras/os
+//		//	Enabled:   0
+//		//
+//		//	Repo ID:   rhel-7-for-power-9-beta-rpms
+//		//	Repo Name: Red Hat Enterprise Linux 7 for POWER9 Beta (RPMs)
+//		//	Repo URL:  https://cdn.redhat.com/content/beta/rhel-alt/server/7/7Server/power9/$basearch/os
+//		//	Enabled:   0
+//		if (clienttasks.redhatReleaseX.equals("7") && clienttasks.variant.equals("Server") && clienttasks.arch.equals("ppc64le") && (rhelProductCert.productId.equals("362")/*Red Hat Enterprise Linux for Power 9 Beta*/||rhelProductCert.productId.equals("420")/*Red Hat Enterprise Linux for Power 9*/)) {
+//			rhelBaseRepoId = "rhel-7-for-power-9-rpms";
+//		}
+
 		
 		// PLATFORM=RedHatEnterpriseLinux7-Server-ppc64
 		//	Repo ID: rhel-7-for-power-rpms
@@ -312,7 +351,7 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 			rhelBetaRepoId		= rhelBaseRepoId.replaceFirst("-rpms$", "-beta-rpms");
 			rhelHtbRepoId		= rhelBaseRepoId.replaceFirst("-rpms$", "-htb-rpms");
 		} else {
-			Assert.fail("Additional automation development is needed in this test to predict the name of the enabled base RHEL repo for RHEL"+clienttasks.redhatReleaseX+" "+clienttasks.variant+" "+clienttasks.arch);
+			Assert.fail("Additional automation development is needed in this test to predict the name of the enabled base RHEL repo for RHEL"+clienttasks.redhatReleaseX+" "+clienttasks.variant+" "+clienttasks.arch+"; Installed Product Cert: "+rhelProductCert);
 		}
 		
 		// assert the base rhel repo is enabled by default
@@ -345,14 +384,19 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 	protected String rhelEusRepoId = null;
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-22226", "RHEL7-55194"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-22226", "RHEL7-55194"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="verify that the search-disabled-repos plugin is not triggered when I attempt to install a package from a disabled repo (because search-disabled-repos plugin should only be triggered to resolve missing dependency packages)",
-			groups={},
-			dependsOnMethods={"VerifyRhelSubscriptionBaseAndOptionalReposAreAvailable_Test"},
+			groups={"Tier1Tests","blockedByBug-1512948"},
+			dependsOnMethods={"testRhelSubscriptionBaseAndOptionalReposAreAvailable"},
 			priority=25, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyYumSearchDisabledReposTriggersOnlyOnMissingDependencies_Test() {
+	public void testYumSearchDisabledReposTriggersOnlyOnMissingDependencies() {
 		// make sure rhelBasePackage and rhelOptionalPackage are not installed
 		if (clienttasks.isPackageInstalled(rhelOptionalPackage)) clienttasks.yumRemovePackage(rhelOptionalPackage);
 		if (clienttasks.isPackageInstalled(rhelBasePackage)) clienttasks.yumRemovePackage(rhelBasePackage);
@@ -392,14 +436,19 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 	protected String rhelOptionalPackage	= "ghostscript-devel";	// assume this package is available from rhelOptionalRepoId and depends on rhelBasePackage
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-22227", "RHEL7-55193"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-22227", "RHEL7-55193"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="verify yum usability message is presented when the default notify_only=1 is configured in /etc/yum/pluginconf.d/search-disabled-repos.conf",
-			groups={"blockedByBug-1232232","blockedByBug-1268376"},
-			dependsOnMethods={"VerifyRhelSubscriptionBaseAndOptionalReposAreAvailable_Test"},
+			groups={"Tier1Tests","blockedByBug-1232232","blockedByBug-1268376","blockedByBug-1512948"},
+			dependsOnMethods={"testRhelSubscriptionBaseAndOptionalReposAreAvailable"},
 			priority=30, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyNotifyOnlyFeedbackFromYumSearchDisabledRepos_Test() {
+	public void testNotifyOnlyFeedbackFromYumSearchDisabledRepos() {
 		// make sure rhelBasePackage and rhelOptionalPackage are not installed
 		if (clienttasks.isPackageInstalled(rhelOptionalPackage)) clienttasks.yumRemovePackage(rhelOptionalPackage);
 		if (clienttasks.isPackageInstalled(rhelBasePackage)) clienttasks.yumRemovePackage(rhelBasePackage);
@@ -462,14 +511,19 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-22228", "RHEL7-55195"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-22228", "RHEL7-55195"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="verify user is prompted to search disabled repos to complete an applicable yum install transaction when notify_only=0 is configured in /etc/yum/pluginconf.d/search-disabled-repos.conf and proceed with --assumeno responses",
-			groups={"blockedByBug-1232232","blockedByBug-1268376"},
-			dependsOnMethods={"VerifyRhelSubscriptionBaseAndOptionalReposAreAvailable_Test"},
+			groups={"Tier1Tests","blockedByBug-1232232","blockedByBug-1268376","blockedByBug-1512948"},
+			dependsOnMethods={"testRhelSubscriptionBaseAndOptionalReposAreAvailable"},
 			priority=40, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void WithNotifyOnlyOffVerifyYumSearchDisabledReposAssumingNoResponses_Test() {
+	public void testWithNotifyOnlyOffVerifyYumSearchDisabledReposAssumingNoResponses() {
 		// make sure rhelBasePackage and rhelOptionalPackage are not installed
 		if (clienttasks.isPackageInstalled(rhelOptionalPackage)) clienttasks.yumRemovePackage(rhelOptionalPackage);
 		if (clienttasks.isPackageInstalled(rhelBasePackage)) clienttasks.yumRemovePackage(rhelBasePackage);
@@ -551,14 +605,19 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-22229", "RHEL7-55196"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-22229", "RHEL7-55196"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="verify user is prompted to search disabled repos to complete an applicable yum install transaction when notify_only=0 is configured in /etc/yum/pluginconf.d/search-disabled-repos.conf and proceed with --assumeyes responses",
-			groups={"blockedByBug-1232232","blockedByBug-1268376"},
-			dependsOnMethods={"VerifyRhelSubscriptionBaseAndOptionalReposAreAvailable_Test"},
+			groups={"Tier1Tests","blockedByBug-1232232","blockedByBug-1268376","blockedByBug-1512948"},
+			dependsOnMethods={"testRhelSubscriptionBaseAndOptionalReposAreAvailable"},
 			priority=50, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void WithNotifyOnlyOffVerifyYumSearchDisabledReposAssumingYesResponses_Test() {
+	public void testWithNotifyOnlyOffVerifyYumSearchDisabledReposAssumingYesResponses() {
 		
 		// make sure rhelBasePackage and rhelOptionalPackage are not installed
 		if (clienttasks.isPackageInstalled(rhelOptionalPackage)) clienttasks.yumRemovePackage(rhelOptionalPackage);
@@ -719,14 +778,19 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-22230", "RHEL7-55197"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-22230", "RHEL7-55197"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="verify user is prompted to search disabled repos to complete an applicable yum install transaction when notify_only=0 is configured in /etc/yum/pluginconf.d/search-disabled-repos.conf and proceed with yes response to search disabled repos and install followed by no response to keep repos enabled.",
-			groups={"blockedByBug-1232232","blockedByBug-1268376"},
-			dependsOnMethods={"VerifyRhelSubscriptionBaseAndOptionalReposAreAvailable_Test"},
+			groups={"Tier1Tests","blockedByBug-1232232","blockedByBug-1268376","blockedByBug-1512948"},
+			dependsOnMethods={"testRhelSubscriptionBaseAndOptionalReposAreAvailable"},
 			priority=60, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void WithNotifyOnlyOffVerifyYumSearchDisabledReposWithYesYesNoResponses_Test() {
+	public void testWithNotifyOnlyOffVerifyYumSearchDisabledReposWithYesYesNoResponses() {
 		// make sure rhelBasePackage and rhelOptionalPackage are not installed
 		if (clienttasks.isPackageInstalled(rhelOptionalPackage)) clienttasks.yumRemovePackage(rhelOptionalPackage);
 		if (clienttasks.isPackageInstalled(rhelBasePackage)) clienttasks.yumRemovePackage(rhelBasePackage);
@@ -970,14 +1034,19 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-22231", "RHEL7-55198"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-22231", "RHEL7-55198"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="verify user is prompted to search disabled repos to complete an applicable yum install transaction when notify_only=0 is configured in /etc/yum/pluginconf.d/search-disabled-repos.conf and proceed with yes response to search disabled repos and no to the install prompt",
-			groups={"blockedByBug-1232232","blockedByBug-1268376"},
-			dependsOnMethods={"VerifyRhelSubscriptionBaseAndOptionalReposAreAvailable_Test"},
+			groups={"Tier1Tests","blockedByBug-1232232","blockedByBug-1268376","blockedByBug-1512948"},
+			dependsOnMethods={"testRhelSubscriptionBaseAndOptionalReposAreAvailable"},
 			priority=70, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void WithNotifyOnlyOffVerifyYumSearchDisabledReposWithYesNoResponses_Test() {
+	public void testWithNotifyOnlyOffVerifyYumSearchDisabledReposWithYesNoResponses() {
 		// make sure rhelBasePackage and rhelOptionalPackage are not installed
 		if (clienttasks.isPackageInstalled(rhelOptionalPackage)) clienttasks.yumRemovePackage(rhelOptionalPackage);
 		if (clienttasks.isPackageInstalled(rhelBasePackage)) clienttasks.yumRemovePackage(rhelBasePackage);

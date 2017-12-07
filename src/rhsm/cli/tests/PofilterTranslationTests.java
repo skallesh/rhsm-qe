@@ -29,8 +29,11 @@ import com.redhat.qe.tools.SSHCommandResult;
 import com.redhat.qe.tools.SSHCommandRunner;
 //import com.sun.org.apache.xalan.internal.xsltc.compiler.Pattern;
 
-import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.DefTypes;
 import com.github.redhatqe.polarize.metadata.TestDefinition;
+import com.github.redhatqe.polarize.metadata.TestType;
+import com.github.redhatqe.polarize.metadata.DefTypes.PosNeg;
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
 
 
 /**
@@ -176,31 +179,41 @@ import com.github.redhatqe.polarize.metadata.TestDefinition;
  **/
 
 
-@Test(groups={"PofilterTranslationTests","Tier2Tests"})
+@Test(groups={"PofilterTranslationTests"})
 public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	// Test Methods ***********************************************************************
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36515", "RHEL7-51288"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36515", "RHEL7-51288"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="run pofilter translate tests on subscription manager translation files",
 			dataProvider="getSubscriptionManagerTranslationFilePofilterTestData",
-			groups={},
+			groups={"Tier2Tests"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void subscriptionManagerPofilter_Test(Object bugzilla, String pofilterTest, File translationFile) {
+	public void testSubscriptionManagerTranslationsUsingPofilter(Object bugzilla, String pofilterTest, File translationFile) {
 		pofilter_Test(client, pofilterTest, translationFile);
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36514", "RHEL7-51287"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36514", "RHEL7-51287"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="run pofilter translate tests on candlepin translation files",
 			dataProvider="getCandlepinTranslationFilePofilterTestData",
-			groups={},
+			groups={"Tier2Tests"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void candlepinPofilter_Test(Object bugzilla, String pofilterTest, File translationFile) {
+	public void testCandlepinTranslationsUsingPofilter(Object bugzilla, String pofilterTest, File translationFile) {
 		pofilter_Test(server, pofilterTest, translationFile);
 	}
 	

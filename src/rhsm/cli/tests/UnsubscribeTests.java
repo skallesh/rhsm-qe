@@ -26,43 +26,57 @@ import com.redhat.qe.jul.TestRecords;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 
+import com.github.redhatqe.polarize.metadata.DefTypes.PosNeg;
 import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.DefTypes;
+import com.github.redhatqe.polarize.metadata.LinkedItem;
 import com.github.redhatqe.polarize.metadata.TestDefinition;
+import com.github.redhatqe.polarize.metadata.TestType;
 
 /**
  * @author jsefler
  *
  */
-@Test(groups={"UnsubscribeTests","Tier2Tests"})
+@Test(groups={"UnsubscribeTests"})
 public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	
 	// Test Methods ***********************************************************************
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-27126", "RHEL7-51409"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-27126", "RHEL7-51409"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager-cli: unsubscribe consumer from an entitlement using product ID",
-			groups={"blockedByBug-584137", "blockedByBug-602852", "blockedByBug-873791"},
+			groups={"Tier2Tests","blockedByBug-584137", "blockedByBug-602852", "blockedByBug-873791"},
 			//dataProvider="getAllConsumedProductSubscriptionsData",	// 06/04/2014 takes too long; rarely reveals a bug
 			dataProvider="getRandomSubsetOfConsumedProductSubscriptionsData",
 			enabled=true)
 	@ImplementsNitrateTest(caseId=41688)
-	public void UnsubscribeFromValidProductIDs_Test(ProductSubscription productSubscription){
+	public void testUnsubscribeFromValidProductIDs(ProductSubscription productSubscription){
 //		sm.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
 //		sm.unsubscribeFromEachOfTheCurrentlyConsumedProductSubscriptions();
 		clienttasks.unsubscribeFromProductSubscription(productSubscription);
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-27124", "RHEL7-51397"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-27124", "RHEL7-51397"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="Unsubscribe product entitlement and re-subscribe",
-			groups={"blockedByBug-584137","blockedByBug-602852","blockedByBug-873791","blockedByBug-979492"},
+			groups={"Tier2Tests","blockedByBug-584137","blockedByBug-602852","blockedByBug-873791","blockedByBug-979492"},
 			//dataProvider="getAllConsumedProductSubscriptionsData",	// 06/04/2014 takes too long; rarely reveals a bug
 			dataProvider="getRandomSubsetOfConsumedProductSubscriptionsData",
 			enabled=true)
 	@ImplementsNitrateTest(caseId=41898)
-	public void ResubscribeAfterUnsubscribe_Test(ProductSubscription productSubscription) throws Exception{
+	public void testResubscribeAfterUnsubscribe(ProductSubscription productSubscription) throws Exception{
 ///*debugTesting*/if (!productSubscription.productId.equals("awesomeos-unlimited-quantity")) throw new SkipException("debugTesting");
 		
 		// now loop through each consumed product subscription and unsubscribe/re-subscribe
@@ -74,13 +88,29 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	
-	@Test(description="Malicious Test - Unsubscribe and then attempt to reuse the revoked entitlement cert.",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-584137","blockedByBug-602852","blockedByBug-672122","blockedByBug-804227","blockedByBug-871146","blockedByBug-905546","blockedByBug-962520","blockedByBug-822402","blockedByBug-986572","blockedByBug-1000301","blockedByBug-1026435"},
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-47922", "RHEL7-97323"},
+			linkedWorkItems= {
+				@LinkedItem(
+					workitemId= "RHEL6-28489",	// RHSM-REQ : subscription-manager cli attaching and removing subscriptions
+					project= Project.RHEL6,
+					role= DefTypes.Role.VERIFIES),
+				@LinkedItem(
+					workitemId= "RHEL7-84911",	// RHSM-REQ : subscription-manager cli attaching and removing subscriptions
+					project= Project.RedHatEnterpriseLinux7,
+					role= DefTypes.Role.VERIFIES)},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
+	@Test(	description="Unsubscribe from a valid entitlement and then maliciously attempt to reuse the revoked entitlement cert.",
+			groups={"Tier1Tests","blockedByBug-584137","blockedByBug-602852","blockedByBug-672122","blockedByBug-804227","blockedByBug-871146","blockedByBug-905546","blockedByBug-962520","blockedByBug-822402","blockedByBug-986572","blockedByBug-1000301","blockedByBug-1026435"},
 			//dataProvider="getAvailableSubscriptionPoolsData",	// very thorough, but takes too long to execute and rarely finds more bugs
 			dataProvider="getRandomSubsetOfAvailableSubscriptionPoolsData",
 			enabled=true)
 	@ImplementsNitrateTest(caseId=41903)
-	public void UnsubscribeAndAttemptToReuseTheRevokedEntitlementCert_Test(SubscriptionPool subscriptionPool) throws JSONException, Exception{
+	public void testUnsubscribeAndAttemptToReuseTheRevokedEntitlementCert(SubscriptionPool subscriptionPool) throws JSONException, Exception{
 		client.runCommandAndWaitWithoutLogging("killall -9 yum");
 		
 		// choose a quantity before subscribing to avoid Stdout: Quantity '1' is not a multiple of instance multiplier '2'
@@ -141,13 +171,29 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 	}
 
 	
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-27125", "RHEL7-51946"},
+			linkedWorkItems= {
+				@LinkedItem(
+					workitemId= "RHEL6-28489",	// RHSM-REQ : subscription-manager cli attaching and removing subscriptions
+					project= Project.RHEL6,
+					role= DefTypes.Role.VERIFIES),
+				@LinkedItem(
+					workitemId= "RHEL7-84911",	// RHSM-REQ : subscription-manager cli attaching and removing subscriptions
+					project= Project.RedHatEnterpriseLinux7,
+					role= DefTypes.Role.VERIFIES)},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager: subscribe and then unsubscribe from a future subscription pool",
-			groups={"blockedByBug-727970","blockedByBug-958775"},
+			groups={"Tier2Tests","blockedByBug-727970","blockedByBug-958775"},
 			//dataProvider="getAllFutureSystemSubscriptionPoolsData",	// 06/04/2014 takes too long; rarely reveals a bug
 			dataProvider="getRandomSubsetOfFutureSystemSubscriptionPoolsData",
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
-	public void UnsubscribeAfterSubscribingToFutureSubscriptionPool_Test(SubscriptionPool pool) throws Exception {
+	public void testUnsubscribeAfterSubscribingToFutureSubscriptionPool(SubscriptionPool pool) throws Exception {
 //if (!pool.productId.equals("awesomeos-virt-unlmtd-phys")) throw new SkipException("debugTesting pool productId="+pool.productId);
 		
 		Calendar now = new GregorianCalendar();
@@ -182,11 +228,28 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		*/
 	}
 	
-	@Test(description="Attempt to unsubscribe from a serial when not registered",
-			groups={"blockedByBug-735338","blockedByBug-838146","blockedByBug-865590","blockedByBug-873791"},
+	
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36600", "RHEL7-51408"},
+			linkedWorkItems= {
+				@LinkedItem(
+					workitemId= "RHEL6-28489",	// RHSM-REQ : subscription-manager cli attaching and removing subscriptions
+					project= Project.RHEL6,
+					role= DefTypes.Role.VERIFIES),
+				@LinkedItem(
+					workitemId= "RHEL7-84911",	// RHSM-REQ : subscription-manager cli attaching and removing subscriptions
+					project= Project.RedHatEnterpriseLinux7,
+					role= DefTypes.Role.VERIFIES)},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
+	@Test(	description="Attempt to unsubscribe from a serial when not registered",
+			groups={"Tier2Tests","blockedByBug-735338","blockedByBug-838146","blockedByBug-865590","blockedByBug-873791"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void UnsubscribeFromSerialWhenNotRegistered_Test() {
+	public void testUnsubscribeFromSerialWhenNotRegistered() {
 	
 		// first make sure we are subscribed to a pool
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null, true, false, null, null, null, null);
@@ -211,11 +274,28 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(clienttasks.getCurrentlyConsumedProductSubscriptions().size(), 0, "We should not be consuming any entitlements after unsubscribing (while not registered).");
 	}
 	
-	@Test(description="Attempt to unsubscribe when from an invalid serial number",
-			groups={"blockedByBug-706889","blockedByBug-867766"},
+	
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36598", "RHEL7-51403"},
+			linkedWorkItems= {
+				@LinkedItem(
+					workitemId= "RHEL6-28489",	// RHSM-REQ : subscription-manager cli attaching and removing subscriptions
+					project= Project.RHEL6,
+					role= DefTypes.Role.VERIFIES),
+				@LinkedItem(
+					workitemId= "RHEL7-84911",	// RHSM-REQ : subscription-manager cli attaching and removing subscriptions
+					project= Project.RedHatEnterpriseLinux7,
+					role= DefTypes.Role.VERIFIES)},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
+	@Test(	description="Attempt to unsubscribe when from an invalid serial number",
+			groups={"Tier2Tests","blockedByBug-706889","blockedByBug-867766"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void UnsubscribeFromAnInvalidSerial_Test() {
+	public void testUnsubscribeFromAnInvalidSerial() {
 		SSHCommandResult result;
 		
 		BigInteger serial = BigInteger.valueOf(-123);
@@ -237,11 +317,27 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	
-	@Test(description="Verify the feedback after unsubscribing from all consumed subscriptions using unsubscribe --all",
-			groups={"blockedByBug-812388","blockedByBug-844455"},
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36597", "RHEL7-51402"},
+			linkedWorkItems= {
+				@LinkedItem(
+					workitemId= "RHEL6-28489",	// RHSM-REQ : subscription-manager cli attaching and removing subscriptions
+					project= Project.RHEL6,
+					role= DefTypes.Role.VERIFIES),
+				@LinkedItem(
+					workitemId= "RHEL7-84911",	// RHSM-REQ : subscription-manager cli attaching and removing subscriptions
+					project= Project.RedHatEnterpriseLinux7,
+					role= DefTypes.Role.VERIFIES)},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
+	@Test(	description="Verify the feedback after unsubscribing from all consumed subscriptions using unsubscribe --all",
+			groups={"Tier2Tests","blockedByBug-812388","blockedByBug-844455"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void UnsubscribeFromAll_Test() {
+	public void testUnsubscribeFromAll() {
 	
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null, true, null, null, null, null, null);
 		clienttasks.subscribeToTheCurrentlyAllAvailableSubscriptionPoolsCollectively();
@@ -249,8 +345,10 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		
 		// unsubscribe from all and assert # subscriptions are unsubscribed
 		SSHCommandResult result = clienttasks.unsubscribe(true, (BigInteger)null, null, null, null, null, null);
-		//Assert.assertEquals(result.getStdout().trim(), String.format("This machine has been unsubscribed from %s subscriptions",pools.size()),"Expected feedback when unsubscribing from all the currently consumed subscriptions.");	// 10/18/2013 NOT SURE WHAT COMMIT/BUG CAUSED THIS CHANGE TO THE FOLLOWING...
-		Assert.assertEquals(result.getStdout().trim(), String.format("%s subscriptions removed at the server."+"\n"+"%s local certificates have been deleted.",numberSubscriptionsConsumed,numberSubscriptionsConsumed),"Expected feedback when unsubscribing from all the currently consumed subscriptions.");
+		//String expectedStdoutRegex = String.format("This machine has been unsubscribed from %s subscriptions",pools.size());	// 10/18/2013 NOT SURE WHAT COMMIT/BUG CAUSED THIS CHANGE TO THE FOLLOWING...
+		String expectedStdoutRegex = String.format("%s subscriptions removed at the server."+"\n"+"%s local certificates have been deleted.",numberSubscriptionsConsumed,numberSubscriptionsConsumed);
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.20.2-1")) expectedStdoutRegex = String.format("%s local certificates have been deleted."+"\n"+"%s subscriptions removed at the server.",numberSubscriptionsConsumed,numberSubscriptionsConsumed);	// commit d88d09c7060a17fba34a138313e7efd21cc79d02  D-Bus service for removing entitlements (all/ID/serial num.)
+		Assert.assertEquals(result.getStdout().trim(), expectedStdoutRegex,"Expected feedback when unsubscribing from all the currently consumed subscriptions.");
 		
 		// now attempt to unsubscribe from all again and assert 0 subscriptions are unsubscribed
 		result = clienttasks.unsubscribe(true, (BigInteger)null, null, null, null, null, null);
@@ -258,11 +356,28 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(result.getStdout().trim(), String.format("%s subscriptions removed at the server.",0),"Expected feedback when unsubscribing from all when no subscriptions are currently consumed.");
 	}
 	
-	@Test(description="Verify the feedback after unsubscribing from all consumed subscriptions using unsubscribe --serial SERIAL1 --serial SERIAL2 --serial SERIAL3 etc.",
-			groups={"blockedByBug-867766"},
+	
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36596", "RHEL7-51401"},
+			linkedWorkItems= {
+				@LinkedItem(
+					workitemId= "RHEL6-28489",	// RHSM-REQ : subscription-manager cli attaching and removing subscriptions
+					project= Project.RHEL6,
+					role= DefTypes.Role.VERIFIES),
+				@LinkedItem(
+					workitemId= "RHEL7-84911",	// RHSM-REQ : subscription-manager cli attaching and removing subscriptions
+					project= Project.RedHatEnterpriseLinux7,
+					role= DefTypes.Role.VERIFIES)},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
+	@Test(	description="Verify the feedback after unsubscribing from all consumed subscriptions using unsubscribe --serial SERIAL1 --serial SERIAL2 --serial SERIAL3 etc.",
+			groups={"Tier2Tests","blockedByBug-867766"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void UnsubscribeFromAllSerials_Test() throws Exception {
+	public void testUnsubscribeFromAllSerials() throws Exception {
 	
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null, true, false, null, null, null, null);
 		List<SubscriptionPool> pools = clienttasks.subscribeToTheCurrentlyAllAvailableSubscriptionPoolsCollectively();
@@ -341,11 +456,28 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		Assert.assertTrue(expectedStdoutMsgAsList.containsAll(actualStdoutMsgAsList) && actualStdoutMsgAsList.containsAll(expectedStdoutMsgAsList), "Stdout feedback when unsubscribing from all the currently consumed subscriptions contains all the expected serial numbers:"+expectedStdoutMsg.replace(expectedStdoutMsgLabel, ""));
 	}
 	
-	@Test(description="Verify the feedback after unsubscribing from all consumed subscriptions (including revoked serials) using unsubscribe --serial SERIAL1 --serial SERIAL2 --serial SERIAL3 etc.",
-			groups={"blockedByBug-867766"},
+	
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36595", "RHEL7-51400"},
+			linkedWorkItems= {
+				@LinkedItem(
+					workitemId= "RHEL6-28489",	// RHSM-REQ : subscription-manager cli attaching and removing subscriptions
+					project= Project.RHEL6,
+					role= DefTypes.Role.VERIFIES),
+				@LinkedItem(
+					workitemId= "RHEL7-84911",	// RHSM-REQ : subscription-manager cli attaching and removing subscriptions
+					project= Project.RedHatEnterpriseLinux7,
+					role= DefTypes.Role.VERIFIES)},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
+	@Test(	description="Verify the feedback after unsubscribing from all consumed subscriptions (including revoked serials) using unsubscribe --serial SERIAL1 --serial SERIAL2 --serial SERIAL3 etc.",
+			groups={"Tier2Tests","blockedByBug-867766"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void UnsubscribeFromAllSerialsIncludingRevokedSerials_Test() throws JSONException, Exception {
+	public void testUnsubscribeFromAllSerialsIncludingRevokedSerials() throws JSONException, Exception {
 	
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null,true,false,null,null,null, null);
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAllAvailableSubscriptionPools();
@@ -468,11 +600,27 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 //	}
 	
 	
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36592", "RHEL7-51396"},
+			linkedWorkItems= {
+				@LinkedItem(
+					workitemId= "RHEL6-28489",	// RHSM-REQ : subscription-manager cli attaching and removing subscriptions
+					project= Project.RHEL6,
+					role= DefTypes.Role.VERIFIES),
+				@LinkedItem(
+					workitemId= "RHEL7-84911",	// RHSM-REQ : subscription-manager cli attaching and removing subscriptions
+					project= Project.RedHatEnterpriseLinux7,
+					role= DefTypes.Role.VERIFIES)},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager: unsubscribe and remove can be used interchangably",
-			groups={"blockedByBug-874749"},
+			groups={"Tier2Tests","blockedByBug-874749"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
-	public void RemoveDeprecatesUnsubscribe_Test() throws Exception {
+	public void testRemoveDeprecatesUnsubscribe() throws Exception {
 		SSHCommandResult result = client.runCommandAndWait(clienttasks.command+" --help");
 		Assert.assertContainsMatch(result.getStdout(), "^\\s*unsubscribe\\s+Deprecated, see remove$");
 		
@@ -497,10 +645,26 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36591", "RHEL7-51395"},
+			linkedWorkItems= {
+				@LinkedItem(
+					workitemId= "RHEL6-28489",	// RHSM-REQ : subscription-manager cli attaching and removing subscriptions
+					project= Project.RHEL6,
+					role= DefTypes.Role.VERIFIES),
+				@LinkedItem(
+					workitemId= "RHEL7-84911",	// RHSM-REQ : subscription-manager cli attaching and removing subscriptions
+					project= Project.RedHatEnterpriseLinux7,
+					role= DefTypes.Role.VERIFIES)},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="after attaching many subscriptions (in a different order) to two different consumers, call unsubscribe --all on each consumer",
-			groups={"blockedByBug-1095939"})
+			groups={"Tier2Tests","blockedByBug-1095939"})
 			//@ImplementsNitrateTest(caseId=)
-	public void MultiClientAttemptToDeadLockOnUnsubscribeAll_Test() throws JSONException, Exception {
+	public void testMultiClientAttemptToDeadLockOnUnsubscribeAll() throws JSONException, Exception {
 		if (client2tasks==null) throw new SkipException("This multi-client test requires a second client.");
 		
 		// register two clients
@@ -561,11 +725,27 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	
 	
-	@Test(description="Attempt to unsubscribe from a pool id when not registered",
-			groups={"blockedByBug-1198178", "AcceptanceTests","Tier1Tests"},
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-47923", "RHEL7-51407"},
+			linkedWorkItems= {
+				@LinkedItem(
+					workitemId= "RHEL6-28489",	// RHSM-REQ : subscription-manager cli attaching and removing subscriptions
+					project= Project.RHEL6,
+					role= DefTypes.Role.VERIFIES),
+				@LinkedItem(
+					workitemId= "RHEL7-84911",	// RHSM-REQ : subscription-manager cli attaching and removing subscriptions
+					project= Project.RedHatEnterpriseLinux7,
+					role= DefTypes.Role.VERIFIES)},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
+	@Test(	description="Attempt to unsubscribe from a pool id when not registered",
+			groups={"Tier1Tests","blockedByBug-1198178"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void UnsubscribeFromPoolIdWhenNotRegistered_Test() {
+	public void testUnsubscribeFromPoolIdWhenNotRegistered() {
 		if (clienttasks.isPackageVersion("subscription-manager","<","1.16.5-1")) throw new SkipException("The unsubscribe --pool function was not implemented in this version of subscription-manager.  See RFE Bug 1198178");
 	
 		// first make sure we are subscribed to a pool
@@ -607,11 +787,27 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	
-	@Test(description="Attempt to unsubscribe from a valid pool id",
-			groups={"blockedByBug-1198178","AcceptanceTests","Tier1Tests"},
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-47924", "RHEL7-51406"},
+			linkedWorkItems= {
+				@LinkedItem(
+					workitemId= "RHEL6-28489",	// RHSM-REQ : subscription-manager cli attaching and removing subscriptions
+					project= Project.RHEL6,
+					role= DefTypes.Role.VERIFIES),
+				@LinkedItem(
+					workitemId= "RHEL7-84911",	// RHSM-REQ : subscription-manager cli attaching and removing subscriptions
+					project= Project.RedHatEnterpriseLinux7,
+					role= DefTypes.Role.VERIFIES)},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
+	@Test(	description="Attempt to unsubscribe from a valid pool id",
+			groups={"Tier1Tests","blockedByBug-1198178"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void UnsubscribeFromPool_Test() {
+	public void testUnsubscribeFromPool() {
 		if (clienttasks.isPackageVersion("subscription-manager","<","1.16.5-1")) throw new SkipException("The unsubscribe --pool function was not implemented in this version of subscription-manager.  See RFE Bug 1198178");
 		
 		// register and get available pools
@@ -671,16 +867,33 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		//Assert.assertEquals(result.getStdout().trim(),expectedStdout,"Stdout when attempting to unsubscribe from a valid pool id.");
 		String expectedStdoutRegex = String.format("Pools successfully removed at the server:\n   %s\nSerial numbers successfully removed at the server:\n   %s\n   %s\n%d local certificates have been deleted.", pool.poolId, "("+serials.get(0)+"|"+serials.get(1)+")", "("+serials.get(0)+"|"+serials.get(1)+")", serials.size());
 		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.17.8-1")) expectedStdoutRegex = String.format("The entitlement server successfully removed these pools:\n   %s\nThe entitlement server successfully removed these serial numbers:\n   %s\n   %s\n%d local certificates have been deleted.", pool.poolId, "("+serials.get(0)+"|"+serials.get(1)+")", "("+serials.get(0)+"|"+serials.get(1)+")", serials.size());	// commit f64d5a6b012f49bb4d6d6653441d4de9bf373660  1319678: Alter the return message for removing entitlements at server
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.20.2-1")) expectedStdoutRegex = String.format("%d local certificates have been deleted.\nThe entitlement server successfully removed these pools:\n   %s\nThe entitlement server successfully removed these serial numbers:\n   %s\n   %s", serials.size(), pool.poolId, "("+serials.get(0)+"|"+serials.get(1)+")", "("+serials.get(0)+"|"+serials.get(1)+")");	// commit d88d09c7060a17fba34a138313e7efd21cc79d02  D-Bus service for removing entitlements (all/ID/serial num.)
 		Assert.assertMatch(result.getStdout().trim(), expectedStdoutRegex);
 		Assert.assertEquals(result.getStderr(), "", "Stderr when attempting to unsubscribe from a valid pool id.");
 	}
 	
 	
-	@Test(description="Attempt to unsubscribe from an unknown pool id",
-			groups={"blockedByBug-1198178","blockedByBug-1298586", "AcceptanceTests","Tier1Tests"},
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36363", "RHEL7-51405"},
+			linkedWorkItems= {
+				@LinkedItem(
+					workitemId= "RHEL6-28489",	// RHSM-REQ : subscription-manager cli attaching and removing subscriptions
+					project= Project.RHEL6,
+					role= DefTypes.Role.VERIFIES),
+				@LinkedItem(
+					workitemId= "RHEL7-84911",	// RHSM-REQ : subscription-manager cli attaching and removing subscriptions
+					project= Project.RedHatEnterpriseLinux7,
+					role= DefTypes.Role.VERIFIES)},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
+	@Test(	description="Attempt to unsubscribe from an unknown pool id",
+			groups={"Tier1Tests","blockedByBug-1198178","blockedByBug-1298586"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void UnsubscribeFromAnUnknownPoolId_Test() {
+	public void testUnsubscribeFromAnUnknownPoolId() {
 		if (clienttasks.isPackageVersion("subscription-manager","<","1.16.5-1")) throw new SkipException("The unsubscribe --pool function was not implemented in this version of subscription-manager.  See RFE Bug 1198178");
 		
 		// register
@@ -717,11 +930,27 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	
-	@Test(description="Verify the feedback after unsubscribing from all consumed subscriptions using unsubscribe --pool POOLID1 --pool POOLID2 --pool POOLID3 etc.",
-			groups={"blockedByBug-1198178","blockedByBug-1288626"},
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36594", "RHEL7-51399"},
+			linkedWorkItems= {
+				@LinkedItem(
+					workitemId= "RHEL6-28489",	// RHSM-REQ : subscription-manager cli attaching and removing subscriptions
+					project= Project.RHEL6,
+					role= DefTypes.Role.VERIFIES),
+				@LinkedItem(
+					workitemId= "RHEL7-84911",	// RHSM-REQ : subscription-manager cli attaching and removing subscriptions
+					project= Project.RedHatEnterpriseLinux7,
+					role= DefTypes.Role.VERIFIES)},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
+	@Test(	description="Verify the feedback after unsubscribing from all consumed subscriptions using unsubscribe --pool POOLID1 --pool POOLID2 --pool POOLID3 etc.",
+			groups={"Tier2Tests","blockedByBug-1198178","blockedByBug-1288626"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void UnsubscribeFromAllPoolIds_Test() throws Exception {
+	public void testUnsubscribeFromAllPoolIds() throws Exception {
 		if (clienttasks.isPackageVersion("subscription-manager","<","1.16.5-1")) throw new SkipException("The unsubscribe --pool function was not implemented in this version of subscription-manager.  See RFE Bug 1198178");
 		if (!servertasks.statusCapabilities.contains("remove_by_pool_id")) throw new SkipException("The registered entitlement server does not support remove --pool");
 		
@@ -818,12 +1047,27 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	
-	
-	@Test(description="Attempt to unsubscribe from an unknown pool id and serial",
-			groups={"blockedByBug-1198178","blockedByBug-1298586"},
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36599", "RHEL7-51404"},
+			linkedWorkItems= {
+				@LinkedItem(
+					workitemId= "RHEL6-28489",	// RHSM-REQ : subscription-manager cli attaching and removing subscriptions
+					project= Project.RHEL6,
+					role= DefTypes.Role.VERIFIES),
+				@LinkedItem(
+					workitemId= "RHEL7-84911",	// RHSM-REQ : subscription-manager cli attaching and removing subscriptions
+					project= Project.RedHatEnterpriseLinux7,
+					role= DefTypes.Role.VERIFIES)},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
+	@Test(	description="Attempt to unsubscribe from an unknown pool id and serial",
+			groups={"Tier2Tests","blockedByBug-1198178","blockedByBug-1298586"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void UnsubscribeFromAnUnknownPoolIdAndSerial_Test() {
+	public void testUnsubscribeFromAnUnknownPoolIdAndSerial() {
 		if (clienttasks.isPackageVersion("subscription-manager","<","1.16.5-1")) throw new SkipException("The unsubscribe --pool function was not implemented in this version of subscription-manager.  See RFE Bug 1198178");
 		if (!servertasks.statusCapabilities.contains("remove_by_pool_id")) throw new SkipException("The registered entitlement server does not support remove --pool");
 		
@@ -854,11 +1098,27 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	
-	@Test(description="Attempt to unsubscribe from an valid pool id and serial",
-			groups={"blockedByBug-1198178"},
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36593", "RHEL7-51398"},
+			linkedWorkItems= {
+				@LinkedItem(
+					workitemId= "RHEL6-28489",	// RHSM-REQ : subscription-manager cli attaching and removing subscriptions
+					project= Project.RHEL6,
+					role= DefTypes.Role.VERIFIES),
+				@LinkedItem(
+					workitemId= "RHEL7-84911",	// RHSM-REQ : subscription-manager cli attaching and removing subscriptions
+					project= Project.RedHatEnterpriseLinux7,
+					role= DefTypes.Role.VERIFIES)},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
+	@Test(	description="Attempt to unsubscribe from an valid pool id and serial",
+			groups={"Tier2Tests","blockedByBug-1198178","blockedByBug-1498664"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void UnsubscribeFromAValidPoolIdAndSerial_Test() {
+	public void testUnsubscribeFromAValidPoolIdAndSerial() {
 		if (clienttasks.isPackageVersion("subscription-manager","<","1.16.5-1")) throw new SkipException("The unsubscribe --pool function was not implemented in this version of subscription-manager.  See RFE Bug 1198178");
 		if (!servertasks.statusCapabilities.contains("remove_by_pool_id")) throw new SkipException("The registered entitlement server does not support remove --pool");
 		
@@ -882,14 +1142,19 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 
 		Integer expectedExitCode = new Integer(1);	// NOTE: why exitCode 1?  probably because we are attempting two removes on one entitlement cert causing the second remove to fail after the first succeeds.
 		String expectedStdout = "";
-		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.17.8-1")) { // commit f64d5a6b012f49bb4d6d6653441d4de9bf373660  1319678: Alter the return message for removing entitlements at server
-			expectedStdout += String.format("The entitlement server successfully removed these pools:\n   %s\n", productSubscription.poolId);
-			expectedStdout += String.format("The entitlement server successfully removed these serial numbers:\n   %s\n", productSubscription.serialNumber);
-		} else {
-			expectedStdout += String.format("Pools successfully removed at the server:\n   %s\n", productSubscription.poolId);
-			expectedStdout += String.format("Serial numbers successfully removed at the server:\n   %s\n", productSubscription.serialNumber);
-		}
+		expectedStdout  = String.format("Pools successfully removed at the server:\n   %s", productSubscription.poolId); expectedStdout += "\n";
+		expectedStdout += String.format("Serial numbers successfully removed at the server:\n   %s", productSubscription.serialNumber); expectedStdout += "\n";
 		expectedStdout += String.format("%d local certificate has been deleted.",1);
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.17.8-1")) { // commit f64d5a6b012f49bb4d6d6653441d4de9bf373660  1319678: Alter the return message for removing entitlements at server
+			expectedStdout  = String.format("The entitlement server successfully removed these pools:\n   %s", productSubscription.poolId); expectedStdout += "\n";
+			expectedStdout += String.format("The entitlement server successfully removed these serial numbers:\n   %s", productSubscription.serialNumber); expectedStdout += "\n";
+			expectedStdout += String.format("%d local certificate has been deleted.",1);
+		}
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.20.2-1")) { // commit d88d09c7060a17fba34a138313e7efd21cc79d02  D-Bus service for removing entitlements (all/ID/serial num.)
+			expectedStdout  = String.format("%d local certificate has been deleted.",1); expectedStdout += "\n";
+			expectedStdout += String.format("The entitlement server successfully removed these pools:\n   %s", productSubscription.poolId); expectedStdout += "\n";
+			expectedStdout += String.format("The entitlement server successfully removed these serial numbers:\n   %s", productSubscription.serialNumber);
+		}
 		Assert.assertEquals(result.getExitCode(), expectedExitCode, "Asserting exit code when attempting to unsubscribe from a valid pool id and serial (corresponding to the same entitlement).");
 		Assert.assertEquals(result.getStdout().trim(), expectedStdout.trim(),"Stdout");
 		Assert.assertEquals(result.getStderr().trim(), "","Stderr");
@@ -913,15 +1178,19 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		//	2 local certificates have been deleted.
 		
 		expectedExitCode = new Integer(0);
-		expectedStdout = "";
-		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.17.8-1")) { // commit f64d5a6b012f49bb4d6d6653441d4de9bf373660  1319678: Alter the return message for removing entitlements at server
-			expectedStdout += String.format("The entitlement server successfully removed these pools:\n   %s\n", productSubscription2.poolId);
-			expectedStdout += String.format("The entitlement server successfully removed these serial numbers:\n   %s\n   %s\n", productSubscription2.serialNumber, productSubscription1.serialNumber);
-		} else {
-			expectedStdout += String.format("Pools successfully removed at the server:\n   %s\n", productSubscription2.poolId);
-			expectedStdout += String.format("Serial numbers successfully removed at the server:\n   %s\n   %s\n", productSubscription2.serialNumber, productSubscription1.serialNumber);
-		}
+		expectedStdout  = String.format("Pools successfully removed at the server:\n   %s", productSubscription2.poolId); expectedStdout += "\n";
+		expectedStdout += String.format("Serial numbers successfully removed at the server:\n   %s\n   %s", productSubscription2.serialNumber, productSubscription1.serialNumber); expectedStdout += "\n";
 		expectedStdout += String.format("%d local certificates have been deleted.",2);
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.17.8-1")) { // commit f64d5a6b012f49bb4d6d6653441d4de9bf373660  1319678: Alter the return message for removing entitlements at server
+			expectedStdout  = String.format("The entitlement server successfully removed these pools:\n   %s", productSubscription2.poolId); expectedStdout += "\n";
+			expectedStdout += String.format("The entitlement server successfully removed these serial numbers:\n   %s\n   %s", productSubscription2.serialNumber, productSubscription1.serialNumber); expectedStdout += "\n";
+			expectedStdout += String.format("%d local certificates have been deleted.",2);
+		}
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.20.2-1")) { // commit d88d09c7060a17fba34a138313e7efd21cc79d02  D-Bus service for removing entitlements (all/ID/serial num.)
+			expectedStdout  = String.format("%d local certificates have been deleted.",2); expectedStdout += "\n";
+			expectedStdout += String.format("The entitlement server successfully removed these pools:\n   %s", productSubscription2.poolId); expectedStdout += "\n";
+			expectedStdout += String.format("The entitlement server successfully removed these serial numbers:\n   %s\n   %s", productSubscription2.serialNumber, productSubscription1.serialNumber); expectedStdout += "\n";
+		}
 		Assert.assertEquals(result.getExitCode(), expectedExitCode, "Asserting exit code when attempting to unsubscribe from from a valid pool id and serial (corresponding to two different entitlements).");
 		Assert.assertEquals(result.getStdout().trim(), expectedStdout.trim(),"Stdout");
 		Assert.assertEquals(result.getStderr().trim(), "","Stderr");

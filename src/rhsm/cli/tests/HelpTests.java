@@ -6,7 +6,10 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.github.redhatqe.polarize.metadata.DefTypes;
 import com.github.redhatqe.polarize.metadata.TestDefinition;
+import com.github.redhatqe.polarize.metadata.TestType;
+import com.github.redhatqe.polarize.metadata.DefTypes.PosNeg;
 import com.github.redhatqe.polarize.metadata.DefTypes.Project;
 
 import org.testng.SkipException;
@@ -28,19 +31,24 @@ import com.redhat.qe.tools.SSHCommandResult;
  * @author jsefler
  *
  */
-@Test(groups={"HelpTests","Tier2Tests"})
+@Test(groups={"HelpTests"})
 public class HelpTests extends SubscriptionManagerCLITestScript{
 	
 	
 	// Test Methods ***********************************************************************
-
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			, testCaseID = {"RHEL6-21764", "RHEL7-51271"})
-	@Test(	description="when subscription-manager is run with no args, it should default to the help report",
-			groups={"blockedByBug-974123"},
+	
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21764", "RHEL7-51271"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
+	@Test(	description="when subscription-manager is run with no args, it should default to the --help option report",
+			groups={"Tier2Tests","blockedByBug-974123"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
-	public void StatusIsTheDefault_Test() {
+	public void testStatusIsTheDefault() {
 		clienttasks.unregister(null,null,null, null);
 		SSHCommandResult helpResult = RemoteFileTasks.runCommandAndAssert(client,clienttasks.command+" --help",Integer.valueOf(0));
 		SSHCommandResult defaultResult = RemoteFileTasks.runCommandAndAssert(client,clienttasks.command,Integer.valueOf(0));
@@ -51,13 +59,18 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		Assert.assertTrue(defaultResult.toString().equals(helpResult.toString()), "When registered, the default output running subscription-manager with no arguments should be identical to output from running subscription-manager with --help.");
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21758", "RHEL7-51265"})
-	@Test(	description="subscription-manager-cli: man page",
-			groups={},
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21758", "RHEL7-51265"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
+	@Test(	description="subscription-manager: assert the existence of a man page for this tool",
+			groups={"Tier2Tests"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=41697)
-	public void ManPageExistanceForCLI_Test() {
+	public void testManPageExistanceForSubscriptionManager() {
 		if (clienttasks==null) throw new SkipException("A client connection is needed for this test.");
 		String cliCommand = clienttasks.command;
 		RemoteFileTasks.runCommandAndAssert(client,"man -P cat "+cliCommand,0);
@@ -65,13 +78,18 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		log.warning("In this test we only verified the existence of the man page; NOT the contents!");
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21759", "RHEL7-51266"})
-	@Test(	description="subscription-manager-gui: man page",
-			groups={},
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21759", "RHEL7-51266"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
+	@Test(	description="subscription-manager-gui: assert the existence of a man page for this tool",
+			groups={"Tier2Tests"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ManPageExistanceForGUI_Test() {
+	public void testManPageExistanceForSubscriptionManagerGui() {
 		if (clienttasks==null) throw new SkipException("A client connection is needed for this test.");
 		String guiCommand = clienttasks.command+"-gui";
 		// is the guiCommand installed?
@@ -87,13 +105,18 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		}
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21762", "RHEL7-51269"})
-	@Test(	description="rhsm-icon: man page",
-			groups={"blockedByBug-771726"},
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21762", "RHEL7-51269"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
+	@Test(	description="rhsm-icon: assert the existence of a man page for this tool",
+			groups={"Tier2Tests","blockedByBug-771726"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ManPageExistanceForRhsmIcon_Test() {
+	public void testManPageExistanceForRhsmIcon() {
 		if (clienttasks==null) throw new SkipException("A client connection is needed for this test.");
 		String command = "rhsm-icon"; //iconCommand = "rhsm-compliance-icon"; // prior to bug 771726
 		// is the command installed?
@@ -109,13 +132,18 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		}
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6}
-			       , testCaseID = {"RHEL6-25813"})
-	@Test(	description="install-num-migrate-to-rhsm: man page",
-			groups={},
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6},
+			testCaseID= {"RHEL6-25813"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
+	@Test(	description="install-num-migrate-to-rhsm: assert the existence of a man page for this tool",
+			groups={"Tier2Tests",},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ManPageExistanceForInstallNumMigrateToRhsm_Test() {
+	public void testManPageExistanceForInstallNumMigrateToRhsm() {
 		if (clienttasks==null) throw new SkipException("A client connection is needed for this test.");
 		String command = MigrationTests.installNumTool;
 		SSHCommandResult result;
@@ -151,13 +179,18 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		}
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21763", "RHEL7-51270"})
-	@Test(	description="rhn-migrate-classic-to-rhsm: man page",
-			groups={},
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21763", "RHEL7-51270"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
+	@Test(	description="rhn-migrate-classic-to-rhsm: assert the existence of a man page for this tool",
+			groups={"Tier2Tests"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ManPageForRhnMigrateClassicToRhsm_Test() {
+	public void testManPageExistanceForRhnMigrateClassicToRhsm() {
 		if (clienttasks==null) throw new SkipException("A client connection is needed for this test.");
 		String command = MigrationTests.rhnMigrateTool;
 		// is the command installed?
@@ -173,13 +206,18 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		}
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21760", "RHEL7-51267"})
-	@Test(	description="rct: man page",
-			groups={"blockedByBug-862909"},
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21760", "RHEL7-51267"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
+	@Test(	description="rct: assert the existence of a man page for this tool",
+			groups={"Tier2Tests","blockedByBug-862909"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ManPageExistanceForRCT_Test() {
+	public void testManPageExistanceForRCT() {
 		if (clienttasks==null) throw new SkipException("A client connection is needed for this test.");
 		String rctCommand = "rct";
 		RemoteFileTasks.runCommandAndAssert(client,"man -P cat "+rctCommand,0);
@@ -187,13 +225,18 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		log.warning("In this test we only verified the existence of the man page; NOT the contents!");
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21761", "RHEL7-51268"})
-	@Test(	description="rhsm.conf: man page",
-			groups={"blockedByBug-990183"},
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21761", "RHEL7-51268"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
+	@Test(	description="rhsm.conf: assert the existence of a man page for this config file",
+			groups={"Tier2Tests","blockedByBug-990183"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ManPageExistanceForRhsmConf_Test() {
+	public void testManPageExistanceForRhsmConf() {
 		if (clienttasks==null) throw new SkipException("A client connection is needed for this test.");
 		if (clienttasks.isPackageVersion("subscription-manager-migration", "<", "1.13.6-1")) throw new SkipException("RFE 990183 for an rhsm.conf man page was not implemented until subscription-manager version 1.13.6-1.");
 		String cliCommand = "rhsm.conf";
@@ -202,13 +245,18 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		log.warning("In this test we only verified the existence of the man page; NOT the contents!");
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-22220", "RHEL7-51264"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-22220", "RHEL7-51264"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager-gui --help with no X-Display",
-			groups={"blockedByBug-1290885","blockedByBug-976689","blockedByBug-881095"/* ALSO INCLUDED IN ExpectedCommandLineOptionsData */},
+			groups={"Tier2Tests","blockedByBug-1290885","blockedByBug-976689","blockedByBug-881095"/* ALSO INCLUDED IN ExpectedCommandLineOptionsData */},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void CommandLineHelpForGUIWithoutDisplay_Test() {
+	public void testCommandLineHelpForSubscriptionManagerGuiWithoutDisplay() {
 		
 		SSHCommandResult result = client.runCommandAndWait("subscription-manager-gui --help");
 		
@@ -250,14 +298,19 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21757", "RHEL7-51263"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-21757", "RHEL7-51263"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager, subscription-manager-gui, rhn-migrate-classic-to-rhsm, and other CLI tools: assert only expected command line options are available",
-			groups={},
+			groups={"Tier2Tests",},
 			dataProvider="ExpectedCommandLineOptionsData")
 	@ImplementsNitrateTest(caseId=46713)
 	//@ImplementsNitrateTest(caseId=46707)
-	public void CommandLineHelpForCLI_Test(Object bugzilla, String helpCommand, Integer exitCode, String stdoutRegex, List<String> expectedOptions) {
+	public void testCommandLineHelp(Object bugzilla, String helpCommand, Integer exitCode, String stdoutRegex, List<String> expectedOptions) {
 		log.info("Testing subscription-manager-cli command line options '"+helpCommand+"' and verifying the exit code and that ONLY the expected options are available.");
 		SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(client,helpCommand,exitCode);
 		
@@ -753,6 +806,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		options.add("--proxyuser=PROXY_USER");
 		options.add("--proxypassword=PROXY_PASSWORD");
 		if (clienttasks.isPackageVersion("python-rhsm", ">=", "1.19.4-1")) options.add("--noproxy=NO_PROXY");		// added by bug 1420533 commit bd8b0538d7b0be7ee1e666ad5a66df80962c67d9
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.20.2-1")) options.remove("--type=UNITTYPE");		// removed by bug 1461003 commit e0c34a729e9e347ab1e0f4f5fa656c8b20205fdf
 		for (String smHelpCommand : new String[]{clienttasks.command+" -h "+module,clienttasks.command+" --help "+module}) {
 			List <String> usages = new ArrayList<String>();
 			String usage = String.format("Usage: %s %s [OPTIONS]",clienttasks.command,module);

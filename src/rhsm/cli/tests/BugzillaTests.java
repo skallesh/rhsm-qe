@@ -58,6 +58,10 @@ import rhsm.data.SubscriptionPool;
 import rhsm.data.YumRepo;
 
 import com.github.redhatqe.polarize.metadata.TestDefinition;
+import com.github.redhatqe.polarize.metadata.LinkedItem;
+import com.github.redhatqe.polarize.metadata.TestType;
+import com.github.redhatqe.polarize.metadata.DefTypes;
+import com.github.redhatqe.polarize.metadata.DefTypes.PosNeg;
 import com.github.redhatqe.polarize.metadata.DefTypes.Project;
 
 /**
@@ -65,7 +69,7 @@ import com.github.redhatqe.polarize.metadata.DefTypes.Project;
  *
  *
  */
-@Test(groups = { "BugzillaTests", "Tier3Tests" })
+@Test(groups = {"BugzillaTests"})
 public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	protected String ownerKey = "";
 	protected List<String> providedProduct = new ArrayList<String>();
@@ -86,14 +90,19 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	String productId = "BugzillaTest-product";
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-	               , testCaseID = {"RHEL6-26709", "RHEL7-63527"})
-	@Test(description = "Verify that the EUS RHEL product certs on the CDN for each release correctly reflect the release version.  For example, this affects users that want use subcription-manager release --set=6.3 to keep yum updates fixed to an older release.", groups = {
-			"VerifyEUSRHELProductCertVersionFromEachCDNReleaseVersion_Test", "AcceptanceTests",
-			"Tier1Tests" }, dataProvider = "VerifyEUSRHELProductCertVersionFromEachCDNReleaseVersion_TestData", enabled = true)
-	public void VerifyEUSRHELProductCertVersionFromEachCDNReleaseVersion_Test(Object blockedByBug, String release,
-			String rhelRepoUrl, File eusEntitlementCertFile) throws JSONException, Exception {
-		if (!sm_serverType.equals(CandlepinType.hosted))
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-47933", "RHEL7-63527"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
+	@Test(	description = "Verify that the EUS RHEL product certs on the CDN for each release correctly reflect the release version.  For example, this affects users that want use subcription-manager release --set=6.3 to keep yum updates fixed to an older release.",
+			groups = {"Tier1Tests","VerifyEUSRHELProductCertVersionFromEachCDNReleaseVersion_Test"},
+			dataProvider = "VerifyEUSRHELProductCertVersionFromEachCDNReleaseVersion_TestData",
+			enabled = true)
+	public void testEUSRHELProductCertVersionFromEachCDNReleaseVersion(Object blockedByBug, String release, String rhelRepoUrl, File eusEntitlementCertFile) throws JSONException, Exception {
+		if (!(sm_serverType.equals(CandlepinType.hosted)))
 			throw new SkipException("To be run against Stage only");
 		String rhelProductId = null;
 		if ((clienttasks.arch.equals("ppc64")) && (clienttasks.variant.equals("Server")))
@@ -292,12 +301,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RedHatEnterpriseLinux7}
-	               , testCaseID = {"RHEL7-55663"})
-	@Test(description = "verify Status Cache not used when listing repos with a bad proxy ", groups = {
-			"ListingReposWithBadProxy", "blockedByBug-1298327", "blockedByBug-1345962",
-			"blockedByBug-1389794" }, enabled = false)
-	public void ListingReposWithBadProxy() throws Exception {
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL7-55663"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "verify Status Cache not used when listing repos with a bad proxy ",
+			groups = {"Tier3Tests","ListingReposWithBadProxy", "blockedByBug-1298327", "blockedByBug-1345962", "blockedByBug-1389794" },
+			enabled = false)
+	public void testListingReposWithBadProxy() throws Exception {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null,
 				null, (String) null, null, null, null, true, null, null, null, null, null);
 		SSHCommandResult result = clienttasks.repos(true, null, null, (String) null, null, null, null, null, null);
@@ -323,9 +337,26 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@Test(description = "verify Product certs not be generated with a tag value of None ", groups = {
-			"VerifyProductCertWithNoneTag", "blockedByBug-955824" }, enabled = true)
-	public void VerifyProductCertWithNoneTag() throws Exception {
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-47893", "RHEL7-96267"},
+//			linkedWorkItems= {
+//				@LinkedItem(
+//					workitemId= "",
+//					project= Project.RHEL6,
+//					role= DefTypes.Role.VERIFIES),
+//				@LinkedItem(
+//					workitemId= "",
+//					project= Project.RedHatEnterpriseLinux7,
+//					role= DefTypes.Role.VERIFIES)},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager", //"releng" "Unrecognized enumeration value 'releng' for custom field id 'casecomponent'"
+			testtype= @TestType(testtype= DefTypes.TestTypes.STRUCTURAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.LOW, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description= "verify Product certs not be generated with a tag value of None",
+			groups= {"Tier3Tests","VerifyProductCertWithNoneTag", "blockedByBug-955824" },
+			enabled= true)
+	public void testProductCertWithNoneTag() throws Exception {
 		String baseProductsDir = "/usr/share/rhsm/product/RHEL-" + clienttasks.redhatReleaseX;
 		for (ProductCert productCert : clienttasks.getProductCerts(baseProductsDir)) {
 			Assert.assertFalse(productCert.productNamespace.providedTags.equals("None"));
@@ -338,11 +369,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-	               , testCaseID = {"RHEL6-21981", "RHEL7-51843"})
-	@Test(description = "verify rhsm-debug --no-archive --destination <destination Loc> throws [Errno 18] Invalid cross-device link", groups = {
-			"VerifyrhsmDebugWithNoArchive", "blockedByBug-1175284" }, enabled = true)
-	public void VerifyrhsmDebugWithNoArchive() throws Exception {
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21981", "RHEL7-51843"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "verify rhsm-debug --no-archive --destination <destination Loc> throws [Errno 18] Invalid cross-device link",
+			groups = {"Tier3Tests","VerifyrhsmDebugWithNoArchive", "blockedByBug-1175284" },
+			enabled = true)
+	public void testRhsmDebugWithNoArchive() throws Exception {
 		String path = "/tmp/rhsmDebug/";
 		client.runCommandAndWait("rm -rf " + path + " && mkdir -p " + path); // pre
 		// cleanup
@@ -360,11 +397,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-	               , testCaseID = {"RHEL6-21932", "RHEL7-51794"})
-	@Test(description = "verify subscription-manager attach --file <file> ,with file being empty attaches subscription for installed product", groups = {
-			"VerifyAttachingEmptyFile", "blockedByBug-1175291" }, enabled = true)
-	public void VerifyAttachingEmptyFile() throws Exception {
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21932", "RHEL7-51794"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "verify subscription-manager attach --file <file> ,with file being empty attaches subscription for installed product",
+			groups = {"Tier3Tests","VerifyAttachingEmptyFile", "blockedByBug-1175291" },
+			enabled = true)
+	public void testAttachingEmptyFile() throws Exception {
 		if (clienttasks.isPackageVersion("subscription-manager", "<", "1.13.8-1"))
 			throw new SkipException(
 					"The attach --file function was not implemented in this version of subscription-manager.");
@@ -386,11 +429,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-	               , testCaseID = {"RHEL6-21957", "RHEL7-51819"})
-	@Test(description = "verify subscription-manager repos --list does not delete an imported entitlement certificate on a system", groups = {
-			"VerifyImportedCertgetsDeletedByRepoCommand", "blockedByBug-1160150" }, enabled = true)
-	public void VerifyImportedCertgetsDeletedByRepoCommand() throws Exception {
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21957", "RHEL7-51819"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "verify subscription-manager repos --list does not delete an imported entitlement certificate on a system",
+			groups = {"Tier3Tests","VerifyImportedCertgetsDeletedByRepoCommand", "blockedByBug-1160150" },
+			enabled = true)
+	public void testImportedCertGetsDeletedByRepoCommand() throws Exception {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, false, null,
 				null, (String) null, null, null, null, true, null, null, null, null, null);
 		clienttasks.autoheal(null, null, true, null, null, null, null); // disable
@@ -425,11 +474,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-	               , testCaseID = {"RHEL6-21970", "RHEL7-51832"})
-	@Test(description = "verify End date and start date of the subscription is appropriate one when you attach a future subscription and then  heal after 1 min", groups = {
-			"VerifyStartEndDateOfSubscription", "blockedByBug-994853","blockedByBug-1440934" }, enabled = true)
-	public void VerifyStartEndDateOfSubscription() throws Exception {
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21970", "RHEL7-51832"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "verify End date and start date of the subscription is appropriate one when you attach a future subscription and then  heal after 1 min",
+			groups = {"Tier3Tests","VerifyStartEndDateOfSubscription", "blockedByBug-994853","blockedByBug-1440934" },
+			enabled = true)
+	public void testStartEndDateOfSubscription() throws Exception {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null,
 				null, (String) null, null, null, null, true, null, null, null, null, null);
 		Map<String, String> factsMap = new HashMap<String, String>();
@@ -509,11 +564,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-	               , testCaseID = {"RHEL6-21971", "RHEL7-51833"})
-	@Test(description = "verify status check and response from server after addition and deletion of product to/from /etc/pki/product/", groups = {
-			"VerifyStatusCheck", "blockedByBug-921870", "blockedByBug-1183175" }, enabled = true)
-	public void VerifyStatusCheck() throws Exception {
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21971", "RHEL7-51833"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "verify status check and response from server after addition and deletion of product to/from /etc/pki/product/",
+			groups = {"Tier3Tests","VerifyStatusCheck", "blockedByBug-921870", "blockedByBug-1183175" },
+			enabled = true)
+	public void testStatusAfterProductIdIsAddedOrDeleted() throws Exception {
 		String result, expectedStatus;
 		Boolean Flag = false;
 		ProductCert installedProductCert32060 = ProductCert.findFirstInstanceWithMatchingFieldFromList("productId",
@@ -560,11 +621,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-	               , testCaseID = {"RHEL6-21956", "RHEL7-51818"})
-	@Test(description = "verify if Status displays product name multiple times when the system had inactive stack subscriptions", groups = {
-			"VerifyIfStatusDisplaysProductNameMultipleTimes", "blockedByBug-972752" }, enabled = true)
-	public void VerifyIfStatusDisplaysProductNameMultipleTimes() throws Exception {
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21956", "RHEL7-51818"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "verify if Status displays product name multiple times when the system had inactive stack subscriptions",
+			groups = {"Tier3Tests","VerifyIfStatusDisplaysProductNameMultipleTimes", "blockedByBug-972752" },
+			enabled = true)
+	public void testIfStatusDisplaysProductNameMultipleTimes() throws Exception {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
 				null, (String) null, null, null, null, true, null, null, null, null, null);
 		int sockets = 4;
@@ -590,11 +657,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 */
 	@SuppressWarnings("deprecation")
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-	               , testCaseID = {"RHEL6-21947", "RHEL7-51809"})
-	@Test(description = "verify if update facts button won't recreate facts.json file", groups = {
-			"VerifyFactsFileExistenceAfterUpdate", "blockedByBug-627707" }, enabled = true)
-	public void VerifyFactsFileExistenceAfterUpdate() throws Exception {
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21947", "RHEL7-51809"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "verify if update facts button won't recreate facts.json file",
+			groups = {"Tier3Tests","VerifyFactsFileExistenceAfterUpdate", "blockedByBug-627707" },
+			enabled = true)
+	public void testFactsFileExistenceAfterUpdate() throws Exception {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
 				null, (String) null, null, null, null, true, null, null, null, null, null);
 		client.runCommandAndWait("rm -rf " + clienttasks.rhsmFactsJsonFile);
@@ -611,31 +684,49 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-	               , testCaseID = {"RHEL6-21992", "RHEL7-51854"})
-	@Test(description = "verify if unsubscribe does not delete entitlement cert from location /etc/pki/entitlement/product for consumer type candlepin ", groups = {
-			"unsubscribeTheRegisteredConsumerTypeCandlepin", "blockedByBug-621962" }, enabled = true)
-	public void unsubscribeTheRegisteredConsumerTypeCandlepin() throws Exception {
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, ConsumerType.candlepin, null,
-				null, null, null, null, (String) null, null, null, null, true, null, null, null, null, null);
-		clienttasks.subscribe(true, null, (String) null, null, null, null, null, null, null, null, null, null, null);
-		List<File> files = clienttasks.getCurrentEntitlementCertFiles();
-		Assert.assertNotNull(files.size());
-		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
-		files = clienttasks.getCurrentEntitlementCertFiles();
-		Assert.assertTrue(files.isEmpty());
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21992", "RHEL7-51854"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "verify if unsubscribe does not delete entitlement cert from location /etc/pki/entitlement/product for consumer type candlepin ",
+			groups = {"Tier3Tests","unsubscribeTheRegisteredConsumerTypeCandlepin", "blockedByBug-621962" },
+			enabled = true)
+	public void testUnsubscribeTheRegisteredConsumerTypeCandlepin() throws Exception {
+	    if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">="/*TODO CHANGE TO ">" after candlepin 2.1.2-1 is tagged*/, "2.1.1-1")) {	// candlepin commit 739b51a0d196d9d3153320961af693a24c0b826f Bug 1455361: Disallow candlepin consumers to be registered via Subscription Manager
+		    clienttasks.registerCandlepinConsumer(sm_clientUsername,sm_clientPassword,sm_clientOrg,sm_serverUrl,"candlepin");
+	    }else{
+		    clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, ConsumerType.candlepin, null,
+				null, null, null, null, (String) null, null, null, null, true, null, null, null, null, null); 
+	    }
+			    clienttasks.subscribe(true, null, (String) null, null, null, null, null, null, null, null, null, null, null);
+			    List<File> files = clienttasks.getCurrentEntitlementCertFiles();
+			    Assert.assertNotNull(files.size());
+			    clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
+			    files = clienttasks.getCurrentEntitlementCertFiles();
+			    Assert.assertTrue(files.isEmpty());
+		
 	}
+		
 
 	/**
 	 * @author skallesh
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-	               , testCaseID = {"RHEL6-21991", "RHEL7-51853"})
-	@Test(description = "verify if you can unsubscribe from imported cert", groups = { "unsubscribeImportedcert",
-			"blockedByBug-691784" }, enabled = true)
-	public void unsubscribeImportedcert() throws Exception {
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21991", "RHEL7-51853"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "verify if you can unsubscribe from imported cert",
+			groups = {"Tier3Tests","unsubscribeImportedcert","blockedByBug-691784" },
+			enabled = true)
+	public void testUnsubscribeImportedCert() throws Exception {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
 				null, (String) null, null, null, null, true, null, null, null, null, null);
 		clienttasks.autoheal(null, null, true, null, null, null, null); // disable
@@ -662,11 +753,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-	               , testCaseID = {"RHEL6-21929", "RHEL7-51790"})
-	@Test(description = "verify if subscription manager CLI does not display all facts", groups = { "SystemFactsInCLI",
-			"blockedByBug-722239" }, enabled = true)
-	public void SystemFactsInCLI() throws Exception {
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21929", "RHEL7-51790"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "verify if subscription manager CLI does not display all facts",
+			groups = {"Tier3Tests","SystemFactsInCLI","blockedByBug-722239" },
+			enabled = true)
+	public void testSystemFactsInCLI() throws Exception {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
 				null, (String) null, null, null, null, true, null, null, null, null, null);
 		Map<String, String> result = clienttasks.getFacts("system");
@@ -680,11 +777,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-	               , testCaseID = {"RHEL6-21924", "RHEL7-51785"})
-	@Test(description = "verify if Registering with an activation key which has run out of susbcriptions results in a system, but no identity certificate", groups = {
-			"RegisterWithActivationKeyWithExpiredPool", "blockedByBug-803814" }, enabled = true)
-	public void RegisterWithActivationKeyWithExpiredPool() throws Exception {
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21924", "RHEL7-51785"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "verify if Registering with an activation key which has run out of susbcriptions results in a system, but no identity certificate",
+			groups = {"Tier3Tests","RegisterWithActivationKeyWithExpiredPool", "blockedByBug-803814" },
+			enabled = true)
+	public void testRegisterUsingActivationKeyWithExpiredPool() throws Exception {
 		int endingMinutesFromNow = 1;
 		Integer addQuantity = 1;
 		String name = String.format("%s_%s-ActivationKey%s", sm_clientUsername, sm_clientOrg,
@@ -709,7 +812,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		DateFormat yyyy_MM_dd_DateFormat = new SimpleDateFormat("M/d/yy h:mm aaa");
 		String EndingDate = yyyy_MM_dd_DateFormat.format(endCalendar.getTime());
 		Calendar c2 = new GregorianCalendar();
-		sleep(1 * 57 * 1000 - (c2.getTimeInMillis() - c1.getTimeInMillis()));
+		sleep(1 * 59 * 1000 - (c2.getTimeInMillis() - c1.getTimeInMillis()));
 		new JSONObject(
 				CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername,
 						sm_clientPassword, sm_serverUrl, "/activation_keys/" + jsonActivationKey.getString("id")
@@ -718,21 +821,32 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.unregister(null, null, null, null);
 		SSHCommandResult registerResult = clienttasks.register_(null, null, sm_clientOrg, null, null, null, null, null,
 				null, null, name, null, null, null, true, null, null, null, null, null);
+		List<ProductSubscription> consumedResult= clienttasks.getCurrentlyConsumedProductSubscriptions();
+		SSHCommandResult consumedListResult= clienttasks.list(null, null, true, null, null, null, null, null, null, null, null, null, null, null);
+
 		String expected_message = "Unable to attach pool with ID '" + expiringPoolId + "'.: Subscriptions for "
 				+ productId + " expired on: " + EndingDate + ".";
-		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">", "0.9.30-1"))
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.2.0-1")) {
+			Assert.assertContainsMatch(registerResult.getStderr().trim(),"None of the subscriptions on the activation key were available for attaching.", "stderr");
+			Assert.assertEquals(consumedListResult.getStdout().trim(),"No consumed subscription pools were found.","Expired subscription cannot be attached to activationkey");
+		}
+		if ((SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">", "0.9.30-1"))&&(SubscriptionManagerTasks.isVersion(servertasks.statusVersion,"<", "2.2.0-1"))) {
 			expected_message = "No activation key was applied successfully."; // Follows:
 		// candlepin-0.9.30-1
 		// //
 		// https://github.com/candlepin/candlepin/commit/bcb4b8fd8ee009e86fc9a1a20b25f19b3dbe6b2a
-		Assert.assertEquals(registerResult.getStderr().trim(), expected_message);
+			Assert.assertEquals(registerResult.getStderr().trim(), expected_message);
+			Assert.assertEquals(consumedResult.get(randomGenerator.nextInt(consumedResult.size()-1)).statusDetails.toString(),"[Subscription is expired]","Attached subscription is in expired state");
+
+		}
 		SSHCommandResult identityResult = clienttasks.identity_(null, null, null, null, null, null, null, null);
 		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.9-1")) { // post
 			// commit
 			// a695ef2d1da882c5f851fde90a24f957b70a63ad
-			Assert.assertEquals(identityResult.getStderr().trim(), clienttasks.msg_ConsumerNotRegistered, "stderr");
-		} else {
-			Assert.assertEquals(identityResult.getStdout().trim(), clienttasks.msg_ConsumerNotRegistered, "stdout");
+		    Assert.assertEquals(identityResult.getStderr().trim(), clienttasks.msg_ConsumerNotRegistered, "stderr");
+		}else {
+		    Assert.assertEquals(identityResult.getStdout().trim(), clienttasks.msg_ConsumerNotRegistered, "stdout");
+	    
 		}
 	}
 
@@ -741,11 +855,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-	               , testCaseID = {"RHEL6-21983", "RHEL7-51845"})
-	@Test(description = "verify if Wrong DMI structures Error is filtered from the stderr of subscription-manager command line calls", groups = {
-			"WrongDMIstructuresError", "blockedByBug-706552" }, enabled = true)
-	public void WrongDMIstructuresError() throws Exception {
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21983", "RHEL7-51845"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "verify if Wrong DMI structures Error is filtered from the stderr of subscription-manager command line calls",
+			groups = {"Tier3Tests","WrongDMIstructuresError","blockedByBug-706552"},
+			enabled = true)
+	public void testWrongDmiStructuresError() throws Exception {
 		String result = clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null,
 				null, null, null, (String) null, null, null, null, true, null, null, null, null, null).getStderr();
 		Assert.assertContainsNoMatch(result, "Wrong DMI");
@@ -758,13 +878,18 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-	               , testCaseID = {"RHEL6-20114", "RHEL7-55206"})
-	@Test(description = "Verify the fix for Bug 709412 - subscription manager cli uses product name comparisons in the list command", groups = {
-			"InstalledProductMultipliesAfterSubscription", "AcceptanceTests", "Tier1Tests",
-			"blockedByBug-709412" }, enabled = true)
-	public void InstalledProductMultipliesAfterSubscription() throws Exception {
-		if (!sm_serverType.equals(CandlepinType.hosted))
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-20114", "RHEL7-55206"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
+	@Test(	description = "Verify the fix for Bug 709412 - subscription manager cli uses product name comparisons in the list command",
+			groups = {"Tier1Tests","InstalledProductMultipliesAfterSubscription", "blockedByBug-709412" },
+			enabled = true)
+	public void testInstalledProductMultipliesAfterSubscription() throws Exception {
+		if (!(sm_serverType.equals(CandlepinType.hosted)))
 			throw new SkipException("To be run against Stage only");
 
 		String serverUrl = getServerUrl(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "hostname"),
@@ -798,11 +923,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-	               , testCaseID = {"RHEL6-21927", "RHEL7-51788"})
-	@Test(description = "verify Stacking of a future subscription and present subsciption make the product compliant ", groups = {
-			"StackingFutureSubscriptionWithCurrentSubscription", "blockedByBug-966069" }, enabled = true)
-	public void StackingFutureSubscriptionWithCurrentSubscription() throws Exception {
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21927", "RHEL7-51788"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "verify Stacking of a future subscription and present subsciption make the product compliant ",
+			groups = {"Tier3Tests","StackingFutureSubscriptionWithCurrentSubscription", "blockedByBug-966069" },
+			enabled = true)
+	public void testStackingFutureSubscriptionWithCurrentSubscription() throws Exception {
 
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
 				null, (String) null, null, null, null, true, null, null, null, null, null);
@@ -886,11 +1017,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-	               , testCaseID = {"RHEL6-21903", "RHEL7-51764"})
-	@Test(description = "verify the system compliance after deleting the consumer", groups = {
-			"ComplianceAfterConsumerDeletion" }, enabled = true)
-	public void ComplianceAfterConsumerDeletion() throws Exception {
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21903", "RHEL7-51764"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "verify the system compliance after deleting the consumer",
+			groups = {"Tier3Tests","ComplianceAfterConsumerDeletion" },
+			enabled = true)
+	public void testComplianceAfterConsumerDeletion() throws Exception {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
 				null, (String) null, null, null, null, true, null, null, null, null, null);
 		String consumerid = clienttasks.getCurrentConsumerId();
@@ -913,11 +1050,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-	               , testCaseID = {"RHEL6-21955", "RHEL7-51817"})
-	@Test(description = "verify if ipV4_Address is unknown in the facts list", groups = {
-			"VerifyIfIPV4_AddressIsUnknown", "blockedByBug-694662" }, enabled = true)
-	public void VerifyIfIPV4_AddressIsUnknown() throws Exception {
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21955", "RHEL7-51817"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "verify if ipV4_Address is unknown in the facts list",
+			groups = {"Tier3Tests","VerifyIfIPV4_AddressIsUnknown", "blockedByBug-694662" },
+			enabled = true)
+	public void testIfIPV4_AddressIsUnknown() throws Exception {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
 				null, (String) null, null, null, null, true, null, null, null, null, null);
 		Map<String, String> ipv4 = clienttasks.getFacts("ipv4_address");
@@ -929,11 +1072,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-	               , testCaseID = {"RHEL6-21988", "RHEL7-51850"})
-	@Test(description = "verify if configurations like manage_repos have default values", groups = {
-			"defaultValueForManageRepos", "blockedByBug-807721" }, enabled = true)
-	public void defaultValueForManageReposConfiguration() throws Exception {
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21988", "RHEL7-51850"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "verify if configurations like manage_repos have default values",
+			groups = {"Tier3Tests","defaultValueForManageRepos", "blockedByBug-807721" },
+			enabled = true)
+	public void testDefaultValueForManageReposConfiguration() throws Exception {
 
 		String result = clienttasks.config(true, null, null, (String[]) null).getStdout();
 		clienttasks.commentConfFileParameter(clienttasks.rhsmConfFile, "manage_repos");
@@ -948,9 +1097,11 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@Test(description = "verify if refresh pools will not notice change in provided products", groups = {
-			"RefreshPoolAfterChangeInProvidedProducts", "blockedByBug-665118" }, enabled = false)
-	public void RefreshPoolAfterChangeInProvidedProducts() throws Exception {
+	@SuppressWarnings("deprecation")
+	@Test(	description = "verify if refresh pools will not notice change in provided products",
+			groups = {"Tier3Tests","RefreshPoolAfterChangeInProvidedProducts", "blockedByBug-665118" },
+			enabled = false)
+	public void testRefreshPoolAfterChangeInProvidedProducts() throws Exception {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
 				null, (String) null, null, null, null, true, null, null, null, null, null);
 
@@ -997,8 +1148,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 
 		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,
 				sm_clientOrg, name, productId, 1, attributes, null);
-		String requestBody = CandlepinTasks.createSubscriptionRequestBody(20, startDate, endDate, productId,
-				contractNumber, accountNumber, providedProductIds, null).toString();
+		@SuppressWarnings("deprecation")
+		String requestBody = CandlepinTasks.createSubscriptionRequestBody(sm_serverUrl, 20, startDate, endDate,
+				productId, contractNumber, accountNumber, providedProductIds, null).toString();
 		JSONObject jsonSubscription = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverAdminUsername,
 				sm_serverAdminPassword, sm_serverUrl, "/owners/" + ownerKey + "/subscriptions", requestBody));
 		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverAdminUsername,
@@ -1044,11 +1196,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-	               , testCaseID = {"RHEL6-21907", "RHEL7-51768"})
-	@Test(description = "verify Remote Server Exception is getting displayed for Server 500 Error", groups = {
-			"DisplayOfRemoteServerExceptionForServer500Error", "blockedByBug-668814" }, enabled = true)
-	public void DisplayOfRemoteServerExceptionForServer500Error() throws Exception {
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21907", "RHEL7-51768"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "verify Remote Server Exception is getting displayed for Server 500 Error",
+			groups = {"Tier3Tests","DisplayOfRemoteServerExceptionForServer500Error", "blockedByBug-668814" },
+			enabled = true)
+	public void testDisplayOfRemoteServerExceptionForServer500Error() throws Exception {
 		String prefixValueBeforeExecution = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "prefix");
 		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
 		listOfSectionNameValues.add(new String[] { "server", "hostname".toLowerCase(), configuredHostname });
@@ -1080,11 +1238,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-	               , testCaseID = {"RHEL6-21915", "RHEL7-51776"})
-	@Test(description = "verify Manual Changes To Redhat.Repo is sticky", groups = { "ManualChangesToRedhat_Repo",
-			"blockedByBug-797243" }, enabled = true)
-	public void ManualChangesToRedhat_Repo() throws Exception {
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21915", "RHEL7-51776"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "verify Manual Changes To Redhat.Repo is sticky",
+			groups = {"Tier3Tests","ManualChangesToRedhat_Repo","blockedByBug-797243" },
+			enabled = true)
+	public void testManualChangesToRedhatRepo() throws Exception {
 		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
 		listOfSectionNameValues.add(new String[] { "rhsmcertd", "autoAttachInterval".toLowerCase(), "1440" });
 		clienttasks.config(null, null, true, listOfSectionNameValues);
@@ -1129,11 +1293,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-	               , testCaseID = {"RHEL6-21911", "RHEL7-51772"})
-	@Test(description = "Extraneous / InRequest urls in the rhsm.log file", groups = { "ExtraneousSlashInRequesturls",
-			"blockedByBug-848836" }, enabled = true)
-	public void ExtraneousSlashInRequesturls() throws Exception {
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21911", "RHEL7-51772"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "Extraneous / InRequest urls in the rhsm.log file",
+			groups = {"Tier3Tests","ExtraneousSlashInRequesturls","blockedByBug-848836" },
+			enabled = true)
+	public void testExtraneousSlashInRequestUrls() throws Exception {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
 				null, (String) null, null, null, null, true, null, null, null, null, null);
 		Boolean actual = false;
@@ -1142,7 +1312,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
 		listOfSectionNameValues.add(new String[] { "server", "prefix".toLowerCase(), "/candlepin" });
 		clienttasks.config(null, null, true, listOfSectionNameValues);
-		Boolean flag = RegexInRhsmLog("//",
+		Boolean flag = regexInRhsmLog("//",
 				RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, LogMarker, "GET"));
 		Assert.assertEquals(flag, actual);
 
@@ -1153,9 +1323,10 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@Test(description = "verify the first system is unregistered when the second system is registered using consumerid of the first", groups = {
-			"RegisterTwoClientsUsingSameConsumerId", "blockedByBug-949990" }, enabled = false)
-	public void RegisterTwoClientsUsingSameConsumerId() throws Exception {
+	@Test(	description = "verify the first system is unregistered when the second system is registered using consumerid of the first", 
+			groups = {"Tier3Tests","RegisterTwoClientsUsingSameConsumerId", "blockedByBug-949990" },
+			enabled = false)
+	public void testRegisterTwoClientsUsingSameConsumerId() throws Exception {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
 				null, (String) null, null, null, null, true, null, null, null, null, null);
 		String consumerid = clienttasks.getCurrentConsumerId();
@@ -1179,10 +1350,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-	               , testCaseID = {"RHEL6-21919", "RHEL7-51780"})
-	@Test(description = "verify proxy option in repos list ", groups = { "ProxyOptionForRepos" }, enabled = true)
-	public void ProxyOptionForRepos() throws Exception {
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21919", "RHEL7-51780"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "verify proxy option in repos list ",
+			groups = {"Tier3Tests","ProxyOptionForRepos" },
+			enabled = true)
+	public void testProxyOptionForRepos() throws Exception {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
 				null, (String) null, null, null, null, true, null, null, null, null, null);
 		clienttasks.subscribe(true, null, (String) null, null, null, null, null, null, null, null, null, null, null);
@@ -1198,11 +1376,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-	               , testCaseID = {"RHEL6-21898", "RHEL7-51759"})
-	@Test(description = "verify Future subscription added to the activation key ", groups = {
-			"AddingFutureSubscriptionToActivationKey","blockedByBug-1440180" }, enabled = true)
-	public void AddingFutureSubscriptionToActivationKey() throws Exception {
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21898", "RHEL7-51759"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "verify Future subscription added to the activation key ",
+			groups = {"Tier3Tests","AddingFutureSubscriptionToActivationKey","blockedByBug-1440180" },
+			enabled = true)
+	public void testAddingFutureSubscriptionToActivationKey() throws Exception {
 		Integer addQuantity = 1;
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
 				null, (String) null, null, null, null, true, null, null, null, null, null);
@@ -1212,9 +1396,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		consumerId);
 		clienttasks.autoheal(null, null, true, null, null, null, null);
 		String futurePool = createTestPool(60 * 24 *365, 60 * 24 *(365*2),true);
-
-		List<String> providedProductIds = CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername, sm_clientPassword,
-		sm_serverUrl, futurePool);
 		String name = String.format("%s_%s-ActivationKey%s", sm_clientUsername, sm_clientOrg,
 				System.currentTimeMillis());
 		Map<String, String> mapActivationKeyRequest = new HashMap<String, String>();
@@ -1232,7 +1413,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.autoheal(null, null, true, null, null, null, null);
 		clienttasks.listConsumedProductSubscriptions();
 		InstalledProduct installedProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId",
-			"100000000000002", clienttasks.getCurrentlyInstalledProducts());
+			"37060", clienttasks.getCurrentlyInstalledProducts());
 		Assert.assertEquals(installedProduct.status, "Future Subscription");
 		
 	}
@@ -1244,11 +1425,18 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-	               , testCaseID = {"RHEL6-21987", "RHEL7-51849"})
-	@Test(description = "create virt-only pool and check if lists on available list of physical and virtual machine", groups = {
-			"createVirtOnlyPool" }, enabled = true)
-	public void createVirtOnlyPool() throws Exception {
+	@SuppressWarnings("deprecation")
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21987", "RHEL7-51849"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "create virt-only pool and check if lists on available list of physical and virtual machine",
+			groups = {"Tier3Tests","createVirtOnlyPool"},
+			enabled = true)
+	public void testCreateVirtOnlyPool() throws Exception {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
 				null, (String) null, null, null, null, true, null, null, null, null, null);
 
@@ -1269,23 +1457,14 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		attributes.put("type", "SVC");
 		attributes.put("virt_only", "true");
 		providedProductIds.add("37060");
-		Integer contractNumber = getRandInt();
-		Integer accountNumber = getRandInt();
 		Calendar endCalendar = new GregorianCalendar();
 		endCalendar.set(Calendar.HOUR_OF_DAY, 0);
 		endCalendar.set(Calendar.MINUTE, 0);
 		endCalendar.set(Calendar.SECOND, 0); // avoid times in the middle of the
 		// day
-		endCalendar.add(Calendar.MINUTE, 15 * 24 * 60); // 15 days from today
-		Date endDate = endCalendar.getTime();
-		Calendar startCalendar = new GregorianCalendar();
-		startCalendar.set(Calendar.HOUR_OF_DAY, 0);
-		startCalendar.set(Calendar.MINUTE, 0);
-		startCalendar.set(Calendar.SECOND, 0); // avoid times in the middle of
-		// the day
-		startCalendar.add(Calendar.MINUTE, -1 * 24 * 60); // 1 day ago
-
-		Date startDate = startCalendar.getTime();
+	
+		int startingMinutesFromNow = -1 * 24 * 60;
+		int endingMinutesFromNow = 15 * 24 * 60;
 		CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword,
 				sm_serverUrl, sm_clientOrg, productId);
 		String resourcePath = "/products/" + productId;
@@ -1295,23 +1474,21 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				resourcePath);
 
 		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,
-				sm_clientOrg, name, productId, 1, attributes, null);
-		String requestBody = CandlepinTasks.createSubscriptionRequestBody(20, startDate, endDate, productId,
-				contractNumber, accountNumber, providedProductIds, null).toString();
-		new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword,
-				sm_serverUrl, "/owners/" + ownerKey + "/subscriptions", requestBody));
+			sm_clientOrg, name + " BITS", productId, 1, attributes, null);
+		
+		@SuppressWarnings("deprecation")
+		String poolId = CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername,
+			sm_serverAdminPassword, sm_serverUrl, ownerKey, 3, startingMinutesFromNow,endingMinutesFromNow ,
+			getRandInt(), getRandInt(), productId, providedProduct, null).getString("id");
 		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverAdminUsername,
-				sm_serverAdminPassword, sm_serverUrl, ownerKey);
+			sm_serverAdminPassword, sm_serverUrl, ownerKey);
 		jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword,
-				sm_serverUrl, jobDetail, "FINISHED", 5 * 1000, 1);
-		String poolid = CandlepinTasks.getPoolIdFromProductNameAndContractNumber(sm_serverAdminUsername,
-				sm_serverAdminPassword, sm_serverUrl, "admin", name, contractNumber.toString());
+			sm_serverUrl, jobDetail, "FINISHED", 5 * 1000, 1);
 		String isGuest = clienttasks.getFactValue("virt.is_guest");
 		if (isGuest.equalsIgnoreCase("true")) {
-
-			Assert.assertContainsMatch(clienttasks.getCurrentlyAllAvailableSubscriptionPools().toString(), poolid);
+		    Assert.assertContainsMatch(clienttasks.getCurrentlyAllAvailableSubscriptionPools().toString(), poolId);
 		} else if (isGuest.equalsIgnoreCase("False")) {
-			Assert.assertContainsNoMatch(clienttasks.getCurrentlyAllAvailableSubscriptionPools().toString(), poolid);
+		    Assert.assertContainsNoMatch(clienttasks.getCurrentlyAllAvailableSubscriptionPools().toString(), poolId);
 		}
 
 		// Note: After attaching this subscription in the
@@ -1325,11 +1502,18 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-	               , testCaseID = {"RHEL6-21912", "RHEL7-51773"})
-	@Test(description = "verify Facts for change in OS ", groups = { "FactsForChangeIn_OS" }, enabled = true)
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21912", "RHEL7-51773"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "verify Facts for change in OS ",
+			groups = {"Tier3Tests","FactsForChangeIn_OS"},
+			enabled = true)
 	@ImplementsNitrateTest(caseId = 56387)
-	public void FactsForChangeIn_OS() throws Exception {
+	public void testFactsForChangeInOS() throws Exception {
 		String originalhostname = clienttasks.hostname;
 		String changedHostname = "redhat";
 		String result = clienttasks.getFactValue("network.hostname");
@@ -1351,12 +1535,18 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21902", "RHEL7-51763"})
-	@Test(description = "Consumer unsubscribed when Subscription revoked", groups = { "CRLTest", "blockedByBug-1389559",
-			"blockedByBug-1399356" }, enabled = true)
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21902", "RHEL7-51763"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "Consumer unsubscribed when Subscription revoked",
+			groups = {"Tier3Tests", "CRLTest", "blockedByBug-1389559","blockedByBug-1399356" },
+			enabled = true)
 	@ImplementsNitrateTest(caseId = 55355)
-	public void CRLTest() {
+	public void testCRL() {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
 				null, (String) null, null, null, null, true, false, null, null, null, null);
 		List<SubscriptionPool> availPools = clienttasks.getCurrentlyAvailableSubscriptionPools();
@@ -1385,12 +1575,19 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21905", "RHEL7-51766"})
-	@Test(description = "Consumer unsubscribed when Subscription revoked", groups = {
-			"ConsumerUnsubscribedWhenSubscriptionRevoked", "blockedByBug-947429" }, enabled = true)
+	@SuppressWarnings("deprecation")
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21905", "RHEL7-51766"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "Consumer unsubscribed when Subscription revoked",
+			groups = {"Tier3Tests","ConsumerUnsubscribedWhenSubscriptionRevoked", "blockedByBug-947429" },
+			enabled = true)
 	@ImplementsNitrateTest(caseId = 56025)
-	public void ConsumerUnsubscribedWhenSubscriptionRevoked() throws Exception {
+	public void testConsumerUnsubscribedWhenSubscriptionRevoked() throws Exception {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
 				null, (String) null, null, null, null, true, null, null, null, null, null);
 		clienttasks.autoheal(null, null, true, null, null, null, null);
@@ -1465,10 +1662,11 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@Test(description = "do not persist --serverurl option values to rhsm.conf when calling subscription-manager modules: orgs, environment, service-level", groups = {
-			"AcceptanceTests", "Tier1Tests", "blockedByBug-889573" }, enabled = false)
-	public void ServerUrloptionValuesInRHSMFile() throws JSONException, Exception {
-		if (!sm_serverType.equals(CandlepinType.hosted))
+	@Test(	description = "do not persist --serverurl option values to rhsm.conf when calling subscription-manager modules: orgs, environment, service-level",
+			groups = {"Tier1Tests", "blockedByBug-889573"},
+			enabled = false)
+	public void testServerUrlOptionValuesInRHSMFile() throws JSONException, Exception {
+		if (!(sm_serverType.equals(CandlepinType.hosted)))
 			throw new SkipException("To be run against Stage only");
 		String clientUsername = "stage_test_12";
 		String serverurl = "subscription.rhn.stage.redhat.com:443/subscription";
@@ -1509,11 +1707,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21942", "RHEL7-51804"})
-	@Test(description = "verify if CLI lets you set consumer nameto empty string and defaults to sm_clientUsername", groups = {
-			"VerifyConsumerNameTest", "blockedByBug-669395", "blockedByBug-1451003" }, enabled = true)
-	public void VerifyConsumerNameTest() throws JSONException, Exception {
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21942", "RHEL7-51804"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "verify if CLI lets you set consumer name to empty string and defaults to sm_clientUsername",
+			groups = {"Tier3Tests","VerifyConsumerNameTest", "blockedByBug-669395", "blockedByBug-1451003" },
+			enabled = true)
+	public void testRegisterAttemptsWithVariousConsumerNames() throws JSONException, Exception {
 		String consumerName = "tester";
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
 				null, (String) null, null, null, null, true, null, null, null, null, null);
@@ -1557,13 +1761,18 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21939", "RHEL7-51801"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21939", "RHEL7-51801"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description = "verify if CLI auto-subscribe tries to re-use basic auth credentials.",
-			groups = {"VerifyAutosubscribeReuseBasicAuthCredntials", "blockedByBug-707641","blockedByBug-919700" },
+			groups = {"Tier3Tests","VerifyAutosubscribeReuseBasicAuthCredntials", "blockedByBug-707641","blockedByBug-919700" },
 			enabled = true)
-	public void VerifyAutosubscribeReuseBasicAuthCredntials() throws JSONException, Exception {
-		if (!sm_serverType.equals(CandlepinType.standalone)) throw new SkipException("This test was designed for execution against an opremise candlepin server.");
+	public void testAutosubscribeReuseBasicAuthCredentials() throws JSONException, Exception {
+		if (!(sm_serverType.equals(CandlepinType.standalone))) throw new SkipException("This test was designed for execution against an opremise candlepin server.");
 		servertasks.updateConfFileParameter("log4j.logger.org.candlepin.policy.js.compliance", "DEBUG");
 		servertasks.updateConfFileParameter("log4j.logger.org.candlepin", "DEBUG");
 		servertasks.restartTomcat();
@@ -1587,6 +1796,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			servertasks.updateConfFileParameter("log4j.logger.org.candlepin.policy.js.compliance", "INFO");
 			servertasks.updateConfFileParameter("log4j.logger.org.candlepin", "INFO");
 			servertasks.restartTomcat();
+			sleep(100);
 		}
 	}
 
@@ -1596,12 +1806,18 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 */
 	// To be tested against stage
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20115", "RHEL7-55207"})
-	@Test(description = "verify if 500 errors in stage on subscribe/unsubscribe", groups = { "AcceptanceTests",
-			"Tier1Tests", "blockedByBug-878994" }, enabled = true)
-	public void Verify500ErrorOnStage() throws JSONException, Exception {
-		if (!sm_serverType.equals(CandlepinType.hosted))
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-20115", "RHEL7-55207"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
+	@Test(	description = "verify if 500 errors in stage on subscribe/unsubscribe",
+			groups = {"Tier1Tests", "blockedByBug-878994"},
+			enabled = true)
+	public void test500ErrorOnStage() throws JSONException, Exception {
+		if (!(sm_serverType.equals(CandlepinType.hosted)))
 			throw new SkipException("To be run against Stage only");
 		String logMessage = "remote server status code: 500";
 		String serverUrl = getServerUrl(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "hostname"),
@@ -1637,11 +1853,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21920", "RHEL7-51781"})
-	@Test(description = "verify if redhat repo is created subscription-manager yum plugin when the repo is not present", groups = {
-			"RedhatrepoNotBeingCreated", "blockedByBug-886992", "blockedByBug-919700" }, enabled = true)
-	public void RedhatrepoNotBeingCreated() throws JSONException, Exception {
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21920", "RHEL7-51781"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "verify if redhat repo is created subscription-manager yum plugin when the repo is not present",
+			groups = {"Tier3Tests","RedhatrepoNotBeingCreated", "blockedByBug-886992", "blockedByBug-919700" },
+			enabled = true)
+	public void testRedhatRepoNotBeingCreated() throws JSONException, Exception {
 		client.runCommandAndWait("mv /etc/yum.repos.d/redhat.repo /root/").getStdout();
 		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
 		listOfSectionNameValues.add(new String[] { "rhsm", "manage_repos".toLowerCase(), "1" });
@@ -1659,11 +1881,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-26774", "RHEL7-55317"})
-	@Test(description = "verify if  insecure in rhsm.comf getse updated when using --insecure option if command fails", groups = {
-			"InsecureValueInRHSMConfAfterRegistrationFailure", "blockedByBug-916369" }, enabled = true)
-	public void InsecureValueInRHSMConfAfterRegistrationFailure() throws JSONException, Exception {
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-26774", "RHEL7-55317"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "verify if  insecure in rhsm.comf getse updated when using --insecure option if command fails",
+			groups = {"Tier3Tests","InsecureValueInRHSMConfAfterRegistrationFailure", "blockedByBug-916369" },
+			enabled = true)
+	public void testInsecureValueInRHSMConfAfterRegistrationFailure() throws JSONException, Exception {
 		String defaultHostname = "rhel7.com";
 		String defaultPort = "8443";
 		String defaultPrefix = "candlepin";
@@ -1681,11 +1909,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21922", "RHEL7-51783"})
-	@Test(description = "verify if subscription-manager register fails with consumerid and activationkey specified", groups = {
-			"RegisterActivationKeyAndConsumerID", "blockedByBug-749636" }, enabled = true)
-	public void RegisterActivationKeyAndConsumerID() throws JSONException, Exception {
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21922", "RHEL7-51783"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "verify if subscription-manager register fails with consumerid and activationkey specified",
+			groups = {"Tier3Tests","RegisterActivationKeyAndConsumerID", "blockedByBug-749636" },
+			enabled = true)
+	public void testRegisterActivationKeyAndConsumerID() throws JSONException, Exception {
 		String name = String.format("%s_%s-ActivationKey%s", sm_clientUsername, sm_clientOrg,
 				System.currentTimeMillis());
 		Map<String, String> mapActivationKeyRequest = new HashMap<String, String>();
@@ -1716,11 +1950,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21918", "RHEL7-51779"})
-	@Test(description = "verify if Product id is displayed in intsalled list", groups = { "ProductIdInInstalledList",
-			"blockedByBug-803386" }, enabled = true)
-	public void ProductIdInInstalledList() throws JSONException, Exception {
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21918", "RHEL7-51779"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "verify Product id is displayed in installed list",
+			groups = {"Tier3Tests","ProductIdInInstalledList","blockedByBug-803386" },
+			enabled = true)
+	public void testInstalledListIncludesProductIDs() throws JSONException, Exception {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
 				null, (String) null, null, null, null, true, null, null, null, null, null);
 		for (InstalledProduct result : clienttasks.getCurrentlyInstalledProducts()) {
@@ -1735,13 +1975,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	// TODO correct the pasted description
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-26775", "RHEL7-55318"})
-	@Test(	description = "verify if Entitlement certs are downloaded if subscribed to expired pool",
-			groups = {"ServerURLInRHSMFile", "blockedByBug-916353" },
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-26775", "RHEL7-55318"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = /*TODO */"please provide a description",
+			groups = {"Tier3Tests","ServerURLInRHSMFile", "blockedByBug-916353" },
 			enabled = true)
-	public void ServerURLInRHSMFile() throws JSONException, Exception {
+	public void testServerUrlInRhsmFile() throws JSONException, Exception {
 		String defaultHostname = "rhel7.com";
 		String defaultPort = "8443";
 		String defaultPrefix = "/candlepin";
@@ -1760,11 +2004,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21908", "RHEL7-51769"})
-	@Test(description = "Implicitly using the consumer cert from a currently registered system, attempt to query the available service levels on a different candlepin server.", groups = {
-			"DipslayServicelevelWhenRegisteredToDifferentServer", "blockedByBug-916362" }, enabled = true)
-	public void DisplayServicelevelWhenRegisteredToDifferentServer() {
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21908", "RHEL7-51769"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "Implicitly using the consumer cert from a currently registered system, attempt to query the available service levels on a different candlepin server.",
+			groups = {"Tier3Tests","DipslayServicelevelWhenRegisteredToDifferentServer", "blockedByBug-916362" },
+			enabled = true)
+	public void testDisplayServiceLevelWhenRegisteredToDifferentServer() {
 		String defaultHostname = "subscription.rhn.redhat.com";
 		String defaultPort = "443";
 		String defaultPrefix = "/subscription";
@@ -1796,11 +2046,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21910", "RHEL7-51771"})
-	@Test(description = "verify expiration of entitlement certs", groups = { "ExpirationOfEntitlementCerts",
-			"blockedByBug-907638", "blockedByBug-953830" }, enabled = true)
-	public void ExpirationOfEntitlementCerts() throws JSONException, Exception {
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21910", "RHEL7-51771"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "verify expiration of entitlement certs",
+			groups = {"Tier3Tests","ExpirationOfEntitlementCerts","blockedByBug-907638", "blockedByBug-953830" },
+			enabled = true)
+	public void testExpirationOfEntitlementCerts() throws JSONException, Exception {
 		int endingMinutesFromNow = 1;
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
 				null, (String) null, null, null, null, true, false, null, null, null, null);
@@ -1862,11 +2118,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21928", "RHEL7-51789"})
-	@Test(description = "verify if Entitlement certs are downloaded if subscribed to expired pool", groups = {
-			"SubscribeToexpiredEntitlement", "blockedByBug-907638" }, enabled = true)
-	public void SubscribeToexpiredEntitlement() throws JSONException, Exception {
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21928", "RHEL7-51789"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "verify if Entitlement certs are downloaded if subscribed to expired pool",
+			groups = {"Tier3Tests","SubscribeToexpiredEntitlement", "blockedByBug-907638" },
+			enabled = true)
+	public void testSubscribeToExpiredEntitlement() throws JSONException, Exception {
 
 		int endingMinutesFromNow = 1;
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
@@ -1887,11 +2149,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 */
 	@SuppressWarnings("unused")
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21916", "RHEL7-51777"})
-	@Test(description = "verify if no multiple repos are created,if subscribed to a product that share one or more engineering subscriptions", groups = {
-			"NoMultipleReposCreated" }, enabled = true)
-	public void NoMultipleReposCreated() throws JSONException, Exception {
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21916", "RHEL7-51777"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "verify if no multiple repos are created,if subscribed to a product that share one or more engineering subscriptions",
+			groups = {"Tier3Tests","NoMultipleReposCreated" },
+			enabled = true)
+	public void testNoMultipleReposCreated() throws JSONException, Exception {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
 				null, (String) null, null, null, null, true, null, null, null, null, null);
 		String consumerId = clienttasks.getCurrentConsumerId();
@@ -1927,8 +2195,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,
 				sm_clientOrg, "Multi-Stackable", "multi-stackable", 1, attributes, null);
 		String requestBody = CandlepinTasks
-				.createSubscriptionRequestBody(20, todaysDate, futureDate, "multi-stackable",
-						Integer.valueOf(getRandInt()), Integer.valueOf(getRandInt()), providedProducts, null)
+				.createSubscriptionRequestBody(sm_serverUrl, 20, todaysDate, futureDate,
+						"multi-stackable", Integer.valueOf(getRandInt()), Integer.valueOf(getRandInt()), providedProducts, null)
 				.toString();
 		CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,
 				"/owners/" + ownerKey + "/subscriptions", requestBody);
@@ -1971,11 +2239,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21906", "RHEL7-51767"})
-	@Test(description = "verify that a content set can be deleted after being added to a product.", groups = {
-			"DeleteContentSourceFromProduct", "blockedByBug-687970", "blockedByBug-834125" }, enabled = true)
-	public void DeleteContentSourceFromProduct() throws JSONException, Exception {
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21906", "RHEL7-51767"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "verify that a content set can be deleted after being added to a product.",
+			groups = {"Tier3Tests","DeleteContentSourceFromProduct", "blockedByBug-687970", "blockedByBug-834125" },
+			enabled = true)
+	public void testDeleteContentSourceFromProduct() throws JSONException, Exception {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
 				null, (String) null, null, null, null, true, null, null, null, null, null);
 		List<String> modifiedProductIds = null;
@@ -2068,12 +2342,20 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21940", "RHEL7-51802"})
-	@Test(description = "verify that bind and unbind event is recorded in syslog", groups = {
-			"VerifyBindAndUnbindInSyslog", "blockedByBug-919700" }, enabled = true)
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21940", "RHEL7-51802"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "verify that bind and unbind event is recorded in syslog",
+			groups = {"Tier3Tests","VerifyBindAndUnbindInSyslog", "blockedByBug-919700" },
+			enabled = true)
 	@ImplementsNitrateTest(caseId = 68740)
-	public void VerifyBindAndUnbindInSyslog() throws JSONException, Exception {
+	public void testBindAndUnbindInSyslog() throws JSONException, Exception {
+	    	clienttasks.clean();
+	    //    clienttasks.unregister(null, null, null, null);
 		String logMarker, expectedSyslogMessage, tailFromSyslogFile;
 
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
@@ -2183,12 +2465,18 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21964", "RHEL7-51826"})
-	@Test(description = "verify if register and unregister event is recorded in syslog", groups = {
-			"VerifyRegisterAndUnregisterInSyslog" }, enabled = true)
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21964", "RHEL7-51826"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "verify if register and unregister event is recorded in syslog",
+			groups = {"Tier3Tests","VerifyRegisterAndUnregisterInSyslog" },
+			enabled = true)
 	@ImplementsNitrateTest(caseId = 68749)
-	public void VerifyRegisterAndUnregisterInSyslog() throws JSONException, Exception {
+	public void testRegisterAndUnregisterInSyslog() throws JSONException, Exception {
 		String logMarker, expectedSyslogMessage, tailFromSyslogFile;
 
 		logMarker = System.currentTimeMillis() + " Testing Register **********************";
@@ -2222,12 +2510,18 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21941", "RHEL7-51803"})
-	@Test(description = "verify that Consumer Account And Contract Id are Present in the consumed list", groups = {
-			"VerifyConsumerAccountAndContractIdPresence" }, enabled = true)
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21941", "RHEL7-51803"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "verify that Consumer Account And Contract Id are Present in the consumed list",
+			groups = {"Tier3Tests","VerifyConsumerAccountAndContractIdPresence" },
+			enabled = true)
 	@ImplementsNitrateTest(caseId = 68738)
-	public void VerifyConsumerAccountAndContractIdPresence() throws JSONException, Exception {
+	public void testConsumerAccountAndContractIdPresence() throws JSONException, Exception {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
 				null, (String) null, null, null, null, true, null, null, null, null, null);
 		for (ProductSubscription consumed : clienttasks.getCurrentlyConsumedProductSubscriptions()) {
@@ -2242,10 +2536,12 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@Test(description = "verify that system should not be compliant for an expired subscription", groups = {
-			"VerifySubscriptionOf" }, enabled = false)
+	@SuppressWarnings("deprecation")
+	@Test(	description = "verify that system should not be compliant for an expired subscription",
+			groups = {"Tier3Tests","VerifySubscriptionOf"},
+			enabled = false)
 	// @ImplementsNitrateTest(caseId=71208)
-	public void VerifySubscriptionOfBestProductWithUnattendedRegistration() throws JSONException, Exception {
+	public void testSubscriptionOfBestProductWithUnattendedRegistration() throws JSONException, Exception {
 		Map<String, String> attributes = new HashMap<String, String>();
 		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
 		listOfSectionNameValues.add(new String[] { "rhsmcertd", "autoAttachInterval".toLowerCase(), "1440" });
@@ -2283,8 +2579,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,
 				sm_clientOrg, "Multi-Stackable for 100000000000002", "multi-stackable", 1, attributes, null);
 		String requestBody = CandlepinTasks
-				.createSubscriptionRequestBody(20, todaysDate, futureDate, "multi-stackable",
-						Integer.valueOf(getRandInt()), Integer.valueOf(getRandInt()), providedProducts, null)
+				.createSubscriptionRequestBody(sm_serverUrl, 20, todaysDate, futureDate,
+						"multi-stackable", Integer.valueOf(getRandInt()), Integer.valueOf(getRandInt()), providedProducts, null)
 				.toString();
 		CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,
 				"/owners/" + ownerKey + "/subscriptions", requestBody);
@@ -2319,9 +2615,10 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@Test(description = "verify that system should not be compliant for an expired subscription", groups = {
-			"VerifySystemCompliantFact" }, enabled = false)
-	public void VerifySystemCompliantFactWhenAllProductsAreExpired_Test() throws JSONException, Exception {
+	@Test(	description = "verify that system should not be compliant for an expired subscription",
+			groups = {"Tier3Tests","VerifySystemCompliantFact"},
+			enabled = false)
+	public void testSystemCompliantFactWhenAllProductsAreExpired() throws JSONException, Exception {
 
 		List<ProductCert> productCerts = clienttasks.getCurrentProductCerts();
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
@@ -2362,7 +2659,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		}
 		return subscriptionId;
 	}
-
+	
+	// FIXME This method appears to be abandoned
 	@AfterGroups(groups = "setup", value = { "VerifyVirtOnlyPoolsRemoved" }, enabled = true)
 	public void cleanupAfterVerifyVirtOnlyPoolsRemoved() throws Exception {
 		// TODO This is not completely accurate, but it is a good place to
@@ -2386,11 +2684,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21986", "RHEL7-51848"})
-	@Test(description = "verify if able to entitle consumer to the pool virt_only,pool_derived,bonus pool ", groups = {
-			"consumeVirtOnlyPool", "blockedByBug-756628" }, enabled = true)
-	public void consumeVirtOnlyPool() throws JSONException, Exception {
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21986", "RHEL7-51848"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "verify if able to entitle consumer to the pool virt_only,pool_derived,bonus pool ",
+			groups = {"Tier3Tests","consumeVirtOnlyPool", "blockedByBug-756628" },
+			enabled = true)
+	public void testConsumeVirtOnlyPool() throws JSONException, Exception {
 		String isPool_derived = null;
 		Boolean virtonly = false;
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
@@ -2422,14 +2726,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6}
-			       , testCaseID = {"RHEL6-26777"})
-	@Test(description = "verify if system.entitlements_valid goes from valid to partial after oversubscribing", // TODO
-			// fix
-			// this
-			// description
-			groups = { "VerifyRHELWorkstationSubscription", "blockedByBug-739790" }, enabled = true)
-	public void VerifyRHELWorkstationSubscription() throws JSONException, Exception {
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6},
+			testCaseID = {"RHEL6-26777"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = /*TODO */"please provide a description",
+			groups = {"Tier3Tests","VerifyRHELWorkstationSubscription", "blockedByBug-739790" },
+			enabled = true)
+	public void testRHELWorkstationSubscription() throws JSONException, Exception {
 		InstalledProduct workstation = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", "71",
 				clienttasks.getCurrentlyInstalledProducts());
 		if (workstation == null)
@@ -2462,11 +2769,18 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21985","RHEL7-51847"})
-	@Test(description = "verify changing to a different rhsm.productcertdir configuration throws OSError", // TODO,
-			groups = { "certificateStacking", "blockedByBug-726409", "blockedByBug-1183175" }, enabled = true)
-	public void certificateStacking() throws JSONException, Exception {
+	@SuppressWarnings("deprecation")
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21985","RHEL7-51847"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = /*TODO */"please provide a description",
+			groups = {"Tier3Tests","certificateStacking", "blockedByBug-726409", "blockedByBug-1183175" },
+			enabled = true)
+	public void testCertificateStacking() throws JSONException, Exception {
 		Map<String, String> attributes = new HashMap<String, String>();
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
 				null, (List<String>) null, (String) null, null, null, true, null, null, null, null, null);
@@ -2565,11 +2879,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21917","RHEL7-51778"})
-	@Test(description = "verify OwnerInfo is displayed only for pools that are active right now, for all the stats", groups = {
-			"OwnerInfoForActivePools", "blockedByBug-710141", }, enabled = true)
-	public void OwnerInfoForActivePools() throws JSONException, Exception {
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21917","RHEL7-51778"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "verify OwnerInfo is displayed only for pools that are active right now, for all the stats",
+			groups = {"Tier3Tests","OwnerInfoForActivePools", "blockedByBug-710141", },
+			enabled = true)
+	public void testOwnerInfoForActivePools() throws JSONException, Exception {
 		DateFormat yyyy_MM_dd_DateFormat = new SimpleDateFormat("yyyy-MM-dd");
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
 				null, (List<String>) null, (String) null, null, null, true, null, null, null, null, null);
@@ -2626,9 +2946,10 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@Test(description = "verify if refresh Pools w/ Auto-Create Owner Fails", groups = { "EnableAndDisableCertV3",
-			"blockedByBug-919700" }, enabled = false)
-	public void EnableAndDisableCertV3() throws JSONException, Exception {
+	@Test(	description = "verify if refresh Pools w/ Auto-Create Owner Fails",
+			groups = {"Tier3Tests","EnableAndDisableCertV3","blockedByBug-919700" },
+			enabled = false)
+	public void testEnableAndDisableCertV3() throws JSONException, Exception {
 		String version = null;
 		servertasks.updateConfFileParameter("candlepin.enable_cert_v3", "false");
 		servertasks.restartTomcat();
@@ -2665,11 +2986,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21921","RHEL7-51782"})
-	@Test(description = "verify that refresh pools w/ auto_create_owner succeeds", groups = {
-			"RefreshPoolsWithAutoCreate", "blockedByBug-720487" }, enabled = true)
-	public void RefreshPoolsWithAutoCreate() throws JSONException, Exception {
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21921","RHEL7-51782"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "verify that refresh pools w/ auto_create_owner succeeds",
+			groups = {"Tier3Tests","RefreshPoolsWithAutoCreate", "blockedByBug-720487" },
+			enabled = true)
+	public void testRefreshPoolsWithAutoCreate() throws JSONException, Exception {
 		String org = "newowner";
 		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,
 				"/owners/" + org); // in case org already exists
@@ -2694,11 +3021,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-28536","RHEL6-26709"})
-	@Test(description = "verify fix for Bug 874147 - python-ethtool api changed causing facts to list ipv4 address as \"unknown\"", groups = {
-			"VerifyipV4Facts", "blockedByBug-874147" }, enabled = true)
-	public void VerifyipV4Facts() throws JSONException, Exception {
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-47932","RHEL7-97447"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "verify fix for Bug 874147 - python-ethtool api changed causing facts to list ipv4 address as \"unknown\"",
+			groups = {"Tier3Tests","VerifyipV4Facts", "blockedByBug-874147" },
+			enabled = true)
+	public void testIPV4Facts() throws JSONException, Exception {
 		Boolean pattern = false;
 		Boolean Flag = false;
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
@@ -2717,11 +3050,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-28478", "RHEL6-26709"})
-	@Test(description = "verify fix for Bug 886604 - etc/yum.repos.d/ does not exist, turning manage_repos off.", groups = {
-			"VerifyRepoFileExistance", "blockedByBug-886604", "blockedByBug-919700" }, enabled = true)
-	public void VerifyRepoFileExistance() throws JSONException, Exception {
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-47931", "RHEL7-97446"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "verify fix for Bug 886604 - etc/yum.repos.d/ does not exist, turning manage_repos off.",
+			groups = {"Tier3Tests","VerifyRepoFileExistance", "blockedByBug-886604", "blockedByBug-919700" },
+			enabled = true)
+	public void testRepoFileExistance() throws JSONException, Exception {
 		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
 		listOfSectionNameValues.add(new String[] { "rhsm", "manage_repos", "1" });
 		clienttasks.config(null, null, true, listOfSectionNameValues);
@@ -2744,11 +3083,18 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21899", "RHEL7-51760"})
-	@Test(description = "verify fix for Bug 755677 - failing to add a virt unlimited pool to an activation key", groups = {
-			"AddingVirtualPoolToActivationKey", "blockedByBug-755677" }, enabled = true)
-	public void AddingVirtualPoolToActivationKey() throws JSONException, Exception {
+	@SuppressWarnings("deprecation")
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21899", "RHEL7-51760"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "verify fix for Bug 755677 - failing to add a virt unlimited pool to an activation key",
+			groups = {"Tier3Tests","AddingVirtualPoolToActivationKey", "blockedByBug-755677" },
+			enabled = true)
+	public void testAddingVirtualPoolToActivationKey() throws JSONException, Exception {
 		Integer addQuantity = 1;
 
 		String consumerId = clienttasks.getCurrentConsumerId(
@@ -2783,6 +3129,10 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword,
 				sm_serverUrl, ownerKey, 20, -1 * 24 * 60/* 1 day ago */,
 				15 * 24 * 60/* 15 days from now */, getRandInt(), getRandInt(), productId, providedProductIds, null);
+		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverAdminUsername,
+			sm_serverAdminPassword, sm_serverUrl, ownerKey);
+		jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword,
+			sm_serverUrl, jobDetail, "FINISHED", 5 * 1000, 1);
 		String name = String.format("%s_%s-ActivationKey%s", sm_clientUsername, sm_clientOrg,
 				System.currentTimeMillis());
 		Map<String, String> mapActivationKeyRequest = new HashMap<String, String>();
@@ -2823,11 +3173,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21984", "RHEL7-51846"})
-	@Test(description = "verify tracebacks occur running yum repolist after subscribing to a pool", groups = {
-			"YumReposListAfterSubscription", "blockedByBug-696786", "blockedByBug-919700" }, enabled = true)
-	public void YumReposListAfterSubscription() throws JSONException, Exception {
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21984", "RHEL7-51846"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "verify tracebacks occur running yum repolist after subscribing to a pool",
+			groups = {"Tier3Tests","YumReposListAfterSubscription", "blockedByBug-696786", "blockedByBug-919700" },
+			enabled = true)
+	public void testYumReposListAfterSubscription() throws JSONException, Exception {
 		Boolean pattern = false;
 		Boolean Flag = false;
 		String yum_cmd = "yum repolist enabled --disableplugin=rhnplugin";
@@ -2850,11 +3206,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 */
 	@ImplementsNitrateTest(caseId = 50235)
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21931", "RHEL7-51793"})
-	@Test(description = "verify rhsm log for Update With No Installed Products", groups = {
-			"UpdateWithNoInstalledProducts", "blockedByBug-746241", "blockedByBug-1389559" }, enabled = true)
-	public void UpdateWithNoInstalledProducts() throws JSONException, Exception {
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21931", "RHEL7-51793"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "verify rhsm log for Update With No Installed Products",
+			groups = {"Tier3Tests","UpdateWithNoInstalledProducts", "blockedByBug-746241", "blockedByBug-1389559" },
+			enabled = true)
+	public void testUpdateWithNoInstalledProducts() throws JSONException, Exception {
 		client.runCommandAndWait("rm -f " + clienttasks.rhsmLogFile);
 		configureTmpProductCertDirWithOutInstalledProductCerts();
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
@@ -2883,12 +3245,18 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21913", "RHEL7-51774"})
-	@Test(description = "verify Facts Update For Deleted Consumer", groups = { "FactsUpdateForDeletedConsumer",
-			"blockedByBug-798788" }, enabled = true)
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21913", "RHEL7-51774"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "verify Facts Update For Deleted Consumer",
+			groups = {"Tier3Tests","FactsUpdateForDeletedConsumer","blockedByBug-798788" },
+			enabled = true)
 	@ImplementsNitrateTest(caseId = 148216)
-	public void FactsUpdateForDeletedConsumer() throws JSONException, Exception {
+	public void testFactsUpdateForDeletedConsumer() throws JSONException, Exception {
 
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
 				null, (String) null, null, null, null, true, null, null, null, null, null);
@@ -2908,13 +3276,18 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21925", "RHEL7-51786"})
-	@Test(	description = "verify if you can register using consumer id of a deleted owner",
-			groups = {"RegisterWithConsumeridOfDeletedOwner" },
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21925", "RHEL7-51786"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "verify that you blocked when trying to register using the consumerId of a deleted owner",
+			groups = {"Tier3Tests","RegisterWithConsumeridOfDeletedOwner" },
 			enabled = true)
 	@ImplementsNitrateTest(caseId = 148216)
-	public void RegisterWithConsumeridOfDeletedOwner() throws JSONException, Exception {
+	public void testRegisterWithConsumerIdOfDeletedOwner() throws JSONException, Exception {
 		String orgname = "testOwner1";
 		servertasks.createOwnerUsingCPC(orgname);
 		clienttasks.register_(sm_serverAdminUsername, sm_serverAdminPassword, orgname, null, null, null, null, null,
@@ -2937,11 +3310,18 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21923", "RHEL7-51784"})
-	@Test(description = "verify if register to a deleted owner", groups = { "RegisterToDeletedOwner" }, enabled = true)
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21923", "RHEL7-51784"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "verify if register to a deleted owner",
+			groups = {"Tier3Tests","RegisterToDeletedOwner" },
+			enabled = true)
 	@ImplementsNitrateTest(caseId = 148216)
-	public void RegisterToDeletedOwner() throws JSONException, Exception {
+	public void testRegisterToDeletedOwner() throws JSONException, Exception {
 		String orgname = "testOwner1";
 		servertasks.createOwnerUsingCPC(orgname);
 		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,
@@ -2957,11 +3337,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21909", "RHEL7-51770"})
-	@Test(description = "verify if Repos List is empty for FutureSubscription", groups = {
-			"EmptyReposListForFutureSubscription", "blockedByBug-958775","blockedByBug-1440180" }, enabled = true)
-	public void EmptyReposListForFutureSubscription() throws JSONException, Exception {
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21909", "RHEL7-51770"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "verify if Repos List is empty for FutureSubscription",
+			groups = {"Tier3Tests","EmptyReposListForFutureSubscription", "blockedByBug-958775","blockedByBug-1440180" },
+			enabled = true)
+	public void testEmptyReposListForFutureSubscription() throws JSONException, Exception {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
 				null, (String) null, null, null, null, true, false, null, null, null, null);
 		String consumerId = clienttasks.getCurrentConsumerId();
@@ -3003,11 +3389,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21933", "RHEL7-51795"})
-	@Test(description = "verify if auto-subscribe and activation-key are mutually exclusive", groups = {
-			"VerifyAutoSubscribeAndActivationkeyTogether", "blockedByBug-869729" }, enabled = true)
-	public void VerifyAutoSubscribeAndActivationkeyTogether() throws JSONException, Exception {
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21933", "RHEL7-51795"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "verify if auto-subscribe and activation-key are mutually exclusive",
+			groups = {"Tier3Tests","VerifyAutoSubscribeAndActivationkeyTogether", "blockedByBug-869729" },
+			enabled = true)
+	public void testAutoSubscribeAndActivationKeyTogether() throws JSONException, Exception {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
 				null, (String) null, null, null, null, true, null, null, null, null, null);
 		String name = String.format("%s_%s-ActivationKey%s", sm_clientUsername, sm_clientOrg,
@@ -3035,12 +3427,18 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21963", "RHEL7-51825"})
-	@Test(description = "verify if entitlement certs are regenerated if certs are manually removed", groups = {
-			"VerifyRegenrateEntitlementCert" }, enabled = true)
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21963", "RHEL7-51825"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "verify if entitlement certs are regenerated if certs are manually removed",
+			groups = {"Tier3Tests","VerifyRegenrateEntitlementCert"},
+			enabled = true)
 	@ImplementsNitrateTest(caseId = 64181)
-	public void VerifyRegenrateEntitlementCert() throws JSONException, Exception {
+	public void testRegenerateEntitlementCert() throws JSONException, Exception {
 		String poolId = null;
 		int Certfrequeny = 1;
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
@@ -3066,12 +3464,18 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21973", "RHEL7-51835"})
-	@Test(description = "verify if entitlement certs are downloaded if subscribed using bogus poolid", groups = {
-			"VerifySubscribingTobogusPoolID" }, enabled = true)
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21973", "RHEL7-51835"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "verify if entitlement certs are downloaded if subscribed using bogus poolid",
+			groups = {"Tier3Tests","VerifySubscribingTobogusPoolID" },
+			enabled = true)
 	@ImplementsNitrateTest(caseId = 50223)
-	public void VerifySubscribingTobogusPoolID() throws JSONException, Exception {
+	public void testSubscribingToBogusPoolID() throws JSONException, Exception {
 		String poolId = null;
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
 				null, (String) null, null, null, null, true, null, null, null, null, null);
@@ -3094,12 +3498,18 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21952", "RHEL7-51814"})
-	@Test(description = "Verify Functionality Access After Unregister", groups = {
-			"VerifyFunctionalityAccessAfterUnregister" }, enabled = true)
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21952", "RHEL7-51814"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "Verify Functionality Access After Unregister",
+			groups = {"Tier3Tests","VerifyFunctionalityAccessAfterUnregister" },
+			enabled = true)
 	@ImplementsNitrateTest(caseId = 50215)
-	public void VerifyFunctionalityAccessAfterUnregister() throws JSONException, Exception {
+	public void testFunctionalityAccessAfterUnregister() throws JSONException, Exception {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg);
 		String availList = clienttasks.listAllAvailableSubscriptionPools().getStdout();
 		Assert.assertNotNull(availList);
@@ -3123,12 +3533,18 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21960", "RHEL7-51822"})
-	@Test(description = "Verify only One Cert is downloaded Per One Subscription", groups = {
-			"VerifyOneCertPerOneSubscription" }, enabled = true)
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21960", "RHEL7-51822"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "Verify only One Cert is downloaded Per One Subscription",
+			groups = {"Tier3Tests","VerifyOneCertPerOneSubscription" },
+			enabled = true)
 	@ImplementsNitrateTest(caseId = 50215)
-	public void VerifyOneCertPerOneSubscription() {
+	public void testOneCertPerOneSubscription() {
 		int expected = 0;
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
 				null, (String) null, null, null, null, true, false, null, null, null, null);
@@ -3148,10 +3564,11 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@Test(description = "verify content set associated with product", groups = { "VerifyUnsubscribingCertV3",
-			"blockedByBug-895447" }, enabled = false)
+	@Test(	description = "verify content set associated with product",
+			groups = {"Tier3Tests","VerifyUnsubscribingCertV3","blockedByBug-895447" },
+			enabled = false)
 	@ImplementsNitrateTest(caseId = 50215)
-	public void VerifyUnsubscribingCertV3() throws JSONException, Exception {
+	public void testUnsubscribingCertV3() throws JSONException, Exception {
 
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
 				null, (String) null, null, null, null, true, null, null, null, null, null);
@@ -3168,11 +3585,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21962", "RHEL7-51824"})
-	@Test(description = "verify  rhsmcertd is logging update failed (255)", groups = { "VerifyRHSMCertdLogging",
-			"blockedByBug-708512","blockedByBug-1440934" }, enabled = true)
-	public void VerifyRHSMCertdLogging() throws JSONException, Exception {
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21962", "RHEL7-51824"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "verify  rhsmcertd is logging update failed (255)",
+			groups = {"Tier3Tests","VerifyRHSMCertdLogging","blockedByBug-708512","blockedByBug-1440934" },
+			enabled = true)
+	public void testRhsmcertdLogging() throws JSONException, Exception {
 		int autoAttachInterval = 1;
 
 		clienttasks.unregister(null, null, null, null);
@@ -3187,12 +3610,18 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21961", "RHEL7-51823"})
-	@Test(description = "verify content set associated with product", groups = {
-			"VerifycertsAfterUnsubscribeAndunregister" }, enabled = true)
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21961", "RHEL7-51823"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "verify content set associated with product",
+			groups = {"Tier3Tests","VerifycertsAfterUnsubscribeAndunregister"},
+			enabled = true)
 	@ImplementsNitrateTest(caseId = 50215)
-	public void VerifyProductCertsAfterUnsubscribeAndunregister() throws JSONException, Exception {
+	public void testProductCertsAfterUnsubscribeAndUnregister() throws JSONException, Exception {
 
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
 				null, (String) null, null, null, null, true, false, null, null, null, null);
@@ -3215,12 +3644,18 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21965", "RHEL7-51827"})
-	@Test(description = "verify reregister with invalid consumerid", groups = {
-			"VerifyRegisterUsingInavlidConsumerId" }, enabled = true)
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21965", "RHEL7-51827"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "verify reregister with invalid consumerid",
+			groups = {"Tier3Tests","VerifyRegisterUsingInavlidConsumerId" },
+			enabled = true)
 	@ImplementsNitrateTest(caseId = 61716)
-	public void VerifyRegisterUsingInavlidConsumerId() throws JSONException, Exception {
+	public void testRegisterUsingInvalidConsumerId() throws JSONException, Exception {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
 				null, (String) null, null, null, null, true, null, null, null, null, null);
 		String consumerId = clienttasks.getCurrentConsumerId();
@@ -3250,11 +3685,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21979", "RHEL7-51841"})
-	@Test(description = "verify if corrupt identity cert displays a trace back for list command", groups = {
-			"VerifyCorruptIdentityCert", "blockedByBug-607162" }, enabled = true)
-	public void VerifycorruptIdentityCert() throws JSONException, Exception {
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21979", "RHEL7-51841"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "verify if corrupt identity cert displays a trace back for list command",
+			groups = {"Tier3Tests","VerifyCorruptIdentityCert", "blockedByBug-607162" },
+			enabled = true)
+	public void testCorruptIdentityCert() throws JSONException, Exception {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
 				null, (String) null, null, null, null, true, null, null, null, null, null);
 		client.runCommandAndWait("cp /etc/pki/consumer/cert.pem /etc/pki/consumer/cert.pem.save");
@@ -3262,27 +3703,43 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				+ " > /tmp/stdout; mv /tmp/stdout -f " + clienttasks.consumerCertFile(), 0);
 		SSHCommandResult result = clienttasks.list_(null, true, null, null, null, null, null, null, null, null, null,
 				null, null, null);
-		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.8-1")) { // post
+		 if(clienttasks.isPackageVersion("subscription-manager", ">=", "1.20.1-1")) {	// commit 79f86e4c043ee751677131ed4e3cf00affd13087
+			Assert.assertEquals(result.getStderr().trim(), "Consumer identity either does not exist or is corrupted. Try register --help", "stdout");
+			    
+		 }else if((clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.8-1"))) { // post
 			// commit
 			// df95529a5edd0be456b3528b74344be283c4d258
 			Assert.assertEquals(result.getStderr().trim(), clienttasks.msg_ConsumerNotRegistered, "stderr");
-		} else {
+		 }else{
 			Assert.assertEquals(result.getStdout().trim(), clienttasks.msg_ConsumerNotRegistered, "stdout");
-		}
-		client.runCommandAndWait("mv -f /etc/pki/consumer/cert.pem.save /etc/pki/consumer/cert.pem");
+		 }
 
 	}
+	
+	
+	@AfterGroups(groups = { "setup" }, value = {"VerifyCorruptIdentityCert"})
+	protected void restoreOriginalTests() throws Exception {
+	
+	client.runCommandAndWait("mv -f /etc/pki/consumer/cert.pem.save /etc/pki/consumer/cert.pem");
+	}
+
 
 	/**
 	 * @author skallesh
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21982", "RHEL7-51844"})
-	@Test(description = "subscription-manager facts --update changes update date after facts update", groups = {
-			"VerifyUpdateConsumerFacts", "blockedByBug-700821" }, enabled = true)
-	public void VerifyupdateConsumerFacts() throws JSONException, Exception {
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21982", "RHEL7-51844"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "subscription-manager facts --update changes update date after facts update",
+			groups = {"Tier3Tests","VerifyUpdateConsumerFacts", "blockedByBug-700821" },
+			enabled = true)
+	public void testUpdateConsumerFacts() throws JSONException, Exception {
 
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
 				null, (String) null, null, null, null, true, null, null, null, null, null);
@@ -3307,11 +3764,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21954", "RHEL7-51816"})
-	@Test(description = "verify healing of installed products without taking future subscriptions into consideration", groups = {
-			"VerifyHealingForFutureSubscription", "blockedByBug-907638","blockedByBug-1440180" }, enabled = true)
-	public void VerifyHealingForFutureSubscription() throws JSONException, Exception {
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21954", "RHEL7-51816"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "verify healing of installed products without taking future subscriptions into consideration",
+			groups = {"Tier3Tests","VerifyHealingForFutureSubscription", "blockedByBug-907638","blockedByBug-1440180" },
+			enabled = true)
+	public void testHealingForFutureSubscription() throws JSONException, Exception {
 		String productId = null;
 
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
@@ -3392,12 +3855,18 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-22312", "RHEL7-51791"})
-	@Test(description = "Verify unsubscribe from multiple invalid serial numbers", groups = { "blockedByBug-1268491",
-			"UnsubscribeFromInvalidMultipleEntitlements" }, enabled = true)
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-22312", "RHEL7-51791"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "Verify unsubscribe from multiple invalid serial numbers",
+			groups = {"Tier3Tests","blockedByBug-1268491","UnsubscribeFromInvalidMultipleEntitlements" },
+			enabled = true)
 	@ImplementsNitrateTest(caseId = 50230)
-	public void UnsubscribeFromInvalidMultipleEntitlements() throws JSONException, Exception {
+	public void testUnsubscribeFromInvalidMultipleEntitlements() throws JSONException, Exception {
 		List<BigInteger> serialnums = new ArrayList<BigInteger>();
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
 				null, (String) null, null, null, null, true, null, null, null, null, null);
@@ -3441,12 +3910,18 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21930", "RHEL7-51792"})
-	@Test(description = "Verify unsubscribe from multiple subscriptions", groups = {
-			"UnsubscribeFromMultipleEntitlementsTest", "blockedByBug-867766", "blockedByBug-906550" }, enabled = true)
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21930", "RHEL7-51792"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "Verify unsubscribe from multiple subscriptions",
+			groups = {"Tier3Tests","UnsubscribeFromMultipleEntitlementsTest", "blockedByBug-867766", "blockedByBug-906550" },
+			enabled = true)
 	@ImplementsNitrateTest(caseId = 50230)
-	public void UnsubscribeFromMultipleEntitlements() throws JSONException, Exception {
+	public void testUnsubscribeFromMultipleEntitlements() throws JSONException, Exception {
 		int count = 0;
 		List<BigInteger> serialnums = new ArrayList<BigInteger>();
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
@@ -3481,6 +3956,12 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			expected += "   " + serialTwo + "\n";
 			expected += "2 local certificates have been deleted.";
 		}
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.2.0-1")) {
+		    	expected =  "2 local certificates have been deleted."+ "\n";
+			expected += "The entitlement server successfully removed these serial numbers:"+ "\n";
+			expected += "   " + serialOne + "\n";
+			expected += "   " + serialTwo;
+		}
 		Assert.assertEquals(result.trim(), expected);
 	}
 
@@ -3489,10 +3970,27 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@Test(description = "verify content set associated with product", groups = {
-			"VerifyRegisterWithConsumerIdForDifferentUser" }, enabled = true)
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-47895", "RHEL7-96269"},
+			linkedWorkItems= {
+				@LinkedItem(
+					workitemId= "RHEL6-28485",	// RHSM-REQ : subscription-manager cli registration and deregistration
+					project= Project.RHEL6,
+					role= DefTypes.Role.VERIFIES),
+				@LinkedItem(
+					workitemId= "RHEL7-84906",	// RHSM-REQ : subscription-manager cli registration and deregistration
+					project= Project.RedHatEnterpriseLinux7,
+					role= DefTypes.Role.VERIFIES)},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.LOW, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description= "verify registration fails when specifying a consumerid that has been revoked",
+			groups= {"Tier3Tests","VerifyRegisterWithConsumerIdForDifferentUser" },
+			enabled= true)
 	@ImplementsNitrateTest(caseId = 61710)
-	public void VerifyRegisterWithConsumerIdForDifferentUser() throws JSONException, Exception {
+	public void testRegisterWithConsumerIdForDifferentUser() throws JSONException, Exception {
 		if (sm_client2Username == null)
 			throw new SkipException("This test requires valid credentials for a second user.");
 		clienttasks.register(sm_client2Username, sm_client2Password, sm_client2Org, null, null, null, null, null, null,
@@ -3509,12 +4007,18 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21948", "RHEL7-51810"})
-	@Test(description = "verify content set associated with product", groups = {
-			"VerifyFactsListByOverridingValues" }, enabled = true)
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21948", "RHEL7-51810"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "verify content set associated with product",
+			groups = {"Tier3Tests","VerifyFactsListByOverridingValues" },
+			enabled = true)
 	@ImplementsNitrateTest(caseId = 56389)
-	public void VerifyFactsListByOverridingValues() throws JSONException, Exception {
+	public void testFactsListByOverridingValues() throws JSONException, Exception {
 
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
 				null, (String) null, null, null, null, true, null, null, null, null, null);
@@ -3534,12 +4038,18 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21949", "RHEL7-51811"})
-	@Test(description = "verify content set associated with product", groups = {
-			"VerifyFactsListWithOutrageousValues" }, enabled = true)
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21949", "RHEL7-51811"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "verify content set associated with product",
+			groups = {"Tier3Tests","VerifyFactsListWithOutrageousValues" },
+			enabled = true)
 	@ImplementsNitrateTest(caseId = 56897)
-	public void VerifyFactsListWithOutrageousValues() throws JSONException, Exception {
+	public void testFactsListWithOutrageousValues() throws JSONException, Exception {
 
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
 				null, (String) null, null, null, null, true, null, null, null, null, null);
@@ -3565,12 +4075,18 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21978", "RHEL7-51840"})
-	@Test(description = "verify content set associated with product", groups = {
-			"Verifycontentsetassociatedwithproduct" }, enabled = true)
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21978", "RHEL7-51840"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "verify content set associated with product",
+			groups = {"Tier3Tests","Verifycontentsetassociatedwithproduct" },
+			enabled = true)
 	@ImplementsNitrateTest(caseId = 61115)
-	public void Verifycontentsetassociatedwithproduct() throws JSONException, Exception {
+	public void testContentSetAssociatedWithProduct() throws JSONException, Exception {
 		clienttasks.unregister(null, null, null, null);
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
 				null, (String) null, null, null, null, true, null, null, null, null, null);
@@ -3600,14 +4116,14 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@Test(description = "verify if rhsmcertd process refresh the identity certificate after every restart", groups = {
-			"VerifyrhsmcertdRefreshIdentityCert", "blockedByBug-827034", "blockedByBug-923159",
-			"blockedByBug-827035" }, enabled = false)
+	@Test(	description = "verify if rhsmcertd process refresh the identity certificate after every restart",
+			groups = {"Tier3Tests","VerifyrhsmcertdRefreshIdentityCert", "blockedByBug-827034", "blockedByBug-923159","blockedByBug-827035" },
+			enabled = false)
 	// TODO disabling this test for two reasons:
 	// 1. it is dangerous to change the system dates
 	// 2. the network service seems to stop when the date changes breaking the
 	// ability to ssh into the system
-	public void VerifyrhsmcertdRefreshIdentityCert() throws JSONException, Exception {
+	public void testRhsmcertdRefreshIdentityCert() throws JSONException, Exception {
 
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
 				null, (String) null, null, null, null, true, null, null, null, null, null);
@@ -3655,13 +4171,18 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21974", "RHEL7-51836"})
-	@Test(description = "subscription-manager unsubscribe --all on expired subscriptions removes certs from entitlement folder", groups = {
-			"VerifyUnsubscribeAllForExpiredSubscription", "blockedByBug-852630",
-			"blockedByBug-906550" }, enabled = true)
-	public void VerifyUnsubscribeAllForExpiredSubscription() throws JSONException, Exception {
-
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21974", "RHEL7-51836"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "subscription-manager unsubscribe --all on expired subscriptions removes certs from entitlement folder",
+			groups = {"Tier3Tests","VerifyUnsubscribeAllForExpiredSubscription", "blockedByBug-852630","blockedByBug-906550" },
+			enabled = true)
+	public void testUnsubscribeAllForExpiredSubscription() throws JSONException, Exception {
+	    	clienttasks.clean();
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null,
 				null, (String) null, null, null, null, true, false, null, null, null, null);
 		String consumerId = clienttasks.getCurrentConsumerId();
@@ -3675,7 +4196,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		// sleep(endingMinutesFromNow*60*1000);
 		// trying to reduce the wait time for the expiration by subtracting off
 		// some expensive test time
-		sleep(1 * 57 * 1000 - (c2.getTimeInMillis() - c1.getTimeInMillis()));
+		sleep(1 * 60 * 1000 - (c2.getTimeInMillis() - c1.getTimeInMillis()));
 		List<ProductSubscription> consumedProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
 		List<ProductSubscription> activeProductSubscriptions = ProductSubscription
 				.findAllInstancesWithMatchingFieldFromList("isActive", Boolean.TRUE, consumedProductSubscriptions);
@@ -3692,6 +4213,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				"%d subscriptions removed at the server.\n%d local certificates have been deleted.",
 				activeProductSubscriptionSerials.size(),
 				activeProductSubscriptionSerials.size() + expiredProductSubscriptions.size());
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.20.2-1")) {	// commit d88d09c7060a17fba34a138313e7efd21cc79d02  D-Bus service for removing entitlements (all/ID/serial num.)
+			expected = String.format("%d local certificates have been deleted."+"\n"+"%d subscriptions removed at the server.", activeProductSubscriptionSerials.size()+expiredProductSubscriptions.size(), activeProductSubscriptionSerials.size());
+		}
 		if (activeProductSubscriptionSerials.size() + expiredProductSubscriptions.size() == 1)
 			expected = expected.replace("local certificates have been", "local certificate has been");
 		Assert.assertEquals(result.getStdout().trim(), expected);
@@ -3703,11 +4227,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21945", "RHEL7-51807"})
-	@Test(description = "Verify One empty certificate file in /etc/rhsm/ca causes registration failure", groups = {
-			"VerifyEmptyCertCauseRegistrationFailure_Test", "blockedByBug-806958","blockedByBug-1432990" }, enabled = true)
-	public void VerifyEmptyCertCauseRegistrationFailure_Test() throws JSONException, Exception {
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21945", "RHEL7-51807"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "Verify One empty certificate file in /etc/rhsm/ca causes registration failure",
+			groups = {"Tier3Tests","VerifyEmptyCertCauseRegistrationFailure_Test", "blockedByBug-806958","blockedByBug-1432990" },
+			enabled = true)
+	public void testEmptyCertCauseRegistrationFailure_Test() throws JSONException, Exception {
 		clienttasks.unregister(null, null, null, null);
 		String FilePath = myEmptyCaCertFile;
 		String command = "touch " + FilePath;
@@ -3729,11 +4259,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21950", "RHEL7-51812"})
-	@Test(description = "Verify facts update with incorrect proxy url produces traceback.", groups = {
-			"VerifyFactsWithIncorrectProxy_Test", "blockedByBug-744504" }, enabled = true)
-	public void VerifyFactsWithIncorrectProxy_Test() throws JSONException, Exception {
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21950", "RHEL7-51812"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "Verify facts update with incorrect proxy url produces traceback.",
+			groups = {"Tier3Tests","VerifyFactsWithIncorrectProxy_Test", "blockedByBug-744504" },
+			enabled = true)
+	public void testFactsWithIncorrectProxy_Test() throws JSONException, Exception {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
 				null, (String) null, null, null, null, true, null, null, null, null, null);
 		String basicauthproxyUrl = String.format("%s:%s", "testmachine.com", sm_basicauthproxyPort);
@@ -3751,11 +4287,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21967", "RHEL7-51829"})
-	@Test(description = "Verify Subscription Manager Leaves Broken Yum Repos After Unregister", groups = {
-			"ReposListAfterUnregisterTest", "blockedByBug-674652" }, enabled = true)
-	public void VerifyRepoAfterUnregisterTest() throws JSONException, Exception {
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21967", "RHEL7-51829"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "Verify Subscription Manager Leaves Broken Yum Repos After Unregister",
+			groups = {"Tier3Tests","ReposListAfterUnregisterTest", "blockedByBug-674652" },
+			enabled = true)
+	public void testRepoAfterUnregister() throws JSONException, Exception {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null,
 				null, (String) null, null, null, null, true, null, null, null, null, null);
 		clienttasks.unsubscribe(true, (BigInteger) null, null, null, null, null, null);
@@ -3772,12 +4314,19 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21944", "RHEL7-51806"})
-	@Test(description = "Verify if stacking entitlements reports as distinct entries in cli list --installed", groups = {
-			"VerifyDistinctStackingEntires", "blockedByBug-733327" }, enabled = true)
-	public void VerifyDistinctStackingEntires() throws Exception {
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21944", "RHEL7-51806"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "Verify if stacking entitlements reports as distinct entries in cli list --installed",
+			groups = {"Tier3Tests","VerifyDistinctStackingEntires", "blockedByBug-733327" },
+			enabled = true)
+	public void testDistinctStackingEntires() throws Exception {
 		String poolId = null;
+		String productIds=null;
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
 				null, (String) null, null, null, null, true, null, null, null, null, null);
 		clienttasks.autoheal(null, null, true, null, null, null, null);
@@ -3801,20 +4350,29 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				if (!(pool.suggested == 1)) {
 					clienttasks.subscribe(null, null, pool.poolId, null, null, Integer.toString(quantity), null, null,
 							null, null, null, null, null);
-					poolId = pool.poolId;
+					 productIds = pool.productId;
 					providedProductId = pool.provides.get(randomGenerator.nextInt(pool.provides.size()));
 					if (!(providedProductId.isEmpty())) {
-						break;
-
+					    break;
 					}
-				}
+					
+			}
+			
+
 			}
 		}
 		InstalledProduct BeforeAttaching = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productName",
 				providedProductId, clienttasks.getCurrentlyInstalledProducts());
 		Assert.assertEquals(BeforeAttaching.status, "Partially Subscribed",
 				"Verified that installed product is partially subscribed");
-		clienttasks.subscribe(null, null, poolId, null, null, null, null, null, null, null, null, null, null);
+		List<SubscriptionPool> AvailableStackableSubscription = SubscriptionPool
+			.findAllInstancesWithMatchingFieldFromList("productId", productIds,
+					clienttasks.getAvailableSubscriptionsMatchingInstalledProducts());
+		System.out.println(AvailableStackableSubscription.size()+ "size .............");
+		for(SubscriptionPool pools :AvailableStackableSubscription){
+		    clienttasks.subscribeToSubscriptionPool(pools);
+		}
+		
 		InstalledProduct AfterAttaching = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productName",
 				providedProductId, clienttasks.getCurrentlyInstalledProducts());
 		Assert.assertEquals(AfterAttaching.status, "Subscribed", "Verified that installed product"
@@ -3827,11 +4385,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21943", "RHEL7-51805"})
-	@Test(description = "Verify that Product with UUID '%s' cannot be deleted while subscriptions exist.", groups = {
-			"DeleteProductTest", "blockedByBug-684941" }, enabled = true)
-	public void VerifyDeletionOfSubscribedProduct_Test() throws JSONException, Exception {
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21943", "RHEL7-51805"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "Verify that Product with UUID '%s' cannot be deleted while subscriptions exist.",
+			groups = {"Tier3Tests","DeleteProductTest", "blockedByBug-684941" },
+			enabled = true)
+	public void testDeletionOfSubscribedProduct_Test() throws JSONException, Exception {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
 				null, (List<String>) null, null, null, null, true, null, null, null, null, null);
 		clienttasks.subscribe_(true, null, null, (String) null, null, null, null, null, null, null, null, null, null);
@@ -3865,11 +4429,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21951", "RHEL7-51813"})
-	@Test(description = "Verify Force Registration After Consumer is Deleted", groups = { "ForceRegAfterDEL",
-			"blockedByBug-853876" }, enabled = true)
-	public void VerifyForceRegistrationAfterConsumerDeletion_Test() throws JSONException, Exception {
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21951", "RHEL7-51813"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "Verify Force Registration After Consumer is Deleted",
+			groups = {"Tier3Tests","ForceRegAfterDEL","blockedByBug-853876" },
+			enabled = true)
+	public void testForceRegistrationAfterConsumerDeletion() throws JSONException, Exception {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
 				null, (List<String>) null, null, null, null, true, null, null, null, null, null);
 		String consumerId = clienttasks.getCurrentConsumerId();
@@ -3887,12 +4457,18 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21904", "RHEL7-51765"})
-	@Test(description = "verify config Server port with blank or incorrect text produces traceback", groups = {
-			"configBlankTest", "blockedByBug-744654" }, enabled = true)
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21904", "RHEL7-51765"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "verify config Server port with blank or incorrect text produces traceback",
+			groups = {"Tier3Tests","configBlankTest", "blockedByBug-744654" },
+			enabled = true)
 	// @ImplementsNitrateTest(caseId=)
-	public void ConfigSetServerPortValueToBlank_Test() {
+	public void testConfigSetServerPortValueToBlank() {
 
 		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
 		String section = "server";
@@ -3913,11 +4489,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21990", "RHEL7-51852"})
-	@Test(description = "subscription-manager: register --name , setting consumer name to blank", groups = {
-			"registerwithname", "blockedByBug-669395" }, enabled = true)
-	public void registerWithNameBlankTest() throws JSONException, Exception {
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21990", "RHEL7-51852"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "subscription-manager: register --name , setting consumer name to blank",
+			groups = {"Tier3Tests","registerwithname", "blockedByBug-669395" },
+			enabled = true)
+	public void testRegisterWithNameBlank() throws JSONException, Exception {
 		String name = "test";
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, name, null, null, null,
 				null, (String) null, null, null, null, true, null, null, null, null, null);
@@ -3946,11 +4528,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21989", "RHEL7-51851"})
-	@Test(description = "subscription-manager: register --consumerid  using a different user and valid consumerId", groups = {
-			"reregister", "blockedByBug-627665" }, enabled = true)
-	public void registerWithConsumerid_Test() throws JSONException, Exception {
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21989", "RHEL7-51851"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "subscription-manager: register --consumerid  using a different user and valid consumerId",
+			groups = {"Tier3Tests","reregister", "blockedByBug-627665" },
+			enabled = true)
+	public void testRegisterWithConsumerId() throws JSONException, Exception {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
 				null, (String) null, null, null, null, true, null, null, null, null, null);
 		String consumerId = clienttasks.getCurrentConsumerId();
@@ -3982,12 +4570,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	/**
 	 * @author skallesh
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21926", "RHEL7-51787"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21926", "RHEL7-51787"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
 	@Test(	description = "subscription-manager: service-level --org (without --list option)",
-			groups = {"ServicelevelTest", "blockedByBug-826856" },
+			groups = {"Tier3Tests","ServicelevelTest", "blockedByBug-826856" },
 			enabled = true)
-	public void ServiceLevelWithOrgWithoutList_Test() {
+	public void testServiceLevelWithOrgWithoutList() {
 
 		SSHCommandResult result;
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
@@ -4008,11 +4601,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	/**
 	 * @author skallesh
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21914", "RHEL7-51775"})
-	@Test(description = "subscription-manager: facts --update (when registered)", groups = { "MyTestFacts",
-			"blockedByBug-707525" }, enabled = true)
-	public void FactsUpdateWhenregistered_Test() {
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21914", "RHEL7-51775"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "subscription-manager: facts --update (when registered)",
+			groups = {"Tier3Tests","MyTestFacts","blockedByBug-707525" },
+			enabled = true)
+	public void testFactsUpdateWhenRegistered() {
 
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
 				null, (List<String>) null, null, null, null, true, null, null, null, null, null);
@@ -4023,11 +4622,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	/**
 	 * @author skallesh
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21900", "RHEL7-51761"})
-	@Test(description = "subscription-manager: attempt register to with white space in the user name should fail", groups = {
-			"registeredTests", "blockedByBug-719378" }, enabled = true)
-	public void AttemptregisterWithWhiteSpacesInUsername_Test() {
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21900", "RHEL7-51761"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "subscription-manager: attempt register to with white space in the user name should fail",
+			groups = {"Tier3Tests","registeredTests", "blockedByBug-719378" },
+			enabled = true)
+	public void testAttemptRegisterWithWhiteSpacesInUsername() {
 		SSHCommandResult result = clienttasks.register_("user name", "password", sm_clientOrg, null, null, null, null,
 				null, null, null, (String) null, null, null, null, true, null, null, null, null, null);
 		Assert.assertEquals(result.getStderr().trim(), servertasks.invalidCredentialsMsg(),
@@ -4039,11 +4644,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 * @throws Exception
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21936", "RHEL7-51798"})
-	@Test(description = "Auto-heal for partial subscription", groups = { "autohealPartial", "blockedByBug-746218",
-			"blockedByBug-907638", "blockedByBug-907400" }, enabled = true)
-	public void VerifyAutohealForPartialSubscription() throws Exception {
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21936", "RHEL7-51798"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "Auto-heal for partial subscription",
+			groups = {"Tier3Tests","autohealPartial", "blockedByBug-746218","blockedByBug-907638", "blockedByBug-907400" },
+			enabled = true)
+	public void testAutohealForPartialSubscription() throws Exception {
 		Integer moreSockets = 0;
 		List<String> productIds = new ArrayList<String>();
 		List<String> poolId = new ArrayList<String>();
@@ -4102,11 +4713,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 * @throws Exception
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21938", "RHEL7-51800"})
-	@Test(description = "Verify healing only attaches with a service-level that is set on the system's preference", groups = {
-			"AutoHealWithSLA", "blockedByBug-907638", "blockedByBug-907400" }, enabled = true)
-	public void VerifyAutohealWithSLA() throws JSONException, Exception {
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21938", "RHEL7-51800"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "Verify healing only attaches with a service-level that is set on the system's preference",
+			groups = {"Tier3Tests","AutoHealWithSLA", "blockedByBug-907638", "blockedByBug-907400" },
+			enabled = true)
+	public void testAutohealWithSLA() throws JSONException, Exception {
 		/*
 		 * not necessary; will use clienttasks.run_rhsmcertd_worker(true) to
 		 * invoke an immediate autoheal Integer autoAttachInterval = 2;
@@ -4166,11 +4783,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @author skallesh
 	 * @throws Exception
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21901", "RHEL7-51762"})
-	@Test(description = "verfying Auto-heal when auto-heal parameter is turned off", groups = { "AutohealTurnedOff",
-			"blockedByBug-726411" }, enabled = true)
-	public void AutohealTurnedOff() throws Exception {
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21901", "RHEL7-51762"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "verfying Auto-heal when auto-heal parameter is turned off",
+			groups = {"Tier3Tests","AutohealTurnedOff","blockedByBug-726411" },
+			enabled = true)
+	public void testAutohealTurnedOff() throws Exception {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
 				null, (String) null, null, null, null, true, null, null, null, null, null);
 
@@ -4186,12 +4809,18 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21972", "RHEL7-51834"})
-	@Test(description = "Verify if Subscription manager displays incorrect status for partially subscribed subscription", groups = {
-			"VerifyStatusForPartialSubscription", "blockedByBug-743710" }, enabled = true)
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21972", "RHEL7-51834"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "Verify if Subscription manager displays incorrect status for partially subscribed subscription",
+			groups = {"Tier3Tests","VerifyStatusForPartialSubscription", "blockedByBug-743710" },
+			enabled = true)
 	@ImplementsNitrateTest(caseId = 119327)
-	public void VerifyStatusForPartialSubscription() throws JSONException, Exception {
+	public void testStatusForPartialSubscription() throws JSONException, Exception {
 
 		String Flag = "false";
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
@@ -4235,18 +4864,25 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-26776", "RHEL7-63526"})
-	@Test(description = "Auto-heal for Expired subscription", groups = { "AutohealForExpired", "blockedByBug-746088",
-			"blockedByBug-907638", "blockedByBug-907400" }, enabled = true)
-	public void VerifyAutohealForExpiredSubscription() throws JSONException, Exception {
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-26776", "RHEL7-63526"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "Auto-heal for Expired subscription",
+			groups = {"Tier3Tests","AutohealForExpired", "blockedByBug-746088","blockedByBug-907638", "blockedByBug-907400" },
+			enabled = true)
+	public void testAutohealForExpiredSubscription() throws JSONException, Exception {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
 				null, (String) null, null, null, null, true, null, null, null, null, null);
 		String consumerId = clienttasks.getCurrentConsumerId();
 		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,
 				consumerId);
 
-		String expiringPoolId = createTestPool(-60 * 24, 1,false);
+		int endingMinutesFromNow=1;
+		String expiringPoolId = createTestPool(-60 * 24, endingMinutesFromNow,false);
 		Calendar c1 = new GregorianCalendar();
 		clienttasks.subscribe(null, null, expiringPoolId, null, null, null, null, null, null, null, null, null, null);		
 		Calendar c2 = new GregorianCalendar();
@@ -4254,13 +4890,10 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		// sleep(endingMinutesFromNow*60*1000);
 		// trying to reduce the wait time for the expiration by subtracting off
 		// some expensive test time
-		sleep(1 * 57 * 1000 - (c2.getTimeInMillis() - c1.getTimeInMillis()));
-
+		sleep(1 * 60 * 1000 - (c2.getTimeInMillis() - c1.getTimeInMillis()));
 		InstalledProduct productCertBeforeHealing = ProductCert.findFirstInstanceWithMatchingFieldFromList("status",
-				"Expired", clienttasks.getCurrentlyInstalledProducts());
-		
+				"Expired", clienttasks.getCurrentlyInstalledProducts());		
 		Assert.assertEquals(productCertBeforeHealing.status, "Expired");
-
 		clienttasks.run_rhsmcertd_worker(true);
 		InstalledProduct productCertAfterHealing = ProductCert.findFirstInstanceWithMatchingFieldFromList("productId",
 				productCertBeforeHealing.productId, clienttasks.getCurrentlyInstalledProducts());
@@ -4273,12 +4906,18 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21937", "RHEL7-51799"})
-	@Test(description = "Auto-heal for subscription", groups = { "AutoHeal", "blockedByBug-907638",
-			"blockedByBug-726411", "blockedByBug-907400" }, enabled = true)
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21937", "RHEL7-51799"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "Auto-heal for subscription",
+			groups = {"Tier3Tests","AutoHeal", "blockedByBug-907638","blockedByBug-726411", "blockedByBug-907400" },
+			enabled = true)
 	@ImplementsNitrateTest(caseId = 119327)
-	public void VerifyAutohealForSubscription() throws JSONException, Exception {
+	public void testAutohealForSubscription() throws JSONException, Exception {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
 				null, (String) null, null, null, null, true, null, null, null, null, null);
 		Assert.assertTrue(clienttasks.getCurrentEntitlementCerts().isEmpty(),
@@ -4297,55 +4936,55 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 * @throws Exception
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21935", "RHEL7-51797"})
-	@Test(description = "Auto-heal with SLA", // TODO Add some more description;
-			// has same description as
-			// VerifyAutohealWithSLA()
-			groups = { "AutoHealFailForSLA" }, enabled = true)
-	public void VerifyAutohealFailForSLA() throws JSONException, Exception {
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21935", "RHEL7-51797"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "Auto-heal for a system with preference Premium for a product with SLA Standard should fail",
+			groups = {"Tier3Tests","AutoHealFailForSLA" },
+			enabled = true)
+	public void testAutohealFailForSLA() throws JSONException, Exception {
 
 		List<ProductCert> productCerts = clienttasks.getCurrentProductCerts();
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
 				null, (String) null, null, null, null, true, null, null, null, null, null);
-		List<String> availableServiceLevelData = clienttasks.getCurrentlyAvailableServiceLevels();
+		/*List<String> availableServiceLevelData = clienttasks.getCurrentlyAvailableServiceLevels();
 		String availableService = availableServiceLevelData
-				.get(randomGenerator.nextInt(availableServiceLevelData.size()));
-		clienttasks.service_level(null, null, availableService, null, null, null, null, null, null, null, null, null, null);
+				.get(randomGenerator.nextInt(availableServiceLevelData.size()));*/
+		clienttasks.service_level(null, null, "Standard", null, null, null, null, null, null, null, null, null, null);
 		clienttasks.unsubscribe(true, (BigInteger) null, null, null, null, null, null);
 		clienttasks.subscribe(true, null, (String) null, null, null, null, null, null, null, null, null, null, null);
-		for (InstalledProduct installedProduct : clienttasks.getCurrentlyInstalledProducts()) {
+		ProductCert productCert = ProductCert.findFirstInstanceWithMatchingFieldFromList("productId",
+						"32060", productCerts);
 
-			if ((!(installedProduct.status.equalsIgnoreCase("Subscribed")))
-					|| (!(installedProduct.status.equalsIgnoreCase("Partially Subscribed")))) {
+		configureTmpProductCertDirWithInstalledProductCerts(Arrays.asList(productCert));
 
-				ProductCert productCert = ProductCert.findFirstInstanceWithMatchingFieldFromList("productId",
-						installedProduct.productId, productCerts);
-
-				configureTmpProductCertDirWithInstalledProductCerts(Arrays.asList(productCert));
-
-				// moveProductCertFiles(productCert.file.getName());
-			}
-		}
 		clienttasks.unsubscribe(true, (BigInteger) null, null, null, null, null, null);
-		List<EntitlementCert> certsbeforeRHSMService = clienttasks.getCurrentEntitlementCerts();
-		log.info("cert contents are " + certsbeforeRHSMService);
+		clienttasks.service_level(null, null, "Premium", null, null, null, null, null, null, null, null, null, null);
 
 		clienttasks.run_rhsmcertd_worker(true);
 		List<ProductSubscription> consumed = clienttasks.getCurrentlyConsumedProductSubscriptions();
 		Assert.assertTrue((consumed.isEmpty()), "autoheal has failed");
-		List<EntitlementCert> certs = clienttasks.getCurrentEntitlementCerts();
 	}
 
 	/**
 	 * @author skallesh
 	 * @throws IOException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21958", "RHEL7-51820"})
-	@Test(description = "subscription-manager: subscribe multiple pools in incorrect format", groups = {
-			"MysubscribeTest", "blockedByBug-772218" }, enabled = true)
-	public void VerifyIncorrectSubscriptionFormat() throws IOException {
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21958", "RHEL7-51820"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "subscription-manager: subscribe multiple pools in incorrect format",
+			groups = {"Tier3Tests","MysubscribeTest", "blockedByBug-772218" },
+			enabled = true)
+	public void testSubscribingWithIncorrectFormatForPoolId() throws IOException {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
 				null, (String) null, null, null, null, true, null, null, null, null, null);
 		List<String> poolid = new ArrayList<String>();
@@ -4370,11 +5009,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @author skallesh
 	 * @throws Exception
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21946", "RHEL7-51808"})
-	@Test(description = "Verify that Entitlement Start Dates is the Subscription Start Date ", groups = {
-			"VerifyEntitlementStartDate_Test", "blockedByBug-670831" }, enabled = true)
-	public void VerifyEntitlementStartDate_Test() throws JSONException, Exception {
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21946", "RHEL7-51808"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "Verify that Entitlement Start Dates is the Subscription Start Date",
+			groups = {"Tier3Tests","VerifyEntitlementStartDate_Test", "blockedByBug-670831" },
+			enabled = true)
+	public void testEntitlementStartDate() throws JSONException, Exception {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
 				null, (String) null, null, null, null, true, false, null, null, null, null);
 		for (SubscriptionPool pool : getRandomSubsetOfList(clienttasks.getCurrentlyAvailableSubscriptionPools(), 5)) {
@@ -4396,11 +5041,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @author skallesh
 	 * @throws Exception
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21975", "RHEL7-51837"})
-	@Test(description = "Verify if architecture for auto-subscribe test", groups = {
-			"VerifyarchitectureForAutobind_Test", "blockedByBug-664847" }, enabled = true)
-	public void VerifyarchitectureForAutobind_Test() throws Exception {
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21975", "RHEL7-51837"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "Verify if architecture for auto-subscribe test",
+			groups = {"Tier3Tests","VerifyarchitectureForAutobind_Test", "blockedByBug-664847" },
+			enabled = true)
+	public void testArchitectureForAutobind() throws Exception {
 
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
 				null, (String) null, null, null, null, true, null, null, null, null, null);
@@ -4448,11 +5099,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @author skallesh
 	 * @throws Exception
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21969", "RHEL7-51831"})
-	@Test(description = "Verify that rhsm.log reports all products provided by an attached subsubscription.", groups = {
-			"blockedByBug-668032", "VerifyRhsmLogsProvidedProducts", "blockedByBug-1389559" }, enabled = true)
-	public void VerifyRhsmLogsProvidedProducts_Test() {
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21969", "RHEL7-51831"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "Verify that rhsm.log reports all products provided by an attached subsubscription.",
+			groups = {"Tier3Tests","blockedByBug-668032", "VerifyRhsmLogsProvidedProducts", "blockedByBug-1389559" },
+			enabled = true)
+	public void testRhsmLogsProvidedProducts() {
 		client.runCommandAndWait("rm -f " + clienttasks.rhsmLogFile);
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
 				null, (String) null, null, null, null, true, false, null, null, null, null);
@@ -4494,11 +5151,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @author skallesh
 	 * @throws Exception
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21953", "RHEL7-51815"})
-	@Test(description = "Verify if future entitlements are disregarded by autosubscribe when determining what should be subscribed to satisfy compliance today ", groups = {
-			"VerifyFutureSubscription_Test", "blockedByBug-746035","blockedByBug-1440180" }, enabled = true)
-	public void VerifyFutureSubscription_Test() throws Exception {
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21953", "RHEL7-51815"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "Verify if future entitlements are disregarded by autosubscribe when determining what should be subscribed to satisfy compliance today",
+			groups = {"Tier3Tests","VerifyFutureSubscription_Test", "blockedByBug-746035","blockedByBug-1440180" },
+			enabled = true)
+	public void testFutureSubscription() throws Exception {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
 				null, (String) null, null, null, null, true, false, null, null, null, null);
 		String consumerId = clienttasks.getCurrentConsumerId();
@@ -4511,8 +5174,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		
 		InstalledProduct installedProductBeforeAutoAttach = InstalledProduct.findFirstInstanceWithCaseInsensitiveMatchingFieldFromList("status",
 									"Future Subscription", clienttasks.getCurrentlyInstalledProducts());
-	//	InstalledProduct installedProductBeforeAutoAttach = InstalledProduct.findFirstInstanceWithCaseInsensitiveMatchingFieldFromList("arch",
-	//								"clienttasks.arch", allInstalledProductBeforeAutoAttach);
 	
 		Assert.assertNotNull(installedProductBeforeAutoAttach, "Found installed product that is covered by a inactive subscription");
 		
@@ -4546,11 +5207,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21977", "RHEL7-51839"})
-	@Test(description = "Verify if the status of installed products match when autosubscribed,and when you subscribe all the available products ", groups = {
-			"VerifyautosubscribeTest" }, enabled = true)
-	public void VerifyautosubscribeTest() throws JSONException, Exception {
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21977", "RHEL7-51839"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "Verify if the status of installed products match when autosubscribed,and when you subscribe all the available products",
+			groups = {"Tier3Tests","VerifyautosubscribeTest" },
+			enabled = true)
+	public void testAutosubscribe() throws JSONException, Exception {
 
 		List<String> ProductIdBeforeAuto = new ArrayList<String>();
 		List<String> ProductIdAfterAuto = new ArrayList<String>();
@@ -4577,11 +5244,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @author skallesh
 	 * @throws Exception
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21976", "RHEL7-51838"})
-	@Test(description = "Verify if autosubscribe ignores socket count on non multi-entitled subscriptions ", groups = {
-			"VerifyautosubscribeIgnoresSocketCount_Test", "blockedByBug-743704" }, enabled = true)
-	public void VerifyautosubscribeIgnoresSocketCount_Test() throws Exception {
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21976", "RHEL7-51838"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "Verify if autosubscribe ignores socket count on non multi-entitled subscriptions",
+			groups = {"Tier3Tests","VerifyautosubscribeIgnoresSocketCount_Test", "blockedByBug-743704" },
+			enabled = true)
+	public void testAutosubscribeIgnoresSocketCount() throws Exception {
 		// InstalledProduct installedProduct =
 		// InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId",
 		// "1000000000000023", clienttasks.getCurrentlyInstalledProducts());
@@ -4617,11 +5290,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21959", "RHEL7-51821"})
-	@Test(description = "subscription-manager: entitlement key files created with weak permissions", groups = {
-			"MykeyTest", "blockedByBug-720360" }, enabled = true)
-	public void VerifyKeyFilePermissions() throws JSONException, Exception {
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21959", "RHEL7-51821"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "subscription-manager: entitlement key files created with weak permissions",
+			groups = {"Tier3Tests","MykeyTest", "blockedByBug-720360" },
+			enabled = true)
+	public void testKeyFilePermissions() throws JSONException, Exception {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
 				null, (String) null, null, null, null, true, null, null, null, null, null);
 		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
@@ -4645,12 +5324,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 *
 	 * @throws JSONException *
 	 */
-	@TestDefinition( projectID = {Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL7-55664"})
-	@Test(description = "Verify the file permissions on /var/lib/rhsm/cache and facts files", groups = {
-			"blockedByBug-1297485", "blockedByBug-1297493", "blockedByBug-1340525",
-			"blockedByBug-1389449" }, enabled = true)
-	public void VerifyCacheAndFactsfilePermissions_Test() throws JSONException, Exception {
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL7-55664"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "Verify the file permissions on /var/lib/rhsm/cache and facts files",
+			groups = {"Tier3Tests","blockedByBug-1297485", "blockedByBug-1297493", "blockedByBug-1340525","blockedByBug-1389449" },
+			enabled = true)
+	public void testCacheAndFactsFilePermissions() throws JSONException, Exception {
 		if (clienttasks.isPackageVersion("subscription-manager", "<", "1.17.7-1")) {
 			// subscription-manager commit
 			// 9dec31c377b57b4c98f845c018a5372d6f650d88
@@ -4679,10 +5363,26 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 *
 	 * @throws JSONException *
 	 */
-	@Test(description = "verify repo-override --remove='' doesnot remove the overrides from the given repo", groups = {
-			"blockedByBug-1331739" }, enabled = true)
-	public void VerifyEmptyRepoOverrideRemove_Test() throws JSONException, Exception {
-
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-47894", "RHEL7-96268"},
+			linkedWorkItems= {
+				@LinkedItem(
+					workitemId= "RHEL6-28545",	// RHSM-REQ : subscription-manager cli repo listing and override management
+					project= Project.RHEL6,
+					role= DefTypes.Role.VERIFIES),
+				@LinkedItem(
+					workitemId= "RHEL7-84934",	// RHSM-REQ : subscription-manager cli repo listing and override management
+					project= Project.RedHatEnterpriseLinux7,
+					role= DefTypes.Role.VERIFIES)},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.MEDIUM, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description= "verify repo-override --remove='' does not remove the overrides from the given repo",
+			groups= {"Tier3Tests","blockedByBug-1331739"},
+			enabled= true)
+	public void testEmptyRepoOverrideRemove() throws JSONException, Exception {
 
 		  if (clienttasks.isPackageVersion("subscription-manager", "<",
 		  "1.19.4-1")) { // fix : https://github.com/candlepin/subscription-manager/pull/1474
@@ -4734,11 +5434,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 *             JSON Exception
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-38192", "RHEL7-77384"})
-	@Test(description = "Verify the newly added content set is immediatly available on the client", groups = {
-			"VerifyNewContentAvailability", "blockedByBug-1360909" }, enabled = true)
-	public void VerifyNewContentAvailability_Test() throws JSONException, Exception {
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-38192", "RHEL7-77384"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "Verify the newly added content set is immediatly available on the client",
+			groups = {"Tier3Tests","VerifyNewContentAvailability", "blockedByBug-1360909" },
+			enabled = true)
+	public void testNewContentAvailability() throws JSONException, Exception {
 		String resourcePath = null;
 		String requestBody = null;
 		String ProductId = "32060";
@@ -4822,6 +5528,65 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 
 	}
 
+	/**
+	 * @author redakkan
+	 * @throws Exception
+	 * JSON Exception
+	 */
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-47892", "RHEL7-96016"},
+			linkedWorkItems= {
+				@LinkedItem(
+					workitemId= "RHEL6-28489",	// RHSM-REQ : subscription-manager cli attaching and removing subscriptions
+					project= Project.RHEL6,
+					role= DefTypes.Role.VERIFIES),
+				@LinkedItem(
+					workitemId= "RHEL7-84911",	// RHSM-REQ : subscription-manager cli attaching and removing subscriptions
+					project= Project.RedHatEnterpriseLinux7,
+					role= DefTypes.Role.VERIFIES)},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.LOW, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description= "subscription-manager: verify subscribe with --file=invalid file from stdin is handled properly",
+			groups= {"Tier3Tests","blockedByBug-1350402","testSubscribeWithInvalidFileFromStdin"},
+			enabled= true)
+	//@ImplementsNitrateTest(caseId=)
+	public void testSubscribeWithInvalidFileFromStdin() throws JSONException, Exception {
+		if (clienttasks.isPackageVersion("subscription-manager","<","1.13.8-1")) throw new SkipException("The attach --file function was not implemented in this version of subscription-manager.");	// commit 3167333fc3a261de939f4aa0799b4283f2b9f4d2 bug 1159974
+		if (clienttasks.isPackageVersion("subscription-manager","<","1.20.1-1")) throw new SkipException("The currently installed version ("+clienttasks.installedPackageVersionMap.get("subscription-manager")+") is blocked by bug 1350402 which is fixed in subscription-manager-1.20.1-1 and newer.");	// commit cda076cce4ac66d09eba31b64454d2780a6d1312 bug 1350402
+
+		if (clienttasks.getCurrentlyRegisteredOwnerKey() == null) {
+			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null, null);
+		} else clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null, null, null);
+
+		String InvalidFile = "/tmp/invalid.txt";
+
+        /*About the bug : When stdout/stderr output of subscription-manager is redirected using pipe to some other process ... e.g. subscription-manager list --all --available --pool-only | subscription-manager subscribe --file=/tmp/invalid
+        and the second process does not read anything from stdout like in this case, then subscription-manager cannot write the buffer anywhere hence the command was terminated with some errors
+        The bug is reproducible only with stdin , hence passing the poolOnlyListCommand to pipe the out put
+
+        [root@ibm-x3250m3-01 ~]# subscription-manager list --all --available --pool-only | subscription-manager subscribe --file=/tmp/invalid
+		Error: The file "/tmp/invalid" does not exist or cannot be read.
+		close failed in file object destructor:
+		sys.excepthook is missing
+		lost sys.stderr
+        */
+		String poolOnlyListCommand = clienttasks.listCommand(true, true, null, null, null, null, null, null, null, true, null, null, null, null);
+		String stdinFileSubscribeCommand = clienttasks.subscribeCommand(null, null, (List<String>) null, (List<String>) null, null, null, null, null,InvalidFile, null, null, null, null);
+		SSHCommandResult stdinFileSubscribeCommandResult = client.runCommandAndWait(poolOnlyListCommand +"|" +stdinFileSubscribeCommand, (long) (3/*min*/*60*1000/*timeout*/));
+
+		//Assert the additional error messages no longer appear
+		Assert.assertEquals(stdinFileSubscribeCommandResult.getStderr().trim(),"Error: The file \"/tmp/invalid.txt\" does not exist or cannot be read.");
+		 if(clienttasks.isPackageVersion("subscription-manager", ">=", "1.20.1-1")) {	// commit 79f86e4c043ee751677131ed4e3cf00affd13087
+		     Assert.assertEquals(stdinFileSubscribeCommandResult.getExitCode(),Integer.valueOf(65), "Exit Code comparison between the expected result of subscribing using a list of poolids from stdin along with a invalid file.");
+		 }else {
+		     Assert.assertEquals(stdinFileSubscribeCommandResult.getExitCode(),Integer.valueOf(64), "Exit Code comparison between the expected result of subscribing using a list of poolids from stdin along with a invalid file.");
+ 		 }
+	}
+	
+	
 	@BeforeGroups(groups = "setup", value = {}, enabled = true)
 	public void unsubscribeBeforeGroup() {
 		clienttasks.unsubscribe(true, (BigInteger) null, null, null, null, null, null);
@@ -4850,10 +5615,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.config(null, null, true, listOfSectionNameValues);
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-21934", "RHEL7-51796"})
-	@Test(description = "verify that the autoheal attribute of a new system consumer defaults to true", groups = {}, enabled = true)
-	public void VerifyAutohealAttributeDefaultsToTrueForNewSystemConsumer_Test() throws Exception {
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-21934", "RHEL7-51796"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "verify that the autoheal attribute of a new system consumer defaults to true",
+			groups = {"Tier3Tests"},
+			enabled = true)
+	public void testAutohealAttributeDefaultsToTrueForNewSystemConsumer() throws Exception {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
 				null, (String) null, null, null, null, true, null, null, null, null, null);
 		String consumerId = clienttasks.getCurrentConsumerId();
@@ -5007,7 +5779,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		return client.runCommandAndWait(command);
 	}
 
-	public Boolean RegexInRhsmLog(String logRegex, String input) {
+	public Boolean regexInRhsmLog(String logRegex, String input) {
 
 		Pattern pattern = Pattern.compile(logRegex, Pattern.MULTILINE);
 		Matcher matcher = pattern.matcher(input);
@@ -5117,11 +5889,14 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 * @throws Exception
 	 */
+	@SuppressWarnings("deprecation")
 	protected String createTestPool(int startingMinutesFromNow, int endingMinutesFromNow, Boolean FuturePool)
 			throws JSONException, Exception {
 	    	String name = "BugzillaTestSubscription";
+	    	providedProduct.clear();
+		providedProduct.add("37060");
 	    	if(FuturePool){
-		name = "BugillaTestInactiveSubscription";
+	    	    name = "BugillaTestInactiveSubscription";
 	    	}
 		Map<String, String> attributes = new HashMap<String, String>();
 		attributes.clear();
@@ -5131,7 +5906,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		attributes.put("warning_period", "30");
 		attributes.put("type", "MKT");
 		attributes.put("type", "SVC");
-		providedProduct.add("100000000000002");
 		CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword,
 				sm_serverUrl, sm_clientOrg, productId);
 		String resourcePath = "/products/" + productId;
@@ -5146,6 +5920,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				getRandInt(), getRandInt(), productId, providedProduct, null).getString("id");
 	}
 
+	@SuppressWarnings("deprecation")
 	@AfterClass(groups = { "setup" })
 	protected void DeleteTestPool() throws Exception {
 		if (CandlepinType.hosted.equals(sm_serverType))

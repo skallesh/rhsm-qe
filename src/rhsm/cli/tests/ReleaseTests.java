@@ -27,10 +27,14 @@ import com.redhat.qe.auto.bugzilla.BlockedByBzBug;
 import com.redhat.qe.auto.bugzilla.BugzillaAPIException;
 import com.redhat.qe.auto.bugzilla.BzChecker;
 import com.redhat.qe.auto.testng.TestNGUtils;
+import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 
-import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.DefTypes;
 import com.github.redhatqe.polarize.metadata.TestDefinition;
+import com.github.redhatqe.polarize.metadata.TestType;
+import com.github.redhatqe.polarize.metadata.DefTypes.PosNeg;
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
 
 /**
  * @author jsefler
@@ -49,19 +53,24 @@ Loaded plugins: product-id
 
  */
 
-@Test(groups={"ReleaseTests","AcceptanceTests","Tier1Tests"})
+@Test(groups={"ReleaseTests"})
 public class ReleaseTests extends SubscriptionManagerCLITestScript {
 
 	
 	// Test methods ***********************************************************************
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-19997", "RHEL7-51030"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-19997", "RHEL7-51030"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="attempt to get the subscription-manager release when not registered",
-			groups={},
+			groups={"Tier1Tests"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void AttemptToGetReleaseWhenNotRegistered_Test() {
+	public void testGetReleaseWhenNotRegistered() {
 		
 		// make sure we are not registered
 		clienttasks.unregister(null, null, null, null);
@@ -100,13 +109,18 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-19998", "RHEL7-51031"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-19998", "RHEL7-51031"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="attempt to get the subscription-manager release when a release has not been set; should be told that the release is not set",
-			groups={},
+			groups={"Tier1Tests"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void AttemptToGetReleaseWhenReleaseHasNotBeenSet_Test() {
+	public void testGetReleaseWhenReleaseHasNotBeenSet() {
 		
 		// make sure we are newly registered
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null,true, null, null, null, null, null);		
@@ -115,13 +129,18 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-19996", "RHEL7-51029"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-19996", "RHEL7-51029"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="attempt to get the subscription-manager release list without having subscribed to any entitlements",
-			groups={"blockedByBug-824979"},
+			groups={"Tier1Tests","blockedByBug-824979"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void AttemptToGetReleaseListWithoutHavingAnyEntitlements_Test() {
+	public void testGetReleaseListWithoutHavingAnyEntitlements() {
 		
 		// make sure we are newly registered
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null,true, null, null, null, null, null);
@@ -135,22 +154,32 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 
 		// assert feedback from release --list 
 		SSHCommandResult result = clienttasks.release_(null,true,null,null,null, null, null, null);
-		Assert.assertEquals(result.getStdout().trim(), "", "stdout from release release --list without any entitlements");
-		Assert.assertEquals(result.getStderr().trim(), "No release versions available, please check subscriptions.", "stderr from release --list without any entitlements");
 		Integer expectedExitCode = new Integer(255);
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) expectedExitCode = new Integer(78);	// EX_CONFIG	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+		String rhelTag = "rhel-"+clienttasks.redhatReleaseX;
+		if (clienttasks.getCurrentProductCerts(rhelTag).size()>1) {	// Bug 1506271 - redhat-release is providing more than 1 variant specific product cert
+			Assert.assertEquals(result.getStdout().trim(), "", "stdout from release --list when more than one product cert with tag '"+rhelTag+"' is installed.");
+			Assert.assertEquals(result.getStderr().trim(), "Error: More than one release product certificate installed.", "stderr from release --list when more than one product cert with tag '"+rhelTag+"' is installed.");
+		} else {
+			Assert.assertEquals(result.getStdout().trim(), "", "stdout from release --list without any entitlements");
+			Assert.assertEquals(result.getStderr().trim(), "No release versions available, please check subscriptions.", "stderr from release --list without any entitlements");
+		}
 		Assert.assertEquals(result.getExitCode(), expectedExitCode, "exitCode from release --list without any entitlements");
-
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-19999", "RHEL7-51032"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-19999", "RHEL7-51032"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="attempt to set the subscription-manager release value that is not currently available",
-			groups={"blockedByBug-818205", "blockedByBug-919700"},
+			groups={"Tier1Tests","blockedByBug-818205", "blockedByBug-919700"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void AttemptToSetAnUnavailableReleaseValue_Test() {
+	public void testSetAnUnavailableReleaseValue() {
 		
 		// make sure we are newly registered
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,true,null,null,(List<String>)null,null,null,null,true, null, null, null, null, null);		
@@ -158,21 +187,33 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 		// assert feedback from release --list 
 		String unavailableRelease = "Foo_1.0";
 		SSHCommandResult result = clienttasks.release_(null, null, unavailableRelease, null, null, null, null, null);
-		Assert.assertEquals(result.getStdout().trim(), "", "stdout from release release --set with an unavailable value");
-		Assert.assertEquals(result.getStderr().trim(), String.format("No releases match '%s'.  Consult 'release --list' for a full listing.", unavailableRelease), "stderr from release --set with an unavailable value");
 		Integer expectedExitCode = new Integer(255);
-		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) expectedExitCode = new Integer(65);	// EX_DATAERR	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+		String rhelTag = "rhel-"+clienttasks.redhatReleaseX;
+		if (clienttasks.getCurrentProductCerts(rhelTag).size()>1) {	// Bug 1506271 - redhat-release is providing more than 1 variant specific product cert
+			if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) expectedExitCode = new Integer(78);	// EX_CONFIG	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+			Assert.assertEquals(result.getStdout().trim(), "", "stdout from --set with an unavailable value when more than one product cert with tag '"+rhelTag+"' is installed.");
+			Assert.assertEquals(result.getStderr().trim(), "Error: More than one release product certificate installed.", "stderr from release --set with an unavailable value when more than one product cert with tag '"+rhelTag+"' is installed.");
+		} else {
+			if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) expectedExitCode = new Integer(65);	// EX_DATAERR	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+			Assert.assertEquals(result.getStdout().trim(), "", "stdout from release --set with an unavailable value");
+			Assert.assertEquals(result.getStderr().trim(), String.format("No releases match '%s'.  Consult 'release --list' for a full listing.", unavailableRelease), "stderr from release --set with an unavailable value");
+		}
 		Assert.assertEquals(result.getExitCode(), expectedExitCode, "exitCode from release --set with an unavailable value");
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20001", "RHEL7-55165"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20001", "RHEL7-55165"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="verify that the consumer's current subscription-manager release value matches the release value just set",
-			groups={"blockedByBug-814385", "blockedByBug-919700"},
+			groups={"Tier1Tests","blockedByBug-814385", "blockedByBug-919700"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void GetTheReleaseAfterSettingTheRelease_Test() {
+	public void testGetTheReleaseAfterSettingTheRelease() {
 		
 		// make sure we are newly registered
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,true,null,null,(List<String>)null,null,null,null,true, null, null, null, null, null);		
@@ -188,13 +229,18 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20000", "RHEL7-55164"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20000", "RHEL7-55164"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="assert that the subscription-manager release can nolonger be unset by setting it to \"\".",
-			groups={"blockedByBug-807822","blockedByBug-814385", "blockedByBug-919700"},
+			groups={"Tier1Tests","blockedByBug-807822","blockedByBug-814385", "blockedByBug-919700"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void AttemptToUnsetTheReleaseWithAnEmptyString_Test() {
+	public void testUnsetTheReleaseWithAnEmptyString() {
 		
 		// make sure we are newly registered
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,true,null,null,(List<String>)null,null,null,null,true, null, null, null, null, null);		
@@ -218,13 +264,18 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20003", "RHEL7-55167"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20003", "RHEL7-55167"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="assert that the subscription-manager release can be unset by using the unset option.",
-			groups={"blockedByBug-807822","blockedByBug-814385", "blockedByBug-919700"},
+			groups={"Tier1Tests","blockedByBug-807822","blockedByBug-814385", "blockedByBug-919700"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void UnsetTheRelease_Test() {
+	public void testUnsetTheRelease() {
 		
 		// make sure we are newly registered
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,true,null,null,(List<String>)null,null,null,null,true, null, null, null, null, null);		
@@ -243,13 +294,18 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20002", "RHEL7-55166"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20002", "RHEL7-55166"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="assert that subscription-manager release without any options defaults to --show",
-			groups={"blockedByBug-812153", "blockedByBug-919700"},
+			groups={"Tier1Tests","blockedByBug-812153", "blockedByBug-919700"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ReleaseShow_Test() {
+	public void testReleaseShow() {
 		
 		// make sure we are newly registered
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,true,null,null,(List<String>)null,null,null,null,true, null, null, null, null, null);		
@@ -281,13 +337,18 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20010", "RHEL7-55175"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20010", "RHEL7-55175"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="after subscribing to all available subscriptions, assert that content with url paths that reference $releasever are substituted with the consumers current release preference",
-			groups={"blockedByBug-807407","blockedByBug-962520"},
+			groups={"Tier1Tests","blockedByBug-807407","blockedByBug-962520"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyReleaseverSubstitutionInRepoLists_Test() throws JSONException, Exception {
+	public void testReleaseverSubstitutionInRepoLists() throws JSONException, Exception {
 		
 		// make sure we are newly registered
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null,true, null, null, null, null, null);
@@ -359,14 +420,19 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20009", "RHEL7-55174"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20009", "RHEL7-55174"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="register to a RHEL subscription and verify that release --list matches the expected CDN listing for this x-stream release of RHEL",
-			groups={"blockedByBug-818298","blockedByBug-820639","blockedByBug-844368","blockedByBug-893746","blockedByBug-904193"},
+			groups={"Tier1Tests","blockedByBug-818298","blockedByBug-820639","blockedByBug-844368","blockedByBug-893746","blockedByBug-904193","blockedByBug-1506271"},
 			dataProvider="getCredentialsToVerifyReleaseListMatchesCDN_Test",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyReleaseListMatchesCDN_Test(Object bugzilla, String username, String password, String org) throws JSONException, Exception {
+	public void testReleaseListMatchesCDN(Object bugzilla, String username, String password, String org) throws JSONException, Exception {
 
 		// make sure we are newly registered
 		clienttasks.register(username,password,org,null,null,null,null,null,null,null,(List<String>)null,null,null,null,true, null, null, null, null, null);
@@ -463,6 +529,8 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 			providingTag = "rhsa-.*";
 			rhelProductCerts = clienttasks.getCurrentProductCerts(providingTag);
 		}
+		// TODO special case (rhel-alt) after the outcome of Bug 1510024 - RHEL-ALT 7.4 subscription manager is not able to list releases on Power-9
+		
 		/* 7/13/2015 no longer true now that /etc/pki/product-default may also provide a duplicate rhel product
 		Assert.assertEquals(rhelProductCerts.size(), 1, "Only one product cert is installed that provides RHEL tag '"+providingTag+"'");
 		instead, let's make sure they all cover the same product id... */
@@ -503,13 +571,18 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20004", "RHEL7-55169"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6},
+			testCaseID= {"RHEL6-20004"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="register to a RHEL subscription and verify that release --list excludes 6.0",
-			groups={"blockedByBug-802245"},
+			groups={"Tier1Tests","blockedByBug-802245"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyReleaseListExcludes60OnRHEL6System_Test() throws JSONException, Exception {
+	public void testReleaseListExcludes60OnRHEL6System() throws JSONException, Exception {
 		if (!clienttasks.redhatReleaseX.equals("6")) throw new SkipException("This test is only applicable on RHEL6.");
 		
 		// make sure we are newly registered with autosubscribe
@@ -538,11 +611,12 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 	}
 
 
+	@TestDefinition(projectID={/*Project.RHEL5*/},testCaseID={})
 	@Test(	description="register to a RHEL subscription and verify that release --list excludes 5.6, 5.5, 5.4, 5.3, 5.2, 5.1, 5.0",
-			groups={"blockedByBug-785989"/*,"blockedByBug-840509" MOVED TO TEMPORARY WORKAROUND*/,"blockedByBug-919700"},
+			groups={"Tier1Tests","blockedByBug-785989"/*,"blockedByBug-840509" MOVED TO TEMPORARY WORKAROUND*/,"blockedByBug-919700"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyReleaseListExcludes56OnRHEL5System_Test() throws JSONException, Exception {
+	public void testReleaseListExcludes56OnRHEL5System() throws JSONException, Exception {
 		if (!clienttasks.redhatReleaseX.equals("5")) throw new SkipException("This test is only applicable on RHEL5.");
 		
 		// TEMPORARY WORKAROUND
@@ -584,35 +658,50 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20007", "RHEL7-55172"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20007", "RHEL7-55172"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="using a no auth proxy server, register to a RHEL subscription and verify that release --list matches the expected CDN listing for this x-stream release of RHEL",
-			groups={"blockedByBug-844368","blockedByBug-893746","blockedByBug-904193","blockedByBug-1134963","blockedByBug-1400719","blockedByBug-1438552"},
+			groups={"Tier1Tests","blockedByBug-844368","blockedByBug-893746","blockedByBug-904193","blockedByBug-1134963","blockedByBug-1400719","blockedByBug-1438552"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyReleaseListMatchesCDNUsingNoAuthProxyCommandLineArgs_Test() throws JSONException, Exception {
+	public void testReleaseListMatchesCDNUsingNoAuthProxyCommandLineArgs() throws JSONException, Exception {
 		verifyReleaseListMatchesCDN(sm_noauthproxyHostname,sm_noauthproxyPort,null,null);
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20005", "RHEL7-55170"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20005", "RHEL7-55170"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="using a basic auth proxy server, register to a RHEL subscription and verify that release --list matches the expected CDN listing for this x-stream release of RHEL",
-			groups={"blockedByBug-844368","blockedByBug-893746","blockedByBug-904193","blockedByBug-1134963","blockedByBug-1400719","blockedByBug-1438552"},
+			groups={"Tier1Tests","blockedByBug-844368","blockedByBug-893746","blockedByBug-904193","blockedByBug-1134963","blockedByBug-1400719","blockedByBug-1438552"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyReleaseListMatchesCDNUsingBasicAuthProxyCommandLineArgs_Test() {
+	public void testReleaseListMatchesCDNUsingBasicAuthProxyCommandLineArgs() {
 		verifyReleaseListMatchesCDN(sm_basicauthproxyHostname,sm_basicauthproxyPort,sm_basicauthproxyUsername,sm_basicauthproxyPassword);
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20008", "RHEL7-55173"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20008", "RHEL7-55173"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="using a no auth proxy server set within rhsm.conf, register to a RHEL subscription and verify that release --list matches the expected CDN listing for this x-stream release of RHEL",
-			groups={"blockedByBug-822965","blockedByBug-844368","blockedByBug-893746","blockedByBug-904193","blockedByBug-1400719","blockedByBug-1438552"},
+			groups={"Tier1Tests","blockedByBug-822965","blockedByBug-844368","blockedByBug-893746","blockedByBug-904193","blockedByBug-1400719","blockedByBug-1438552"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyReleaseListMatchesCDNUsingNoAuthProxyViaRhsmConfFile_Test() throws JSONException, Exception {
+	public void testReleaseListMatchesCDNUsingNoAuthProxyViaRhsmConfFile() throws JSONException, Exception {
 		clienttasks.config(false, false, true, Arrays.asList(
 				new String[]{"server","proxy_hostname",sm_noauthproxyHostname},
 				new String[]{"server","proxy_port",sm_noauthproxyPort}));
@@ -620,13 +709,18 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20006", "RHEL7-55171"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20006", "RHEL7-55171"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="using a basic auth proxy server set within rhsm.conf, register to a RHEL subscription and verify that release --list matches the expected CDN listing for this x-stream release of RHEL",
-			groups={"blockedByBug-822965","blockedByBug-844368","blockedByBug-893746","blockedByBug-904193","blockedByBug-1134963","blockedByBug-1400719","blockedByBug-1438552"},
+			groups={"Tier1Tests","blockedByBug-822965","blockedByBug-844368","blockedByBug-893746","blockedByBug-904193","blockedByBug-1134963","blockedByBug-1400719","blockedByBug-1438552"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyReleaseListMatchesCDNUsingBasicAuthProxyViaRhsmConfFile_Test() {
+	public void testReleaseListMatchesCDNUsingBasicAuthProxyViaRhsmConfFile() {
 		clienttasks.config(false, false, true, Arrays.asList(
 				new String[]{"server","proxy_hostname",sm_basicauthproxyHostname},
 				new String[]{"server","proxy_port",sm_basicauthproxyPort},
@@ -635,7 +729,71 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 		verifyReleaseListMatchesCDN(null,null,null,null);
 	}
 	
-
+	
+	
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-47938", "RHEL7-99713"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
+	@Test(	description="subscription-manager: after using the release module to pin the content set repos paths, use yum repolist to bombard the IT-Candlepin server with GET requests to /subscription/consumers/{uuid}/release so as to generate a RateLimitExceededException",
+			groups={"Tier1Tests","blockedByBug-1481384","blockedByBug-1486549"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void testRateLimitExceededExceptionShouldNotAlterRedhatRepo() throws JSONException, Exception {
+		
+		// register a new consumer and auto-subscribe to cover the installed RHEL product
+		clienttasks.unregister(null, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, null, false, null, null, null, null);
+		
+		// attach a RHEL subscription
+		if (!clienttasks.isRhelProductCertSubscribed()) throw new SkipException("This test requires attachment to a RHEL subscription for the installed RHEL product.");
+		
+		// assert that there are some occurrences of $releasever in redhat.repo
+		String sshCommandGreppingRedhatRepoForNumberReleaseverOccurrences = "grep '$releasever' "+clienttasks.redhatRepoFile+" | wc --lines";
+		Integer numberReleaseverOccurrences = Integer.valueOf(client.runCommandAndWait(sshCommandGreppingRedhatRepoForNumberReleaseverOccurrences).getStdout().trim());
+		Assert.assertTrue(numberReleaseverOccurrences>0, "The number of occurances ("+numberReleaseverOccurrences+") for '$releasever' in '"+clienttasks.redhatRepoFile+"' is greater than zero.");
+		
+		// are any releases available?
+		List<String> availableReleases = clienttasks.getCurrentlyAvailableReleases(null, null, null, null);
+		if (availableReleases.isEmpty()) throw new SkipException("When no releases are available, this test must be skipped.");
+		
+		// set a release
+		String release = availableReleases.get(0); // assume the first release is good enough for this test	
+		if (availableReleases.contains("7.3")) release = "7.3";
+		clienttasks.release(null, null, release, null, null, null, null, null);
+		
+		// assert that no occurrences of $releasever are in redhat.repo
+		Assert.assertEquals(client.runCommandAndWait(sshCommandGreppingRedhatRepoForNumberReleaseverOccurrences).getStdout().trim(), "0", "Number of occurances for \"$releasever\" in '"+clienttasks.redhatRepoFile+"' after setting the release to '"+release+"'.");
+		
+		// remember the number of available packages
+		Integer numPackagesAvailableBeforeExceedingRateLimit = clienttasks.getYumListAvailable(null).size();
+		
+		// now bombard the server with more than 60 hits to encounter a RateLimitExceededException
+		client.runCommandAndWait("for i in {1..60}; do yum repolist --quiet; done;");
+		String rhsmLogMarker = System.currentTimeMillis()+" testRateLimitExceededExceptionShouldNotAlterRedhatRepo...";
+		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, rhsmLogMarker);
+		Integer numPackagesAvailableAfterExceedingRateLimit = clienttasks.getYumListAvailable(null).size();
+		
+		// assert that there are still no occurrences of $releasever in redhat.repo
+		Assert.assertEquals(client.runCommandAndWait(sshCommandGreppingRedhatRepoForNumberReleaseverOccurrences).getStdout().trim(), "0", "Number of occurances for \"$releasever\" in '"+clienttasks.redhatRepoFile+"' after setting the release to '"+release+"' and then bombarding the server via the subscription-manager yum plugin via system invocations of yum repolist.");
+		
+		// assert that there is an ERROR in the rhsm.log for the RateLimitExceededException
+		String rhsmLogStatement = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, rhsmLogMarker, "ERROR").trim();
+		// 2017-09-01 16:16:47,199 [ERROR] yum:16448:MainThread @cache.py:235 - Access rate limit exceeded
+		if (!rhsmLogStatement.isEmpty()) log.warning(rhsmLogStatement);
+		String expectedErrorMsg = "Access rate limit exceeded";		// https://github.com/candlepin/subscription-manager/pull/1694	// commit abca9b07c0cbc852d015dc9316927f8e39d1ba0d 1481384: Do not update redhat.repo at RateLimitExceededException 
+		Assert.assertTrue(rhsmLogStatement.contains(expectedErrorMsg),"After bombarding the server to purposefully invoke a RateLimitExceededException, the '"+clienttasks.rhsmLogFile+"' reports expected ERROR '"+expectedErrorMsg+"'.");
+		
+		// assert that the number of available packages remains the same
+		Assert.assertEquals(numPackagesAvailableAfterExceedingRateLimit, numPackagesAvailableBeforeExceedingRateLimit, "The number of yum available packages after exceeding the rate limit ("+numPackagesAvailableAfterExceedingRateLimit+") matches the number before exceeding the rate limit ("+numPackagesAvailableBeforeExceedingRateLimit+").");
+	}
+	
+	
+	
+	
 	
 	
 	

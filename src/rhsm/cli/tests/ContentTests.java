@@ -12,8 +12,12 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.github.redhatqe.polarize.metadata.DefTypes.PosNeg;
 import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.DefTypes;
+import com.github.redhatqe.polarize.metadata.LinkedItem;
 import com.github.redhatqe.polarize.metadata.TestDefinition;
+import com.github.redhatqe.polarize.metadata.TestType;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -26,6 +30,7 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import com.redhat.qe.Assert;
+import com.redhat.qe.auto.bugzilla.BlockedByBzBug;
 import com.redhat.qe.auto.bugzilla.BugzillaAPIException;
 import com.redhat.qe.auto.bugzilla.BzChecker;
 import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
@@ -49,20 +54,25 @@ import com.redhat.qe.tools.SSHCommandResult;
  * @author jsefler
  *
  */
-@Test(groups={"ContentTests","Tier2Tests"})
+@Test(groups={"ContentTests"})
 public class ContentTests extends SubscriptionManagerCLITestScript{
 
 	
 	// Test methods ***********************************************************************
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-25987", "RHEL7-51485"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-25987", "RHEL7-51485"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags="Tier2")
 	@Test(	description="subscription-manager Yum plugin: enable/disable",
-			groups={"FipsTests","EnableDisableManageReposAndVerifyContentAvailable_Test","blockedByBug-804227","blockedByBug-871146","blockedByBug-905546","blockedByBug-1017866"},
+			groups={"Tier2Tests","FipsTests","EnableDisableManageReposAndVerifyContentAvailable_Test","blockedByBug-804227","blockedByBug-871146","blockedByBug-905546","blockedByBug-1017866"},
 			//dataProvider="getAvailableSubscriptionPoolsData",	// very thorough, but takes too long to execute and rarely finds more bugs
 			dataProvider="getRandomSubsetOfAvailableSubscriptionPoolsData",
 			enabled=true)
 	@ImplementsNitrateTest(caseId=41696,fromPlan=2479)
-	public void EnableDisableManageReposAndVerifyContentAvailable_Test(SubscriptionPool pool) throws JSONException, Exception {
+	public void testEnableDisableManageReposAndVerifyContentAvailable(SubscriptionPool pool) throws JSONException, Exception {
 
 		// get the currently installed product certs to be used when checking for conditional content tagging
 		List<ProductCert> currentProductCerts = clienttasks.getCurrentProductCerts();
@@ -174,13 +184,18 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20085", "RHEL7-51099"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-20085", "RHEL7-51099"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags="Tier1")
 	@Test(	description="subscription-manager content flag : Default content flag should enable",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-804227","blockedByBug-871146","blockedByBug-924919","blockedByBug-962520"},
+			groups={"Tier1Tests","blockedByBug-804227","blockedByBug-871146","blockedByBug-924919","blockedByBug-962520"},
 	        enabled=true)
 	@ImplementsNitrateTest(caseId=47578,fromPlan=2479)
-	public void VerifyYumRepoListsEnabledContent_Test() throws JSONException, Exception{
+	public void testYumRepoListsEnabledContent() throws JSONException, Exception{
 // Original code from ssalevan
 //	    ArrayList<String> repos = this.getYumRepolist();
 //	    
@@ -222,13 +237,18 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20082", "RHEL7-51098"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-20082", "RHEL7-51098"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags="Tier1")
 	@Test(	description="subscription-manager content flag : gpgcheck value in redhat.repo should be disabled when gpg_url is empty or null",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-741293","blockedByBug-805690","blockedByBug-962520"},
+			groups={"Tier1Tests","blockedByBug-741293","blockedByBug-805690","blockedByBug-962520"},
 	        enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyGpgCheckValuesInYumRepos_Test() throws JSONException, Exception {
+	public void testGpgCheckValuesInYumRepos() throws JSONException, Exception {
 		//	[root@jsefler-r63-server ~]# cat /etc/yum.repos.d/redhat.repo 
 		//	#
 		//	# Certificate-Based Repositories
@@ -324,11 +344,11 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager Yum plugin: ensure content can be downloaded/installed/removed",
-			groups={"FipsTests","AcceptanceTests","Tier1Tests","blockedByBug-701425","blockedByBug-871146","blockedByBug-962520"},
+			groups={"Tier1Tests","FipsTests","blockedByBug-701425","blockedByBug-871146","blockedByBug-962520"},
 			dataProvider="getPackageFromEnabledRepoAndSubscriptionPoolData",
 			enabled=false)	// disabled in favor of replacement InstallAndRemoveAnyPackageFromEnabledRepoAfterSubscribingToPool_Test
 	@ImplementsNitrateTest(caseId=41695,fromPlan=2479)
-	public void InstallAndRemovePackageFromEnabledRepoAfterSubscribingToPool_Test(String pkg, String repoLabel, SubscriptionPool pool, String quantity) throws JSONException, Exception {
+	public void testInstallAndRemovePackageFromEnabledRepoAfterSubscribingToPool(String pkg, String repoLabel, SubscriptionPool pool, String quantity) throws JSONException, Exception {
 		if (pkg==null) throw new SkipException("Could NOT find a unique available package from repo '"+repoLabel+"' after subscribing to SubscriptionPool: "+pool);
 		
 		// to avoid interference from an already enabled repo from a prior attached subscription that also
@@ -358,14 +378,19 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-22222", "RHEL7-55190"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-22222", "RHEL7-55190"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags="Tier1")
 	@Test(	description="subscription-manager Yum plugin: ensure content can be downloaded/installed/removed",
-			groups={"FipsTests","AcceptanceTests","Tier1Tests","blockedByBug-701425","blockedByBug-871146","blockedByBug-962520"},
+			groups={"Tier1Tests","FipsTests","blockedByBug-701425","blockedByBug-871146","blockedByBug-962520"},
 			dataProvider="getEnabledRepoAndSubscriptionPoolData",
 			enabled=true)
 	@ImplementsNitrateTest(caseId=41695,fromPlan=2479)
-	public void InstallAndRemoveAnyPackageFromEnabledRepoAfterSubscribingToPool_Test(String repoLabel, SubscriptionPool pool, String quantity) throws JSONException, Exception {
+	public void testInstallAndRemoveAnyPackageFromEnabledRepoAfterSubscribingToPool(String repoLabel, SubscriptionPool pool, String quantity) throws JSONException, Exception {
 		
 		// to avoid interference from an already enabled repo from a prior attached subscription that also
 		// contains this same packages (e.g. -htb- repos versus non -htb- repos) it would be best to remove
@@ -402,23 +427,28 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager Yum plugin: ensure content can be downloaded/installed/removed after subscribing to a personal subpool",
-			groups={"InstallAndRemovePackageAfterSubscribingToPersonalSubPool_Test"},
+			groups={"Tier2Tests","InstallAndRemovePackageAfterSubscribingToPersonalSubPool_Test"},
 			dataProvider="getPackageFromEnabledRepoAndPersonalSubscriptionSubPoolData",
-			enabled=true)
+			enabled=false)	// registered consumers type of "person" was originally intended for entitling people to training.  Red Hat Learning Management systems never made use if it, and candlepin has no active requirements for it.  Disabling the personal tests...  Reference https://bugzilla.redhat.com/show_bug.cgi?id=967160#c1
 	//@ImplementsNitrateTest(caseId=) //TODO Find a tcms caseId for
-	public void InstallAndRemovePackageAfterSubscribingToPersonalSubPool_Test(String pkg, String repoLabel, SubscriptionPool pool) throws JSONException, Exception {
-		InstallAndRemovePackageFromEnabledRepoAfterSubscribingToPool_Test(pkg, repoLabel, pool, null);
+	public void testInstallAndRemovePackageAfterSubscribingToPersonalSubPool(String pkg, String repoLabel, SubscriptionPool pool) throws JSONException, Exception {
+		testInstallAndRemovePackageFromEnabledRepoAfterSubscribingToPool(pkg, repoLabel, pool, null);
 	}
-
-
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-25986", "RHEL7-56655"})
+	
+	
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-25986", "RHEL7-56655"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags="Tier2")
 	@Test(	description="subscription-manager Yum plugin: ensure yum groups can be installed/removed",
-			groups={"FipsTests"},
+			groups={"Tier2Tests","FipsTests"},
 			dataProvider="getYumAvailableGroupFromEnabledRepoAndSubscriptionPoolData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=) //TODO Find a tcms caseId for
-	public void InstallAndRemoveYumGroupFromEnabledRepoAfterSubscribingToPool_Test(String availableGroup, String repoLabel, SubscriptionPool pool) throws JSONException, Exception {
+	public void testInstallAndRemoveYumGroupFromEnabledRepoAfterSubscribingToPool(String availableGroup, String repoLabel, SubscriptionPool pool) throws JSONException, Exception {
 		if (availableGroup==null) throw new SkipException("No yum groups corresponding to enabled repo '"+repoLabel+" were found after subscribing to pool: "+pool);
 		
 		// remove any previously attached subscriptions
@@ -467,11 +497,11 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		clienttasks.unsubscribeFromSerialNumber(entitlementCert.serialNumber);
 	}
 	@Test(	description="subscription-manager Yum plugin: ensure yum groups can be removed/re-installed",
-			groups={},
+			groups={"Tier2Tests"},
 			dataProvider="getYumInstalledGroupFromEnabledRepoAndSubscriptionPoolData",
 			enabled=false)	// jsefler - I don't like this test because groups installed from the latest compose will have newer packages and required packages than available from the subscription CDN content
 	//@ImplementsNitrateTest(caseId=) //TODO Find a tcms caseId for
-	public void RemoveAndInstallYumGroupFromEnabledRepoAfterSubscribingToPool_Test(String installedGroup, String repoLabel, SubscriptionPool pool) throws JSONException, Exception {
+	public void testRemoveAndInstallYumGroupFromEnabledRepoAfterSubscribingToPool(String installedGroup, String repoLabel, SubscriptionPool pool) throws JSONException, Exception {
 		if (installedGroup==null) throw new SkipException("No yum groups corresponding to enabled repo '"+repoLabel+" were found after subscribing to pool: "+pool);
 				
 		// unsubscribe from this pool
@@ -501,11 +531,11 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="verify redhat.repo file does not contain an excessive (more than two) number of successive blank lines",
-			groups={"blockedByBug-737145"},
+			groups={"Tier2Tests","blockedByBug-737145"},
 			enabled=false) // Disabling... this test takes too long to execute.  VerifyRedHatRepoFileIsPurgedOfBlankLinesByYumPlugin_Test effectively provides the same test coverage.
 	@Deprecated
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyRedHatRepoFileDoesNotContainExcessiveBlankLines_Test_DEPRECATED() {
+	public void testRedHatRepoFileDoesNotContainExcessiveBlankLines_DEPRECATED() {
 		
 		// successive blank lines in redhat.repo must not exceed N
 		int N=2; String regex = "(\\n\\s*){"+(N+2)+",}"; 	//  (\n\s*){4,}
@@ -542,13 +572,18 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		Assert.assertContainsMatch(redhatRepoFileContents,"^# Managed by \\(rhsm\\) subscription-manager$",null,"Comment heading \"Managed by (rhsm) subscription-manager\" was found inside "+clienttasks.redhatRepoFile);		
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20083", "RHEL7-51096"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-20083", "RHEL7-51096"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags="Tier1")
 	@Test(	description="verify redhat.repo file is purged of successive blank lines by subscription-manager yum plugin",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-737145","blockedByBug-838113","blockedByBug-924919","blockedByBug-979492","blockedByBug-1017969","blockedByBug-1035440"},	/* yum stdout/stderr related bugs 872310 901612 1017354 1017969 */
+			groups={"Tier1Tests","blockedByBug-737145","blockedByBug-838113","blockedByBug-924919","blockedByBug-979492","blockedByBug-1017969","blockedByBug-1035440"},	/* yum stdout/stderr related bugs 872310 901612 1017354 1017969 */
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=) //TODO Find a tcms caseId for
-	public void VerifyRedHatRepoFileIsPurgedOfBlankLinesByYumPlugin_Test() {
+	public void testRedHatRepoFileIsPurgedOfBlankLinesByYumPlugin() {
 		
 		// TEMPORARY WORKAROUND
 		if (clienttasks.arch.equals("ppc64le")) {
@@ -643,11 +678,11 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		Assert.assertContainsMatch(redhatRepoFileContents,"^# test for bug 737145$",null,"User defined comment remains inside "+clienttasks.redhatRepoFile+" after triggering the yum plugin for subscription-manager.");		
 	}
 	@Test(	description="verify redhat.repo file is purged of successive blank lines by subscription-manager yum plugin",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-737145"},
+			groups={"Tier1Tests","blockedByBug-737145"},
 			enabled=false)	// was valid before bug fix 781510
 	@Deprecated
 	//@ImplementsNitrateTest(caseId=) //TODO Find a tcms caseId for
-	public void VerifyRedHatRepoFileIsPurgedOfBlankLinesByYumPlugin_Test_DEPRECATED() {
+	public void testRedHatRepoFileIsPurgedOfBlankLinesByYumPlugin_DEPRECATED() {
 		
 		// successive blank lines in redhat.repo must not exceed N
 		int N=2; String regex = "(\\n\\s*){"+(N+2)+",}"; 	//  (\n\s*){4,}
@@ -680,13 +715,18 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36652", "RHEL7-51484"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-36652", "RHEL7-51484"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags="Tier2")
 	@Test(	description="Verify that a 185 content set product subscription is always subscribable",
-			groups={"SubscribabilityOfContentSetProduct_Tests","blockedByBug-871146","blockedByBug-905546"},
+			groups={"Tier2Tests","SubscribabilityOfContentSetProduct_Tests","blockedByBug-871146","blockedByBug-905546"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifySubscribabilityOfSKUProvidingA185ContentSetProduct_Test() {
+	public void testSubscribabilityOfSKUProvidingA185ContentSetProduct() {
 
 		Map<String,String> factsMap = new HashMap<String,String>();
 		File entitlementCertFile;
@@ -751,35 +791,50 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36653", "RHEL7-51486"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-36653", "RHEL7-51486"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags="Tier2")
 	@Test(	description="Verify that a 186 content set product subscription is subscribable only when system.certificate_version >= 3.0",
-			groups={"SubscribabilityOfContentSetProduct_Tests","blockedByBug-871146","blockedByBug-905546"},
+			groups={"Tier2Tests","SubscribabilityOfContentSetProduct_Tests","blockedByBug-871146","blockedByBug-905546"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifySubscribabilityOfSKUProvidingA186ContentSetProduct_Test() {
+	public void testSubscribabilityOfSKUProvidingA186ContentSetProduct() {
 		VerifySubscribabilityOfSKUProvidingTooManyContentSets(subscriptionSKUProvidingA186ContentSetProduct,186);
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36654", "RHEL7-51487"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-36654", "RHEL7-51487"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags="Tier2")
 	@Test(	description="Verify that a subscription providing two 93 content set products is subscribable only when system.certificate_version >= 3.0",
-			groups={"SubscribabilityOfContentSetProduct_Tests","blockedByBug-879022","blockedByBug-905546"},
+			groups={"Tier2Tests","SubscribabilityOfContentSetProduct_Tests","blockedByBug-879022","blockedByBug-905546"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifySubscribabilityOfSKUProvidingTwo93ContentSetProducts_Test() {
+	public void testSubscribabilityOfSKUProvidingTwo93ContentSetProducts() {
 		VerifySubscribabilityOfSKUProvidingTooManyContentSets(subscriptionSKUProvidingTwo93ContentSetProducts,93*2);
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20086", "RHEL7-51097"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-20086", "RHEL7-51097"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags="Tier1")
 	@Test(	description="Verify that yum vars used in a baseurl are listed in a yum repo parameter called ui_repoid_vars",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-906554"},
+			groups={"Tier1Tests","blockedByBug-906554"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyYumRepoUiRepoIdVars_Test() throws JSONException, Exception {
+	public void testYumRepoUiRepoIdVars() throws JSONException, Exception {
 		// register
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
 
@@ -825,13 +880,18 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20080", "RHEL7-33076"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-20080", "RHEL7-33076"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags="Tier1")
 	@Test(	description="Verify that all content sets granted from a subscription pool that are restricted to specific arches satisfy the current system's arch.",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-706187","blockedByBug-975520","VerifyArchRestrictedContentSetsEntitledAfterSubscribeAllSatisfiesTheSystemArch_Test"},
+			groups={"Tier1Tests","blockedByBug-706187","blockedByBug-975520","VerifyArchRestrictedContentSetsEntitledAfterSubscribeAllSatisfiesTheSystemArch_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyArchRestrictedContentSetsEntitledAfterSubscribeAllSatisfiesTheSystemArch_Test() throws JSONException, Exception {
+	public void testArchRestrictedContentSetsEntitledAfterSubscribeAllSatisfiesTheSystemArch() throws JSONException, Exception {
 		// get a list of all of the available poolIds that provide arch-based content sets
 		List<List<Object>> subscriptionPoolsDataList = getAllAvailableSubscriptionPoolsProvidingArchBasedContentDataAsListOfLists();
 		List<String> archBasedSubscriptionPoolIds = new ArrayList<String>();
@@ -882,14 +942,19 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20081", "RHEL7-50720"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-20081", "RHEL7-50720"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags="Tier1")
 	@Test(	description="Verify that all content sets granted from a subscription pool satisfy the system arch and subset the provided product's arch",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-706187","blockedByBug-975520"},
+			groups={"Tier1Tests","blockedByBug-706187","blockedByBug-975520"},
 			dataProvider="getAllAvailableSubscriptionPoolsProvidingArchBasedContentData",//"getAvailableSubscriptionPoolsData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyContentSetsEntitledFromSubscriptionPoolSatisfyTheSystemArch_Test(SubscriptionPool pool) throws JSONException, Exception {
+	public void testContentSetsEntitledFromSubscriptionPoolSatisfyTheSystemArch(SubscriptionPool pool) throws JSONException, Exception {
 		List<String> providedProductIds = CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername,sm_clientPassword,sm_serverUrl,pool.poolId);
 		if (providedProductIds.isEmpty()) throw new SkipException("This test is not applicable for a pool that provides no products.");
 		JSONObject jsonStatus = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(/*authenticator*/null,/*password*/null,sm_serverUrl,"/status"));
@@ -1102,13 +1167,18 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	protected Set<String> poolIds = new HashSet<String>();
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20084", "RHEL7-55189"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-20084", "RHEL7-55189"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags="Tier1")
 	@Test(	description="Verify that all there is at least one available RHEL subscription and that yum content is available for the installed RHEL product cert",
-			groups={"FipsTests","AcceptanceTests","Tier1Tests","blockedByBug-1156638"},
+			groups={"Tier1Tests","FipsTests","blockedByBug-1156638"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyRhelSubscriptionContentIsAvailable_Test() throws JSONException, Exception {
+	public void testRhelSubscriptionContentIsAvailable() throws JSONException, Exception {
 		
 		// TODO Move this workaround to the end of this test
 		// TEMPORARY WORKAROUND
@@ -1204,14 +1274,19 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20087", "RHEL7-55191"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-20087", "RHEL7-55191"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags="Tier1")
 	@Test(	description="Verify that yum install does not fail when service rsyslog is stopped",
-			groups={"FipsTests","AcceptanceTests","Tier1Tests","blockedByBug-1211557","VerifyYumInstallSucceedsWhenServiceRsyslogIsStopped_Test"},
-			dependsOnMethods={"VerifyRhelSubscriptionContentIsAvailable_Test"},
+			groups={"Tier1Tests","FipsTests","blockedByBug-1211557","VerifyYumInstallSucceedsWhenServiceRsyslogIsStopped_Test"},
+			dependsOnMethods={"testRhelSubscriptionContentIsAvailable"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyYumInstallSucceedsWhenServiceRsyslogIsStopped_Test() throws JSONException, Exception {
+	public void testYumInstallSucceedsWhenServiceRsyslogIsStopped() throws JSONException, Exception {
 		// assume a RHEL subscription is available from dependent VerifyRhelSubscriptionContentIsAvailable_Test
 		
 		// register and attach a RHEL subscription via autosubscribe
@@ -1280,6 +1355,545 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	
+	
+	
+	
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-47914", "RHEL7-97069"},
+			linkedWorkItems= {
+				@LinkedItem(
+					workitemId= "RHEL6-28570",	// RHSM-REQ : Modifier Subscriptions (EUS)
+					project= Project.RHEL6,
+					role= DefTypes.Role.RELATES_TO),
+				@LinkedItem(
+					workitemId= "RHEL7-84951",	// RHSM-REQ : Modifier Subscriptions (EUS)
+					project= Project.RedHatEnterpriseLinux7,
+					role= DefTypes.Role.RELATES_TO)},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
+	@Test(	description="Verify Extended Update Support content set repos (identified as containing '-eus-') have a non-empty list of modifiedProductIds",
+			groups={"Tier1Tests"},
+			dataProvider="getAllEUSProductContentSetData",
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void testEUSProductContentSetsAssertingNonEmptyModifiesProducts(Object bugzilla, String eusProductName, String eusProductId, String eusContentSetName, String eusContentSetId, String eusContentSetLabel, List<String> modifiedProductIds) throws JSONException, Exception {
+		
+		log.info("The following curl request can be used to fetch the Candlepin representation for EUS Content Set '"+eusContentSetName+"': "+eusContentSetLabel);
+		JSONObject jsonContent = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/owners/"+getAllEUSProductContentSetDataAsListOfListsOwnerKey+"/content/"+eusContentSetId));
+		//	[root@jsefler-rhel7 ~]# curl --stderr /dev/null --insecure --user stage_ha_testuser:redhat --request GET 'https://subscription.rhsm.stage.redhat.com:443/subscription/owners/10992327/content/4180' | python -m json/tool
+		//	{
+		//	    "arches": "x86_64",
+		//	    "contentUrl": "/content/eus/rhel/server/7/$releasever/$basearch/highavailability/os",
+		//	    "created": "2017-05-31T17:29:04+0000",
+		//	    "gpgUrl": "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release",
+		//	    "id": "4180",
+		//	    "label": "rhel-ha-for-rhel-7-server-eus-rpms",
+		//	    "metadataExpire": 86400,
+		//	    "modifiedProductIds": [],
+		//	    "name": "Red Hat Enterprise Linux High Availability (for RHEL 7 Server) - Extended Update Support (RPMs)",
+		//	    "releaseVer": null,
+		//	    "requiredTags": "rhel-7-server",
+		//	    "type": "yum",
+		//	    "updated": "2017-05-31T17:29:04+0000",
+		//	    "uuid": "8a99f9825c5f84ae015c5f8dc05f0a77",
+		//	    "vendor": "Red Hat"
+		//	}
+		log.info("EUS Engineering Product:           "+eusProductName);
+		log.info("EUS Engineering ProductId:         "+eusProductId);
+		log.info("EUS ContentSet Repo Name:          "+eusContentSetName);
+		log.info("EUS ContentSet Repo Label:         "+eusContentSetLabel);
+		log.info("EUS ContentSet id:                 "+eusContentSetId);
+		log.info("EUS ContentSet modifiedProductIds: "+modifiedProductIds);
+		
+		Assert.assertEquals(jsonContent.get("name"), eusContentSetName);	// if this does not pass, then the Candlepin API for /owners/{owner_key}/content/{content_id} is returning different values than returned from /owners/{owner_key}/products
+		Assert.assertEquals(jsonContent.get("label"), eusContentSetLabel);	// if this does not pass, then the Candlepin API for /owners/{owner_key}/content/{content_id} is returning different values than returned from /owners/{owner_key}/products
+		
+		// skip Red Hat Software Collections
+		if (modifiedProductIds.isEmpty() && eusContentSetLabel.contains("-rhscl-") && eusProductName.startsWith("Red Hat Software Collections")) {
+			throw new SkipException("Skipping '"+eusProductName+"' content set '"+eusContentSetLabel+"' because both the eus and non-eus rhscl repos are both provided by the same engineering product.  Hence a subscription to a Red Hat Software Collection includes extended update support.");
+		}
+		
+		// does this pool contain productContents that modify other products?
+		Assert.assertTrue(!modifiedProductIds.isEmpty(), "EUS Product '"+eusProductName+"' (id="+eusProductId+") content set repository '"+eusContentSetLabel+"' (id="+eusContentSetId+") modifies a NON-EMPTY list of engineering productIds (actualModifiedProductIds="+modifiedProductIds+")");
+	}
+	@DataProvider(name="getAllEUSProductContentSetData")
+	public Object[][] getAllEUSProductContentSetDataAs2dArray() throws JSONException, Exception {
+		return TestNGUtils.convertListOfListsTo2dArray(getAllEUSProductContentSetDataAsListOfLists());
+	}
+	protected List<List<Object>> getAllEUSProductContentSetDataAsListOfLists() throws JSONException, Exception {
+		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
+		
+		// register and get the owner_key
+		clienttasks.unregister(null, null, null, null);
+		// NOTE: The most thorough way to test this is using an account with access to all products via the Employee SKU ES0113909
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, null, false, null, null, null, null);
+		getAllEUSProductContentSetDataAsListOfListsOwnerKey = clienttasks.getCurrentlyRegisteredOwnerKey();
+		Map<String,String> eusLabelToInfoMap = new HashMap<String,String>();
+		
+		//	[root@jsefler-rhel7 ~]# curl --stderr /dev/null --insecure --user REDACTED:REDACTED --request GET 'https://subscription.rhsm.stage.redhat.com:443/subscription/owners/10992327/products/84' | python -m json/tool
+		//	{
+		//	    "attributes": [
+		//	        {
+		//	            "name": "arch",
+		//	            "value": "ia64,ppc,ppc64,ppc64le,x86,x86_64"
+		//	        },
+		//	        {
+		//	            "name": "name",
+		//	            "value": "Red Hat Enterprise Linux High Availability (for RHEL Server) - Extended Update Support"
+		//	        },
+		//	        {
+		//	            "name": "type",
+		//	            "value": "SVC"
+		//	        }
+		//	    ],
+		//	    "created": "2017-05-31T17:30:20+0000",
+		//	    "dependentProductIds": [],
+		//	    "href": "/products/8a99f9835c5f85d2015c5f8eebc504e3",
+		//	    "id": "84",
+		//	    "multiplier": 1,
+		//	    "name": "Red Hat Enterprise Linux High Availability (for RHEL Server) - Extended Update Support",
+		//	    "productContent": [
+		//	        {
+		//	            "content": {
+		//	                "arches": "x86,x86_64",
+		//	                "contentUrl": "/content/eus/rhel/server/6/$releasever/$basearch/highavailability/os",
+		//	                "created": "2017-05-31T17:30:17+0000",
+		//	                "gpgUrl": "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release",
+		//	                "id": "1352",
+		//	                "label": "rhel-ha-for-rhel-6-server-eus-rpms",
+		//	                "metadataExpire": 86400,
+		//	                "modifiedProductIds": [],
+		//	                "name": "Red Hat Enterprise Linux High Availability (for RHEL 6 Server) - Extended Update Support (RPMs)",
+		//	                "releaseVer": null,
+		//	                "requiredTags": "rhel-6-server",
+		//	                "type": "yum",
+		//	                "updated": "2017-05-31T17:30:17+0000",
+		//	                "uuid": "8a99f9835c5f85d2015c5f8eddb20236",
+		//	                "vendor": "Red Hat"
+		//	            },
+		//	            "enabled": false
+		//	        },
+		// <SNIP FOR BREVITY>
+		//	        {
+		//	            "content": {
+		//	                "arches": "x86,x86_64",
+		//	                "contentUrl": "/content/eus/rhel/server/6/$releasever/$basearch/highavailability/debug",
+		//	                "created": "2017-05-31T17:30:17+0000",
+		//	                "gpgUrl": "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release",
+		//	                "id": "1351",
+		//	                "label": "rhel-ha-for-rhel-6-server-eus-debug-rpms",
+		//	                "metadataExpire": 86400,
+		//	                "modifiedProductIds": [
+		//	                    "83"
+		//	                ],
+		//	                "name": "Red Hat Enterprise Linux High Availability (for RHEL 6 Server) - Extended Update Support (Debug RPMs)",
+		//	                "releaseVer": null,
+		//	                "requiredTags": "rhel-6-server",
+		//	                "type": "yum",
+		//	                "updated": "2017-05-31T17:30:17+0000",
+		//	                "uuid": "8a99f9835c5f85d2015c5f8eddb20237",
+		//	                "vendor": "Red Hat"
+		//	            },
+		//	            "enabled": false
+		//	        }
+		//	    ],
+		//	    "updated": "2017-05-31T17:30:20+0000",
+		//	    "uuid": "8a99f9835c5f85d2015c5f8eebc504e3"
+		//	}
+		
+		// loop through all of the owner's products
+		JSONArray jsonProducts = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/owners/"+getAllEUSProductContentSetDataAsListOfListsOwnerKey+"/products"));
+		for (int i = 0; i < jsonProducts.length(); i++) {
+			JSONObject jsonProduct = (JSONObject) jsonProducts.get(i);
+			
+			String productId = jsonProduct.getString("id");
+			String productName = CandlepinTasks.getResourceAttributeValue(jsonProduct, "name");
+			
+			// loop through all of the product content sets
+			JSONArray jsonProductContents = jsonProduct.getJSONArray("productContent");
+			for (int j = 0; j < jsonProductContents.length(); j++) {
+				JSONObject jsonProductContent = (JSONObject) jsonProductContents.get(j);
+				JSONObject jsonContent = jsonProductContent.getJSONObject("content");
+				
+				// get the label and modifiedProductIds for each of the productContents
+				String label = jsonContent.getString("label");	// "rhel-ha-for-rhel-6-server-eus-rpms",
+				String name = jsonContent.getString("name");	// "Red Hat Enterprise Linux High Availability (for RHEL 6 Server) - Extended Update Support (RPMs)",
+				String id = jsonContent.getString("id");		// "1351"
+				String requiredTags = jsonContent.isNull("requiredTags")? null:jsonContent.getString("requiredTags"); // comma separated string
+				String type = jsonContent.getString("type");
+				JSONArray jsonModifiedProductIds = jsonContent.getJSONArray("modifiedProductIds");
+				List<String> modifiedProductIds = new ArrayList<String>();
+				for (int k = 0; k < jsonModifiedProductIds.length(); k++) {
+					String modifiedProductId = (String) jsonModifiedProductIds.get(k);
+					modifiedProductIds.add(modifiedProductId);
+				}
+				
+				// is this an EUS content set?
+				if (label.contains("-eus-")) {	// only add rows for eus repo labels
+					if (label.contains("rhel-4")) {
+						log.info("Skipping this test for rhel-4 eus content set repository '"+label+"' because subscription-manager was never delivered on rhel-4.");
+						continue;	// skip RHEL4 REPOS
+					}
+					eusLabelToInfoMap.put(label, productId+";"+productName+";"+id+";"+modifiedProductIds);
+					Set<String> bugIds = new HashSet<String>();
+					
+					if (label.contains("-rhui-")) {
+						log.info("Skipping this test for rhui eus content set repository '"+label+"' because of a NEEDINFO on RHUI eng product 157 - How is RHUI special? There is no product cert 157 on rcm-metadata.git.");
+						continue;	// skip RHUI REPOS
+					}
+					
+					// Bug 1471998 - content set mappings for "Red Hat S-JIS Support (for RHEL Server) - Extended Update Support" is missing from cdn/cs_mappings-prod.csv
+					if (label.equals("rhel-sjis-for-rhel-6-server-eus-debug-rpms")) bugIds.add("1471998");
+					if (label.equals("rhel-sjis-for-rhel-6-server-eus-rpms")) bugIds.add("1471998");
+					if (label.equals("rhel-sjis-for-rhel-6-server-eus-source-rpms")) bugIds.add("1471998");
+					if (label.equals("rhel-sjis-for-rhel-7-server-eus-debug-rpms")) bugIds.add("1471998");
+					if (label.equals("rhel-sjis-for-rhel-7-server-eus-rpms")) bugIds.add("1471998");
+					if (label.equals("rhel-sjis-for-rhel-7-server-eus-source-rpms")) bugIds.add("1471998");
+					
+					// Bug 1472001 - content set mappings for "Red Hat Enterprise Linux Resilient Storage (for RHEL Server) - Extended Update Support" is missing from cdn/cs_mappings-prod.csv
+					if (label.equals("rhel-rs-for-rhel-5-for-power-eus-debug-rpms")) bugIds.add("1472001");
+					if (label.equals("rhel-rs-for-rhel-5-for-power-eus-rpms")) bugIds.add("1472001");
+					if (label.equals("rhel-rs-for-rhel-5-for-power-eus-source-rpms")) bugIds.add("1472001");
+					if (label.equals("rhel-rs-for-rhel-5-server-eus-rpms")) bugIds.add("1472001");
+					if (label.equals("rhel-rs-for-rhel-6-server-eus-rpms")) bugIds.add("1472001");
+					if (label.equals("rhel-rs-for-rhel-7-server-eus-debug-rpms")) bugIds.add("1472001");
+					if (label.equals("rhel-rs-for-rhel-7-server-eus-rpms")) bugIds.add("1472001");
+					if (label.equals("rhel-rs-for-rhel-7-server-eus-source-rpms")) bugIds.add("1472001");
+					
+					// Bug 1472004 - content set mappings for "Red Hat Enterprise Linux High Availability (for RHEL Server) - Extended Update Support" is missing from cdn/cs_mappings-prod.csv
+					if (label.equals("rhel-ha-for-rhel-5-for-power-eus-debug-rpms")) bugIds.add("1472004");
+					if (label.equals("rhel-ha-for-rhel-5-for-power-eus-rpms")) bugIds.add("1472004");
+					if (label.equals("rhel-ha-for-rhel-5-for-power-eus-source-rpms")) bugIds.add("1472004");
+					if (label.equals("rhel-ha-for-rhel-5-server-eus-rpms")) bugIds.add("1472004");
+					if (label.equals("rhel-ha-for-rhel-6-server-eus-rpms")) bugIds.add("1472004");
+					if (label.equals("rhel-ha-for-rhel-7-server-eus-debug-rpms")) bugIds.add("1472004");
+					if (label.equals("rhel-ha-for-rhel-7-server-eus-rpms")) bugIds.add("1472004");
+					if (label.equals("rhel-ha-for-rhel-7-server-eus-source-rpms")) bugIds.add("1472004");
+					
+					// Bug 1472005 - content set mappings for "Oracle Java (for RHEL Server) - Extended Update Support" is missing from cdn/cs_mappings-prod.csv
+					if (label.equals("rhel-5-server-eus-thirdparty-oracle-java-isos")) bugIds.add("1472005");
+					if (label.equals("rhel-5-server-eus-thirdparty-oracle-java-rpms")) bugIds.add("1472005");
+					if (label.equals("rhel-5-server-eus-thirdparty-oracle-java-source-rpms")) bugIds.add("1472005");
+					if (label.equals("rhel-6-server-eus-thirdparty-oracle-java-isos")) bugIds.add("1472005");
+					if (label.equals("rhel-6-server-eus-thirdparty-oracle-java-rpms")) bugIds.add("1472005");
+					if (label.equals("rhel-6-server-eus-thirdparty-oracle-java-source-rpms")) bugIds.add("1472005");
+					if (label.equals("rhel-7-server-eus-thirdparty-oracle-java-isos")) bugIds.add("1472005");
+					if (label.equals("rhel-7-server-eus-thirdparty-oracle-java-rpms")) bugIds.add("1472005");
+					if (label.equals("rhel-7-server-eus-thirdparty-oracle-java-source-rpms")) bugIds.add("1472005");
+					
+					// Bug 1472007 - content set mappings for "Red Hat Enterprise Linux Server - Extended Update Support" is missing from cdn/cs_mappings-prod.csv
+					if (label.equals("rhel-5-server-eus-rh-common-debuginfo")) bugIds.add("1472007");
+					if (label.equals("rhel-5-server-eus-rh-common-isos")) bugIds.add("1472007");
+					if (label.equals("rhel-5-server-eus-rh-common-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-5-server-eus-rh-common-source-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-5-server-eus-rhn-tools-debug-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-5-server-eus-rhn-tools-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-5-server-eus-rhn-tools-source-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-5-server-eus-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-5-server-eus-satellite-tools-6.1-debuginfo")) bugIds.add("1472007");
+					if (label.equals("rhel-5-server-eus-satellite-tools-6.1-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-5-server-eus-satellite-tools-6.1-source-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-6-server-eus-rhn-tools-debug-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-6-server-eus-rhn-tools-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-6-server-eus-rhn-tools-source-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-6-server-eus-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-6-server-eus-satellite-tools-6.1-debug-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-6-server-eus-satellite-tools-6.1-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-6-server-eus-satellite-tools-6.1-source-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-6-server-eus-satellite-tools-6.2-debug-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-6-server-eus-satellite-tools-6.2-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-6-server-eus-satellite-tools-6.2-source-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-6-server-eus-satellite-tools-6.3-debug-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-6-server-eus-satellite-tools-6.3-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-6-server-eus-satellite-tools-6.3-source-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-7-server-eus-debug-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-7-server-eus-isos")) bugIds.add("1472007");
+					if (label.equals("rhel-7-server-eus-optional-debug-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-7-server-eus-optional-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-7-server-eus-optional-source-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-7-server-eus-rh-common-debug-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-7-server-eus-rh-common-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-7-server-eus-rh-common-source-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-7-server-eus-rhn-tools-debug-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-7-server-eus-rhn-tools-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-7-server-eus-rhn-tools-source-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-7-server-eus-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-7-server-eus-satellite-tools-6.1-debug-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-7-server-eus-satellite-tools-6.1-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-7-server-eus-satellite-tools-6.1-source-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-7-server-eus-satellite-tools-6.2-debug-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-7-server-eus-satellite-tools-6.2-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-7-server-eus-satellite-tools-6.2-source-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-7-server-eus-satellite-tools-6.3-debug-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-7-server-eus-satellite-tools-6.3-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-7-server-eus-satellite-tools-6.3-source-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-7-server-eus-source-isos")) bugIds.add("1472007");
+					if (label.equals("rhel-7-server-eus-source-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-7-server-eus-supplementary-debuginfo")) bugIds.add("1472007");
+					if (label.equals("rhel-7-server-eus-supplementary-isos")) bugIds.add("1472007");
+					if (label.equals("rhel-7-server-eus-supplementary-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-7-server-eus-supplementary-source-rpms")) bugIds.add("1472007");
+					
+					//	Bug 1491304 - content set mappings for "Oracle Java (for RHEL Compute Node) - Extended Update Support" is missing from cdn/cs_mappings-prod.csv
+					if (label.equals("rhel-7-hpc-node-eus-thirdparty-oracle-java-rpms")) bugIds.add("1491304");
+					if (label.equals("rhel-7-hpc-node-eus-thirdparty-oracle-java-source-rpms")) bugIds.add("1491304");
+					if (label.equals("rhel-hpc-node-6-eus-thirdparty-oracle-java-rpms")) bugIds.add("1491304");
+					if (label.equals("rhel-hpc-node-6-eus-thirdparty-oracle-java-source-rpms")) bugIds.add("1491304");
+					
+					//	Bug 1491308 - content set mappings for "Red Hat Developer Toolset (for RHEL Server EUS)" is missing from cdn/cs_mappings-prod.csv
+					if (label.equals("rhel-server-dts-5-eus-rpms")) bugIds.add("1491308");
+					if (label.equals("rhel-server-dts-6-eus-rpms")) bugIds.add("1491308");
+					if (label.equals("rhel-server-dts2-5-eus-debug-rpms")) bugIds.add("1491308");
+					if (label.equals("rhel-server-dts2-5-eus-rpms")) bugIds.add("1491308");
+					if (label.equals("rhel-server-dts2-5-eus-source-rpms")) bugIds.add("1491308");
+					if (label.equals("rhel-server-dts2-6-eus-debug-rpms")) bugIds.add("1491308");
+					if (label.equals("rhel-server-dts2-6-eus-rpms")) bugIds.add("1491308");
+					if (label.equals("rhel-server-dts2-6-eus-source-rpms")) bugIds.add("1491308");
+					
+					//	Bug 1491319 - content set mappings for "Red Hat Enterprise Linux EUS Compute Node" is missing from cdn/cs_mappings-prod.csv
+					if (label.equals("rhel-6-for-hpc-node-eus-satellite-tools-6.1-debug-rpms")) bugIds.add("1491319");
+					if (label.equals("rhel-6-for-hpc-node-eus-satellite-tools-6.1-rpms")) bugIds.add("1491319");
+					if (label.equals("rhel-6-for-hpc-node-eus-satellite-tools-6.1-source-rpms")) bugIds.add("1491319");
+					if (label.equals("rhel-6-for-hpc-node-eus-satellite-tools-6.2-debug-rpms")) bugIds.add("1491319");
+					if (label.equals("rhel-6-for-hpc-node-eus-satellite-tools-6.2-rpms")) bugIds.add("1491319");
+					if (label.equals("rhel-6-for-hpc-node-eus-satellite-tools-6.2-source-rpms")) bugIds.add("1491319");
+					if (label.equals("rhel-7-for-hpc-node-eus-rh-common-debug-rpms")) bugIds.add("1491319");
+					if (label.equals("rhel-7-for-hpc-node-eus-rh-common-rpms")) bugIds.add("1491319");
+					if (label.equals("rhel-7-for-hpc-node-eus-rh-common-source-rpms")) bugIds.add("1491319");
+					if (label.equals("rhel-7-for-hpc-node-eus-satellite-tools-6.1-debug-rpms")) bugIds.add("1491319");
+					if (label.equals("rhel-7-for-hpc-node-eus-satellite-tools-6.1-rpms")) bugIds.add("1491319");
+					if (label.equals("rhel-7-for-hpc-node-eus-satellite-tools-6.1-source-rpms")) bugIds.add("1491319");
+					if (label.equals("rhel-7-for-hpc-node-eus-satellite-tools-6.2-debug-rpms")) bugIds.add("1491319");
+					if (label.equals("rhel-7-for-hpc-node-eus-satellite-tools-6.2-rpms")) bugIds.add("1491319");
+					if (label.equals("rhel-7-for-hpc-node-eus-satellite-tools-6.2-source-rpms")) bugIds.add("1491319");
+					if (label.equals("rhel-7-hpc-node-eus-debug-rpms")) bugIds.add("1491319");
+					if (label.equals("rhel-7-hpc-node-eus-optional-debug-rpms")) bugIds.add("1491319");
+					if (label.equals("rhel-7-hpc-node-eus-optional-rpms")) bugIds.add("1491319");
+					if (label.equals("rhel-7-hpc-node-eus-optional-source-rpms")) bugIds.add("1491319");
+					if (label.equals("rhel-7-hpc-node-eus-rpms")) bugIds.add("1491319");
+					if (label.equals("rhel-7-hpc-node-eus-source-rpms")) bugIds.add("1491319");
+					if (label.equals("rhel-7-hpc-node-eus-supplementary-debug-rpms")) bugIds.add("1491319");
+					if (label.equals("rhel-7-hpc-node-eus-supplementary-rpms")) bugIds.add("1491319");
+					if (label.equals("rhel-7-hpc-node-eus-supplementary-source-rpms")) bugIds.add("1491319");
+					if (label.equals("rhel-hpc-node-6-eus-debug-rpms")) bugIds.add("1491319");
+					if (label.equals("rhel-hpc-node-6-eus-optional-debug-rpms")) bugIds.add("1491319");
+					if (label.equals("rhel-hpc-node-6-eus-optional-rpms")) bugIds.add("1491319");
+					if (label.equals("rhel-hpc-node-6-eus-optional-source-rpms")) bugIds.add("1491319");
+					if (label.equals("rhel-hpc-node-6-eus-rhn-tools-debug-rpms")) bugIds.add("1491319");
+					if (label.equals("rhel-hpc-node-6-eus-rhn-tools-rpms")) bugIds.add("1491319");
+					if (label.equals("rhel-hpc-node-6-eus-rhn-tools-source-rpms")) bugIds.add("1491319");
+					if (label.equals("rhel-hpc-node-6-eus-rpms")) bugIds.add("1491319");
+					if (label.equals("rhel-hpc-node-6-eus-source-rpms")) bugIds.add("1491319");
+					if (label.equals("rhel-hpc-node-6-eus-supplementary-debug-rpms")) bugIds.add("1491319");
+					if (label.equals("rhel-hpc-node-6-eus-supplementary-rpms")) bugIds.add("1491319");
+					if (label.equals("rhel-hpc-node-6-eus-supplementary-source-rpms")) bugIds.add("1491319");
+					if (label.equals("rhel-hpc-node-7-eus-rhn-tools-debug-rpms")) bugIds.add("1491319");
+					if (label.equals("rhel-hpc-node-7-eus-rhn-tools-rpms")) bugIds.add("1491319");
+					if (label.equals("rhel-hpc-node-7-eus-rhn-tools-source-rpms")) bugIds.add("1491319");
+					
+					//	Bug 1491325 - content set mappings for "Red Hat Enterprise Linux EUS Compute Node High Performance Networking" is missing from cdn/cs_mappings-prod.csv
+					if (label.equals("rhel-hpc-node-6-eus-hpn-debug-rpms")) bugIds.add("1491325");
+					if (label.equals("rhel-hpc-node-6-eus-hpn-rpms")) bugIds.add("1491325");
+					if (label.equals("rhel-hpc-node-6-eus-hpn-source-rpms")) bugIds.add("1491325");
+					
+					//	Bug 1491334 - content set mappings for "Red Hat Enterprise Linux EUS Compute Node Scalable File System" is missing from cdn/cs_mappings-prod.csv
+					if (label.equals("rhel-hpc-node-6-eus-sfs-debug-rpms")) bugIds.add("1491334");
+					if (label.equals("rhel-hpc-node-6-eus-sfs-rpms")) bugIds.add("1491334");
+					if (label.equals("rhel-hpc-node-6-eus-sfs-source-rpms")) bugIds.add("1491334");
+					
+					//	Bug 1491348 - content set mappings for "Red Hat Enterprise Linux for IBM z Systems - Extended Update Support" is missing from cdn/cs_mappings-prod.csv
+					if (label.equals("rhel-5-for-system-z-eus-rh-common-debuginfo")) bugIds.add("1491348");
+					if (label.equals("rhel-5-for-system-z-eus-rh-common-isos")) bugIds.add("1491348");
+					if (label.equals("rhel-5-for-system-z-eus-rh-common-rpms")) bugIds.add("1491348");
+					if (label.equals("rhel-5-for-system-z-eus-rh-common-source-rpms")) bugIds.add("1491348");
+					if (label.equals("rhel-5-for-system-z-eus-rhn-tools-debug-rpms")) bugIds.add("1491348");
+					if (label.equals("rhel-5-for-system-z-eus-rhn-tools-rpms")) bugIds.add("1491348");
+					if (label.equals("rhel-5-for-system-z-eus-rhn-tools-source-rpms")) bugIds.add("1491348");
+					if (label.equals("rhel-5-for-system-z-eus-rpms")) bugIds.add("1491348");
+					if (label.equals("rhel-5-for-system-z-eus-satellite-tools-6.1-debuginfo")) bugIds.add("1491348");
+					if (label.equals("rhel-5-for-system-z-eus-satellite-tools-6.1-rpms")) bugIds.add("1491348");
+					if (label.equals("rhel-5-for-system-z-eus-satellite-tools-6.1-source-rpms")) bugIds.add("1491348");
+					if (label.equals("rhel-6-for-system-z-eus-rhn-tools-debug-rpms")) bugIds.add("1491348");
+					if (label.equals("rhel-6-for-system-z-eus-rhn-tools-rpms")) bugIds.add("1491348");
+					if (label.equals("rhel-6-for-system-z-eus-rhn-tools-source-rpms")) bugIds.add("1491348");
+					if (label.equals("rhel-6-for-system-z-eus-rpms")) bugIds.add("1491348");
+					if (label.equals("rhel-6-for-system-z-eus-satellite-tools-6.1-debug-rpms")) bugIds.add("1491348");
+					if (label.equals("rhel-6-for-system-z-eus-satellite-tools-6.1-rpms")) bugIds.add("1491348");
+					if (label.equals("rhel-6-for-system-z-eus-satellite-tools-6.1-source-rpms")) bugIds.add("1491348");
+					if (label.equals("rhel-6-for-system-z-eus-satellite-tools-6.2-debug-rpms")) bugIds.add("1491348");
+					if (label.equals("rhel-6-for-system-z-eus-satellite-tools-6.2-rpms")) bugIds.add("1491348");
+					if (label.equals("rhel-6-for-system-z-eus-satellite-tools-6.2-source-rpms")) bugIds.add("1491348");
+					if (label.equals("rhel-7-for-system-z-eus-debug-rpms")) bugIds.add("1491348");
+					if (label.equals("rhel-7-for-system-z-eus-isos")) bugIds.add("1491348");
+					if (label.equals("rhel-7-for-system-z-eus-optional-debug-rpms")) bugIds.add("1491348");
+					if (label.equals("rhel-7-for-system-z-eus-optional-rpms")) bugIds.add("1491348");
+					if (label.equals("rhel-7-for-system-z-eus-optional-source-rpms")) bugIds.add("1491348");
+					if (label.equals("rhel-7-for-system-z-eus-rh-common-debug-rpms")) bugIds.add("1491348");
+					if (label.equals("rhel-7-for-system-z-eus-rh-common-rpms")) bugIds.add("1491348");
+					if (label.equals("rhel-7-for-system-z-eus-rh-common-source-rpms")) bugIds.add("1491348");
+					if (label.equals("rhel-7-for-system-z-eus-rhn-tools-debug-rpms")) bugIds.add("1491348");
+					if (label.equals("rhel-7-for-system-z-eus-rhn-tools-rpms")) bugIds.add("1491348");
+					if (label.equals("rhel-7-for-system-z-eus-rhn-tools-source-rpms")) bugIds.add("1491348");
+					if (label.equals("rhel-7-for-system-z-eus-rpms")) bugIds.add("1491348");
+					if (label.equals("rhel-7-for-system-z-eus-satellite-tools-6.1-debug-rpms")) bugIds.add("1491348");
+					if (label.equals("rhel-7-for-system-z-eus-satellite-tools-6.1-rpms")) bugIds.add("1491348");
+					if (label.equals("rhel-7-for-system-z-eus-satellite-tools-6.1-source-rpms")) bugIds.add("1491348");
+					if (label.equals("rhel-7-for-system-z-eus-satellite-tools-6.2-debug-rpms")) bugIds.add("1491348");
+					if (label.equals("rhel-7-for-system-z-eus-satellite-tools-6.2-rpms")) bugIds.add("1491348");
+					if (label.equals("rhel-7-for-system-z-eus-satellite-tools-6.2-source-rpms")) bugIds.add("1491348");
+					if (label.equals("rhel-7-for-system-z-eus-source-isos")) bugIds.add("1491348");
+					if (label.equals("rhel-7-for-system-z-eus-source-rpms")) bugIds.add("1491348");
+					if (label.equals("rhel-7-for-system-z-eus-supplementary-debuginfo")) bugIds.add("1491348");
+					if (label.equals("rhel-7-for-system-z-eus-supplementary-isos")) bugIds.add("1491348");
+					if (label.equals("rhel-7-for-system-z-eus-supplementary-rpms")) bugIds.add("1491348");
+					if (label.equals("rhel-7-for-system-z-eus-supplementary-source-rpms")) bugIds.add("1491348");
+					
+					//	Bug 1491351 - content set mappings for "Red Hat Enterprise Linux for Power, big endian - Extended Update Support" is missing from cdn/cs_mappings-prod.csv
+					if (label.equals("rhel-5-for-power-eus-debug-rpms")) bugIds.add("1491351");
+					if (label.equals("rhel-5-for-power-eus-isos")) bugIds.add("1491351");
+					if (label.equals("rhel-5-for-power-eus-rh-common-debuginfo")) bugIds.add("1491351");
+					if (label.equals("rhel-5-for-power-eus-rh-common-isos")) bugIds.add("1491351");
+					if (label.equals("rhel-5-for-power-eus-rh-common-rpms")) bugIds.add("1491351");
+					if (label.equals("rhel-5-for-power-eus-rh-common-source-rpms")) bugIds.add("1491351");
+					if (label.equals("rhel-5-for-power-eus-rhn-tools-debug-rpms")) bugIds.add("1491351");
+					if (label.equals("rhel-5-for-power-eus-rhn-tools-rpms")) bugIds.add("1491351");
+					if (label.equals("rhel-5-for-power-eus-rhn-tools-source-rpms")) bugIds.add("1491351");
+					if (label.equals("rhel-5-for-power-eus-rpms")) bugIds.add("1491351");
+					if (label.equals("rhel-5-for-power-eus-satellite-tools-6.1-debuginfo")) bugIds.add("1491351");
+					if (label.equals("rhel-5-for-power-eus-satellite-tools-6.1-rpms")) bugIds.add("1491351");
+					if (label.equals("rhel-5-for-power-eus-satellite-tools-6.1-source-rpms")) bugIds.add("1491351");
+					if (label.equals("rhel-5-for-power-eus-source-isos")) bugIds.add("1491351");
+					if (label.equals("rhel-5-for-power-eus-source-rpms")) bugIds.add("1491351");
+					if (label.equals("rhel-5-for-power-eus-supplementary-debuginfo")) bugIds.add("1491351");
+					if (label.equals("rhel-5-for-power-eus-supplementary-isos")) bugIds.add("1491351");
+					if (label.equals("rhel-5-for-power-eus-supplementary-rpms")) bugIds.add("1491351");
+					if (label.equals("rhel-5-for-power-eus-supplementary-source-rpms")) bugIds.add("1491351");
+					if (label.equals("rhel-6-for-power-eus-rhn-tools-debug-rpms")) bugIds.add("1491351");
+					if (label.equals("rhel-6-for-power-eus-rhn-tools-rpms")) bugIds.add("1491351");
+					if (label.equals("rhel-6-for-power-eus-rhn-tools-source-rpms")) bugIds.add("1491351");
+					if (label.equals("rhel-6-for-power-eus-rpms")) bugIds.add("1491351");
+					if (label.equals("rhel-6-for-power-eus-satellite-tools-6.1-debug-rpms")) bugIds.add("1491351");
+					if (label.equals("rhel-6-for-power-eus-satellite-tools-6.1-rpms")) bugIds.add("1491351");
+					if (label.equals("rhel-6-for-power-eus-satellite-tools-6.1-source-rpms")) bugIds.add("1491351");
+					if (label.equals("rhel-6-for-power-eus-satellite-tools-6.2-debug-rpms")) bugIds.add("1491351");
+					if (label.equals("rhel-6-for-power-eus-satellite-tools-6.2-rpms")) bugIds.add("1491351");
+					if (label.equals("rhel-6-for-power-eus-satellite-tools-6.2-source-rpms")) bugIds.add("1491351");
+					if (label.equals("rhel-7-for-power-eus-debug-rpms")) bugIds.add("1491351");
+					if (label.equals("rhel-7-for-power-eus-isos")) bugIds.add("1491351");
+					if (label.equals("rhel-7-for-power-eus-optional-debug-rpms")) bugIds.add("1491351");
+					if (label.equals("rhel-7-for-power-eus-optional-rpms")) bugIds.add("1491351");
+					if (label.equals("rhel-7-for-power-eus-optional-source-rpms")) bugIds.add("1491351");
+					if (label.equals("rhel-7-for-power-eus-rh-common-debug-rpms")) bugIds.add("1491351");
+					if (label.equals("rhel-7-for-power-eus-rh-common-rpms")) bugIds.add("1491351");
+					if (label.equals("rhel-7-for-power-eus-rh-common-source-rpms")) bugIds.add("1491351");
+					if (label.equals("rhel-7-for-power-eus-rhn-tools-debug-rpms")) bugIds.add("1491351");
+					if (label.equals("rhel-7-for-power-eus-rhn-tools-rpms")) bugIds.add("1491351");
+					if (label.equals("rhel-7-for-power-eus-rhn-tools-source-rpms")) bugIds.add("1491351");
+					if (label.equals("rhel-7-for-power-eus-rpms")) bugIds.add("1491351");
+					if (label.equals("rhel-7-for-power-eus-satellite-tools-6.1-debug-rpms")) bugIds.add("1491351");
+					if (label.equals("rhel-7-for-power-eus-satellite-tools-6.1-rpms")) bugIds.add("1491351");
+					if (label.equals("rhel-7-for-power-eus-satellite-tools-6.1-source-rpms")) bugIds.add("1491351");
+					if (label.equals("rhel-7-for-power-eus-satellite-tools-6.2-debug-rpms")) bugIds.add("1491351");
+					if (label.equals("rhel-7-for-power-eus-satellite-tools-6.2-rpms")) bugIds.add("1491351");
+					if (label.equals("rhel-7-for-power-eus-satellite-tools-6.2-source-rpms")) bugIds.add("1491351");
+					if (label.equals("rhel-7-for-power-eus-source-isos")) bugIds.add("1491351");
+					if (label.equals("rhel-7-for-power-eus-source-rpms")) bugIds.add("1491351");
+					if (label.equals("rhel-7-for-power-eus-supplementary-debuginfo")) bugIds.add("1491351");
+					if (label.equals("rhel-7-for-power-eus-supplementary-isos")) bugIds.add("1491351");
+					if (label.equals("rhel-7-for-power-eus-supplementary-rpms")) bugIds.add("1491351");
+					if (label.equals("rhel-7-for-power-eus-supplementary-source-rpms")) bugIds.add("1491351");
+					
+					//	Bug 1491356 - content set mappings for "Red Hat Enterprise Linux for Power, little endian - Extended Update Support" is missing from cdn/cs_mappings-prod.csv
+					if (label.equals("rhel-7-for-power-le-eus-debug-rpms")) bugIds.add("1491356");
+					if (label.equals("rhel-7-for-power-le-eus-isos")) bugIds.add("1491356");
+					if (label.equals("rhel-7-for-power-le-eus-optional-debug-rpms")) bugIds.add("1491356");
+					if (label.equals("rhel-7-for-power-le-eus-optional-rpms")) bugIds.add("1491356");
+					if (label.equals("rhel-7-for-power-le-eus-optional-source-rpms")) bugIds.add("1491356");
+					if (label.equals("rhel-7-for-power-le-eus-rhn-tools-debug-rpms")) bugIds.add("1491356");
+					if (label.equals("rhel-7-for-power-le-eus-rhn-tools-rpms")) bugIds.add("1491356");
+					if (label.equals("rhel-7-for-power-le-eus-rhn-tools-source-rpms")) bugIds.add("1491356");
+					if (label.equals("rhel-7-for-power-le-eus-rpms")) bugIds.add("1491356");
+					if (label.equals("rhel-7-for-power-le-eus-satellite-tools-6.1-debug-rpms")) bugIds.add("1491356");
+					if (label.equals("rhel-7-for-power-le-eus-satellite-tools-6.1-rpms")) bugIds.add("1491356");
+					if (label.equals("rhel-7-for-power-le-eus-satellite-tools-6.1-source-rpms")) bugIds.add("1491356");
+					if (label.equals("rhel-7-for-power-le-eus-satellite-tools-6.2-debug-rpms")) bugIds.add("1491356");
+					if (label.equals("rhel-7-for-power-le-eus-satellite-tools-6.2-rpms")) bugIds.add("1491356");
+					if (label.equals("rhel-7-for-power-le-eus-satellite-tools-6.2-source-rpms")) bugIds.add("1491356");
+					if (label.equals("rhel-7-for-power-le-eus-source-isos")) bugIds.add("1491356");
+					if (label.equals("rhel-7-for-power-le-eus-source-rpms")) bugIds.add("1491356");
+					if (label.equals("rhel-7-for-power-le-eus-supplementary-debug-rpms")) bugIds.add("1491356");
+					if (label.equals("rhel-7-for-power-le-eus-supplementary-rpms")) bugIds.add("1491356");
+					if (label.equals("rhel-7-for-power-le-eus-supplementary-source-rpms")) bugIds.add("1491356");
+					
+					//	Bug 1491359 - content set mappings for "Red Hat Enterprise Linux Load Balancer (for RHEL Server) - Extended Update Support" is missing from cdn/cs_mappings-prod.csv
+					if (label.equals("rhel-lb-for-rhel-6-server-eus-rpms")) bugIds.add("1491359");
+					
+					//	Bug 1491365 - content set mappings for "Red Hat Enterprise Linux Scalable File System (for RHEL Server) - Extended Update Support" is missing from cdn/cs_mappings-prod.csv
+					if (label.equals("rhel-scalefs-for-rhel-5-server-eus-rpms")) bugIds.add("1491365");
+					if (label.equals("rhel-sfs-for-rhel-6-server-eus-rpms")) bugIds.add("1491365");
+					
+					//	Bug 1491369 - content set mappings for "RHEL for SAP - Extended Update Support" is missing from cdn/cs_mappings-prod.csv
+					if (label.equals("rhel-sap-for-rhel-6-server-eus-debug-rpms")) bugIds.add("1491369");
+					if (label.equals("rhel-sap-for-rhel-6-server-eus-rpms")) bugIds.add("1491369");
+					if (label.equals("rhel-sap-for-rhel-6-server-eus-source-rpms")) bugIds.add("1491369");
+					if (label.equals("rhel-sap-for-rhel-7-server-eus-debug-rpms")) bugIds.add("1491369");
+					if (label.equals("rhel-sap-for-rhel-7-server-eus-rpms")) bugIds.add("1491369");
+					if (label.equals("rhel-sap-for-rhel-7-server-eus-source-rpms")) bugIds.add("1491369");
+					
+					//	Bug 1491373 - content set mappings for "RHEL for SAP Applications for Power BE EUS" is missing from cdn/cs_mappings-prod.csv
+					if (label.equals("rhel-sap-for-rhel-7-for-power-eus-debug-rpms")) bugIds.add("1491373");
+					if (label.equals("rhel-sap-for-rhel-7-for-power-eus-rpms")) bugIds.add("1491373");
+					if (label.equals("rhel-sap-for-rhel-7-for-power-eus-source-rpms")) bugIds.add("1491373");
+					
+					//	Bug 1491376 - content set mappings for "RHEL for SAP Applications for Power LE EUS" is missing from cdn/cs_mappings-prod.csv
+					if (label.equals("rhel-sap-for-rhel-7-for-power-le-eus-debug-rpms")) bugIds.add("1491376");
+					if (label.equals("rhel-sap-for-rhel-7-for-power-le-eus-rpms")) bugIds.add("1491376");
+					if (label.equals("rhel-sap-for-rhel-7-for-power-le-eus-source-rpms")) bugIds.add("1491376");
+					
+					//	Bug 1491380 - content set mappings for "RHEL for SAP Applications for System Z EUS" is missing from cdn/cs_mappings-prod.csv
+					if (label.equals("rhel-sap-for-rhel-7-for-system-z-eus-debug-rpms")) bugIds.add("1491380");
+					if (label.equals("rhel-sap-for-rhel-7-for-system-z-eus-rpms")) bugIds.add("1491380");
+					if (label.equals("rhel-sap-for-rhel-7-for-system-z-eus-source-rpms")) bugIds.add("1491380");
+					
+					//	Bug 1491382 - content set mappings for "RHEL for SAP HANA - Extended Update Support" is missing from cdn/cs_mappings-prod.csv
+					if (label.equals("rhel-sap-hana-for-rhel-6-server-eus-debug-rpms")) bugIds.add("1491382");
+					if (label.equals("rhel-sap-hana-for-rhel-6-server-eus-rpms")) bugIds.add("1491382");
+					if (label.equals("rhel-sap-hana-for-rhel-6-server-eus-source-rpms")) bugIds.add("1491382");
+					if (label.equals("rhel-sap-hana-for-rhel-7-server-eus-debug-rpms")) bugIds.add("1491382");
+					if (label.equals("rhel-sap-hana-for-rhel-7-server-eus-rpms")) bugIds.add("1491382");
+					if (label.equals("rhel-sap-hana-for-rhel-7-server-eus-source-rpms")) bugIds.add("1491382");
+					
+					//	Bug 1491384 - content set mappings for "RHEL for SAP HANA for Power LE EUS" is missing from cdn/cs_mappings-prod.csv
+					if (label.equals("rhel-sap-hana-for-rhel-7-for-power-le-eus-debug-rpms")) bugIds.add("1491384");
+					if (label.equals("rhel-sap-hana-for-rhel-7-for-power-le-eus-rpms")) bugIds.add("1491384");
+					if (label.equals("rhel-sap-hana-for-rhel-7-for-power-le-eus-source-rpms")) bugIds.add("1491384");
+					
+					// Bug 1521181 - content set mappings for "Red Hat Enterprise Linux High Availability (for IBM Power LE) - Extended Update Support" is missing from cdn/cs_mappings-prod.csv 
+					if (label.equals("rhel-ha-for-rhel-7-server-for-power-le-eus-debug-rpms")) bugIds.add("1521181");
+					if (label.equals("rhel-ha-for-rhel-7-server-for-power-le-eus-rpms")) bugIds.add("1521181");
+					if (label.equals("rhel-ha-for-rhel-7-server-for-power-le-eus-source-rpms")) bugIds.add("1521181");
+					
+					
+					BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
+					// Object bugzilla, String eusProductName, String eusProductId, String eusContentSetName, String eusContentSetId, String eusContentSetLabel, List<String> modifiedProductIds
+					ll.add(Arrays.asList(new Object[]{blockedByBzBug,  productName, productId, name, id, label, modifiedProductIds}));
+				}
+			}
+		}
+		
+		// logging a semi-colon delimited map of repo label to information for debugging purposes importing into a spreadsheet
+		log.info(" (DELETE COLUMN);ContentSet/Repo Label;Eng Prod ID;Eng Product Name;Content Set ID;Actual: Modifies Eng Prod IDs\rAssert that this list is not empty;");
+		for (String key : eusLabelToInfoMap.keySet()) {
+			// eusRepoLabel, fromEngProductId, fromEngProductName, whoseContentIdIs, modifiesTheseEngProductIds
+			log.info(";"+key+";"+eusLabelToInfoMap.get(key)+";");
+			// WAS IMPORTED TO: https://docs.google.com/a/redhat.com/spreadsheets/d/1oFCJ0KI2CjV1bOavNkKzZRJl-CZ6CopxngJi4EJbii0/edit?usp=sharing
+		}
+		return ll;
+	}
+	protected String getAllEUSProductContentSetDataAsListOfListsOwnerKey=null;
 	
 	
 	
@@ -1883,10 +2497,6 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
 		if (client1tasks==null) return ll;
 		if (client2tasks==null) return ll;
-		if (true) {
-			log.warning("Support for the Personal Subscriptions was yanked in favor of new DataCenter SKUs.");
-			return ll;
-		}
 		
 		// assure we are registered (as a person on client2 and a system on client1)
 		

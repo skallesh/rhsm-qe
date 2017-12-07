@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<testcase id="RHEL6-36366">
+    <title>RHSM-TC : rhsm.cli.tests.CertificateTests.testBaseRHELProductCertVersionUpdates</title>
+    <description>Verify that the base RHEL product cert will upgrade to match the releaseVer set when a package is installed/upgraded/downgraded</description>
+    <test-steps>
+        <test-step>
+            <test-step-column id="step">
+                <parameter name="blockedByBug" scope="local"/>
+                <parameter name="testPackage" scope="local"/>
+                <parameter name="oldProductCertVersion" scope="local"/>
+                <parameter name="oldRelease" scope="local"/>
+                <parameter name="newerRelease" scope="local"/>
+            </test-step-column>
+        </test-step>
+    </test-steps>
+    <custom-fields>
+        <custom-field id="caseautomation" content="automated"></custom-field>
+        <custom-field id="caseimportance" content="high"></custom-field>
+        <custom-field id="caselevel" content="component"></custom-field>
+        <custom-field id="caseposneg" content="positive"></custom-field>
+        <custom-field id="tags" content="Tier1"></custom-field>
+        <custom-field id="casecomponent" content="subscription-manager"></custom-field>
+        <custom-field id="testtype" content="functional"></custom-field>
+        <custom-field id="subtype1" content="reliability"></custom-field>
+        <custom-field id="subtype2" content="-"></custom-field>
+    </custom-fields>
+</testcase>

@@ -36,6 +36,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.testng.SkipException;
 import org.testng.annotations.AfterClass;
+import org.testng.annotations.AfterGroups;
 import org.testng.annotations.AfterSuite;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeSuite;
@@ -475,7 +476,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			smt.installZStreamUpdates(sm_yumInstallOptions, sm_yumInstallZStreamUpdatePackages, sm_yumInstallZStreamComposeUrl, sm_yumInstallZStreamBrewUrl, sm_ciMessage);
 		}
 		sm_rpmUpdateUrls.addAll(getRpmUpdateUrlsFromCiMessage(sm_ciMessage));
-		smt.installSubscriptionManagerRPMs(sm_rpmInstallUrls,sm_rpmUpdateUrls,sm_yumInstallOptions);
+		smt.installSubscriptionManagerRPMs(sm_rpmInstallUrls,sm_rpmUpdateUrls,sm_yumInstallOptions, jenkinsUsername,jenkinsPassword);
 		smt.initializeMsgStringsAfterInstallingSubscriptionManagerRPMs();
 		
 		// rewrite rhsmcertd.certFrequency -> rhsmcertd.certCheckInterval   see bug 882459
@@ -815,173 +816,18 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			}
 		}
 	}
-
-/* deleteSomeSecondarySubscriptionsBeforeSuite() IS A BETTER IMPLEMENTATION THAT THIS.  DELETEME 3/23/2015
-	@BeforeSuite(groups={"setup"},dependsOnMethods={"setupBeforeSuite"}, description="delete selected secondary/duplicate subscription pools to reduce the number of available pools against a standalone candlepin server")
-	public void deleteSomeSecondarySubscriptionPoolsBeforeSuite() throws JSONException, Exception {
-		Set<String> secondarySkusSkipped = new HashSet<String>();
-		Set<String> secondarySkusToDelete = new HashSet<String>(Arrays.asList(new String[]{
-		//	[root@jsefler-5 ~]# subscription-manager register --username admin --password admin --org admin --type system
-		//	The system has been registered with ID: 9581087a-1b3a-483e-9756-c94142119d22 
-		//	[root@jsefler-5 ~]# subscription-manager list --all --avail | egrep "SKU" | sort | wc -l
-		//	86
-		//  [root@jsefler-5 ~]# subscription-manager list --all --avail | egrep "SKU" | sort | awk '{print $2}' | xargs -i[] echo \"[]\",  
-			"2cores-2ram-multiattr",
-			"2cores-2ram-multiattr",
-			"awesomeos-all-just-86_64-cont",
-			"awesomeos-all-just-86_64-cont",
-			"awesomeos-all-no-86_64-cont",
-			"awesomeos-all-no-86_64-cont",
-			"awesomeos-all-x86-cont",
-			"awesomeos-all-x86-cont",
-			"awesomeos-docker",
-			"awesomeos-docker",
-			"awesomeos-everything",
-			"awesomeos-everything",
-			"awesomeos-guestlimit-4-stackable",
-			"awesomeos-guestlimit-4-stackable",
-			"awesomeos-guestlimit-4-stackable",
-			"awesomeos-guestlimit-4-stackable",
-			"awesomeos-i386",
-			"awesomeos-i386",
-			"awesomeos-i686",
-			"awesomeos-i686",
-			"awesomeos-ia64",
-			"awesomeos-ia64",
-		//	"awesomeos-instancebased",		// kept because it will help test bug 963227
-		//	"awesomeos-instancebased",
-		//	"awesomeos-instancebased",	// temporary
-		//	"awesomeos-instancebased",	// temporary
-			"awesomeos-modifier",
-			"awesomeos-modifier",
-			"awesomeos-onesocketib",
-			"awesomeos-onesocketib",
-			"awesomeos-onesocketib",	// temporary
-			"awesomeos-onesocketib",	// temporary
-			"awesomeos-ostree",
-			"awesomeos-ostree",
-			"awesomeos-per-arch-cont",
-			"awesomeos-per-arch-cont",
-			"awesomeos-ppc64",
-			"awesomeos-ppc64",
-			"awesomeos-s390",
-			"awesomeos-s390",
-			"awesomeos-s390x",
-			"awesomeos-s390x",
-			"awesomeos-server",
-			"awesomeos-server",
-			"awesomeos-server-2-socket-std",
-			"awesomeos-server-2-socket-std",
-		//	"awesomeos-server-basic",		// kept because it is Multi-Entitlement: No
-		//	"awesomeos-server-basic",
-			"awesomeos-server-basic-dc",
-			"awesomeos-server-basic-dc",
-		//	"awesomeos-server-basic-me",	// kept because it is Multi-Entitlement: Yes
-		//	"awesomeos-server-basic-me",
-//			"awesomeos-server-basic-vdc",	// temporary derived from awesomeos-server-basic-dc
-//			"awesomeos-server-basic-vdc",	// temporary derived from awesomeos-server-basic-dc
-			"awesomeos-super-hypervisor",
-			"awesomeos-super-hypervisor",
-			"awesomeos-super-hypervisor",
-			"awesomeos-super-hypervisor",
-			"awesomeos-virt-4",
-			"awesomeos-virt-4",
-			"awesomeos-virt-4",
-			"awesomeos-virt-4",
-			"awesomeos-virt-datacenter",
-			"awesomeos-virt-datacenter",
-			"awesomeos-virt-datacenter",	// temporary
-			"awesomeos-virt-datacenter",	// temporary
-			"awesomeos-virt-unlimited",
-			"awesomeos-virt-unlimited",
-			"awesomeos-virt-unlimited",
-			"awesomeos-virt-unlimited",
-			"awesomeos-virt-unlmtd-phys",
-			"awesomeos-virt-unlmtd-phys",
-			"awesomeos-virt-unlmtd-phys",
-			"awesomeos-virt-unlmtd-phys",
-			"awesomeos-workstation-basic",
-			"awesomeos-workstation-basic",
-			"awesomeos-x86",
-			"awesomeos-x86",
-			"awesomeos-x86_64",
-			"awesomeos-x86_64",
-			"cores-26",
-			"cores-26",
-			"cores4-multiattr",
-			"cores4-multiattr",
-			"cores-8-stackable",
-			"cores-8-stackable",
-			"management-100",
-			"management-100",
-			"non-stacked-6core8ram-multiattr",
-			"non-stacked-6core8ram-multiattr",
-			"non-stacked-8core4ram-multiattr",
-			"non-stacked-8core4ram-multiattr",
-			"non-stacked-multiattr",
-			"non-stacked-multiattr",
-			"ram-2gb-stackable",
-			"ram-2gb-stackable",
-			"ram2-multiattr",
-			"ram2-multiattr",
-			"ram-4gb-stackable",
-			"ram-4gb-stackable",
-			"ram-8gb",
-			"ram-8gb",
-			"ram-cores-8gb-4cores",
-			"ram-cores-8gb-4cores",
-			"sfs",
-			"sfs",
-			"sock2-multiattr",
-			"sock2-multiattr",
-			"sock-core-ram-multiattr",
-			"sock-core-ram-multiattr",
-			"stackable-with-awesomeos-x86_64",
-			"stackable-with-awesomeos-x86_64",
-			"virt-awesomeos-i386",
-			"virt-awesomeos-i386",
-			""}));
-		
-		if (sm_clientOrg==null) return;
-		if (!CandlepinType.standalone.equals(sm_serverType)) return;
-		
-		// process all of the pools belonging to ownerKey
-		JSONArray jsonPools = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,"/owners/"+sm_clientOrg+"/pools?listall=true"));	
-		List<String> secondarySubscriptionIdsDeleted = new ArrayList<String>();
-		for (int i = 0; i < jsonPools.length(); i++) {
-			JSONObject jsonPool = (JSONObject) jsonPools.get(i);
-			String productId = jsonPool.getString("productId");
-			
-			// skip pools that we do not want to delete
-			if (!secondarySkusToDelete.contains(productId)) continue;
-			
-			// skip pools that are not NORMAL (eg. BONUS, ENTITLEMENT_DERIVED, STACK_DERIVED)
-			if (!jsonPool.getString("type").equals("NORMAL")) continue;
-			
-			// skip pools that were generated from consumption of a parent pool
-			if (!jsonPool.isNull("sourceEntitlement")) continue;
-			
-			// skip the first secondarySkusToDelete encountered (this will be the one kept)
-			if (!secondarySkusSkipped.contains(productId)) {
-				secondarySkusSkipped.add(productId);
-				continue;
-			}
-						
-			// delete the subscription
-			String subscriptionId = jsonPool.getString("subscriptionId");
-			CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl, "/subscriptions/"+subscriptionId);
-			secondarySubscriptionIdsDeleted.add(subscriptionId);
-		}
-		
-		// refresh the pools
-		if (!secondarySubscriptionIdsDeleted.isEmpty()) {
-			JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,sm_clientOrg);
-			jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,jobDetail,"FINISHED", 5*1000, 1);
-		}
-	}
-*/
+	
+	
+	@Deprecated
 	@BeforeSuite(groups={"setup"},dependsOnMethods={"setupBeforeSuite"}, description="delete selected secondary/duplicate subscriptions to reduce the number of available pools against a standalone candlepin server")
 	public void deleteSomeSecondarySubscriptionsBeforeSuite() throws JSONException, Exception {
+		
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.2.0-1")) {	// effectively a permanent and suggested WORKAROUND prompted by Bug 1503578 - Runtime Error You can't operate on a closed ResultSet!!!
+			// forward to newer task
+			deleteSomeSecondarySubscriptionPoolsBeforeSuite();
+			return;
+		}
+		
 		Set<String> secondarySkusSkipped = new HashSet<String>();
 		Set<String> secondarySkusToDelete = new HashSet<String>(Arrays.asList(new String[]{
 		//	[jsefler@jseflerT5400 ~]$ curl --stderr /dev/null --insecure --user admin:admin --request GET https://jsefler-f14-candlepin.usersys.redhat.com:8443/candlepin/owners/admin/subscriptions?include=product.id | python -m simplejson/tool | grep \"id\" | sort | awk '{print $2}' | xargs -i[] echo \"[]\",
@@ -1122,6 +968,248 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,jobDetail,"FINISHED", 5*1000, 1);
 		}
 	}
+	/**
+	 * This is a replacement for deleteSomeSecondarySubscriptionsBeforeSuite() and a candlepin-2.2+ workaround for Bug 1503578 - Runtime Error You can't operate on a closed ResultSet!!!
+	 * @throws JSONException
+	 * @throws Exception
+	 */
+	public void deleteSomeSecondarySubscriptionPoolsBeforeSuite() throws JSONException, Exception {
+		
+		Set<String> secondarySkusSkipped = new HashSet<String>();
+		Set<String> secondarySkusToDelete = new HashSet<String>(Arrays.asList(new String[]{
+		//	[root@jsefler-rhel7 ~]# curl --stderr /dev/null --insecure --user admin:admin --request GET 'https://jsefler-candlepin.usersys.redhat.com:8443/candlepin/owners/admin/pools?add_future=true&include=productId' | python -m json/tool | grep \"productId\" | sort | awk '{print $2}' | xargs -i[] echo \"[]\",	
+				"2cores-2ram-multiattr",
+				"2cores-2ram-multiattr",
+				"2cores-2ram-multiattr",
+				"adminos-onesocketib",
+				"adminos-onesocketib",
+				"adminos-onesocketib",
+				"adminos-onesocketib",
+				"adminos-onesocketib",
+				"adminos-onesocketib",
+				"adminos-server-2-socket-std",
+				"adminos-server-2-socket-std",
+				"adminos-server-2-socket-std",
+				"awesomeos-all-just-86_64-cont",
+				"awesomeos-all-just-86_64-cont",
+				"awesomeos-all-just-86_64-cont",
+				"awesomeos-all-no-86_64-cont",
+				"awesomeos-all-no-86_64-cont",
+				"awesomeos-all-no-86_64-cont",
+				"awesomeos-all-x86-cont",
+				"awesomeos-all-x86-cont",
+				"awesomeos-all-x86-cont",
+				"awesomeos-docker",
+				"awesomeos-docker",
+				"awesomeos-docker",
+				"awesomeos-everything",
+				"awesomeos-everything",
+				"awesomeos-everything",
+				"awesomeos-guestlimit-4-stackable",
+				"awesomeos-guestlimit-4-stackable",
+				"awesomeos-guestlimit-4-stackable",
+				"awesomeos-guestlimit-4-stackable",
+				"awesomeos-guestlimit-4-stackable",
+				"awesomeos-guestlimit-4-stackable",
+				"awesomeos-i386",
+				"awesomeos-i386",
+				"awesomeos-i386",
+				"awesomeos-i686",
+				"awesomeos-i686",
+				"awesomeos-i686",
+				"awesomeos-ia64",
+				"awesomeos-ia64",
+				"awesomeos-ia64",
+//				"awesomeos-instancebased",		// kept because it will help test bug 963227
+//				"awesomeos-instancebased",
+//				"awesomeos-instancebased",
+//				"awesomeos-instancebased",
+//				"awesomeos-instancebased",
+//				"awesomeos-instancebased",
+				"awesomeos-modifier",
+				"awesomeos-modifier",
+				"awesomeos-modifier",
+				"awesomeos-onesocketib",
+				"awesomeos-onesocketib",
+				"awesomeos-onesocketib",
+				"awesomeos-onesocketib",
+				"awesomeos-onesocketib",
+				"awesomeos-onesocketib",
+				"awesomeos-ostree",
+				"awesomeos-ostree",
+				"awesomeos-ostree",
+				"awesomeos-per-arch-cont",
+				"awesomeos-per-arch-cont",
+				"awesomeos-per-arch-cont",
+				"awesomeos-ppc64",
+				"awesomeos-ppc64",
+				"awesomeos-ppc64",
+				"awesomeos-s390",
+				"awesomeos-s390",
+				"awesomeos-s390",
+				"awesomeos-s390x",
+				"awesomeos-s390x",
+				"awesomeos-s390x",
+				"awesomeos-server",
+				"awesomeos-server",
+				"awesomeos-server",
+				"awesomeos-server-2-socket-std",
+				"awesomeos-server-2-socket-std",
+				"awesomeos-server-2-socket-std",
+//				"awesomeos-server-basic",		// kept because it is Multi-Entitlement: No
+//				"awesomeos-server-basic",
+//				"awesomeos-server-basic",
+				"awesomeos-server-basic-dc",
+				"awesomeos-server-basic-dc",
+				"awesomeos-server-basic-dc",
+//				"awesomeos-server-basic-me",	// kept because it is Multi-Entitlement: Yes
+//				"awesomeos-server-basic-me",
+//				"awesomeos-server-basic-me",
+				"awesomeos-server-basic-vdc",
+				"awesomeos-server-basic-vdc",
+				"awesomeos-server-basic-vdc",
+				"awesomeos-super-hypervisor",
+				"awesomeos-super-hypervisor",
+				"awesomeos-super-hypervisor",
+				"awesomeos-super-hypervisor",
+				"awesomeos-super-hypervisor",
+				"awesomeos-super-hypervisor",
+				"awesomeos-ul-quantity-virt",
+				"awesomeos-ul-quantity-virt",
+				"awesomeos-ul-quantity-virt",
+				"awesomeos-ul-quantity-virt",
+				"awesomeos-ul-quantity-virt",
+				"awesomeos-ul-quantity-virt",
+				"awesomeos-unlimited-quantity",
+				"awesomeos-unlimited-quantity",
+				"awesomeos-unlimited-quantity",
+				"awesomeos-virt-4",
+				"awesomeos-virt-4",
+				"awesomeos-virt-4",
+				"awesomeos-virt-4",
+				"awesomeos-virt-4",
+				"awesomeos-virt-4",
+				"awesomeos-virt-datacenter",
+				"awesomeos-virt-datacenter",
+				"awesomeos-virt-datacenter",
+				"awesomeos-virt-datacenter",
+				"awesomeos-virt-datacenter",
+				"awesomeos-virt-datacenter",
+				"awesomeos-virt-unlimited",
+				"awesomeos-virt-unlimited",
+				"awesomeos-virt-unlimited",
+				"awesomeos-virt-unlimited",
+				"awesomeos-virt-unlimited",
+				"awesomeos-virt-unlimited",
+				"awesomeos-virt-unlmtd-phys",
+				"awesomeos-virt-unlmtd-phys",
+				"awesomeos-virt-unlmtd-phys",
+				"awesomeos-virt-unlmtd-phys",
+				"awesomeos-virt-unlmtd-phys",
+				"awesomeos-virt-unlmtd-phys",
+				"awesomeos-workstation-basic",
+				"awesomeos-workstation-basic",
+				"awesomeos-workstation-basic",
+				"awesomeos-x86",
+				"awesomeos-x86",
+				"awesomeos-x86",
+				"awesomeos-x86_64",
+				"awesomeos-x86_64",
+				"awesomeos-x86_64",
+				"cores-26",
+				"cores-26",
+				"cores-26",
+				"cores4-multiattr",
+				"cores4-multiattr",
+				"cores4-multiattr",
+				"cores-8-stackable",
+				"cores-8-stackable",
+				"cores-8-stackable",
+				"management-100",
+				"management-100",
+				"management-100",
+//				"MKT-multiplier-client-50",
+//				"MKT-multiplier-client-50",
+//				"MKT-multiplier-client-50",
+				"non-stacked-6core8ram-multiattr",
+				"non-stacked-6core8ram-multiattr",
+				"non-stacked-6core8ram-multiattr",
+				"non-stacked-8core4ram-multiattr",
+				"non-stacked-8core4ram-multiattr",
+				"non-stacked-8core4ram-multiattr",
+				"non-stacked-multiattr",
+				"non-stacked-multiattr",
+				"non-stacked-multiattr",
+				"ram-2gb-stackable",
+				"ram-2gb-stackable",
+				"ram-2gb-stackable",
+				"ram2-multiattr",
+				"ram2-multiattr",
+				"ram2-multiattr",
+				"ram-4gb-stackable",
+				"ram-4gb-stackable",
+				"ram-4gb-stackable",
+				"ram-8gb",
+				"ram-8gb",
+				"ram-8gb",
+				"ram-cores-8gb-4cores",
+				"ram-cores-8gb-4cores",
+				"ram-cores-8gb-4cores",
+				"sfs",
+				"sfs",
+				"sfs",
+				"sock2-multiattr",
+				"sock2-multiattr",
+				"sock2-multiattr",
+				"sock-core-ram-multiattr",
+				"sock-core-ram-multiattr",
+				"sock-core-ram-multiattr",
+				"stackable-with-awesomeos-x86_64",
+				"stackable-with-awesomeos-x86_64",
+				"stackable-with-awesomeos-x86_64",
+//				"storage-limited-256",	// keep multiple pools to testAutoSubscribeStorageBandSubscription() and testAutoHealStorageBandSubscription()
+//				"storage-limited-256",
+//				"storage-limited-256",
+				"virt-awesomeos-i386",
+				"virt-awesomeos-i386",
+				"virt-awesomeos-i386",
+			""}));
+		
+		if (sm_clientOrg==null) return;
+		if (!CandlepinType.standalone.equals(sm_serverType)) return;
+		
+		// process all of the subscription pools belonging to ownerKey
+		JSONArray jsonSubscriptionPools = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,"/owners/"+sm_clientOrg+"/pools?add_future=true"));	// /pools?add_future=true&include=productId
+		for (int i = 0; i < jsonSubscriptionPools.length(); i++) {
+			JSONObject jsonSubscriptionPool = (JSONObject) jsonSubscriptionPools.get(i);
+			String productId = jsonSubscriptionPool.getString("productId");
+			
+			// skip all subscription pools for productIds (a.k.a. SKUs) not on the list of secondarySkusToDelete
+			if (!secondarySkusToDelete.contains(productId)) continue;
+			
+			// skip all custom pools not originating from a subscription
+			if (jsonSubscriptionPool.isNull("subscriptionSubKey")) continue;
+			
+			String subscriptionSubKey = jsonSubscriptionPool.getString("subscriptionSubKey");	// master or derived
+			
+			// skip non-master subscription pools
+			if (!subscriptionSubKey.equals("master")) continue;
+			
+			// TODO check the startDate and keep future subscription pools
+			
+			// skip the first secondarySkusToDelete encountered (this will be the one kept)
+			if (!secondarySkusSkipped.contains(productId)) {
+				secondarySkusSkipped.add(productId);
+				continue;
+			}
+			
+			// delete the subscription pool
+			String id = jsonSubscriptionPool.getString("id");
+			CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl, "/pools/"+id);
+		}
+	}
+	
+	
 	
 	protected static ArrayList<String> invokedWorkaroundBugs = new ArrayList<String>();;
 	@AfterSuite(groups={"cleanup"},description="log all the invoked bugzilla workarounds")
@@ -1205,6 +1293,13 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	}
 	
 	/**
+	 * @return a random Boolean.TRUE or Boolean.FALSE
+	 */
+	public static Boolean getRandomBoolean() {
+		return 	getRandomListItem(Arrays.asList(new Boolean[]{Boolean.TRUE,Boolean.FALSE}));
+	}
+	
+	/**
 	 * Randomize the input string case.  For example input="Hello World", output="HElLo wORlD"
 	 * @param string
 	 * @return
@@ -1255,6 +1350,27 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	public static <T> boolean isEqualNoOrder(List<T> list1, List<T> list2) {  
 	   return list1.containsAll(list2) && list2.containsAll(list1) && list1.size()==list2.size();
 	   // similar to Assert.assertEqualsNoOrder(Object[] actual, Object[] expected, String message)
+	}
+	
+	/**
+	 * Given two Strings representing a list of comma separated tags, return true if they are effectively equivalent.<br>
+	 * Example: "tag1,tag2" is equivalent to "tag2,tag1"<br>
+	 * Example: "tag1,tag2" is NOT equivalent to "tag1,tag2,tag3"<br>
+	 * @param requiredTagsAsString
+	 * @param providedTagsAsString
+	 * @return
+	 */
+	public boolean areTagsEquivalent(String requiredTagsAsString, String providedTagsAsString) {
+		if (requiredTagsAsString==null && providedTagsAsString==null) return true;
+		if (requiredTagsAsString==null && providedTagsAsString!=null &&  providedTagsAsString.isEmpty()) return true;
+		if (requiredTagsAsString==null && providedTagsAsString!=null && !providedTagsAsString.isEmpty()) return false;
+		if (providedTagsAsString==null && requiredTagsAsString!=null &&  requiredTagsAsString.isEmpty()) return true;
+		if (providedTagsAsString==null && requiredTagsAsString!=null && !requiredTagsAsString.isEmpty()) return false;
+		
+		List<String> requiredTags = Arrays.asList(requiredTagsAsString.split("\\s*,\\s*"));
+		List<String> providedTags = Arrays.asList(providedTagsAsString.split("\\s*,\\s*"));
+		
+		return (requiredTags.containsAll(providedTags) && providedTags.containsAll(requiredTags));
 	}
 	
 	/**
@@ -1342,7 +1458,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		}
 	}
 	
-	// this list will be populated by subclass ResisterTests.RegisterWithCredentials_Test
+	// this list will be populated by subclass ResisterTests.testRegisterWithCredentials
 	protected static List<RegistrationData> registrationDataList = new ArrayList<RegistrationData>();	
 
 //	/**
@@ -1352,7 +1468,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 //	 * @throws JSONException
 //	 */
 //	protected RegistrationData findRegistrationDataNotMatchingOwnerKey(String key) throws JSONException {
-//		Assert.assertTrue (!registrationDataList.isEmpty(), "The RegisterWithCredentials_Test has been executed thereby populating the registrationDataList with content for testing."); 
+//		Assert.assertTrue (!registrationDataList.isEmpty(), "The testRegisterWithCredentials has been executed thereby populating the registrationDataList with content for testing."); 
 //		for (RegistrationData registration : registrationDataList) {
 //			if (registration.ownerKey!=null) {
 //				if (!registration.ownerKey.equals(key)) {
@@ -1377,7 +1493,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		List<RegistrationData> goodRegistrationData = new ArrayList<RegistrationData>();
 		List<String> ownersWithMatchingUsername = new ArrayList<String>();
 		List<String> usernamesWithMatchingOwnerKey = new ArrayList<String>();
-		Assert.assertTrue (!registrationDataList.isEmpty(), "The RegisterWithCredentials_Test has been executed thereby populating the registrationDataList with content for testing."); 
+		Assert.assertTrue (!registrationDataList.isEmpty(), "The testRegisterWithCredentials has been executed thereby populating the registrationDataList with content for testing."); 
 		for (RegistrationData registrationDatum : registrationDataList) {
 			if (registrationDatum.registerResult.getExitCode().intValue()==0) {
 				if (registrationDatum.ownerKey.equals(ownerKey)) usernamesWithMatchingOwnerKey.add(registrationDatum.username);
@@ -1435,7 +1551,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 //	 * @throws JSONException
 //	 */
 //	protected RegistrationData findRegistrationDataMatchingOwnerKeyButNotMatchingUsername(String key, String username) throws JSONException {
-//		Assert.assertTrue (!registrationDataList.isEmpty(), "The RegisterWithCredentials_Test has been executed thereby populating the registrationDataList with content for testing."); 
+//		Assert.assertTrue (!registrationDataList.isEmpty(), "The testRegisterWithCredentials has been executed thereby populating the registrationDataList with content for testing."); 
 //		for (RegistrationData registration : registrationDataList) {
 //			if (registration.ownerKey!=null) {
 //				if (registration.ownerKey.equals(key)) {
@@ -1456,7 +1572,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 //	 * @throws JSONException
 //	 */
 //	protected RegistrationData findRegistrationDataMatchingUsername(String username) throws JSONException {
-//		Assert.assertTrue (!registrationDataList.isEmpty(), "The RegisterWithCredentials_Test has been executed thereby populating the registrationDataList with content for testing."); 
+//		Assert.assertTrue (!registrationDataList.isEmpty(), "The testRegisterWithCredentials has been executed thereby populating the registrationDataList with content for testing."); 
 //		for (RegistrationData registration : registrationDataList) {
 //			if (registration.username.equals(username)) {
 //				return registration;
@@ -1469,16 +1585,16 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	 * This can be called by Tests that depend on it in a BeforeClass method to insure that registrationDataList has been populated.
 	 * @throws Exception 
 	 */
-	protected void RegisterWithCredentials_Test() throws Exception {
+	protected void testRegisterWithCredentials() throws Exception {
 		if (registrationDataList.isEmpty()) {
 			clienttasks.unregister(null,null,null, null); // make sure client is unregistered
 			for (List<Object> credentials : getRegisterCredentialsDataAsListOfLists()) {
 				rhsm.cli.tests.RegisterTests registerTests = new rhsm.cli.tests.RegisterTests();
 				registerTests.setupBeforeSuite();
 				try {
-					registerTests.RegisterWithCredentials_Test((String)credentials.get(0), (String)credentials.get(1), (String)credentials.get(2));			
+					registerTests.testRegisterWithCredentials((String)credentials.get(0), (String)credentials.get(1), (String)credentials.get(2));			
 				} catch (AssertionError e) {
-					log.warning("Ignoring a failure in RegisterWithCredentials_Test("+(String)credentials.get(0)+", "+(String)credentials.get(1)+", "+(String)credentials.get(2)+")");
+					log.warning("Ignoring a failure in testRegisterWithCredentials("+(String)credentials.get(0)+", "+(String)credentials.get(1)+", "+(String)credentials.get(2)+")");
 				}
 			}
 		}
@@ -1901,7 +2017,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		}
 		
 		// manually reorder the pools so that the base "Red Hat Enterprise Linux*" pool is first in the list
-		// This is a workaround for InstallAndRemovePackageAfterSubscribingToPool_Test so as to avoid installing
+		// This is a workaround for testInstallAndRemovePackageAfterSubscribingToPool so as to avoid installing
 		// a package from a repo that has a package dependency from a repo that is not yet entitled.
 		int i=0;
 		for (List<Object> list : ll) {
@@ -2154,7 +2270,6 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	public Object[][] getAvailableSystemSubscriptionPoolProductDataAs2dArray() throws Exception {
 		return TestNGUtils.convertListOfListsTo2dArray(getSystemSubscriptionPoolProductDataAsListOfLists(true, false));
 	}
-
 	/**
 	 * @param matchSystemHardware - make sure that atLeastOneProvidedProductSatisfiesArch
 	 * @param matchSystemSoftware - makes sure that atLeastOneProvidedProductIsInstalled
@@ -2162,6 +2277,8 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	 * @throws Exception
 	 */
 	protected List<List<Object>> getSystemSubscriptionPoolProductDataAsListOfLists(boolean matchSystemHardware, boolean matchSystemSoftware) throws Exception {
+		JSONObject jsonStatus = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(/*authenticator*/null,/*password*/null,sm_serverUrl,"/status"));
+		
 		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
 		List <String> productIdsAddedToSystemSubscriptionPoolProductData = new ArrayList<String>();
 		
@@ -2181,29 +2298,54 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		// get the currently installed product certs
 		List<ProductCert> productCerts = clienttasks.getCurrentProductCerts();
 		
-		// process all of the subscriptions belonging to ownerKey
-		/* 7/10/2015 devel consciously decided to drop @Verify(value = Owner.class, subResource = SubResource.SUBSCRIPTIONS) on this GET method starting with candlepin-2.0.
-		 * 7/10/2015 modifying this testware to simply raise the authentication credentials to admin
-		JSONArray jsonSubscriptions = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/owners/"+ownerKey+"/subscriptions"));
-		 */
-		JSONArray jsonSubscriptions = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,"/owners/"+ownerKey+"/subscriptions"));
-		for (int i = 0; i < jsonSubscriptions.length(); i++) {
-			JSONObject jsonSubscription = (JSONObject) jsonSubscriptions.get(i);
+		// process all of the subscriptions/pools belonging to ownerKey...
+		
+		// decide whether to loop through the subscription objects or pool objects
+		JSONArray jsonSubs;
+		if (SubscriptionManagerTasks.isVersion(jsonStatus.getString("version"), ">=", "2.1.1-1")) {	// candlepin commit 9c448315c843c0a20167236af7591359d895613a Discontinue ambiguous subscription resources in sharing world
+			jsonSubs = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,"/owners/"+ownerKey+"/pools?add_future=true"));	// /pools?add_future=true&include=productId;
+		} else {
+			/* 7/10/2015 devel consciously decided to drop @Verify(value = Owner.class, subResource = SubResource.SUBSCRIPTIONS) on this GET method starting with candlepin-2.0.
+			 * 7/10/2015 modifying this testware to simply raise the authentication credentials to admin
+			jsonSubs = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/owners/"+ownerKey+"/subscriptions"));
+			 */
+			jsonSubs = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,"/owners/"+ownerKey+"/subscriptions"));;
+		}
+		
+		// loop through all of the jsonSubs
+		for (int i = 0; i < jsonSubs.length(); i++) {
+			JSONObject jsonSub = (JSONObject) jsonSubs.get(i);
+			
+			// skip derived pools
+			if (jsonSub.has("subscriptionSubKey") && !jsonSub.isNull("subscriptionSubKey")) {	// null (custom pools not originating from a subscription)
+				if (jsonSub.getString("subscriptionSubKey").toLowerCase().equals("derived")) {	// master, derived, 
+					continue;
+				}
+			}
 			
 			// skip future subscriptions that are not valid today (at this time now)
-			Calendar startDate = parseISO8601DateString(jsonSubscription.getString("startDate"),"GMT");	// "startDate":"2012-02-08T00:00:00.000+0000"
-			Calendar endDate = parseISO8601DateString(jsonSubscription.getString("endDate"),"GMT");	// "endDate":"2013-02-07T00:00:00.000+0000"
+			Calendar startDate = parseISO8601DateString(jsonSub.getString("startDate"),"GMT");	// "startDate":"2012-02-08T00:00:00.000+0000"
+			Calendar endDate = parseISO8601DateString(jsonSub.getString("endDate"),"GMT");	// "endDate":"2013-02-07T00:00:00.000+0000"
 			if (!(startDate.before(now) && endDate.after(now))) continue;
 			
-			JSONObject jsonProduct = (JSONObject) jsonSubscription.getJSONObject("product");
-			String productId = jsonProduct.getString("id");
-			String productName = jsonProduct.getString("name");
+			// get the product id name and attributes
+			JSONArray jsonProductAttributes;
+			String productId;
+			String productName;
+			if (jsonSub.has("product")) {	// when jsonSub comes from /owners/{ownerKey}/subscriptions
+				productId = jsonSub.getJSONObject("product").getString("id");
+				productName = jsonSub.getJSONObject("product").getString("name");
+				jsonProductAttributes = jsonSub.getJSONObject("product").getJSONArray("attributes");
+			} else {	// when jsonSub comes from /owners/{ownerKey}/pools
+				productId = jsonSub.getString("productId");
+				productName = jsonSub.getString("productName");
+				jsonProductAttributes = jsonSub.getJSONArray("productAttributes");
+			}
 			
 			// skip subscriptions that have already been added to SystemSubscriptionPoolProductData
 			if (productIdsAddedToSystemSubscriptionPoolProductData.contains(productId)) continue;
 			
 			// process this subscription productId
-			JSONArray jsonProductAttributes = jsonProduct.getJSONArray("attributes");
 			boolean productAttributesPassRulesCheck = true; // assumed
 			String productAttributeSocketsValue = "";
 			List<String> productSupportedArches = new ArrayList<String>();
@@ -2307,14 +2449,20 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 				Boolean atLeastOneProvidedProductIsInstalled = false; // assumed
 				Boolean atLeastOneProvidedProductSatisfiesArch = false; // assumed
 				JSONArray jsonBundledProductData = new JSONArray();
-				JSONArray jsonProvidedProducts = (JSONArray) jsonSubscription.getJSONArray("providedProducts");
+				JSONArray jsonProvidedProducts = (JSONArray) jsonSub.getJSONArray("providedProducts");
 				if (jsonProvidedProducts.length()==0) atLeastOneProvidedProductIsInstalled = true;	// effectively true when no provided products are installed
 				if (jsonProvidedProducts.length()==0) atLeastOneProvidedProductSatisfiesArch = true;	// effectively true when no provided products are installed
 				for (int k = 0; k < jsonProvidedProducts.length(); k++) {
-					JSONObject jsonProvidedProduct = (JSONObject) jsonProvidedProducts.get(k);
+					
+					String providedProductId;
+					if (((JSONObject) jsonProvidedProducts.get(k)).has("id")) {	// when jsonSub comes from /owners/{ownerKey}/subscriptions
+						providedProductId = ((JSONObject) jsonProvidedProducts.get(k)).getString("id");
+					} else {	// when jsonSub comes from /owners/{ownerKey}/pools
+						providedProductId = ((JSONObject) jsonProvidedProducts.get(k)).getString("productId");
+					}
+					JSONObject jsonProvidedProduct = new JSONObject (CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,"/owners/"+ownerKey+"/products/"+providedProductId));
 					String providedProductName = jsonProvidedProduct.getString("name");
-					String providedProductId = jsonProvidedProduct.getString("id");
-
+					
 					// process this providedProducts attributes
 					JSONArray jsonProvidedProductAttributes = jsonProvidedProduct.getJSONArray("attributes");
 					boolean providedProductAttributesPassRulesCheck = true; // assumed
@@ -2399,7 +2547,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		}
 		
 		// minimize the number of dataProvided rows (useful during automated testcase development)
-		// WARNING: When true, this will fail the VerifyNormalAvailablePoolsFromSubscriptionsPassTheHardwareRulesCheck_Test
+		// WARNING: When true, this will fail the testVerifyNormalAvailablePoolsFromSubscriptionsPassTheHardwareRulesCheck
 		if (Boolean.valueOf(getProperty("sm.debug.dataProviders.minimize","false"))) ll=ll.subList(0,1);
 
 		return ll;
@@ -3671,11 +3819,11 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	
 	
 	
-	@DataProvider(name="getServerurl_TestData")
-	public Object[][] getServerurl_TestDataAs2dArray() {
-		return TestNGUtils.convertListOfListsTo2dArray(getServerurl_TestDataAsListOfLists());
+	@DataProvider(name="getServerurlData")
+	public Object[][] getServerurlDataAs2dArray() {
+		return TestNGUtils.convertListOfListsTo2dArray(getServerurlDataAsListOfLists());
 	}
-	protected List<List<Object>> getServerurl_TestDataAsListOfLists() {
+	protected List<List<Object>> getServerurlDataAsListOfLists() {
 		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
 		if (servertasks==null) return ll;
 		if (clienttasks==null) return ll;
@@ -3922,6 +4070,23 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		
 		// make sure the rhnplugin conf is enabled
 		clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForRhn, "enabled","1");
+	}
+
+
+	@AfterGroups(
+			value = {"testSubscriptionManagerShouldAutomaticallyEnableYumPluginsWhenAutoEnableIsOn",
+					"testSubscriptionManagerShouldNotAutomaticallyEnableYumPluginsWhenAutoEnableIsOff",
+					"testRhnMigrateClassicToRhsmShouldAutomaticallyEnableYumPluginsWhenAutoEnableIsOn",
+					"testRhnMigrateClassicToRhsmShouldAutomaticallyEnableYumPluginsWhenAutoEnableIsOff",
+					"testSubscriptionManagerConfigModuleShouldNotAutomaticallyEnableYumPlugins"},
+			groups = {"setup"})
+	public void resetDefaultConfigurationsForYumPluginsAndRhsmAutoEnableYumPlugins() {
+		// make sure subscription-manager config auto_enable_yum_plugins is on
+		clienttasks.config(false,false,true,new String[]{"rhsm","auto_enable_yum_plugins","1"});
+		
+		// make sure yum plugins are enabled
+		clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForProductId, "enabled", "1");
+		clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForSubscriptionManager, "enabled", "1");
 	}
 
 

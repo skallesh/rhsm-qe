@@ -9,8 +9,11 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.DefTypes;
 import com.github.redhatqe.polarize.metadata.TestDefinition;
+import com.github.redhatqe.polarize.metadata.TestType;
+import com.github.redhatqe.polarize.metadata.DefTypes.PosNeg;
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -37,7 +40,7 @@ import com.redhat.qe.tools.RemoteFileTasks;
  * 
  * 
  */
-@Test(groups = { "FlexibleBrandingTests","Tier2Tests" })
+@Test(groups = {"FlexibleBrandingTests"})
 public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 	protected  static String BrandType = null;
 	protected String ownerKey="";
@@ -58,12 +61,17 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36693", "RHEL7-51539"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36693", "RHEL7-51539"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="verify if brandname file is created",
-			groups={"VerifyBrandFileCreation"},
+			groups={"Tier2Tests","VerifyBrandFileCreation"},
 			enabled=true)
-	public void VerifyBrand_NameFileCreation() throws Exception {
+	public void testBrandNameFileCreation() throws Exception {
 		// reset the installed product cert to productCert32060 and reset the brand file
 		clienttasks.removeAllCerts(false, false, true);
 		RemoteFileTasks.runCommandAndAssert(client,"cp "+productCert32060.file+" "+tmpProductCertDir,Integer.valueOf(0));
@@ -85,12 +93,17 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36698", "RHEL7-51544"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36698", "RHEL7-51544"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="verify if brandname file is deleted",
-			groups={"VerifyBrandFileDeletion"},
+			groups={"Tier2Tests","VerifyBrandFileDeletion"},
 			enabled=true)
-	public void VerifyBrand_NameFileNotDeletedAfterUnsubscribing() throws Exception {
+	public void testBrandNameFileNotDeletedAfterUnsubscribing() throws Exception {
 		// reset the installed product cert to productCert32060 and reset the brand file
 		clienttasks.removeAllCerts(false, false, true);
 		RemoteFileTasks.runCommandAndAssert(client,"cp "+productCert32060.file+" "+tmpProductCertDir,Integer.valueOf(0));
@@ -115,12 +128,17 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36701", "RHEL7-51547"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36701", "RHEL7-51547"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="verify if brandname file are replaced",
-			groups={"VerifyBrandFileContents"},
+			groups={"Tier2Tests","VerifyBrandFileContents"},
 			enabled=true)
-	public void VerifyBrand_nameContentsAreReplaced() throws Exception {
+	public void testBrandNameContentsAreReplaced() throws Exception {
 		// reset the installed product cert to productCert32060 and reset the brand file
 		clienttasks.removeAllCerts(false, false, true);
 		RemoteFileTasks.runCommandAndAssert(client,"cp "+productCert32060.file+" "+tmpProductCertDir,Integer.valueOf(0));
@@ -152,12 +170,17 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36700", "RHEL7-51546"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36700", "RHEL7-51546"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="verify if brandtype value is present in the entitlement cert",
-			groups={"VerifyBrand_TypeValue"},
+			groups={"Tier2Tests","VerifyBrand_TypeValue"},
 			enabled=true) 
-	public void VerifyBrand_TypeValue() throws Exception {
+	public void testBrandTypeValue() throws Exception {
 		// reset the installed product cert to productCert32060 and reset the brand file
 		clienttasks.removeAllCerts(false, false, true);
 		RemoteFileTasks.runCommandAndAssert(client,"cp "+productCert32060.file+" "+tmpProductCertDir,Integer.valueOf(0));
@@ -185,12 +208,17 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36695", "RHEL7-51541"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36695", "RHEL7-51541"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="verify if brandname file is created for imported cert",
-			groups={"CreationWithImport"},
+			groups={"Tier2Tests","CreationWithImport"},
 			enabled=true) 
-	public void VerifyBrand_NameFileCreationWithImportedCert() throws Exception {
+	public void testBrandNameFileCreationWithImportedCert() throws Exception {
 		// reset the installed product cert to productCert32060 and reset the brand file
 		clienttasks.removeAllCerts(false, false, true);
 		RemoteFileTasks.runCommandAndAssert(client,"cp "+productCert32060.file+" "+tmpProductCertDir,Integer.valueOf(0));
@@ -221,12 +249,17 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36696", "RHEL7-51542"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36696", "RHEL7-51542"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="verify if brandname file is created when rhsmcertd service runs",
-			groups={"CreationWithRHSMCERTD","blockedByBug-907638"},
+			groups={"Tier2Tests","CreationWithRHSMCERTD","blockedByBug-907638"},
 			enabled=true) 
-	public void VerifyBrand_NameFileCreationWithRHSMCERTD() throws Exception {
+	public void testBrandNameFileCreationWithRhsmcertd() throws Exception {
 		// reset the installed product cert to productCert32060 and reset the brand file
 		clienttasks.removeAllCerts(false, false, true);
 		RemoteFileTasks.runCommandAndAssert(client,"cp "+productCert32060.file+" "+tmpProductCertDir,Integer.valueOf(0));
@@ -249,12 +282,17 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36697", "RHEL7-51543"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36697", "RHEL7-51543"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="verify if brandname file is created when two RHEL products are installed",
-			groups={"CreationWithTwoRhelproducts"},
+			groups={"Tier2Tests","CreationWithTwoRhelproducts"},
 			enabled=true) 
-	public void VerifyBrand_NameFileCreationWithTwoRhelProductInstalled() throws Exception {
+	public void testBrandNameFileCreationWithTwoRhelProductInstalled() throws Exception {
 		clienttasks.unregister(null, null, null, null);
 		
 		// reset the installed product certs and reset the brand file
@@ -277,12 +315,17 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36694", "RHEL7-51540"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36694", "RHEL7-51540"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="verify if brandname file is created when registering with an activation key",
-			groups={"CreationWithTActivationKey"},
+			groups={"Tier2Tests","CreationWithTActivationKey"},
 			enabled=true) 
-	public void VerifyBrand_NameFileCreationWithActivationKeys() throws Exception {
+	public void testBrandNameFileCreationWithActivationKeys() throws Exception {
 		// reset the installed product cert to productCert32060 and reset the brand file
 		clienttasks.removeAllCerts(false, false, true);
 		RemoteFileTasks.runCommandAndAssert(client,"cp "+productCert32060.file+" "+tmpProductCertDir,Integer.valueOf(0));
@@ -331,12 +374,17 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36699", "RHEL7-51545"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36699", "RHEL7-51545"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="verify if brandname file is created without product cert",
-			groups={"verifyFile"},
+			groups={"Tier2Tests","verifyFile"},
 			enabled=true)
-	public void VerifyBrand_NameFileShouldNotBeCreatedWithoutProduct() throws Exception {
+	public void testBrandNameFileShouldNotBeCreatedWithoutProduct() throws Exception {
 		// reset the installed product certs and reset the brand file
 		clienttasks.removeAllCerts(false, false, true);
 		RemoteFileTasks.runCommandAndWait(client,"rm -f "+Brand_Name, TestRecords.action());
@@ -362,12 +410,17 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36692", "RHEL7-51538"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36692", "RHEL7-51538"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="verify if Brand Name Creation During Repeated RHSMCERTD Updates",
-			groups={"verifyFileduringrhsmupdates","blockedByBug-907638"},
+			groups={"Tier2Tests","verifyFileduringrhsmupdates","blockedByBug-907638"},
 			enabled=true)
-	public void VerifyBrand_NameCreatedDuringRepeatedRHSMCERTDUpdates() throws Exception {
+	public void testBrandNameCreatedDuringRepeatedRhsmcertdUpdates() throws Exception {
 		// reset the installed product cert to productCert32060 and reset the brand file
 		clienttasks.removeAllCerts(false, false, true);
 		RemoteFileTasks.runCommandAndAssert(client,"cp "+productCert32060.file+" "+tmpProductCertDir,Integer.valueOf(0));
@@ -398,9 +451,9 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 */
 	@Test(	description="verify if brandname file is created cert version is 1",
-			groups={"VerifyBrand_NameCreatedWithCertV1","blockedByBug-1011768"},
+			groups={"Tier2Tests","VerifyBrand_NameCreatedWithCertV1","blockedByBug-1011768"},
 			enabled=false)//bug has been closed as not a bug
-	public void VerifyBrand_NameCreatedWithCertV1() throws Exception {
+	public void testBrandNameCreatedWithCertV1() throws Exception {
 		// reset the installed product cert to productCert32060 and reset the brand file
 		clienttasks.removeAllCerts(false, false, true);
 		RemoteFileTasks.runCommandAndAssert(client,"cp "+productCert32060.file+" "+tmpProductCertDir,Integer.valueOf(0));

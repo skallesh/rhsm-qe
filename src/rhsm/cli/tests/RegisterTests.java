@@ -31,6 +31,7 @@ import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.jul.TestRecords;
 
+import rhsm.base.CandlepinType;
 import rhsm.base.ConsumerType;
 import rhsm.base.SubscriptionManagerCLITestScript;
 import rhsm.cli.tasks.CandlepinTasks;
@@ -45,16 +46,19 @@ import rhsm.data.SubscriptionPool;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 import com.redhat.qe.tools.SSHCommandRunner;
-
+import com.github.redhatqe.polarize.metadata.DefTypes.PosNeg;
 import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.DefTypes;
+import com.github.redhatqe.polarize.metadata.LinkedItem;
 import com.github.redhatqe.polarize.metadata.TestDefinition;
+import com.github.redhatqe.polarize.metadata.TestType;
 
 /**
  * @author ssalevan
  * @author jsefler
  *
  */
-@Test(groups={"RegisterTests","Tier2Tests"})
+@Test(groups={"RegisterTests"})
 public class RegisterTests extends SubscriptionManagerCLITestScript {
 
 	
@@ -68,13 +72,18 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		clienttasks.unregister_(null, null, null, null);
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-19951", "RHEL7-33090"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-19951", "RHEL7-33090"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="subscription-manager-cli: register to a Candlepin server",
-			groups={"RegisterWithCredentials_Test", "AcceptanceTests","Tier1Tests"},
+			groups={"Tier1Tests","RegisterWithCredentials_Test"},
 			dataProvider="getRegisterCredentialsData")
 	@ImplementsNitrateTest(caseId=41677)
-	public void RegisterWithCredentials_Test(String username, String password, String org) {
+	public void testRegisterWithCredentials(String username, String password, String org) {
 		log.info("Testing registration to a Candlepin using username="+username+" password="+password+" org="+org+" ...");
 		
 		// cleanup from last test when needed
@@ -193,14 +202,19 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36518", "RHEL7-51290"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36518", "RHEL7-51290"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager-cli: register to a Candlepin server using bogus credentials",
-			groups={},
+			groups={"Tier2Tests"},
 			dataProvider="getAttemptRegistrationWithInvalidCredentials_Test")
 //	@ImplementsNitrateTest(caseId={41691, 47918})
 	@ImplementsNitrateTest(caseId=47918)
-	public void AttemptRegistrationWithInvalidCredentials_Test(Object meta, String username, String password, String owner, ConsumerType type, String name, String consumerId, Boolean autosubscribe, Boolean force, String debug, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex) {
+	public void testRegistrationWithInvalidCredentials(Object meta, String username, String password, String owner, ConsumerType type, String name, String consumerId, Boolean autosubscribe, Boolean force, String debug, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex) {
 		log.info("Testing registration to a Candlepin using various options and data and asserting various expected results.");
 		
 		// ensure we are unregistered
@@ -260,13 +274,18 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-19948", "RHEL7-55160"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-19948", "RHEL7-55160"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="subscription-manager-cli: attempt to register a user who has not yet accepted the Red Hat Terms and Conditions",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1089034","blockedByBug-1068766","blockedByBug-1458423"},
+			groups={"Tier1Tests","blockedByBug-1089034","blockedByBug-1068766","blockedByBug-1458423"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=48502)
-	public void AttemptRegistrationWithUnacceptedTermsAndConditions_Test() {
+	public void testRegistrationWithUnacceptedTermsAndConditions() {
 		String username = sm_usernameWithUnacceptedTC;
 		String password = sm_passwordWithUnacceptedTC;
 		if (username.equals("")) throw new SkipException("Must specify a username who has not yet accepted the Red Hat Terms and Conditions before attempting this test.");
@@ -310,13 +329,18 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-19947", "RHEL7-55159"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-19947", "RHEL7-55159"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="subscription-manager-cli: attempt to register a user who has been disabled",
-			groups={"AcceptanceTests","Tier1Tests"},
+			groups={"Tier1Tests"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=50210)
-	public void AttemptRegistrationWithDisabledUserCredentials_Test() {
+	public void testRegistrationWithDisabledUserCredentials() {
 		String username = sm_disabledUsername;
 		String password = sm_disabledPassword;
 		if (username.equals("")) throw new SkipException("Must specify a username who has been disabled before attempting this test.");
@@ -339,10 +363,10 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager-cli: register to a Candlepin server using autosubscribe functionality",
-			groups={"RegisterWithAutosubscribe_Test","blockedByBug-602378", "blockedByBug-616137", "blockedByBug-678049", "blockedByBug-737762", "blockedByBug-743082", "AcceptanceTests","Tier1Tests"},
+			groups={"Tier1Tests","RegisterWithAutosubscribe_Test","blockedByBug-602378", "blockedByBug-616137", "blockedByBug-678049", "blockedByBug-737762", "blockedByBug-743082"},
 			enabled=false)	// the strategy for this test has been improved in the new implementation of RegisterWithAutosubscribe_Test() 
 	@Deprecated
-	public void RegisterWithAutosubscribe_Test_DEPRECATED() throws JSONException, Exception {
+	public void testRegisterWithAutosubscribe_DEPRECATED() throws JSONException, Exception {
 
 		log.info("RegisterWithAutosubscribe_Test Strategy:");
 		log.info(" For DEV and QA testing purposes, we may not have valid products installed on the client, therefore we will fake an installed product by following this strategy:");
@@ -449,10 +473,10 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		//Assert.assertNotNull(ProductSubscription.findFirstInstanceWithMatchingFieldFromList("productName", autoSubscribedProduct.productName, clienttasks.getCurrentlyConsumedProductSubscriptions()),"Expected ProductSubscription with ProductName '"+autoSubscribedProduct.productName+"' is consumed after registering with autosubscribe.");
 	}
 	@Test(	description="subscription-manager-cli: register to a Candlepin server using autosubscribe functionality",
-			groups={"RegisterWithAutosubscribe_Test","blockedByBug-602378", "blockedByBug-616137", "blockedByBug-678049", "blockedByBug-737762", "blockedByBug-743082", "AcceptanceTests","Tier1Tests"},
+			groups={"Tier1Tests","RegisterWithAutosubscribe_Test","blockedByBug-602378", "blockedByBug-616137", "blockedByBug-678049", "blockedByBug-737762", "blockedByBug-743082"},
 			enabled=false)
 	@Deprecated
-	public void RegisterWithAutosubscribe_Test_DEPRECATED_2() throws JSONException, Exception {
+	public void testRegisterWithAutosubscribe_DEPRECATED_2() throws JSONException, Exception {
 
 		log.info("RegisterWithAutosubscribe_Test Strategy:");
 		log.info(" 1. Change the rhsm.conf configuration for productCertDir to point to a new temporary product cert directory.");
@@ -540,12 +564,17 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 				"As expected, ProductName '"+tmpProductCert.productName+"' was reported as subscribed in the output from register with autotosubscribe.");
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-19949", "RHEL7-50999"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-19949", "RHEL7-50999"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="subscription-manager-cli: register to a Candlepin server using autosubscribe functionality",
-			groups={"AcceptanceTests","Tier1Tests", "blockedByBug-602378", "blockedByBug-616137", "blockedByBug-678049", "blockedByBug-737762", "blockedByBug-743082", "blockedByBug-919700"},
+			groups={"Tier1Tests", "blockedByBug-602378", "blockedByBug-616137", "blockedByBug-678049", "blockedByBug-737762", "blockedByBug-743082", "blockedByBug-919700"},
 			enabled=true)
-	public void RegisterWithAutosubscribe_Test() throws JSONException, Exception {
+	public void testRegisterWithAutosubscribe() throws JSONException, Exception {
 
 		// determine all of the productIds that are provided by available subscriptions
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
@@ -669,12 +698,17 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36522", "RHEL7-51294"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36522", "RHEL7-51294"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager-cli: register with --force",
-			groups={"blockedByBug-623264"},
+			groups={"Tier2Tests","blockedByBug-623264"},
 			enabled=true)
-	public void RegisterWithForce_Test() {
+	public void testRegisterWithForce() {
 		
 		// start fresh by unregistering
 		clienttasks.unregister(null, null, null, null);
@@ -716,14 +750,19 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36525", "RHEL7-51298"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36525", "RHEL7-51298"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager-cli: register with --name",
 			dataProvider="getRegisterWithName_TestData",
-			groups={},
+			groups={"Tier2Tests"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=62352) // caseIds=81089 81090 81091
-	public void RegisterWithName_Test(Object bugzilla, String name, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex) {
+	public void testRegisterWithName(Object bugzilla, String name, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex) {
 		
 		// start fresh by unregistering
 		clienttasks.unregister(null, null, null, null);
@@ -850,31 +889,39 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-27114", "RHEL7-51297"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-27114", "RHEL7-51297"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager-cli: register with --name and --type",
-			dataProvider="getRegisterWithNameAndType_TestData",
-			groups={},
+			dataProvider="getRegisterWithNameAndTypeData",
+			groups={"Tier2Tests"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void RegisterWithNameAndType_Test(Object bugzilla, String username, String password, String owner, String name, ConsumerType type, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex) {
+	public void testRegisterWithNameAndType(Object bugzilla, String username, String password, String owner, String name, ConsumerType type, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex) {
 		
 		// start fresh by unregistering
 		clienttasks.unregister(null, null, null, null);
-		
 		// register with a name
+		
 		SSHCommandResult sshCommandResult = clienttasks.register_(username,password,owner,null,type,name,null, null, null, null, (String)null, null, null, null, null, null, null, null, null, null);
 		
 		// assert the sshCommandResult here
-		if (expectedExitCode!=null) Assert.assertEquals(sshCommandResult.getExitCode(), expectedExitCode,"ExitCode after register with --name="+name+" --type="+type+" options:");
+		if (expectedExitCode!=null)Assert.assertEquals(sshCommandResult.getExitCode(), expectedExitCode,"ExitCode after register with --name="+name+" --type="+type+" options:");
 		if (expectedStdoutRegex!=null) Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), expectedStdoutRegex,"Stdout after register with --name="+name+" --type="+type+" options:");
 		if (expectedStderrRegex!=null) Assert.assertContainsMatch(sshCommandResult.getStderr().trim(), expectedStderrRegex,"Stderr after register with --name="+name+" --type="+type+" options:");
 	}
-	@DataProvider(name="getRegisterWithNameAndType_TestData")
-	public Object[][] getRegisterWithNameAndType_TestDataAs2dArray() throws JSONException, Exception {
-		return TestNGUtils.convertListOfListsTo2dArray(getRegisterWithNameAndType_TestDataAsListOfLists());
+	
+
+	
+	@DataProvider(name="getRegisterWithNameAndTypeData")
+	public Object[][] getRegisterWithNameAndTypeDataAs2dArray() throws JSONException, Exception {
+		return TestNGUtils.convertListOfListsTo2dArray(getRegisterWithNameAndTypeDataAsListOfLists());
 	}
-	protected List<List<Object>> getRegisterWithNameAndType_TestDataAsListOfLists() throws JSONException, Exception {
+	protected List<List<Object>> getRegisterWithNameAndTypeDataAsListOfLists() throws JSONException, Exception {
 		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
 		String username=sm_clientUsername;
 		String password=sm_clientPassword;
@@ -887,8 +934,13 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 			String consumerType = jsonConsumerType.getString("label");
 			registerableConsumerTypes.add(consumerType);
 		}
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.20.2-1")) {	// post commit e0c34a729e9e347ab1e0f4f5fa656c8b20205fdf RFE Bug 1461003: Deprecate --type option on register command
+			// TODO I think the version check above should trigger on a server version commit not sub-man
+			// Allowing a RHUI type to register is now acceptable, but not advertised
+			if (!registerableConsumerTypes.contains(ConsumerType.RHUI.toString())) registerableConsumerTypes.add(ConsumerType.RHUI.toString());
+		}
 		
-		// interate across all ConsumerType values and append rows to the dataProvider
+		// iterate across all ConsumerType values and append rows to the dataProvider
 		for (ConsumerType type : ConsumerType.values()) {
 			String name = type.toString()+"_NAME";
 			
@@ -912,29 +964,84 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 					ll.add(Arrays.asList(new Object[]{null,  							username,	password,	name,	type,	Integer.valueOf(0),	"[a-f,0-9,\\-]{36} "+name,	null}));			
 				}
 				*/
-				ll.add(Arrays.asList(new Object[]{null,  	username,	password,	owner,	name,	type,	Integer.valueOf(0),	"The system has been registered with ID: [a-f,0-9,\\-]{36}",	null}));			
+				Integer expectedExitCode = new Integer(0);
+				String expectedStdoutRegex = "The system has been registered with ID: [a-f,0-9,\\-]{36}";
+				String expectedStderrRegex = null;
+				if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">="/*TODO CHANGE TO ">" after candlepin 2.1.2-1 is tagged*/, "2.1.1-1")) {	// candlepin commit 739b51a0d196d9d3153320961af693a24c0b826f Bug 1455361: Disallow candlepin consumers to be registered via Subscription Manager
+					if (ConsumerType.candlepin.equals(type) |
+						ConsumerType.headpin.equals(type) |
+						ConsumerType.katello.equals(type)) {
+						//	FINE: ssh root@jsefler-rhel7.usersys.redhat.com subscription-manager register --username=testuser1 --password=password --org=admin --type=candlepin --name="candlepin_NAME"
+						//	FINE: Stdout: Registering to: jsefler-candlepin.usersys.redhat.com:8443/candlepin
+						//	FINE: Stderr: You may not create a manifest consumer via Subscription Manager.
+						//	FINE: ExitCode: 70
+						expectedStdoutRegex = null;
+						expectedStderrRegex = "You may not create a manifest consumer via Subscription Manager.";
+						expectedExitCode = Integer.valueOf(70);
+					}
+				}
+				if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.1.1-1")) {	// candlepin commit 6976b7c45d48945d6d0bf1118bd1d8edebceb1f0
+					if (ConsumerType.share.equals(type)) {
+						//	FINE: ssh root@jsefler-rhel7.usersys.redhat.com subscription-manager register --username=testuser1 --password=password --org=admin --type=share --name="share_NAME"
+						//	FINE: Stdout: Registering to: jsefler-candlepin.usersys.redhat.com:8443/candlepin
+						//	FINE: Stderr: A unit type of "share" cannot have installed products
+						//	FINE: ExitCode: 70
+						expectedStdoutRegex = null;
+						//	Note: assuming there is at least one installed product since our client is a RHEL product afterall
+						expectedStderrRegex = "A unit type of \"share\" cannot have installed products";
+						expectedExitCode = Integer.valueOf(70);
+					}
+				}	
+				ll.add(Arrays.asList(new Object[]{null,  username,	password,	owner,	name,	type,	expectedExitCode,	expectedStdoutRegex,	expectedStderrRegex}));
 			} else {
 				String expectedStderrRegex = "No such consumer type: "+type;
 				if (!clienttasks.workaroundForBug876764(sm_serverType)) expectedStderrRegex = "No such unit type: "+type;
 				expectedStderrRegex = String.format("Unit type '%s' could not be found.",type);	// changed to this by bug 876758 comment 5; https://bugzilla.redhat.com/show_bug.cgi?id=876758#c5
 				Integer expectedExitCode = new Integer(255);
 				if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) expectedExitCode = new Integer(70);	// EX_SOFTWARE	// post commit df95529a5edd0be456b3528b74344be283c4d258
-				ll.add(Arrays.asList(new Object[]{ null,	username,	password,	owner,	name,	type,	expectedExitCode,	null,	expectedStderrRegex}));			
-	
+				ll.add(Arrays.asList(new Object[]{null,	username,	password,	owner,	name,	type,	expectedExitCode,	null,	expectedStderrRegex}));
 			}
 		}
-
+		
+		// process all of the rows and change the expected results due to 1461003: Deprecate --type option on register command
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.20.2-1")) {	// post commit e0c34a729e9e347ab1e0f4f5fa656c8b20205fdf RFE Bug 1461003: Deprecate --type option on register command
+			for (List<Object> l : ll) {
+				BlockedByBzBug blockedByBzBug = (BlockedByBzBug) l.get(0);	// get the existing BlockedByBzBug
+				ConsumerType type = (ConsumerType) l.get(5);
+				if (!type.equals(ConsumerType.system) && !type.equals(ConsumerType.RHUI)) {
+					List<String> bugIds = blockedByBzBug==null?new ArrayList<String>():new ArrayList<String>(Arrays.asList(blockedByBzBug.getBugIds()));
+					bugIds.add("1461003");	// Bug 1461003 - [RFE] Remove --type option from subscription-manager register
+					blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
+					l.set(0, blockedByBzBug);
+					l.set(6, new Integer(64));	// EX_USAGE
+					l.set(7, "");	// stdout
+					l.set(8, "Error: The --type option has been deprecated and may not be used.");	// stderr
+				}
+				if (type.equals(ConsumerType.RHUI)) {
+					List<String> bugIds = blockedByBzBug==null?new ArrayList<String>():new ArrayList<String>(Arrays.asList(blockedByBzBug.getBugIds()));
+					bugIds.add("1485008");	// Bug 1485008 - subscription-manager register --type="RHUI" or --type="rhui" should both work as documented in various KBase articles
+					blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
+					l.set(0, blockedByBzBug);
+				}
+			}
+		}
+		
 		return ll;
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36526", "RHEL7-51299"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36526", "RHEL7-51299"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="assert that a consumer can register with a release value and that subscription-manager release will return the set value",
-			groups={},
+			groups={"Tier2Tests"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void RegisterWithRelease_Test() {
+	public void testRegisterWithRelease() {
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,"Foo",(List<String>)null,null,null,null,true, null, null, null, null, null);		
 		Assert.assertEquals(clienttasks.getCurrentRelease(), "Foo", "The release value retrieved after registering with the release.");
 	}
@@ -944,8 +1051,13 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	/**
 	 * https://tcms.engineering.redhat.com/case/56327/?from_plan=2476
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-19953", "RHEL7-51002"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-19953", "RHEL7-51002"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="subscription-manager-cli: reregister basic registration\n" +
 			"\t\tActions:\n" +
 			"\n" +
@@ -962,10 +1074,10 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 			"\t \t\t* after running reregister you should have a new identity cert\n" +
 			"\t \t\t* after registering you should still the same products consumed (list consumed)\n" +
 			"\t \t\t* the entitlement serials should be the same as before the registration",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-636843","blockedByBug-962520"},
+			groups={"Tier1Tests","blockedByBug-636843","blockedByBug-962520"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=56327)
-	public void ReregisterBasicRegistration_Test() {
+	public void testReregisterBasicRegistration() {
 		
 		// start fresh by unregistering and registering
 		clienttasks.unregister(null, null, null, null);
@@ -1004,8 +1116,13 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	/**
 	 * https://tcms.engineering.redhat.com/case/56328/?from_plan=2476
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36529", "RHEL7-51302"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36529", "RHEL7-51302"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager-cli: bad identity cert\n" +
 			"\t\tActions:\n" +
 			"\n" +
@@ -1022,10 +1139,10 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 			"\t \t\t* after running reregister you should have a new identity cert\n" +
 			"\t \t\t* after registering you should still the same products consumed (list consumed)\n" +
 			"\t \t\t* the entitlement serials should be the same as before the registration",
-			groups={"blockedByBug-624106","blockedByBug-844069","ReregisterWithBadIdentityCert_Test"},
+			groups={"Tier2Tests","blockedByBug-624106","blockedByBug-844069","ReregisterWithBadIdentityCert_Test"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=56328)
-	public void ReregisterWithBadIdentityCert_Test() {
+	public void testReregisterWithBadIdentityCert() {
 		
 		// start fresh by unregistering and registering
 		clienttasks.unregister(null, null, null, null);
@@ -1085,8 +1202,13 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception 
 	 * @throws JSONException
 	 */
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36530", "RHEL7-51303"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36530", "RHEL7-51303"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="register with existing consumerid should automatically refresh entitlements\n" +
 			"Actions:\n" +
 			"\n" +
@@ -1102,10 +1224,10 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 			"Expected Results:\n" +
 			"\n" +
 			"    * when registering a new system to an already existing consumer, all of the existing consumers entitlement certs should be downloaded to the new system",
-			groups={},
+			groups={"Tier2Tests"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=72845)
-	public void ReregisterWithConsumerIdShouldAutomaticallyRefreshEntitlements_Test() throws JSONException, Exception {
+	public void testReregisterWithConsumerIdShouldAutomaticallyRefreshEntitlements() throws JSONException, Exception {
 		
 		// register with username and password and remember the consumerid
 		clienttasks.unregister(null, null, null, null);
@@ -1150,13 +1272,18 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36519", "RHEL7-51291"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36519", "RHEL7-51291"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="register with an empty /var/lib/rhsm/facts/facts.json file",
-			groups={"blockedByBug-667953","blockedByBug-669208"},
+			groups={"Tier2Tests","blockedByBug-667953","blockedByBug-669208"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
-	public void RegisterWithAnEmptyRhsmFactsJsonFile_Test() {
+	public void testRegisterWithAnEmptyRhsmFactsJsonFile() {
 		
 		Assert.assertTrue(RemoteFileTasks.testFileExists(client, clienttasks.rhsmFactsJsonFile)==1, "rhsm facts json file '"+clienttasks.rhsmFactsJsonFile+"' exists");
 		log.info("Emptying rhsm facts json file '"+clienttasks.rhsmFactsJsonFile+"'...");
@@ -1169,13 +1296,18 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36520", "RHEL7-51292"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36520", "RHEL7-51292"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="register with a missing /var/lib/rhsm/facts/facts.json file",
-			groups={},
+			groups={"Tier2Tests"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
-	public void RegisterWithAnMissingRhsmFactsJsonFile_Test() {
+	public void testRegisterWithAnMissingRhsmFactsJsonFile() {
 		
 		Assert.assertTrue(RemoteFileTasks.testFileExists(client, clienttasks.rhsmFactsJsonFile)==1, "rhsm facts json file '"+clienttasks.rhsmFactsJsonFile+"' exists");
 		log.info("Deleting rhsm facts json file '"+clienttasks.rhsmFactsJsonFile+"'...");
@@ -1187,14 +1319,19 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36524", "RHEL7-51296"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36524", "RHEL7-51296"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="register with interactive prompting for credentials",
-			groups={"blockedByBug-678151","blockedbyBug-878986"},
+			groups={"Tier2Tests","blockedByBug-678151","blockedbyBug-878986"},
 			dataProvider = "getRegisterWithInteractivePromptingForCredentials_TestData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void RegisterWithInteractivePromptingForCredentials_Test(Object bugzilla, String promptedUsername, String promptedPassword, String commandLineUsername, String commandLinePassword, String commandLineOrg, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex) {
+	public void testRegisterWithInteractivePromptingForCredentials(Object bugzilla, String promptedUsername, String promptedPassword, String commandLineUsername, String commandLinePassword, String commandLineOrg, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex) {
 		
 		// ensure we are unregistered
 		clienttasks.unregister(null,null,null, null);
@@ -1291,13 +1428,18 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36516", "RHEL7-51289"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36516", "RHEL7-51289"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager: attempt register to --environment when the candlepin server does not support environments should fail",
-			groups={},
+			groups={"Tier2Tests"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void AttemptRegisterToEnvironmentWhenCandlepinDoesNotSupportEnvironments_Test() throws JSONException, Exception {
+	public void testRegisterToEnvironmentWhenCandlepinDoesNotSupportEnvironments() throws JSONException, Exception {
 		// ask the candlepin server if it supports environment
 		boolean supportsEnvironments = CandlepinTasks.isEnvironmentsSupported(sm_clientUsername, sm_clientPassword, sm_serverUrl);
 		//boolean supportsEnvironments = CandlepinTasks.isEnvironmentsSupported(null,null, getServerUrl(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile,"hostname"), clienttasks.getConfFileParameter(clienttasks.rhsmConfFile,"port"), clienttasks.getConfFileParameter(clienttasks.rhsmConfFile,"prefix")));		// attempt to fix: INFO: I/O exception (javax.net.ssl.SSLException) caught when processing request: java.lang.RuntimeException: Could not generate DH keypair (org.apache.commons.httpclient.HttpMethodDirector.executeWithRetry)
@@ -1315,13 +1457,18 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36517", "RHEL7-59316"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36517", "RHEL7-59316"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager: attempt register to --environment without --org option should block on missing org",
-			groups={"blockedByBug-727092"},
+			groups={"Tier2Tests","blockedByBug-727092"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void AttemptRegisterToEnvironmentWithoutOrg_Test() throws JSONException, Exception {
+	public void testRegisterToEnvironmentWithoutOrg() throws JSONException, Exception {
 		// ask the candlepin server if it supports environment
 		boolean supportsEnvironments = CandlepinTasks.isEnvironmentsSupported(sm_clientUsername, sm_clientPassword, sm_serverUrl);
 		
@@ -1383,14 +1530,19 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-19950", "RHEL7-51000"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-19950", "RHEL7-51000"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="subscription-manager-cli: register with --baseurl",
 			dataProvider="getRegisterWithBaseurl_TestData",
-			groups={"RegisterWithBaseurl_Test","AcceptanceTests","Tier1Tests"},
+			groups={"Tier1Tests","RegisterWithBaseurl_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void RegisterWithBaseurl_Test(Object bugzilla, String baseurl, String baseurlConfigured, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex) {
+	public void testRegisterWithBaseurl(Object bugzilla, String baseurl, String baseurlConfigured, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex) {
 		// get original baseurl at the beginning of this test
 		//String baseurlBeforeTest = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsm","baseurl");
 		String baseurlBeforeTest = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "baseurl");
@@ -1549,14 +1701,19 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-19952", "RHEL7-51001"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-19952", "RHEL7-51001"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="subscription-manager-cli: register with --serverurl; assert positive registrations persist the serverurl to rhsm.conf, negative registrations do not.",
-			dataProvider="getServerurl_TestData",
-			groups={"RegisterWithServerurl_Test","AcceptanceTests","Tier1Tests"},
+			dataProvider="getServerurlData",
+			groups={"Tier1Tests","RegisterWithServerurl_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void RegisterWithServerurl_Test(Object bugzilla, String serverurl, String expectedHostname, String expectedPort, String expectedPrefix, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrMatch) {
+	public void testRegisterWithServerurl(Object bugzilla, String serverurl, String expectedHostname, String expectedPort, String expectedPrefix, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrMatch) {
 		// get original server at the beginning of this test
 		String hostnameBeforeTest	= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "hostname");
 		String portBeforeTest		= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "port");
@@ -1595,13 +1752,18 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36527", "RHEL7-51300"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36527", "RHEL7-51300"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager-cli: register with good --serverurl --autosubscribe and bad --servicelevel; assert persistance of serverurl from good registration",
-			groups={"RegisterWithServerurlAutosubscribeAndBadServicelevel_Test","blockedByBug-1221273"},
+			groups={"Tier2Tests","RegisterWithServerurlAutosubscribeAndBadServicelevel_Test","blockedByBug-1221273"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void RegisterWithServerurlAutosubscribeAndBadServicelevel_Test() throws JSONException, Exception {
+	public void testRegisterWithServerurlAutosubscribeAndBadServicelevel() throws JSONException, Exception {
 		clienttasks.unregister(null, null, null, null);
 		
 		// get the original good serverurl from the rhsm.conf file
@@ -1659,13 +1821,18 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36521", "RHEL7-51293"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36521", "RHEL7-51293"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager: register with --autosubscribe and --auto-attach can be used interchangably",
-			groups={"blockedByBug-874749","blockedByBug-874804"},
+			groups={"Tier2Tests","blockedByBug-874749","blockedByBug-874804"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
-	public void RegisterWithAutoattachDeprecatesAutosubscribe_Test() throws Exception {
+	public void testRegisterWithAutoattachDeprecatesAutosubscribe() throws Exception {
 		SSHCommandResult result = client.runCommandAndWait(clienttasks.command+" register --help");
 		Assert.assertContainsMatch(result.getStdout(), "^\\s*--autosubscribe\\s+Deprecated, see --auto-attach$");
 		
@@ -1692,13 +1859,18 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36523", "RHEL7-51295"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36523", "RHEL7-51295"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager: register with --insecure",
-			groups={"RegisterWithInsecure_Test","blockedByBug-844411","blockedByBug-993202"},
+			groups={"Tier2Tests","RegisterWithInsecure_Test","blockedByBug-844411","blockedByBug-993202"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void RegisterWithInsecure_Test() {
+	public void testRegisterWithInsecure() {
 		SSHCommandResult sshCommandResult;
 		
 		// calling register without insecure should pass
@@ -1746,13 +1918,18 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36528", "RHEL7-51301"})
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-36528", "RHEL7-51301"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="subscription-manager: register with leading or trailing whitespace on --username",
-			groups={"blockedByBug-1023166"},
+			groups={"Tier2Tests","blockedByBug-1023166"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void RegisterWithWhitespaceOnUsername_Test() {
+	public void testRegisterWithWhitespaceOnUsername() {
 		String usernameWithWhitespace;
 		SSHCommandResult sshCommandResult;
 		
@@ -1768,11 +1945,27 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-47919", "RHEL7-97262"},
+			linkedWorkItems= {
+				@LinkedItem(
+					workitemId= "RHEL6-28485",	// RHSM-REQ : subscription-manager cli registration and deregistration
+					project= Project.RHEL6,
+					role= DefTypes.Role.VERIFIES),
+				@LinkedItem(
+					workitemId= "RHEL7-91067",	// RHSM-REQ : subscription-manager cli registration and deregistration
+					project= Project.RedHatEnterpriseLinux7,
+					role= DefTypes.Role.VERIFIES)},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="subscription-manager: register with LC_ALL=C should succeed.",
-			groups={"blockedByBug-1445387","Tier1Tests"},
+			groups={"Tier1Tests","blockedByBug-1445387"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void RegisterWithLC_ALL_C_Test() {
+	public void testRegisterWithLC_ALL_C() {
 		
 		// make sure we are not registered
 		clienttasks.unregister(null, null, null, null);

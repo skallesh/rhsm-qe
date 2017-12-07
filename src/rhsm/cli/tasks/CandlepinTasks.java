@@ -3825,6 +3825,76 @@ schema generation failed
 		return new JSONObject(postResourceUsingRESTfulAPI(owner, password, url, "/owners", jsonData.toString()));
 	}
 	
+	static public JSONObject createCandlepinConsumerUsingRESTfulAPI(String authenticator, String password, String url, String owner, String name) throws Exception {
+		
+		//	[root@jsefler-rhel7 ~]# curl -k -u testuser1:password --header "Content-Type: application/json" --request POST 'https://jsefler-candlepin.usersys.redhat.com:8443/candlepin/consumers?owner=admin' --data '{"type":{"label":"candlepin"},"name":"candlepin_name"}' --stderr /dev/null | python -m json/tool
+		//	{
+		//	    "annotations": null,
+		//	    "autoheal": true,
+		//	    "canActivate": false,
+		//	    "capabilities": null,
+		//	    "contentAccessMode": null,
+		//	    "contentTags": null,
+		//	    "created": "2017-07-07T17:00:05+0000",
+		//	    "dev": false,
+		//	    "entitlementCount": 0,
+		//	    "entitlementStatus": null,
+		//	    "environment": null,
+		//	    "facts": null,
+		//	    "guestIds": [],
+		//	    "href": "/consumers/dc8a1d3b-b476-4c67-a363-f5b0ec230c89",
+		//	    "hypervisorId": null,
+		//	    "id": "8a90860f5d19a77e015d1dfe850f0b41",
+		//	    "idCert": {
+		//	        "cert": "-----BEGIN CERTIFICATE-----\nMIIDszCCAxygAwIBAgIIONYLLPkCksowDQYJKoZIhvcNAQEFBQAwTjEtMCsGA1UE\nAwwkanNlZmxlci1jYW5kbGVwaW4udXNlcnN5cy5yZWRoYXQuY29tMQswCQYDVQQG\nEwJVUzEQMA4GA1UEBwwHUmFsZWlnaDAeFw0xNzA3MDcxNjAwMDVaFw0zMzA3MDcx\nNzAwMDVaMC8xLTArBgNVBAMTJGRjOGExZDNiLWI0NzYtNGM2Ny1hMzYzLWY1YjBl\nYzIzMGM4OTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAMvY8PA8+EZ1\nPKSG9HHuQH1vD15dDUK72NZ2CpH6Gdfy9+dzQKuZwZ1P+43xeGU7kCpmZvPuEvhh\nX+CJ20WW2exRpjChU/Un00I8apNBdNhxLDIK9qXllqyvhi+WKZ+F/HVHhFE01lLy\nTYVX5LxSdQvE18bPQJR0hjLQmLXD/L95XiGXiKmUoBnjsrL8TRrB41AyOAxjl6bZ\n6HW7LfI40McbKuZwmWxz33el/N6u1ESlwVmS8rLuVVLmMrXcb2K4GB884TZKNSxL\ndpTFROJ8/T6ASTH8hJxcy+5BH7/G8sMtmAsojPzmtVaUG4QAaDfKIgAwugIkHDxK\nwPVC5cInQNUCAwEAAaOCATMwggEvMBEGCWCGSAGG+EIBAQQEAwIFoDALBgNVHQ8E\nBAMCBLAwfgYDVR0jBHcwdYAUS2QA9/x6L+MPwXo7mjN04xAZf9ahUqRQME4xLTAr\nBgNVBAMMJGpzZWZsZXItY2FuZGxlcGluLnVzZXJzeXMucmVkaGF0LmNvbTELMAkG\nA1UEBhMCVVMxEDAOBgNVBAcMB1JhbGVpZ2iCCQDt7lC7OV1PcTAdBgNVHQ4EFgQU\ntA2EI0nJfG38My4LPjloLXRcDNwwEwYDVR0lBAwwCgYIKwYBBQUHAwIwWQYDVR0R\nBFIwUKQxMC8xLTArBgNVBAMMJGRjOGExZDNiLWI0NzYtNGM2Ny1hMzYzLWY1YjBl\nYzIzMGM4OaQbMBkxFzAVBgNVBAMMDmNhbmRsZXBpbl9uYW1lMA0GCSqGSIb3DQEB\nBQUAA4GBAEowyr3R8a+sVzFlQRG7LFFnq08WZxAPkKRZAGB2hDX/Yelg5hfCdGqg\n/Ij+Hzt/alS1hd33cpwrMfdNFmKNGEHvvptMXNeArYmJla0h/77jjGfaw/cP24eh\nCcIooobf3LCrbYiHiWO/Fbt5F0XMgzGUIpCKE3Ks78pBpeV+P6t0\n-----END CERTIFICATE-----\n",
+		//	        "created": "2017-07-07T17:00:06+0000",
+		//	        "id": "8a90860f5d19a77e015d1dfe87560b43",
+		//	        "key": "-----BEGIN RSA PRIVATE KEY-----\nMIIEogIBAAKCAQEAy9jw8Dz4RnU8pIb0ce5AfW8PXl0NQrvY1nYKkfoZ1/L353NA\nq5nBnU/7jfF4ZTuQKmZm8+4S+GFf4InbRZbZ7FGmMKFT9SfTQjxqk0F02HEsMgr2\npeWWrK+GL5Ypn4X8dUeEUTTWUvJNhVfkvFJ1C8TXxs9AlHSGMtCYtcP8v3leIZeI\nqZSgGeOysvxNGsHjUDI4DGOXptnodbst8jjQxxsq5nCZbHPfd6X83q7URKXBWZLy\nsu5VUuYytdxvYrgYHzzhNko1LEt2lMVE4nz9PoBJMfyEnFzL7kEfv8bywy2YCyiM\n/Oa1VpQbhABoN8oiADC6AiQcPErA9ULlwidA1QIDAQABAoIBABcR6Uq3C74lnIRe\nRaHzPdc0T3/1df+8dLDo0Q9uR6h59fZ6w7HoB9J+79BDqMWENS+nQTWQFxOHKaum\nzmsUxHsLToyoZXEUXcNcRQ9/U/L+8+qB9SIXVrMadkxCaVmFd2nqex4ZpbvjckSK\nCvgJOPfpAiac5AkpGtr7Yp0Hnj4pEXg1bns2cghXzL7mI0GyHEAjswLVhTpxwTYM\nd2YhbFVGjTE3qdf4HidzX153jIHFT21+GEgITv71GM3XpR3aM0j9Xh1bpBE5MlW2\nY0u2kIJdirzXxRrSzZ2WQBm5lEbU9txKf33TkI9OTK7CAQdjs7oEzD6gnzNDgHNy\nlGc9RmECgYEA6FuYXtn6w7tzofLWuA1h+ikyxBiqZvZGIJ+nFY7r+B+/wVj/BoS5\n17etVMkzD+6fKhBEr8qGL50v9u4bZPtDOHvtc8mhm988Gbta43ImZhoMAcw/mlOU\nKGSFeHGu7UoXdo0jlDN6YkPWWn5MsJSzFIXoxNykGXher4pAoeZ36YkCgYEA4Ja2\n1HeFPyi0BeN+l4IyP7VFjF7XLo0PxX75Fr68w2/t8rlrzsR0EEFrh5xNlhvohXLg\n7Lf++mse/uW7fC8VBRSZ+hVyZScwB4fUuNP9Hnq0yNEHTCYz3Nq+vHa6uflNb1mX\n6TWOwegEIY9BnfqGzycUwydVfnAGleyLMUK5Ze0CgYAtPzjqr5PvbZ9U2A8MBD8i\nEce6+/qi1i5NyAknX49/397dbdErmcj+wtvT+OIiphsEe+qEOPHsb7WZZkCbZ3pt\nk2Rn+cmoqs3vTNakF+R2WXghGX8BNGlTfE+pZqnjt1veUBmvkF6yp/cj5BhXAn3k\n7zamrzidZR07Hbb8T/7l0QKBgAZQ1rVk4w9ioqVjv2SdWbJm85y98gkyGFZyeqjE\nFmTcmfFwe3KmHalzXYXDxH7LLB/Mmjyt8/Kw3n9GkJ4uaMXqzWW2ArCLiJM9o6LK\n+1xHERxwnGbs0BqO4DxGjnu6Yg4Wk+oQAoK7dppHAA5kRDRBIhlW2tWiatz+eO+a\ns8IFAoGAR2ScKdPOvrjJE8S+3+jar1GJ5WWiCaCVy0V9FxNJQ7hq7zdImBMN/G+q\n+99SGTMCY8Lw6RoED4AfOT5a15Kpd85bFezsAyFJH+7QkW/Me0LjGEszIMszuI94\nMKjqi6Ua4cx8PvsSK7chJ58HHurYHAXSEt3Ok/k5QX59i9FQPpg=\n-----END RSA PRIVATE KEY-----\n",
+		//	        "serial": {
+		//	            "collected": false,
+		//	            "created": "2017-07-07T17:00:05+0000",
+		//	            "expiration": "2033-07-07T17:00:05+0000",
+		//	            "id": 4095473198924206794,
+		//	            "revoked": false,
+		//	            "serial": 4095473198924206794,
+		//	            "updated": "2017-07-07T17:00:05+0000"
+		//	        },
+		//	        "updated": "2017-07-07T17:00:06+0000"
+		//	    },
+		//	    "installedProducts": null,
+		//	    "lastCheckin": null,
+		//	    "name": "candlepin_name",
+		//	    "owner": {
+		//	        "displayName": "Admin Owner",
+		//	        "href": "/owners/admin",
+		//	        "id": "8a90860f5d19a77e015d19a89aa20003",
+		//	        "key": "admin"
+		//	    },
+		//	    "recipientOwnerKey": null,
+		//	    "releaseVer": {
+		//	        "releaseVer": null
+		//	    },
+		//	    "serviceLevel": "",
+		//	    "type": {
+		//	        "id": "1003",
+		//	        "label": "candlepin",
+		//	        "manifest": true
+		//	    },
+		//	    "updated": "2017-07-07T17:00:06+0000",
+		//	    "username": "testuser1",
+		//	    "uuid": "dc8a1d3b-b476-4c67-a363-f5b0ec230c89"
+		//	}
+		
+		// initialize the data
+		JSONObject jsonTypeData = new JSONObject();
+		jsonTypeData.put("label", ConsumerType.candlepin.toString());
+		JSONObject jsonData = new JSONObject();
+		jsonData.put("type", jsonTypeData);
+		jsonData.put("name", name);
+		
+		return new JSONObject(postResourceUsingRESTfulAPI(authenticator, password, url, "/consumers?owner="+owner, jsonData.toString()));
+	}
+	
 	public SSHCommandResult deleteOwnerUsingCPC(String owner_name) {
 		log.info("Using the ruby client to delete_owner owner_name='"+owner_name+"'...");
 		if (serverInstallDir.isEmpty()) log.warning("serverInstallDir is empty.  Check the value of the sm.server.installDir in your automation.properties file.");
@@ -4068,19 +4138,31 @@ schema generation failed
 		DateFormat dateFormat = new SimpleDateFormat(simpleDateFormatOverride);
 		return dateFormat.format(date.getTime());
 	}
+	
+	/**
+	 * Calls to this method are being forwarded to createSubscriptionPoolRequestBody(...) for candlepin >= 2.1.1-1.
+	 * Beware that the return object could will now be for a pool rather than a subscription.  They differ SLIGHTLY.
+	 * @param url
+	 * @param quantity
+	 * @param startDate
+	 * @param endDate
+	 * @param productId
+	 * @param contractNumber
+	 * @param accountNumber
+	 * @param providedProducts
+	 * @param brandingMaps
+	 * @return
+	 * @throws Exception
+	 */
+	@Deprecated
+	public static JSONObject createSubscriptionRequestBody(String url, Integer quantity, Date startDate, Date endDate, String productId, Integer contractNumber, Integer accountNumber, List<String> providedProducts, List<Map<String, String>> brandingMaps) throws Exception {
+		JSONObject jsonStatus = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(/*authenticator*/null,/*password*/null,url,"/status"));
+		if (SubscriptionManagerTasks.isVersion(jsonStatus.getString("version"), ">=", "2.1.1-1")) {	// candlepin commit 9c448315c843c0a20167236af7591359d895613a Discontinue ambiguous subscription resources in sharing world
+			// forward to newer task
+			return createSubscriptionPoolRequestBody(url, quantity, startDate, endDate, productId, contractNumber, accountNumber, providedProducts, brandingMaps);
+		}
 		
-	public static JSONObject createSubscriptionRequestBody(Integer quantity, Date startDate, Date endDate, String productId, Integer contractNumber, Integer accountNumber, List<String> providedProducts, List<Map<String, String>> brandingMaps) throws JSONException{
-		
-		/*
-		[root@jsefler-onprem-62server ~]# curl -k --user admin:admin --request POST
-		--data '{"product":{"id":"awesomeos-server-basic"},"startDate":"Tue, 13 Sep
-		2016 01:00:00 -0400","accountNumber":123456,"quantity":20,"endDate":"Wed, 13
-		Sep 2017 01:00:00
-		-0400","contractNumber":123,"providedProducts":[{"id":"37060"}]}' --header
-		'accept: application/json' --header 'content-type: application/json' 
-		https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/owners/admin/subscriptions
-		| python -mjson.tool
-		 */
+		// [root@jsefler-onprem-62server ~]# curl -k --user admin:admin --request POST --data '{"product":{"id":"awesomeos-server-basic"},"startDate":"Tue, 13 Sep 2016 01:00:00 -0400","accountNumber":123456,"quantity":20,"endDate":"Wed, 13 Sep 2017 01:00:00 -0400","contractNumber":123,"providedProducts":[{"id":"37060"}]}' --header 'accept: application/json' --header 'content-type: application/json' https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/owners/admin/subscriptions | python -mjson.tool
 		
 		JSONObject sub = new JSONObject();
 		SimpleDateFormat sdf = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z");
@@ -4119,6 +4201,147 @@ schema generation failed
 
 		return sub;
 	}
+	
+	
+	public static JSONObject createSubscriptionPoolRequestBody(String url, Integer quantity, Date startDate, Date endDate, String productId, Integer contractNumber, Integer accountNumber, List<String> providedProducts, List<Map<String, String>> brandingMaps) throws JSONException{
+		
+		//	[root@jsefler-rhel7 ~]# curl -k --user admin:admin --stderr /dev/null --request POST --data '{"product":{"id":"awesomeos-server-basic"},"startDate":"Tue, 13 Sep 2016 01:00:00 -0400","accountNumber":123456,"quantity":20,"endDate":"Wed, 13 Sep 2099 01:00:00 -0400","contractNumber":123,"providedProducts":[{"productId":"37060"}]}' --header 'accept: application/json' --header 'content-type: application/json' https://jsefler-candlepin.usersys.redhat.com:8443/candlepin/owners/admin/pools | python -mjson.tool
+		//	{
+		//	    "accountNumber": "123456",
+		//	    "activeSubscription": true,
+		//	    "attributes": [],
+		//	    "branding": [],
+		//	    "calculatedAttributes": null,
+		//	    "consumed": 0,
+		//	    "contractNumber": "123",
+		//	    "created": "2017-10-11T19:12:49+0000",
+		//	    "createdByShare": false,
+		//	    "derivedProductAttributes": [],
+		//	    "derivedProductId": null,
+		//	    "derivedProductName": null,
+		//	    "derivedProvidedProducts": [],
+		//	    "developmentPool": false,
+		//	    "endDate": "2099-09-13T05:00:00+0000",
+		//	    "exported": 0,
+		//	    "hasSharedAncestor": false,
+		//	    "href": "/pools/8a90860f5eed6282015f0cda8abe3721",
+		//	    "id": "8a90860f5eed6282015f0cda8abe3721",
+		//	    "orderNumber": null,
+		//	    "owner": {
+		//	        "displayName": "Admin Owner",
+		//	        "href": "/owners/admin",
+		//	        "id": "8a90860f5eed6282015eed637d7d0003",
+		//	        "key": "admin"
+		//	    },
+		//	    "productAttributes": [
+		//	        {
+		//	            "name": "management_enabled",
+		//	            "value": "0"
+		//	        },
+		//	        {
+		//	            "name": "multi-entitlement",
+		//	            "value": "no"
+		//	        },
+		//	        {
+		//	            "name": "vcpu",
+		//	            "value": "4"
+		//	        },
+		//	        {
+		//	            "name": "warning_period",
+		//	            "value": "30"
+		//	        },
+		//	        {
+		//	            "name": "variant",
+		//	            "value": "ALL"
+		//	        },
+		//	        {
+		//	            "name": "sockets",
+		//	            "value": "2"
+		//	        },
+		//	        {
+		//	            "name": "support_level",
+		//	            "value": "None"
+		//	        },
+		//	        {
+		//	            "name": "support_type",
+		//	            "value": "Self-Support"
+		//	        },
+		//	        {
+		//	            "name": "arch",
+		//	            "value": "ALL"
+		//	        },
+		//	        {
+		//	            "name": "type",
+		//	            "value": "MKT"
+		//	        },
+		//	        {
+		//	            "name": "version",
+		//	            "value": "1.0"
+		//	        }
+		//	    ],
+		//	    "productId": "awesomeos-server-basic",
+		//	    "productName": "Awesome OS Server Basic",
+		//	    "providedProducts": [
+		//	        {
+		//	            "productId": "37060",
+		//	            "productName": "Awesome OS Server Bits"
+		//	        }
+		//	    ],
+		//	    "quantity": 20,
+		//	    "restrictedToUsername": null,
+		//	    "shared": 0,
+		//	    "sourceEntitlement": null,
+		//	    "sourceStackId": null,
+		//	    "stackId": null,
+		//	    "stacked": false,
+		//	    "startDate": "2016-09-13T05:00:00+0000",
+		//	    "subscriptionId": null,
+		//	    "subscriptionSubKey": null,
+		//	    "type": "NORMAL",
+		//	    "updated": "2017-10-11T19:12:49+0000",
+		//	    "upstreamConsumerId": null,
+		//	    "upstreamEntitlementId": null,
+		//	    "upstreamPoolId": null
+		//	}
+
+		JSONObject sub = new JSONObject();
+		SimpleDateFormat sdf = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z");
+		if (startDate!=null)		sub.put("startDate", sdf.format(startDate));
+		if (endDate!=null)			sub.put("endDate", sdf.format(endDate));
+		if (contractNumber!=null)	sub.put("contractNumber", contractNumber);
+		if (accountNumber!=null)	sub.put("accountNumber", accountNumber);
+		if (quantity!=null)			sub.put("quantity", quantity);
+
+		List<JSONObject> pprods = new ArrayList<JSONObject>();
+		if (providedProducts!=null) {
+			for (String providedProductId: providedProducts) {
+				JSONObject jo = new JSONObject();
+				jo.put("productId", providedProductId);
+				pprods.add(jo);
+			}
+			sub.put("providedProducts", pprods);
+		}
+		
+		JSONArray jsonBrandings = new JSONArray();
+		if (brandingMaps!=null) {
+			for (Map<String,String> brandingMap: brandingMaps) {
+				JSONObject jsonBranding = new JSONObject();
+				for (String key : brandingMap.keySet()) {	// Valid branding keys: "productId", "type", "name"
+					jsonBranding.put(key, brandingMap.get(key));
+				}
+				jsonBrandings.put(jsonBranding);
+			}
+			sub.put("branding", jsonBrandings);
+		}
+
+		JSONObject prod = new JSONObject();
+		prod.put("id", productId);
+		
+		sub.put("product", prod);
+
+		return sub;
+	}
+
 	
 	public static JSONObject createProductRequestBody(String name, String productId, Integer multiplier, Map<String,String> attributes, List<String> dependentProductIds) throws JSONException{
 		
@@ -4195,9 +4418,45 @@ schema generation failed
 
 		return httpResponse;
 	}
+	
+	public static String updateSubscriptionPoolDatesUsingRESTfulAPI(String authenticator, String password, String url, String poolId, Calendar startCalendar, Calendar endCalendar) throws JSONException, Exception  {
+Assert.fail("THIS METHIOD IS UNDER DEVELOPMENT.  Blocked by candlepin bugs 1500837 1500843");
+		// get the existing subscription pool for default values
+		JSONObject jsonPool = new JSONObject(getResourceUsingRESTfulAPI(authenticator, password, url, "/pools/"+poolId));
+		
+		// create a jsonOwner
+		JSONObject jsonOwner = new JSONObject();
+		jsonOwner.put("key", jsonPool.getJSONObject("owner").getString("key"));
+		
+		// create a jsonProduct
+//		JSONObject jsonProduct = new JSONObject();
+//		jsonProduct.put("id", jsonPool.getJSONObject("product").getString("id"));
+		
+		// create a requestBody
+		JSONObject requestBody = new JSONObject();
+		requestBody.put("id", poolId);
+		SimpleDateFormat sdf = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z");
+		if (startCalendar!=null)	requestBody.put("startDate", sdf.format(startCalendar.getTime())); else requestBody.put("startDate", jsonPool.getString("startDate"));
+		if (endCalendar!=null)		requestBody.put("endDate", sdf.format(endCalendar.getTime())); else requestBody.put("endDate", jsonPool.getString("endDate"));
+		requestBody.put("quantity",jsonPool.getInt("quantity"));
+		requestBody.put("owner",jsonOwner);
+//		requestBody.put("product",jsonProduct);
+		
+		
+		// update the subscription pool
+		String httpResponse = CandlepinTasks.putResourceUsingRESTfulAPI(authenticator,password,url,"/owners/"+jsonOwner.getString("key")+"/pools",requestBody);
+		// httpResponse will be null; not a string representation of the jsonSubscription!  
+		
+		// refresh the pools
+//		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(authenticator,password,url,jsonOwner.getString("key"));
+//		jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(authenticator,password,url,jobDetail,"FINISHED", 5*1000, 1);
 
+		return httpResponse;
+	}
 	
 	/**
+	 * Calls to this method are being forwarded to createSubscriptionPoolUsingRESTfulAPI(...) for candlepin >= 2.1.1-1.
+	 * Beware that the return object could will now be a pool rather than a subscription.
 	 * @param authenticator
 	 * @param password
 	 * @param url
@@ -4210,11 +4469,17 @@ schema generation failed
 	 * @param productId
 	 * @param providedProductIds
 	 * @param brandingMaps
-	 * @return JSONObject representing the pool corresponding to the subscription
+	 * @return
 	 * @throws JSONException
 	 * @throws Exception
 	 */
+	@Deprecated
 	public static JSONObject createSubscriptionAndRefreshPoolsUsingRESTfulAPI(String authenticator, String password, String url, String ownerKey, Integer quantity, int startingMinutesFromNow, int endingMinutesFromNow, Integer contractNumber, Integer accountNumber, String productId, List<String> providedProductIds, List<Map<String,String>> brandingMaps) throws JSONException, Exception  {
+		JSONObject jsonStatus = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(/*authenticator*/null,/*password*/null,url,"/status"));
+		if (SubscriptionManagerTasks.isVersion(jsonStatus.getString("version"), ">=", "2.1.1-1")) {	// candlepin commit 9c448315c843c0a20167236af7591359d895613a Discontinue ambiguous subscription resources in sharing world
+			// forward to newer task
+			return createSubscriptionPoolUsingRESTfulAPI(authenticator, password, url, ownerKey, quantity, startingMinutesFromNow, endingMinutesFromNow, contractNumber, accountNumber, productId, providedProductIds, brandingMaps);
+		}
 		
 		// set the start and end dates
 		Calendar endCalendar = new GregorianCalendar();
@@ -4225,7 +4490,7 @@ schema generation failed
 		Date startDate = startCalendar.getTime();
 		
 		// create the subscription
-		String requestBody = CandlepinTasks.createSubscriptionRequestBody(quantity, startDate, endDate, productId, contractNumber, accountNumber, providedProductIds, brandingMaps).toString();
+		String requestBody = CandlepinTasks.createSubscriptionRequestBody(url, quantity, startDate, endDate, productId, contractNumber, accountNumber, providedProductIds, brandingMaps).toString();
 		// curl --stderr /dev/null --insecure --user admin:admin --request POST --data '{"product":{"id":"0-sockets"},"quantity":20,"providedProducts":[{"id":"90001"}],"endDate":"Tue, 15 Mar 2016 12:14:20 -0400","contractNumber":1021091971,"accountNumber":1131685727,"startDate":"Sun, 28 Feb 2016 11:14:20 -0500"}' --header 'accept: application/json' --header 'content-type: application/json' https://jsefler-f22-candlepin.usersys.redhat.com:8443/candlepin/owners/admin/subscriptions
 		JSONObject jsonSubscription = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(authenticator,password,url,"/owners/" + ownerKey + "/subscriptions",requestBody));
 		
@@ -4260,6 +4525,53 @@ schema generation failed
 		log.info("The newly created subscription pool with id '"+poolId+"' will start '"+startingMinutesFromNow+"' minutes from now.");
 		log.info("The newly created subscription pool with id '"+poolId+"' will expire '"+endingMinutesFromNow+"' minutes from now.");
 		return jsonPool; // return first jsonPool found generated for the newly created subscription
+		
+	}
+	
+	/**
+	 * create a subscription pool under owner for productId - this method replaces createSubscriptionAndRefreshPoolsUsingRESTfulAPI(...) for candlepin version >= 2.1.1-1
+	 * @param authenticator
+	 * @param password
+	 * @param url
+	 * @param ownerKey
+	 * @param quantity
+	 * @param startingMinutesFromNow
+	 * @param endingMinutesFromNow
+	 * @param contractNumber
+	 * @param accountNumber
+	 * @param productId
+	 * @param providedProductIds
+	 * @param brandingMaps
+	 * @return the master pool created
+	 * @throws JSONException
+	 * @throws Exception
+	 */
+	public static JSONObject createSubscriptionPoolUsingRESTfulAPI(String authenticator, String password, String url, String ownerKey, Integer quantity, int startingMinutesFromNow, int endingMinutesFromNow, Integer contractNumber, Integer accountNumber, String productId, List<String> providedProductIds, List<Map<String,String>> brandingMaps) throws JSONException, Exception  {
+		
+		// set the start and end dates
+		Calendar endCalendar = new GregorianCalendar();
+		endCalendar.add(Calendar.MINUTE, endingMinutesFromNow);
+		Date endDate = endCalendar.getTime();
+		Calendar startCalendar = new GregorianCalendar();
+		startCalendar.add(Calendar.MINUTE, startingMinutesFromNow);
+		Date startDate = startCalendar.getTime();
+		
+		// create the subscription pool
+		String requestBody = CandlepinTasks.createSubscriptionPoolRequestBody(url, quantity, startDate, endDate, productId, contractNumber, accountNumber, providedProductIds, brandingMaps).toString();
+		// [root@jsefler-rhel7 ~]# curl --stderr /dev/null --insecure --user admin:admin --request POST --data '{"product":{"id":"0-sockets"},"quantity":20,"providedProducts":[{"productId":"90001"}],"endDate":"Tue, 15 Mar 2016 12:14:20 -0400","contractNumber":1021091971,"accountNumber":1131685727,"startDate":"Sun, 28 Feb 2016 11:14:20 -0500"}' --header 'accept: application/json' --header 'content-type: application/json' https://jsefler-candlepin.usersys.redhat.com:8443/candlepin/owners/admin/pools
+		JSONObject jsonPool = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(authenticator,password,url,"/owners/" + ownerKey + "/pools",requestBody));
+		
+		if (jsonPool.has("displayMessage")) {
+			//log.warning("Pool creation appears to have failed: "+jsonSubscription("displayMessage"));
+			Assert.fail("Pool creation appears to have failed: "+jsonPool.getString("displayMessage"));
+		}
+		
+// NOT NECESSARY
+//		// refresh the pools
+//		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(authenticator,password,url,ownerKey);
+//		jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(authenticator,password,url,jobDetail,"FINISHED", 5*1000, 1);
+		
+		return jsonPool; // return the newly created subscription pool
 		
 	}
 	
@@ -4313,8 +4625,24 @@ schema generation failed
 		
 	}
 	
+	/**
+	 * Calls to this method are being forwarded to deleteSubscriptionPoolsUsingRESTfulAPI(...) for candlepin >= 2.1.1-1.
+	 * @param authenticator
+	 * @param password
+	 * @param url
+	 * @param ownerKey
+	 * @param productId
+	 * @throws JSONException
+	 * @throws Exception
+	 */
+	@Deprecated
 	public static void deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(String authenticator, String password, String url, String ownerKey, String productId) throws JSONException, Exception  {
 		JSONObject jsonStatus = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(/*authenticator*/null,/*password*/null,url,"/status"));
+		if (SubscriptionManagerTasks.isVersion(jsonStatus.getString("version"), ">=", "2.1.1-1")) {	// candlepin commit 9c448315c843c0a20167236af7591359d895613a Discontinue ambiguous subscription resources in sharing world
+			// forward to newer task
+			deleteSubscriptionPoolsUsingRESTfulAPI(authenticator, password, url, ownerKey, productId);
+			return;
+		}
 		
 		// delete all the subscriptions whose product/id matches productId
 		// process all of the subscriptions belonging to ownerKey
@@ -4341,6 +4669,44 @@ schema generation failed
 		// refresh the pools
 		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(authenticator,password,url,ownerKey);
 		jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(authenticator,password,url,jobDetail,"FINISHED", 5*1000, 1);		
+	}
+	
+	/**
+	 * delete all the pools under owner with a matching productId - this method replaces deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(...) for candlepin version >= 2.1.1-1
+	 * @param authenticator
+	 * @param password
+	 * @param url
+	 * @param ownerKey
+	 * @param productId
+	 * @throws JSONException
+	 * @throws Exception
+	 */
+	public static void deleteSubscriptionPoolsUsingRESTfulAPI(String authenticator, String password, String url, String ownerKey, String productId) throws JSONException, Exception  {
+		//JSONObject jsonStatus = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(/*authenticator*/null,/*password*/null,url,"/status"));
+		
+		// delete all the pools for "productId"
+		// process all of the pools belonging to ownerKey
+		JSONArray jsonPools = new JSONArray(getResourceUsingRESTfulAPI(authenticator,password,url,"/owners/"+ownerKey+"/pools?add_future=true"));
+		for (int i = 0; i < jsonPools.length(); i++) {
+			JSONObject jsonPool = (JSONObject) jsonPools.get(i);
+			String id = jsonPool.getString("id");
+			//String productId = jsonPool.getString("productId");
+			String productName = jsonPool.getString("productName");
+			if (jsonPool.getString("productId").equals(productId)) {
+				// delete the pool
+				String response = deleteResourceUsingRESTfulAPI(authenticator, password, url, "/pools/"+id);
+				
+				// assert the deleted pool cannot be GET
+				String expectedDisplayMessage = String.format("Pool with id %s could not be found.",id);	// candlepin commit 9964eff403a9b3846ca696ee9ff6646c84bf07b8
+				jsonPool = new JSONObject(getResourceUsingRESTfulAPI(authenticator, password, url, "/pools/"+id));
+				Assert.assertTrue(jsonPool.has("displayMessage"),"Attempt to GET newly deleted pool '"+id+"' fails with a displayMessage.");
+				Assert.assertEquals(jsonPool.getString("displayMessage"),expectedDisplayMessage);
+			}
+		}
+// NOT NECESSARY		
+//		// refresh the pools
+//		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(authenticator,password,url,ownerKey);
+//		jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(authenticator,password,url,jobDetail,"FINISHED", 5*1000, 1);		
 	}
 	
 	public static JSONObject createActivationKeyUsingRESTfulAPI(String authenticator, String password, String url, String org, String name, List<String> poolIds, Integer quantity) throws JSONException, Exception  {

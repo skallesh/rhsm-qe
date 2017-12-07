@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<testcase id="RHEL7-51285">
+    <title>RHSM-TC : rhsm.cli.tests.TranslationTests.testMsgIdDeprecatedSeeAutoAttachInterval</title>
+    <description>verify that msgid "deprecated, see auto-attach-interval" did NOT translate the command line option "auto-attach-interval" for all languages</description>
+    <test-steps>
+        <test-step>
+            <test-step-column id="step"/>
+        </test-step>
+    </test-steps>
+    <custom-fields>
+        <custom-field id="caseautomation" content="automated"></custom-field>
+        <custom-field id="caseimportance" content="low"></custom-field>
+        <custom-field id="caselevel" content="component"></custom-field>
+        <custom-field id="caseposneg" content="positive"></custom-field>
+        <custom-field id="tags" content="Tier3"></custom-field>
+        <custom-field id="casecomponent" content="subscription-manager"></custom-field>
+        <custom-field id="testtype" content="functional"></custom-field>
+        <custom-field id="subtype1" content="reliability"></custom-field>
+        <custom-field id="subtype2" content="-"></custom-field>
+    </custom-fields>
+    <linked-work-items>
+        <linked-work-item workitem-id="RHEL7-84942" role-id="verifies"/>
+    </linked-work-items>
+</testcase>

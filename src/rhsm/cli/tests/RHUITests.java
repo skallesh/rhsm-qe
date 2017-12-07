@@ -19,8 +19,11 @@ import rhsm.data.SubscriptionPool;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 
-import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.DefTypes;
 import com.github.redhatqe.polarize.metadata.TestDefinition;
+import com.github.redhatqe.polarize.metadata.TestType;
+import com.github.redhatqe.polarize.metadata.DefTypes.PosNeg;
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
 
 /**
  * @author jsefler
@@ -67,18 +70,23 @@ RHEL-6.2-RHUI-2.0.3-20120416.0-Server-x86_64-DVD1.iso.sha256sum
 <IMG SRC="/icons/generic.gif" ALT="[FILE]"> <A HREF="iso/RHEL-6.6-RHUI-2.1.3.2-20141021.3-Server-x86_64-DVD1.iso">RHEL-6.6-RHUI-2.1.3.2-20141021..&gt;</A> 21-Oct-2014 19:21  34.0M  
 
  */
-@Test(groups={"RHUITests","AcceptanceTests","Tier1Tests"})
+@Test(groups={"RHUITests"})
 public class RHUITests extends SubscriptionManagerCLITestScript {
 
 	// Test methods ***********************************************************************
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-22224", "RHEL7-55199"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-22224", "RHEL7-55199"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="register to the stage/prod environment as a RHUI consumer type",
-			groups={},
+			groups={"Tier1Tests", "blockedByBug-1496550"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void RegisterRHUIConsumer_Test() {
+	public void testRegisterRHUIConsumer() {
 		// register a RHUI consumer type
 		if (sm_serverType.equals(CandlepinType.standalone)) {
 			SSHCommandResult result = clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,ConsumerType.RHUI,null,null,null,null,null,(String)null,null,null, null, true, null, null, null, null, null);
@@ -89,14 +97,19 @@ public class RHUITests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,ConsumerType.RHUI,null,null,null,null,null,(String)null,null,null, null, true, null, null, null, null, null);
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-22225", "RHEL7-55200"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-22225", "RHEL7-55200"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="after registering to the stage/prod environment as a RHUI consumer, subscribe to the expected RHUI product subscription",
-			groups={"blockedByBug-885325","blockedByBug-962520"},
-			dependsOnMethods={"RegisterRHUIConsumer_Test"},
+			groups={"Tier1Tests","blockedByBug-885325","blockedByBug-962520"},
+			dependsOnMethods={"testRegisterRHUIConsumer"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ConsumeRHUISubscriptionProduct_Test() {
+	public void testConsumeRHUISubscriptionProduct() {
 		if (sm_rhuiSubscriptionProductId.isEmpty()) throw new SkipException("Skipping this test when no RHUI Subscription Product ID (SKU) was provided for testing.");	
 		
 		// assert that the RHUI ProductId is found in the all available list
@@ -119,12 +132,12 @@ public class RHUITests extends SubscriptionManagerCLITestScript {
 	}
 	
 	@Test(	description="download an expected RHUI iso from an expected yum repoUrl",
-			groups={},
-			dependsOnMethods={"ConsumeRHUISubscriptionProduct_Test"},
+			groups={"Tier1Tests"},
+			dependsOnMethods={"testConsumeRHUISubscriptionProduct"},
 			enabled=false)	// this download file methodology will NOT work for a file; replaced by DownloadRHUIISOFromFileRepo_Test()
 	@Deprecated
 	//@ImplementsNitrateTest(caseId=)
-	public void DownloadRHUIISOFromYumRepo_Test() {
+	public void testDownloadRHUIISOFromYumRepo_DEPRECATED() {
 		if (sm_rhuiDownloadIso.equals("")) throw new SkipException("Skipping this test when no value was given for the RHUI Download ISO");
 
 		File downloadedIsoFile = new File("/tmp/"+sm_rhuiDownloadIso);
@@ -145,14 +158,19 @@ public class RHUITests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-22305", "RHEL7-55202"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-22305", "RHEL7-55202"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="download an expected RHUI iso from an expected file repoUrl",
-			groups={"blockedByBug-860516","blockedByBug-894184","blockedByBug-1427516"},	// RHEL-6-RHUI-2-LATEST-Server-x86_64-DVD.iso ERROR 404: Not Found. https://projects.engineering.redhat.com/browse/RCMPROJ-6571
-			dependsOnMethods={"ConsumeRHUISubscriptionProduct_Test"},
+			groups={"Tier1Tests","blockedByBug-860516","blockedByBug-894184","blockedByBug-1427516"},	// RHEL-6-RHUI-2-LATEST-Server-x86_64-DVD.iso ERROR 404: Not Found. https://projects.engineering.redhat.com/browse/RCMPROJ-6571
+			dependsOnMethods={"testConsumeRHUISubscriptionProduct"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void DownloadRHUIISOFromFileRepo_Test() {
+	public void testDownloadRHUIISOFromFileRepo() {
 		if (sm_rhuiDownloadIso.equals("")) throw new SkipException("Skipping this test when no value was given for the RHUI Download ISO");
 
 		File downloadedIsoFile = new File("/tmp/"+sm_rhuiDownloadIso);
@@ -195,14 +213,19 @@ public class RHUITests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-22306", "RHEL7-55201"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-22306", "RHEL7-55201"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="mount the downloaded RHUI iso and list the packages in the iso",
-			groups={},
-			dependsOnMethods={"DownloadRHUIISOFromFileRepo_Test"},
+			groups={"Tier1Tests"},
+			dependsOnMethods={"testDownloadRHUIISOFromFileRepo"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ListPackagesInMountedRHUIISO_Test() {
+	public void testListPackagesInMountedRHUIISO() {
 
 		// RHEL63
 		//	[root@rhsm-compat-rhel63 ~]# mkdir /tmp/RHEL-6.1-RHUI-2.0-LATEST-Server-x86_64-DVD.iso.mount

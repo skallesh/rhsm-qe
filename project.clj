@@ -1,9 +1,8 @@
 (defproject org.clojars.jsefler/sm "1.1.0-SNAPSHOT"
   :description "Automated tests for Red Hat Subsciption Manager CLI and GUI"
-  :java-source-path "src" ;lein1
   :java-source-paths ["src"]
   :main rhsm.runtestng
-  :aot [#"^rhsm.gui.tests" #"^rhsm.api.tests" rhsm.runtestng] ;regex to find tests that testng will run
+  :aot [#"^rhsm.gui.tests" #"^rhsm.api.tests" #"^rhsm.cockpit.tests" rhsm.runtestng] ;regex to find tests that testng will run
   :keep-non-project-classes true
   :dependencies [[clj-http "2.0.0"]
                  [com.google.code.guice/guice "1.0"]        ;; required for new testng
@@ -14,10 +13,10 @@
                  [com.redhat.qe/json-java "20110202"]
                  [com.redhat.qe/jul.test.records "1.0.1"]
                  [com.redhat.qe/ssh-tools "1.0.3-SNAPSHOT"]
-                 [com.redhat.qe/testng-listeners "1.0.0" 
+                 [com.redhat.qe/testng-listeners "1.0.0"
                   :exclusions [com.redhat.qe/bugzilla-testng]]
                  [com.redhat.qe/verify-testng "1.0.0-SNAPSHOT"]
-                 [com.redhat.qe/rhsm-dbus "0.9.0-SNAPSHOT"]
+                 [com.redhat.qe/rhsm-dbus "0.9.1-SNAPSHOT"]
                  [gnome.ldtp "1.2.1-SNAPSHOT"]
                  [matchure "0.10.1"]
                  [org.clojure/core.match "0.3.0-alpha4"]
@@ -33,26 +32,21 @@
                  [postgresql/postgresql "8.4-701.jdbc4"]
                  [slingshot "0.8.0"]
                  [cheshire "5.7.0"]
-                 ;[test_clj.testng "1.0.1-SNAPSHOT"]
                  [test-clj.testng "1.1.0-SNAPSHOT"]
                  [levand/immuconf "0.1.0"]
                  [com.github.redhatqe.polarize/polarize "0.7.1-SNAPSHOT"]
                  [org.json/json "20160810"]
+                 [org.seleniumhq.selenium/selenium-java "3.5.2"]
                  [http-kit "2.2.0"]
                  [mount "0.1.10"]]
-  ;lein1
-  :dev-dependencies [[fn.trace "1.3.2.0-SNAPSHOT"]
-                     [lein-eclipse "1.0.0"]]
-  ;lein2
   :profiles {:dev {:dependencies
                    [[fn.trace "1.3.2.0-SNAPSHOT"]]}}
   :plugins [[lein2-eclipse "2.0.0"]
             [quickie "0.4.1"]]
   ; regexp of namespaces that contains of tests of our tests. It is used by quickie.
   :test-matcher #"rhsm\..*-test$"
-  :repositories [["clojars.org" {:url       "http://clojars.org/repo"
-                                 :snapshots {:update :always}}]
-                 ["sonatype" {:url           "http://oss.sonatype.org/content/repositories/releases"
+  :repositories [
+                 ["sonatype" {:url           "https://oss.sonatype.org/content/repositories/releases"
                               ;; If a repository contains releases only setting
                               ;; :snapshots to false will speed up dependencies.
                               :snapshots     false

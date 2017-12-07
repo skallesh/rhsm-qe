@@ -62,6 +62,7 @@ public class SubscriptionManagerTasks {
 	public SSHCommandRunner sshCommandRunner = null;
 	public final String command				= "subscription-manager";
 	public final String redhatRepoFile		= "/etc/yum.repos.d/redhat.repo";
+	public final String redhatRepoServerValueFile	= "/var/lib/rhsm/repo_server_val/redhat.repo";
 	public final String rhsmConfFile		= "/etc/rhsm/rhsm.conf";
 	public final String rhsmLoggingConfFile	= "/etc/rhsm/logging.conf";	// NO LONGER EXISTS in subscription-manager-1.17.10-1	// RHEL7.3 commit d84b15f42c2e4521e130b939039960c0846b849c 1334916: Move logging configuration to rhsm.conf
 	public final String factsDir			= "/etc/rhsm/facts";
@@ -100,6 +101,7 @@ public class SubscriptionManagerTasks {
 	public String msg_RemoteErrorCheckConnection	= null;
 	public String msg_ProxyConnectionFailed			= null;
 	public String msg_ProxyConnectionFailed407		= null;
+	public String msg_ProxyErrorUnableToConnect		= null;
 	public String msg_ClockSkewDetection			= null;
 	public String msg_ContainerMode					= null;
 	public String msg_InteroperabilityWarning		= null;
@@ -147,7 +149,7 @@ public class SubscriptionManagerTasks {
 		ipaddr			= sshCommandRunner.runCommandAndWait("ip addr show $(ip route | awk '$1 == \"default\" {print $5}' | uniq) | egrep 'inet [[:digit:]]+\\.[[:digit:]]+\\.[[:digit:]]+\\.[[:digit:]]+.* scope global' | awk '{print $2}' | cut -d'/' -f1").getStdout().trim();	// Note: this value is identical to facts net.interface.eth0.ipv4_address and network.ipv4_address but NOT on an openstack instance where network.ipv4_address is different
 		arch			= sshCommandRunner.runCommandAndWait("uname --machine").getStdout().trim();  // uname -i --hardware-platform :print the hardware platform or "unknown"	// uname -m --machine :print the machine hardware name
 		//releasever		= sshCommandRunner.runCommandAndWait("rpm -q --qf \"%{VERSION}\\n\" --whatprovides /etc/redhat-release").getStdout().trim();  // e.g. 5Server		// cut -f 5 -d : /etc/system-release-cpe	// rpm -q --queryformat "%{VERSION}\n" --whatprovides system-release		// rpm -q --queryformat "%{VERSION}\n" --whatprovides /etc/redhat-release	// does not work on RHEL7, returns "7.0" instead of "7Server"
-		releasever		= sshCommandRunner.runCommandAndWait("python -c 'import yum, pprint; yb = yum.YumBase(); pprint.pprint(yb.conf.yumvar[\"releasever\"], width=1)' | grep -v 'Loaded plugins' | cut -f 2 -d \\'").getStdout().trim();  // e.g. 5Server 6Server 7Server	// python -c 'import yum, pprint; yb = yum.YumBase(); pprint.pprint(yb.conf.yumvar["releasever"], width=1)' | grep -v 'Loaded plugins' | cut -f 2 -d \'
+		releasever		= sshCommandRunner.runCommandAndWait("python -c 'import yum, pprint; yb = yum.YumBase(); pprint.pprint(yb.conf.yumvar[\"releasever\"], width=1)' | egrep -v 'Loaded plugins|This system' | cut -f 2 -d \\'").getStdout().trim();  // e.g. 5Server 6Server 7Server	// python -c 'import yum, pprint; yb = yum.YumBase(); pprint.pprint(yb.conf.yumvar["releasever"], width=1)' | grep -v 'Loaded plugins' | cut -f 2 -d \'
 		
 		//		rhsmComplianceD	= sshCommandRunner.runCommandAndWait("rpm -ql subscription-manager | grep libexec/rhsm").getStdout().trim();
 		redhatRelease	= sshCommandRunner.runCommandAndWait("cat /etc/redhat-release").getStdout().trim();
@@ -711,34 +713,50 @@ if (false) {
 		// avoid ERROR: can not find RHNS CA file: /usr/share/rhn/RHN-ORG-TRUSTED-SSL-CERT
 		installOptions += " --disableplugin=rhnplugin";
 		
-		// locally create a yum.repos.d extras repos file
-		String repo = "latest-EXTRAS-7-RHEL-7-"+variant;
-	    File file = new File("tmp/"+repo+".repo"); // this will be in the automation.dir directory on hudson (workspace/automatjon/sm)
+		// locally create a yum.repos.d extras repos file (and include latest-RHEL-7 for dependencies)
+
+	    File file = new File("tmp/latest.repo"); // this will be in the automation.dir directory on hudson (workspace/automatjon/sm)
 	    // http://download.devel.redhat.com/rel-eng/latest-EXTRAS-7-RHEL-7/compose/Server/x86_64/os/
-	    String baseurl = "http://download.devel.redhat.com/rel-eng/latest-EXTRAS-7-RHEL-7/compose/"+variant+"/$basearch/os/";
-	    baseurl = "http://download.devel.redhat.com/rel-eng/latest-EXTRAS-7-RHEL-7/compose/"+variant+"/x86_64/os/";	// 302 Found // The document has moved <a href="http://download-node-02.eng.bos.redhat.com/rel-eng/latest-EXTRAS-7-RHEL-7/compose/Workstation/x86_64/os/">here</a>
-	    baseurl = "http://download-node-02.eng.bos.redhat.com/rel-eng/latest-EXTRAS-7-RHEL-7/compose/"+variant+"/x86_64/os/";
-	    
+	    String baseurlForExtras = "http://download.devel.redhat.com/rel-eng/latest-EXTRAS-7-RHEL-7/compose/"+variant+"/$basearch/os/";
+	    baseurlForExtras = "http://download.devel.redhat.com/rel-eng/latest-EXTRAS-7-RHEL-7/compose/"+variant+"/x86_64/os/";	// 302 Found // The document has moved <a href="http://download-node-02.eng.bos.redhat.com/rel-eng/latest-EXTRAS-7-RHEL-7/compose/Workstation/x86_64/os/">here</a>
+	    baseurlForExtras = "http://download-node-02.eng.bos.redhat.com/rel-eng/latest-EXTRAS-7-RHEL-7/compose/"+variant+"/x86_64/os/";
+	    baseurlForExtras = "http://download-node-02.eng.bos.redhat.com/rel-eng/latest-EXTRAS-7-RHEL-7/compose/"+"Server"+"/x86_64/os/";	// "Server" is the ONLY compose for http://download-node-02.eng.bos.redhat.com/rel-eng/latest-EXTRAS-7-RHEL-7/compose/
+	    String baseurlForDeps = "http://download-node-02.eng.bos.redhat.com/rel-eng/latest-RHEL-7/compose/"+variant+"/x86_64/os/";
+    
 	    // check the baseurl for problems
-	    SSHCommandResult baseurlTestResult = sshCommandRunner.runCommandAndWait("curl --stderr /dev/null --insecure --request GET "+baseurl);
+	    SSHCommandResult baseurlTestResult = sshCommandRunner.runCommandAndWait("curl --stderr /dev/null --insecure --request GET "+baseurlForExtras);
 	    if (baseurlTestResult.getStdout().contains("404 Not Found") || baseurlTestResult.getStdout().contains("The document has moved")) {
-			log.warning("Cannot install updates from latest-EXTRAS-7-RHEL-7 since the baseurl '"+baseurl+"' is Not Found.");
-	    	Assert.fail("The Latest Extras baseurl '"+baseurl+"' was Not Found.  Instruct the automator to verify the assembly of this baseurl.");
+			log.warning("Cannot install updates from latest-EXTRAS-7-RHEL-7 since the baseurl '"+baseurlForExtras+"' is Not Found.");
+	    	Assert.fail("The Latest Extras baseurl '"+baseurlForExtras+"' was Not Found.  Instruct the automator to verify the assembly of this baseurl.");
+	    }
+	    baseurlTestResult = sshCommandRunner.runCommandAndWait("curl --stderr /dev/null --insecure --request GET "+baseurlForDeps);
+	    if (baseurlTestResult.getStdout().contains("404 Not Found") || baseurlTestResult.getStdout().contains("The document has moved")) {
+			log.warning("Cannot install updates from latest-RHEL-7 since the baseurl '"+baseurlForDeps+"' is Not Found.");
+	    	Assert.fail("The Latest baseurl '"+baseurlForDeps+"' was Not Found.  Instruct the automator to verify the assembly of this baseurl.");
 	    }
 		
 		// write out the rows of the table...
     	Writer output = new BufferedWriter(new FileWriter(file));
 	    
     	// write the rhel-latest-extras repo
+		String repo = "latest-EXTRAS-7-RHEL-7-"+variant;
 		output.write("["+repo+"]\n");
 		output.write("name     = Latest Extras updates for RHEL"+redhatReleaseX+" "+variant+"\n");
 		output.write("enabled  = 0\n");
 		output.write("gpgcheck = 0\n");	// needed since the latest extras packages may not be signed until on REL_PREP
 		//output.write("exclude  = redhat-release*\n");	// avoids unwanted updates of rhel-release server variant to workstation
-		output.write("baseurl  = "+baseurl+"\n");
+		output.write("baseurl  = "+baseurlForExtras+"\n");
+	    installOptions += " --enablerepo="+repo;
+		repo = "latest-RHEL-7-"+variant;
+		output.write("["+repo+"]\n");
+		output.write("name     = Latest updates for RHEL"+redhatReleaseX+" "+variant+"\n");
+		output.write("enabled  = 0\n");
+		output.write("gpgcheck = 0\n");	// needed since the latest packages may not be signed until on REL_PREP
+		//output.write("exclude  = redhat-release*\n");	// avoids unwanted updates of rhel-release server variant to workstation
+		output.write("baseurl  = "+baseurlForDeps+"\n");
+	    installOptions += " --enablerepo="+repo;
 		output.write("\n");
 	    output.close();
-	    installOptions += " --enablerepo="+repo;
 
 		RemoteFileTasks.putFile(sshCommandRunner.getConnection(), file.getPath(), "/etc/yum.repos.d/", "0644");
 		
@@ -747,7 +765,7 @@ if (false) {
 		for (String updatePackage : updatePackages) updatePackagesAsString += updatePackage+" "; updatePackagesAsString=updatePackagesAsString.trim();
 		
 		// run yum update
-		Assert.assertEquals(sshCommandRunner.runCommandAndWait("yum -y update "+updatePackagesAsString+" "+installOptions).getExitCode(),Integer.valueOf(0), "Yum updated from latest extras repo: "+baseurl);
+		Assert.assertEquals(sshCommandRunner.runCommandAndWait("yum -y update "+updatePackagesAsString+" "+installOptions).getExitCode(),Integer.valueOf(0), "Yum updated from latest extras repo: "+baseurlForExtras);
 	}
 	
 	
@@ -864,7 +882,7 @@ if (false) {
 		if (Float.valueOf(redhatReleaseXY)>=7.1f) pkgs = new ArrayList<String>(Arrays.asList(new String[]{"python-rhsm", "subscription-manager", "subscription-manager-gui",   "subscription-manager-firstboot", "subscription-manager-migration", "subscription-manager-migration-data", "subscription-manager-plugin-ostree", "subscription-manager-plugin-container"}));
 		if (Float.valueOf(redhatReleaseXY)>=7.2f) pkgs = new ArrayList<String>(Arrays.asList(new String[]{"python-rhsm", "subscription-manager", "subscription-manager-gui",   "subscription-manager-initial-setup-addon", "subscription-manager-migration", "subscription-manager-migration-data", "subscription-manager-plugin-ostree", "subscription-manager-plugin-container"}));
 		if (Float.valueOf(redhatReleaseXY)>=7.3f) pkgs = new ArrayList<String>(Arrays.asList(new String[]{"python-rhsm-certificates", "python-rhsm", "subscription-manager", "subscription-manager-gui",   "subscription-manager-initial-setup-addon", "subscription-manager-migration", "subscription-manager-migration-data", "subscription-manager-plugin-ostree", "subscription-manager-plugin-container"}));
-		if (Float.valueOf(redhatReleaseXY)>=6.0f) pkgs.add(0,"python-dateutil");	// dependency
+		if (Float.valueOf(redhatReleaseXY)>=7.5f) pkgs = new ArrayList<String>(Arrays.asList(new String[]{"subscription-manager-rhsm-certificates", "subscription-manager-rhsm", "subscription-manager", "subscription-manager-gui",   "subscription-manager-initial-setup-addon", "subscription-manager-migration", "subscription-manager-migration-data", "subscription-manager-plugin-ostree", "subscription-manager-plugin-container", "subscription-manager-cockpit"}));
 		pkgs.add(0,"expect");	// used for interactive cli prompting
 		pkgs.add(0,"sos");	// used to create an sosreport for debugging hardware
 		pkgs.add(0,"bash-completion");	// used in BashCompletionTests
@@ -873,6 +891,8 @@ if (false) {
 		pkgs.add(0,"policycoreutils-python");	// used for Docker testing - required by docker-selinux package 
 		pkgs.add(0,"net-tools");	// provides netstat which is used to know when vncserver is up
 		pkgs.add(0,"ntp");	// used to synchronize a computer's time with another reference time source.
+		if (Float.valueOf(redhatReleaseXY)>=6.0f) pkgs.add(0,"python-dateutil");	// dependency for python-rhsm
+		if (Float.valueOf(redhatReleaseXY)>=7.5f) pkgs.add(0,"cockpit");	// indirect dependency for subscription-manager-cockpit, but indirectly requires subscription-manager which means when subscription-manager is removed by yum, then cockpit is also removed
 		
 		// TEMPORARY WORKAROUND FOR BUG
 		String bugId = "790116"; boolean invokeWorkaroundWhileBugIsOpen = true;
@@ -894,7 +914,7 @@ if (false) {
 	
 	
 	
-	public void installSubscriptionManagerRPMs(List<String> rpmInstallUrls, List<String> rpmUpdateUrls, String installOptions) {
+	public void installSubscriptionManagerRPMs(List<String> rpmInstallUrls, List<String> rpmUpdateUrls, String installOptions, String jenkinsUsername, String jenkinsPassword) {
 		if (rpmInstallUrls==null) rpmInstallUrls = new ArrayList<String>();
 		if (rpmUpdateUrls==null) rpmUpdateUrls = new ArrayList<String>();
 		if (installOptions==null) installOptions = "";
@@ -962,10 +982,16 @@ if (false) {
 			log.info("Removing existing package "+pkg+"...");
 			if (pkg.startsWith("katello-ca-consumer")) {
 				sshCommandRunner.runCommandAndWait("yum -y remove $(rpm -qa | grep katello-ca-consumer) "+installOptions);
-			} else {
-				sshCommandRunner.runCommandAndWait("yum -y remove "+pkg+" "+installOptions);
-				RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"rpm -q "+pkg,Integer.valueOf(1),"package "+pkg+" is not installed",null);
+				continue;
 			}
+			// compatibility adjustment for python-rhsm* packages obsoleted by subscription-manager-rhsm* packages
+			if (pkg.startsWith("subscription-manager-rhsm")) {	// commit f445b6486a962d12185a5afe69e768d0a605e175 Move python-rhsm build into subscription-manager
+				String obsoletedPackage = pkg.replace("subscription-manager-rhsm", "python-rhsm");
+				sshCommandRunner.runCommandAndWait("yum -y remove "+obsoletedPackage+" "+installOptions);
+			}
+			//sshCommandRunner.runCommandAndWait("yum -y remove "+pkg+" "+installOptions);	// inadvertently causes removal of cockpit-system which requires subscription-manager and then there is no way to get it back when subscription-manager-cockpit is installed; therefore let's use rpm --erase --no-deps
+			sshCommandRunner.runCommandAndWait("rpm --erase --nodeps "+pkg);
+			RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"rpm -q "+pkg,Integer.valueOf(1),"package "+pkg+" is not installed",null);
 		}
 		
 		// install new rpms
@@ -986,7 +1012,7 @@ if (false) {
 			
 			// install rpmUrl
 			log.info("Installing RPM from "+rpmUrl+"...");
-			RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"wget -nv -O "+rpmPath+" --no-check-certificate \""+rpmUrl.trim()+"\"",Integer.valueOf(0),null,"-> \""+rpmPath+"\"");
+			RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"wget -nv -O "+rpmPath+" --no-check-certificate "+(jenkinsUsername.isEmpty()?"":"--http-user="+jenkinsUsername)+" "+(jenkinsPassword.isEmpty()?"":"--http-password="+jenkinsPassword)+" \""+rpmUrl.trim()+"\"",Integer.valueOf(0),null,"-> \""+rpmPath+"\"");
 			Assert.assertEquals(sshCommandRunner.runCommandAndWait("yum -y localinstall "+rpmPath+" "+installOptions).getExitCode(), Integer.valueOf(0), "ExitCode from yum installed local rpm: "+rpmPath);
 			
 			// assert the local rpm is now installed
@@ -1072,6 +1098,7 @@ if (false) {
 		msg_RemoteErrorCheckConnection	= "Remote server error. Please check the connection details, or see /var/log/rhsm/rhsm.log for more information.";
 		msg_ProxyConnectionFailed		= "Proxy connection failed, please check your settings.";
 		msg_ProxyConnectionFailed407	= "Proxy connection failed: 407";
+		msg_ProxyErrorUnableToConnect	= "Proxy error, unable to connect to proxy server.";
 
 		// TEMPORARY WORKAROUND FOR BUG 1335537 - typo in "Proxy connnection failed, please check your settings."
 		String bugId = "1335537"; boolean invokeWorkaroundWhileBugIsOpen = true;
@@ -1569,6 +1596,7 @@ if (false) {
 		}
 		
 		// mark the rhsmcertd log file before restarting the deamon
+ 		RemoteFileTasks.runCommandAndWait(sshCommandRunner, "touch "+rhsmcertdLogFile, TestRecords.action());	// to ensure the file exists before trying to mark it
 		String rhsmcertdLogMarker = System.currentTimeMillis()+" Testing service rhsmcertd restart...";
 		RemoteFileTasks.markFile(sshCommandRunner, rhsmcertdLogFile, rhsmcertdLogMarker);
 		
@@ -1702,7 +1730,6 @@ if (false) {
 		//	Mon Jul 16 14:32:29 2012 [INFO] (Cert Check) Certificates updated.
 		//	Mon Jul 16 14:34:22 2012 [INFO] (Cert Check) Certificates updated.
 
-		String rhsmcertdLogResult = RemoteFileTasks.getTailFromMarkedFile(sshCommandRunner, rhsmcertdLogFile, rhsmcertdLogMarker, null).trim();
 		Integer waitSecondsForFirstUpdateCheck = 120; // this is a dev hard coded wait (seconds) before the first check for updates is attempted  REFERENCE BUG 818978#c2
 		String rhsmcertdLogExpectedStartingRhsmMsg = String.format(" Starting rhsmcertd...");
 		String rhsmcertdLogExpectedHealIntervalMsg = String.format(" Healing interval: %.1f minute(s) [%d second(s)]",healFrequency*1.0,healFrequency*60);/* msg was changed by bug 882459*/
@@ -1714,6 +1741,14 @@ if (false) {
 		if (isPackageVersion("subscription-manager",">=","1.19.9-1")) {	// commit e0e1a6b3e80c33e04fe79eaa696a821881f95f35 1443205: Simplify rhsmcertd log message plurality
 			rhsmcertdLogExpectedCertIntervalMsg = String.format(" Cert check interval: %.1f minutes [%d seconds]",certFrequency*1.0,certFrequency*60);
 		}
+		String rhsmcertdLogResult;
+		int i=0, delay=5;
+		do {	// retry every 5 seconds (up to a 20 seconds) for the expected update messages in the rhsmcertd log
+			if (i>0) SubscriptionManagerCLITestScript.sleep(delay*1000);	// wait a few seconds before trying again
+			rhsmcertdLogResult = RemoteFileTasks.getTailFromMarkedFile(sshCommandRunner, rhsmcertdLogFile, rhsmcertdLogMarker, null).trim();
+			if (rhsmcertdLogResult.contains(rhsmcertdLogExpectedStartingRhsmMsg)) break;
+		} while (delay*i++ < 20);	// Note: should wait at least 60+ additional seconds because auto-attach can timeout after 60 seconds.  see bug https://bugzilla.redhat.com/show_bug.cgi?id=964332#c6
+		
 		Assert.assertTrue(rhsmcertdLogResult.contains(rhsmcertdLogExpectedStartingRhsmMsg),"Tail of rhsmcertd log contains the expected restart message '"+rhsmcertdLogExpectedStartingRhsmMsg+"'.");
 		Assert.assertTrue(rhsmcertdLogResult.contains(rhsmcertdLogExpectedHealIntervalMsg),"Tail of rhsmcertd log contains the expected restart message '"+rhsmcertdLogExpectedHealIntervalMsg+"'.");
 		Assert.assertTrue(rhsmcertdLogResult.contains(rhsmcertdLogExpectedCertIntervalMsg),"Tail of rhsmcertd log contains the expected restart message '"+rhsmcertdLogExpectedCertIntervalMsg+"'.");
@@ -1779,12 +1814,12 @@ if (false) {
 			//String healMsg = assertCertificatesUpdate? "(Healing) Certificates updated.":"(Healing) Update failed (255), retry will occur on next run.";	// msg was changed by bug 882459
 			String healMsg = assertCertificatesUpdate? "(Auto-attach) Certificates updated.":"(Auto-attach) Update failed (255), retry will occur on next run.";
 			String certMsg = assertCertificatesUpdate? "(Cert Check) Certificates updated.":"(Cert Check) Update failed (255), retry will occur on next run.";
-			int i=0, delay=10;
+			/*int*/ i=0; delay=10;
 			do {	// retry every 10 seconds (up to a 90 seconds) for the expected update messages in the rhsmcertd log
-				SubscriptionManagerCLITestScript.sleep(delay*1000);i++;	// wait a few seconds before trying again
+				if (i>0) SubscriptionManagerCLITestScript.sleep(delay*1000);i++;	// wait a few seconds before trying again
 				rhsmcertdLogResult = RemoteFileTasks.getTailFromMarkedFile(sshCommandRunner, rhsmcertdLogFile, rhsmcertdLogMarker, null).trim();
 				if (rhsmcertdLogResult.contains(healMsg) && rhsmcertdLogResult.contains(certMsg)) break;
-			} while (delay*i < 90);	// Note: should wait at least 60+ additional seconds because auto-attach can timeout after 60 seconds.  see bug https://bugzilla.redhat.com/show_bug.cgi?id=964332#c6
+			} while (delay*i++ < 90);	// Note: should wait at least 60+ additional seconds because auto-attach can timeout after 60 seconds.  see bug https://bugzilla.redhat.com/show_bug.cgi?id=964332#c6
 			
 			boolean healMsgAssert = true;
 			boolean certMsgAssert = true;
@@ -2309,156 +2344,99 @@ if (false) {
 	}
 
 	/**
-	 * @return the currently installed ProductCert that provides tag "rhel-5", "rhel-6", or "rhel-7"
-	 * depending on system's redhat-release; also asserts that at most only one product cert is installed
-	 * that provides this tag; returns null if not found
+	 * @return the currently installed ProductCert that provides a known base RHEL OS tag "rhel-5", "rhel-6", "rhel-7", "rhel-alt-7", etc.
+	 * Also asserts that at most only one RHEL product cert is installed; returns null if not found
 	 */
 	public ProductCert getCurrentRhelProductCert() {
-		// get the current base RHEL product cert
-		String providingTag = "rhel-"+redhatReleaseX;
+		// get the current base RHEL product cert that provides a predictable tag
+		String providingTag;
+		
+		// consider the major rhel version tags
+		//	Product:
+		//		ID: 69
+		//		Name: Red Hat Enterprise Linux 6 Server
+		//		Version: 6.1
+		//		Arch: i386
+		//		Tags: rhel-6,rhel-6-server
+		//		Brand Type: 
+		//		Brand Name: 
+		providingTag = "rhel-"+redhatReleaseX;
+		
+		// also consider rhel-5-client-workstation tag
+		//	Product:
+		//		ID: 71
+		//		Name: Red Hat Enterprise Linux Workstation
+		//		Version: 5.10
+		//		Arch: i386
+		//		Tags: rhel-5-client-workstation,rhel-5-workstation
+		providingTag += "|" + "rhel-5-client-workstation";
+		
+		// also consider tags used for rhel 7 beta
+		//	[root@ibm-p8-kvm-09-guest-08 rhel-7.0-beta]# for f in $(ls *.pem); do rct cat-cert $f | egrep -A7 'Product:'; done;
+		//	Product:
+		//		ID: 227
+		//		Name: Red Hat Enterprise Linux 7 for IBM POWER Public Beta
+		//		Version: 7.0 Beta
+		//		Arch: ppc64
+		//		Tags: rhel-7-ibm-power-everything
+		//		Brand Type: 
+		//		Brand Name: 
+		//	Product:
+		//		ID: 228
+		//		Name: Red Hat Enterprise Linux 7 for IBM System z Public Beta
+		//		Version: 7.0 Beta
+		//		Arch: s390x
+		//		Tags: rhel-7-ibm-system-z-everything
+		//		Brand Type: 
+		//		Brand Name: 
+		//	Product:
+		//		ID: 226
+		//		Name: Red Hat Enterprise Linux 7 Public Beta
+		//		Version: 7.0 Beta
+		//		Arch: x86_64
+		//		Tags: rhel-7-everything
+		//		Brand Type: 
+		//		Brand Name: 
+		providingTag += "|" + "rhel-7-.*everything";
+		
+		// also consider tags used for rhelsa-dp Development Preview
+		//	[root@ibm-p8-kvm-09-guest-08 rhelsa-dp]# for f in $(ls *.pem); do rct cat-cert $f | egrep -A7 'Product:'; done;
+		//	Product:
+		//		ID: 261
+		//		Name: Red Hat Enterprise Linux Server for ARM Development Preview
+		//		Version: Snapshot
+		//		Arch: aarch64
+		//		Tags: rhsa-dp-server,rhsa-dp-server-7
+		//		Brand Type: 
+		//		Brand Name: 
+		providingTag += "|" + "rhelsa-dp-.+";
+		
+		// also consider tags used for rhel-alt
+		//	[root@ibm-p8-kvm-09-guest-08 tmp]# git clone git://git.host.prod.eng.bos.redhat.com/rcm/rcm-metadata.git
+		//	[root@ibm-p8-kvm-09-guest-08 tmp]# cd rcm-metadata/product_ids/rhel-alt-7.4/
+		//	[root@ibm-p8-kvm-09-guest-08 rhel-alt-7.4]# for f in $(ls *.pem); do rct cat-cert $f | egrep -A7 'Product:'; done;
+		//	Product:
+		//		ID: 419
+		//		Name: Red Hat Enterprise Linux for ARM 64
+		//		Version: 7.4
+		//		Arch: aarch64
+		//		Tags: rhel-alt-7,rhel-alt-7-armv8-a
+		//		Brand Type: 
+		//		Brand Name: 
+		//	Product:
+		//		ID: 420
+		//		Name: Red Hat Enterprise Linux for Power 9
+		//		Version: 7.4
+		//		Arch: ppc64le
+		//		Tags: rhel-alt-7,rhel-alt-7-power9
+		//		Brand Type: 
+		//		Brand Name: 
+		providingTag += "|" + "rhel-alt-"+redhatReleaseX;
+		
+		
+		// get the product certs matching the rhel regex tag
 		List<ProductCert> rhelProductCerts = getCurrentProductCerts(providingTag);
 		
-		// special case (rhel5ClientDesktopVersusWorkstation)
-		if (rhelProductCerts.isEmpty() && releasever.equals("5Client")) {
-			//	Product:
-			//		ID: 68
-			//		Name: Red Hat Enterprise Linux Desktop
-			//		Version: 5.10
-			//		Arch: i386
-			//		Tags: rhel-5,rhel-5-client
-
-			//	Product:
-			//		ID: 71
-			//		Name: Red Hat Enterprise Linux Workstation
-			//		Version: 5.10
-			//		Arch: i386
-			//		Tags: rhel-5-client-workstation,rhel-5-workstation
-			providingTag = "rhel-5-client-workstation";
-			rhelProductCerts = getCurrentProductCerts(providingTag);
-		}
-		
-		// special case (rhel70)
-		/* NOT NECESSARY AFTER rhel-7.0-beta
-		if (rhelProductCerts.isEmpty() && redhatReleaseX.equals("7")) {
-			//[root@jsefler-7 rhel-7.0-beta]# for f in $(ls *.pem); do rct cat-cert $f | egrep -A7 'Product:'; done;
-			//Product:
-			//	ID: 229
-			//	Name: Red Hat Enterprise Linux 7 Desktop High Touch Beta
-			//	Version: 7.0 Beta
-			//	Arch: x86_64
-			//	Tags: rhel-7-client
-			//	Brand Type: 
-			//
-			//Product:
-			//	ID: 234
-			//	Name: Red Hat Enterprise Linux 7 for HPC Compute Node High Touch Beta
-			//	Version: 7.0 Beta
-			//	Arch: x86_64
-			//	Tags: rhel-7-computenode
-			//	Brand Type: 
-			//
-			//Product:
-			//	ID: 227
-			//	Name: Red Hat Enterprise Linux 7 for IBM POWER Public Beta
-			//	Version: 7.0 Beta
-			//	Arch: ppc64
-			//	Tags: rhel-7-everything
-			//	Brand Type: 
-			//
-			//Product:
-			//	ID: 228
-			//	Name: Red Hat Enterprise Linux 7 for IBM System z Public Beta
-			//	Version: 7.0 Beta
-			//	Arch: s390x
-			//	Tags: rhel-7-everything
-			//	Brand Type: 
-			//
-			//Product:
-			//	ID: 226
-			//	Name: Red Hat Enterprise Linux 7 Public Beta
-			//	Version: 7.0 Beta
-			//	Arch: x86_64
-			//	Tags: rhel-7-everything
-			//	Brand Type: 
-			//
-			//Product:
-			//	ID: 236
-			//	Name: Red Hat Enterprise Linux 7 High Availability High Touch Beta
-			//	Version: 7.0 Beta
-			//	Arch: x86_64
-			//	Tags: rhel-7-highavailability
-			//	Brand Type: 
-			//
-			//Product:
-			//	ID: 237
-			//	Name: Red Hat Enterprise Linux 7 Load Balancer High Touch Beta
-			//	Version: 7.0 Beta
-			//	Arch: x86_64
-			//	Tags: rhel-7-loadbalancer
-			//	Brand Type: 
-			//
-			//Product:
-			//	ID: 233
-			//	Name: Red Hat Enterprise Linux 7 for IBM POWER High Touch Beta
-			//	Version: 7.0 Beta
-			//	Arch: ppc64
-			//	Tags: rhel-7-server
-			//	Brand Type: 
-			//
-			//Product:
-			//	ID: 238
-			//	Name: Red Hat Enterprise Linux 7 Resilient Storage High Touch Beta
-			//	Version: 7.0 Beta
-			//	Arch: x86_64
-			//	Tags: rhel-7-resilientstorage
-			//	Brand Type: 
-			//
-			//Product:
-			//	ID: 232
-			//	Name: Red Hat Enterprise Linux 7 for IBM System z High Touch Beta
-			//	Version: 7.0 Beta
-			//	Arch: s390x
-			//	Tags: rhel-7-server
-			//	Brand Type: 
-			//
-			//Product:
-			//	ID: 230
-			//	Name: Red Hat Enterprise Linux 7 Server High Touch Beta
-			//	Version: 7.0 Beta
-			//	Arch: x86_64
-			//	Tags: rhel-7-server
-			//	Brand Type: 
-			//
-			//Product:
-			//	ID: 231
-			//	Name: Red Hat Enterprise Linux 7 Workstation High Touch Beta
-			//	Version: 7.0 Beta
-			//	Arch: x86_64
-			//	Tags: rhel-7-workstation
-			//	Brand Type: 
-			
-			providingTag = "rhel-"+redhatReleaseX+"-.*";	// use a regex for rhel-7
-			rhelProductCerts = getCurrentProductCerts(providingTag);
-		}
-		*/
-		
-		/* NOT NECESSARY AFTER rhelsa-dp Development Preview
-		// special case (rhel for ARM)
-		if (rhelProductCerts.isEmpty() && arch.equals("aarch64")) {
-			
-			//	Product:
-			//		ID: 261
-			//		Name: Red Hat Enterprise Linux Server for ARM Development Preview
-			//		Version: Snapshot
-			//		Arch: aarch64
-			//		Tags: rhsa-dp-server,rhsa-dp-server-7
-			//		Brand Type: 
-			//		Brand Name: 
-			
-			providingTag = "rhsa-.*";
-			rhelProductCerts = getCurrentProductCerts(providingTag);
-		}
-		*/
 		
 		// due to the implementation of Bug 1123029 - [RFE] Use default product certificates when they are present
 		// we should now purge the product-default certs from rhelProductCerts that are being trumped
@@ -2470,8 +2448,9 @@ if (false) {
 		}
 		
 		// log a warning when more than one product cert providing tag rhel-X is installed 
-		if (rhelProductCerts.size()>1) log.warning("These "+rhelProductCerts.size()+" '"+providingTag+"' product certs are installed: "+rhelProductCerts); 
+		if (rhelProductCerts.size()>1) log.warning("These "+rhelProductCerts.size()+" RHEL tagged '"+providingTag+"' product certs are installed: "+rhelProductCerts); 
 
+/* TODO FIX THIS LOGIC WHICH ASSUMES providingTag IS NOT A REGEX
 		// HTB Product Certs (230, 231) also provide the base rhel-7 tags and the content sets for *rhel-7-<variant>-htb-rpms repos require tag rhel-7-<variant>; hence all of the rhel7 htb products are "OS" branded products  (not the same for rhel6)
 		// let's ignore it since it could have been legitimately added by installing a package from an htb repo 
 		//	Product:
@@ -2489,14 +2468,25 @@ if (false) {
 				rhelProductCerts.remove(htbProductCert);
 			}
 		}
+*/
+		
+		// TEMPORARY WORKAROUND
+		if (rhelProductCerts.size()>1) {
+			boolean invokeWorkaroundWhileBugIsOpen = true;
+			String bugId="1506271"; // Bug 1506271 - redhat-release is providing more than 1 variant specific product cert
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			if (invokeWorkaroundWhileBugIsOpen) {
+				throw new SkipException("The remainder of this test is blocked by bug '"+bugId+"' because multiple base RHEL product certs are installed.");
+			}
+		}
+		// END OF WORKAROUND
 		
 		// assert that only one rhel product cert is installed (after purging HTB and an untrumped product-default cert)
 		Assert.assertEquals(rhelProductCerts.size(), 1, "Only one product cert is installed that provides RHEL tag '"+providingTag+"' (this assert accounts for /etc/pki/product-default/ certs that are trumped by /etc/pki/product/ certs)");
 		
 		// return it
 		if (rhelProductCerts.isEmpty()) return null;
-		ProductCert rhelProductCert = rhelProductCerts.get(0);
-		return rhelProductCert;
+		return rhelProductCerts.get(0);
 	}
 	
 	public boolean isRhelProductCertSubscribed() {
@@ -3765,6 +3755,42 @@ if (false) {
 		return register(username, password, org, null, null, null, null, null, null, null, (String)null, null, null, null, null, null, null, null, null, null);
 	}
 	
+	/**
+	 * Useful workaround to create a candlepin consumer on a RHEL client when the version of
+	 * candlepin is greater that 2.1.1-1 due to a change in candlepin behavior blocking the
+	 * creation of a "candlepin" consumer from subscription-manager.
+	 * Reference candlepin commit 739b51a0d196d9d3153320961af693a24c0b826f
+	 * 1455361: Disallow candlepin consumers to be registered via Subscription Manager
+	 * @param username
+	 * @param password
+	 * @param org
+	 * @param serverUrl
+	 * @param consumerName
+	 * @throws Exception
+	 */
+	public void registerCandlepinConsumer(String username, String password, String org, String serverUrl, String consumerName) throws Exception {
+	    JSONObject jsonCandlepinConsumer = CandlepinTasks.createCandlepinConsumerUsingRESTfulAPI(username, password, serverUrl, org, consumerName);
+		String cert = jsonCandlepinConsumer.getJSONObject("idCert").getString("cert");
+		String key = jsonCandlepinConsumer.getJSONObject("idCert").getString("key");
+		
+		// write the cert and key to a local file
+	    File certFile = new File("test-output/cert.pem");
+    	Writer certWriter = new BufferedWriter(new FileWriter(certFile));
+		certWriter.write(cert);
+		certWriter.close();
+	    File keyFile = new File("test-output/key.pem");
+    	Writer keyWriter = new BufferedWriter(new FileWriter(keyFile));
+		keyWriter.write(key);
+		keyWriter.close();
+		
+		// transfer the cert and key file to the client
+		RemoteFileTasks.putFile(sshCommandRunner.getConnection(), certFile.getPath(), consumerCertFile(), "0640");
+		RemoteFileTasks.putFile(sshCommandRunner.getConnection(), keyFile.getPath(), consumerKeyFile(), "0640");
+		
+		//return jsonCandlepinConsumer.getString("uuid");
+	}
+	
+	
 	// reregister module tasks ************************************************************
 
 //	/**
@@ -4417,11 +4443,12 @@ if (false) {
 	
 	
 	// config module tasks ************************************************************
-
+	
 	/**
-	 * config without asserting results
+	 * @param noproxy TODO
+	 * @return the command line syntax for calling this subscription-manager module with these options
 	 */
-	public SSHCommandResult config_(Boolean list, Boolean remove, Boolean set, List<String[]> listOfSectionNameValues) {
+	public String configCommand(Boolean list, Boolean remove, Boolean set, List<String[]> listOfSectionNameValues) {
 		
 		// assemble the command
 		String command = this.command;				command += " config";
@@ -4434,6 +4461,22 @@ if (false) {
 			if (remove!=null && remove)				command += String.format(" --remove=%s.%s", section_name_value[0],section_name_value[1]);  // expected format section.name
 			if (set!=null && set)					command += String.format(" --%s.%s=%s", section_name_value[0],section_name_value[1],section_name_value[2]);  // expected format section.name=value
 		}
+		
+		return command;
+	}
+	public String configCommand(Boolean list, Boolean remove, Boolean set, String[] section_name_value) {
+		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
+		if (section_name_value!=null) listOfSectionNameValues.add(section_name_value);
+		return configCommand(list, remove, set, listOfSectionNameValues);
+	}
+	
+	/**
+	 * config without asserting results
+	 */
+	public SSHCommandResult config_(Boolean list, Boolean remove, Boolean set, List<String[]> listOfSectionNameValues) {
+		
+		// assemble the command
+		String command = configCommand(list, remove, set, listOfSectionNameValues);
 		
 		// run command without asserting results
 		SSHCommandResult sshCommandResult = sshCommandRunner.runCommandAndWait(command);
@@ -4739,6 +4782,8 @@ if (false) {
 			defaultNames.add("pluginDir");
 			defaultNames.add("pluginConfDir");
 			if (isPackageVersion("subscription-manager",">=","1.10.7-1")) defaultNames.add("full_refresh_on_yum");	// was added as part of RFE Bug 803746
+			if (isPackageVersion("subscription-manager",">=","1.20.2-1")) defaultNames.add("auto_enable_yum_plugins");	// commit 29a9a1db08a2ee920c43891daafdf858082e5d8b	// Bug 1319927 - [RFE] subscription-manager should automatically enable yum plugins
+			if (isPackageVersion("subscription-manager",">=","1.20.2-1"/*TODO change to 1.20.3-1*/)) defaultNames.add("inotify");	// commit db7f92dd2a29071eddd3b8de5beedb0fe46352f9	// Bug 1477958: Use inotify for checking changes of consumer certs
 		}
 		if (section.equalsIgnoreCase("rhsmcertd")) {
 			defaultNames.add(/*"certFrequency" CHANGED BY BUG 882459 TO*/"certCheckInterval");
@@ -5042,9 +5087,13 @@ if (false) {
 		SSHCommandResult sshCommandResult = list(null,null,Boolean.TRUE, null, null, null, null, null, null, null, null, null, null, null);
 		
 		List<File> entitlementCertFiles = getCurrentEntitlementCertFiles();
+		String expectedConsumedListMessage="No consumed subscription pools to list";
+		if (isPackageVersion("subscription-manager", ">=", "1.20.2-1")) {	// commit da72dfcbbb2c3a44393edb9e46e1583d05cc140a
+			expectedConsumedListMessage="No consumed subscription pools were found.";
+		}
 
 		if (entitlementCertFiles.isEmpty()) {
-			Assert.assertTrue(sshCommandResult.getStdout().trim().equals("No consumed subscription pools to list"), "No consumed subscription pools to list");
+			Assert.assertEquals(sshCommandResult.getStdout().trim(),expectedConsumedListMessage, "Expected message when there are no consumed subscription pools.");
 		} else {
 			String title = "Consumed Product Subscriptions";
 			title = "Consumed Subscriptions";	// changed in https://bugzilla.redhat.com/show_bug.cgi?id=806986#c10
@@ -6381,8 +6430,12 @@ if (false) {
 		unsubscribe(true, (BigInteger)null, null, null, null, null, null);
 
 		// assert that there are no product subscriptions consumed
+		String expectedConsumedListMessage="No consumed subscription pools to list";
+		if (isPackageVersion("subscription-manager", ">=", "1.20.2-1")) {	// commit da72dfcbbb2c3a44393edb9e46e1583d05cc140a
+		    expectedConsumedListMessage="No consumed subscription pools were found.";
+		}
 		Assert.assertEquals(listConsumedProductSubscriptions().getStdout().trim(),
-				"No consumed subscription pools to list","Successfully unsubscribed from all consumed products.");
+			expectedConsumedListMessage,"Successfully unsubscribed from all consumed products.");
 		
 		// assert that there are no entitlement cert files
 		Assert.assertTrue(sshCommandRunner.runCommandAndWait("find "+entitlementCertDir+" -name '*.pem' | grep -v key.pem").getStdout().equals(""),
@@ -7160,6 +7213,26 @@ if (false) {
 		if (info!=null) return result.getStdout().split(":")[1].trim();
 		return result.getStdout().trim();
 	}
+	
+	
+	public void yumConfigManagerEnableRepos(List<String> repos, String options) {
+		
+		// use yum-config-manager to enable all the requested repos
+		if (options==null) options="";	// optional options like --disablerepo=beaker*
+		String command = "yum-config-manager "+options+" --enable";
+		for (String repo : repos) command += " "+repo;
+		SSHCommandResult result = sshCommandRunner.runCommandAndWait(command);
+		Assert.assertEquals(result.getExitCode(), Integer.valueOf(0), "ExitCode from command '"+command+"'.");
+		
+		if (this.isPackageVersion("subscription-manager", ">=", "1.20.1-1")) {	// commit afbc7fd31a27c7eba26fe4b0cc6840228678bfa8	RFE Bug 1329349: Add subscription-manager plugin to yum-config-manager
+			//	FINE: ssh root@jsefler-rhel7.usersys.redhat.com yum-config-manager  --enable rhel-7-server-openstack-7.0-tools-source-rpms rhel-7-server-optional-beta-rpms
+			//	FINE: Stdout: 
+			//	Loaded plugins: langpacks, product-id, subscription-manager
+			//	============
+			Assert.assertTrue(SubscriptionManagerCLITestScript.doesStringContainMatches(result.getStdout(),"Loaded plugins: .*subscription-manager"),"yum-config-manager loaded plugins includes subscription-manager");
+		}
+	}
+	
 	
 	/**
 	 * Disable all of the repos in /etc/yum.repos.d
@@ -9723,6 +9796,12 @@ if (false) {
 		//	subscription-manager-migration-data-2.0.7-1.el7.noarch
 		//	subscription-manager-migration-data-1.11.3.2-1.el5
 		//	ntpdate-4.2.6p5-18.el7.x86_64
+		
+		// compatibility adjustment for python-rhsm* packages obsoleted by subscription-manager-rhsm* packages
+		if (packageName.startsWith("python-rhsm") && isPackageVersion("subscription-manager",">=","1.20.3-1")) {	// commit f445b6486a962d12185a5afe69e768d0a605e175 Move python-rhsm build into subscription-manager
+			log.fine("Adjusting query for isPackageVersion(\""+packageName+"\"...) to isPackageVersion(\""+packageName.replace("python-rhsm", "subscription-manager-rhsm")+"\"...) due to obsoleted package starting in version 1.20.3-1");
+			packageName = packageName.replace("python-rhsm", "subscription-manager-rhsm");
+		}
 		
 		// get the currently installed version of the packageName of the form subscription-manager-1.10.14-7.el7.x86_64
 		if (this.installedPackageVersionMap.get(packageName)==null) {

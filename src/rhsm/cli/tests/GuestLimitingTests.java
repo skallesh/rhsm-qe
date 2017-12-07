@@ -13,6 +13,12 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
+import com.github.redhatqe.polarize.metadata.DefTypes;
+import com.github.redhatqe.polarize.metadata.LinkedItem;
+import com.github.redhatqe.polarize.metadata.TestDefinition;
+import com.github.redhatqe.polarize.metadata.TestType;
+import com.github.redhatqe.polarize.metadata.DefTypes.PosNeg;
+import com.github.redhatqe.polarize.metadata.DefTypes.Project;
 import com.redhat.qe.Assert;
 import com.redhat.qe.tools.RemoteFileTasks;
 
@@ -33,7 +39,7 @@ import rhsm.data.SubscriptionPool;
  *         virt_guest_limit_design.html
  */
 
-@Test(groups = { "GuestLimitingTests", "Tier2Tests" })
+@Test(groups = {"GuestLimitingTests"})
 public class GuestLimitingTests extends SubscriptionManagerCLITestScript {
 	protected String ownerKey = "";
 	protected List<String> providedProductIds = new ArrayList<String>();
@@ -49,9 +55,26 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@Test(description = "Verify the compliance status on the server when the host has more than 2 guests", groups = {
-			"complianceOfHostWithOnlyGuests" }, enabled = true)
-	protected void complianceOfHostWithtwoGuestsAndGuestLimitOfFour() throws JSONException, Exception {
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-37723", "RHEL7-51950"},
+			linkedWorkItems= {
+				@LinkedItem(
+					workitemId= "RHEL6-30331",	// RHSM-REQ : Guest-limited Subscriptions
+					project= Project.RHEL6,
+					role= DefTypes.Role.VERIFIES),
+				@LinkedItem(
+					workitemId= "RHEL7-84959",	// RHSM-REQ : Guest-limited Subscriptions
+					project= Project.RedHatEnterpriseLinux7,
+					role= DefTypes.Role.VERIFIES)},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
+	@Test(	description = "Verify the compliance status on the server when the host has more than 2 guests",
+			groups = {"Tier2Tests"},
+			enabled = true)
+	public void testComplianceOfHostWithtwoGuestsAndGuestLimitOfFour() throws JSONException, Exception {
 		String consumerId = clienttasks.getCurrentConsumerId(
 				clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null,
 						null, null, (String) null, null, null, null, true, null, null, null, null, null));
@@ -94,9 +117,26 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@Test(description = "Verify the compliance status on the server when the host has more than 4 guests", groups = {
-			"complianceOfHostWithFiveGuests" }, enabled = true)
-	protected void complianceOfHostWithFiveGuestsAndGuestLimitOfFour() throws JSONException, Exception {
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-37721", "RHEL7-51948"},
+			linkedWorkItems= {
+				@LinkedItem(
+					workitemId= "RHEL6-30331",	// RHSM-REQ : Guest-limited Subscriptions
+					project= Project.RHEL6,
+					role= DefTypes.Role.VERIFIES),
+				@LinkedItem(
+					workitemId= "RHEL7-84959",	// RHSM-REQ : Guest-limited Subscriptions
+					project= Project.RedHatEnterpriseLinux7,
+					role= DefTypes.Role.VERIFIES)},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
+	@Test(	description = "Verify the compliance status on the server when the host has more than 4 guests",
+			groups = {"Tier2Tests"},
+			enabled = true)
+	public void testComplianceOfHostWithFiveGuestsAndGuestLimitOfFour() throws JSONException, Exception {
 
 		String consumerId = clienttasks.getCurrentConsumerId(
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null,
@@ -142,9 +182,26 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@Test(description = "Verify that the guest_limit attribute is global across guest-limit subscriptions", groups = {
-			"complianceOfGuests" }, enabled = true)
-	protected void VerifyGuestLimitIsGlobal() throws JSONException, Exception {
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-37720", "RHEL7-51537"},
+			linkedWorkItems= {
+				@LinkedItem(
+					workitemId= "RHEL6-30331",	// RHSM-REQ : Guest-limited Subscriptions
+					project= Project.RHEL6,
+					role= DefTypes.Role.VERIFIES),
+				@LinkedItem(
+					workitemId= "RHEL7-84959",	// RHSM-REQ : Guest-limited Subscriptions
+					project= Project.RedHatEnterpriseLinux7,
+					role= DefTypes.Role.VERIFIES)},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
+	@Test(	description = "Verify that the guest_limit attribute is global across guest-limit subscriptions",
+			groups = {"Tier2Tests"},
+			enabled = true)
+	public void testGuestLimitIsGlobal() throws JSONException, Exception {
 		String consumerId = clienttasks.getCurrentConsumerId(
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null,
 						null, null, (String) null, null, null, null, true, null, null, null, null, null));
@@ -185,9 +242,26 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@Test(description = "Verify the compliance status on the server when the host has more than 5 guests and one of the guest is reported to be inactive by virt-who", groups = {
-			"complianceOfHostWithOneInactiveGuest" }, enabled = true)
-	protected void complianceOfHostWithOneOftheGuestReportedInactive() throws JSONException, Exception {
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-37722", "RHEL7-51949"},
+			linkedWorkItems= {
+				@LinkedItem(
+					workitemId= "RHEL6-30331",	// RHSM-REQ : Guest-limited Subscriptions
+					project= Project.RHEL6,
+					role= DefTypes.Role.VERIFIES),
+				@LinkedItem(
+					workitemId= "RHEL7-84959",	// RHSM-REQ : Guest-limited Subscriptions
+					project= Project.RedHatEnterpriseLinux7,
+					role= DefTypes.Role.VERIFIES)},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
+	@Test(	description = "Verify the compliance status on the server when the host has more than 5 guests and one of the guest is reported to be inactive by virt-who",
+			groups = {"Tier2Tests"},
+			enabled = true)
+	public void testComplianceOfHostWithOneOftheGuestReportedInactive() throws JSONException, Exception {
 		String consumerId = clienttasks.getCurrentConsumerId(
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null,
 						null, null, (String) null, null, null, null, true, null, null, null, null, null));
@@ -335,6 +409,7 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 * @throws Exception
 	 */
+	@SuppressWarnings("deprecation")
 	protected String createTestPool(int startingMinutesFromNow, int endingMinutesFromNow,String guest_limit)
 			throws JSONException, Exception {
 	    String name = "Guest_limit_GlobalTestProduct";
@@ -352,6 +427,7 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript {
 		attributes.put("type", "MKT");
 		attributes.put("type", "SVC");
 		attributes.put("guest_limit", guest_limit);
+		providedProduct.clear();
 		providedProduct.add("37060");
 		CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword,
 				sm_serverUrl, sm_clientOrg, productId);

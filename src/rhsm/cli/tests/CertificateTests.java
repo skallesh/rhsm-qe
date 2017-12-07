@@ -10,8 +10,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.github.redhatqe.polarize.metadata.DefTypes.PosNeg;
 import com.github.redhatqe.polarize.metadata.DefTypes.Project;
+import com.github.redhatqe.polarize.metadata.DefTypes;
+import com.github.redhatqe.polarize.metadata.LinkedItem;
 import com.github.redhatqe.polarize.metadata.TestDefinition;
+import com.github.redhatqe.polarize.metadata.TestType;
 
 import org.json.JSONException;
 import org.testng.SkipException;
@@ -58,18 +62,23 @@ import com.redhat.qe.tools.SSHCommandResult;
  *  that the CDN sends from the edge server to the java app thingy that does auth so if DER size
  *  is over 120kb or so you have a problem. if subject key id size is over 28kb or so you have a problem.
  */
-@Test(groups={"CertificateTests","Tier2Tests"})
+@Test(groups={"CertificateTests"})
 public class CertificateTests extends SubscriptionManagerCLITestScript {
 
 	// Test methods ***********************************************************************
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20031", "RHEL7-51044"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-20031", "RHEL7-51044"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="Verify that no more than one RHEL product cert is ever installed.",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-854879","blockedByBug-904193"},
+			groups={"Tier1Tests","blockedByBug-854879","blockedByBug-904193","blockedByBug-1506271"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyOnlyOneBaseRHELProductCertIsInstalled_Test() {
+	public void testOnlyOneBaseRHELProductCertIsInstalled() {
 		
 		// base RHEL product ids
 		// Reference: http://git.app.eng.bos.redhat.com/git/rcm/rcm-metadata.git/tree/product_ids
@@ -118,14 +127,19 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20036", "RHEL7-51045"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-20036", "RHEL7-51045"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="Verify that a base product cert corresponding to the /etc/redhat-release is installed",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-706518","blockedByBug-844368","blockedByBug-1104498","blockedByBug-904193"},
-			dependsOnMethods={"VerifyOnlyOneBaseRHELProductCertIsInstalled_Test"},
+			groups={"Tier1Tests","blockedByBug-706518","blockedByBug-844368","blockedByBug-1104498","blockedByBug-904193"},
+			dependsOnMethods={"testOnlyOneBaseRHELProductCertIsInstalled"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyBaseRHELProductCertIsInstalled_Test() {
+	public void testBaseRHELProductCertIsInstalled() {
 
 		// list the currently installed products
 		clienttasks.listInstalledProducts();
@@ -173,13 +187,18 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20037", "RHEL7-51046"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-20037", "RHEL7-51046"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="Verify that default-product cert(s) provided by the redhat-release package for this release are expected (e.g. '6.9 Beta' during Beta/Snapshot composes and '6.9' during RC composes)",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1426759","blockedByBug-1387101","blockedByBug-1327016","blockedByBug-1198931"},	// Bug 1318584 - /etc/pki/product-default/*.pem should supply only GA product cert (HTB versus Beta versus GA discussion)
+			groups={"Tier1Tests","blockedByBug-1426759","blockedByBug-1387101","blockedByBug-1327016","blockedByBug-1198931"},	// Bug 1318584 - /etc/pki/product-default/*.pem should supply only GA product cert (HTB versus Beta versus GA discussion)
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyDefaultProductCertVersion_Test() {
+	public void testDefaultProductCertVersion() {
 		if (sm_clientDefProdCertVersion==null) throw new SkipException("No automation property value for the expected '"+clienttasks.productCertDefaultDir+"' cert(s) version was supplied.");
 
 		boolean productDefaultCertTested=false;
@@ -199,12 +218,19 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	}
 
 
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-20037", "RHEL7-51046"},
+			level= DefTypes.Level.COMPONENT, component= "redhat-release-server",	// TODO should be a list of ["redhat-release-server","redhat-release-client","redhat-release-workstation","redhat-release-computenode"]
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="Verify that the installed base RHEL product cert provides the expected tags",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1259820","blockedByBug-1259839"},
-			dependsOnMethods={"VerifyBaseRHELProductCertIsInstalled_Test"},
+			groups={"Tier1Tests","blockedByBug-1259820","blockedByBug-1259839"},
+			dependsOnMethods={"testBaseRHELProductCertIsInstalled"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyBaseRHELProductCertArchAndTags_Test() {
+	public void testBaseRHELProductCertArchAndTags() {
 		
 		ProductCert productCert = clienttasks.getCurrentRhelProductCert();
 		List<String> providedTags = Arrays.asList(productCert.productNamespace.providedTags.split("\\s*,\\s*"));
@@ -256,14 +282,19 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20033", "RHEL7-33094"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-20033", "RHEL7-33094"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="candidate product cert validity dates",
-			groups={"AcceptanceTests","Tier1Tests"},
+			groups={"Tier1Tests"},
 			dataProvider="getProductCertFilesData",
 			enabled=true)
 	@ImplementsNitrateTest(caseId=64656)
-	public void VerifyValidityPeriodInProductCerts_Test(File productCertFile) {
+	public void testValidityPeriodInProductCerts(File productCertFile) {
 		
 		ProductCert productCert = clienttasks.getProductCertFromProductCertFile(productCertFile);
 		long actualValidityDurationDays = (productCert.validityNotAfter.getTimeInMillis() - productCert.validityNotBefore.getTimeInMillis())/(24*60*60*1000);
@@ -296,14 +327,19 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
 	}
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20029", "RHEL7-51904"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-20029", "RHEL7-51904"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="Make sure the entitlement cert contains all expected OIDs",
-			groups={"VerifyEntitlementCertContainsExpectedOIDs_Test","AcceptanceTests","Tier1Tests","blockedByBug-744259","blockedByBug-754426","blockedByBug-962520","blockedByBug-997970","blockedByBug-1021581","blockedByBug-1443693"},
+			groups={"Tier1Tests","VerifyEntitlementCertContainsExpectedOIDs_Test","blockedByBug-744259","blockedByBug-754426","blockedByBug-962520","blockedByBug-997970","blockedByBug-1021581","blockedByBug-1443693"},
 			dataProvider="getAllAvailableSubscriptionPoolsData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyEntitlementCertContainsExpectedOIDs_Test(SubscriptionPool pool) throws JSONException, Exception {
+	public void testEntitlementCertContainsExpectedOIDs(SubscriptionPool pool) throws JSONException, Exception {
 		
 		// skip RAM-based subscriptions since they were are not supported on v1 certificates
 		if (CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId, "ram")!=null) {
@@ -444,13 +480,18 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36643", "RHEL7-51454"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-36643", "RHEL7-51454"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="assert that the rct cat-cert tool reports the currently installed product certs are Certificate: Version: 1.0 (Note: this is not the ProductNamespace.version)",
-			groups={},
+			groups={"Tier2Tests"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyProductCertsAreV1Certificates_Test() {
+	public void testProductCertsAreV1Certificates() {
 
 		/* installed product certs only
 		List <ProductCert> productCerts = clienttasks.getCurrentProductCerts();
@@ -471,13 +512,18 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36641", "RHEL7-51452"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-36641", "RHEL7-51452"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="assert that the rct cat-cert tool reports the current consumer cert is a Certificate: Version: 1.0",
-			groups={"blockedByBug-863961"},
+			groups={"Tier2Tests","blockedByBug-863961"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyConsumerCertsAreV1Certificates_Test() {
+	public void testConsumerCertsAreV1Certificates() {
 		
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null, null);
 		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
@@ -485,13 +531,18 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			, testCaseID = {"RHEL6-36641", "RHEL7-51452"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-36641", "RHEL7-51452"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="assert the rct cat-cert tool does not traceback when run as non-root user.",
-			groups={"blockedByBug-1315901","VerifyConsumerCertsAreNotAccessibleByNonRootUserUsingRct_Test"},
+			groups={"Tier2Tests","blockedByBug-1315901","VerifyConsumerCertsAreNotAccessibleByNonRootUserUsingRct_Test","blockedByBug-1503851"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyConsumerCertsAreNotAccessibleByNonRootUserUsingRct_Test() {
+	public void testConsumerCertsAreNotAccessibleByNonRootUserUsingRct() {
 		if (clienttasks.isPackageVersion("python-rhsm","<","1.17.6-1")) {	// python-rhsm RHEL7.3 branch commit d21c8252b4bdcf2b57f316ecc604487a3ef6e2c2  1315901: Exception handling for PEM cert read
 			throw new SkipException ("This test is not fixed in this version of python-rhsm.  It was first fixed in python-rhsm-1.17.6-1");
 		}
@@ -527,16 +578,26 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		// After fix to Bug 1315901 - Stacktrace displayed when running rct against an inaccessible file
 		//	[root@jsefler-rhel7 ~]# su non-root-user --command 'rct cat-cert /etc/pki/consumer/cert.pem' 
 		//	Permission denied
-
+		String expectedStdout = "Permission denied";
+		Integer expectedExitCode = Integer.valueOf(1);
+		
+		// After fix to Bug 1472715 - Python module rhsm should never call exit()
+		//	[root@jsefler-rhel7 ~]# su non-root-user --command 'rct cat-cert /etc/pki/consumer/cert.pem'
+		//	Unable to read certificate file '/etc/pki/consumer/cert.pem': Error loading certificate: [Errno 13] Permission denied: '/etc/pki/consumer/cert.pem'
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.20.1-1")) {	// post commit f192653c46808239c2f193478c1dfeb55a6ee35c	//Bug 1472715: Python module rhsm should never call exit()
+			expectedStdout= String.format("Unable to read certificate file '%s': Error loading certificate: [Errno 13] Permission denied: '%s'",consumerCert.file.getPath(),consumerCert.file.getPath());
+			expectedExitCode = Integer.valueOf(0);
+		}
+		
 		// attempt to run command "rct cat-cert /etc/pki/consumer/cert.pem" as non-root-user
 		String command = "rct cat-cert "+consumerCert.file.getPath();
 		SSHCommandResult result = client.runCommandAndWait("su "+nonRootUser+" --command '"+command+"'");
 		
 		// assert expected results
 		Assert.assertTrue(!result.getStderr().toLowerCase().contains("Traceback".toLowerCase()), "Stderr from command '"+command+"' run as a non-root user does not contain a traceback.");
-		Assert.assertEquals(result.getStdout().trim(), "Permission denied", "Stdout from command '"+command+"' run as a non-root user.");
+		Assert.assertEquals(result.getStdout().trim(), expectedStdout, "Stdout from command '"+command+"' run as a non-root user.");
 		Assert.assertEquals(result.getStderr().trim(), "", "Stderr from command '"+command+"' run as a non-root user.");
-		Assert.assertEquals(result.getExitCode(), Integer.valueOf(1), "ExitCode from command '"+command+"' run as a non-root user.");
+		Assert.assertEquals(result.getExitCode(), expectedExitCode, "ExitCode from command '"+command+"' run as a non-root user.");
 	}
 	@AfterGroups(groups={"setup"}, value={"VerifyConsumerCertsAreNotAccessibleByNonRootUserUsingRct_Test"})
 	public void deleteNonRootUser() {
@@ -545,13 +606,18 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	protected final String nonRootUser = "non-root-user";
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20030", "RHEL7-33093"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-20030", "RHEL7-33093"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="assert that the rct cat-cert tool reports the issuer of consumer/entitlement/product certificates",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-968364"},
+			groups={"Tier1Tests","blockedByBug-968364"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyIssuerOfConsumerProductAndEntitlementCerts_Test() throws JSONException, Exception {
+	public void testIssuerOfConsumerProductAndEntitlementCerts() throws JSONException, Exception {
 		
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, false, null, null, null, null);
 		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
@@ -601,13 +667,18 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20032", "RHEL7-33086"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-20032", "RHEL7-33086"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="assert that the rct cat-cert tool reports orders as Unlimited instead of -1",
-			groups={"AcceptanceTests","Tier1Tests","blockedByBug-1011961"},
+			groups={"Tier1Tests","blockedByBug-1011961"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyRctCatCertReportsOrdersWithQuantityUnlimited_Test() throws JSONException, Exception {
+	public void testRctCatCertReportsOrdersWithQuantityUnlimited() throws JSONException, Exception {
 		int numberOfUnlimitedPools = 0;
 		boolean isSystemVirtual = Boolean.valueOf(clienttasks.getFactValue("virt.is_guest"));
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null, null);
@@ -633,13 +704,18 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36639", "RHEL7-51451"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-36639", "RHEL7-51451"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="assert the statistic values reported by the rct stat-cert tool for the current consumer cert",
-			groups={},
+			groups={"Tier2Tests"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void AssertConsumerCertStatistics_Test() {
+	public void testConsumerCertStatistics() {
 		
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, false, null, null, null, null, null);
 		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
@@ -663,13 +739,18 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36644", "RHEL7-51455"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-36644", "RHEL7-51455"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="assert the statistic values reported by the rct stat-cert tool for currently installed product certs",
-			groups={},
+			groups={"Tier2Tests"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void AssertProductCertStatistics_Test() {
+	public void testProductCertStatistics() {
 		
 		// get all the product certs on the system
 		List<ProductCert> productCerts = new ArrayList();
@@ -701,13 +782,18 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20035", "RHEL7-33079"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-20035", "RHEL7-33079"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="assert the statistic values reported by the rct stat-cert tool for currently subscribed entitlements",
-			groups={"AcceptanceTests","Tier1Tests"},
+			groups={"Tier1Tests"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void AssertEntitlementCertStatistics_Test() {
+	public void testEntitlementCertStatistics() {
 		
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, false, null, null, null, null, null);
 
@@ -739,13 +825,18 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36642", "RHEL7-51453"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-36642", "RHEL7-51453"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
 	@Test(	description="assert the statistic values reported by the rct stat-cert tool for a zero-content set entitlement",
-			groups={"blockedByBug-966137"},
+			groups={"Tier2Tests","blockedByBug-966137"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void AssertEntitlementCertStatisticsForZeroContentSetEntitlement_Test() {
+	public void testEntitlementCertStatisticsForZeroContentSetEntitlement() {
 		File zeroContentSetEntitlementCertFile = new File("/tmp/zeroContentSetEntitlementCert.pem");
 		client.runCommandAndWait("echo \""+zeroContentSetEntitlementCert.trim()+"\" > "+zeroContentSetEntitlementCertFile);
 		
@@ -868,14 +959,19 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20028", "RHEL7-33082"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-20028", "RHEL7-33082"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="Verify that the base RHEL product certs on the CDN for each release correctly reflect the release version.  For example, this affects users that want use subcription-manager release --set=6.3 to keep yum updates fixed to an older release.",
-			groups={"VerifyBaseRHELProductCertVersionFromEachCDNReleaseVersion_Test","AcceptanceTests","Tier1Tests"},
+			groups={"Tier1Tests","VerifyBaseRHELProductCertVersionFromEachCDNReleaseVersion_Test"},
 			dataProvider="VerifyBaseRHELProductCertVersionFromEachCDNReleaseVersion_TestData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyBaseRHELProductCertVersionFromEachCDNReleaseVersion_Test(Object blockedByBug, String release, String rhelRepoUrl, File rhelEntitlementCertFile, File caCertFile) {
+	public void testBaseRHELProductCertVersionFromEachCDNReleaseVersion(Object blockedByBug, String release, String rhelRepoUrl, File rhelEntitlementCertFile, File caCertFile) {
 		if (clienttasks.arch.equals("aarch64") && release.matches("7.0|7.1")) throw new SkipException("This test variation for aarch64 against release '"+release+"' is blocked by CLOSED WONTFIX bug 1261163 https://bugzilla.redhat.com/show_bug.cgi?id=1261163"); 
 
 		File certFile = rhelEntitlementCertFile;
@@ -1041,14 +1137,19 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-36366", "RHEL7-33085"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-36366", "RHEL7-33085"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="Verify that the base RHEL product cert will upgrade to match the releaseVer set when a package is installed/upgraded/downgraded",
-			groups={"VerifyBaseRHELProductCertVersionUpdates_Test","AcceptanceTests","Tier1Tests"},
+			groups={"Tier1Tests","VerifyBaseRHELProductCertVersionUpdates_Test"},
 			dataProvider="getVerifyBaseRHELProductCertVersionUpdates_TestData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyBaseRHELProductCertVersionUpdates_Test(Object blockedByBug, String testPackage, String oldProductCertVersion, String oldRelease, String newerRelease) {
+	public void testBaseRHELProductCertVersionUpdates(Object blockedByBug, String testPackage, String oldProductCertVersion, String oldRelease, String newerRelease) {
 		clienttasks.unregister(null, null, null, null);
 		restoreOriginalRhsmProductCertDirAndProductIdJsonFile();
 		
@@ -1305,13 +1406,18 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 
 
 
-	@TestDefinition( projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7}
-			       , testCaseID = {"RHEL6-20034", "RHEL7-55176"})
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"RHEL6-20034", "RHEL7-55176"},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
 	@Test(	description="When updating a RHEL package on a system with JBoss, verify that the JBoss productId is not deleted when calling yum update with --disablerepo=jb-eap-6-for-rhel-6-server-rpms",
-			groups={"VerifyYumUpdateWithDisabledRepoWillNotDeleteJBossProductId_Test","AcceptanceTests","Tier1Tests","blockedByBug-1159163"},
+			groups={"Tier1Tests","VerifyYumUpdateWithDisabledRepoWillNotDeleteJBossProductId_Test","blockedByBug-1159163","blockedByBug-1512948"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyYumUpdateWithDisabledRepoWillNotDeleteJBossProductId_Test() throws JSONException, Exception {
+	public void testYumUpdateWithDisabledRepoWillNotDeleteJBossProductId() throws JSONException, Exception {
 		// fixed in https://bugzilla.redhat.com/show_bug.cgi?id=1159163#c12  subscription-manager commit 68d210bb9145e7ea65aea979fde694436e3e0373 subscription-manager-1.14.6-1
 		clienttasks.unregister(null, null, null, null);
 		restoreOriginalRhsmProductCertDirAndProductIdJsonFile();
