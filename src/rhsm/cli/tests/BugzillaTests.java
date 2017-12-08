@@ -1796,7 +1796,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			servertasks.updateConfFileParameter("log4j.logger.org.candlepin.policy.js.compliance", "INFO");
 			servertasks.updateConfFileParameter("log4j.logger.org.candlepin", "INFO");
 			servertasks.restartTomcat();
-			sleep(100);
+			sleep(200);
 		}
 	}
 
