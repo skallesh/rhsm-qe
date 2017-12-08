@@ -7357,6 +7357,9 @@ if (false) {
 	}
 	
 	public String findRandomAvailablePackageFromRepo (String repo) {
+		// TODO: consider re-implementing this method using...
+		// repoquery --pkgnarrow=available --all --repoid=<REPO_ID> --qf "%{name}"
+
 		ArrayList<String> pkgs = getYumListAvailable("--disablerepo=* --enablerepo="+repo);
 		if (pkgs.isEmpty()) return null;
 		return pkgs.get(SubscriptionManagerCLITestScript.randomGenerator.nextInt(pkgs.size()));
