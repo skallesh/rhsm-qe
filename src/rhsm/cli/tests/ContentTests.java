@@ -26,6 +26,7 @@ import org.testng.SkipException;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterGroups;
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeGroups;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
@@ -376,8 +377,16 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 			}
 		}
 	}
-
-
+	
+	
+	protected List<ProductCert> productCertsBeforeTest;
+	protected SubscriptionPool lastSubscriptionPool = null;
+	protected File lastEntitlementCertFile = null;
+	@BeforeGroups(groups={"setup"}, value={"testInstallAndRemoveAnyPackageFromEnabledRepoAfterSubscribingToPool"})
+	public void beforeInstallAndRemoveAnyPackageFromEnabledRepoAfterSubscribingToPool() {
+		if (clienttasks==null) return;
+		productCertsBeforeTest = clienttasks.getCurrentProductCerts();
+	}
 	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID = {"RHEL6-22222", "RHEL7-55190"},
@@ -386,20 +395,28 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags="Tier1")
 	@Test(	description="subscription-manager Yum plugin: ensure content can be downloaded/installed/removed",
-			groups={"Tier1Tests","FipsTests","blockedByBug-701425","blockedByBug-871146","blockedByBug-962520"},
+			groups={"Tier1Tests","FipsTests","blockedByBug-701425","blockedByBug-871146","blockedByBug-962520","testInstallAndRemoveAnyPackageFromEnabledRepoAfterSubscribingToPool"},
 			dataProvider="getEnabledRepoAndSubscriptionPoolData",
 			enabled=true)
 	@ImplementsNitrateTest(caseId=41695,fromPlan=2479)
 	public void testInstallAndRemoveAnyPackageFromEnabledRepoAfterSubscribingToPool(String repoLabel, SubscriptionPool pool, String quantity) throws JSONException, Exception {
+		File entitlementCertFile;
 		
-		// to avoid interference from an already enabled repo from a prior attached subscription that also
-		// contains this same packages (e.g. -htb- repos versus non -htb- repos) it would be best to remove
-		// all previously attached subscriptions.  actually this will speed up the test
-		clienttasks.unsubscribe(true, (BigInteger)null, null, null, null, null, null);
-		
-		// subscribe to this pool
-		File entitlementCertFile = clienttasks.subscribeToSubscriptionPool_(pool,quantity);
-		Assert.assertNotNull(entitlementCertFile, "Found the entitlement cert file that was granted after subscribing to pool: "+pool);
+		// save some time when the last row of data subscribed to the same pool...
+		if (lastSubscriptionPool==null || !lastSubscriptionPool.poolId.equals(pool.poolId)) {
+			// to avoid interference from an already enabled repo from a prior attached subscription that also
+			// contains this same packages (e.g. -htb- repos versus non -htb- repos) it would be best to remove
+			// all previously attached subscriptions.  actually this will speed up the test
+			clienttasks.unsubscribe(true, (BigInteger)null, null, null, null, null, null);
+			
+			// subscribe to this pool
+			entitlementCertFile = clienttasks.subscribeToSubscriptionPool_(pool,quantity);
+			lastSubscriptionPool = pool;	// remember for the next row of data
+			lastEntitlementCertFile = entitlementCertFile;	// remember for the next row of data
+			Assert.assertNotNull(entitlementCertFile, "Found the entitlement cert file that was granted after subscribing to pool: "+pool);
+		} else {
+			entitlementCertFile = lastEntitlementCertFile;	// take from the last row of data
+		}
 		
 		// find an available package that is uniquely provided by repo
 		String pkg = clienttasks.findUniqueAvailablePackageFromRepo(repoLabel);
@@ -421,6 +438,36 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		for (String depPkg : getYumDependencyPackagesInstalledFromYumInstallPackageResult(yumInstallPackageResult)) {
 			if (!depPkgsAlreadyRemoved.contains(depPkg)) {
 				depPkgsAlreadyRemoved.addAll(getYumDependencyPackagesRemovedFromYumRemovePackageResult(clienttasks.yumRemovePackage(depPkg)));
+			}
+		}
+	}
+	@AfterGroups(groups={"setup"}, value={"testInstallAndRemoveAnyPackageFromEnabledRepoAfterSubscribingToPool"}, alwaysRun=true)
+	public void afterInstallAndRemoveAnyPackageFromEnabledRepoAfterSubscribingToPool() {
+		if (clienttasks==null) return;
+		List<ProductCert> productCertsAfterTest = clienttasks.getCurrentProductCerts();
+		
+		// clean up (remove) any extraneous product certs that were installed by the yum productid plugin during testInstallAndRemoveAnyPackageFromEnabledRepoAfterSubscribingToPool
+		for (ProductCert productCertAfterTest : productCertsAfterTest) {
+			for (ProductCert productCertBeforeTest : productCertsBeforeTest) {
+				// do nothing when this productCertAfterTest was also present BeforeTest
+				if (productCertBeforeTest.file.equals(productCertAfterTest.file)) continue;
+				// do nothing if this productCertAfterTest is located in the default directory
+				if (productCertAfterTest.file.getPath().startsWith(clienttasks.productCertDefaultDir)) continue;
+				
+				// TEMPORARY WORKAROUND
+				if (doesStringContainMatches(productCertAfterTest.productNamespace.providedTags,"rhel-"+clienttasks.redhatReleaseX+"(,|$)")) {
+					boolean invokeWorkaroundWhileBugIsOpen = true;
+					String bugId="1525238"; // Bug 1525238 - yum plugin for productid neglects to remove HTB product cert from /etc/pki/product/ because it is tagged as a provider of "rhel-7"
+					try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
+					if (invokeWorkaroundWhileBugIsOpen) {
+					   log.warning("Removing product cert '"+productCertAfterTest.productName+" "+productCertAfterTest.file+"' afterInstallAndRemoveAnyPackageFromEnabledRepoAfterSubscribingToPool while bug '"+bugId+"' is open.");
+					}
+				}
+				// END OF WORKAROUND
+				
+				// remove the product cert
+			    log.info("Removing product cert '"+productCertAfterTest.productName+" "+productCertAfterTest.file+"' afterInstallAndRemoveAnyPackageFromEnabledRepoAfterSubscribingToPool.");
+				client.runCommandAndWait("rm -f "+productCertAfterTest.file);
 			}
 		}
 	}
@@ -2384,6 +2431,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		// assure we are freshly registered and process all available subscription pools
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, ConsumerType.system, null, null, null, null, null, (String)null, null, null, null, Boolean.TRUE, false, null, null, null, null);
 		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
+///*debugTesting*/if (!pool.productId.equals("RH00076")) continue; 
 			String quantity = null;
 			/*if (clienttasks.isPackageVersion("subscription-manager",">=","1.10.3-1"))*/ if (pool.suggested!=null) if (pool.suggested<1) quantity = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId, "instance_multiplier"); 	// when the Suggested quantity is 0, let's specify a quantity to avoid Stdout: Quantity '1' is not a multiple of instance multiplier '2'
 			File entitlementCertFile = clienttasks.subscribeToSubscriptionPool_(pool,quantity);
