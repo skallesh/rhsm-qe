@@ -45,6 +45,23 @@
   (.close @driver ))
 
 (defn ^{Test {:groups ["proxy" "cockpit" "tier2" "tier3"]
+              :dataProvider "run-command"
+              :dependsOnMethods ["package_is_installed"]}
+        TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL7-99248"]}}
+  service_is_running
+  [ts run-command]
+  "[root@jstavel-rhel7-latest-server ~]# systemctl status cockpit.service
+● cockpit.service - Cockpit Web Service
+   Loaded: loaded (/usr/lib/systemd/system/cockpit.service; static; vendor preset: disabled)"
+  (log/info "service_is_running")
+  (let [result (->> "systemctl status cockpit.service"
+                    run-command
+                    :stdout)]
+    (is (.contains result "cockpit.service - Cockpit Web Service"))
+    (is (re-find #"\n[ \t]+Loaded:[ \t]+loaded" result))))
+
+(defn ^{Test {:groups ["proxy" "cockpit" "tier2" "tier3"]
               :dataProvider "client-with-webdriver-and-english-locale"}}
   auth_proxy_works
   [ts driver run-command locale language]
@@ -279,7 +296,7 @@
 
 (defn ^{DataProvider {:name "run-command"}}
   provide_run_command
-  "It provides a running Chrome/Firefox instance."
+  "It provides a running SSHCommandRunner"
   [_]
   (-> [(partial run-command @c/clientcmd)]
       vector

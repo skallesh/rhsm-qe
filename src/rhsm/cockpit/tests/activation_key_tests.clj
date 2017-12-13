@@ -58,6 +58,28 @@
   cleanup [_]
   (.close @driver))
 
+(defn ^{Test {:groups ["register"
+                       "activation-key"
+                       "cockpit"
+                       "tier1"
+                       "tier2"
+                       "tier3"]
+              :dataProvider "run-command"
+              :dependsOnMethods ["package_is_installed"]}
+        TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]
+                        :testCaseID ["RHEL7-99248"]}}
+  service_is_running
+  [ts run-command]
+  "[root@jstavel-rhel7-latest-server ~]# systemctl status cockpit.service
+● cockpit.service - Cockpit Web Service
+   Loaded: loaded (/usr/lib/systemd/system/cockpit.service; static; vendor preset: disabled)"
+  (log/info "service_is_running")
+  (let [result (->> "systemctl status cockpit.service"
+                    run-command
+                    :stdout)]
+    (is (.contains result "cockpit.service - Cockpit Web Service"))
+    (is (re-find #"\n[ \t]+Loaded:[ \t]+loaded" result))))
+
 (defn ^{AfterClass {:groups ["cleanup"]
                     :alwaysRun true}}
   delete_all_actually_created_activation_keys
@@ -80,8 +102,7 @@
                        "cockpit"
                        "tier1"]
               :dataProvider "client-with-webdriver-and-activation-key-and-english-locale"
-              ;;:dependsOnMethods ["service_is_running"]
-              }
+              :dependsOnMethods ["service_is_running"]}
         TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]
                         :testCaseID ["RHEL7-99656"]}}
   register_with_activation_key
@@ -137,7 +158,7 @@
                        "cockpit"
                        "tier3"]
               :dataProvider "client-with-webdriver-and-activation-key-and-locale"
-              ;;:dependsOnMethods ["service_is_running"]
+              :dependsOnMethods ["service_is_running"]
               }
         TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]
                         :testCaseID ["RHEL7-99656"]}}
