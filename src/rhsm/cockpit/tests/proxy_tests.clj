@@ -45,8 +45,7 @@
   (.close @driver ))
 
 (defn ^{Test {:groups ["proxy" "cockpit" "tier2" "tier3"]
-              :dataProvider "run-command"
-              :dependsOnMethods ["package_is_installed"]}
+              :dataProvider "run-command"}
         TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]
                         :testCaseID ["RHEL7-99248"]}}
   service_is_running
