@@ -962,6 +962,9 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 			if (translationFile.getPath().contains("/ru/")) bugIds.add("1463765");
 			if (translationFile.getPath().contains("/es_ES/")) bugIds.add("1463765");
 			
+			// Bug 1525621 - [es_ES] missing a space character in one of the translated strings
+			if (translationFile.getPath().contains("/es_ES/")) bugIds.add("1525621");
+			
 			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 			ll.add(Arrays.asList(new Object[] {blockedByBzBug, translationFile}));
 		}
