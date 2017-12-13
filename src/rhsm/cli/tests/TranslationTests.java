@@ -782,6 +782,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 		doNotTranslateSubStrings.addAll(Arrays.asList(new String[]{"&#x2022;"}));	// Unicode bullet character	// msgid "&#x2022; A network connection"	// msgid "&#x2022; The address of a subscription management service (optional)"	// msgid "&#x2022; Your account login"
 		doNotTranslateSubStrings.addAll(Arrays.asList(new String[]{"subscription-manager register --help"}));	// msgid "This system is not yet registered. Try 'subscription-manager register --help' for more information."
 		doNotTranslateSubStrings.addAll(Arrays.asList(new String[]{"subscription-manager plugins"}));	// msgid "View and configure subscription-manager plugins"
+		doNotTranslateSubStrings.addAll(Arrays.asList(new String[]{"subscription-manager config --rhsm.auto_enable_yum_plugins=0"}));	// msgid "The yum plugins: %s were automatically enabled for the benefit of Red Hat Subscription Management. If not desired, use \"subscription-manager config --rhsm.auto_enable_yum_plugins=0\" to block this behavior."
 		doNotTranslateSubStrings.add("%s:%s%s");	// msgid "Unregistering from: %s:%s%s"	// msgid "Registering to: %s:%s%s"
 		
 		List<String> ignoreTheseExceptionalCases = new ArrayList<String>();

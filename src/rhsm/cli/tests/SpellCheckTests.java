@@ -145,6 +145,7 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 			msgId = msgId.replace("DER size", "binary size");
 			msgId = msgId.replace("SSL", "Secure Sockets Layer");
 			msgId = msgId.replace("UUID", "universally unique identifier");
+			msgId = msgId.replace("uuid", "universally unique identifier");
 			msgId = msgId.replace("SKU", "Stock Keeping Unit");
 			msgId = msgId.replace("SLA", "Service Level Agreement");
 			msgId = msgId.replace("DMI", "Desktop Management Interface");
@@ -168,9 +169,11 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 			msgId = msgId.replace("shouldn't","should not");
 			msgId = msgId.replace("consumerid", "consumer_id");
 			msgId = msgId.replace("consumer_uuid", "consumer_universally_unique_identifier");
+			msgId = msgId.replace("subscription-manager config --rhsm", "subscription-manager configure --red-hat-subscription-manager");
 			msgId = msgId.replace("&#x2022;","bullet");
 			//msgId = msgId.replace("'%s'", "%s");	// already fixed by adjustment below
 			msgId = msgId.replaceAll("'([^ ]+)'", "$1");	// remove surrounding single quotes from single words
+			msgId = msgId.replaceFirst("^Ok$", "Okay");
 			
 			// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=1188265
 			if (msgId.contains("Susbscriptions")) {
