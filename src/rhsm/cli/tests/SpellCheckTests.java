@@ -419,6 +419,7 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 		Set<String> msgIds = new HashSet<String>();
 		for (String msgId : translationMsgidSetForCandlepin) {
 			msgId = msgId.replace("candlepin", "candle pin");
+			msgId = msgId.replace("Candlepin", "Candle pin");
 			msgId = msgId.replace("metadata", "data about data");
 			msgId = msgId.replace("username", "user name");
 			msgId = msgId.replace("Stackable", "Capable of being stacked");
@@ -445,11 +446,25 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 			msgId = msgId.replace("''", "'");	// remove the escaping single quotes
 			msgId = msgId.replaceAll("'([^ ]+)'", "$1");	// remove surrounding single quotes from single words
 			
-			// TEMPORARY WORKAROUND FOR BUG
+			// TEMPORARY WORKAROUND
 			for (String word : Arrays.asList(new String[]{"ueber","indepent","databse","html","oauth","checkin.","json","ActivationKey","boolean","kbase","uuid","sku"})) {
 				if (msgId.contains(word)) {
 					boolean invokeWorkaroundWhileBugIsOpen = true;
 					String bugId="1190814";	// Bug 1190814 - typos in candlepin msgids
+					try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
+					if (invokeWorkaroundWhileBugIsOpen) {
+						log.warning("Ignoring known misspelling of '"+word+"' while bug '"+bugId+"' is open.");
+						msgId = msgId.replace(word, "TYPO");
+					}
+				}
+			}
+			// END OF WORKAROUND
+			
+			// TEMPORARY WORKAROUND
+			for (String word : Arrays.asList(new String[]{"ueber","autobind","specifed"})) {
+				if (msgId.contains(word)) {
+					boolean invokeWorkaroundWhileBugIsOpen = true;
+					String bugId="1525572";	// Bug 1525572 - typos in candlepin msgids
 					try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
 					if (invokeWorkaroundWhileBugIsOpen) {
 						log.warning("Ignoring known misspelling of '"+word+"' while bug '"+bugId+"' is open.");
