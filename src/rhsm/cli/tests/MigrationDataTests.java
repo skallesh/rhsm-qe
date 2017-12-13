@@ -340,9 +340,10 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				"rhel-x86_64-server-sfs-6.5.aus",
 				"rhel-x86_64-server-sfs-6.5.aus-debuginfo",
 // TODO: Bug 1418467 - NEEDINFO on rhel-x86_64-server-sjis-6.*.aus-debuginfo channel mappings to product certs before including...
-//				"rhel-x86_64-server-sjis-6.2.aus-debuginfo",
-//				"rhel-x86_64-server-sjis-6.4.aus-debuginfo",
-//				"rhel-x86_64-server-sjis-6.5.aus-debuginfo",
+// DONE: Bug 1418467 was CLOSED WONTFIX.  Inclusion/verification of these three channels is benign. 
+					"rhel-x86_64-server-sjis-6.2.aus-debuginfo",
+					"rhel-x86_64-server-sjis-6.4.aus-debuginfo",
+					"rhel-x86_64-server-sjis-6.5.aus-debuginfo",
 				"rhel-x86_64-server-supplementary-6.2.aus",
 				"rhel-x86_64-server-supplementary-6.2.aus-debuginfo",
 				"rhel-x86_64-server-supplementary-6.4.aus",
