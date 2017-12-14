@@ -83,7 +83,6 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		// base RHEL product ids
 		// Reference: http://git.app.eng.bos.redhat.com/git/rcm/rcm-metadata.git/tree/product_ids
 		List<String> baseProductIds = Arrays.asList(
-//			"180",	// Red Hat Beta
 			"68",	// Red Hat Enterprise Linux Desktop
 			"69",	// Red Hat Enterprise Linux Server
 			"71",	// Red Hat Enterprise Linux Workstation
@@ -91,8 +90,20 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 			"74",	// Red Hat Enterprise Linux for IBM POWER
 			"76",	// Red Hat Enterprise Linux for Scientific Computing
 			"279",	// Red Hat Enterprise Linux for IBM POWER LE
-			"294");	// Red Hat Enterprise Linux Server for ARM
-					// 70,73,75 are "Extended Update Support"
+			"294",	// Red Hat Enterprise Linux Server for ARM
+			"420",	// Red Hat Enterprise Linux for Power 9
+			"419",	// Red Hat Enterprise Linux for ARM 64
+			"434",	// Red Hat Enterprise Linux for IBM System z (Structure A)
+// Valid during the snapshot phase...
+			"362",	// Red Hat Enterprise Linux for Power 9 Beta
+			"363",	// Red Hat Enterprise Linux for ARM 64 Beta
+			"433",	// Red Hat Enterprise Linux for IBM System z (Structure A) Beta
+			"135",	// Red Hat Enterprise Linux 6 Server HTB
+			"155",	// Red Hat Enterprise Linux 6 Workstation HTB
+			"230",	// Red Hat Enterprise Linux 7 Server High Touch Beta
+			"231",	// Red Hat Enterprise Linux 7 Workstation High Touch Beta
+			"180");	// Red Hat Beta
+
 		
 		// find all installed RHEL product Certs
 		List<ProductCert> currentRhelProductCerts = new ArrayList<ProductCert>();
@@ -179,7 +190,13 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		}
 		
 		if (clienttasks.redhatReleaseX.equals("7")) {
-			rhelProductCert = clienttasks.getCurrentProductCerts("rhel-7-.*").get(0);	// should only be one (tested by VerifyOnlyOneBaseRHELProductCertIsInstalled_Test)
+			// should we be expecting a rhel-alt system?
+			// rhel-alt-7 is built on kernel-4 ; rhel-7 is built on kernel-3
+			if (clienttasks.isPackageVersion("kernel", "==", "4")) {
+				rhelProductCert = clienttasks.getCurrentProductCerts("rhel-alt-7-.*").get(0);	// should only be one (tested by VerifyOnlyOneBaseRHELProductCertIsInstalled_Test)				
+			} else {
+				rhelProductCert = clienttasks.getCurrentProductCerts("rhel-7-.*").get(0);	// should only be one (tested by VerifyOnlyOneBaseRHELProductCertIsInstalled_Test)				
+			}
 		}
 		
 		Assert.assertNotNull(rhelProductCert,"Found an installed product cert that matches the system's base RHEL release version '"+clienttasks.releasever+"' on arch '"+clienttasks.arch+"':");
@@ -269,6 +286,39 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 				break;
 			case 294: // Red Hat Enterprise Linux Server for ARM
 				expectedTags = Arrays.asList("rhel-#,rhel-#-arm".replaceAll("#",clienttasks.redhatReleaseX).split("\\s*,\\s*"));
+				break;
+			case 419: // Red Hat Enterprise Linux for ARM 64
+				expectedTags = Arrays.asList("rhel-#,rhel-alt-#,rhel-alt-#-armv8-a".replaceAll("#",clienttasks.redhatReleaseX).split("\\s*,\\s*"));
+				// TODO ADD WORKAROUND FOR Bug 1518886 - RHEL-ALT-7.5 product certs should also provide tag "rhel-7"
+				break;
+			case 420: // Red Hat Enterprise Linux for Power 9
+				expectedTags = Arrays.asList("rhel-#,rhel-alt-#,rhel-alt-#-power".replaceAll("#",clienttasks.redhatReleaseX).split("\\s*,\\s*"));
+				// TODO ADD WORKAROUND FOR Bug 1518886 - RHEL-ALT-7.5 product certs should also provide tag "rhel-7"
+				break;
+			case 434: // Red Hat Enterprise Linux for IBM System z (Structure A)
+				expectedTags = Arrays.asList("rhel-#,rhel-alt-#,rhel-alt-#-system-z-a".replaceAll("#",clienttasks.redhatReleaseX).split("\\s*,\\s*"));
+				// TODO ADD WORKAROUND FOR Bug 1518886 - RHEL-ALT-7.5 product certs should also provide tag "rhel-7"
+				break;
+			case 363: // Red Hat Enterprise Linux for ARM 64 Beta
+				expectedTags = Arrays.asList("rhel-alt-#,rhel-alt-#-armv8-a".replaceAll("#",clienttasks.redhatReleaseX).split("\\s*,\\s*"));
+				break;
+			case 362: // Red Hat Enterprise Linux for Power 9 Beta
+				expectedTags = Arrays.asList("rhel-alt-#,rhel-alt-#-power".replaceAll("#",clienttasks.redhatReleaseX).split("\\s*,\\s*"));
+				break;
+			case 433: // Red Hat Enterprise Linux for IBM System z (Structure A) Beta
+				expectedTags = Arrays.asList("rhel-alt-#,rhel-alt-#-system-z-a".replaceAll("#",clienttasks.redhatReleaseX).split("\\s*,\\s*"));
+				break;
+			case 135: // Red Hat Enterprise Linux 6 Server HTB
+				expectedTags = Arrays.asList("rhel-6-server-htb,rhel-6-server");
+				break;
+			case 155: // Red Hat Enterprise Linux 6 Workstation HTB
+				expectedTags = Arrays.asList("rhel-6-workstation-htb,rhel-6-workstation");
+				break;
+			case 230: // Red Hat Enterprise Linux 7 Server High Touch Beta
+				expectedTags = Arrays.asList("rhel-7-htb,rhel-7-server");
+				break;
+			case 231: // Red Hat Enterprise Linux 7 Workstation High Touch Beta
+				expectedTags = Arrays.asList("rhel-7-htb,rhel-7-workstation");
 				break;
 			default:
 				Assert.fail("Unknown productCert id '"+productCert.productId+"'");
