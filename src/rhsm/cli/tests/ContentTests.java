@@ -1979,6 +1979,18 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		client.runCommandAndWait("mv -f /tmp/beaker.repos/beaker*.repo /etc/yum.repos.d");
 	}
 	
+	@AfterClass(groups={"setup"},dependsOnMethods={"restoreYumBeakerRepos"})
+	public void restoreRedHatRelease() {
+		// TEMPORARY WORKAROUND
+		boolean invokeWorkaroundWhileBugIsOpen = true;
+		String bugId="1526622"; // Bug 1526622 - the productid plugin should never delete a /etc/pki/product-default/<ID>.pem cert provided by the redhat-release-<VARIANT>.rpm
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
+		if (invokeWorkaroundWhileBugIsOpen) {
+			client.runCommandAndWait("yum reinstall redhat-release* --assumeyes --enablerepo=beaker*");
+		}
+		// END OF WORKAROUND
+	}
+	
 	@AfterClass(groups={"setup"})
 	@AfterGroups(groups={"setup"},value="InstallAndRemovePackageAfterSubscribingToPersonalSubPool_Test", alwaysRun=true)
 	public void unregisterAfterGroupsInstallAndRemovePackageAfterSubscribingToPersonalSubPool_Test() {
@@ -2431,7 +2443,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		// assure we are freshly registered and process all available subscription pools
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, ConsumerType.system, null, null, null, null, null, (String)null, null, null, null, Boolean.TRUE, false, null, null, null, null);
 		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
-///*debugTesting*/if (!pool.productId.equals("RH00076")) continue; 
+///*debugTesting*/if (!pool.productId.equals("RH00783")) continue; 
 			String quantity = null;
 			/*if (clienttasks.isPackageVersion("subscription-manager",">=","1.10.3-1"))*/ if (pool.suggested!=null) if (pool.suggested<1) quantity = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId, "instance_multiplier"); 	// when the Suggested quantity is 0, let's specify a quantity to avoid Stdout: Quantity '1' is not a multiple of instance multiplier '2'
 			File entitlementCertFile = clienttasks.subscribeToSubscriptionPool_(pool,quantity);
