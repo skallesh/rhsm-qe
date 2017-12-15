@@ -648,13 +648,19 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 		// register a new consumer and auto-subscribe to cover the installed RHEL product
 		clienttasks.unregister(null, null, null, null);
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, null, false, null, null, null, null);
+		ProductCert rhelProductCert=clienttasks.getCurrentRhelProductCert();
+		if (rhelProductCert==null) throw new SkipException("This test requires an entitlement to an installed RHEL product");
+		InstalledProduct installedRhelProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", rhelProductCert.productId, clienttasks.getCurrentlyInstalledProducts());
+		if (installedRhelProduct==null) Assert.fail("Could not find the installed product corresponding to the current RHEL product cert: "+rhelProductCert);
+		if (!installedRhelProduct.status.equals("Subscribed")) throw new SkipException("This test requires attachment to a RHEL subscription for the installed RHEL product.");
 		
-		// attach a RHEL subscription
-		if (!clienttasks.isRhelProductCertSubscribed()) throw new SkipException("This test requires attachment to a RHEL subscription for the installed RHEL product.");
-		
-		// assert that there are some occurrences of $releasever in redhat.repo
+		// assert that there are some occurrences of $releasever in redhat.repo (for non Beta|HTB eng products)
 		String sshCommandGreppingRedhatRepoForNumberReleaseverOccurrences = "grep '$releasever' "+clienttasks.redhatRepoFile+" | wc --lines";
 		Integer numberReleaseverOccurrences = Integer.valueOf(client.runCommandAndWait(sshCommandGreppingRedhatRepoForNumberReleaseverOccurrences).getStdout().trim());
+		if (Arrays.asList("135","155","230","231","362","363","433").contains(installedRhelProduct.productId)) {
+			Assert.assertEquals(numberReleaseverOccurrences, Integer.valueOf(0),"Because the currently installed RHEL engineering product '"+installedRhelProduct.productId+"' should only provide content access to beta|htb repositories, none of the current entitled repo urls should contain reference to $releasever.");
+			throw new SkipException("This test requires a RHEL entitlement to an engineering product with content sets that can be pinned to a $releasever.");
+		}
 		Assert.assertTrue(numberReleaseverOccurrences>0, "The number of occurances ("+numberReleaseverOccurrences+") for '$releasever' in '"+clienttasks.redhatRepoFile+"' is greater than zero.");
 		
 		// are any releases available?
