@@ -436,108 +436,9 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 
 		// make sure we are newly registered
 		clienttasks.register(username,password,org,null,null,null,null,null,null,null,(List<String>)null,null,null,null,true, null, null, null, null, null);
-
-		// get the current base RHEL product cert
-		String providingTag = "rhel-"+clienttasks.redhatReleaseX;
-		List<ProductCert> rhelProductCerts = clienttasks.getCurrentProductCerts(providingTag);
-		// special case (rhel5ClientDesktopVersusWorkstation)
-		if (rhelProductCerts.isEmpty() && clienttasks.releasever.equals("5Client")) {
-			//	Product:
-			//		ID: 68
-			//		Name: Red Hat Enterprise Linux Desktop
-			//		Version: 5.10
-			//		Arch: i386
-			//		Tags: rhel-5,rhel-5-client
-
-			//	Product:
-			//		ID: 71
-			//		Name: Red Hat Enterprise Linux Workstation
-			//		Version: 5.10
-			//		Arch: i386
-			//		Tags: rhel-5-client-workstation,rhel-5-workstation
-			providingTag = "rhel-5-client-workstation";
-			rhelProductCerts = clienttasks.getCurrentProductCerts(providingTag);
-		}
-		// special case (rhel7)
-		if (rhelProductCerts.isEmpty() && clienttasks.redhatReleaseX.equals("7")) {
-			//	[root@jsefler-7 rhel-7.0-beta]# pwd
-			//	/tmp/rhnDefinitionsDir/product_ids/rhel-7.0-beta
-			//	[root@jsefler-7 rhel-7.0-beta]# for f in $(ls *.pem); do echo ''; echo $f; rct cat-cert $f | egrep 'Tags:|ID:'; done;
-			//
-			//	Client-x86_64-0e02a62335a7-229.pem
-			//		ID: 229
-			//		Tags: rhel-7-client
-			//
-			//	ComputeNode-x86_64-58cda7733d76-234.pem
-			//		ID: 234
-			//		Tags: rhel-7-computenode
-			//
-			//	Everything-ppc64-f7fe5b9ea798-227.pem
-			//		ID: 227
-			//		Tags: rhel-7-everything
-			//
-			//	Everything-s390x-25a8e9a13878-228.pem
-			//		ID: 228
-			//		Tags: rhel-7-everything
-			//
-			//	Everything-x86_64-316174883467-226.pem
-			//		ID: 226
-			//		Tags: rhel-7-everything
-			//
-			//	Server-HighAvailability-x86_64-7b7efc9479e7-236.pem
-			//		ID: 236
-			//		Tags: rhel-7-highavailability
-			//
-			//	Server-LoadBalancer-x86_64-6406500c3a54-237.pem
-			//		ID: 237
-			//		Tags: rhel-7-loadbalancer
-			//
-			//	Server-ppc64-56b1260a7102-233.pem
-			//		ID: 233
-			//		Tags: rhel-7-server
-			//
-			//	Server-ResilientStorage-x86_64-d4e812911f8e-238.pem
-			//		ID: 238
-			//		Tags: rhel-7-resilientstorage
-			//
-			//	Server-s390x-efb367fafc5d-232.pem
-			//		ID: 232
-			//		Tags: rhel-7-server
-			//
-			//	Server-x86_64-4f156adfd691-230.pem
-			//		ID: 230
-			//		Tags: rhel-7-server
-			//
-			//	Workstation-x86_64-a7ced6b6706e-231.pem
-			//		ID: 231
-			//		Tags: rhel-7-workstation
-			providingTag = "rhel-"+clienttasks.redhatReleaseX+"-.*";	// use a regex for rhel-7
-			rhelProductCerts = clienttasks.getCurrentProductCerts(providingTag);
-		}
-		// special case (rhel for ARM)
-		if (rhelProductCerts.isEmpty() && clienttasks.arch.equals("aarch64")) {
-			
-			//	Product:
-			//		ID: 261
-			//		Name: Red Hat Enterprise Linux Server for ARM Development Preview
-			//		Version: Snapshot
-			//		Arch: aarch64
-			//		Tags: rhsa-dp-server,rhsa-dp-server-7
-			//		Brand Type: 
-			//		Brand Name: 
-			
-			providingTag = "rhsa-.*";
-			rhelProductCerts = clienttasks.getCurrentProductCerts(providingTag);
-		}
-		// TODO special case (rhel-alt) after the outcome of Bug 1510024 - RHEL-ALT 7.4 subscription manager is not able to list releases on Power-9
 		
-		/* 7/13/2015 no longer true now that /etc/pki/product-default may also provide a duplicate rhel product
-		Assert.assertEquals(rhelProductCerts.size(), 1, "Only one product cert is installed that provides RHEL tag '"+providingTag+"'");
-		instead, let's make sure they all cover the same product id... */
-		Set<String> rhelProductIds = new HashSet<String>();
-		for (ProductCert rhelProductCert : rhelProductCerts) rhelProductIds.add(rhelProductCert.productId);
-		Assert.assertEquals(rhelProductIds.size(), 1, "Only one product cert ID (actual "+rhelProductIds+") is currently installed that provides RHEL tag '"+providingTag+"'");
-		ProductCert rhelProductCert = rhelProductCerts.get(0);
+		// get the current base RHEL product cert
+		ProductCert rhelProductCert = clienttasks.getCurrentRhelProductCert();
 		
 		// find an available RHEL subscription pool that provides for this base RHEL product cert
 		//List<SubscriptionPool> rhelSubscriptionPools = clienttasks.getCurrentlyAvailableSubscriptionPools(rhelProductCert.productId, sm_serverUrl);	// no longer works; encounters "Insufficient permissions"
@@ -559,7 +460,7 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 		String bugId="1108257"; 
 		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
 		if (invokeWorkaroundWhileBugIsOpen) {
-			if (providingTag.equals("rhel-5-client-workstation")) {
+			if (rhelProductCert.productNamespace.providedTags.contains("rhel-5-client-workstation")) {
 				throw new SkipException("Skipping this test while bug '"+bugId+"' is open. (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");			
 			}
 		}
