@@ -654,14 +654,17 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 		if (installedRhelProduct==null) Assert.fail("Could not find the installed product corresponding to the current RHEL product cert: "+rhelProductCert);
 		if (!installedRhelProduct.status.equals("Subscribed")) throw new SkipException("This test requires attachment to a RHEL subscription for the installed RHEL product.");
 		
-		// assert that there are some occurrences of $releasever in redhat.repo (for non Beta|HTB eng products)
+		// assert that there are some occurrences of $releasever in redhat.repo (for non Beta)
 		String sshCommandGreppingRedhatRepoForNumberReleaseverOccurrences = "grep '$releasever' "+clienttasks.redhatRepoFile+" | wc --lines";
 		Integer numberReleaseverOccurrences = Integer.valueOf(client.runCommandAndWait(sshCommandGreppingRedhatRepoForNumberReleaseverOccurrences).getStdout().trim());
-		if (Arrays.asList("135","155","230","231","362","363","433").contains(installedRhelProduct.productId)) {
+		if (false) {	// NOT A VALID ASSERTION BECAUSE RCM HAS CHOSEN TO USE THE SAME TAGS ON BETA ENG IDS 362,363,433 AS THEIR GA COUNTERPARTS 420,419,434 WHICH MEANS THAT IF A SUBSCRIPTION THAT PROVIDES BOTH BETA AND GA ARE ATTACHED TO A SYSTEM WITH ONLY THE BETA PRODUCT CERT INSTALLED THEN ACCESS TO GA CONTENT WITH $releasever IS GRANTED.
+		if (Arrays.asList("362","363","433").contains(installedRhelProduct.productId)) {
 			Assert.assertEquals(numberReleaseverOccurrences, Integer.valueOf(0),"Because the currently installed RHEL engineering product '"+installedRhelProduct.productId+"' should only provide content access to beta|htb repositories, none of the current entitled repo urls should contain reference to $releasever.");
 			throw new SkipException("This test requires a RHEL entitlement to an engineering product with content sets that can be pinned to a $releasever.");
 		}
-		Assert.assertTrue(numberReleaseverOccurrences>0, "The number of occurances ("+numberReleaseverOccurrences+") for '$releasever' in '"+clienttasks.redhatRepoFile+"' is greater than zero.");
+		}
+		if (numberReleaseverOccurrences==0) throw new SkipException("This test requires a RHEL entitlement providing an engineering product with content sets that can be pinned to a $releasever.");
+		// NOT A VALID ASSERTION Assert.assertTrue(numberReleaseverOccurrences>0, "The number of occurrences ("+numberReleaseverOccurrences+") for '$releasever' in '"+clienttasks.redhatRepoFile+"' is greater than zero.");
 		
 		// are any releases available?
 		List<String> availableReleases = clienttasks.getCurrentlyAvailableReleases(null, null, null, null);
