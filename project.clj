@@ -36,7 +36,7 @@
                  [levand/immuconf "0.1.0"]
                                         ;[com.github.redhatqe.polarize/polarize "0.7.1-SNAPSHOT"]
                  [com.github.redhatqe.polarize/polarize-meta "0.1.0"]
-                 [com.github.redhatqe.polarizer/reporter "0.2.0"]
+                 [com.github.redhatqe.polarizer/reporter "0.2.1"]
                  [org.json/json "20160810"]
                  [org.seleniumhq.selenium/selenium-java "3.5.2"]
                  [http-kit "2.2.0"]
