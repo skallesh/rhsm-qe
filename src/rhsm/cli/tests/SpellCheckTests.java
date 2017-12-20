@@ -145,6 +145,7 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 			msgId = msgId.replace("DER size", "binary size");
 			msgId = msgId.replace("SSL", "Secure Sockets Layer");
 			msgId = msgId.replace("UUID", "universally unique identifier");
+			msgId = msgId.replace("uuid", "universally unique identifier");
 			msgId = msgId.replace("SKU", "Stock Keeping Unit");
 			msgId = msgId.replace("SLA", "Service Level Agreement");
 			msgId = msgId.replace("DMI", "Desktop Management Interface");
@@ -168,9 +169,11 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 			msgId = msgId.replace("shouldn't","should not");
 			msgId = msgId.replace("consumerid", "consumer_id");
 			msgId = msgId.replace("consumer_uuid", "consumer_universally_unique_identifier");
+			msgId = msgId.replace("subscription-manager config --rhsm", "subscription-manager configure --red-hat-subscription-manager");
 			msgId = msgId.replace("&#x2022;","bullet");
 			//msgId = msgId.replace("'%s'", "%s");	// already fixed by adjustment below
 			msgId = msgId.replaceAll("'([^ ]+)'", "$1");	// remove surrounding single quotes from single words
+			msgId = msgId.replaceFirst("^Ok$", "Okay");
 			
 			// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=1188265
 			if (msgId.contains("Susbscriptions")) {
@@ -419,6 +422,7 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 		Set<String> msgIds = new HashSet<String>();
 		for (String msgId : translationMsgidSetForCandlepin) {
 			msgId = msgId.replace("candlepin", "candle pin");
+			msgId = msgId.replace("Candlepin", "Candle pin");
 			msgId = msgId.replace("metadata", "data about data");
 			msgId = msgId.replace("username", "user name");
 			msgId = msgId.replace("Stackable", "Capable of being stacked");
@@ -445,11 +449,25 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 			msgId = msgId.replace("''", "'");	// remove the escaping single quotes
 			msgId = msgId.replaceAll("'([^ ]+)'", "$1");	// remove surrounding single quotes from single words
 			
-			// TEMPORARY WORKAROUND FOR BUG
+			// TEMPORARY WORKAROUND
 			for (String word : Arrays.asList(new String[]{"ueber","indepent","databse","html","oauth","checkin.","json","ActivationKey","boolean","kbase","uuid","sku"})) {
 				if (msgId.contains(word)) {
 					boolean invokeWorkaroundWhileBugIsOpen = true;
 					String bugId="1190814";	// Bug 1190814 - typos in candlepin msgids
+					try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
+					if (invokeWorkaroundWhileBugIsOpen) {
+						log.warning("Ignoring known misspelling of '"+word+"' while bug '"+bugId+"' is open.");
+						msgId = msgId.replace(word, "TYPO");
+					}
+				}
+			}
+			// END OF WORKAROUND
+			
+			// TEMPORARY WORKAROUND
+			for (String word : Arrays.asList(new String[]{"ueber","autobind","specifed"})) {
+				if (msgId.contains(word)) {
+					boolean invokeWorkaroundWhileBugIsOpen = true;
+					String bugId="1525572";	// Bug 1525572 - typos in candlepin msgids
 					try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
 					if (invokeWorkaroundWhileBugIsOpen) {
 						log.warning("Ignoring known misspelling of '"+word+"' while bug '"+bugId+"' is open.");

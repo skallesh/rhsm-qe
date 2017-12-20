@@ -13,13 +13,13 @@
   <!-- Cockpit TIER 3 TESTS -->
   <test name="Cockpit: Status">
     <classes>
-      <class name="rhsm.base.SubscriptionManagerBaseTestScript"/>
+      <class name="rhsm.base.SubscriptionManagerCLITestScript"/>
       <class name="rhsm.cockpit.tests.status_tests" />
     </classes>
     <groups>
       <run>
         <include name="setup"/>
-        <include name="tier1"/>
+        <include name="tier3"/>
         <include name="cleanup"/>
       </run>
     </groups>
@@ -27,7 +27,7 @@
 
   <test name="Cockpit: Register">
     <classes>
-      <class name="rhsm.base.SubscriptionManagerBaseTestScript"/>
+      <class name="rhsm.base.SubscriptionManagerCLITestScript"/>
       <class name="rhsm.cockpit.tests.register_tests" />
     </classes>
     <groups>
@@ -41,13 +41,13 @@
 
   <test name="Cockpit: Activation Key">
     <classes>
-      <class name="rhsm.base.SubscriptionManagerBaseTestScript"/>
+      <class name="rhsm.base.SubscriptionManagerCLITestScript"/>
       <class name="rhsm.cockpit.tests.activation_key_tests" />
     </classes>
     <groups>
       <run>
         <include name="setup"/>
-        <include name="tier1"/>
+        <include name="tier3"/>
         <include name="cleanup"/>
       </run>
     </groups>
@@ -55,13 +55,13 @@
 
   <test name="Cockpit: Proxy">
     <classes>
-      <class name="rhsm.base.SubscriptionManagerBaseTestScript"/>
+      <class name="rhsm.base.SubscriptionManagerCLITestScript"/>
       <class name="rhsm.cockpit.tests.proxy_tests" />
     </classes>
     <groups>
       <run>
         <include name="setup"/>
-        <include name="tier1"/>
+        <include name="tier3"/>
         <include name="cleanup"/>
       </run>
     </groups>

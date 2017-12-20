@@ -949,13 +949,16 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 		//	container_content.ContainerContentPlugin.conf
 		//	ostree_content.OstreeContentPlugin.conf
 		
-		
+/* replacing this block with a new register to avoid RateLimitExceededException: Access rate limit exceeded
 		// make sure we are already registered (from VerifyYumRepolistOnRunningDockerImageConsumedFromHostEntitlements_Test)
 		Assert.assertNotNull(clienttasks.getCurrentConsumerCert(),"This test assumes a consumer has already been registered on '"+clienttasks.hostname+"'.");
 		
 		// make sure we are auto-subscribed to a minimal number of entitlements
 		clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null, null, null);
 		clienttasks.subscribe(true, null, (String)null, (String)null, null, null, null, null, null, null, null, null, null);
+*/
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,true,null,null,(String)null,null,null, null, true, false, null, null, null, null);
+
 		
 		// get the current entitlements on the host
 		//	[root@hp-sl2x170zg6-01 ~]# ls /etc/pki/entitlement | sort

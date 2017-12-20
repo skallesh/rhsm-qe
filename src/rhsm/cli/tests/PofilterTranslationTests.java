@@ -140,6 +140,10 @@ import com.github.redhatqe.polarize.metadata.DefTypes.Project;
  *      https://engineering.redhat.com/rt/Ticket/Display.html?id=447283
  *      https://bugzilla.redhat.com/show_bug.cgi?id=1441739
  *      
+ *      New Zanata Projects
+ *      https://vendors.zanata.redhat.com/project/view/subscription-manager
+ *      https://vendors.zanata.redhat.com/project/view/candlepin
+ *      
  *      Candlepin IT Service Adapters
  *      https://translate.engineering.redhat.com/project/view/candlepin-it-adapters
  *      
