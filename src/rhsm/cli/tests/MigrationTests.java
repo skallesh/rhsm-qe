@@ -2953,22 +2953,22 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		// copy the rhn-channels.py script to the client
 		File rhnChannelsScriptFile = new File(System.getProperty("automation.dir", null)+"/scripts/rhn-channels.py");
 		if (!rhnChannelsScriptFile.exists()) Assert.fail("Failed to find expected script: "+rhnChannelsScriptFile);
-		RemoteFileTasks.putFile(client.getConnection(), rhnChannelsScriptFile.toString(), "/usr/local/bin/", "0755");
+		RemoteFileTasks.putFile(client, rhnChannelsScriptFile.toString(), "/usr/local/bin/", "0755");
 		
 		// copy the rhn-is-registered.py script to the client
 		File rhnIsRegisteredScriptFile = new File(System.getProperty("automation.dir", null)+"/scripts/rhn-is-registered.py");
 		if (!rhnIsRegisteredScriptFile.exists()) Assert.fail("Failed to find expected script: "+rhnIsRegisteredScriptFile);
-		RemoteFileTasks.putFile(client.getConnection(), rhnIsRegisteredScriptFile.toString(), "/usr/local/bin/", "0755");
+		RemoteFileTasks.putFile(client, rhnIsRegisteredScriptFile.toString(), "/usr/local/bin/", "0755");
 		
 		// copy the rhn-delete-systems.py script to the client
 		File rhnDeleteSystemsScriptFile = new File(System.getProperty("automation.dir", null)+"/scripts/rhn-delete-systems.py");
 		if (!rhnDeleteSystemsScriptFile.exists()) Assert.fail("Failed to find expected script: "+rhnDeleteSystemsScriptFile);
-		RemoteFileTasks.putFile(client.getConnection(), rhnDeleteSystemsScriptFile.toString(), "/usr/local/bin/", "0755");
+		RemoteFileTasks.putFile(client, rhnDeleteSystemsScriptFile.toString(), "/usr/local/bin/", "0755");
 		
 		// copy the rhn-migrate-classic-to-rhsm.tcl script to the client
 		File expectScriptFile = new File(System.getProperty("automation.dir", null)+"/scripts/rhn-migrate-classic-to-rhsm.tcl");
 		if (!expectScriptFile.exists()) Assert.fail("Failed to find expected script: "+expectScriptFile);
-		RemoteFileTasks.putFile(client.getConnection(), expectScriptFile.toString(), "/usr/local/bin/", "0755");
+		RemoteFileTasks.putFile(client, expectScriptFile.toString(), "/usr/local/bin/", "0755");
 	}
 	
 	@BeforeClass(groups="setup", dependsOnMethods={"setupBeforeClass","copyScriptsToClient"})

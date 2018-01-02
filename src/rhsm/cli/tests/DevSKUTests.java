@@ -630,7 +630,7 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 		genericCertFilePath = clienttasks.productCertDir.replaceFirst("/*$", "/")+filename;
 		genericCertFilePath = genericCertFilePath.replaceFirst("_?\\.pem$", "_.pem");	// make it end in _.pem by convention to help identify fake product certs
 		if (genericFile.exists()) {
-			RemoteFileTasks.putFile(client.getConnection(), genericFile.toString(), genericCertFilePath, "0644");
+			RemoteFileTasks.putFile(client, genericFile.toString(), genericCertFilePath, "0644");
 			return;
 		} // otherwise, create a new generic product cert...
 		

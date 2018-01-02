@@ -258,9 +258,9 @@ if (false) {
 			this.productCertDir		= getConfFileParameter(rhsmConfFile, "productCertDir").replaceFirst("/$", "");
 			this.caCertDir			= getConfFileParameter(rhsmConfFile, "ca_cert_dir").replaceFirst("/$", "");
 			this.baseurl			= getConfFileParameter(rhsmConfFile, "baseurl").replaceFirst("/$", "");
-			log.info(this.getClass().getSimpleName()+".initializeFieldsFromConfigFile() succeeded on '"+sshCommandRunner.getConnection().getHostname()+"'.");
+			log.info(this.getClass().getSimpleName()+".initializeFieldsFromConfigFile() succeeded on '"+sshCommandRunner.getConnection().getRemoteHostname()+"'.");
 		} else {
-			log.warning("Cannot "+this.getClass().getSimpleName()+".initializeFieldsFromConfigFile() on '"+sshCommandRunner.getConnection().getHostname()+"' until file exists: "+rhsmConfFile);
+			log.warning("Cannot "+this.getClass().getSimpleName()+".initializeFieldsFromConfigFile() on '"+sshCommandRunner.getConnection().getRemoteHostname()+"' until file exists: "+rhsmConfFile);
 		}
 	}
 	
@@ -291,7 +291,7 @@ if (false) {
 		if (toNewName==null) toNewName = repoCaCertFile.getName();
 		
 		// transfer the CA Cert File from the candlepin server to the clients so we can test in secure mode
-		RemoteFileTasks.putFile(sshCommandRunner.getConnection(), repoCaCertFile.getPath(), caCertDir+"/"+toNewName, "0644");
+		RemoteFileTasks.putFile(sshCommandRunner, repoCaCertFile.getPath(), caCertDir+"/"+toNewName, "0644");
 		updateConfFileParameter(rhsmConfFile, "insecure", "0");
 	}
 	
@@ -308,7 +308,7 @@ if (false) {
 		}
 
 		for (File file : productCerts) {
-			RemoteFileTasks.putFile(sshCommandRunner.getConnection(), file.getPath(), productCertDir+"/", "0644");
+			RemoteFileTasks.putFile(sshCommandRunner, file.getPath(), productCertDir+"/", "0644");
 		}
 	}
 	
@@ -470,7 +470,7 @@ if (false) {
 		    installOptions += " --enablerepo=rhel-zstream-"+variant+"-optional-i686";
 	    }
 	    output.close();
-		RemoteFileTasks.putFile(sshCommandRunner.getConnection(), file.getPath(), "/etc/yum.repos.d/", "0644");
+		RemoteFileTasks.putFile(sshCommandRunner, file.getPath(), "/etc/yum.repos.d/", "0644");
 		
 		// assemble the packages to be updated (note: if the list is empty, then all packages will be updated)
 		String updatePackagesAsString = "";
@@ -501,7 +501,7 @@ if (false) {
 		output.write("\n");
 	    installOptions += " --enablerepo=rhel-zstream-brew";
 	    output.close();
-		RemoteFileTasks.putFile(sshCommandRunner.getConnection(), file.getPath(), "/etc/yum.repos.d/", "0644");
+		RemoteFileTasks.putFile(sshCommandRunner, file.getPath(), "/etc/yum.repos.d/", "0644");
 		
 		// no need to continue installing anything when CI_MESSAGE is empty
 		if (ciMessage.isEmpty()) return;
@@ -682,7 +682,7 @@ if (false) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		RemoteFileTasks.putFile(sshCommandRunner.getConnection(), file.getPath(), "/etc/yum.repos.d/", "0644");
+		RemoteFileTasks.putFile(sshCommandRunner, file.getPath(), "/etc/yum.repos.d/", "0644");
 		
 		// assemble the packages to be updated (note: if the list is empty, then all packages will be updated)
 		String updatePackagesAsString = "";
@@ -758,7 +758,7 @@ if (false) {
 		output.write("\n");
 	    output.close();
 
-		RemoteFileTasks.putFile(sshCommandRunner.getConnection(), file.getPath(), "/etc/yum.repos.d/", "0644");
+		RemoteFileTasks.putFile(sshCommandRunner, file.getPath(), "/etc/yum.repos.d/", "0644");
 		
 		// assemble the packages to be updated (note: if the list is empty, then all packages will be updated)
 		String updatePackagesAsString = "";
@@ -814,7 +814,7 @@ if (false) {
 	    output.close();
 	    installOptions += " --enablerepo="+repo;
 
-		RemoteFileTasks.putFile(sshCommandRunner.getConnection(), file.getPath(), "/etc/yum.repos.d/", "0644");
+		RemoteFileTasks.putFile(sshCommandRunner, file.getPath(), "/etc/yum.repos.d/", "0644");
 		
 		
 		
@@ -849,7 +849,7 @@ if (false) {
 	    output.close();
 	    installOptions += " --enablerepo="+repo;
 
-		RemoteFileTasks.putFile(sshCommandRunner.getConnection(), file.getPath(), "/etc/yum.repos.d/", "0644");
+		RemoteFileTasks.putFile(sshCommandRunner, file.getPath(), "/etc/yum.repos.d/", "0644");
 		
 		
 		
@@ -1399,7 +1399,7 @@ if (false) {
 		// get a local copy of the confFile
 		File remoteFile = new File(confFile);
 	    File localFile = new File("tmp/"+remoteFile.getName()); // this will be in the automation.dir directory
-		RemoteFileTasks.getFile(sshCommandRunner.getConnection(), localFile.getParent(),remoteFile.getPath());
+		RemoteFileTasks.getFile(sshCommandRunner, localFile.getParent(),remoteFile.getPath());
 		
 		// read the confFile into a single String
 		//String contents = new String(Files.readAllBytes(Paths.get("abc.java")));
@@ -1431,7 +1431,7 @@ if (false) {
 	    output.close();
 	    
 	    // put the updated confFile back onto the client
-		RemoteFileTasks.putFile(sshCommandRunner.getConnection(), localFile.getPath(), confFile, mask);
+		RemoteFileTasks.putFile(sshCommandRunner, localFile.getPath(), confFile, mask);
 
 		// also update this "cached" value for these config file parameters
 		if (confFile.equals(this.rhsmConfFile)) {
@@ -3806,8 +3806,8 @@ if (false) {
 		keyWriter.close();
 		
 		// transfer the cert and key file to the client
-		RemoteFileTasks.putFile(sshCommandRunner.getConnection(), certFile.getPath(), consumerCertFile(), "0640");
-		RemoteFileTasks.putFile(sshCommandRunner.getConnection(), keyFile.getPath(), consumerKeyFile(), "0640");
+		RemoteFileTasks.putFile(sshCommandRunner, certFile.getPath(), consumerCertFile(), "0640");
+		RemoteFileTasks.putFile(sshCommandRunner, keyFile.getPath(), consumerKeyFile(), "0640");
 		
 		//return jsonCandlepinConsumer.getString("uuid");
 	}

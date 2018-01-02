@@ -184,9 +184,9 @@ public class RefreshTests extends SubscriptionManagerCLITestScript {
 		//	Nov  5 16:13:49 jsefler-7 systemd: Started Enable periodic update of entitlement certificates..
 		
 		// verify that no subscription-manager abrt was logged to /var/log/messages 
-		Assert.assertTrue(RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.messagesLogFile, marker, "abrt").trim().equals(""), "No segfault was logged in '"+clienttasks.messagesLogFile+"' on "+client.getConnection().getHostname()+" while regression testing bug 725535.");
-		//Assert.assertTrue(RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.varLogMessagesFile, marker, null).trim().equals(""), "No segfault was logged in '"+clienttasks.varLogMessagesFile+"' on "+client.getConnection().getHostname()+" while regression testing bug 725535.");
-		//Assert.assertTrue(RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.varLogMessagesFile, marker, clienttasks.hostname.split("\\.")[0]+"' | grep -v 'Enable periodic update of entitlement certificates").trim().equals(""), "No segfault was logged in '"+clienttasks.varLogMessagesFile+"' on "+client.getConnection().getHostname()+" while regression testing bug 725535.");
+		Assert.assertTrue(RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.messagesLogFile, marker, "abrt").trim().equals(""), "No segfault was logged in '"+clienttasks.messagesLogFile+"' on "+client.getConnection().getRemoteHostname()+" while regression testing bug 725535.");
+		//Assert.assertTrue(RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.varLogMessagesFile, marker, null).trim().equals(""), "No segfault was logged in '"+clienttasks.varLogMessagesFile+"' on "+client.getConnection().getRemoteHostname()+" while regression testing bug 725535.");
+		//Assert.assertTrue(RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.varLogMessagesFile, marker, clienttasks.hostname.split("\\.")[0]+"' | grep -v 'Enable periodic update of entitlement certificates").trim().equals(""), "No segfault was logged in '"+clienttasks.varLogMessagesFile+"' on "+client.getConnection().getRemoteHostname()+" while regression testing bug 725535.");
 	}
 	
 	

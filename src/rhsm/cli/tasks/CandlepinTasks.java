@@ -207,7 +207,7 @@ public class CandlepinTasks {
 	 * @throws IOException
 	 */
 	public void redeploy() throws IOException {
-		String hostname = sshCommandRunner.getConnection().getHostname();
+		String hostname = sshCommandRunner.getConnection().getRemoteHostname();
 		
 		// kill all runaway instances of tomcat6
 		SSHCommandResult tomcatProcesses = sshCommandRunner.runCommandAndWait("ps u -U tomcat | grep tomcat6");
@@ -251,9 +251,9 @@ public class CandlepinTasks {
 			log.warning("Attempting to substitute the master candlepin patch file for RedeemTests: "+candlepinRedeemTestsMasterPatchFile);
 			candlepinRedeemTestsPatchFile = candlepinRedeemTestsMasterPatchFile;
 		}
-		//RemoteFileTasks.putFile(sshCommandRunner.getConnection(), candlepinRedeemTestsPatchFile.toString(), serverInstallDir+"/proxy/", "0644");
-		//RemoteFileTasks.putFile(sshCommandRunner.getConnection(), candlepinRedeemTestsPatchFile.toString(), serverInstallDir+"/", "0644");
-		RemoteFileTasks.putFile(sshCommandRunner.getConnection(), candlepinRedeemTestsPatchFile.toString(), serverInstallDir+"/server/", "0644");
+		//RemoteFileTasks.putFile(sshCommandRunner, candlepinRedeemTestsPatchFile.toString(), serverInstallDir+"/proxy/", "0644");
+		//RemoteFileTasks.putFile(sshCommandRunner, candlepinRedeemTestsPatchFile.toString(), serverInstallDir+"/", "0644");
+		RemoteFileTasks.putFile(sshCommandRunner, candlepinRedeemTestsPatchFile.toString(), serverInstallDir+"/server/", "0644");
 		// Stdout: patching file src/main/java/org/fedoraproject/candlepin/service/impl/DefaultSubscriptionServiceAdapter.java
 		// Stdout: patching file src/main/java/org/candlepin/service/impl/DefaultSubscriptionServiceAdapter.java
 		//RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"/proxy; patch -p2 < "+candlepinRedeemTestsPatchFile.getName(), Integer.valueOf(0), "patching file .*/DefaultSubscriptionServiceAdapter.java", null);

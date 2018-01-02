@@ -106,7 +106,7 @@ public class InteroperabilityTests extends SubscriptionManagerCLITestScript {
 		
 		// import an expired certificate 
 		File expiredCertFile = new File(System.getProperty("automation.dir", null)+"/certs/Expiredcert.pem");
-		RemoteFileTasks.putFile(client.getConnection(), expiredCertFile.getPath(), "/tmp/Expiredcert.pem", "0644");
+		RemoteFileTasks.putFile(client, expiredCertFile.getPath(), "/tmp/Expiredcert.pem", "0644");
 		if (clienttasks.isPackageVersion("subscription-manager", "<", "1.17.10-1")) {	//	subscription-manager commit b93e59482563b9e3e972a928233bef7ebf885ea1	// Bug 1251516: Disable import when registered
 			clienttasks.importCertificate("/tmp/Expiredcert.pem");
 		} else {

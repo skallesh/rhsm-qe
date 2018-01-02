@@ -156,7 +156,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			
 			// install packages
 			SSHCommandResult yumInstallResult = server.runCommandAndWait("sudo "+"yum install -y --quiet hunspell");
-			Assert.assertEquals(yumInstallResult.getExitCode(), Integer.valueOf(0),"ExitCode from yum install of packages on server '"+server.getConnection().getHostname()+"'.");
+			Assert.assertEquals(yumInstallResult.getExitCode(), Integer.valueOf(0),"ExitCode from yum install of packages on server '"+server.getConnection().getRemoteHostname()+"'.");
 			
 			// fetch the generated Product Certs
 			if (Boolean.valueOf(getProperty("sm.debug.fetchProductCerts","true"))) {
@@ -171,7 +171,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 				File remoteFile = new File(remoteFileAsString);
 				File localFile = new File((getProperty("automation.dir", "/tmp")+"/tmp/"+remoteFile.getName()).replace("tmp/tmp", "tmp"));
 				File localFileRenamed = new File(localFile.getPath().replace(".pem", "_.pem")); // rename the generated productCertFile to help distinguish it from a true RHEL productCertFiles
-				RemoteFileTasks.getFile(server.getConnection(), localFile.getParent(),remoteFile.getPath());
+				RemoteFileTasks.getFile(server, localFile.getParent(),remoteFile.getPath());
 				localFile.renameTo(localFileRenamed);
 				generatedProductCertFiles.add(localFileRenamed);
 			}
@@ -269,7 +269,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		if (server!=null && !sm_serverType.equals(CandlepinType.hosted)) {
 			log.info("Fetching Candlepin CA cert...");
 			serverCaCertFile = new File((getProperty("automation.dir", "/tmp")+"/tmp/"+servertasks.candlepinCACertFile.getName()).replace("tmp/tmp", "tmp"));
-			RemoteFileTasks.getFile(server.getConnection(), serverCaCertFile.getParent(), servertasks.candlepinCACertFile.getPath());
+			RemoteFileTasks.getFile(server, serverCaCertFile.getParent(), servertasks.candlepinCACertFile.getPath());
 		}
 		return serverCaCertFile;
 	}
@@ -633,7 +633,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 				// END OF WORKAROUND
 				
 				// assert selinux is Enforcing
-				Assert.assertEquals(clienttasks.sshCommandRunner.runCommandAndWait("getenforce").getStdout().trim(), "Enforcing", "SELinux mode is set to enforcing on client "+clienttasks.sshCommandRunner.getConnection().getHostname());
+				Assert.assertEquals(clienttasks.sshCommandRunner.runCommandAndWait("getenforce").getStdout().trim(), "Enforcing", "SELinux mode is set to enforcing on client "+clienttasks.sshCommandRunner.getConnection().getRemoteHostname());
 			}
 		}
 	}
@@ -669,7 +669,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 				}
 				// END OF WORKAROUND
 				
-				Assert.assertTrue(tailFromMarkedFile.trim().isEmpty(), "No SELinux denials found in the audit log '"+clienttasks.auditLogFile+"' on client "+clienttasks.sshCommandRunner.getConnection().getHostname()+" while executing this test class.");
+				Assert.assertTrue(tailFromMarkedFile.trim().isEmpty(), "No SELinux denials found in the audit log '"+clienttasks.auditLogFile+"' on client "+clienttasks.sshCommandRunner.getConnection().getRemoteHostname()+" while executing this test class.");
 			}
 		}
 	}
@@ -695,7 +695,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 				client.runCommandAndWait("dmidecode --dump-bin dmi_dump.bin; TMPDIR=`mktemp -d`; mkdir $TMPDIR/proc; cp /proc/cpuinfo $TMPDIR/proc/; cp /proc/sysinfo $TMPDIR/proc/; mkdir -p $TMPDIR/sys/devices/system/cpu; cp -r /sys/devices/system/cpu $TMPDIR/sys/devices/system/; tar -cf "+remoteFile.getName()+" --ignore-failed-read --sparse dmi_dump.bin $TMPDIR  && tar -tvf "+remoteFile.getName()+" && rm -rf $TMPDIR");
 				if (!RemoteFileTasks.testExists(client, remoteFile.getPath())) client.runCommandAndWait("touch "+remoteFile.getPath());
 				File localFile = new File((getProperty("automation.dir", "/tmp")+"/test-output/"+remoteFile.getName()));
-				RemoteFileTasks.getFile(client.getConnection(), localFile.getParent(),remoteFile.getPath());
+				RemoteFileTasks.getFile(client, localFile.getParent(),remoteFile.getPath());
 			}
 			
 			// dump hardware info from sosreport...
@@ -749,7 +749,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 				File remoteFile = new File(getSubstringMatches(sosResult.getStdout(), "/var/tmp/sosreport-.+\\.tar\\.(xz|bz2)").get(0));	// /var/tmp/sosreport-jsefler-os7.usersys.redhat.com-20141013121912.tar.xz	// /var/tmp/sosreport-jsefler-5.usersys.redhat.com.tar.bz2
 				if (RemoteFileTasks.testExists(client, remoteFile.getPath())) {
 					File localFile = new File((getProperty("automation.dir", "/tmp")+"/test-output/"+remoteFile.getName()));
-					RemoteFileTasks.getFile(client.getConnection(), localFile.getParent(),remoteFile.getPath());
+					RemoteFileTasks.getFile(client, localFile.getParent(),remoteFile.getPath());
 					localFile.renameTo(new File(localFile.getPath().replaceFirst("-\\d{14}","")));	// strip out -20141013121912
 				}
 			}

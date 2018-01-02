@@ -368,7 +368,7 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 		}
 		// write the msgIds to a temporary file on the client
 		writeSetOfStringsToFile(msgIds,localFile, System.getProperty("line.separator")+"--------"+System.getProperty("line.separator"));
-		RemoteFileTasks.putFile(client.getConnection(), localFile.getPath(), remoteFile.getPath(), "0644");
+		RemoteFileTasks.putFile(client, localFile.getPath(), remoteFile.getPath(), "0644");
 		
 		// run a hunspell check on the msgIds
 		SSHCommandResult hunspellResult = client.runCommandAndWait("hunspell -l -d en_US "+remoteFile);
@@ -512,7 +512,7 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 		}
 		// write the msgIds to a temporary file on the client
 		writeSetOfStringsToFile(msgIds,localFile, System.getProperty("line.separator")+"--------"+System.getProperty("line.separator"));
-		RemoteFileTasks.putFile(server.getConnection(), localFile.getPath(), remoteFile.getPath(), "0644");
+		RemoteFileTasks.putFile(server, localFile.getPath(), remoteFile.getPath(), "0644");
 		
 		// run a hunspell check on the msgIds
 		SSHCommandResult hunspellResult = server.runCommandAndWait("hunspell -l -d en_US "+remoteFile);
@@ -1094,7 +1094,7 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 		Writer fileWriter = new FileWriter(localFile);
 		fileWriter.write(modifiedManPage);
 		fileWriter.close();
-		RemoteFileTasks.putFile(client.getConnection(), localFile.getPath(), remoteFile.getPath(), "0644");
+		RemoteFileTasks.putFile(client, localFile.getPath(), remoteFile.getPath(), "0644");
 		
 		// run a hunspell check on the modifiedManPage
 		SSHCommandResult hunspellResult = client.runCommandAndWait("hunspell -l -d en_US "+remoteFile);

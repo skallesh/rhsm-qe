@@ -12,7 +12,7 @@
                  [com.redhat.qe/bz-checker "2.1.3-SNAPSHOT"]
                  [com.redhat.qe/json-java "20110202"]
                  [com.redhat.qe/jul.test.records "1.0.1"]
-                 [com.redhat.qe/ssh-tools "1.0.3-SNAPSHOT"]
+                 [com.redhat.qe/ssh-tools "2.0.0-SNAPSHOT"]
                  [com.redhat.qe/testng-listeners "1.0.0"
                   :exclusions [com.redhat.qe/bugzilla-testng]]
                  [com.redhat.qe/verify-testng "1.0.0-SNAPSHOT"]
