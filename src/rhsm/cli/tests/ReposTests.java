@@ -1407,7 +1407,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		// copy the ismanagedtest.py script to the client
 		File ismanagedtestFile = new File(System.getProperty("automation.dir", null)+"/scripts/ismanagedtest.py");
 		if (!ismanagedtestFile.exists()) Assert.fail("Failed to find expected script: "+ismanagedtestFile);
-		RemoteFileTasks.putFile(client.getConnection(), ismanagedtestFile.toString(), "/usr/local/bin/", "0755");
+		RemoteFileTasks.putFile(client, ismanagedtestFile.toString(), "/usr/local/bin/", "0755");
 
 		RemoteFileTasks.runCommandAndAssert(client, "ismanagedtest.py some_repo", 0, "False", null);
 		

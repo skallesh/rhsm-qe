@@ -668,8 +668,8 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 		//	[root@auto-services timeout_listener]# openssl genrsa -out timeout_listener.key 4096
 		//	[root@auto-services timeout_listener]# openssl req -new -x509 -key timeout_listener.key -out timeout_listener.pem -days 3650 -subj '/CN=auto-services.usersys.redhat.com/C=US/L=Raleigh'
 		File localTimeoutServerCaCertFile = new File((getProperty("automation.dir", "/tmp")+"/tmp/"+remoteTimeoutServerCaCertFile.getName().replace("tmp/tmp", "tmp")));
-		RemoteFileTasks.getFile(timeoutServerCommandRunner.getConnection(), localTimeoutServerCaCertFile.getParent(), remoteTimeoutServerCaCertFile.getPath());
-		RemoteFileTasks.putFile(client.getConnection(), localTimeoutServerCaCertFile.getPath(), clienttasks.caCertDir+"/", "0644");
+		RemoteFileTasks.getFile(timeoutServerCommandRunner, localTimeoutServerCaCertFile.getParent(), remoteTimeoutServerCaCertFile.getPath());
+		RemoteFileTasks.putFile(client, localTimeoutServerCaCertFile.getPath(), clienttasks.caCertDir+"/", "0644");
 		
 		// remember originally configured server configs
 		if (serverHostnameConfigured==null) serverHostnameConfigured = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "hostname");

@@ -262,13 +262,13 @@ public class CRLTests extends SubscriptionManagerCLITestScript{
 		for (RevokedCert revokedCert : revokedCerts) {
 			List<RevokedCert> allRevokedCertsWithMatchingSerial = RevokedCert.findAllInstancesWithMatchingFieldFromList("serialNumber", revokedCert.serialNumber, revokedCerts);
 			if (allRevokedCertsWithMatchingSerial.size()>1) {
-				log.warning("Found multiple revoked entitlement certificates on candlepin server '"+server.getConnection().getHostname()+"' file '"+servertasks.candlepinCRLFile+"' matching serial '"+String.format("%016X",revokedCert.serialNumber)+"' (BigInteger='"+revokedCert.serialNumber+"').");
+				log.warning("Found multiple revoked entitlement certificates on candlepin server '"+server.getConnection().getRemoteHostname()+"' file '"+servertasks.candlepinCRLFile+"' matching serial '"+String.format("%016X",revokedCert.serialNumber)+"' (BigInteger='"+revokedCert.serialNumber+"').");
 				foundDuplicateRevokedCertsWithMatchingSerials = true;
 			}
 		}
 		
 		// assert no duplicates were found
-		Assert.assertTrue(!foundDuplicateRevokedCertsWithMatchingSerials, "Did not find any revoked entitlement certificates on candlepin server '"+server.getConnection().getHostname()+"' file '"+servertasks.candlepinCRLFile+"'.  If failed, see warnings above for duplicate serials.");
+		Assert.assertTrue(!foundDuplicateRevokedCertsWithMatchingSerials, "Did not find any revoked entitlement certificates on candlepin server '"+server.getConnection().getRemoteHostname()+"' file '"+servertasks.candlepinCRLFile+"'.  If failed, see warnings above for duplicate serials.");
 	}
 	
 	// Candidates for an automated Test:

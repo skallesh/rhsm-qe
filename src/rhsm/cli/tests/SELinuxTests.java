@@ -151,7 +151,7 @@ public class SELinuxTests extends SubscriptionManagerCLITestScript {
 				}
 				// END OF WORKAROUND
 				
-				Assert.assertTrue(tailFromMarkedFile.trim().isEmpty(), "No SELinux denials found in the audit log '"+clienttasks.auditLogFile+"' on client "+clienttasks.sshCommandRunner.getConnection().getHostname()+" while executing this test class.");
+				Assert.assertTrue(tailFromMarkedFile.trim().isEmpty(), "No SELinux denials found in the audit log '"+clienttasks.auditLogFile+"' on client "+clienttasks.sshCommandRunner.getConnection().getRemoteHostname()+" while executing this test class.");
 			}
 		}
 	}

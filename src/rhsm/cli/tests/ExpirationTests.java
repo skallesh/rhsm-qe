@@ -237,10 +237,10 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 		// Assert that the difference in the system clocks on runners is less that the specified milliseconds.
 		long msTimeDiffAllowed = 60000L;
 		if (client1!=null) {
-			Assert.assertLess(Math.abs(getTimeDifferenceBetweenCommandRunners(client1, server)), msTimeDiffAllowed, "Time difference between '"+client1.getConnection().getHostname()+"' and '"+server.getConnection().getHostname()+"' is less than '"+msTimeDiffAllowed+"' milliseconds");
+			Assert.assertLess(Math.abs(getTimeDifferenceBetweenCommandRunners(client1, server)), msTimeDiffAllowed, "Time difference between '"+client1.getConnection().getRemoteHostname()+"' and '"+server.getConnection().getRemoteHostname()+"' is less than '"+msTimeDiffAllowed+"' milliseconds");
 		}
 		if (client2!=null) {
-			Assert.assertLess(Math.abs(getTimeDifferenceBetweenCommandRunners(client2, server)), msTimeDiffAllowed, "Time difference between '"+client2.getConnection().getHostname()+"' and '"+server.getConnection().getHostname()+"' is less than '"+msTimeDiffAllowed+"' milliseconds");
+			Assert.assertLess(Math.abs(getTimeDifferenceBetweenCommandRunners(client2, server)), msTimeDiffAllowed, "Time difference between '"+client2.getConnection().getRemoteHostname()+"' and '"+server.getConnection().getRemoteHostname()+"' is less than '"+msTimeDiffAllowed+"' milliseconds");
 		}
 	}
 	
