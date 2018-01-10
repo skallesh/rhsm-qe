@@ -1283,6 +1283,14 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 				}
 				// END OF WORKAROUND
 				
+				// WORKAROUND FOR RHEL-ALT-7.5 aarch64
+				if (clienttasks.redhatReleaseXY.equals("7.5") && rhelProductCert.productId.equals("433")) { // Red Hat Enterprise Linux for IBM System z (Structure A) Beta
+					String repo="rhel-7-for-system-z-a-beta-rpms";
+					log.info("WORKAROUND: Enabling beta repo '"+repo+"' for installed product '"+rhelProductCert.productName+"' ("+rhelProductCert.productId+") because this is the debut release for this product.  No GA content from repo rhel-7-for-system-z-a-rpms is available yet.");
+					clienttasks.repos(null, null, null, repo, null, null, null, null, null);
+				}
+				// END OF WORKAROUND
+				
 				// verify that rhel yum content is available
 				yumRepolistPackageCount = clienttasks.getYumRepolistPackageCount("enabled");
 				if (yumRepolistPackageCount>0) {
@@ -1296,6 +1304,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 				clienttasks.unsubscribe(null, rhelEntitlementCert.serialNumber, null, null, null, null, null);
 				
 				rhelSubscriptionIsAvailable = true;
+				if (rhelYumContentIsAvailable) break;
 			}
 		}
 		if (!rhelSubscriptionIsAvailable && sm_serverType.equals(CandlepinType.standalone)) throw new SkipException("Skipping this test against a standalone Candlepin server that has no RHEL subscriptions available.");
