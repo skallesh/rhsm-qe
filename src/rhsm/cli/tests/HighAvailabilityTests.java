@@ -563,6 +563,20 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 			throw new SkipException("High Availability tests are only executable on a RHEL Server.");
 		}
 		
+		// Skip distributions of RHEL that do not support High Availability
+		ProductCert rhelProductCert = clienttasks.getCurrentRhelProductCert();
+		if (Arrays.asList(new String[]{
+				"294",	/* Red Hat Enterprise Linux Server for ARM */
+				"419",	/* Red Hat Enterprise Linux for ARM 64 */
+				"420",	/* Red Hat Enterprise Linux for Power 9 */
+				"434",	/* Red Hat Enterprise Linux for IBM System z (Structure A) */
+				"363",	/* Red Hat Enterprise Linux for ARM 64 Beta */
+				"362",	/* Red Hat Enterprise Linux for Power 9 Beta */
+				"433",	/* Red Hat Enterprise Linux for IBM System z (Structure A) Beta */
+				}).contains(rhelProductCert.productId)) {
+			throw new SkipException("High Availability is not offered on '"+rhelProductCert.productName+"'");
+		}
+		
 		//	[root@ibm-js22-vios-02-lp2 ~]# curl -k -u stage_test_2:PASSWORD http://rubyvip.web.stage.ext.phx2.redhat.com:80/clonepin/candlepin/pools/8a99f9843c01ccba013c037a0fa0015a | python -msimplejson/tool
 		//    "productAttributes": [
 		//                          {
@@ -604,11 +618,6 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 				haPackage1Fetch = "http://download.devel.redhat.com/released/RHEL-7/7.2/Server/s390x/os/addons/HighAvailability/omping-0.0.4-6.el7.s390x.rpm";
 			}
 			if (Float.valueOf(clienttasks.redhatReleaseXY)<7.2) throw new SkipException("High Availability is not offered on arch '"+clienttasks.arch+"' release '"+clienttasks.redhatReleaseXY+"'.");
-		}
-		
-		if (clienttasks.arch.equals("aarch64")) {
-			serverProductId = "294";	// Red Hat Enterprise Linux Server for ARM
-			throw new SkipException("High Availability is not offered on arch '"+clienttasks.arch+"'.");
 		}
 		
 		if (clienttasks.redhatReleaseX.equals("5")) {
