@@ -2083,7 +2083,9 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		SubscriptionPool multiEntitlementPool = null;
 		SubscriptionPool standardPool = null;
 		for (SubscriptionPool pool : getRandomList(clienttasks.getCurrentlyAvailableSubscriptionPools())) {
+///* debugTesting all pools */for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
 ///* debugTesting unlimited pools */if (!pool.quantity.equalsIgnoreCase("unlimited")) continue;
+///* debugTesting only these SKUs*/if (!Arrays.asList(new String[]{"RH00076","RH0604852","RH00284"}).contains(pool.productId)) continue;
 			if (instanceBasedPool!=null && multiEntitlementPool!=null && standardPool!=null) break;
 			if (!pool.quantity.equalsIgnoreCase("unlimited") && Integer.valueOf(pool.quantity)<2) continue;	// skip pools that don't have enough quantity left to consume
 			
