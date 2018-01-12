@@ -407,8 +407,12 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 			// to avoid interference from an already enabled repo from a prior attached subscription that also
 			// contains this same packages (e.g. -htb- repos versus non -htb- repos) it would be best to remove
 			// all previously attached subscriptions.  actually this will speed up the test
-			clienttasks.unsubscribe(true, (BigInteger)null, null, null, null, null, null);
-			
+			SSHCommandResult result = clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null, null, null);
+			if (result.getStderr().trim().equals("Access rate limit exceeded")) { // ExitCode: 70	Stderr: "Access rate limit exceeded"	Stdout: ""
+				// Encountered a RateLimitExceededException, recover by re-registering a new consumer
+				clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, ConsumerType.system, null, null, null, null, null, (String)null, null, null, null, Boolean.TRUE, false, null, null, null, null);
+			}
+
 			// subscribe to this pool
 			entitlementCertFile = clienttasks.subscribeToSubscriptionPool_(pool,quantity);
 			lastSubscriptionPool = pool;	// remember for the next row of data
