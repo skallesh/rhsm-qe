@@ -905,10 +905,11 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 				Assert.assertTrue(!sshCommandResult.getStdout().contains(autosubscribeFailedMsg), "When autosubscribe is successful and entitlements have been granted, stdout from call to '"+rhnMigrateTool+" "+options+"' does NOT contain message: "+autosubscribeFailedMsg);				
 			} */
 			if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit 7957b8df95c575e6e8713c2f1a0f8f754e32aed3 bug 1119688
-				if (clienttasks.status(null, null, null, null, null).getExitCode().equals(1)) {	// exit code of 0 indicates valid compliance, otherwise exit code is 1
-					Assert.assertTrue(sshCommandResult.getStdout().contains(autosubscribeFailedMsg), "Since the subscription-manager status does not indicate a fully green compliance, the most likely reason is because at least one of the migrated products could not be auto-subscribed.  Therefore stdout from call to '"+rhnMigrateTool+" "+options+"' contains message: "+autosubscribeFailedMsg);
-				} else {
-					Assert.assertTrue(!sshCommandResult.getStdout().contains(autosubscribeFailedMsg), "Since the subscription-manager status does not indicate a fully green compliance, all of the migrated products should have been auto-subscribed.  Therefore stdout from call to '"+rhnMigrateTool+" "+options+"' does NOT contain message: "+autosubscribeFailedMsg);						
+				SSHCommandResult statusResult = clienttasks.status(null, null, null, null, null);
+				if (statusResult.getStdout().contains("Overall Status: Invalid")) {
+					Assert.assertTrue(sshCommandResult.getStdout().contains(autosubscribeFailedMsg), "Since the subscription-manager overall status appears Invalid, the most likely reason is because at least one of the migrated products could not be auto-subscribed.  Therefore stdout from call to '"+rhnMigrateTool+" "+options+"' contains message: "+autosubscribeFailedMsg);
+				} else {	// Note: "Overall Status: Insufficient" is possible and likely when the auto-subscribed subscription pool is Temporary
+					Assert.assertTrue(!sshCommandResult.getStdout().contains(autosubscribeFailedMsg), "Since the subscription-manager overall status does not appear Invalid (overall status of Current or Insufficient are likely), all of the migrated products should have been auto-subscribed.  Therefore stdout from call to '"+rhnMigrateTool+" "+options+"' does NOT contain message: "+autosubscribeFailedMsg);						
 				}
 			}
 			
