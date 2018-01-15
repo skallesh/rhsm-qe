@@ -466,6 +466,26 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 		}
 		// END OF WORKAROUND
 		
+		// TEMPORARY WORKAROUND FOR BUG
+		if (actualReleases.isEmpty() && !expectedReleases.isEmpty()) {
+			invokeWorkaroundWhileBugIsOpen = true;
+			bugId="1518886"; // Bug 1518886 - RHEL-ALT-7.5 product certs should also provide tag "rhel-7"
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
+			if (invokeWorkaroundWhileBugIsOpen) {
+				if (Arrays.asList(new String[]{ // this is a RHEL-ALT system
+						"419",	/* Red Hat Enterprise Linux for ARM 64 */
+						"420",	/* Red Hat Enterprise Linux for Power 9 */
+						"434",	/* Red Hat Enterprise Linux for IBM System z (Structure A) */
+						"363",	/* Red Hat Enterprise Linux for ARM 64 Beta */
+						"362",	/* Red Hat Enterprise Linux for Power 9 Beta */
+						"433",	/* Red Hat Enterprise Linux for IBM System z (Structure A) Beta */
+						}).contains(rhelProductCert.productId)) {
+				throw new SkipException("subscription-manager release listings on RHEL-ALT will be empty until bug '"+bugId+"' is fixed.");
+				}
+			}
+		}
+		// END OF WORKAROUND
+		
 		// assert that they are equivalent
 		Assert.assertTrue(expectedReleases.containsAll(actualReleases) && actualReleases.containsAll(expectedReleases), "The actual subscription-manager releases list "+actualReleases+" matches the expected consolidated CDN listing "+expectedReleases+" after being granted an entitlement from subscription product: "+rhelSubscriptionPool.productId);
 		Assert.assertTrue(expectedReleases.size()==actualReleases.size(), "The actual subscription-manager releases list "+actualReleases+" does not contain any duplicates.  It should be a unique list.");
