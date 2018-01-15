@@ -279,7 +279,9 @@ public class RedeemTests extends SubscriptionManagerCLITestScript {
 		SSHCommandResult redeemResult = clienttasks.redeem("tester@redhat.com",null,null,null,null, null, null);
 		
 		// assert the redeemResult here
-		Assert.assertEquals(redeemResult.getExitCode(), new Integer(0));
+		Integer expectedExitCode = new Integer(0);
+		expectedExitCode = new Integer(70/*EX_SOFTWARE*/); // changed due to IT commit https://git.corp.redhat.com/cgit/dev/towers/engineering/cp/candlepin-util/commit/?id=4667496c6c0395405937bad800b20a7de537b297 now throws an IseException instead of an AcceptedRequestException	// The POST on the consumer now throws a 500 response
+		Assert.assertEquals(redeemResult.getExitCode(), expectedExitCode);
 		Assert.assertEquals(redeemResult.getStdout().trim(), "");
 		Assert.assertEquals(redeemResult.getStderr().trim(), "The system is unable to redeem the requested subscription: {0}".replaceFirst("\\{0\\}", facts.get("dmi.system.serial_number")));
 	}
