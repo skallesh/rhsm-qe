@@ -105,7 +105,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	@ImplementsNitrateTest(caseId=41678)
 	public void testHardwareMatchingSubscriptionsAreListedAsAvailable(String productId, JSONArray bundledProductDataAsJSONArray) throws JSONException, Exception {
 ///*debugTesting*/if (!productId.equals("awesomeos-virt-unlmtd-phys")) throw new SkipException("debugTesting productId="+productId);
-///*debugTesting*/if (!productId.equals("RH0103708")) throw new SkipException("debugTesting productId="+productId);
+///*debugTesting*/if (!productId.equals("MCT3115")) throw new SkipException("debugTesting productId="+productId);
 		// implicitly registered in dataProvider; no need to register with force; saves time
 		//clienttasks.register(clientusername, clientpassword, null, null, null, null, true, null, null, null);
 		SubscriptionPool pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", productId, clienttasks.getCurrentlyAvailableSubscriptionPools());
@@ -132,7 +132,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 				int quantity = (Integer) CandlepinTasks.getPoolValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, poolId, "quantity");
 				int consumed = (Integer) CandlepinTasks.getPoolValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, poolId, "consumed");
 				if (consumed>=quantity) {
-					log.warning("It appears that the total quantity '"+quantity+"' of subscriptions from poolId '"+poolId+"' for product '"+productId+"' are being consumed.");
+					throw new SkipException("The total quantity '"+quantity+"' of subscriptions from poolId '"+poolId+"' for product '"+productId+"' are being consumed; hence this pool is appropriately not available despite a match in hardware");
 				}
 			}
 			// another possible cause is that the pool.productAttributes.arch list on the pool is older than the subscription.product.attributes.arch
