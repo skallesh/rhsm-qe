@@ -335,7 +335,6 @@ public class InstanceBasedTests extends SubscriptionManagerCLITestScript {
 
 	
 	protected void moveProductCertFiles(String filename) throws IOException {
-		client = new SSHCommandRunner(sm_clientHostname, sm_clientSSHUser, sm_sshKeyPrivate,sm_sshkeyPassphrase,null);
 		if(!(RemoteFileTasks.testExists(client, "/root/temp1/"))){
 			client.runCommandAndWait("mkdir " + "/root/temp1/");
 		}
@@ -364,7 +363,6 @@ public class InstanceBasedTests extends SubscriptionManagerCLITestScript {
 	@AfterGroups(groups = { "setup" }, value = { "ManuallyAttachInstanceBasedSubscriptionOnCertV1"})
 	@AfterClass(groups = "setup")
 	public void restoreProductCerts() throws IOException {
-		client = new SSHCommandRunner(sm_clientHostname, sm_clientSSHUser, sm_sshKeyPrivate,sm_sshkeyPassphrase,null);
 		client.runCommandAndWait("mv " + "/root/temp1/*.pem" + " "
 				+ clienttasks.productCertDir);
 		client.runCommandAndWait("rm -rf " + "/root/temp1");

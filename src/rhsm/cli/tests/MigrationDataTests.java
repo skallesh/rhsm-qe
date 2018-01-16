@@ -1851,45 +1851,6 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(rhnAvailableChildChannels.size()>0,"A positive number of child channels under the RHN Classic base channel '"+rhnBaseChannel+"' are available for consumption.");
 	}
 	
-//	@BeforeGroups(groups="setup",value={"InstallNumMigrateToRhsmWithNonDefaultProductCertDir_Test","RhnMigrateClassicToRhsmWithNonDefaultProductCertDir_Test"})
-//	public void configNonDefaultRhsmProductCertDir() {
-//		if (clienttasks==null) return;
-//		
-//		//clienttasks.config(false, false, true, new String[]{"rhsm","productcertdir",productCertDirNonDefault});
-//		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir", nonDefaultProductCertDir);
-//	}
-//
-//	
-//	public static SSHCommandRunner basicAuthProxyRunner = null;
-//	public static SSHCommandRunner noAuthProxyRunner = null;
-//	@BeforeClass(groups={"setup"})
-//	public void setupProxyRunnersBeforeClass() throws IOException {
-//		basicAuthProxyRunner = new SSHCommandRunner(sm_basicauthproxyHostname, sm_sshUser, sm_sshKeyPrivate, sm_sshkeyPassphrase, null);
-//		noAuthProxyRunner = new SSHCommandRunner(sm_noauthproxyHostname, sm_sshUser, sm_sshKeyPrivate, sm_sshkeyPassphrase, null);
-//	}
-//	
-//	@AfterClass(groups="setup")
-//	public void restoreProductCertsAfterClass() {
-//		if (clienttasks==null) return;
-//		
-//		log.info("Restoring the originally installed product certs...");
-//		client.runCommandAndWait("rm -f "+originalProductCertDir+"/*.pem");
-//		client.runCommandAndWait("cp "+backupProductCertDir+"/*.pem "+originalProductCertDir);
-//		configOriginalRhsmProductCertDir();
-//	}
-//	
-//	@AfterClass(groups="setup")
-//	@AfterGroups(groups="setup",value={"RhnMigrateClassicToRhsm_Test"})
-//	public void restoreOriginallyConfiguredServerUrl() {
-//		if (clienttasks==null) return;
-//		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
-//		listOfSectionNameValues.add(new String[]{"server","hostname",originalServerHostname});
-//		listOfSectionNameValues.add(new String[]{"server","port",originalServerPort});
-//		listOfSectionNameValues.add(new String[]{"server","prefix",originalServerPrefix});
-//		log.info("Restoring the originally configured server URL...");
-//		clienttasks.config(null, null, true, listOfSectionNameValues);
-//	}
-	
 	@AfterClass(groups={"setup"},alwaysRun=true)
 	public void removeRHNSystemIdFileAfterClass() {
 		if (clienttasks!=null) {

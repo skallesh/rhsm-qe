@@ -2504,6 +2504,9 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		basicauthproxy = new SSHCommandRunner(sm_basicauthproxyHostname, sm_basicauthproxySSHUser, sm_sshKeyPrivate, sm_sshkeyPassphrase, null);
 		noauthproxy = new SSHCommandRunner(sm_noauthproxyHostname, sm_noauthproxySSHUser, sm_sshKeyPrivate, sm_sshkeyPassphrase, null);
 		unauthproxy = new SSHCommandRunner(sm_unauthproxyHostname, sm_unauthproxySSHUser, sm_sshKeyPrivate, sm_sshkeyPassphrase, null);
+		if (sm_sshEmergenecyTimeoutMS!=null) basicauthproxy.setEmergencyTimeout(Long.valueOf(sm_sshEmergenecyTimeoutMS));
+		if (sm_sshEmergenecyTimeoutMS!=null) noauthproxy.setEmergencyTimeout(Long.valueOf(sm_sshEmergenecyTimeoutMS));
+		if (sm_sshEmergenecyTimeoutMS!=null) unauthproxy.setEmergencyTimeout(Long.valueOf(sm_sshEmergenecyTimeoutMS));
 		if (clienttasks!=null) nErrMsg = clienttasks.msg_NetworkErrorUnableToConnect;
 		if (clienttasks!=null) pErrMsg = clienttasks.msg_ProxyConnectionFailed;
 		if (clienttasks!=null) pErr407Msg = clienttasks.msg_ProxyConnectionFailed407;

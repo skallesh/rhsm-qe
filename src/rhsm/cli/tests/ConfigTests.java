@@ -659,6 +659,7 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 		// instructions for setting this up are in scripts/timeout_listener.sh
 		// let's use the auto-services.usersys.redhat.com as the timeout listener server sm_basicauthproxyHostname
 		SSHCommandRunner timeoutServerCommandRunner = new SSHCommandRunner(sm_basicauthproxyHostname, sm_basicauthproxySSHUser, sm_sshKeyPrivate, sm_sshkeyPassphrase, null);
+		if (sm_sshEmergenecyTimeoutMS!=null) timeoutServerCommandRunner.setEmergencyTimeout(Long.valueOf(sm_sshEmergenecyTimeoutMS));
 		SSHCommandResult timeoutServerServiceResult = timeoutServerCommandRunner.runCommandAndWait("systemctl is-active timeout_listener.service");
 		Assert.assertContainsMatch(timeoutServerServiceResult.getStdout().trim(), "^active$","The timeout_listener.service is running.  If this fails, then a one-time setup of the timeout_listener server on '"+sm_basicauthproxyHostname+"' is needed.  See the instructions in the automation scripts/timeout_listener.sh file.");
 		

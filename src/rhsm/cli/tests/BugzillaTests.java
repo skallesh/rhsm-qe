@@ -5729,6 +5729,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	protected String setDate(String hostname, String user, String passphrase, String privatekey, String datecmd)
 			throws IOException {
 		SSHCommandRunner sshHostnameCommandRunner = new SSHCommandRunner(hostname, user, passphrase, privatekey, null);
+		if (sm_sshEmergenecyTimeoutMS!=null) sshHostnameCommandRunner.setEmergencyTimeout(Long.valueOf(sm_sshEmergenecyTimeoutMS));
 		return (sshHostnameCommandRunner.runCommandAndWait(datecmd).getStdout());
 
 	}
@@ -5736,6 +5737,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	protected String getDate(String hostname, String user, String passphrase, String privatekey, Boolean flag)
 			throws IOException, ParseException {
 		SSHCommandRunner sshHostnameCommandRunner = new SSHCommandRunner(hostname, user, passphrase, privatekey, null);
+		if (sm_sshEmergenecyTimeoutMS!=null) sshHostnameCommandRunner.setEmergencyTimeout(Long.valueOf(sm_sshEmergenecyTimeoutMS));
 		if (flag)
 			return (sshHostnameCommandRunner.runCommandAndWait("date +\"%F\"").getStdout());
 		else
