@@ -116,6 +116,19 @@
 		</groups>
 	</test>
 	
+	<test name="CLI: Subscribe Tests">
+		<classes>
+			<class name="rhsm.cli.tests.SubscribeTests" />
+		</classes>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="Tier0Tests" />
+				<include name="cleanup" />
+			</run>
+		</groups>
+	</test>
+	
 	<test name="CLI: Interoperability Tests">
 		<classes>
 			<class name="rhsm.cli.tests.InteroperabilityTests" />
@@ -249,19 +262,6 @@
 	<test name="CLI: Orgs Tests">
 		<classes>
 			<class name="rhsm.cli.tests.OrgsTests" />
-		</classes>
-		<groups>
-			<run>
-				<include name="setup" />
-				<include name="Tier0Tests" />
-				<include name="cleanup" />
-			</run>
-		</groups>
-	</test>
-
-	<test name="CLI: Subscribe Tests">
-		<classes>
-			<class name="rhsm.cli.tests.SubscribeTests" />
 		</classes>
 		<groups>
 			<run>
