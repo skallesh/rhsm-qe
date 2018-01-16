@@ -3033,6 +3033,8 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	public void setupProxyRunnersBeforeClass() throws IOException {
 		basicAuthProxyRunner = new SSHCommandRunner(sm_basicauthproxyHostname, sm_basicauthproxySSHUser, sm_sshKeyPrivate, sm_sshkeyPassphrase, null);
 		noAuthProxyRunner = new SSHCommandRunner(sm_noauthproxyHostname, sm_noauthproxySSHUser	, sm_sshKeyPrivate, sm_sshkeyPassphrase, null);
+		if (sm_sshEmergenecyTimeoutMS!=null) basicAuthProxyRunner.setEmergencyTimeout(Long.valueOf(sm_sshEmergenecyTimeoutMS));
+		if (sm_sshEmergenecyTimeoutMS!=null) noAuthProxyRunner.setEmergencyTimeout(Long.valueOf(sm_sshEmergenecyTimeoutMS));
 		if (clienttasks!=null) ipv4_address = clienttasks.getIPV4Address();
 	}
 	
