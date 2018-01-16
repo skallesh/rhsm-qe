@@ -292,7 +292,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 				// TODO ADD WORKAROUND FOR Bug 1518886 - RHEL-ALT-7.5 product certs should also provide tag "rhel-7"
 				break;
 			case 420: // Red Hat Enterprise Linux for Power 9
-				expectedTags = Arrays.asList("rhel-#,rhel-alt-#,rhel-alt-#-power".replaceAll("#",clienttasks.redhatReleaseX).split("\\s*,\\s*"));
+				expectedTags = Arrays.asList("rhel-#,rhel-alt-#,rhel-alt-#-power9".replaceAll("#",clienttasks.redhatReleaseX).split("\\s*,\\s*"));
 				// TODO ADD WORKAROUND FOR Bug 1518886 - RHEL-ALT-7.5 product certs should also provide tag "rhel-7"
 				break;
 			case 434: // Red Hat Enterprise Linux for IBM System z (Structure A)
@@ -303,7 +303,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 				expectedTags = Arrays.asList("rhel-alt-#,rhel-alt-#-armv8-a".replaceAll("#",clienttasks.redhatReleaseX).split("\\s*,\\s*"));
 				break;
 			case 362: // Red Hat Enterprise Linux for Power 9 Beta
-				expectedTags = Arrays.asList("rhel-alt-#,rhel-alt-#-power".replaceAll("#",clienttasks.redhatReleaseX).split("\\s*,\\s*"));
+				expectedTags = Arrays.asList("rhel-alt-#,rhel-alt-#-power9".replaceAll("#",clienttasks.redhatReleaseX).split("\\s*,\\s*"));
 				break;
 			case 433: // Red Hat Enterprise Linux for IBM System z (Structure A) Beta
 				expectedTags = Arrays.asList("rhel-alt-#,rhel-alt-#-system-z-a".replaceAll("#",clienttasks.redhatReleaseX).split("\\s*,\\s*"));
