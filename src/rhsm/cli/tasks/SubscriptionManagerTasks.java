@@ -7090,7 +7090,7 @@ if (false) {
 		sshCommandRunner.runCommandAndWaitWithoutLogging("killall -9 yum");
 
 		int min = 5;
-		log.fine("Using a timeout of "+min+" minutes for next command...");
+		log.fine("Using a timeout of "+min+" minutes for next ssh command...");
 		//SSHCommandResult result = sshCommandRunner.runCommandAndWait("yum list available",Long.valueOf(min*60000));
 		SSHCommandResult result = sshCommandRunner.runCommandAndWait("yum list available --disablerepo=* --enablerepo="+repoLabel+" --disableplugin=rhnplugin",Long.valueOf(min*60000));  // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
 
@@ -7134,7 +7134,7 @@ if (false) {
 		
 		// execute the yum command to list available packages
 		int min = 5;
-		log.fine("Using a timeout of "+min+" minutes for next command...");
+		log.fine("Using a timeout of "+min+" minutes for next ssh command...");
 		SSHCommandResult result = sshCommandRunner.runCommandAndWait(command,Long.valueOf(min*60000));
 		
 		// Example result
@@ -7297,7 +7297,7 @@ if (false) {
 		
 		// execute the yum command to list available packages
 		int min = 5;
-		log.fine("Using a timeout of "+min+" minutes for next command...");
+		log.fine("Using a timeout of "+min+" minutes for next ssh command...");
 		SSHCommandResult result = sshCommandRunner.runCommandAndWait(command,Long.valueOf(min*60000));
 		
 		// Example result.getStdout()

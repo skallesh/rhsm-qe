@@ -699,13 +699,13 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(client.runCommandAndWait(sshCommandGreppingRedhatRepoForNumberReleaseverOccurrences).getStdout().trim(), "0", "Number of occurances for \"$releasever\" in '"+clienttasks.redhatRepoFile+"' after setting the release to '"+release+"'.");
 		
 		// remember the number of available packages
-		Integer numPackagesAvailableBeforeExceedingRateLimit = clienttasks.getYumListAvailable(null).size();
+		Integer numPackagesAvailableBeforeExceedingRateLimit = clienttasks.getYumListAvailable("--disablerepo=beaker*").size();
 		
 		// now bombard the server with more than 60 hits to encounter a RateLimitExceededException
-		client.runCommandAndWait("for i in {1..60}; do yum repolist --quiet; done;");
+		client.runCommandAndWait("for i in {1..60}; do yum repolist --disablerepo=beaker* --quiet; done;");
 		String rhsmLogMarker = System.currentTimeMillis()+" testRateLimitExceededExceptionShouldNotAlterRedhatRepo...";
 		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, rhsmLogMarker);
-		Integer numPackagesAvailableAfterExceedingRateLimit = clienttasks.getYumListAvailable(null).size();
+		Integer numPackagesAvailableAfterExceedingRateLimit = clienttasks.getYumListAvailable("--disablerepo=beaker*").size();
 		
 		// assert that there are still no occurrences of $releasever in redhat.repo
 		Assert.assertEquals(client.runCommandAndWait(sshCommandGreppingRedhatRepoForNumberReleaseverOccurrences).getStdout().trim(), "0", "Number of occurances for \"$releasever\" in '"+clienttasks.redhatRepoFile+"' after setting the release to '"+release+"' and then bombarding the server via the subscription-manager yum plugin via system invocations of yum repolist.");
