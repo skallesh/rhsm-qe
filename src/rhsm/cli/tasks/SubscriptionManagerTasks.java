@@ -9454,6 +9454,47 @@ if (false) {
 			
 			
 			// TEMPORARY WORKAROUND FOR BUG
+			//	2018-01-15 14:39:26,359 [DEBUG] subscription-manager:34555:MainThread  @connection.py:543 - Making request: DELETE  /subscription/consumers/c3b6eb11-da15-47ea-893d-7d3896af5952/entitlements
+			//	2018-01-15  14:39:55,131 [ERROR] subscription-manager:34555:MainThread  @managercli.py:181 - Unable to perform remove due to the following  exception: [Errno 104] Connection reset by peer
+			//	2018-01-15 14:39:55,131 [ERROR] subscription-manager:34555:MainThread @managercli.py:182 - [Errno 104] Connection reset by peer
+			//	Traceback (most recent call last):
+			//	  File "/usr/lib64/python2.7/site-packages/subscription_manager/managercli.py", line 1707, in _do_command
+			//	    total = ent_service.remove_all_entitlements()
+			//	  File "/usr/lib64/python2.7/site-packages/rhsmlib/services/entitlement.py", line 303, in remove_all_entitlements
+			//	    response = self.cp.unbindAll(self.identity.uuid)
+			//	  File "/usr/lib64/python2.7/site-packages/rhsm/connection.py", line 1273, in unbindAll
+			//	    return self.conn.request_delete(method)
+			//	  File "/usr/lib64/python2.7/site-packages/rhsm/connection.py", line 702, in request_delete
+			//	    return self._request("DELETE", method, params, headers=headers)
+			//	  File "/usr/lib64/python2.7/site-packages/rhsm/connection.py", line 716, in _request
+			//	    info=info, headers=headers)
+			//	  File "/usr/lib64/python2.7/site-packages/rhsm/connection.py", line 573, in _request
+			//	    response = conn.getresponse()
+			//	  File "/usr/lib64/python2.7/httplib.py", line 1089, in getresponse
+			//	    response.begin()
+			//	  File "/usr/lib64/python2.7/httplib.py", line 444, in begin
+			//	    version, status, reason = self._read_status()
+			//	  File "/usr/lib64/python2.7/httplib.py", line 400, in _read_status
+			//	    line = self.fp.readline(_MAXLINE + 1)
+			//	  File "/usr/lib64/python2.7/socket.py", line 476, in readline
+			//	    data = self._sock.recv(self._rbufsize)
+			//	  File "/usr/lib64/python2.7/ssl.py", line 759, in recv
+			//	    return self.read(buflen)
+			//	  File "/usr/lib64/python2.7/ssl.py", line 653, in read
+			//	    v = self._sslobj.read(len or 1024)
+			//	error: [Errno 104] Connection reset by peer
+			issue = "[Errno 104] Connection reset by peer";
+			if (getTracebackCommandResult.getStdout().contains(issue) || result.getStderr().contains(issue)) {
+				String bugId = "1535150"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1535150 - [Errno 104] Connection reset by peer
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				if (invokeWorkaroundWhileBugIsOpen) {
+					throw new SkipException("Encountered a '"+issue+"' and could not complete this test while bug '"+bugId+"' is open.");
+				}
+			}
+			// END OF WORKAROUND
+			
+			
+			// TEMPORARY WORKAROUND FOR BUG
 			//	2016-01-27 16:24:22.520  FINE: ssh root@ibm-x3550m3-09.lab.eng.brq.redhat.com subscription-manager unsubscribe --all
 			//	2016-01-27 16:24:50.438  FINE: Stdout: 1 subscription removed at the server.
 			//
