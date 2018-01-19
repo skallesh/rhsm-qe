@@ -128,6 +128,7 @@ public class SubscriptionManagerTasks {
 	public String vcpu								= null;	// of the client
 	public String variant							= null;	// of the client
 	public String releasever						= null;	// of the client; 5Server 5Client
+	public String compose							= null; // from beaker
 	public Boolean isFipsEnabled					= null; // of the client	sysctl crypto.fips_enabled => crypto.fips_enabled = 1
 	
 	protected String currentlyRegisteredUsername	= null;	// most recent username used during register
@@ -179,6 +180,11 @@ public class SubscriptionManagerTasks {
 			redhatReleaseX = "7";
 		}
 		*/
+		
+		// compose
+		// /etc/yum.repos.d/beaker-Server.repo:baseurl=http://download.eng.rdu.redhat.com/rel-eng/RHEL-ALT-7.5-20180110.1/compose/Server/aarch64/os
+		String tree = sshCommandRunner.runCommandAndWait("grep RHEL /etc/yum.repos.d/beaker-*.repo | sort | tail -1").getStdout();
+		compose = SubscriptionManagerCLITestScript.getSubstringMatches(tree, "RHEL-.*/compose").get(0).split("/")[0];	// RHEL-ALT-7.5-20180110.1
 		
 		// FIPS mode
 		isFipsEnabled = sshCommandRunner.runCommandAndWait("sysctl crypto.fips_enabled").getStdout().trim().equals("crypto.fips_enabled = 1")? true:false;
@@ -308,6 +314,7 @@ if (false) {
 		}
 
 		for (File file : productCerts) {
+			if (!file.exists()) Assert.fail("Local file '"+file.getPath()+"' does not exist.  Instruct the automator to fix this logic error.");
 			RemoteFileTasks.putFile(sshCommandRunner, file.getPath(), productCertDir+"/", "0644");
 		}
 	}
