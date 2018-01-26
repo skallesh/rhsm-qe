@@ -880,16 +880,12 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void testInititiateAutoSubscribe() throws Exception {
+		// cleanup the current consumer
+		clienttasks.unregister_(null, null, null, null);
+		clienttasks.deleteFactsFileWithOverridingValues();
 		
 		// re-calculate the subscriptionPoolProductData accounting for a match to installed system software
 		subscriptionPoolProductData = getSystemSubscriptionPoolProductDataAsListOfLists(true,true);
-
-		// before testing, make sure all the expected subscriptionPoolProductId are available
-		/* I think an unsubscribe --all should be sufficient to make sure all the expected subscriptionPoolProductId are available
-		clienttasks.unregister(null, null, null);
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, null, false, null, null, null);
-		*/
-		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		
 		// autosubscribe
 		sshCommandResultFromAutosubscribe = clienttasks.subscribe(true,null,(String)null,null,null,null,null,null,null,null,null, null, null);
