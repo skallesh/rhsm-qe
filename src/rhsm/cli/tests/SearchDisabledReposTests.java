@@ -422,14 +422,24 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 		
 		// predict the disabled optional repo and potential presence of other enabled repos 
 		if (rhelBaseRepoId!=null) {
-			rhelOptionalRepoId	= rhelBaseRepoId.replaceFirst("-rpms$", "-optional-rpms");
-			rhelEusRepoId		= rhelBaseRepoId.replaceFirst("-rpms$", "-eus-rpms");
-			rhelBetaRepoId		= rhelBaseRepoId.replaceFirst("-rpms$", "-beta-rpms");
-			rhelHtbRepoId		= rhelBaseRepoId.replaceFirst("-rpms$", "-htb-rpms");
+			rhelOptionalRepoId			= rhelBaseRepoId.replaceFirst("-rpms$", "-optional-rpms");
+			rhelEusRepoId				= rhelBaseRepoId.replaceFirst("-rpms$", "-eus-rpms");
+			rhelBetaRepoId				= rhelBaseRepoId.replaceFirst("-rpms$", "-beta-rpms");
+			rhelHtbRepoId				= rhelBaseRepoId.replaceFirst("-rpms$", "-htb-rpms");
+			rhelOptionalHtbRepoId		= rhelBaseRepoId.replaceFirst("-rpms$", "-optional-htb-rpms");
 		} else {
 			Assert.fail("Additional automation development is needed in this test to predict the name of the enabled base RHEL repo for RHEL"+clienttasks.redhatReleaseX+" "+clienttasks.variant+" "+clienttasks.arch+"; Installed Product Cert: "+rhelProductCert);
 		}
 		
+		// Special case: Snapshot composes provide the HTB product as the base product-default rather than the Beta/GA products.
+		// Since some subscription SKUs like RH00076 only provide HTB products, let's adjust the
+		// expected rhelBaseRepoId and rhelOptionalRepoId to the corresponding HTB repos
+		if (rhelProductCert.productId.equals("230")/*Red Hat Enterprise Linux 7 Server High Touch Beta*/||
+			rhelProductCert.productId.equals("231")/*Red Hat Enterprise Linux 7 Workstation High Touch Beta)*/) {
+			log.info("Adjusting the expected base and optional repos because the default installed RHEL product appears to be High Touch Beta (this is expected for Snapshot composes).");
+			rhelBaseRepoId = rhelHtbRepoId;
+			rhelOptionalRepoId = rhelOptionalHtbRepoId;
+		}
 		// assert the base rhel repo is enabled by default
 		Repo rhelBaseRepo = Repo.findFirstInstanceWithMatchingFieldFromList("repoId", rhelBaseRepoId, subscribedRepos);
 		Assert.assertNotNull(rhelBaseRepo, "RHEL base repo id '"+rhelBaseRepoId+"' was found in subscribed repos.");
@@ -450,6 +460,10 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 		Repo rhelHtbRepo = Repo.findFirstInstanceWithMatchingFieldFromList("repoId", rhelHtbRepoId, subscribedRepos);
 		if (rhelHtbRepo==null) rhelHtbRepoId=null;
 		
+		// determine if optional htb rhel repo is entitled; if not then set it to null
+		Repo rhelOptionalHtbRepo = Repo.findFirstInstanceWithMatchingFieldFromList("repoId", rhelOptionalHtbRepoId, subscribedRepos);
+		if (rhelOptionalHtbRepo==null) rhelOptionalHtbRepoId=null;
+		
 		// determine if eus rhel repo is entitled; if not then set it to null
 		Repo rhelEusRepo = Repo.findFirstInstanceWithMatchingFieldFromList("repoId", rhelEusRepoId, subscribedRepos);
 		if (rhelEusRepo==null) rhelEusRepoId=null;
@@ -459,6 +473,7 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 	protected String rhelOptionalRepoId = null;
 	protected String rhelBetaRepoId = null;
 	protected String rhelHtbRepoId = null;
+	protected String rhelOptionalHtbRepoId = null;
 	protected String rhelEusRepoId = null;
 
 
@@ -483,7 +498,11 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 		clienttasks.repos(null, null, null, rhelBaseRepoId, rhelOptionalRepoId, null, null, null, null);
 		
 		// attempt to install a specific package from a disabled repo
-		SSHCommandResult result = clienttasks.yumDoPackageFromRepo_("install", rhelOptionalPackage, null, "--disablerepo=*beta-rpms --disablerepo=*htb-rpms --disablerepo=*eus-rpms --disablerepo=beaker-*");	// disable any other repos that might be enabled to prevent rhelBasePackage from // rhel-7-server-eus-rpms
+		String disablerepos = "--disablerepo=beaker-*";
+		if (!rhelBaseRepoId.endsWith("-beta-rpms") && !rhelOptionalRepoId.endsWith("-beta-rpms")) disablerepos += " --disablerepo=*-beta-rpms";
+		if (!rhelBaseRepoId.endsWith("-htb-rpms") && !rhelOptionalRepoId.endsWith("-htb-rpms")) disablerepos += " --disablerepo=*-htb-rpms";
+		if (!rhelBaseRepoId.endsWith("-eus-rpms") && !rhelOptionalRepoId.endsWith("-eus-rpms")) disablerepos += " --disablerepo=*-eus-rpms";
+		SSHCommandResult result = clienttasks.yumDoPackageFromRepo_("install", rhelOptionalPackage, null, disablerepos);	// disable any other repos that might be enabled to prevent rhelBasePackage from // rhel-7-server-eus-rpms
 
 		// assert results...  should not be able to find package since package is in a disabled repo
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(1),"Exit code from attempt to install '"+rhelOptionalPackage+"' from a disabled repo.");
@@ -497,7 +516,7 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 		clienttasks.repos(null, null, null, rhelOptionalRepoId, rhelBaseRepoId, null, null, null, null);
 		
 		// attempt to install a specific package from a disabled repo
-		result = clienttasks.yumDoPackageFromRepo_("install", rhelBasePackage, null, "--disablerepo=*beta-rpms --disablerepo=*htb-rpms --disablerepo=*eus-rpms --disablerepo=beaker-*");	// disable any other repos that might be enabled // rhel-7-server-eus-rpms
+		result = clienttasks.yumDoPackageFromRepo_("install", rhelBasePackage, null, disablerepos);	// disable any other repos that might be enabled // rhel-7-server-eus-rpms
 
 		// assert results...  should not be able to find package since package is in a disabled repo
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(1),"Exit code from attempt to install '"+rhelBasePackage+"' from a disabled repo.");
@@ -540,7 +559,11 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 		clienttasks.repos(null, null, null, rhelOptionalRepoId, rhelBaseRepoId, null, null, null, null);
 		
 		// attempt to install a package that requires another package from a disabled repo
-		SSHCommandResult result = clienttasks.yumDoPackageFromRepo_("install", rhelOptionalPackage, null, "--disablerepo=*beta-rpms --disablerepo=*htb-rpms --disablerepo=*eus-rpms --disablerepo=beaker-*");	// disable any other repos that might be enabled // rhel-7-server-eus-rpms
+		String disablerepos = "--disablerepo=beaker-*";
+		if (!rhelBaseRepoId.endsWith("-beta-rpms") && !rhelOptionalRepoId.endsWith("-beta-rpms")) disablerepos += " --disablerepo=*-beta-rpms";
+		if (!rhelBaseRepoId.endsWith("-htb-rpms") && !rhelOptionalRepoId.endsWith("-htb-rpms")) disablerepos += " --disablerepo=*-htb-rpms";
+		if (!rhelBaseRepoId.endsWith("-eus-rpms") && !rhelOptionalRepoId.endsWith("-eus-rpms")) disablerepos += " --disablerepo=*-eus-rpms";
+		SSHCommandResult result = clienttasks.yumDoPackageFromRepo_("install", rhelOptionalPackage, null, disablerepos);	// disable any other repos that might be enabled // rhel-7-server-eus-rpms
 
 		//	2015-10-26 15:26:58.217  FINE: ssh root@jsefler-7.usersys.redhat.com yum -y install ghostscript-devel --disableplugin=rhnplugin --disablerepo=*eus-rpms
 		//	2015-10-26 15:27:05.473  FINE: Stdout: 
@@ -613,7 +636,11 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 		clienttasks.repos(null, null, null, rhelOptionalRepoId, rhelBaseRepoId, null, null, null, null);
 		
 		// attempt to install a package that requires another package from a disabled repo
-		SSHCommandResult result = clienttasks.yumDoPackageFromRepo_("install", rhelOptionalPackage, null, "--assumeno --disablerepo=*beta-rpms --disablerepo=*htb-rpms --disablerepo=*eus-rpms --disablerepo=beaker-*");	// disable any other repos that might be enabled to prevent  // rhel-7-server-eus-rpms
+		String disablerepos = "--disablerepo=beaker-*";
+		if (!rhelBaseRepoId.endsWith("-beta-rpms") && !rhelOptionalRepoId.endsWith("-beta-rpms")) disablerepos += " --disablerepo=*-beta-rpms";
+		if (!rhelBaseRepoId.endsWith("-htb-rpms") && !rhelOptionalRepoId.endsWith("-htb-rpms")) disablerepos += " --disablerepo=*-htb-rpms";
+		if (!rhelBaseRepoId.endsWith("-eus-rpms") && !rhelOptionalRepoId.endsWith("-eus-rpms")) disablerepos += " --disablerepo=*-eus-rpms";
+		SSHCommandResult result = clienttasks.yumDoPackageFromRepo_("install", rhelOptionalPackage, null, "--assumeno "+disablerepos);	// disable any other repos that might be enabled to prevent  // rhel-7-server-eus-rpms
 		
 		//	2015-10-26 15:54:03.983  FINE: ssh root@jsefler-7.usersys.redhat.com yum -y install ghostscript-devel --disableplugin=rhnplugin --assumeno --disablerepo=*eus-rpms
 		//	2015-10-26 15:54:10.443  FINE: Stdout: 
@@ -708,7 +735,10 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 		List<String> enableRepos = new ArrayList<String>(); enableRepos.add(rhelOptionalRepoId);
 		List<String> disableRepos = new ArrayList<String>(); disableRepos.add(rhelBaseRepoId);
 		clienttasks.repos(null, null, null, enableRepos, disableRepos, null, null, null, null);
-		disableRepos.clear(); disableRepos.add("*-beta-rpms"); disableRepos.add("*-htb-rpms"); disableRepos.add("*-eus-rpms");
+		disableRepos.clear();
+		if (!rhelBaseRepoId.endsWith("-beta-rpms") && !rhelOptionalRepoId.endsWith("-beta-rpms")) disableRepos.add("*-beta-rpms");
+		if (!rhelBaseRepoId.endsWith("-htb-rpms") && !rhelOptionalRepoId.endsWith("-htb-rpms")) disableRepos.add("*-htb-rpms");
+		if (!rhelBaseRepoId.endsWith("-eus-rpms") && !rhelOptionalRepoId.endsWith("-eus-rpms")) disableRepos.add("*-eus-rpms");
 		clienttasks.repos_(null, null, null, null, disableRepos, null, null, null, null);
 		//	2015-10-29 17:51:58.988  FINE: ssh root@ibm-z10-30.rhts.eng.bos.redhat.com subscription-manager repos --disable=*-beta-rpms --disable=*-htb-rpms --disable=*-eus-rpms
 		//	2015-10-29 17:52:08.882  FINE: Stdout: 
@@ -880,7 +910,10 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 		List<String> enableRepos = new ArrayList<String>(); enableRepos.add(rhelOptionalRepoId);
 		List<String> disableRepos = new ArrayList<String>(); disableRepos.add(rhelBaseRepoId);
 		clienttasks.repos(null, null, null, enableRepos, disableRepos, null, null, null, null);
-		disableRepos.clear(); disableRepos.add("*-beta-rpms"); disableRepos.add("*-htb-rpms"); disableRepos.add("*-eus-rpms");
+		disableRepos.clear();
+		if (!rhelBaseRepoId.endsWith("-beta-rpms") && !rhelOptionalRepoId.endsWith("-beta-rpms")) disableRepos.add("*-beta-rpms");
+		if (!rhelBaseRepoId.endsWith("-htb-rpms") && !rhelOptionalRepoId.endsWith("-htb-rpms")) disableRepos.add("*-htb-rpms");
+		if (!rhelBaseRepoId.endsWith("-eus-rpms") && !rhelOptionalRepoId.endsWith("-eus-rpms")) disableRepos.add("*-eus-rpms");
 		clienttasks.repos_(null, null, null, null, disableRepos, null, null, null, null);
 		
 		// attempt to install a package that requires another package from a disabled repo
@@ -1136,7 +1169,10 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 		List<String> enableRepos = new ArrayList<String>(); enableRepos.add(rhelOptionalRepoId);
 		List<String> disableRepos = new ArrayList<String>(); disableRepos.add(rhelBaseRepoId);
 		clienttasks.repos(null, null, null, enableRepos, disableRepos, null, null, null, null);
-		disableRepos.clear(); disableRepos.add("*-beta-rpms"); disableRepos.add("*-htb-rpms"); disableRepos.add("*-eus-rpms");
+		disableRepos.clear();
+		if (!rhelBaseRepoId.endsWith("-beta-rpms") && !rhelOptionalRepoId.endsWith("-beta-rpms")) disableRepos.add("*-beta-rpms");
+		if (!rhelBaseRepoId.endsWith("-htb-rpms") && !rhelOptionalRepoId.endsWith("-htb-rpms")) disableRepos.add("*-htb-rpms");
+		if (!rhelBaseRepoId.endsWith("-eus-rpms") && !rhelOptionalRepoId.endsWith("-eus-rpms")) disableRepos.add("*-eus-rpms");
 		clienttasks.repos_(null, null, null, null, disableRepos, null, null, null, null);
 		
 		// attempt to install a package that requires another package from a disabled repo
