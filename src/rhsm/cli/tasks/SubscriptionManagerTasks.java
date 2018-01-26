@@ -9788,6 +9788,51 @@ if (false) {
 			// END OF WORKAROUND
 			
 			// TEMPORARY WORKAROUND FOR BUG
+			//	ssh root@gizmo.idmqe.lab.eng.bos.redhat.com subscription-manager register --username=stage_auto_testuser1 --password=redhat --force
+			//	Stdout:
+			//	Unregistering from: subscription.rhsm.stage.redhat.com:443/subscription
+			//	The system with UUID 66381640-b650-4f82-9889-b8e61102268e has been unregistered
+			//	All local data removed
+			//	Registering to: subscription.rhsm.stage.redhat.com:443/subscription
+			//	The system has been registered with ID: cafe07a8-94e0-49e3-86d4-b3ed0492de23
+			//	The registered system name is: gizmo.idmqe.lab.eng.bos.redhat.com
+			//	Stderr:
+			//	ExitCode: 70
+			//	ssh root@gizmo.idmqe.lab.eng.bos.redhat.com LINE_NUMBER=$(grep --line-number 'Making request:' /var/log/rhsm/rhsm.log | tail --lines=1 | cut --delimiter=':' --field=1); if [ -n "$LINE_NUMBER" ]; then tail -n +$LINE_NUMBER /var/log/rhsm/rhsm.log; fi;
+			//	Last request from /var/log/rhsm/rhsm.log:
+			//	2018-01-25 20:42:30,494 [DEBUG] subscription-manager:5750:MainThread @connection.py:543 - Making request: PUT /subscription/consumers/cafe07a8-94e0-49e3-86d4-b3ed0492de23/packages
+			//	2018-01-25 20:43:01,344 [INFO] subscription-manager:5750:MainThread @connection.py:586 - Response: status=500, request="PUT /subscription/consumers/cafe07a8-94e0-49e3-86d4-b3ed0492de23/packages"
+			//	2018-01-25 20:43:01,346 [ERROR] subscription-manager:5750:MainThread @managercli.py:181 - exception caught in subscription-manager
+			//	2018-01-25 20:43:01,347 [ERROR] subscription-manager:5750:MainThread @managercli.py:182 -
+			//	Traceback (most recent call last):
+			//	File "/usr/sbin/subscription-manager", line 96, in <module>
+			//	sys.exit(abs(main() or 0))
+			//	File "/usr/sbin/subscription-manager", line 87, in main
+			//	return managercli.ManagerCLI().main()
+			//	File "/usr/lib64/python2.7/site-packages/subscription_manager/managercli.py", line 2622, in main
+			//	ret = CLI.main(self)
+			//	File "/usr/lib64/python2.7/site-packages/subscription_manager/cli.py", line 181, in main
+			//	return cmd.main()
+			//	File "/usr/lib64/python2.7/site-packages/subscription_manager/managercli.py", line 496, in main
+			//	return_code = self._do_command()
+			//	File "/usr/lib64/python2.7/site-packages/subscription_manager/managercli.py", line 1148, in _do_command
+			//	profile_mgr.update_check(self.cp, consumer['uuid'], True)
+			//	File "/usr/lib64/python2.7/site-packages/subscription_manager/cache.py", line 417, in update_check
+			//	return CacheManager.update_check(self, uep, consumer_uuid, force)
+			//	File "/usr/lib64/python2.7/site-packages/subscription_manager/cache.py", line 178, in update_check
+			//	raise re
+			//	RestlibException		
+			issue = "Response: status=500 from a PUT on /subscription/consumers/{UUID}/packages";
+			if (SubscriptionManagerCLITestScript.doesStringContainMatches(getTracebackCommandResult.getStdout(),"request=\"PUT /subscription/consumers/[a-f,0-9,\\-]{36}/packages\"")) {
+				String bugId = "1539115"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1539115 - encountering frequent 500 responses from stage candlepin from a PUT on /subscription/consumers/{UUID}/packages
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				if (invokeWorkaroundWhileBugIsOpen) {
+					throw new SkipException("Encountered a '"+issue+"' from the server and could not complete this test while bug '"+bugId+"' is open.");
+				}
+			}
+			// END OF WORKAROUND
+			
+			// TEMPORARY WORKAROUND FOR BUG
 			//	2015-10-12 17:58:54,620 [DEBUG] subscription-manager:44349 @connection.py:523 - Making request: PUT /subscription/consumers/d8018dbc-7e66-4c0a-b322-9c28037fd8cf
 			//	2015-10-12 17:58:55,094 [DEBUG] subscription-manager:44349 @connection.py:555 - Response: status=429
 			//	2015-10-12 17:58:55,095 [ERROR] subscription-manager:44349 @managercli.py:1746 -
