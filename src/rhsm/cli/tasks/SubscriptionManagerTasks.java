@@ -2464,6 +2464,27 @@ if (false) {
 		//		Brand Name: 
 		providingTag += "|" + "rhel-alt-"+redhatReleaseX;
 		
+		// also consider tags used for rhel-htb High Touch Beta
+		//	[root@dell-pem610-01 tmp]# git clone git://git.host.prod.eng.bos.redhat.com/rcm/rcm-metadata.git
+		//	[root@dell-pem610-01 tmp]# cd rcm-metadata/product_ids/rhel-7.5-htb/
+		//	[root@dell-pem610-01 rhel-7.5-htb]# for f in $(ls *.pem); do rct cat-cert $f | egrep -A7 'Product:'; done;
+		//	Product:
+		//		ID: 230
+		//		Name: Red Hat Enterprise Linux 7 Server High Touch Beta
+		//		Version: 7.5 Beta					// Ref Bug 1538957 - product-default .pem files do not contain expected data
+		//		Arch: x86_64
+		//		Tags: rhel-7-htb,rhel-7-server
+		//		Brand Type: 
+		//		Brand Name: 
+		//	Product:
+		//		ID: 231
+		//		Name: Red Hat Enterprise Linux 7 Workstation High Touch Beta
+		//		Version: 7.5 Beta					// Ref Bug 1538957 - product-default .pem files do not contain expected data
+		//		Arch: x86_64
+		//		Tags: rhel-7-htb,rhel-7-workstation
+		//		Brand Type: 
+		//		Brand Name: 
+		providingTag += "|" + "rhel-"+redhatReleaseX+"-htb";
 		
 		// get the product certs matching the rhel regex tag
 		List<ProductCert> rhelProductCerts = getCurrentProductCerts(providingTag);
