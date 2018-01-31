@@ -212,26 +212,40 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier1")
 	@Test(	description="Verify that default-product cert(s) provided by the redhat-release package for this release are expected (e.g. '6.9 Beta' during Beta/Snapshot composes and '6.9' during RC composes)",
-			groups={"Tier1Tests","blockedByBug-1426759","blockedByBug-1387101","blockedByBug-1327016","blockedByBug-1198931"},	// Bug 1318584 - /etc/pki/product-default/*.pem should supply only GA product cert (HTB versus Beta versus GA discussion)
+			groups={"Tier1Tests","blockedByBug-1426759","blockedByBug-1387101","blockedByBug-1327016","blockedByBug-1198931","blockedByBug-1538957"},	// Bug 1318584 - /etc/pki/product-default/*.pem should supply only GA product cert (HTB versus Beta versus GA discussion)
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void testDefaultProductCertVersion() {
-		if (sm_clientDefProdCertVersion==null) throw new SkipException("No automation property value for the expected '"+clienttasks.productCertDefaultDir+"' cert(s) version was supplied.");
-
+		if (polarionPlannedIn==null) throw new SkipException("No automation property value for 'polarion.planned_in' was supplied to assert that the expected '"+clienttasks.productCertDefaultDir+"' cert(s) version was supplied.");
+		
+		// predict the expected product cert version based on the polarion.planned_in property
+		String expectedProductCertVersion = clienttasks.redhatReleaseXY;	// 7.5
+		// possible PlannedIn values: "RHEL 7.5" "7.5 Pre-testing" "7.5 Internal Devel Freeze" "7.5 Alpha" "7.5 Beta" "7.5 Snap1"..."7.5 Snap5" "7.5 RC" "7.5 Launch"
+		if (!polarionPlannedIn.toLowerCase().contains("RC".toLowerCase())) {
+			expectedProductCertVersion += " Beta";	// "7.5 Beta"
+		}
+		
+		
 		boolean productDefaultCertTested=false;
 		// due to the implementation of Bug 1123029 - [RFE] Use default product certificates when they are present
 		for (ProductCert productDefaultCert : clienttasks.getProductCerts(clienttasks.productCertDefaultDir)) {
+			
+			// High Touch Beta products should always show "HTB" in the Version e.g. "7.5 HTB"
+			if (productDefaultCert.productId.equals("135")) expectedProductCertVersion = clienttasks.redhatReleaseXY+" HTB";	// Red Hat Enterprise Linux 6 Server HTB
+			if (productDefaultCert.productId.equals("155")) expectedProductCertVersion = clienttasks.redhatReleaseXY+" HTB";	// Red Hat Enterprise Linux 6 Workstation HTB
+			if (productDefaultCert.productId.equals("230")) expectedProductCertVersion = clienttasks.redhatReleaseXY+" HTB";	// Red Hat Enterprise Linux 7 Server High Touch Beta
+			if (productDefaultCert.productId.equals("231")) expectedProductCertVersion = clienttasks.redhatReleaseXY+" HTB";	// Red Hat Enterprise Linux 7 Workstation High Touch Beta
+			
 			// log what package provides the productDefaultCert
 			SSHCommandResult result = client.runCommandAndWait("rpm -q --whatprovides "+productDefaultCert.file.getPath());
 			
 			// assert that the Version of the /etc/pki/product-default/*.pem cert matches the expected value
-			// TODO: It would be nice if we can automatically know what builds are tagged for Beta/Snapshot/RC.  For now we'll take this value from the automation.properties (Jenkins job parameters).
-			Assert.assertEquals(productDefaultCert.productNamespace.version, sm_clientDefProdCertVersion, "The version of the default product cert (provided by '"+result.getStdout().trim()+"') for this RHEL compose.");
+			Assert.assertEquals(productDefaultCert.productNamespace.version, expectedProductCertVersion, "The version of the default product cert (provided by '"+result.getStdout().trim()+"') for this RHEL compose.");
 			productDefaultCertTested=true;
 		}
 		
-		// make sure we attempted the test
-		Assert.assertTrue(productDefaultCertTested, "Found and successfully attempted to test the expected version of the '"+clienttasks.productCertDefaultDir+"' cert(s)");	
+		// skip this test if there was no default-product installed
+		if (!productDefaultCertTested) throw new SkipException("Did not find a default product cert in '"+clienttasks.productCertDefaultDir+"' therefore we cannot assert the expected default product certs' Version.");
 	}
 
 
@@ -292,7 +306,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 				// TODO ADD WORKAROUND FOR Bug 1518886 - RHEL-ALT-7.5 product certs should also provide tag "rhel-7"
 				break;
 			case 420: // Red Hat Enterprise Linux for Power 9
-				expectedTags = Arrays.asList("rhel-#,rhel-alt-#,rhel-alt-#-power".replaceAll("#",clienttasks.redhatReleaseX).split("\\s*,\\s*"));
+				expectedTags = Arrays.asList("rhel-#,rhel-alt-#,rhel-alt-#-power9".replaceAll("#",clienttasks.redhatReleaseX).split("\\s*,\\s*"));
 				// TODO ADD WORKAROUND FOR Bug 1518886 - RHEL-ALT-7.5 product certs should also provide tag "rhel-7"
 				break;
 			case 434: // Red Hat Enterprise Linux for IBM System z (Structure A)
@@ -303,22 +317,24 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 				expectedTags = Arrays.asList("rhel-alt-#,rhel-alt-#-armv8-a".replaceAll("#",clienttasks.redhatReleaseX).split("\\s*,\\s*"));
 				break;
 			case 362: // Red Hat Enterprise Linux for Power 9 Beta
-				expectedTags = Arrays.asList("rhel-alt-#,rhel-alt-#-power".replaceAll("#",clienttasks.redhatReleaseX).split("\\s*,\\s*"));
+				expectedTags = Arrays.asList("rhel-alt-#,rhel-alt-#-power9".replaceAll("#",clienttasks.redhatReleaseX).split("\\s*,\\s*"));
 				break;
 			case 433: // Red Hat Enterprise Linux for IBM System z (Structure A) Beta
 				expectedTags = Arrays.asList("rhel-alt-#,rhel-alt-#-system-z-a".replaceAll("#",clienttasks.redhatReleaseX).split("\\s*,\\s*"));
 				break;
 			case 135: // Red Hat Enterprise Linux 6 Server HTB
-				expectedTags = Arrays.asList("rhel-6-server-htb,rhel-6-server");
+				expectedTags = Arrays.asList("rhel-6-server-htb,rhel-6-server".split("\\s*,\\s*"));
 				break;
 			case 155: // Red Hat Enterprise Linux 6 Workstation HTB
-				expectedTags = Arrays.asList("rhel-6-workstation-htb,rhel-6-workstation");
+				expectedTags = Arrays.asList("rhel-6-workstation-htb,rhel-6-workstation".split("\\s*,\\s*"));
 				break;
 			case 230: // Red Hat Enterprise Linux 7 Server High Touch Beta
-				expectedTags = Arrays.asList("rhel-7-htb,rhel-7-server");
+				expectedTags = Arrays.asList("rhel-7-htb,rhel-7-server".split("\\s*,\\s*"));
+				// Related Bug 1538957 - product-default .pem files do not contain expected data
 				break;
 			case 231: // Red Hat Enterprise Linux 7 Workstation High Touch Beta
-				expectedTags = Arrays.asList("rhel-7-htb,rhel-7-workstation");
+				expectedTags = Arrays.asList("rhel-7-htb,rhel-7-workstation".split("\\s*,\\s*"));
+				// Related Bug 1538957 - product-default .pem files do not contain expected data
 				break;
 			default:
 				Assert.fail("Unknown productCert id '"+productCert.productId+"'");

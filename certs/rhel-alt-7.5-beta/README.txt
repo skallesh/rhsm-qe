@@ -1,0 +1,1 @@
+# The product certs in this directory were fetched from http://git.app.eng.bos.redhat.com/git/rcm/rcm-metadata.git/tree/product_ids/rhel-alt-7.5-beta/

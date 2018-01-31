@@ -49,6 +49,9 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 	
 	public final String jenkinsUsername			= getProperty("jenkins.username","");
 	public final String jenkinsPassword			= getProperty("jenkins.password","");
+	
+	public final String polarionPlannedIn		= getProperty("polarion.planned_in","");
+	
 	public final String sm_serverAdminUsername	= getProperty("sm.server.admin.username","");
 	public final String sm_serverAdminPassword	= getProperty("sm.server.admin.password","");
 

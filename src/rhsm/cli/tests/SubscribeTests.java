@@ -81,7 +81,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 ///*debugTesting*/ if (!productId.equals("RH0380468")) throw new SkipException("debugTesting - Automator should comment out this line."); 		
 ///*debugTesting*/ if (!productId.equals("RH00284")) throw new SkipException("debugTesting - Automator should comment out this line."); 		
 ///*debugTesting*/ if (!productId.equals("awesomeos-super-hypervisor")) throw new SkipException("debugTesting - Automator should comment out this line.");
-///*debugTesting*/ if (!productId.equals("awesomeos-instancebased")) throw new SkipException("debugTesting - Automator should comment out this line.");
+///*debugTesting*/ if (!productId.equals("MCT3115")) throw new SkipException("debugTesting - Automator should comment out this line.");
 		// is this system a virtual guest system or a physical system
 		boolean systemIsGuest = Boolean.valueOf(clienttasks.getFactValue("virt.is_guest"));
 		
@@ -92,7 +92,6 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		// assert the subscription pool with the matching productId is available
 		SubscriptionPool pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", productId, clienttasks.getCurrentlyAllAvailableSubscriptionPools());	// clienttasks.getCurrentlyAvailableSubscriptionPools() is tested at the conclusion of this test
 ///*debugTesting*/pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", "8a9087e34c6b0d69014c6b0ede641f42", clienttasks.getCurrentlyAllAvailableSubscriptionPools());	// awesomeos-onesocketib; Instance Based (Temporary)
-		boolean isPoolRestrictedToUnmappedVirtualSystems = CandlepinTasks.isPoolRestrictedToUnmappedVirtualSystems(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId);
 ///*debugTesting*/ if (!isPoolRestrictedToUnmappedVirtualSystems) throw new SkipException("debugTesting - Automator should comment out this line.");
 		// special case...
 		if (pool==null) {	// when pool is null, another likely cause is that all of the available subscriptions from the pools are being consumed, let's check...
@@ -100,7 +99,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 				int quantity = (Integer) CandlepinTasks.getPoolValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, poolId, "quantity");
 				int consumed = (Integer) CandlepinTasks.getPoolValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, poolId, "consumed");
 				if (consumed>=quantity) {
-					log.warning("It appears that the total quantity '"+quantity+"' of subscriptions from poolId '"+poolId+"' for product '"+productId+"' are being consumed.");
+					throw new SkipException("The total quantity '"+quantity+"' of subscriptions from poolId '"+poolId+"' for product '"+productId+"' are being consumed; hence this product subscription is appropriately not available to subscribe.");
 				}
 			}	
 		}
@@ -163,6 +162,8 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 				quantity = instance_multiplier;
 			}
 		}
+		
+		boolean isPoolRestrictedToUnmappedVirtualSystems = CandlepinTasks.isPoolRestrictedToUnmappedVirtualSystems(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId);
 		
 		// subscribe to the pool
 		File entitlementCertFile = clienttasks.subscribeToSubscriptionPool(pool,quantity,/*sm_serverAdminUsername*/sm_clientUsername,/*sm_serverAdminPassword*/sm_clientPassword,sm_serverUrl);
@@ -822,7 +823,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 					int quantity = (Integer) CandlepinTasks.getPoolValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, poolId, "quantity");
 					int consumed = (Integer) CandlepinTasks.getPoolValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, poolId, "consumed");
 					if (consumed>=quantity) {
-						log.warning("It appears that the total quantity '"+quantity+"' of subscriptions from poolId '"+poolId+"' for product '"+productId+"' are being consumed.");
+						throw new SkipException("The total quantity '"+quantity+"' of subscriptions from poolId '"+poolId+"' for product '"+productId+"' are being consumed; hence this pool is appropriately not available despite a match in hardware");
 					}
 				}
 				// another possible cause is that the pool.productAttributes.arch list on the pool is older than the subscription.product.attributes.arch
@@ -879,16 +880,12 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void testInititiateAutoSubscribe() throws Exception {
+		// cleanup the current consumer
+		clienttasks.unregister_(null, null, null, null);
+		clienttasks.deleteFactsFileWithOverridingValues();
 		
 		// re-calculate the subscriptionPoolProductData accounting for a match to installed system software
 		subscriptionPoolProductData = getSystemSubscriptionPoolProductDataAsListOfLists(true,true);
-
-		// before testing, make sure all the expected subscriptionPoolProductId are available
-		/* I think an unsubscribe --all should be sufficient to make sure all the expected subscriptionPoolProductId are available
-		clienttasks.unregister(null, null, null);
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, null, false, null, null, null);
-		*/
-		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		
 		// autosubscribe
 		sshCommandResultFromAutosubscribe = clienttasks.subscribe(true,null,(String)null,null,null,null,null,null,null,null,null, null, null);
@@ -2083,7 +2080,9 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		SubscriptionPool multiEntitlementPool = null;
 		SubscriptionPool standardPool = null;
 		for (SubscriptionPool pool : getRandomList(clienttasks.getCurrentlyAvailableSubscriptionPools())) {
+///* debugTesting all pools */for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
 ///* debugTesting unlimited pools */if (!pool.quantity.equalsIgnoreCase("unlimited")) continue;
+///* debugTesting only these SKUs*/if (!Arrays.asList(new String[]{"RH00076","RH0604852","RH00284"}).contains(pool.productId)) continue;
 			if (instanceBasedPool!=null && multiEntitlementPool!=null && standardPool!=null) break;
 			if (!pool.quantity.equalsIgnoreCase("unlimited") && Integer.valueOf(pool.quantity)<2) continue;	// skip pools that don't have enough quantity left to consume
 			

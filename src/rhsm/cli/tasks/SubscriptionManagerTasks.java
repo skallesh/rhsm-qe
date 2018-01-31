@@ -128,6 +128,7 @@ public class SubscriptionManagerTasks {
 	public String vcpu								= null;	// of the client
 	public String variant							= null;	// of the client
 	public String releasever						= null;	// of the client; 5Server 5Client
+	public String compose							= "";	// from beaker
 	public Boolean isFipsEnabled					= null; // of the client	sysctl crypto.fips_enabled => crypto.fips_enabled = 1
 	
 	protected String currentlyRegisteredUsername	= null;	// most recent username used during register
@@ -179,6 +180,13 @@ public class SubscriptionManagerTasks {
 			redhatReleaseX = "7";
 		}
 		*/
+		
+		// compose
+		// /etc/yum.repos.d/beaker-Server.repo:baseurl=http://download.eng.rdu.redhat.com/rel-eng/RHEL-ALT-7.5-20180110.1/compose/Server/aarch64/os
+		String tree = sshCommandRunner.runCommandAndWait("grep RHEL /etc/yum.repos.d/beaker-*.repo | sort | tail -1").getStdout();
+		if (SubscriptionManagerCLITestScript.doesStringContainMatches(tree, "RHEL-.*/compose")) {	// RHEL-ALT-7.5-20180110.1/compose
+			compose = SubscriptionManagerCLITestScript.getSubstringMatches(tree, "RHEL-.*/compose").get(0).split("/")[0];	// RHEL-ALT-7.5-20180110.1
+		}
 		
 		// FIPS mode
 		isFipsEnabled = sshCommandRunner.runCommandAndWait("sysctl crypto.fips_enabled").getStdout().trim().equals("crypto.fips_enabled = 1")? true:false;
@@ -258,9 +266,9 @@ if (false) {
 			this.productCertDir		= getConfFileParameter(rhsmConfFile, "productCertDir").replaceFirst("/$", "");
 			this.caCertDir			= getConfFileParameter(rhsmConfFile, "ca_cert_dir").replaceFirst("/$", "");
 			this.baseurl			= getConfFileParameter(rhsmConfFile, "baseurl").replaceFirst("/$", "");
-			log.info(this.getClass().getSimpleName()+".initializeFieldsFromConfigFile() succeeded on '"+sshCommandRunner.getConnection().getHostname()+"'.");
+			log.info(this.getClass().getSimpleName()+".initializeFieldsFromConfigFile() succeeded on '"+sshCommandRunner.getConnection().getRemoteHostname()+"'.");
 		} else {
-			log.warning("Cannot "+this.getClass().getSimpleName()+".initializeFieldsFromConfigFile() on '"+sshCommandRunner.getConnection().getHostname()+"' until file exists: "+rhsmConfFile);
+			log.warning("Cannot "+this.getClass().getSimpleName()+".initializeFieldsFromConfigFile() on '"+sshCommandRunner.getConnection().getRemoteHostname()+"' until file exists: "+rhsmConfFile);
 		}
 	}
 	
@@ -291,7 +299,7 @@ if (false) {
 		if (toNewName==null) toNewName = repoCaCertFile.getName();
 		
 		// transfer the CA Cert File from the candlepin server to the clients so we can test in secure mode
-		RemoteFileTasks.putFile(sshCommandRunner.getConnection(), repoCaCertFile.getPath(), caCertDir+"/"+toNewName, "0644");
+		RemoteFileTasks.putFile(sshCommandRunner, repoCaCertFile.getPath(), caCertDir+"/"+toNewName, "0644");
 		updateConfFileParameter(rhsmConfFile, "insecure", "0");
 	}
 	
@@ -308,7 +316,8 @@ if (false) {
 		}
 
 		for (File file : productCerts) {
-			RemoteFileTasks.putFile(sshCommandRunner.getConnection(), file.getPath(), productCertDir+"/", "0644");
+			if (!file.exists()) Assert.fail("Local file '"+file.getPath()+"' does not exist.  Instruct the automator to fix this logic error.");
+			RemoteFileTasks.putFile(sshCommandRunner, file.getPath(), productCertDir+"/", "0644");
 		}
 	}
 	
@@ -470,7 +479,7 @@ if (false) {
 		    installOptions += " --enablerepo=rhel-zstream-"+variant+"-optional-i686";
 	    }
 	    output.close();
-		RemoteFileTasks.putFile(sshCommandRunner.getConnection(), file.getPath(), "/etc/yum.repos.d/", "0644");
+		RemoteFileTasks.putFile(sshCommandRunner, file.getPath(), "/etc/yum.repos.d/", "0644");
 		
 		// assemble the packages to be updated (note: if the list is empty, then all packages will be updated)
 		String updatePackagesAsString = "";
@@ -501,7 +510,7 @@ if (false) {
 		output.write("\n");
 	    installOptions += " --enablerepo=rhel-zstream-brew";
 	    output.close();
-		RemoteFileTasks.putFile(sshCommandRunner.getConnection(), file.getPath(), "/etc/yum.repos.d/", "0644");
+		RemoteFileTasks.putFile(sshCommandRunner, file.getPath(), "/etc/yum.repos.d/", "0644");
 		
 		// no need to continue installing anything when CI_MESSAGE is empty
 		if (ciMessage.isEmpty()) return;
@@ -682,7 +691,7 @@ if (false) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		RemoteFileTasks.putFile(sshCommandRunner.getConnection(), file.getPath(), "/etc/yum.repos.d/", "0644");
+		RemoteFileTasks.putFile(sshCommandRunner, file.getPath(), "/etc/yum.repos.d/", "0644");
 		
 		// assemble the packages to be updated (note: if the list is empty, then all packages will be updated)
 		String updatePackagesAsString = "";
@@ -758,7 +767,7 @@ if (false) {
 		output.write("\n");
 	    output.close();
 
-		RemoteFileTasks.putFile(sshCommandRunner.getConnection(), file.getPath(), "/etc/yum.repos.d/", "0644");
+		RemoteFileTasks.putFile(sshCommandRunner, file.getPath(), "/etc/yum.repos.d/", "0644");
 		
 		// assemble the packages to be updated (note: if the list is empty, then all packages will be updated)
 		String updatePackagesAsString = "";
@@ -814,7 +823,7 @@ if (false) {
 	    output.close();
 	    installOptions += " --enablerepo="+repo;
 
-		RemoteFileTasks.putFile(sshCommandRunner.getConnection(), file.getPath(), "/etc/yum.repos.d/", "0644");
+		RemoteFileTasks.putFile(sshCommandRunner, file.getPath(), "/etc/yum.repos.d/", "0644");
 		
 		
 		
@@ -849,7 +858,7 @@ if (false) {
 	    output.close();
 	    installOptions += " --enablerepo="+repo;
 
-		RemoteFileTasks.putFile(sshCommandRunner.getConnection(), file.getPath(), "/etc/yum.repos.d/", "0644");
+		RemoteFileTasks.putFile(sshCommandRunner, file.getPath(), "/etc/yum.repos.d/", "0644");
 		
 		
 		
@@ -1399,7 +1408,7 @@ if (false) {
 		// get a local copy of the confFile
 		File remoteFile = new File(confFile);
 	    File localFile = new File("tmp/"+remoteFile.getName()); // this will be in the automation.dir directory
-		RemoteFileTasks.getFile(sshCommandRunner.getConnection(), localFile.getParent(),remoteFile.getPath());
+		RemoteFileTasks.getFile(sshCommandRunner, localFile.getParent(),remoteFile.getPath());
 		
 		// read the confFile into a single String
 		//String contents = new String(Files.readAllBytes(Paths.get("abc.java")));
@@ -1431,7 +1440,7 @@ if (false) {
 	    output.close();
 	    
 	    // put the updated confFile back onto the client
-		RemoteFileTasks.putFile(sshCommandRunner.getConnection(), localFile.getPath(), confFile, mask);
+		RemoteFileTasks.putFile(sshCommandRunner, localFile.getPath(), confFile, mask);
 
 		// also update this "cached" value for these config file parameters
 		if (confFile.equals(this.rhsmConfFile)) {
@@ -2455,6 +2464,27 @@ if (false) {
 		//		Brand Name: 
 		providingTag += "|" + "rhel-alt-"+redhatReleaseX;
 		
+		// also consider tags used for rhel-htb High Touch Beta
+		//	[root@dell-pem610-01 tmp]# git clone git://git.host.prod.eng.bos.redhat.com/rcm/rcm-metadata.git
+		//	[root@dell-pem610-01 tmp]# cd rcm-metadata/product_ids/rhel-7.5-htb/
+		//	[root@dell-pem610-01 rhel-7.5-htb]# for f in $(ls *.pem); do rct cat-cert $f | egrep -A7 'Product:'; done;
+		//	Product:
+		//		ID: 230
+		//		Name: Red Hat Enterprise Linux 7 Server High Touch Beta
+		//		Version: 7.5 Beta					// Ref Bug 1538957 - product-default .pem files do not contain expected data
+		//		Arch: x86_64
+		//		Tags: rhel-7-htb,rhel-7-server
+		//		Brand Type: 
+		//		Brand Name: 
+		//	Product:
+		//		ID: 231
+		//		Name: Red Hat Enterprise Linux 7 Workstation High Touch Beta
+		//		Version: 7.5 Beta					// Ref Bug 1538957 - product-default .pem files do not contain expected data
+		//		Arch: x86_64
+		//		Tags: rhel-7-htb,rhel-7-workstation
+		//		Brand Type: 
+		//		Brand Name: 
+		providingTag += "|" + "rhel-"+redhatReleaseX+"-htb";
 		
 		// get the product certs matching the rhel regex tag
 		List<ProductCert> rhelProductCerts = getCurrentProductCerts(providingTag);
@@ -3806,8 +3836,8 @@ if (false) {
 		keyWriter.close();
 		
 		// transfer the cert and key file to the client
-		RemoteFileTasks.putFile(sshCommandRunner.getConnection(), certFile.getPath(), consumerCertFile(), "0640");
-		RemoteFileTasks.putFile(sshCommandRunner.getConnection(), keyFile.getPath(), consumerKeyFile(), "0640");
+		RemoteFileTasks.putFile(sshCommandRunner, certFile.getPath(), consumerCertFile(), "0640");
+		RemoteFileTasks.putFile(sshCommandRunner, keyFile.getPath(), consumerKeyFile(), "0640");
 		
 		//return jsonCandlepinConsumer.getString("uuid");
 	}
@@ -7090,7 +7120,7 @@ if (false) {
 		sshCommandRunner.runCommandAndWaitWithoutLogging("killall -9 yum");
 
 		int min = 5;
-		log.fine("Using a timeout of "+min+" minutes for next command...");
+		log.fine("Using a timeout of "+min+" minutes for next ssh command...");
 		//SSHCommandResult result = sshCommandRunner.runCommandAndWait("yum list available",Long.valueOf(min*60000));
 		SSHCommandResult result = sshCommandRunner.runCommandAndWait("yum list available --disablerepo=* --enablerepo="+repoLabel+" --disableplugin=rhnplugin",Long.valueOf(min*60000));  // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
 
@@ -7134,7 +7164,7 @@ if (false) {
 		
 		// execute the yum command to list available packages
 		int min = 5;
-		log.fine("Using a timeout of "+min+" minutes for next command...");
+		log.fine("Using a timeout of "+min+" minutes for next ssh command...");
 		SSHCommandResult result = sshCommandRunner.runCommandAndWait(command,Long.valueOf(min*60000));
 		
 		// Example result
@@ -7297,7 +7327,7 @@ if (false) {
 		
 		// execute the yum command to list available packages
 		int min = 5;
-		log.fine("Using a timeout of "+min+" minutes for next command...");
+		log.fine("Using a timeout of "+min+" minutes for next ssh command...");
 		SSHCommandResult result = sshCommandRunner.runCommandAndWait(command,Long.valueOf(min*60000));
 		
 		// Example result.getStdout()
@@ -9454,6 +9484,47 @@ if (false) {
 			
 			
 			// TEMPORARY WORKAROUND FOR BUG
+			//	2018-01-15 14:39:26,359 [DEBUG] subscription-manager:34555:MainThread  @connection.py:543 - Making request: DELETE  /subscription/consumers/c3b6eb11-da15-47ea-893d-7d3896af5952/entitlements
+			//	2018-01-15  14:39:55,131 [ERROR] subscription-manager:34555:MainThread  @managercli.py:181 - Unable to perform remove due to the following  exception: [Errno 104] Connection reset by peer
+			//	2018-01-15 14:39:55,131 [ERROR] subscription-manager:34555:MainThread @managercli.py:182 - [Errno 104] Connection reset by peer
+			//	Traceback (most recent call last):
+			//	  File "/usr/lib64/python2.7/site-packages/subscription_manager/managercli.py", line 1707, in _do_command
+			//	    total = ent_service.remove_all_entitlements()
+			//	  File "/usr/lib64/python2.7/site-packages/rhsmlib/services/entitlement.py", line 303, in remove_all_entitlements
+			//	    response = self.cp.unbindAll(self.identity.uuid)
+			//	  File "/usr/lib64/python2.7/site-packages/rhsm/connection.py", line 1273, in unbindAll
+			//	    return self.conn.request_delete(method)
+			//	  File "/usr/lib64/python2.7/site-packages/rhsm/connection.py", line 702, in request_delete
+			//	    return self._request("DELETE", method, params, headers=headers)
+			//	  File "/usr/lib64/python2.7/site-packages/rhsm/connection.py", line 716, in _request
+			//	    info=info, headers=headers)
+			//	  File "/usr/lib64/python2.7/site-packages/rhsm/connection.py", line 573, in _request
+			//	    response = conn.getresponse()
+			//	  File "/usr/lib64/python2.7/httplib.py", line 1089, in getresponse
+			//	    response.begin()
+			//	  File "/usr/lib64/python2.7/httplib.py", line 444, in begin
+			//	    version, status, reason = self._read_status()
+			//	  File "/usr/lib64/python2.7/httplib.py", line 400, in _read_status
+			//	    line = self.fp.readline(_MAXLINE + 1)
+			//	  File "/usr/lib64/python2.7/socket.py", line 476, in readline
+			//	    data = self._sock.recv(self._rbufsize)
+			//	  File "/usr/lib64/python2.7/ssl.py", line 759, in recv
+			//	    return self.read(buflen)
+			//	  File "/usr/lib64/python2.7/ssl.py", line 653, in read
+			//	    v = self._sslobj.read(len or 1024)
+			//	error: [Errno 104] Connection reset by peer
+			issue = "[Errno 104] Connection reset by peer";
+			if (getTracebackCommandResult.getStdout().contains(issue) || result.getStderr().contains(issue)) {
+				String bugId = "1535150"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1535150 - [Errno 104] Connection reset by peer
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				if (invokeWorkaroundWhileBugIsOpen) {
+					throw new SkipException("Encountered a '"+issue+"' and could not complete this test while bug '"+bugId+"' is open.");
+				}
+			}
+			// END OF WORKAROUND
+			
+			
+			// TEMPORARY WORKAROUND FOR BUG
 			//	2016-01-27 16:24:22.520  FINE: ssh root@ibm-x3550m3-09.lab.eng.brq.redhat.com subscription-manager unsubscribe --all
 			//	2016-01-27 16:24:50.438  FINE: Stdout: 1 subscription removed at the server.
 			//
@@ -9733,6 +9804,51 @@ if (false) {
 				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 				if (invokeWorkaroundWhileBugIsOpen) {
 					throw new SkipException("Encountered a '"+issue+"' and could not complete this test while bug '"+bugId+"' is open.");
+				}
+			}
+			// END OF WORKAROUND
+			
+			// TEMPORARY WORKAROUND FOR BUG
+			//	ssh root@gizmo.idmqe.lab.eng.bos.redhat.com subscription-manager register --username=stage_auto_testuser1 --password=redhat --force
+			//	Stdout:
+			//	Unregistering from: subscription.rhsm.stage.redhat.com:443/subscription
+			//	The system with UUID 66381640-b650-4f82-9889-b8e61102268e has been unregistered
+			//	All local data removed
+			//	Registering to: subscription.rhsm.stage.redhat.com:443/subscription
+			//	The system has been registered with ID: cafe07a8-94e0-49e3-86d4-b3ed0492de23
+			//	The registered system name is: gizmo.idmqe.lab.eng.bos.redhat.com
+			//	Stderr:
+			//	ExitCode: 70
+			//	ssh root@gizmo.idmqe.lab.eng.bos.redhat.com LINE_NUMBER=$(grep --line-number 'Making request:' /var/log/rhsm/rhsm.log | tail --lines=1 | cut --delimiter=':' --field=1); if [ -n "$LINE_NUMBER" ]; then tail -n +$LINE_NUMBER /var/log/rhsm/rhsm.log; fi;
+			//	Last request from /var/log/rhsm/rhsm.log:
+			//	2018-01-25 20:42:30,494 [DEBUG] subscription-manager:5750:MainThread @connection.py:543 - Making request: PUT /subscription/consumers/cafe07a8-94e0-49e3-86d4-b3ed0492de23/packages
+			//	2018-01-25 20:43:01,344 [INFO] subscription-manager:5750:MainThread @connection.py:586 - Response: status=500, request="PUT /subscription/consumers/cafe07a8-94e0-49e3-86d4-b3ed0492de23/packages"
+			//	2018-01-25 20:43:01,346 [ERROR] subscription-manager:5750:MainThread @managercli.py:181 - exception caught in subscription-manager
+			//	2018-01-25 20:43:01,347 [ERROR] subscription-manager:5750:MainThread @managercli.py:182 -
+			//	Traceback (most recent call last):
+			//	File "/usr/sbin/subscription-manager", line 96, in <module>
+			//	sys.exit(abs(main() or 0))
+			//	File "/usr/sbin/subscription-manager", line 87, in main
+			//	return managercli.ManagerCLI().main()
+			//	File "/usr/lib64/python2.7/site-packages/subscription_manager/managercli.py", line 2622, in main
+			//	ret = CLI.main(self)
+			//	File "/usr/lib64/python2.7/site-packages/subscription_manager/cli.py", line 181, in main
+			//	return cmd.main()
+			//	File "/usr/lib64/python2.7/site-packages/subscription_manager/managercli.py", line 496, in main
+			//	return_code = self._do_command()
+			//	File "/usr/lib64/python2.7/site-packages/subscription_manager/managercli.py", line 1148, in _do_command
+			//	profile_mgr.update_check(self.cp, consumer['uuid'], True)
+			//	File "/usr/lib64/python2.7/site-packages/subscription_manager/cache.py", line 417, in update_check
+			//	return CacheManager.update_check(self, uep, consumer_uuid, force)
+			//	File "/usr/lib64/python2.7/site-packages/subscription_manager/cache.py", line 178, in update_check
+			//	raise re
+			//	RestlibException		
+			issue = "Response: status=500 from a PUT on /subscription/consumers/{UUID}/packages";
+			if (SubscriptionManagerCLITestScript.doesStringContainMatches(getTracebackCommandResult.getStdout(),"request=\"PUT /subscription/consumers/[a-f,0-9,\\-]{36}/packages\"")) {
+				String bugId = "1539115"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1539115 - encountering frequent 500 responses from stage candlepin from a PUT on /subscription/consumers/{UUID}/packages
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				if (invokeWorkaroundWhileBugIsOpen) {
+					throw new SkipException("Encountered a '"+issue+"' from the server and could not complete this test while bug '"+bugId+"' is open.");
 				}
 			}
 			// END OF WORKAROUND

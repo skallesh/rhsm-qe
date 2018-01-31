@@ -1131,7 +1131,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		// copy the ismanagedtest.py script to the client
 		File socketgetdefaulttimeouttestFile = new File(System.getProperty("automation.dir", null)+"/scripts/socketgetdefaulttimeouttest.py");
 		if (!socketgetdefaulttimeouttestFile.exists()) Assert.fail("Failed to find expected script: "+socketgetdefaulttimeouttestFile);
-		RemoteFileTasks.putFile(client.getConnection(), socketgetdefaulttimeouttestFile.toString(), "/usr/local/bin/", "0755");
+		RemoteFileTasks.putFile(client, socketgetdefaulttimeouttestFile.toString(), "/usr/local/bin/", "0755");
 		
 		// BEFORE FIX
 		//	[root@jsefler-71 ~]# rpm -q python-rhsm

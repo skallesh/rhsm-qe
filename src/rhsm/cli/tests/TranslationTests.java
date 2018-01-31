@@ -361,6 +361,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 			tags= "Tier1")
 	@Test(	description="verify that only the expected rhsm.mo tranlation files are installed for each of the supported locales",
 			groups={"Tier1Tests","blockedByBug-1057532",
+					"blockedByBug-1481232",	// [subscription-manager] Tier 0 Localization
 					"blockedByBug-1441739",	// Zanata translations for subscription-manager 1.19 are not 100%
 					"blockedByBug-1391681",	// Zanata translations for subscription-manager 1.18 are not 100%
 					"blockedByBug-1340135",	// Zanata translations for subscription-manager 1.17 are not 100%
@@ -1603,7 +1604,10 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 		}
 		// registration test for a user who has not accepted Red Hat's Terms and conditions (translated)  Man, why did you do something?
 		if (!sm_usernameWithUnacceptedTC.equals("")) {
-			if (sm_serverType.equals(CandlepinType.hosted))	ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"615362","642805","1089034","1095389","1458423"}),"de_DE.UTF-8", sm_usernameWithUnacceptedTC, sm_passwordWithUnacceptedTC, 255, null, "Sie müssen zuerst die allgemeinen Geschäftsbedingungen von Red Hat akzeptieren. Bitte besuchen Sie https://www.redhat.com/wapps/ugc. Sie müssen sich gegebenenfalls vom Kundenportal abmelden und anschließend wieder anmelden, um die allgemeinen Geschäftsbedingungen zu sehen."}));		// "Mensch, warum hast du auch etwas zu tun?? Bitte besuchen https://www.redhat.com/wapps/ugc!!!!!!!!!!!!!!!!!!"
+			String expectedStderr = "Mensch, warum hast du auch etwas zu tun?? Bitte besuchen https://www.redhat.com/wapps/ugc!!!!!!!!!!!!!!!!!!";
+			expectedStderr = "Sie müssen zuerst die allgemeinen Geschäftsbedingungen von Red Hat akzeptieren. Bitte besuchen Sie https://www.redhat.com/wapps/ugc. Sie müssen sich gegebenenfalls vom Kundenportal abmelden und anschließend wieder anmelden, um die allgemeinen Geschäftsbedingungen zu sehen.";
+			expectedStderr = "Sie müssen zuerst die allgemeinen Geschäftsbedingungen von Red Hat akzeptieren. Bitte besuchen Sie https://www.redhat.com/wapps/tnc/termsack?event[]=signIn. Sie müssen sich gegebenenfalls vom Kundenportal abmelden und anschließend wieder anmelden, um die allgemeinen Geschäftsbedingungen zu sehen.".replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\?", "\\\\?");	// after IT Adapter fix from Bug 1458423 
+			if (sm_serverType.equals(CandlepinType.hosted))	ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"615362","642805","1089034","1095389","1458423"}),"de_DE.UTF-8", sm_usernameWithUnacceptedTC, sm_passwordWithUnacceptedTC, 255, null, expectedStderr}));
 		}
 		
 		// registration test for a user who has been disabled (translated)

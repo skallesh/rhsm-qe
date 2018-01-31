@@ -905,10 +905,11 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 				Assert.assertTrue(!sshCommandResult.getStdout().contains(autosubscribeFailedMsg), "When autosubscribe is successful and entitlements have been granted, stdout from call to '"+rhnMigrateTool+" "+options+"' does NOT contain message: "+autosubscribeFailedMsg);				
 			} */
 			if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit 7957b8df95c575e6e8713c2f1a0f8f754e32aed3 bug 1119688
-				if (clienttasks.status(null, null, null, null, null).getExitCode().equals(1)) {	// exit code of 0 indicates valid compliance, otherwise exit code is 1
-					Assert.assertTrue(sshCommandResult.getStdout().contains(autosubscribeFailedMsg), "Since the subscription-manager status does not indicate a fully green compliance, the most likely reason is because at least one of the migrated products could not be auto-subscribed.  Therefore stdout from call to '"+rhnMigrateTool+" "+options+"' contains message: "+autosubscribeFailedMsg);
-				} else {
-					Assert.assertTrue(!sshCommandResult.getStdout().contains(autosubscribeFailedMsg), "Since the subscription-manager status does not indicate a fully green compliance, all of the migrated products should have been auto-subscribed.  Therefore stdout from call to '"+rhnMigrateTool+" "+options+"' does NOT contain message: "+autosubscribeFailedMsg);						
+				SSHCommandResult statusResult = clienttasks.status(null, null, null, null, null);
+				if (statusResult.getStdout().contains("Overall Status: Invalid")) {
+					Assert.assertTrue(sshCommandResult.getStdout().contains(autosubscribeFailedMsg), "Since the subscription-manager overall status appears Invalid, the most likely reason is because at least one of the migrated products could not be auto-subscribed.  Therefore stdout from call to '"+rhnMigrateTool+" "+options+"' contains message: "+autosubscribeFailedMsg);
+				} else {	// Note: "Overall Status: Insufficient" is possible and likely when the auto-subscribed subscription pool is Temporary
+					Assert.assertTrue(!sshCommandResult.getStdout().contains(autosubscribeFailedMsg), "Since the subscription-manager overall status does not appear Invalid (overall status of Current or Insufficient are likely), all of the migrated products should have been auto-subscribed.  Therefore stdout from call to '"+rhnMigrateTool+" "+options+"' does NOT contain message: "+autosubscribeFailedMsg);						
 				}
 			}
 			
@@ -2953,22 +2954,22 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		// copy the rhn-channels.py script to the client
 		File rhnChannelsScriptFile = new File(System.getProperty("automation.dir", null)+"/scripts/rhn-channels.py");
 		if (!rhnChannelsScriptFile.exists()) Assert.fail("Failed to find expected script: "+rhnChannelsScriptFile);
-		RemoteFileTasks.putFile(client.getConnection(), rhnChannelsScriptFile.toString(), "/usr/local/bin/", "0755");
+		RemoteFileTasks.putFile(client, rhnChannelsScriptFile.toString(), "/usr/local/bin/", "0755");
 		
 		// copy the rhn-is-registered.py script to the client
 		File rhnIsRegisteredScriptFile = new File(System.getProperty("automation.dir", null)+"/scripts/rhn-is-registered.py");
 		if (!rhnIsRegisteredScriptFile.exists()) Assert.fail("Failed to find expected script: "+rhnIsRegisteredScriptFile);
-		RemoteFileTasks.putFile(client.getConnection(), rhnIsRegisteredScriptFile.toString(), "/usr/local/bin/", "0755");
+		RemoteFileTasks.putFile(client, rhnIsRegisteredScriptFile.toString(), "/usr/local/bin/", "0755");
 		
 		// copy the rhn-delete-systems.py script to the client
 		File rhnDeleteSystemsScriptFile = new File(System.getProperty("automation.dir", null)+"/scripts/rhn-delete-systems.py");
 		if (!rhnDeleteSystemsScriptFile.exists()) Assert.fail("Failed to find expected script: "+rhnDeleteSystemsScriptFile);
-		RemoteFileTasks.putFile(client.getConnection(), rhnDeleteSystemsScriptFile.toString(), "/usr/local/bin/", "0755");
+		RemoteFileTasks.putFile(client, rhnDeleteSystemsScriptFile.toString(), "/usr/local/bin/", "0755");
 		
 		// copy the rhn-migrate-classic-to-rhsm.tcl script to the client
 		File expectScriptFile = new File(System.getProperty("automation.dir", null)+"/scripts/rhn-migrate-classic-to-rhsm.tcl");
 		if (!expectScriptFile.exists()) Assert.fail("Failed to find expected script: "+expectScriptFile);
-		RemoteFileTasks.putFile(client.getConnection(), expectScriptFile.toString(), "/usr/local/bin/", "0755");
+		RemoteFileTasks.putFile(client, expectScriptFile.toString(), "/usr/local/bin/", "0755");
 	}
 	
 	@BeforeClass(groups="setup", dependsOnMethods={"setupBeforeClass","copyScriptsToClient"})
@@ -3032,6 +3033,8 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	public void setupProxyRunnersBeforeClass() throws IOException {
 		basicAuthProxyRunner = new SSHCommandRunner(sm_basicauthproxyHostname, sm_basicauthproxySSHUser, sm_sshKeyPrivate, sm_sshkeyPassphrase, null);
 		noAuthProxyRunner = new SSHCommandRunner(sm_noauthproxyHostname, sm_noauthproxySSHUser	, sm_sshKeyPrivate, sm_sshkeyPassphrase, null);
+		if (sm_sshEmergenecyTimeoutMS!=null) basicAuthProxyRunner.setEmergencyTimeout(Long.valueOf(sm_sshEmergenecyTimeoutMS));
+		if (sm_sshEmergenecyTimeoutMS!=null) noAuthProxyRunner.setEmergencyTimeout(Long.valueOf(sm_sshEmergenecyTimeoutMS));
 		if (clienttasks!=null) ipv4_address = clienttasks.getIPV4Address();
 	}
 	

@@ -2625,7 +2625,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				null, (String) null, null, null, null, true, false, null, null, null, null);
 
 		File expectCertFile = new File(System.getProperty("automation.dir", null) + "/certs/Expiredcert.pem");
-		RemoteFileTasks.putFile(client.getConnection(), expectCertFile.toString(), "/root/", "0755");
+		RemoteFileTasks.putFile(client, expectCertFile.toString(), "/root/", "0755");
 		clienttasks.importCertificate_("/root/Expiredcert.pem");
 		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
 			if ((installed.status.equals("Expired"))) {
@@ -3573,7 +3573,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
 				null, (String) null, null, null, null, true, null, null, null, null, null);
 		File expectCertFile = new File(System.getProperty("automation.dir", null) + "/certs/CertV3.pem");
-		RemoteFileTasks.putFile(client.getConnection(), expectCertFile.toString(), "/root/", "0755");
+		RemoteFileTasks.putFile(client, expectCertFile.toString(), "/root/", "0755");
 		clienttasks.importCertificate_("/root/CertV3.pem");
 		String expected = "0 subscriptions removed at the server." + "\n" + "1 local certificate has been deleted.";
 		String result = clienttasks.unsubscribe(true, (BigInteger) null, null, null, null, null, null).getStdout();
@@ -5729,6 +5729,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	protected String setDate(String hostname, String user, String passphrase, String privatekey, String datecmd)
 			throws IOException {
 		SSHCommandRunner sshHostnameCommandRunner = new SSHCommandRunner(hostname, user, passphrase, privatekey, null);
+		if (sm_sshEmergenecyTimeoutMS!=null) sshHostnameCommandRunner.setEmergencyTimeout(Long.valueOf(sm_sshEmergenecyTimeoutMS));
 		return (sshHostnameCommandRunner.runCommandAndWait(datecmd).getStdout());
 
 	}
@@ -5736,6 +5737,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	protected String getDate(String hostname, String user, String passphrase, String privatekey, Boolean flag)
 			throws IOException, ParseException {
 		SSHCommandRunner sshHostnameCommandRunner = new SSHCommandRunner(hostname, user, passphrase, privatekey, null);
+		if (sm_sshEmergenecyTimeoutMS!=null) sshHostnameCommandRunner.setEmergencyTimeout(Long.valueOf(sm_sshEmergenecyTimeoutMS));
 		if (flag)
 			return (sshHostnameCommandRunner.runCommandAndWait("date +\"%F\"").getStdout());
 		else

@@ -659,6 +659,7 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 		// instructions for setting this up are in scripts/timeout_listener.sh
 		// let's use the auto-services.usersys.redhat.com as the timeout listener server sm_basicauthproxyHostname
 		SSHCommandRunner timeoutServerCommandRunner = new SSHCommandRunner(sm_basicauthproxyHostname, sm_basicauthproxySSHUser, sm_sshKeyPrivate, sm_sshkeyPassphrase, null);
+		if (sm_sshEmergenecyTimeoutMS!=null) timeoutServerCommandRunner.setEmergencyTimeout(Long.valueOf(sm_sshEmergenecyTimeoutMS));
 		SSHCommandResult timeoutServerServiceResult = timeoutServerCommandRunner.runCommandAndWait("systemctl is-active timeout_listener.service");
 		Assert.assertContainsMatch(timeoutServerServiceResult.getStdout().trim(), "^active$","The timeout_listener.service is running.  If this fails, then a one-time setup of the timeout_listener server on '"+sm_basicauthproxyHostname+"' is needed.  See the instructions in the automation scripts/timeout_listener.sh file.");
 		
@@ -668,8 +669,8 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 		//	[root@auto-services timeout_listener]# openssl genrsa -out timeout_listener.key 4096
 		//	[root@auto-services timeout_listener]# openssl req -new -x509 -key timeout_listener.key -out timeout_listener.pem -days 3650 -subj '/CN=auto-services.usersys.redhat.com/C=US/L=Raleigh'
 		File localTimeoutServerCaCertFile = new File((getProperty("automation.dir", "/tmp")+"/tmp/"+remoteTimeoutServerCaCertFile.getName().replace("tmp/tmp", "tmp")));
-		RemoteFileTasks.getFile(timeoutServerCommandRunner.getConnection(), localTimeoutServerCaCertFile.getParent(), remoteTimeoutServerCaCertFile.getPath());
-		RemoteFileTasks.putFile(client.getConnection(), localTimeoutServerCaCertFile.getPath(), clienttasks.caCertDir+"/", "0644");
+		RemoteFileTasks.getFile(timeoutServerCommandRunner, localTimeoutServerCaCertFile.getParent(), remoteTimeoutServerCaCertFile.getPath());
+		RemoteFileTasks.putFile(client, localTimeoutServerCaCertFile.getPath(), clienttasks.caCertDir+"/", "0644");
 		
 		// remember originally configured server configs
 		if (serverHostnameConfigured==null) serverHostnameConfigured = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "hostname");

@@ -125,7 +125,8 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 		//	Repo Name: Red Hat Enterprise Linux 7 Server for ARM Beta (RPMs)
 		//	Repo URL: https://cdn.redhat.com/content/beta/rhel/arm/7/$basearch/os
 		//	Enabled: 1
-		if (clienttasks.redhatReleaseX.equals("7") && clienttasks.variant.equals("Server") && clienttasks.arch.equals("aarch64") && rhelProductCert.productId.equals("294")/*Red Hat Enterprise Linux Server for ARM*/) {
+		if (clienttasks.redhatReleaseX.equals("7") && clienttasks.variant.equals("Server") && clienttasks.arch.equals("aarch64") &&
+			rhelProductCert.productId.equals("294")/*Red Hat Enterprise Linux Server for ARM*/) {
 			rhelBaseRepoId = "rhel-7-for-arm-rpms";
 		}
 		
@@ -139,36 +140,11 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 		//	Repo Name: Red Hat Enterprise Linux 7 for IBM Power LE - Optional (RPMs)
 		//	Repo URL: https://cdn.redhat.com/content/dist/rhel/power-le/7/$releasever/$basearch/optional/os
 		//	Enabled: 0
-		if (clienttasks.redhatReleaseX.equals("7") && clienttasks.variant.equals("Server") && clienttasks.arch.equals("ppc64le") && rhelProductCert.productId.equals("279")/*Red Hat Enterprise Linux for Power, little endian*/) {
+		if (clienttasks.redhatReleaseX.equals("7") && clienttasks.variant.equals("Server") && clienttasks.arch.equals("ppc64le") &&
+			rhelProductCert.productId.equals("279")/*Red Hat Enterprise Linux for Power, little endian*/) {
 			rhelBaseRepoId = "rhel-7-for-power-le-rpms";
 		}
 
-//TODO NEED TO DETERMINE IF THIS IS CORRECT - SHOULD THE BETA PRODUCT 362 REALLY ACCESS THE SAME BASE REPO AS GA?  BOTH 362 and 420 PROVIDE THE SAME TAGS "rhel-alt-7,rhel-alt-7-power9" WHICH MEANS THEY CAN ACCESS THE SAME CONTENT.
-//		// PLATFORM=RedHatEnterpriseLinuxAlternateArchitectures7-Server-ppc64le
-//		//	Repo ID:   rhel-7-for-power-9-rpms
-//		//	Repo Name: Red Hat Enterprise Linux 7 for POWER9 (RPMs)
-//		//	Repo URL:  https://cdn.redhat.com/content/dist/rhel-alt/server/7/$releasever/power9/$basearch/os
-//		//	Enabled:   1
-//		//
-//		//	Repo ID:   rhel-7-for-power-9-optional-rpms
-//		//	Repo Name: Red Hat Enterprise Linux 7 for POWER9 - Optional (RPMs)
-//		//	Repo URL:  https://cdn.redhat.com/content/dist/rhel-alt/server/7/$releasever/power9/$basearch/optional/os
-//		//	Enabled:   0
-//		//
-//		//	Repo ID:   rhel-7-for-power-9-extras-rpms
-//		//	Repo Name: Red Hat Enterprise Linux 7 for POWER9 - Extras (RPMs)
-//		//	Repo URL:  https://cdn.redhat.com/content/dist/rhel-alt/server/7/$releasever/power9/$basearch/extras/os
-//		//	Enabled:   0
-//		//
-//		//	Repo ID:   rhel-7-for-power-9-beta-rpms
-//		//	Repo Name: Red Hat Enterprise Linux 7 for POWER9 Beta (RPMs)
-//		//	Repo URL:  https://cdn.redhat.com/content/beta/rhel-alt/server/7/7Server/power9/$basearch/os
-//		//	Enabled:   0
-//		if (clienttasks.redhatReleaseX.equals("7") && clienttasks.variant.equals("Server") && clienttasks.arch.equals("ppc64le") && (rhelProductCert.productId.equals("362")/*Red Hat Enterprise Linux for Power 9 Beta*/||rhelProductCert.productId.equals("420")/*Red Hat Enterprise Linux for Power 9*/)) {
-//			rhelBaseRepoId = "rhel-7-for-power-9-rpms";
-//		}
-
-		
 		// PLATFORM=RedHatEnterpriseLinux7-Server-ppc64
 		//	Repo ID: rhel-7-for-power-rpms
 		//	Repo Name: Red Hat Enterprise Linux 7 for IBM Power (RPMs)
@@ -288,6 +264,106 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 			rhelBaseRepoId = "rhel-7-workstation-rpms";
 		}
 		
+		// PLATFORM=RedHatEnterpriseLinuxAlternateArchitectures7-Server-ppc64le
+		//	Repo ID:   rhel-7-for-power-9-rpms
+		//	Repo Name: Red Hat Enterprise Linux 7 for POWER9 (RPMs)
+		//	Repo URL:  https://cdn.redhat.com/content/dist/rhel-alt/server/7/$releasever/power9/$basearch/os
+		//	Enabled:   1
+		//
+		//	Repo ID:   rhel-7-for-power-9-optional-rpms
+		//	Repo Name: Red Hat Enterprise Linux 7 for POWER9 - Optional (RPMs)
+		//	Repo URL:  https://cdn.redhat.com/content/dist/rhel-alt/server/7/$releasever/power9/$basearch/optional/os
+		//	Enabled:   0
+		//
+		//	Repo ID:   rhel-7-for-power-9-extras-rpms
+		//	Repo Name: Red Hat Enterprise Linux 7 for POWER9 - Extras (RPMs)
+		//	Repo URL:  https://cdn.redhat.com/content/dist/rhel-alt/server/7/$releasever/power9/$basearch/extras/os
+		//	Enabled:   0
+		//
+		//	Repo ID:   rhel-7-for-power-9-beta-rpms
+		//	Repo Name: Red Hat Enterprise Linux 7 for POWER9 Beta (RPMs)
+		//	Repo URL:  https://cdn.redhat.com/content/beta/rhel-alt/server/7/7Server/power9/$basearch/os
+		//	Enabled:   0
+		// NOTE: BETA PRODUCT 362 AND GA PRODUCT 420 BOTH PROVIDE THE SAME TAGS "rhel-alt-7,rhel-alt-7-power9" WHICH MEANS THEY CAN ACCESS THE SAME CONTENT AND ARE EFFECTIVELY THE SAME PRODUCT (ASSUMING ALL POWER9 SKUS PROVIDE BOTH 362 AND 420)
+		if (clienttasks.redhatReleaseX.equals("7") && clienttasks.variant.equals("Server") && clienttasks.arch.equals("ppc64le") &&
+			(rhelProductCert.productId.equals("362")/*Red Hat Enterprise Linux for Power 9 Beta*/||rhelProductCert.productId.equals("420")/*Red Hat Enterprise Linux for Power 9*/)) {
+			rhelBaseRepoId = "rhel-7-for-power-9-rpms";
+		}
+		
+		// PLATFORM=RedHatEnterpriseLinuxAlternateArchitectures7-Server-s390x
+		//	Repo ID:   rhel-7-for-system-z-a-rpms
+		//	Repo Name: Red Hat Enterprise Linux 7 for IBM System z (Structure A) (RPMs)
+		//	Repo URL:  https://cdn.redhat.com/content/dist/rhel-alt/server/7/$releasever/system-z-a/$basearch/os
+		//	Enabled:   1
+		//
+		//	Repo ID:   rhel-7-for-system-z-a-optional-rpms
+		//	Repo Name: Red Hat Enterprise Linux 7 for IBM System z (Structure A) - Optional (RPMs)
+		//	Repo URL:  https://cdn.redhat.com/content/dist/rhel-alt/server/7/$releasever/system-z-a/$basearch/optional/os
+		//	Enabled:   0
+		//
+		//	Repo ID:   rhel-7-for-system-z-a-extras-rpms
+		//	Repo Name: Red Hat Enterprise Linux 7 for IBM System z (Structure A) - Extras (RPMs)
+		//	Repo URL:  https://cdn.redhat.com/content/dist/rhel-alt/server/7/$releasever/system-z-a/$basearch/extras/os
+		//	Enabled:   0
+		//
+		//	Repo ID:   rhel-7-for-system-z-a-beta-rpms
+		//	Repo Name: Red Hat Enterprise Linux 7 for IBM System z (Structure A) Beta (RPMs)
+		//	Repo URL:  https://cdn.redhat.com/content/beta/rhel-alt/server/7/7Server/system-z-a/$basearch/os
+		//	Enabled:   0
+		//
+		//	Repo ID:   rhel-7-for-system-z-a-optional-beta-rpms
+		//	Repo Name: Red Hat Enterprise Linux 7 for IBM System z (Structure A) - Optional Beta (RPMs)
+		//	Repo URL:  https://cdn.redhat.com/content/beta/rhel-alt/server/7/7Server/system-z-a/$basearch/optional/os
+		//	Enabled:   0
+		//
+		//	Repo ID:   rhel-7-for-system-z-a-extras-beta-rpms
+		//	Repo Name: Red Hat Enterprise Linux 7 for IBM System z (Structure A) - Extras Beta (RPMs)
+		//	Repo URL:  https://cdn.redhat.com/content/beta/rhel-alt/server/7/7Server/system-z-a/$basearch/extras/os
+		//	Enabled:   0
+		//
+		// NOTE: BETA PRODUCT 433 AND GA PRODUCT 434 BOTH PROVIDE THE SAME TAGS "rhel-alt-7,rhel-alt-7-system-z-a" WHICH MEANS THEY CAN ACCESS THE SAME CONTENT AND ARE EFFECTIVELY THE SAME PRODUCT (ASSUMING ALL SYSTEMZ SKUS PROVIDE BOTH 433 AND 434)
+		if (clienttasks.redhatReleaseX.equals("7") && clienttasks.variant.equals("Server") && clienttasks.arch.equals("s390x") &&
+			(rhelProductCert.productId.equals("433")/*Red Hat Enterprise Linux for IBM System z (Structure A) Beta*/||rhelProductCert.productId.equals("434")/*Red Hat Enterprise Linux for IBM System z (Structure A)*/)) {
+			rhelBaseRepoId = "rhel-7-for-system-z-a-rpms";
+		}
+		
+		// PLATFORM=RedHatEnterpriseLinuxAlternateArchitectures7-Server-aarch64
+		//	Repo ID:   rhel-7-for-arm-64-rpms
+		//	Repo Name: Red Hat Enterprise Linux 7 for ARM (RPMs)
+		//	Repo URL:  https://cdn.redhat.com/content/dist/rhel-alt/server/7/$releasever/armv8-a/$basearch/os
+		//	Enabled:   1
+		//
+		//	Repo ID:   rhel-7-for-arm-64-optional-rpms
+		//	Repo Name: Red Hat Enterprise Linux 7 for ARM - Optional (RPMs)
+		//	Repo URL:  https://cdn.redhat.com/content/dist/rhel-alt/server/7/$releasever/armv8-a/$basearch/optional/os
+		//	Enabled:   0
+		//
+		//	Repo ID:   rhel-7-for-arm-64-extras-rpms
+		//	Repo Name: Red Hat Enterprise Linux 7 for ARM - Extras (RPMs)
+		//	Repo URL:  https://cdn.redhat.com/content/dist/rhel-alt/server/7/$releasever/armv8-a/$basearch/extras/os
+		//	Enabled:   0
+		//
+		//	Repo ID:   rhel-7-for-arm-64-beta-rpms
+		//	Repo Name: Red Hat Enterprise Linux 7 for ARM Beta (RPMs)
+		//	Repo URL:  https://cdn.redhat.com/content/beta/rhel-alt/server/7/7Server/armv8-a/$basearch/os
+		//	Enabled:   0
+		//	
+		//	Repo ID:   rhel-7-for-arm-64-optional-beta-rpms
+		//	Repo Name: Red Hat Enterprise Linux 7 for ARM - Optional Beta (RPMs)
+		//	Repo URL:  https://cdn.redhat.com/content/beta/rhel-alt/server/7/7Server/armv8-a/$basearch/optional/os
+		//	Enabled:   0
+		//
+		//	Repo ID:   rhel-7-for-arm-64-extras-beta-rpms
+		//	Repo Name: Red Hat Enterprise Linux 7 for ARM - Extras Beta (RPMs)
+		//	Repo URL:  https://cdn.redhat.com/content/beta/rhel-alt/server/7/7Server/armv8-a/$basearch/extras/os
+		//	Enabled:   0
+		//
+		// NOTE: BETA PRODUCT 363 AND GA PRODUCT 419 BOTH PROVIDE THE SAME TAGS "rhel-alt-7,rhel-alt-7-armv8-a" WHICH MEANS THEY CAN ACCESS THE SAME CONTENT AND ARE EFFECTIVELY THE SAME PRODUCT (ASSUMING ALL SYSTEMZ SKUS PROVIDE BOTH 363 AND 419)
+		if (clienttasks.redhatReleaseX.equals("7") && clienttasks.variant.equals("Server") && clienttasks.arch.equals("aarch64") &&
+			(rhelProductCert.productId.equals("363")/*Red Hat Enterprise Linux for ARM 64 Beta*/||rhelProductCert.productId.equals("419")/*Red Hat Enterprise Linux for ARM 64*/)) {
+			rhelBaseRepoId = "rhel-7-for-arm-64-rpms";
+		}
+		
 		
 		// PLATFORM=RedHatEnterpriseLinux6-Server-i386
 		// PLATFORM=RedHatEnterpriseLinux6-Server-x86_64
@@ -346,31 +422,47 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 		
 		// predict the disabled optional repo and potential presence of other enabled repos 
 		if (rhelBaseRepoId!=null) {
-			rhelOptionalRepoId	= rhelBaseRepoId.replaceFirst("-rpms$", "-optional-rpms");
-			rhelEusRepoId		= rhelBaseRepoId.replaceFirst("-rpms$", "-eus-rpms");
-			rhelBetaRepoId		= rhelBaseRepoId.replaceFirst("-rpms$", "-beta-rpms");
-			rhelHtbRepoId		= rhelBaseRepoId.replaceFirst("-rpms$", "-htb-rpms");
+			rhelOptionalRepoId			= rhelBaseRepoId.replaceFirst("-rpms$", "-optional-rpms");
+			rhelEusRepoId				= rhelBaseRepoId.replaceFirst("-rpms$", "-eus-rpms");
+			rhelBetaRepoId				= rhelBaseRepoId.replaceFirst("-rpms$", "-beta-rpms");
+			rhelHtbRepoId				= rhelBaseRepoId.replaceFirst("-rpms$", "-htb-rpms");
+			rhelOptionalHtbRepoId		= rhelBaseRepoId.replaceFirst("-rpms$", "-optional-htb-rpms");
 		} else {
 			Assert.fail("Additional automation development is needed in this test to predict the name of the enabled base RHEL repo for RHEL"+clienttasks.redhatReleaseX+" "+clienttasks.variant+" "+clienttasks.arch+"; Installed Product Cert: "+rhelProductCert);
 		}
 		
+		// Special case: Snapshot composes provide the HTB product as the base product-default rather than the Beta/GA products.
+		// Since some subscription SKUs like RH00076 only provide HTB products, let's adjust the
+		// expected rhelBaseRepoId and rhelOptionalRepoId to the corresponding HTB repos
+		if (rhelProductCert.productId.equals("230")/*Red Hat Enterprise Linux 7 Server High Touch Beta*/||
+			rhelProductCert.productId.equals("231")/*Red Hat Enterprise Linux 7 Workstation High Touch Beta)*/) {
+			log.info("Adjusting the expected base and optional repos because the default installed RHEL product appears to be High Touch Beta (this is expected for Snapshot composes).");
+			rhelBaseRepoId = rhelHtbRepoId;
+			rhelOptionalRepoId = rhelOptionalHtbRepoId;
+		}
 		// assert the base rhel repo is enabled by default
 		Repo rhelBaseRepo = Repo.findFirstInstanceWithMatchingFieldFromList("repoId", rhelBaseRepoId, subscribedRepos);
 		Assert.assertNotNull(rhelBaseRepo, "RHEL base repo id '"+rhelBaseRepoId+"' was found in subscribed repos.");
 		Assert.assertTrue(rhelBaseRepo.enabled, "RHEL base repo id '"+rhelBaseRepoId+"' is enabled by default.");
 		
-		// assert the optional rhel repo is disabled	by default
+		// assert the optional rhel repo is disabled by default
 		Repo rhelOptionalRepo = Repo.findFirstInstanceWithMatchingFieldFromList("repoId", rhelOptionalRepoId, subscribedRepos);
 		Assert.assertNotNull(rhelOptionalRepo, "RHEL optional repo id '"+rhelOptionalRepoId+"' was found in subscribed repos.");
 		Assert.assertTrue(!rhelOptionalRepo.enabled, "RHEL optional repo id '"+rhelOptionalRepoId+"' is disabled by default.");
 		
 		// determine if beta rhel repo is entitled; if not then set it to null
+		// assert the beta rhel repo is disabled by default
 		Repo rhelBetaRepo = Repo.findFirstInstanceWithMatchingFieldFromList("repoId", rhelBetaRepoId, subscribedRepos);
 		if (rhelBetaRepo==null) rhelBetaRepoId=null;
+		if (rhelBetaRepo!=null) Assert.assertTrue(!rhelBetaRepo.enabled, "RHEL beta repo id '"+rhelBetaRepoId+"' is disabled by default.");
 		
 		// determine if htb rhel repo is entitled; if not then set it to null
 		Repo rhelHtbRepo = Repo.findFirstInstanceWithMatchingFieldFromList("repoId", rhelHtbRepoId, subscribedRepos);
 		if (rhelHtbRepo==null) rhelHtbRepoId=null;
+		
+		// determine if optional htb rhel repo is entitled; if not then set it to null
+		Repo rhelOptionalHtbRepo = Repo.findFirstInstanceWithMatchingFieldFromList("repoId", rhelOptionalHtbRepoId, subscribedRepos);
+		if (rhelOptionalHtbRepo==null) rhelOptionalHtbRepoId=null;
 		
 		// determine if eus rhel repo is entitled; if not then set it to null
 		Repo rhelEusRepo = Repo.findFirstInstanceWithMatchingFieldFromList("repoId", rhelEusRepoId, subscribedRepos);
@@ -381,6 +473,7 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 	protected String rhelOptionalRepoId = null;
 	protected String rhelBetaRepoId = null;
 	protected String rhelHtbRepoId = null;
+	protected String rhelOptionalHtbRepoId = null;
 	protected String rhelEusRepoId = null;
 
 
@@ -405,7 +498,11 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 		clienttasks.repos(null, null, null, rhelBaseRepoId, rhelOptionalRepoId, null, null, null, null);
 		
 		// attempt to install a specific package from a disabled repo
-		SSHCommandResult result = clienttasks.yumDoPackageFromRepo_("install", rhelOptionalPackage, null, "--disablerepo=*beta-rpms --disablerepo=*htb-rpms --disablerepo=*eus-rpms --disablerepo=beaker-*");	// disable any other repos that might be enabled to prevent rhelBasePackage from // rhel-7-server-eus-rpms
+		String disablerepos = "--disablerepo=beaker-*";
+		if (!rhelBaseRepoId.endsWith("-beta-rpms") && !rhelOptionalRepoId.endsWith("-beta-rpms")) disablerepos += " --disablerepo=*-beta-rpms";
+		if (!rhelBaseRepoId.endsWith("-htb-rpms") && !rhelOptionalRepoId.endsWith("-htb-rpms")) disablerepos += " --disablerepo=*-htb-rpms";
+		if (!rhelBaseRepoId.endsWith("-eus-rpms") && !rhelOptionalRepoId.endsWith("-eus-rpms")) disablerepos += " --disablerepo=*-eus-rpms";
+		SSHCommandResult result = clienttasks.yumDoPackageFromRepo_("install", rhelOptionalPackage, null, disablerepos);	// disable any other repos that might be enabled to prevent rhelBasePackage from // rhel-7-server-eus-rpms
 
 		// assert results...  should not be able to find package since package is in a disabled repo
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(1),"Exit code from attempt to install '"+rhelOptionalPackage+"' from a disabled repo.");
@@ -419,7 +516,7 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 		clienttasks.repos(null, null, null, rhelOptionalRepoId, rhelBaseRepoId, null, null, null, null);
 		
 		// attempt to install a specific package from a disabled repo
-		result = clienttasks.yumDoPackageFromRepo_("install", rhelBasePackage, null, "--disablerepo=*beta-rpms --disablerepo=*htb-rpms --disablerepo=*eus-rpms --disablerepo=beaker-*");	// disable any other repos that might be enabled // rhel-7-server-eus-rpms
+		result = clienttasks.yumDoPackageFromRepo_("install", rhelBasePackage, null, disablerepos);	// disable any other repos that might be enabled // rhel-7-server-eus-rpms
 
 		// assert results...  should not be able to find package since package is in a disabled repo
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(1),"Exit code from attempt to install '"+rhelBasePackage+"' from a disabled repo.");
@@ -462,7 +559,11 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 		clienttasks.repos(null, null, null, rhelOptionalRepoId, rhelBaseRepoId, null, null, null, null);
 		
 		// attempt to install a package that requires another package from a disabled repo
-		SSHCommandResult result = clienttasks.yumDoPackageFromRepo_("install", rhelOptionalPackage, null, "--disablerepo=*beta-rpms --disablerepo=*htb-rpms --disablerepo=*eus-rpms --disablerepo=beaker-*");	// disable any other repos that might be enabled // rhel-7-server-eus-rpms
+		String disablerepos = "--disablerepo=beaker-*";
+		if (!rhelBaseRepoId.endsWith("-beta-rpms") && !rhelOptionalRepoId.endsWith("-beta-rpms")) disablerepos += " --disablerepo=*-beta-rpms";
+		if (!rhelBaseRepoId.endsWith("-htb-rpms") && !rhelOptionalRepoId.endsWith("-htb-rpms")) disablerepos += " --disablerepo=*-htb-rpms";
+		if (!rhelBaseRepoId.endsWith("-eus-rpms") && !rhelOptionalRepoId.endsWith("-eus-rpms")) disablerepos += " --disablerepo=*-eus-rpms";
+		SSHCommandResult result = clienttasks.yumDoPackageFromRepo_("install", rhelOptionalPackage, null, disablerepos);	// disable any other repos that might be enabled // rhel-7-server-eus-rpms
 
 		//	2015-10-26 15:26:58.217  FINE: ssh root@jsefler-7.usersys.redhat.com yum -y install ghostscript-devel --disableplugin=rhnplugin --disablerepo=*eus-rpms
 		//	2015-10-26 15:27:05.473  FINE: Stdout: 
@@ -535,7 +636,11 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 		clienttasks.repos(null, null, null, rhelOptionalRepoId, rhelBaseRepoId, null, null, null, null);
 		
 		// attempt to install a package that requires another package from a disabled repo
-		SSHCommandResult result = clienttasks.yumDoPackageFromRepo_("install", rhelOptionalPackage, null, "--assumeno --disablerepo=*beta-rpms --disablerepo=*htb-rpms --disablerepo=*eus-rpms --disablerepo=beaker-*");	// disable any other repos that might be enabled to prevent  // rhel-7-server-eus-rpms
+		String disablerepos = "--disablerepo=beaker-*";
+		if (!rhelBaseRepoId.endsWith("-beta-rpms") && !rhelOptionalRepoId.endsWith("-beta-rpms")) disablerepos += " --disablerepo=*-beta-rpms";
+		if (!rhelBaseRepoId.endsWith("-htb-rpms") && !rhelOptionalRepoId.endsWith("-htb-rpms")) disablerepos += " --disablerepo=*-htb-rpms";
+		if (!rhelBaseRepoId.endsWith("-eus-rpms") && !rhelOptionalRepoId.endsWith("-eus-rpms")) disablerepos += " --disablerepo=*-eus-rpms";
+		SSHCommandResult result = clienttasks.yumDoPackageFromRepo_("install", rhelOptionalPackage, null, "--assumeno "+disablerepos);	// disable any other repos that might be enabled to prevent  // rhel-7-server-eus-rpms
 		
 		//	2015-10-26 15:54:03.983  FINE: ssh root@jsefler-7.usersys.redhat.com yum -y install ghostscript-devel --disableplugin=rhnplugin --assumeno --disablerepo=*eus-rpms
 		//	2015-10-26 15:54:10.443  FINE: Stdout: 
@@ -630,7 +735,10 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 		List<String> enableRepos = new ArrayList<String>(); enableRepos.add(rhelOptionalRepoId);
 		List<String> disableRepos = new ArrayList<String>(); disableRepos.add(rhelBaseRepoId);
 		clienttasks.repos(null, null, null, enableRepos, disableRepos, null, null, null, null);
-		disableRepos.clear(); disableRepos.add("*-beta-rpms"); disableRepos.add("*-htb-rpms"); disableRepos.add("*-eus-rpms");
+		disableRepos.clear();
+		if (!rhelBaseRepoId.endsWith("-beta-rpms") && !rhelOptionalRepoId.endsWith("-beta-rpms")) disableRepos.add("*-beta-rpms");
+		if (!rhelBaseRepoId.endsWith("-htb-rpms") && !rhelOptionalRepoId.endsWith("-htb-rpms")) disableRepos.add("*-htb-rpms");
+		if (!rhelBaseRepoId.endsWith("-eus-rpms") && !rhelOptionalRepoId.endsWith("-eus-rpms")) disableRepos.add("*-eus-rpms");
 		clienttasks.repos_(null, null, null, null, disableRepos, null, null, null, null);
 		//	2015-10-29 17:51:58.988  FINE: ssh root@ibm-z10-30.rhts.eng.bos.redhat.com subscription-manager repos --disable=*-beta-rpms --disable=*-htb-rpms --disable=*-eus-rpms
 		//	2015-10-29 17:52:08.882  FINE: Stdout: 
@@ -802,7 +910,10 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 		List<String> enableRepos = new ArrayList<String>(); enableRepos.add(rhelOptionalRepoId);
 		List<String> disableRepos = new ArrayList<String>(); disableRepos.add(rhelBaseRepoId);
 		clienttasks.repos(null, null, null, enableRepos, disableRepos, null, null, null, null);
-		disableRepos.clear(); disableRepos.add("*-beta-rpms"); disableRepos.add("*-htb-rpms"); disableRepos.add("*-eus-rpms");
+		disableRepos.clear();
+		if (!rhelBaseRepoId.endsWith("-beta-rpms") && !rhelOptionalRepoId.endsWith("-beta-rpms")) disableRepos.add("*-beta-rpms");
+		if (!rhelBaseRepoId.endsWith("-htb-rpms") && !rhelOptionalRepoId.endsWith("-htb-rpms")) disableRepos.add("*-htb-rpms");
+		if (!rhelBaseRepoId.endsWith("-eus-rpms") && !rhelOptionalRepoId.endsWith("-eus-rpms")) disableRepos.add("*-eus-rpms");
 		clienttasks.repos_(null, null, null, null, disableRepos, null, null, null, null);
 		
 		// attempt to install a package that requires another package from a disabled repo
@@ -1058,7 +1169,10 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 		List<String> enableRepos = new ArrayList<String>(); enableRepos.add(rhelOptionalRepoId);
 		List<String> disableRepos = new ArrayList<String>(); disableRepos.add(rhelBaseRepoId);
 		clienttasks.repos(null, null, null, enableRepos, disableRepos, null, null, null, null);
-		disableRepos.clear(); disableRepos.add("*-beta-rpms"); disableRepos.add("*-htb-rpms"); disableRepos.add("*-eus-rpms");
+		disableRepos.clear();
+		if (!rhelBaseRepoId.endsWith("-beta-rpms") && !rhelOptionalRepoId.endsWith("-beta-rpms")) disableRepos.add("*-beta-rpms");
+		if (!rhelBaseRepoId.endsWith("-htb-rpms") && !rhelOptionalRepoId.endsWith("-htb-rpms")) disableRepos.add("*-htb-rpms");
+		if (!rhelBaseRepoId.endsWith("-eus-rpms") && !rhelOptionalRepoId.endsWith("-eus-rpms")) disableRepos.add("*-eus-rpms");
 		clienttasks.repos_(null, null, null, null, disableRepos, null, null, null, null);
 		
 		// attempt to install a package that requires another package from a disabled repo

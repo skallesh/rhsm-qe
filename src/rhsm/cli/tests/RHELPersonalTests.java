@@ -154,7 +154,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 			client2tasks.register(username, password, owner, null, ConsumerType.system, null, null, null, null, null, (String)null, null, null, null, null, false, null, null, null, null);
 			List<SubscriptionPool> client2BeforeSubscriptionPools = client2tasks.getCurrentlyAvailableSubscriptionPools();
 			pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId",systemProductId,client2BeforeSubscriptionPools);
-			Assert.assertNull(pool,"ProductId '"+systemProductId+"' is NOT yet available to client2 system '"+client2.getConnection().getHostname()+"' registered under user '"+username+"'.");
+			Assert.assertNull(pool,"ProductId '"+systemProductId+"' is NOT yet available to client2 system '"+client2.getConnection().getRemoteHostname()+"' registered under user '"+username+"'.");
 	
 			
 	//		log.info("Now register client1 under username '"+consumerUsername+"' as a person and subscribe to the '"+personSubscriptionName+"' subscription pool...");
@@ -172,7 +172,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 			log.info("Now client2 (already registered as a system under username '"+username+"') should now have ProductId '"+systemProductId+"' available with a quantity if '"+systemSubscriptionQuantity+"'...");
 			List<SubscriptionPool> client2AfterSubscriptionPools = client2tasks.getCurrentlyAvailableSubscriptionPools();
 			SubscriptionPool systemSubscriptionPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId",systemProductId,client2AfterSubscriptionPools);
-			Assert.assertNotNull(systemSubscriptionPool,"ProductId '"+systemProductId+"' is now available to client2 '"+client2.getConnection().getHostname()+"' (registered as a system under username '"+username+"')");
+			Assert.assertNotNull(systemSubscriptionPool,"ProductId '"+systemProductId+"' is now available to client2 '"+client2.getConnection().getRemoteHostname()+"' (registered as a system under username '"+username+"')");
 			Assert.assertEquals(systemSubscriptionPool.quantity.toLowerCase(),systemSubscriptionQuantity,"A quantity of '"+systemSubscriptionQuantity+"' entitlements is available to the subscription for "+systemProductId+".");
 			
 			
@@ -212,7 +212,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 
 				log.info("Now client2 should be consuming the product '"+systemConsumedProductName+"'...");
 				ProductSubscription systemProductSubscription = ProductSubscription.findFirstInstanceWithMatchingFieldFromList("productName",systemConsumedProductName,client2tasks.getCurrentlyConsumedProductSubscriptions());
-				Assert.assertNotNull(systemProductSubscription,systemConsumedProductName+" is now consumed on client2 system '"+client2.getConnection().getHostname()+"' registered under user '"+username+"'.");
+				Assert.assertNotNull(systemProductSubscription,systemConsumedProductName+" is now consumed on client2 system '"+client2.getConnection().getRemoteHostname()+"' registered under user '"+username+"'.");
 			}
 			*/
 			List<String> systemConsumedProductNames = new ArrayList<String>();
@@ -223,8 +223,8 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 			}
 			log.info("Now client2 should be consuming the subscription '"+personSubscriptionName+"' that provides '"+systemConsumedProductNames+"'...");
 			ProductSubscription systemProductSubscription = ProductSubscription.findFirstInstanceWithMatchingFieldFromList("productName",personSubscriptionName,client2tasks.getCurrentlyConsumedProductSubscriptions());
-			Assert.assertNotNull(systemProductSubscription,personSubscriptionName+" is now consumed on client2 system '"+client2.getConnection().getHostname()+"' registered under user '"+username+"'.");
-			Assert.assertTrue(systemProductSubscription.provides.containsAll(systemConsumedProductNames)&&systemConsumedProductNames.containsAll(systemProductSubscription.provides),"All of the expected bundled products "+systemConsumedProductNames+" are now being provided for on client2 system '"+client2.getConnection().getHostname()+"' registered under user '"+username+"'.");
+			Assert.assertNotNull(systemProductSubscription,personSubscriptionName+" is now consumed on client2 system '"+client2.getConnection().getRemoteHostname()+"' registered under user '"+username+"'.");
+			Assert.assertTrue(systemProductSubscription.provides.containsAll(systemConsumedProductNames)&&systemConsumedProductNames.containsAll(systemProductSubscription.provides),"All of the expected bundled products "+systemConsumedProductNames+" are now being provided for on client2 system '"+client2.getConnection().getRemoteHostname()+"' registered under user '"+username+"'.");
 		}
 	}
 	
@@ -253,7 +253,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 
 			log.info("Now verify that client2 (already registered as a system under username '"+username+"') can no longer subscribe to the '"+systemProductId+"' pool...");
 			SubscriptionPool systemSubscriptionPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId",systemProductId,client2tasks.getCurrentlyAvailableSubscriptionPools());
-			Assert.assertNull(systemSubscriptionPool,"ProductId '"+systemProductId+"' is no longer available on client2 system '"+client2.getConnection().getHostname()+"' registered under user '"+username+"'.");
+			Assert.assertNull(systemSubscriptionPool,"ProductId '"+systemProductId+"' is no longer available on client2 system '"+client2.getConnection().getRemoteHostname()+"' registered under user '"+username+"'.");
 		}
 	}
 	
@@ -318,7 +318,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 				log.info("Now client2 should be consuming the subscription '"+personSubscriptionName+"' that provides '"+systemConsumedProductNames+"'...");
 				ProductSubscription systemProductSubscription = ProductSubscription.findFirstInstanceWithMatchingFieldFromList("productName",personSubscriptionName,client2tasks.getCurrentlyConsumedProductSubscriptions());
 				Assert.assertNotNull(systemProductSubscription,personSubscriptionName+" is now consumed by consumer '"+consumerId+"' (registered as a system under username '"+username+"')");
-				Assert.assertTrue(systemProductSubscription.provides.containsAll(systemConsumedProductNames)&&systemConsumedProductNames.containsAll(systemProductSubscription.provides),"All of the expected bundled products "+systemConsumedProductNames+" are now being provided for on client2 system '"+client2.getConnection().getHostname()+"' consumed by consumer '"+consumerId+"'.");
+				Assert.assertTrue(systemProductSubscription.provides.containsAll(systemConsumedProductNames)&&systemConsumedProductNames.containsAll(systemProductSubscription.provides),"All of the expected bundled products "+systemConsumedProductNames+" are now being provided for on client2 system '"+client2.getConnection().getRemoteHostname()+"' consumed by consumer '"+consumerId+"'.");
 			}
 		}
 	}
@@ -606,7 +606,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 				String systemConsumedProductName = bundledProductAsJSONObject.getString("productName");
 				
 				ProductSubscription consumedProductSubscription = ProductSubscription.findFirstInstanceWithMatchingFieldFromList("productName",systemConsumedProductName,client2ConsumedProductSubscriptions);
-				Assert.assertNotNull(consumedProductSubscription,systemConsumedProductName+" has been autosubscribed by client2 '"+client2.getConnection().getHostname()+"' (registered as a system under username '"+username+"')");
+				Assert.assertNotNull(consumedProductSubscription,systemConsumedProductName+" has been autosubscribed by client2 '"+client2.getConnection().getRemoteHostname()+"' (registered as a system under username '"+username+"')");
 	
 			}
 			*/
@@ -617,8 +617,8 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 				systemConsumedProductNames.add(systemConsumedProductName);
 			}
 			ProductSubscription systemProductSubscription = ProductSubscription.findFirstInstanceWithMatchingFieldFromList("productName",personSubscriptionName,client2ConsumedProductSubscriptions);
-			Assert.assertNotNull(systemProductSubscription,personSubscriptionName+" has been autosubscribed by client2 '"+client2.getConnection().getHostname()+"' (registered as a system under username '"+username+"')");
-			Assert.assertTrue(systemProductSubscription.provides.containsAll(systemConsumedProductNames)&&systemConsumedProductNames.containsAll(systemProductSubscription.provides),"All of the expected bundled products "+systemConsumedProductNames+" are now being provided for on client2 system '"+client2.getConnection().getHostname()+"' after having autosubscribed.");
+			Assert.assertNotNull(systemProductSubscription,personSubscriptionName+" has been autosubscribed by client2 '"+client2.getConnection().getRemoteHostname()+"' (registered as a system under username '"+username+"')");
+			Assert.assertTrue(systemProductSubscription.provides.containsAll(systemConsumedProductNames)&&systemConsumedProductNames.containsAll(systemProductSubscription.provides),"All of the expected bundled products "+systemConsumedProductNames+" are now being provided for on client2 system '"+client2.getConnection().getRemoteHostname()+"' after having autosubscribed.");
 			
 			
 			

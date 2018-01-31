@@ -301,6 +301,9 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		log.info("Attempting to register to a candlepin server using an account that has not yet accepted the Red Hat Terms and Conditions");
 		String stderr = "You must first accept Red Hat's Terms and conditions. Please visit https://www.redhat.com/wapps/ugc .";
 		stderr += " You may have to log out of and back into the  Customer Portal in order to see the terms.";	// added by Bug 1068766 - (US48790, US51354, US55017) Subscription-manager register leads to unclear message
+		// stderr after fix Bug 1458423 - registration to stage candlepin for an account that has not accepted terms and conditions should block registration
+		stderr = "You must first accept Red Hat's Terms and conditions. Please visit https://www.redhat.com/wapps/tnc/termsack?event[]=signIn .";
+		stderr += " You may have to log out of and back into the  Customer Portal in order to see the terms.";	// added by Bug 1068766 - (US48790, US51354, US55017) Subscription-manager register leads to unclear message
 		String command = clienttasks.registerCommand(username, password, null, null, null, null, null, null, null, null, (String)null, null, null, null, null, null, null, null, null, null);
 		SSHCommandResult result = client.runCommandAndWait(command);
 		Integer expectedExitCode = new Integer(255);

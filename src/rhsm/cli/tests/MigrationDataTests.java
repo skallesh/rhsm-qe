@@ -1800,22 +1800,22 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 		// copy the rhn-channels.py script to the client
 		File rhnChannelsScriptFile = new File(System.getProperty("automation.dir", null)+"/scripts/rhn-channels.py");
 		if (!rhnChannelsScriptFile.exists()) Assert.fail("Failed to find expected script: "+rhnChannelsScriptFile);
-		RemoteFileTasks.putFile(client.getConnection(), rhnChannelsScriptFile.toString(), "/usr/local/bin/", "0755");
+		RemoteFileTasks.putFile(client, rhnChannelsScriptFile.toString(), "/usr/local/bin/", "0755");
 		
 		// copy the rhn-is-registered.py script to the client
 		File rhnIsRegisteredScriptFile = new File(System.getProperty("automation.dir", null)+"/scripts/rhn-is-registered.py");
 		if (!rhnIsRegisteredScriptFile.exists()) Assert.fail("Failed to find expected script: "+rhnIsRegisteredScriptFile);
-		RemoteFileTasks.putFile(client.getConnection(), rhnIsRegisteredScriptFile.toString(), "/usr/local/bin/", "0755");
+		RemoteFileTasks.putFile(client, rhnIsRegisteredScriptFile.toString(), "/usr/local/bin/", "0755");
 		
 		// copy the rhn-delete-systems.py script to the client
 		File rhnDeleteSystemsScriptFile = new File(System.getProperty("automation.dir", null)+"/scripts/rhn-delete-systems.py");
 		if (!rhnDeleteSystemsScriptFile.exists()) Assert.fail("Failed to find expected script: "+rhnDeleteSystemsScriptFile);
-		RemoteFileTasks.putFile(client.getConnection(), rhnDeleteSystemsScriptFile.toString(), "/usr/local/bin/", "0755");
+		RemoteFileTasks.putFile(client, rhnDeleteSystemsScriptFile.toString(), "/usr/local/bin/", "0755");
 		
 		// copy the rhn-migrate-classic-to-rhsm.tcl script to the client
 		File expectScriptFile = new File(System.getProperty("automation.dir", null)+"/scripts/rhn-migrate-classic-to-rhsm.tcl");
 		if (!expectScriptFile.exists()) Assert.fail("Failed to find expected script: "+expectScriptFile);
-		RemoteFileTasks.putFile(client.getConnection(), expectScriptFile.toString(), "/usr/local/bin/", "0755");
+		RemoteFileTasks.putFile(client, expectScriptFile.toString(), "/usr/local/bin/", "0755");
 	}
 	
 	@BeforeClass(groups="setup", dependsOnMethods={"setupBeforeClass","copyScriptsToClient"})
@@ -1850,45 +1850,6 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 		}
 		Assert.assertTrue(rhnAvailableChildChannels.size()>0,"A positive number of child channels under the RHN Classic base channel '"+rhnBaseChannel+"' are available for consumption.");
 	}
-	
-//	@BeforeGroups(groups="setup",value={"InstallNumMigrateToRhsmWithNonDefaultProductCertDir_Test","RhnMigrateClassicToRhsmWithNonDefaultProductCertDir_Test"})
-//	public void configNonDefaultRhsmProductCertDir() {
-//		if (clienttasks==null) return;
-//		
-//		//clienttasks.config(false, false, true, new String[]{"rhsm","productcertdir",productCertDirNonDefault});
-//		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir", nonDefaultProductCertDir);
-//	}
-//
-//	
-//	public static SSHCommandRunner basicAuthProxyRunner = null;
-//	public static SSHCommandRunner noAuthProxyRunner = null;
-//	@BeforeClass(groups={"setup"})
-//	public void setupProxyRunnersBeforeClass() throws IOException {
-//		basicAuthProxyRunner = new SSHCommandRunner(sm_basicauthproxyHostname, sm_sshUser, sm_sshKeyPrivate, sm_sshkeyPassphrase, null);
-//		noAuthProxyRunner = new SSHCommandRunner(sm_noauthproxyHostname, sm_sshUser, sm_sshKeyPrivate, sm_sshkeyPassphrase, null);
-//	}
-//	
-//	@AfterClass(groups="setup")
-//	public void restoreProductCertsAfterClass() {
-//		if (clienttasks==null) return;
-//		
-//		log.info("Restoring the originally installed product certs...");
-//		client.runCommandAndWait("rm -f "+originalProductCertDir+"/*.pem");
-//		client.runCommandAndWait("cp "+backupProductCertDir+"/*.pem "+originalProductCertDir);
-//		configOriginalRhsmProductCertDir();
-//	}
-//	
-//	@AfterClass(groups="setup")
-//	@AfterGroups(groups="setup",value={"RhnMigrateClassicToRhsm_Test"})
-//	public void restoreOriginallyConfiguredServerUrl() {
-//		if (clienttasks==null) return;
-//		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
-//		listOfSectionNameValues.add(new String[]{"server","hostname",originalServerHostname});
-//		listOfSectionNameValues.add(new String[]{"server","port",originalServerPort});
-//		listOfSectionNameValues.add(new String[]{"server","prefix",originalServerPrefix});
-//		log.info("Restoring the originally configured server URL...");
-//		clienttasks.config(null, null, true, listOfSectionNameValues);
-//	}
 	
 	@AfterClass(groups={"setup"},alwaysRun=true)
 	public void removeRHNSystemIdFileAfterClass() {

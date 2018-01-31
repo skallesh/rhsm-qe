@@ -156,7 +156,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			
 			// install packages
 			SSHCommandResult yumInstallResult = server.runCommandAndWait("sudo "+"yum install -y --quiet hunspell");
-			Assert.assertEquals(yumInstallResult.getExitCode(), Integer.valueOf(0),"ExitCode from yum install of packages on server '"+server.getConnection().getHostname()+"'.");
+			Assert.assertEquals(yumInstallResult.getExitCode(), Integer.valueOf(0),"ExitCode from yum install of packages on server '"+server.getConnection().getRemoteHostname()+"'.");
 			
 			// fetch the generated Product Certs
 			if (Boolean.valueOf(getProperty("sm.debug.fetchProductCerts","true"))) {
@@ -171,7 +171,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 				File remoteFile = new File(remoteFileAsString);
 				File localFile = new File((getProperty("automation.dir", "/tmp")+"/tmp/"+remoteFile.getName()).replace("tmp/tmp", "tmp"));
 				File localFileRenamed = new File(localFile.getPath().replace(".pem", "_.pem")); // rename the generated productCertFile to help distinguish it from a true RHEL productCertFiles
-				RemoteFileTasks.getFile(server.getConnection(), localFile.getParent(),remoteFile.getPath());
+				RemoteFileTasks.getFile(server, localFile.getParent(),remoteFile.getPath());
 				localFile.renameTo(localFileRenamed);
 				generatedProductCertFiles.add(localFileRenamed);
 			}
@@ -190,48 +190,86 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		servertasks.initialize(clienttasks.candlepinAdminUsername, clienttasks.candlepinAdminPassword, clienttasks.candlepinUrl);
 		
 		// create an artifact to log all the package versions being tested
-	    File file = new File("test-output/version.txt"); // this will be in the automation.dir directory on hudson (workspace/automatjon/sm)
-    	Writer output = new BufferedWriter(new FileWriter(file));
-    	String infoMsg = "Installed versions...";
-		log.info(infoMsg); output.write(infoMsg+"\n");
+		File file = new File("test-output/version.txt"); // this will be in the automation.dir directory on hudson (workspace/automatjon/sm)
+		Writer output = new BufferedWriter(new FileWriter(file));
+		String infoMsg;
 		if (client1 != null) {
-			infoMsg = "Client1 '"+sm_client1Hostname+"' is running version: ";
+			infoMsg = "Client1 System Hostname: "+sm_client1Hostname+"\n";
+			log.info(infoMsg); output.write(infoMsg+"\n");
+			
+			infoMsg = "Beaker Compose: "+client1tasks.compose+"\n";
+			log.info(infoMsg); output.write(infoMsg+"\n");
+			
+			infoMsg = "Installed Packages:";
 			log.info(infoMsg); output.write(infoMsg+"\n");
 			infoMsg = client1.runCommandAndWait("rpm -qa | egrep ^subscription-manager").getStdout();	// subscription-manager-0.63-1.el6.i686
 			log.info(infoMsg); output.write(infoMsg+"\n");
 			infoMsg = client1.runCommandAndWait("rpm -qa | egrep ^python-rhsm").getStdout();	// python-rhsm-0.63-1.el6.i686
 			log.info(infoMsg); output.write(infoMsg+"\n");
 			infoMsg = client1.runCommandAndWait("rpm -q --whatprovides /etc/redhat-release").getStdout();
-			log.info(infoMsg); output.write(infoMsg+"\n");	
+			log.info(infoMsg); output.write(infoMsg+"\n");
+			
+			infoMsg = "# cat /etc/redhat-release";
+			log.info(infoMsg); output.write(infoMsg+"\n");
 			infoMsg = client1.runCommandAndWait("cat /etc/redhat-release").getStdout();	// Red Hat Enterprise Linux Server release 6.1 Beta (Santiago)
+			log.info(infoMsg); output.write(infoMsg+"\n");
+			
+			infoMsg = "# uname -a";
 			log.info(infoMsg); output.write(infoMsg+"\n");
 			infoMsg = client1.runCommandAndWait("uname -a").getStdout();	// Linux jsefler-onprem-server.usersys.redhat.com 2.6.32-122.el6.x86_64 #1 SMP Wed Mar 9 23:54:34 EST 2011 x86_64 x86_64 x86_64 GNU/Linux
 			log.info(infoMsg); output.write(infoMsg+"\n");
-			infoMsg = client1.runCommandAndWait("grep RHEL /etc/yum.repos.d/beaker-*.repo | sort | tail -1").getStdout();	// /etc/yum.repos.d/beaker-Client.repo:baseurl=http://download.eng.bos.redhat.com/rel-eng/RHEL-6.8-20160125.0/compose/Client/i386/os
+			
+			infoMsg = "# "+client1tasks.listCommand(null, null, null, true, null, null, null, null, null, null, null, null, null, null);
 			log.info(infoMsg); output.write(infoMsg+"\n");
 			infoMsg = client1.runCommandAndWait(client1tasks.listCommand(null, null, null, true, null, null, null, null, null, null, null, null, null, null)).getStdout();
 			log.info(infoMsg); output.write(infoMsg+"\n");
+			
+			for (ProductCert productCert : client1tasks.getCurrentProductCerts()) {
+				infoMsg = "# rpm -q --whatprovides "+productCert.file;
+				log.info(infoMsg); output.write(infoMsg+"\n");
+				infoMsg = client1.runCommandAndWait("rpm -q --whatprovides "+productCert.file).getStdout();
+				log.info(infoMsg); output.write(infoMsg+"\n\n");
+			}
 		}
 		if (client2 != null) {
-			infoMsg = "Client2 '"+sm_client2Hostname+"' is running version: ";
+			infoMsg = "Client2 System Hostname: "+sm_client2Hostname+"\n";
+			log.info(infoMsg); output.write(infoMsg+"\n");
+			
+			infoMsg = "Beaker Compose: "+client2tasks.compose+"\n";
+			log.info(infoMsg); output.write(infoMsg+"\n");
+			
+			infoMsg = "Installed Packages:";
 			log.info(infoMsg); output.write(infoMsg+"\n");
 			infoMsg = client2.runCommandAndWait("rpm -qa | egrep ^subscription-manager").getStdout();	// subscription-manager-0.63-1.el6.i686
 			log.info(infoMsg); output.write(infoMsg+"\n");
 			infoMsg = client2.runCommandAndWait("rpm -qa | egrep ^python-rhsm").getStdout();	// python-rhsm-0.63-1.el6.i686
 			log.info(infoMsg); output.write(infoMsg+"\n");
 			infoMsg = client2.runCommandAndWait("rpm -q --whatprovides /etc/redhat-release").getStdout();
-			log.info(infoMsg); output.write(infoMsg+"\n");	
+			log.info(infoMsg); output.write(infoMsg+"\n");
+			
+			infoMsg = "# cat /etc/redhat-release";
+			log.info(infoMsg); output.write(infoMsg+"\n");
 			infoMsg = client2.runCommandAndWait("cat /etc/redhat-release").getStdout();	// Red Hat Enterprise Linux Server release 6.1 Beta (Santiago)
+			log.info(infoMsg); output.write(infoMsg+"\n");
+			
+			infoMsg = "# uname -a";
 			log.info(infoMsg); output.write(infoMsg+"\n");
 			infoMsg = client2.runCommandAndWait("uname -a").getStdout();	// Linux jsefler-onprem-server.usersys.redhat.com 2.6.32-122.el6.x86_64 #1 SMP Wed Mar 9 23:54:34 EST 2011 x86_64 x86_64 x86_64 GNU/Linux
 			log.info(infoMsg); output.write(infoMsg+"\n");
-			infoMsg = client2.runCommandAndWait("grep RHEL /etc/yum.repos.d/beaker-*.repo | sort | tail -1").getStdout();	// /etc/yum.repos.d/beaker-Client.repo:baseurl=http://download.eng.bos.redhat.com/rel-eng/RHEL-6.8-20160125.0/compose/Client/i386/os
+			
+			infoMsg = "# "+client2tasks.listCommand(null, null, null, true, null, null, null, null, null, null, null, null, null, null);
 			log.info(infoMsg); output.write(infoMsg+"\n");
 			infoMsg = client2.runCommandAndWait(client2tasks.listCommand(null, null, null, true, null, null, null, null, null, null, null, null, null, null)).getStdout();
 			log.info(infoMsg); output.write(infoMsg+"\n");
+			
+			for (ProductCert productCert : client2tasks.getCurrentProductCerts()) {
+				infoMsg = "# rpm -q --whatprovides "+productCert.file;
+				log.info(infoMsg); output.write(infoMsg+"\n");
+				infoMsg = client2.runCommandAndWait("rpm -q --whatprovides "+productCert.file).getStdout();
+				log.info(infoMsg); output.write(infoMsg+"\n\n");
+			}
 		}
 		output.close();
-		
 		
 		// create an artifact containing package versions that can be uploaded to Polarion Group ID 
 		String groupId = "";
@@ -252,8 +290,8 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		groupId = groupId.replaceAll("\\."+clienttasks.arch+"|\\.noarch", "");	// strip off .arch
 		groupId = groupId.trim();
 		/*File*/ file = new File("test-output/group-id.txt"); // this will be in the automation.dir directory on hudson (workspace/automatjon/sm)
-    	/*Writer*/ output = new BufferedWriter(new FileWriter(file));
-		log.info(infoMsg); output.write(groupId);
+		/*Writer*/ output = new BufferedWriter(new FileWriter(file));
+		output.write(groupId);
 		output.close();
 		
 		
@@ -269,7 +307,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		if (server!=null && !sm_serverType.equals(CandlepinType.hosted)) {
 			log.info("Fetching Candlepin CA cert...");
 			serverCaCertFile = new File((getProperty("automation.dir", "/tmp")+"/tmp/"+servertasks.candlepinCACertFile.getName()).replace("tmp/tmp", "tmp"));
-			RemoteFileTasks.getFile(server.getConnection(), serverCaCertFile.getParent(), servertasks.candlepinCACertFile.getPath());
+			RemoteFileTasks.getFile(server, serverCaCertFile.getParent(), servertasks.candlepinCACertFile.getPath());
 		}
 		return serverCaCertFile;
 	}
@@ -566,6 +604,28 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			}
 		}
 		// END OF WORKAROUND
+		
+		// if this client came from a snapshot compose, it might not have an installed product cert
+		// let's manually place a reasonable product cert based on the polarion.planned_in property
+		// Reference: https://mojo.redhat.com/docs/DOC-1157988
+ 		if (smt.getCurrentProductCerts().isEmpty()) {
+			if (polarionPlannedIn.contains("Snap")) {
+				List<File> productCertFiles = new ArrayList<File>();
+				if (smt.compose.startsWith("RHEL-ALT")) {	// RHEL-ALT compose
+					if (smt.arch.equals("aarch64")) productCertFiles.add(new File(getProperty("automation.dir", "/tmp")+"/certs/rhel-alt-"+smt.redhatReleaseXY+"-beta/363_.pem"));	// Red Hat Enterprise Linux for ARM 64 Beta
+					if (smt.arch.equals("ppc64le")) productCertFiles.add(new File(getProperty("automation.dir", "/tmp")+"/certs/rhel-alt-"+smt.redhatReleaseXY+"-beta/362_.pem"));	// Red Hat Enterprise Linux for Power 9 Beta
+					if (smt.arch.equals("s390x"))	productCertFiles.add(new File(getProperty("automation.dir", "/tmp")+"/certs/rhel-alt-"+smt.redhatReleaseXY+"-beta/433_.pem"));	// Red Hat Enterprise Linux for IBM System z (Structure A) Beta
+				} else if (smt.compose.startsWith("RHEL-")){	// RHEL compose
+					if (smt.arch.equals("ppc64le"))	productCertFiles.add(new File(getProperty("automation.dir", "/tmp")+"/certs/rhel-"+smt.redhatReleaseXY+"-beta/279_.pem"));	// Red Hat Enterprise Linux for Power, little endian
+					if (smt.arch.equals("ppc64"))	productCertFiles.add(new File(getProperty("automation.dir", "/tmp")+"/certs/rhel-"+smt.redhatReleaseXY+"-beta/74_.pem"));	// Red Hat Enterprise Linux for Power, big endian
+					if (smt.arch.equals("s390x"))	productCertFiles.add(new File(getProperty("automation.dir", "/tmp")+"/certs/rhel-"+smt.redhatReleaseXY+"-beta/72_.pem"));	// Red Hat Enterprise Linux for IBM z Systems
+					if (smt.arch.equals("x86_64") && smt.variant.equals("Client"))		productCertFiles.add(new File(getProperty("automation.dir", "/tmp")+"/certs/rhel-"+smt.redhatReleaseXY+"-beta/68_.pem"));	// Red Hat Enterprise Linux Desktop
+					if (smt.arch.equals("x86_64") && smt.variant.equals("ComputeNode"))	productCertFiles.add(new File(getProperty("automation.dir", "/tmp")+"/certs/rhel-"+smt.redhatReleaseXY+"-beta/76_.pem"));	// Red Hat Enterprise Linux for Scientific Computing
+				}
+				log.info("Manually placing a RHEL product cert onto the system to enable more testing...");
+				smt.installProductCerts(productCertFiles);	
+			}
+		}
 	}
 	
 	protected static boolean isSetupBeforeSuiteComplete = false;
@@ -633,7 +693,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 				// END OF WORKAROUND
 				
 				// assert selinux is Enforcing
-				Assert.assertEquals(clienttasks.sshCommandRunner.runCommandAndWait("getenforce").getStdout().trim(), "Enforcing", "SELinux mode is set to enforcing on client "+clienttasks.sshCommandRunner.getConnection().getHostname());
+				Assert.assertEquals(clienttasks.sshCommandRunner.runCommandAndWait("getenforce").getStdout().trim(), "Enforcing", "SELinux mode is set to enforcing on client "+clienttasks.sshCommandRunner.getConnection().getRemoteHostname());
 			}
 		}
 	}
@@ -669,7 +729,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 				}
 				// END OF WORKAROUND
 				
-				Assert.assertTrue(tailFromMarkedFile.trim().isEmpty(), "No SELinux denials found in the audit log '"+clienttasks.auditLogFile+"' on client "+clienttasks.sshCommandRunner.getConnection().getHostname()+" while executing this test class.");
+				Assert.assertTrue(tailFromMarkedFile.trim().isEmpty(), "No SELinux denials found in the audit log '"+clienttasks.auditLogFile+"' on client "+clienttasks.sshCommandRunner.getConnection().getRemoteHostname()+" while executing this test class.");
 			}
 		}
 	}
@@ -695,7 +755,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 				client.runCommandAndWait("dmidecode --dump-bin dmi_dump.bin; TMPDIR=`mktemp -d`; mkdir $TMPDIR/proc; cp /proc/cpuinfo $TMPDIR/proc/; cp /proc/sysinfo $TMPDIR/proc/; mkdir -p $TMPDIR/sys/devices/system/cpu; cp -r /sys/devices/system/cpu $TMPDIR/sys/devices/system/; tar -cf "+remoteFile.getName()+" --ignore-failed-read --sparse dmi_dump.bin $TMPDIR  && tar -tvf "+remoteFile.getName()+" && rm -rf $TMPDIR");
 				if (!RemoteFileTasks.testExists(client, remoteFile.getPath())) client.runCommandAndWait("touch "+remoteFile.getPath());
 				File localFile = new File((getProperty("automation.dir", "/tmp")+"/test-output/"+remoteFile.getName()));
-				RemoteFileTasks.getFile(client.getConnection(), localFile.getParent(),remoteFile.getPath());
+				RemoteFileTasks.getFile(client, localFile.getParent(),remoteFile.getPath());
 			}
 			
 			// dump hardware info from sosreport...
@@ -749,7 +809,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 				File remoteFile = new File(getSubstringMatches(sosResult.getStdout(), "/var/tmp/sosreport-.+\\.tar\\.(xz|bz2)").get(0));	// /var/tmp/sosreport-jsefler-os7.usersys.redhat.com-20141013121912.tar.xz	// /var/tmp/sosreport-jsefler-5.usersys.redhat.com.tar.bz2
 				if (RemoteFileTasks.testExists(client, remoteFile.getPath())) {
 					File localFile = new File((getProperty("automation.dir", "/tmp")+"/test-output/"+remoteFile.getName()));
-					RemoteFileTasks.getFile(client.getConnection(), localFile.getParent(),remoteFile.getPath());
+					RemoteFileTasks.getFile(client, localFile.getParent(),remoteFile.getPath());
 					localFile.renameTo(new File(localFile.getPath().replaceFirst("-\\d{14}","")));	// strip out -20141013121912
 				}
 			}
