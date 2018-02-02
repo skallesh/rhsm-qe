@@ -595,10 +595,12 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 			if (clienttasks.redhatReleaseX.equals("5")) haPackage1Fetch = "http://download.devel.redhat.com/released/RHEL-5-Server/U7/x86_64/os/Cluster/ipvsadm-1.24-13.el5.x86_64.rpm";
 			if (clienttasks.redhatReleaseX.equals("6")) haPackage1Fetch = "http://download.devel.redhat.com/released/RHEL-6/6.1/Server/x86_64/os/Packages/ccs-0.16.2-35.el6.x86_64.rpm";
 			if (clienttasks.redhatReleaseX.equals("7")) haPackage1Fetch = "http://download.devel.redhat.com/released/RHEL-7/7.0/Server/x86_64/os/addons/HighAvailability/omping-0.0.4-6.el7.x86_64.rpm";
+			serverProductId = rhelProductCert.productId;	// is usually 69; but could be HTB 230 on RHEL7 or 135 on RHEL6
 		}
 		if (clienttasks.arch.startsWith("i")) {			// i386 i686
 			if (clienttasks.redhatReleaseX.equals("5")) haPackage1Fetch = "http://download.devel.redhat.com/released/RHEL-5-Server/U7/i386/os/Cluster/ipvsadm-1.24-13.el5.i386.rpm";
 			if (clienttasks.redhatReleaseX.equals("6")) haPackage1Fetch = "http://download.devel.redhat.com/released/RHEL-6/6.1/Server/i386/os/Packages/ccs-0.16.2-35.el6.i686.rpm";
+			serverProductId = rhelProductCert.productId;	// is usually 69;
 		}
 		if (clienttasks.arch.equals("ia64")) {
 			if (clienttasks.redhatReleaseX.equals("5")) haPackage1Fetch = "http://download.devel.redhat.com/released/RHEL-5-Server/U7/ia64/os/Cluster/ipvsadm-1.24-13.el5.ia64.rpm";
