@@ -1140,6 +1140,18 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	
 	// Configuration Methods ***********************************************************************
 	@BeforeClass (groups="setup")
+	public void initializeSupportedLocalesBeforeClass() {
+		supportedLocales = Arrays.asList(		"as",	"bn_IN","de_DE","es_ES","fr",	"gu",	"hi",	"it",	"ja",	"kn",	"ko",	"ml",	"mr",	"or",	"pa",	"pt_BR","ru",	"ta_IN","te",	"zh_CN","zh_TW"); 
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.20.10-1")) {	// commit ? // Bug 1520648 - Subscription manager ignores variants of locale
+			supportedLocales = Arrays.asList(	"as",	"bn_IN","de",	"es",	"fr",	"gu",	"hi",	"it",	"ja",	"kn",	"ko",	"ml",	"mr",	"or",	"pa",	"pt_BR","ru",	"ta_IN","te",	"zh_CN","zh_TW"); 
+		}
+	}
+	protected List<String> supportedLocales;
+	static final List<String> unsupportedLocales = Arrays.asList(	"as",	"bn_IN",	/*"de_DE",*/	/*"es_ES",*/	/*"fr",*/	"gu",	"hi",	/*"it",*/	/*"ja",*/	"kn",	/*"ko",*/	"ml",	"mr",	"or",	"pa",	/*"pt_BR",*/	/*"ru",*/	"ta_IN",	"te"	/*"zh_CN",*/	/*"zh_TW"*/);	// comes from https://bugzilla.redhat.com/show_bug.cgi?id=1195824#c2
+	static final List<String> supportedLangs = Arrays.asList(	"as_IN","bn_IN","de_DE","es_ES","fr_FR","gu_IN","hi_IN","it_IT","ja_JP","kn_IN","ko_KR","ml_IN","mr_IN","or_IN","pa_IN","pt_BR","ru_RU","ta_IN","te_IN","zh_CN","zh_TW"); 
+	static final List<String> unsupportedLangs = Arrays.asList(	"as_IN","bn_IN",/*"de_DE","es_ES","fr_FR",*/"gu_IN","hi_IN",/*"it_IT","ja_JP",*/"kn_IN",/*"ko_KR",*/"ml_IN","mr_IN","or_IN","pa_IN",/*"pt_BR","ru_RU",*/"ta_IN","te_IN"/*,"zh_CN","zh_TW"*/); 
+	
+	@BeforeClass (groups="setup")
 	public void buildTranslationFileMapsBeforeClass() {
 		translationFileMapForSubscriptionManager = buildTranslationFileMapForSubscriptionManager();
 		translationFileMapForCandlepin = buildTranslationFileMapForCandlepin();
@@ -1183,11 +1195,6 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	Set<String> translationMsgidSetForCandlepin = new HashSet<String>(500);  // 500 is an estimated size
 
 	// Protected Methods ***********************************************************************
-	static final List<String> supportedLocales = Arrays.asList(	"as",	"bn_IN","de_DE","es_ES","fr",	"gu",	"hi",	"it",	"ja",	"kn",	"ko",	"ml",	"mr",	"or",	"pa",	"pt_BR","ru",	"ta_IN","te",	"zh_CN","zh_TW"); 
-	static final List<String> unsupportedLocales = Arrays.asList(	"as",	"bn_IN",	/*"de_DE",*/	/*"es_ES",*/	/*"fr",*/	"gu",	"hi",	/*"it",*/	/*"ja",*/	"kn",	/*"ko",*/	"ml",	"mr",	"or",	"pa",	/*"pt_BR",*/	/*"ru",*/	"ta_IN",	"te"	/*"zh_CN",*/	/*"zh_TW"*/);	// comes from https://bugzilla.redhat.com/show_bug.cgi?id=1195824#c2
-	static final List<String> supportedLangs = Arrays.asList(	"as_IN","bn_IN","de_DE","es_ES","fr_FR","gu_IN","hi_IN","it_IT","ja_JP","kn_IN","ko_KR","ml_IN","mr_IN","or_IN","pa_IN","pt_BR","ru_RU","ta_IN","te_IN","zh_CN","zh_TW"); 
-	static final List<String> unsupportedLangs = Arrays.asList(	"as_IN","bn_IN",/*"de_DE","es_ES","fr_FR",*/"gu_IN","hi_IN",/*"it_IT","ja_JP",*/"kn_IN",/*"ko_KR",*/"ml_IN","mr_IN","or_IN","pa_IN",/*"pt_BR","ru_RU",*/"ta_IN","te_IN"/*,"zh_CN","zh_TW"*/); 
-
 	
 	protected List<String> newList(String item) {
 		List <String> newList = new ArrayList<String>();
