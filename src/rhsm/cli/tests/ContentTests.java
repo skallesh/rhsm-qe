@@ -382,7 +382,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	protected List<ProductCert> productCertsBeforeTest;
 	protected SubscriptionPool lastSubscriptionPool = null;
 	protected File lastEntitlementCertFile = null;
-	@BeforeGroups(groups={"setup"}, value={"testInstallAndRemoveAnyPackageFromEnabledRepoAfterSubscribingToPool"})
+	@BeforeGroups(groups={"setup"}, value={"testInstallAndRemoveAnyPackageFromEnabledRepoAfterSubscribingToPool","testInstallAndRemoveYumGroupFromEnabledRepoAfterSubscribingToPool"})
 	public void beforeInstallAndRemoveAnyPackageFromEnabledRepoAfterSubscribingToPool() {
 		if (clienttasks==null) return;
 		productCertsBeforeTest = clienttasks.getCurrentProductCerts();
@@ -445,12 +445,13 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 			}
 		}
 	}
-	@AfterGroups(groups={"setup"}, value={"testInstallAndRemoveAnyPackageFromEnabledRepoAfterSubscribingToPool"}, alwaysRun=true)
+	@AfterGroups(groups={"setup"}, value={"testInstallAndRemoveAnyPackageFromEnabledRepoAfterSubscribingToPool","testInstallAndRemoveYumGroupFromEnabledRepoAfterSubscribingToPool"}, alwaysRun=true)
 	public void afterInstallAndRemoveAnyPackageFromEnabledRepoAfterSubscribingToPool() {
 		if (clienttasks==null) return;
 		List<ProductCert> productCertsAfterTest = clienttasks.getCurrentProductCerts();
 		
 		// clean up (remove) any extraneous product certs that were installed by the yum productid plugin during testInstallAndRemoveAnyPackageFromEnabledRepoAfterSubscribingToPool
+		// Extraneous RHEL product certs are easily possible especially on a HTB installation as explained in https://bugzilla.redhat.com/show_bug.cgi?id=1538957#c5
 		for (ProductCert productCertAfterTest : productCertsAfterTest) {
 			for (ProductCert productCertBeforeTest : productCertsBeforeTest) {
 				// do nothing when this productCertAfterTest was also present BeforeTest
@@ -508,7 +509,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags="Tier2")
 	@Test(	description="subscription-manager Yum plugin: ensure yum groups can be installed/removed",
-			groups={"Tier2Tests","FipsTests"},
+			groups={"Tier2Tests","FipsTests","testInstallAndRemoveYumGroupFromEnabledRepoAfterSubscribingToPool"},
 			dataProvider="getYumAvailableGroupFromEnabledRepoAndSubscriptionPoolData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=) //TODO Find a tcms caseId for
@@ -2469,7 +2470,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		// assure we are freshly registered and process all available subscription pools
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, ConsumerType.system, null, null, null, null, null, (String)null, null, null, null, Boolean.TRUE, false, null, null, null, null);
 		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
-///*debugTesting*/if (!pool.productId.equals("RH00783")) continue; 
+///*debugTesting*/if (!pool.productId.equals("RH2501844")) continue; 
 			String quantity = null;
 			/*if (clienttasks.isPackageVersion("subscription-manager",">=","1.10.3-1"))*/ if (pool.suggested!=null) if (pool.suggested<1) quantity = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId, "instance_multiplier"); 	// when the Suggested quantity is 0, let's specify a quantity to avoid Stdout: Quantity '1' is not a multiple of instance multiplier '2'
 			File entitlementCertFile = clienttasks.subscribeToSubscriptionPool_(pool,quantity);
@@ -2512,7 +2513,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		// assure we are freshly registered and process all available subscription pools
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, ConsumerType.system, null, null, null, null, null, (String)null, null, null, null, Boolean.TRUE, false, null, null, null, null);
 		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
-			
+///*debugTesting*/ if (!pool.productId.equals("RH2501844")) continue;			
 			// avoid throttling RateLimitExceededException from IT-Candlepin
 			if (CandlepinType.hosted.equals(sm_serverType)) {	// strategically get a new consumer to avoid 60 repeated API calls from the same consumer
 				// re-register as a new consumer
@@ -2540,7 +2541,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 			clienttasks.unsubscribeFromSerialNumber(clienttasks.getSerialNumberFromEntitlementCertFile(entitlementCertFile));
 			
 			// minimize the number of dataProvided rows (useful during automated testcase development)
-			if (Boolean.valueOf(getProperty("sm.debug.dataProviders.minimize","false"))) break;
+			if (Boolean.valueOf(getProperty("sm.debug.dataProviders.minimize","false")) && !ll.isEmpty()) break;
 		}
 		
 		return ll;
