@@ -24,6 +24,20 @@
     </groups>
   </test>
 
+  <test name="API: Unregister">
+    <classes>
+      <class name="rhsm.base.SubscriptionManagerCLITestScript"/>
+      <class name="rhsm.api.tests.unregister_tests" />
+    </classes>
+    <groups>
+      <run>
+        <include name="setup" />
+        <include name="tier3"/>
+        <include name="cleanup" />
+      </run>
+    </groups>
+  </test>
+
   <test name="API: Attach">
     <classes>
       <class name="rhsm.base.SubscriptionManagerCLITestScript"/>

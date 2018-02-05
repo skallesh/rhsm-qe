@@ -88,7 +88,7 @@
                          ;ssh
                          :ssh-key-passphrase "sm.sshkey.passphrase"
                          :ssh-key-private (DefaultMapKey. "sm.sshkey.private" ".ssh/id_auto_dsa")
-                         :ssh-timeout "sm.ssh.emergencyTimeoutMS"
+                         :ssh-timeout "sm.sshEmergencyTimeoutMS"
                          :ssh-user (DefaultMapKey. "sm.ssh.user" "testuser")
                          :ssh-super-user (DefaultMapKey. "sm.ssh.super-user" "root")
 
