@@ -1726,6 +1726,11 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 					if (label.equals("rhel-server-dts2-6-eus-debug-rpms")) bugIds.add("1491308");
 					if (label.equals("rhel-server-dts2-6-eus-rpms")) bugIds.add("1491308");
 					if (label.equals("rhel-server-dts2-6-eus-source-rpms")) bugIds.add("1491308");
+					// Bug 1491308 was CLOSED WONTFIX
+					if ((label.startsWith("rhel-server-dts-")||label.startsWith("rhel-server-dts2-")) && (label.contains("-eus-"))) {
+						log.info("Skipping this test for content set repository '"+label+"' because bug 1491308 was CLOSED WONTFIX for already not supported(EOL) products DTS and DTS2");
+						continue;	// skip dts and dts2 eus REPOS
+					}
 					
 					//	Bug 1491319 - content set mappings for "Red Hat Enterprise Linux EUS Compute Node" is missing from cdn/cs_mappings-prod.csv
 					if (label.equals("rhel-6-for-hpc-node-eus-satellite-tools-6.1-debug-rpms")) bugIds.add("1491319");
