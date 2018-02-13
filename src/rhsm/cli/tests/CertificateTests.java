@@ -330,11 +330,29 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 				break;
 			case 230: // Red Hat Enterprise Linux 7 Server High Touch Beta
 				expectedTags = Arrays.asList("rhel-7-htb,rhel-7-server".split("\\s*,\\s*"));
-				// Related Bug 1538957 - product-default .pem files do not contain expected data
+				// TEMPORARY WORKAROUND
+				if (!providedTags.containsAll(expectedTags)) {
+					boolean invokeWorkaroundWhileBugIsOpen = true;
+					String bugId="1538957"; // Bug 1538957 - product-default .pem files do not contain expected data
+					try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
+					if (invokeWorkaroundWhileBugIsOpen) {
+						throw new SkipException("Skipping this test when product '"+productCert.productName+"' is installed while blocking bug '"+bugId+"' is open.");
+					}
+				}
+				// END OF WORKAROUND
 				break;
 			case 231: // Red Hat Enterprise Linux 7 Workstation High Touch Beta
 				expectedTags = Arrays.asList("rhel-7-htb,rhel-7-workstation".split("\\s*,\\s*"));
-				// Related Bug 1538957 - product-default .pem files do not contain expected data
+				// TEMPORARY WORKAROUND
+				if (!providedTags.containsAll(expectedTags)) {
+					boolean invokeWorkaroundWhileBugIsOpen = true;
+					String bugId="1538957"; // Bug 1538957 - product-default .pem files do not contain expected data
+					try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
+					if (invokeWorkaroundWhileBugIsOpen) {
+						throw new SkipException("Skipping this test when product '"+productCert.productName+"' is installed while blocking bug '"+bugId+"' is open.");
+					}
+				}
+				// END OF WORKAROUND
 				break;
 			default:
 				Assert.fail("Unknown productCert id '"+productCert.productId+"'");

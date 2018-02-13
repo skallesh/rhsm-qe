@@ -67,6 +67,8 @@ public class DataCenterTests extends SubscriptionManagerCLITestScript {
 		// get some attributes from the subscription pool
 		String poolDerivedProductId = (String)CandlepinTasks.getPoolValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId, "derivedProductId");
 		String poolDerivedProductName = (String)CandlepinTasks.getPoolValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId, "derivedProductName");
+		String poolDerivedProductArch = (String)CandlepinTasks.getPoolDerivedProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId, "arch");
+		List<String> poolDerivedProductArches = new ArrayList<String>(Arrays.asList(poolDerivedProductArch.trim().split(" *, *")));	// Note: the arch attribute can be a comma separated list of values
 		List<String> poolDerivedProvidedProductIds = CandlepinTasks.getPoolDerivedProvidedProductIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId);
 		String poolVirtLimit = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId, "virt_limit");
 		List<String> poolProvidedProductIds = CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId);

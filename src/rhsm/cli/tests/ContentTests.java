@@ -382,7 +382,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	protected List<ProductCert> productCertsBeforeTest;
 	protected SubscriptionPool lastSubscriptionPool = null;
 	protected File lastEntitlementCertFile = null;
-	@BeforeGroups(groups={"setup"}, value={"testInstallAndRemoveAnyPackageFromEnabledRepoAfterSubscribingToPool"})
+	@BeforeGroups(groups={"setup"}, value={"testInstallAndRemoveAnyPackageFromEnabledRepoAfterSubscribingToPool","testInstallAndRemoveYumGroupFromEnabledRepoAfterSubscribingToPool"})
 	public void beforeInstallAndRemoveAnyPackageFromEnabledRepoAfterSubscribingToPool() {
 		if (clienttasks==null) return;
 		productCertsBeforeTest = clienttasks.getCurrentProductCerts();
@@ -445,12 +445,13 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 			}
 		}
 	}
-	@AfterGroups(groups={"setup"}, value={"testInstallAndRemoveAnyPackageFromEnabledRepoAfterSubscribingToPool"}, alwaysRun=true)
+	@AfterGroups(groups={"setup"}, value={"testInstallAndRemoveAnyPackageFromEnabledRepoAfterSubscribingToPool","testInstallAndRemoveYumGroupFromEnabledRepoAfterSubscribingToPool"}, alwaysRun=true)
 	public void afterInstallAndRemoveAnyPackageFromEnabledRepoAfterSubscribingToPool() {
 		if (clienttasks==null) return;
 		List<ProductCert> productCertsAfterTest = clienttasks.getCurrentProductCerts();
 		
 		// clean up (remove) any extraneous product certs that were installed by the yum productid plugin during testInstallAndRemoveAnyPackageFromEnabledRepoAfterSubscribingToPool
+		// Extraneous RHEL product certs are easily possible especially on a HTB installation as explained in https://bugzilla.redhat.com/show_bug.cgi?id=1538957#c5
 		for (ProductCert productCertAfterTest : productCertsAfterTest) {
 			for (ProductCert productCertBeforeTest : productCertsBeforeTest) {
 				// do nothing when this productCertAfterTest was also present BeforeTest
@@ -474,6 +475,19 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 				client.runCommandAndWait("rm -f "+productCertAfterTest.file);
 			}
 		}
+		
+		
+		// might also have to re-install the default-product
+		// TEMPORARY WORKAROUND
+		boolean invokeWorkaroundWhileBugIsOpen = true;
+		String bugId="1526622"; // Bug 1526622 - the productid plugin should never delete a /etc/pki/product-default/<ID>.pem cert provided by the redhat-release-<VARIANT>.rpm
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
+		if (invokeWorkaroundWhileBugIsOpen) {
+			restoreYumBeakerRepos();
+			restoreRedHatRelease();
+			removeYumBeakerRepos();
+		}
+		// END OF WORKAROUND
 	}
 	
 	
@@ -495,7 +509,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags="Tier2")
 	@Test(	description="subscription-manager Yum plugin: ensure yum groups can be installed/removed",
-			groups={"Tier2Tests","FipsTests"},
+			groups={"Tier2Tests","FipsTests","testInstallAndRemoveYumGroupFromEnabledRepoAfterSubscribingToPool"},
 			dataProvider="getYumAvailableGroupFromEnabledRepoAndSubscriptionPoolData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=) //TODO Find a tcms caseId for
@@ -1669,6 +1683,9 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 					if (label.equals("rhel-6-server-eus-satellite-tools-6.3-debug-rpms")) bugIds.add("1472007");
 					if (label.equals("rhel-6-server-eus-satellite-tools-6.3-rpms")) bugIds.add("1472007");
 					if (label.equals("rhel-6-server-eus-satellite-tools-6.3-source-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-6-server-eus-satellite-tools-6.3-puppet4-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-6-server-eus-satellite-tools-6.3-puppet4-debug-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-6-server-eus-satellite-tools-6.3-puppet4-source-rpms")) bugIds.add("1472007");
 					if (label.equals("rhel-7-server-eus-debug-rpms")) bugIds.add("1472007");
 					if (label.equals("rhel-7-server-eus-isos")) bugIds.add("1472007");
 					if (label.equals("rhel-7-server-eus-optional-debug-rpms")) bugIds.add("1472007");
@@ -1690,6 +1707,9 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 					if (label.equals("rhel-7-server-eus-satellite-tools-6.3-debug-rpms")) bugIds.add("1472007");
 					if (label.equals("rhel-7-server-eus-satellite-tools-6.3-rpms")) bugIds.add("1472007");
 					if (label.equals("rhel-7-server-eus-satellite-tools-6.3-source-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-7-server-eus-satellite-tools-6.3-puppet4-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-7-server-eus-satellite-tools-6.3-puppet4-debug-rpms")) bugIds.add("1472007");
+					if (label.equals("rhel-7-server-eus-satellite-tools-6.3-puppet4-source-rpms")) bugIds.add("1472007");
 					if (label.equals("rhel-7-server-eus-source-isos")) bugIds.add("1472007");
 					if (label.equals("rhel-7-server-eus-source-rpms")) bugIds.add("1472007");
 					if (label.equals("rhel-7-server-eus-supplementary-debuginfo")) bugIds.add("1472007");
@@ -1712,6 +1732,11 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 					if (label.equals("rhel-server-dts2-6-eus-debug-rpms")) bugIds.add("1491308");
 					if (label.equals("rhel-server-dts2-6-eus-rpms")) bugIds.add("1491308");
 					if (label.equals("rhel-server-dts2-6-eus-source-rpms")) bugIds.add("1491308");
+					// Bug 1491308 was CLOSED WONTFIX
+					if ((label.startsWith("rhel-server-dts-")||label.startsWith("rhel-server-dts2-")) && (label.contains("-eus-"))) {
+						log.info("Skipping this test for content set repository '"+label+"' because bug 1491308 was CLOSED WONTFIX for already not supported(EOL) products DTS and DTS2");
+						continue;	// skip dts and dts2 eus REPOS
+					}
 					
 					//	Bug 1491319 - content set mappings for "Red Hat Enterprise Linux EUS Compute Node" is missing from cdn/cs_mappings-prod.csv
 					if (label.equals("rhel-6-for-hpc-node-eus-satellite-tools-6.1-debug-rpms")) bugIds.add("1491319");
@@ -1882,6 +1907,9 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 					if (label.equals("rhel-7-for-power-le-eus-satellite-tools-6.2-debug-rpms")) bugIds.add("1491356");
 					if (label.equals("rhel-7-for-power-le-eus-satellite-tools-6.2-rpms")) bugIds.add("1491356");
 					if (label.equals("rhel-7-for-power-le-eus-satellite-tools-6.2-source-rpms")) bugIds.add("1491356");
+					if (label.equals("rhel-7-for-power-le-eus-satellite-tools-6.3-puppet4-debug-rpms")) bugIds.add("1491356");
+					if (label.equals("rhel-7-for-power-le-eus-satellite-tools-6.3-puppet4-rpms")) bugIds.add("1491356");
+					if (label.equals("rhel-7-for-power-le-eus-satellite-tools-6.3-puppet4-source-rpms")) bugIds.add("1491356");
 					if (label.equals("rhel-7-for-power-le-eus-source-isos")) bugIds.add("1491356");
 					if (label.equals("rhel-7-for-power-le-eus-source-rpms")) bugIds.add("1491356");
 					if (label.equals("rhel-7-for-power-le-eus-supplementary-debug-rpms")) bugIds.add("1491356");
@@ -2456,7 +2484,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		// assure we are freshly registered and process all available subscription pools
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, ConsumerType.system, null, null, null, null, null, (String)null, null, null, null, Boolean.TRUE, false, null, null, null, null);
 		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
-///*debugTesting*/if (!pool.productId.equals("RH00783")) continue; 
+///*debugTesting*/if (!pool.productId.equals("RH2501844")) continue; 
 			String quantity = null;
 			/*if (clienttasks.isPackageVersion("subscription-manager",">=","1.10.3-1"))*/ if (pool.suggested!=null) if (pool.suggested<1) quantity = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId, "instance_multiplier"); 	// when the Suggested quantity is 0, let's specify a quantity to avoid Stdout: Quantity '1' is not a multiple of instance multiplier '2'
 			File entitlementCertFile = clienttasks.subscribeToSubscriptionPool_(pool,quantity);
@@ -2499,7 +2527,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		// assure we are freshly registered and process all available subscription pools
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, ConsumerType.system, null, null, null, null, null, (String)null, null, null, null, Boolean.TRUE, false, null, null, null, null);
 		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
-			
+///*debugTesting*/ if (!pool.productId.equals("RH2501844")) continue;			
 			// avoid throttling RateLimitExceededException from IT-Candlepin
 			if (CandlepinType.hosted.equals(sm_serverType)) {	// strategically get a new consumer to avoid 60 repeated API calls from the same consumer
 				// re-register as a new consumer
@@ -2527,7 +2555,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 			clienttasks.unsubscribeFromSerialNumber(clienttasks.getSerialNumberFromEntitlementCertFile(entitlementCertFile));
 			
 			// minimize the number of dataProvided rows (useful during automated testcase development)
-			if (Boolean.valueOf(getProperty("sm.debug.dataProviders.minimize","false"))) break;
+			if (Boolean.valueOf(getProperty("sm.debug.dataProviders.minimize","false")) && !ll.isEmpty()) break;
 		}
 		
 		return ll;

@@ -91,9 +91,9 @@ When I
                        "API"
                        "tier1"
                        "blockedByBug-1477958"]
-              :description "Given a system is unregistered
-   and there is a simple activation key for my account
-When I
+              :description "Given a system is registered
+When I unregister a system using cli
+Then I am able to register the system using dbus method register
 "
               :dataProvider "register-socket"}
         TestDefinition {:projectID [`DefTypes$Project/RedHatEnterpriseLinux7]}}
@@ -105,8 +105,8 @@ When I
            :else nil))
   (run-command "subscription-manager unregister")
   (-> (format "subscription-manager register --username=%s --password=%s --org=%s"
-               (@config :username) (@config :password) (@config :owner-key))
-       run-command   :stdout  (.contains "Registering to:")  verify)
+              (@config :username) (@config :password) (@config :owner-key))
+      run-command   :stdout  (.contains "Registering to:")  verify)
   (register_using_dbus ts socket))
 
 (defn ^{DataProvider {:name "register-socket"}}
