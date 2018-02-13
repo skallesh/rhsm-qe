@@ -157,9 +157,16 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 		Integer expectedExitCode = new Integer(255);
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) expectedExitCode = new Integer(78);	// EX_CONFIG	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
 		String rhelTag = "rhel-"+clienttasks.redhatReleaseX;
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.20.10-1")) {	// commit 76273403e6e3f7fa9811ef252a5a7ce4d84f7aa3	// bug 1510024: Handle rhel-alt product tags properly
+			rhelTag = "rhel-"+clienttasks.redhatReleaseX+"|"+"rhel-alt-"+clienttasks.redhatReleaseX;
+		}
 		if (clienttasks.getCurrentProductCerts(rhelTag).size()>1) {	// Bug 1506271 - redhat-release is providing more than 1 variant specific product cert
 			Assert.assertEquals(result.getStdout().trim(), "", "stdout from release --list when more than one product cert with tag '"+rhelTag+"' is installed.");
-			Assert.assertEquals(result.getStderr().trim(), "Error: More than one release product certificate installed.", "stderr from release --list when more than one product cert with tag '"+rhelTag+"' is installed.");
+			if (clienttasks.isPackageVersion("subscription-manager",">=","1.20.8-1")) {	// commit 286b4fcdc8dba6e75a7b50e5db912a99c8f7ada2	// bug 1464571: 'sub-man release' prints error for more prod. certs. 
+				Assert.assertTrue(result.getStderr().trim().startsWith("Error: More than one release product certificate installed."), "stderr from release --list when more than one product cert with tag '"+rhelTag+"' is installed.");
+			} else {
+				Assert.assertEquals(result.getStderr().trim(), "Error: More than one release product certificate installed.", "stderr from release --list when more than one product cert with tag '"+rhelTag+"' is installed.");
+			}
 		} else {
 			Assert.assertEquals(result.getStdout().trim(), "", "stdout from release --list without any entitlements");
 			Assert.assertEquals(result.getStderr().trim(), "No release versions available, please check subscriptions.", "stderr from release --list without any entitlements");
@@ -189,10 +196,17 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 		SSHCommandResult result = clienttasks.release_(null, null, unavailableRelease, null, null, null, null, null);
 		Integer expectedExitCode = new Integer(255);
 		String rhelTag = "rhel-"+clienttasks.redhatReleaseX;
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.20.10-1")) {	// commit 76273403e6e3f7fa9811ef252a5a7ce4d84f7aa3	// bug 1510024: Handle rhel-alt product tags properly
+			rhelTag = "rhel-"+clienttasks.redhatReleaseX+"|"+"rhel-alt-"+clienttasks.redhatReleaseX;
+		}
 		if (clienttasks.getCurrentProductCerts(rhelTag).size()>1) {	// Bug 1506271 - redhat-release is providing more than 1 variant specific product cert
 			if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) expectedExitCode = new Integer(78);	// EX_CONFIG	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
 			Assert.assertEquals(result.getStdout().trim(), "", "stdout from --set with an unavailable value when more than one product cert with tag '"+rhelTag+"' is installed.");
-			Assert.assertEquals(result.getStderr().trim(), "Error: More than one release product certificate installed.", "stderr from release --set with an unavailable value when more than one product cert with tag '"+rhelTag+"' is installed.");
+			if (clienttasks.isPackageVersion("subscription-manager",">=","1.20.8-1")) {	// commit 286b4fcdc8dba6e75a7b50e5db912a99c8f7ada2	// bug 1464571: 'sub-man release' prints error for more prod. certs. 
+				Assert.assertTrue(result.getStderr().trim().startsWith("Error: More than one release product certificate installed."), "stderr from release --set with an unavailable value when more than one product cert with tag '"+rhelTag+"' is installed.");
+			} else {
+				Assert.assertEquals(result.getStderr().trim(), "Error: More than one release product certificate installed.", "stderr from release --set with an unavailable value when more than one product cert with tag '"+rhelTag+"' is installed.");
+			}
 		} else {
 			if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) expectedExitCode = new Integer(65);	// EX_DATAERR	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
 			Assert.assertEquals(result.getStdout().trim(), "", "stdout from release --set with an unavailable value");
