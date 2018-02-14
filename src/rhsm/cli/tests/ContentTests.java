@@ -26,7 +26,6 @@ import org.testng.SkipException;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterGroups;
 import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeGroups;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
@@ -48,6 +47,7 @@ import rhsm.data.ProductCert;
 import rhsm.data.ProductSubscription;
 import rhsm.data.SubscriptionPool;
 import rhsm.data.YumRepo;
+
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 
@@ -379,14 +379,8 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	
-	protected List<ProductCert> productCertsBeforeTest;
 	protected SubscriptionPool lastSubscriptionPool = null;
 	protected File lastEntitlementCertFile = null;
-	@BeforeGroups(groups={"setup"}, value={"testInstallAndRemoveAnyPackageFromEnabledRepoAfterSubscribingToPool","testInstallAndRemoveYumGroupFromEnabledRepoAfterSubscribingToPool","testYumInstallSucceedsWhenServiceRsyslogIsStopped"})
-	public void beforeInstallAndRemoveAnyPackageFromEnabledRepoAfterSubscribingToPool() {
-		if (clienttasks==null) return;
-		productCertsBeforeTest = clienttasks.getCurrentProductCerts();
-	}
 	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID = {"RHEL6-22222", "RHEL7-55190"},
@@ -445,50 +439,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 			}
 		}
 	}
-	@AfterGroups(groups={"setup"}, value={"testInstallAndRemoveAnyPackageFromEnabledRepoAfterSubscribingToPool","testInstallAndRemoveYumGroupFromEnabledRepoAfterSubscribingToPool","testYumInstallSucceedsWhenServiceRsyslogIsStopped"}, alwaysRun=true)
-	public void afterInstallAndRemoveAnyPackageFromEnabledRepoAfterSubscribingToPool() {
-		if (clienttasks==null) return;
-		List<ProductCert> productCertsAfterTest = clienttasks.getCurrentProductCerts();
-		
-		// clean up (remove) any extraneous product certs that were installed by the yum productid plugin during testInstallAndRemoveAnyPackageFromEnabledRepoAfterSubscribingToPool
-		// Extraneous RHEL product certs are easily possible especially on a HTB installation as explained in https://bugzilla.redhat.com/show_bug.cgi?id=1538957#c5
-		for (ProductCert productCertAfterTest : productCertsAfterTest) {
-			for (ProductCert productCertBeforeTest : productCertsBeforeTest) {
-				// do nothing when this productCertAfterTest was also present BeforeTest
-				if (productCertBeforeTest.file.equals(productCertAfterTest.file)) continue;
-				// do nothing if this productCertAfterTest is located in the default directory
-				if (productCertAfterTest.file.getPath().startsWith(clienttasks.productCertDefaultDir)) continue;
-				
-				// TEMPORARY WORKAROUND
-				if (doesStringContainMatches(productCertAfterTest.productNamespace.providedTags,"rhel-"+clienttasks.redhatReleaseX+"(,|$)")) {
-					boolean invokeWorkaroundWhileBugIsOpen = true;
-					String bugId="1525238"; // Bug 1525238 - yum plugin for productid neglects to remove HTB product cert from /etc/pki/product/ because it is tagged as a provider of "rhel-7"
-					try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
-					if (invokeWorkaroundWhileBugIsOpen) {
-					   log.warning("Removing product cert '"+productCertAfterTest.productName+" "+productCertAfterTest.file+"' afterInstallAndRemoveAnyPackageFromEnabledRepoAfterSubscribingToPool while bug '"+bugId+"' is open.");
-					}
-				}
-				// END OF WORKAROUND
-				
-				// remove the product cert
-			    log.info("Removing product cert '"+productCertAfterTest.productName+" "+productCertAfterTest.file+"' afterInstallAndRemoveAnyPackageFromEnabledRepoAfterSubscribingToPool.");
-				client.runCommandAndWait("rm -f "+productCertAfterTest.file);
-			}
-		}
-		
-		
-		// might also have to re-install the default-product
-		// TEMPORARY WORKAROUND
-		boolean invokeWorkaroundWhileBugIsOpen = true;
-		String bugId="1526622"; // Bug 1526622 - the productid plugin should never delete a /etc/pki/product-default/<ID>.pem cert provided by the redhat-release-<VARIANT>.rpm
-		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
-		if (invokeWorkaroundWhileBugIsOpen) {
-			restoreYumBeakerRepos();
-			restoreRedHatRelease();
-			removeYumBeakerRepos();
-		}
-		// END OF WORKAROUND
-	}
+	
 	
 	
 	@Test(	description="subscription-manager Yum plugin: ensure content can be downloaded/installed/removed after subscribing to a personal subpool",
@@ -2033,6 +1984,27 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		// END OF WORKAROUND
 	}
 	
+	@AfterGroups(groups={"setup"}, value={
+			"testInstallAndRemoveAnyPackageFromEnabledRepoAfterSubscribingToPool",
+			"testInstallAndRemoveYumGroupFromEnabledRepoAfterSubscribingToPool",
+			"testYumInstallSucceedsWhenServiceRsyslogIsStopped"},
+			alwaysRun=true)
+	public void restoreRedHatReleaseAfterGroups() {
+		if (clienttasks==null) return;
+		
+		// might also have to re-install the default-product
+		// TEMPORARY WORKAROUND
+		boolean invokeWorkaroundWhileBugIsOpen = true;
+		String bugId="1526622"; // Bug 1526622 - the productid plugin should never delete a /etc/pki/product-default/<ID>.pem cert provided by the redhat-release-<VARIANT>.rpm
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
+		if (invokeWorkaroundWhileBugIsOpen) {
+			restoreYumBeakerRepos();
+			restoreRedHatRelease();
+			removeYumBeakerRepos();
+		}
+		// END OF WORKAROUND
+	}
+	
 	@AfterClass(groups={"setup"})
 	@AfterGroups(groups={"setup"},value="InstallAndRemovePackageAfterSubscribingToPersonalSubPool_Test", alwaysRun=true)
 	public void unregisterAfterGroupsInstallAndRemovePackageAfterSubscribingToPersonalSubPool_Test() {
@@ -2051,6 +2023,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		if (clienttasks==null) return;
 		clienttasks.deleteFactsFileWithOverridingValues();
 	}
+	
 	
 	@BeforeClass(groups="setup")
 	public void createSubscriptionsWithVariationsOnContentSizes() throws JSONException, Exception {
