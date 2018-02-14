@@ -382,7 +382,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	protected List<ProductCert> productCertsBeforeTest;
 	protected SubscriptionPool lastSubscriptionPool = null;
 	protected File lastEntitlementCertFile = null;
-	@BeforeGroups(groups={"setup"}, value={"testInstallAndRemoveAnyPackageFromEnabledRepoAfterSubscribingToPool","testInstallAndRemoveYumGroupFromEnabledRepoAfterSubscribingToPool"})
+	@BeforeGroups(groups={"setup"}, value={"testInstallAndRemoveAnyPackageFromEnabledRepoAfterSubscribingToPool","testInstallAndRemoveYumGroupFromEnabledRepoAfterSubscribingToPool","testYumInstallSucceedsWhenServiceRsyslogIsStopped"})
 	public void beforeInstallAndRemoveAnyPackageFromEnabledRepoAfterSubscribingToPool() {
 		if (clienttasks==null) return;
 		productCertsBeforeTest = clienttasks.getCurrentProductCerts();
@@ -445,7 +445,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 			}
 		}
 	}
-	@AfterGroups(groups={"setup"}, value={"testInstallAndRemoveAnyPackageFromEnabledRepoAfterSubscribingToPool","testInstallAndRemoveYumGroupFromEnabledRepoAfterSubscribingToPool"}, alwaysRun=true)
+	@AfterGroups(groups={"setup"}, value={"testInstallAndRemoveAnyPackageFromEnabledRepoAfterSubscribingToPool","testInstallAndRemoveYumGroupFromEnabledRepoAfterSubscribingToPool","testYumInstallSucceedsWhenServiceRsyslogIsStopped"}, alwaysRun=true)
 	public void afterInstallAndRemoveAnyPackageFromEnabledRepoAfterSubscribingToPool() {
 		if (clienttasks==null) return;
 		List<ProductCert> productCertsAfterTest = clienttasks.getCurrentProductCerts();
@@ -1356,7 +1356,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags="Tier1")
 	@Test(	description="Verify that yum install does not fail when service rsyslog is stopped",
-			groups={"Tier1Tests","FipsTests","blockedByBug-1211557","VerifyYumInstallSucceedsWhenServiceRsyslogIsStopped_Test"},
+			groups={"Tier1Tests","FipsTests","blockedByBug-1211557","testYumInstallSucceedsWhenServiceRsyslogIsStopped"},
 			dependsOnMethods={"testRhelSubscriptionContentIsAvailable"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -1421,8 +1421,9 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		// Note: On Client, package rcs is under rhel-6-client-optional-rpms
 		//clienttasks.yumInstallPackage(pkg);
 		clienttasks.yumInstallPackage(pkg,"--enablerepo=*-optional-rpms");
+		clienttasks.yumRemovePackage(pkg,"--enablerepo=*-optional-rpms");
 	}
-	@AfterGroups(groups={"setup"}, value={"VerifyYumInstallSucceedsWhenServiceRsyslogIsStopped_Test"})
+	@AfterGroups(groups={"setup"}, value={"testYumInstallSucceedsWhenServiceRsyslogIsStopped"})
 	@AfterClass(groups={"setup"})	// insurance; not really needed
 	public void restartRsyslogAfterGroup() {
 		if (client!=null) RemoteFileTasks.runCommandAndAssert(client, "service rsyslog start", 0);
