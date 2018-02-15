@@ -593,8 +593,8 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 			if (doesStringContainMatches(translationFile.getPath(),"/bn_IN/|/bn_IN\\.po$"))	ignorableMsgIds.addAll(Arrays.asList("Subscription Validity Applet","Auto-attach"));
 			if (doesStringContainMatches(translationFile.getPath(),"/ta_IN/|/ta_IN\\.po$"))	ignorableMsgIds.addAll(Arrays.asList("Org: ","org id: %s","org ID: %s","Repo Id:              \\t%s","Repo Url:             \\t%s"/*,"Auto-attach" Bug 1140644*/));
 			if (doesStringContainMatches(translationFile.getPath(),"/pt_BR/|/pt_BR\\.po$"))	ignorableMsgIds.addAll(Arrays.asList("Org: ","org id: %s","org ID: %s","<b>subscription management service version:</b> %s","Status","Status:               \\t%s","<b>Status:</b>","Login:","Virtual","_Help","virtual", "Repo Id:              \\t%s", "Arch:                 \\t%s"/* omaciel says "Arquitetura:" is better */, "Pool Id:              \\t%s"/* omaciel says "ID do pool:" is better */, "<b>Base URL:</b>","Ok","_Ok","Login","_Login:","Proxy"));
-			if (doesStringContainMatches(translationFile.getPath(),"/de_DE/|/de_DE\\.po$|/de\\.po$"))	ignorableMsgIds.addAll(Arrays.asList("Subscription Manager","Red Hat account: ","Account","<b>Account:</b>","Account:              \\t%s","<b>Subscription Management Service Version:</b> %s","<b>subscription management service version:</b> %s","subscription management server: %s","Login:","Arch","Arch:","Name","Name:                 \\t%s","Name:","<b>Name:</b>","Status","<b>Status:</b>","Status:               \\t%s","Status: $0","Status:","<b>Status Details:</b>","Status Details","Status Details:","Status Details Text","System Status Details","Version: %s","Version","Version:              \\t%s","Version:","<b>%s version:</b> %s","_System","long integer","name: %s","label","Label","Name: %s","Release: %s","integer","Tags","Org: ","org ID: %s","\\tManifest","<b>Account:</b>","Account","Account:","Red Hat account: ","Server","Standard","Repository: %s","Ok","_Ok","<b>Support:</b>","<b>Downloads &amp; Upgrades:</b>","Bypass Proxy Checkbox","Hostname/Domain Bypass Text","Proxy"));
-			if (doesStringContainMatches(translationFile.getPath(),"/es_ES/|/es_ES\\.po$|/es\\.po$"))	ignorableMsgIds.addAll(Arrays.asList("Org: ","Serial","Serial:","No","%s: error: %s","General:","_Login:","Login","Proxy"));
+			if (doesStringContainMatches(translationFile.getPath(),"/de_DE/|/de_DE\\.po$|/de/|de\\.po$"))	ignorableMsgIds.addAll(Arrays.asList("Subscription Manager","Red Hat account: ","Account","<b>Account:</b>","Account:              \\t%s","<b>Subscription Management Service Version:</b> %s","<b>subscription management service version:</b> %s","subscription management server: %s","Login:","Arch","Arch:","Name","Name:                 \\t%s","Name:","<b>Name:</b>","Status","<b>Status:</b>","Status:               \\t%s","Status: $0","Status:","<b>Status Details:</b>","Status Details","Status Details:","Status Details Text","System Status Details","Version: %s","Version","Version:              \\t%s","Version:","<b>%s version:</b> %s","_System","long integer","name: %s","label","Label","Name: %s","Release: %s","integer","Tags","Org: ","org ID: %s","\\tManifest","<b>Account:</b>","Account","Account:","Red Hat account: ","Server","Standard","Repository: %s","Ok","_Ok","<b>Support:</b>","<b>Downloads &amp; Upgrades:</b>","Bypass Proxy Checkbox","Hostname/Domain Bypass Text","Proxy"));
+			if (doesStringContainMatches(translationFile.getPath(),"/es_ES/|/es_ES\\.po$|/es/|es\\.po$"))	ignorableMsgIds.addAll(Arrays.asList("Org: ","Serial","Serial:","No","%s: error: %s","General:","_Login:","Login","Proxy"));
 			if (doesStringContainMatches(translationFile.getPath(),"/te/|/te\\.po$"))		ignorableMsgIds.addAll(Arrays.asList("page 2"));
 			if (doesStringContainMatches(translationFile.getPath(),"/pa/|/pa\\.po$"))		ignorableMsgIds.addAll(Arrays.asList("<b>python-rhsm version:</b> %s"));
 			if (doesStringContainMatches(translationFile.getPath(),"/fr/|/fr\\.po$"))		ignorableMsgIds.addAll(Arrays.asList("Auto-attach","Options","options","Type","Arch","Arches","Architectures","Version","page 2","Standard","Proxy"));
@@ -1220,7 +1220,13 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 
 				// Bug 1266125 - pofilter endwhitespace tests fail for many language translations in candlepin master
 				if (pofilterTest.equals("endwhitespace")) bugIds.add("1266125");
-		    
+				
+				// Bug 1545909 - [fr] poor French translation for msgid "Candlepin is in Suspend mode, please check /status resource to get more details"
+				if (pofilterTest.equals("filepaths") && translationFile.getName().equals("fr.po")) bugIds.add("1545909");
+				
+				// Bug 1545925 - [ja] the msgid "Bad Request" is not translated
+				if (pofilterTest.equals("unchanged") && translationFile.getName().equals("ja.po")) bugIds.add("1545925");			
+				
 				BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 				ll.add(Arrays.asList(new Object[] {blockedByBzBug, pofilterTest, translationFile}));
 			}
