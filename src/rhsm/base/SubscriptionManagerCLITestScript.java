@@ -231,6 +231,11 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 				infoMsg = client1.runCommandAndWait("rpm -q --whatprovides "+productCert.file).getStdout();
 				log.info(infoMsg); output.write(infoMsg+"\n\n");
 			}
+			
+			infoMsg = "# cat "+client1tasks.productIdJsonFile;
+			log.info(infoMsg); output.write(infoMsg+"\n");
+			infoMsg = client1.runCommandAndWait("cat "+client1tasks.productIdJsonFile).getStdout();
+			log.info(infoMsg); output.write(infoMsg+"\n\n");
 		}
 		if (client2 != null) {
 			infoMsg = "Client2 System Hostname: "+sm_client2Hostname+"\n";
@@ -269,6 +274,11 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 				infoMsg = client2.runCommandAndWait("rpm -q --whatprovides "+productCert.file).getStdout();
 				log.info(infoMsg); output.write(infoMsg+"\n\n");
 			}
+			
+			infoMsg = "# cat "+client2tasks.productIdJsonFile;
+			log.info(infoMsg); output.write(infoMsg+"\n");
+			infoMsg = client2.runCommandAndWait("cat "+client2tasks.productIdJsonFile).getStdout();
+			log.info(infoMsg); output.write(infoMsg+"\n\n");
 		}
 		output.close();
 		
