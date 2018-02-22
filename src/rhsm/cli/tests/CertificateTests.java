@@ -1126,6 +1126,9 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		// get the cacert file
 		File caCertFile = new File(clienttasks.getConfParameter("repo_ca_cert"));
 		
+		// get the baseurl
+		String baseurl = clienttasks.getConfParameter("baseurl");
+		
 		// get the repo url to the currently enabled base RHEL repo (assume it ends in /6/$releasever/$basearch/os
 		// get the list of currently enabled repos
 		
@@ -1161,11 +1164,16 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		//	Repo Name: Red Hat Enterprise Linux 7 Server (RPMs)
 		//	Repo URL:  https://cdn.redhat.com/content/dist/rhel/server/7/$releasever/$basearch/os
 		//	Enabled:   1
-
+		
+		//	RHEL-ALT Repos:
+		//	Product 419 aarch64 Repo rhel-7-for-arm-64-rpms        URL: https://cdn.redhat.com/content/dist/rhel-alt/server/7/$releasever/armv8-a/$basearch/os
+		//	Product 420 ppc64le Repo rhel-7-for-power-9-rpms       URL: https://cdn.redhat.com/content/dist/rhel-alt/server/7/$releasever/power9/$basearch/os
+		//	Product 434 s390x   Repo rhel-7-for-system-z-a-rpms	   URL: https://cdn.redhat.com/content/dist/rhel-alt/server/7/$releasever/system-z-a/$basearch/os
 		String rhelRepoUrl = null;
 		for (Repo enabledRepo :  Repo.parse(clienttasks.repos(null, true, false, (String)null,(String)null,null, null, null, null).getStdout())) {
 			if (enabledRepo.enabled) {
-				if (enabledRepo.repoUrl.endsWith(clienttasks.redhatReleaseX+"/$releasever/$basearch/os")) {
+				//if (enabledRepo.repoUrl.endsWith(clienttasks.redhatReleaseX+"/$releasever/$basearch/os")) {	// does not match the RHEL-ALT repos
+				if (enabledRepo.repoUrl.matches(baseurl+"([\\w/-]+)*/"+clienttasks.redhatReleaseX+"/\\$releasever/([\\w/-]+/)*\\$basearch/os")) {	// https://cdn.redhat.com([\w/-]+)*/7/\$releasever/([\w/-]+/)*\$basearch/os
 					// NOTE: I just learned that this will happen when the subscription also provides:  Red Hat Enterprise Linux Server - Extended Update Support
 					// In this case an additional product cert could get installed...
 					//	[root@dell-pe650-02 ~]# wget -nv -O /tmp/productid --ca-certificate=/etc/rhsm/ca/redhat-uep.pem --certificate-type=PEM --certificate=/etc/pki/entitlement/19553491962157768.pem --private-key=/etc/pki/entitlement/19553491962157768-key.pem --private-key-type=pem https://cdn.redhat.com/content/eus/rhel/server/6/6.1/x86_64/os/repodata/productid

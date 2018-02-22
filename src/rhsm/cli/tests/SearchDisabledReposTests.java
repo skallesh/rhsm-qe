@@ -525,9 +525,6 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 		stderrMessage = "Error: Nothing to do";
 		Assert.assertTrue(result.getStderr().contains(stderrMessage),"Stderr from attempt to install '"+rhelBasePackage+"' from a disabled repo contains message:\n"+stderrMessage);
 		
-		
-		
-
 	}
 	protected String rhelBasePackage		= "ghostscript";		// assume this package is available from rhelBaseRepoId
 	protected String rhelOptionalPackage	= "ghostscript-devel";	// assume this package is available from rhelOptionalRepoId and depends on rhelBasePackage
@@ -718,7 +715,7 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier1")
 	@Test(	description="verify user is prompted to search disabled repos to complete an applicable yum install transaction when notify_only=0 is configured in /etc/yum/pluginconf.d/search-disabled-repos.conf and proceed with --assumeyes responses",
-			groups={"Tier1Tests","blockedByBug-1232232","blockedByBug-1268376","blockedByBug-1512948"},
+			groups={"Tier1Tests","blockedByBug-1232232","blockedByBug-1268376","blockedByBug-1512948","testWithNotifyOnlyOffVerifyYumSearchDisabledReposAssumingYesResponses"},
 			dependsOnMethods={"testRhelSubscriptionBaseAndOptionalReposAreAvailable"},
 			priority=50, enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -894,7 +891,7 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier1")
 	@Test(	description="verify user is prompted to search disabled repos to complete an applicable yum install transaction when notify_only=0 is configured in /etc/yum/pluginconf.d/search-disabled-repos.conf and proceed with yes response to search disabled repos and install followed by no response to keep repos enabled.",
-			groups={"Tier1Tests","blockedByBug-1232232","blockedByBug-1268376","blockedByBug-1512948"},
+			groups={"Tier1Tests","blockedByBug-1232232","blockedByBug-1268376","blockedByBug-1512948","testWithNotifyOnlyOffVerifyYumSearchDisabledReposWithYesYesNoResponses"},
 			dependsOnMethods={"testRhelSubscriptionBaseAndOptionalReposAreAvailable"},
 			priority=60, enabled=true)
 	//@ImplementsNitrateTest(caseId=)

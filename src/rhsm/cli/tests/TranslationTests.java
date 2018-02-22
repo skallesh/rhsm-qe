@@ -632,8 +632,72 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 		}
 		return ll;
 	}
-
-
+	
+	
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"", ""},
+			linkedWorkItems= {
+				@LinkedItem(project= Project.RHEL6, workitemId= "RHEL6-28564", role= DefTypes.Role.VERIFIES),	// RHSM-REQ : Translation
+				@LinkedItem(project= Project.RedHatEnterpriseLinux7, workitemId= "RHEL7-84942",role= DefTypes.Role.VERIFIES),	// RHSM-REQ : Translation
+			},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
+	@Test(	description="verify that a colon character has not been appended to the end of the translated msgstr unless msgid also ends in a colon",
+			groups={"Tier2Tests"},
+			dataProvider="getTranslationFileDataToTestTranslationsDoNotEndInUnwantedColon",
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void testTranslationsDoNotEndInUnwantedColon(Object bugzilla, File translationFile) {
+		boolean warningsFound = false;
+		List<String> colonChars = Arrays.asList(":","："/*from zh_CN char set*/);
+		for (String colonChar : colonChars) {
+			for (Translation translation: translationFileMapForSubscriptionManager.get(translationFile)) {
+				if (translation.msgstr.trim().endsWith(colonChar) && !translation.msgid.trim().endsWith(":")) {
+					log.warning("Colon character \""+colonChar+"\" should not be randomly appended to the end of "+translationFile+" translation: "+translation);
+					warningsFound = true;
+				}
+			}
+		}
+		Assert.assertTrue(!warningsFound,"No translations found containing unexpected trailing colon characters.  (Details for failed translations are listed in the WARNING messages above.)");
+	}
+	@DataProvider(name="getTranslationFileDataToTestTranslationsDoNotEndInUnwantedColon")
+	public Object[][] getTranslationFileDataToTestTranslationsDoNotEndInUnwantedColonAs2dArray() {
+		return TestNGUtils.convertListOfListsTo2dArray(getTranslationFileDataToTestTranslationsDoNotEndInUnwantedColonAsListOfLists());
+	}
+	protected List<List<Object>> getTranslationFileDataToTestTranslationsDoNotEndInUnwantedColonAsListOfLists() {
+		List<List<Object>> ll = new ArrayList<List<Object>>();
+		if (translationFileMapForSubscriptionManager==null) return ll;
+		for (File translationFile : translationFileMapForSubscriptionManager.keySet()) {
+			Set<String> bugIds = new HashSet<String>();
+			
+			// Bug 1545442 - [zh_CN][fr][de][ru][pt_BR][pa][kn] unwanted trailing colon characters have been appended to some translations
+			if (translationFile.getPath().contains("/zh_CN/")) bugIds.add("1545442");
+			if (translationFile.getPath().contains("/pt_BR/")) bugIds.add("1545442");
+			if (translationFile.getPath().contains("/fr/")) bugIds.add("1545442");
+			if (translationFile.getPath().contains("/de/")) bugIds.add("1545442");
+			if (translationFile.getPath().contains("/ru/")) bugIds.add("1545442");
+			if (translationFile.getPath().contains("/pa/")) bugIds.add("1545442");
+			if (translationFile.getPath().contains("/kn/")) bugIds.add("1545442");
+			
+			// Bug 1544335 - [zh_CN][RHSM GUI][RHSM Initial Setup] Redundant colon next to 'Manually attach subscriptions after registration' check box in System Registration dialog.
+			if (translationFile.getPath().contains("/zh_CN/")) bugIds.add("1544335");
+			
+			// Bug 1544327 - [zh_CN][RHSM GUI][RHSM Initial Setup] Redundant colon in Attach button text in Subscription Attachment dialog.
+			if (translationFile.getPath().contains("/zh_CN/")) bugIds.add("1544327");
+		
+			// Bug 1544324 - [zh_CN][RHSM GUI][RHSM Initial Setup] Redundant colon in Next button text in System Registration dialog.
+			if (translationFile.getPath().contains("/zh_CN/")) bugIds.add("1544324");
+			
+			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
+			ll.add(Arrays.asList(new Object[] {blockedByBzBug, translationFile}));
+		}
+		return ll;
+	}
+	
+	
 	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-21771", "RHEL7-32172"},

@@ -39,6 +39,7 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterGroups;
 import org.testng.annotations.AfterSuite;
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeGroups;
 import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.DataProvider;
 
@@ -230,6 +231,11 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 				infoMsg = client1.runCommandAndWait("rpm -q --whatprovides "+productCert.file).getStdout();
 				log.info(infoMsg); output.write(infoMsg+"\n\n");
 			}
+			
+			infoMsg = "# cat "+client1tasks.productIdJsonFile;
+			log.info(infoMsg); output.write(infoMsg+"\n");
+			infoMsg = client1.runCommandAndWait("cat "+client1tasks.productIdJsonFile).getStdout();
+			log.info(infoMsg); output.write(infoMsg+"\n\n");
 		}
 		if (client2 != null) {
 			infoMsg = "Client2 System Hostname: "+sm_client2Hostname+"\n";
@@ -268,6 +274,11 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 				infoMsg = client2.runCommandAndWait("rpm -q --whatprovides "+productCert.file).getStdout();
 				log.info(infoMsg); output.write(infoMsg+"\n\n");
 			}
+			
+			infoMsg = "# cat "+client2tasks.productIdJsonFile;
+			log.info(infoMsg); output.write(infoMsg+"\n");
+			infoMsg = client2.runCommandAndWait("cat "+client2tasks.productIdJsonFile).getStdout();
+			log.info(infoMsg); output.write(infoMsg+"\n\n");
 		}
 		output.close();
 		
@@ -4150,5 +4161,59 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForSubscriptionManager, "enabled", "1");
 	}
 
+
+	protected List<ProductCert> productCertsBeforeThisTest;
+	@BeforeGroups(groups = { "setup" }, value = {
+			// list of individual tests that could cause the product-id yum plugin to install a productid from the CDN repodata that you want to remove after the test 
+			"testWithNotifyOnlyOffVerifyYumSearchDisabledReposAssumingYesResponses",
+			"testWithNotifyOnlyOffVerifyYumSearchDisabledReposWithYesYesNoResponses",
+			"testInstallAndRemoveAnyPackageFromEnabledRepoAfterSubscribingToPool",
+			"testInstallAndRemoveYumGroupFromEnabledRepoAfterSubscribingToPool",
+			"testYumInstallSucceedsWhenServiceRsyslogIsStopped" })
+	public void rememberProductCertsBeforeThisTest() {
+		if (clienttasks==null) return;
+		productCertsBeforeThisTest = clienttasks.getCurrentProductCerts();
+	}
+	
+	@AfterGroups(groups={"setup"}, value={
+			// list of individual tests that could cause the product-id yum plugin to install a productid from the CDN repodata that you want to remove after the test 
+			"testWithNotifyOnlyOffVerifyYumSearchDisabledReposAssumingYesResponses",
+			"testWithNotifyOnlyOffVerifyYumSearchDisabledReposWithYesYesNoResponses",
+			"testInstallAndRemoveAnyPackageFromEnabledRepoAfterSubscribingToPool",
+			"testInstallAndRemoveYumGroupFromEnabledRepoAfterSubscribingToPool",
+			"testYumInstallSucceedsWhenServiceRsyslogIsStopped"},
+			alwaysRun=true)
+	public void restoreProductCertsAfterThisTest() {
+		if (clienttasks==null) return;
+		List<ProductCert> productCertsAfterThisTest = clienttasks.getCurrentProductCerts();
+		
+		// clean up (remove) any extraneous product certs that were installed by the yum productid plugin during testInstallAndRemoveAnyPackageFromEnabledRepoAfterSubscribingToPool
+		// Extraneous RHEL product certs are easily possible especially on a HTB installation as explained in https://bugzilla.redhat.com/show_bug.cgi?id=1538957#c5
+		for (ProductCert productCertAfterThisTest : productCertsAfterThisTest) {
+			for (ProductCert productCertBeforeThisTest : productCertsBeforeThisTest) {
+				// do nothing when this productCertAfterTest was also present BeforeTest
+				if (productCertBeforeThisTest.file.equals(productCertAfterThisTest.file)) continue;
+				// do nothing if this productCertAfterTest is located in the default directory
+				if (productCertAfterThisTest.file.getPath().startsWith(clienttasks.productCertDefaultDir)) continue;
+				
+				// TEMPORARY WORKAROUND
+				if (doesStringContainMatches(productCertAfterThisTest.productNamespace.providedTags,"rhel-"+clienttasks.redhatReleaseX+"(,|$)")) {
+					boolean invokeWorkaroundWhileBugIsOpen = true;
+					String bugId="1525238"; // Bug 1525238 - yum plugin for productid neglects to remove HTB product cert from /etc/pki/product/ because it is tagged as a provider of "rhel-7"
+					try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
+					if (invokeWorkaroundWhileBugIsOpen) {
+					   log.warning("Removing product cert '"+productCertAfterThisTest.productName+" "+productCertAfterThisTest.file+"' from restoreProductCertsAfterThisTest() while bug '"+bugId+"' is open.");
+					}
+				}
+				// END OF WORKAROUND
+				
+				// remove the product cert
+			    log.info("Removing product cert '"+productCertAfterThisTest.productName+" "+productCertAfterThisTest.file+"' from restoreProductCertsAfterThisTest().");
+				client.runCommandAndWait("rm -f "+productCertAfterThisTest.file);
+			}
+		}
+		productCertsBeforeThisTest.clear();	// clear the protected variable
+		productCertsBeforeThisTest=null;
+	}
 
 }
