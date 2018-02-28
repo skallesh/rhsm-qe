@@ -3159,6 +3159,14 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				bugIds.add("1519979");
 			}
 			
+			if (rhnAvailableChildChannel.equals("rhel-x86_64-client-7-thirdparty-oracle-java") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-7-thirdparty-oracle-java") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-workstation-7-thirdparty-oracle-java") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-hpc-node-7-thirdparty-oracle-java")) {
+				// Bug 1550219 - missing RHN channel mappings for rhel-x86_64-<VARIANT>-7-thirdparty-oracle-java
+				bugIds.add("1550219");
+			}
+			
 			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 			ll.add(Arrays.asList(new Object[]{blockedByBzBug,	rhnAvailableChildChannel}));
 		}
