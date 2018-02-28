@@ -1836,6 +1836,9 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 					if (label.equals("rhel-7-for-power-eus-satellite-tools-6.2-debug-rpms")) bugIds.add("1491351");
 					if (label.equals("rhel-7-for-power-eus-satellite-tools-6.2-rpms")) bugIds.add("1491351");
 					if (label.equals("rhel-7-for-power-eus-satellite-tools-6.2-source-rpms")) bugIds.add("1491351");
+					if (label.equals("rhel-7-for-power-eus-satellite-tools-6.3-debug-rpms")) bugIds.add("1491351");
+					if (label.equals("rhel-7-for-power-eus-satellite-tools-6.3-rpms")) bugIds.add("1491351");
+					if (label.equals("rhel-7-for-power-eus-satellite-tools-6.3-source-rpms")) bugIds.add("1491351");
 					if (label.equals("rhel-7-for-power-eus-source-isos")) bugIds.add("1491351");
 					if (label.equals("rhel-7-for-power-eus-source-rpms")) bugIds.add("1491351");
 					if (label.equals("rhel-7-for-power-eus-supplementary-debuginfo")) bugIds.add("1491351");
@@ -1859,6 +1862,9 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 					if (label.equals("rhel-7-for-power-le-eus-satellite-tools-6.2-debug-rpms")) bugIds.add("1491356");
 					if (label.equals("rhel-7-for-power-le-eus-satellite-tools-6.2-rpms")) bugIds.add("1491356");
 					if (label.equals("rhel-7-for-power-le-eus-satellite-tools-6.2-source-rpms")) bugIds.add("1491356");
+					if (label.equals("rhel-7-for-power-le-eus-satellite-tools-6.3-debug-rpms")) bugIds.add("1491356");
+					if (label.equals("rhel-7-for-power-le-eus-satellite-tools-6.3-rpms")) bugIds.add("1491356");
+					if (label.equals("rhel-7-for-power-le-eus-satellite-tools-6.3-source-rpms")) bugIds.add("1491356");
 					if (label.equals("rhel-7-for-power-le-eus-satellite-tools-6.3-puppet4-debug-rpms")) bugIds.add("1491356");
 					if (label.equals("rhel-7-for-power-le-eus-satellite-tools-6.3-puppet4-rpms")) bugIds.add("1491356");
 					if (label.equals("rhel-7-for-power-le-eus-satellite-tools-6.3-puppet4-source-rpms")) bugIds.add("1491356");
