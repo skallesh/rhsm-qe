@@ -50,7 +50,7 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 	public final String jenkinsUsername			= getProperty("jenkins.username","");
 	public final String jenkinsPassword			= getProperty("jenkins.password","");
 	
-	public final String polarionPlannedIn		= getProperty("polarion.planned_in","");
+	public final String polarionPlannedIn		= getProperty("polarion.planned_in","None");
 	
 	public final String sm_serverAdminUsername	= getProperty("sm.server.admin.username","");
 	public final String sm_serverAdminPassword	= getProperty("sm.server.admin.password","");
@@ -81,7 +81,6 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 	public String sm_clientOrg					= sm_client1Org;
 	
 	public String sm_clientCertificateVersion	= getProperty("sm.client.certificateVersion",null);
-	public String sm_clientDefProdCertVersion	= getProperty("sm.client.defaultProductCertVersion",null);
 	public Boolean sm_clientFips				= Boolean.valueOf(getProperty("sm.client.fips","false"));
 
 

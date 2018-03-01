@@ -216,7 +216,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void testDefaultProductCertVersion() {
-		if (polarionPlannedIn==null) throw new SkipException("No automation property value for 'polarion.planned_in' was supplied to assert that the expected '"+clienttasks.productCertDefaultDir+"' cert(s) version was supplied.");
+		if (polarionPlannedIn.equalsIgnoreCase("None")) throw new SkipException("No automation property value for 'polarion.planned_in' was supplied to assert that the expected '"+clienttasks.productCertDefaultDir+"' cert(s) version was supplied.");
 		
 		// predict the expected product cert version based on the polarion.planned_in property
 		String expectedProductCertVersion = clienttasks.redhatReleaseXY;	// 7.5

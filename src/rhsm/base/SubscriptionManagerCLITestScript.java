@@ -620,7 +620,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		// let's manually place a reasonable product cert based on the polarion.planned_in property
 		// Reference: https://mojo.redhat.com/docs/DOC-1157988
  		if (smt.getCurrentProductCerts().isEmpty()) {
-			if (polarionPlannedIn.contains("Snap")) {
+			if (polarionPlannedIn.toLowerCase().contains("Snap".toLowerCase())) {
 				List<File> productCertFiles = new ArrayList<File>();
 				if (smt.compose.startsWith("RHEL-ALT")) {	// RHEL-ALT compose
 					if (smt.arch.equals("aarch64")) productCertFiles.add(new File(getProperty("automation.dir", "/tmp")+"/certs/rhel-alt-"+smt.redhatReleaseXY+"-beta/363_.pem"));	// Red Hat Enterprise Linux for ARM 64 Beta
