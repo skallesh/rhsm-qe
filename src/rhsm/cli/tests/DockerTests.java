@@ -980,7 +980,7 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 		List<EntitlementCert> entitlementHostCerts = EntitlementCert.parse(certificates);
 		
 		// Test 1A: assert the listed filenames match
-		Assert.assertEquals(entitlementCertListingResult.getStdout().trim(), entitlementHostCertListingResult.getStdout().trim(), "The entitlement cert files accessible in directory '"+entitlementHostDir+"' within a running container match the entitlment cert files found in the host's directory '"+entitlementDir+"'.");
+		Assert.assertEquals(entitlementHostCertListingResult.getStdout().trim(), entitlementCertListingResult.getStdout().trim(), "The entitlement cert files accessible in directory '"+entitlementHostDir+"' within a running container match the entitlment cert files found in the host's directory '"+entitlementDir+"'.");
 		
 		// Test 1B: assert entitlementHostCerts are equivalent to entitlementCerts
 		for (EntitlementCert entitlementCert : entitlementCerts) {
@@ -1001,7 +1001,7 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 		entitlementHostCertListingResult = client.runCommandAndWait("docker run --rm "+dockerImage+" ls "+entitlementHostDir+" | sort");
 		
 		// Test 2: assert the listed filenames match (after more entitlements have been attached to the host)
-		Assert.assertEquals(entitlementCertListingResult.getStdout().trim(), entitlementHostCertListingResult.getStdout().trim(), "The entitlement cert files accessible in directory '"+entitlementHostDir+"' within a running container match the entitlment cert files found in the host's directory '"+entitlementDir+"'.");
+		Assert.assertEquals(entitlementHostCertListingResult.getStdout().trim(), entitlementCertListingResult.getStdout().trim(), "The entitlement cert files accessible in directory '"+entitlementHostDir+"' within a running container match the entitlment cert files found in the host's directory '"+entitlementDir+"'.");
 	}
 	
 	
