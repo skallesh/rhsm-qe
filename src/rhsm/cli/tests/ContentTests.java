@@ -1265,7 +1265,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 				if (yumRepolistPackageCount>0) {
 					Assert.assertTrue(yumRepolistPackageCount>0,"Expecting many available packages (actual='"+yumRepolistPackageCount+"') of enabled repo content because RHEL subscription '"+pool.subscriptionName+"' SKU '"+pool.productId+"' was just attached.");
 				} else {
-					log.warning("No enabled yum repo content packages are available after attaching RHEL subscription '"+pool.subscriptionName+"'.");
+					log.warning("No enabled yum repo content packages are available after attaching RHEL subscription '"+pool.subscriptionName+"'. (This can happen when the RHEL product is brand new and content has not yet been pushed to '"+clienttasks.baseurl+"')");
 					rhelYumContentIsAvailable = false;
 				}
 				
