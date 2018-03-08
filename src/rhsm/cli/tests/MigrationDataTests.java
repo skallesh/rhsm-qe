@@ -1330,6 +1330,17 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 	//@ImplementsNitrateTest(caseId=)
 	public void testExpectedBaseChannelsSupportThisSystemsRhelVersion() {
 		
+		// TEMPORARY WORKAROUND FOR BUG
+		if (clienttasks.redhatReleaseXY.equals("7.5")) {
+			String bugId = "1549863";	// Bug 1549863 - Missing base RHN-to-ProductCert channel map for "rhel-ppc64le-server-7" and "rhel-aarch64-server-7"
+			boolean invokeWorkaroundWhileBugIsOpen = true;
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			if (invokeWorkaroundWhileBugIsOpen) {
+				throw new SkipException("Skipping this test on '"+clienttasks.redhatReleaseXY+"' while bug '"+bugId+"' is open.");
+			}
+		}
+		// END OF WORKAROUND
+		
 		List<String> expectedBaseChannels = new ArrayList<String>();
 		if (clienttasks.redhatReleaseX.equals("7")) {
 			// TEMPORARY WORKAROUND FOR BUG
@@ -1348,7 +1359,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 			expectedBaseChannels.add("rhel-x86_64-hpc-node-7");		// 76	Red Hat Enterprise Linux for Scientific Computing
 			expectedBaseChannels.add("rhel-s390x-server-7");		// 72	Red Hat Enterprise Linux for IBM System z
 			expectedBaseChannels.add("rhel-ppc64-server-7");		// 74	Red Hat Enterprise Linux for IBM POWER
-			if (Float.valueOf(clienttasks.redhatReleaseXY) >= 7.3) {
+			if (Float.valueOf(clienttasks.redhatReleaseXY) >= 7.3) {	// TODO may need updates after bug 1549863 is resolved
 			expectedBaseChannels.add("rhel-ppc64le-server-7");		// 279	Red Hat Enterprise Linux for Power, little endian
 			expectedBaseChannels.add("rhel-aarch64-server-7");		// 294	Red Hat Enterprise Linux Server for ARM Development Preview <= Preview?
 			}
@@ -1648,7 +1659,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				rhnChannel.equals("rhel-x86_64-hpc-node-7-thirdparty-oracle-java-beta") ||
 				rhnChannel.equals("rhel-x86_64-server-7-thirdparty-oracle-java-beta") ||
 				rhnChannel.equals("rhel-x86_64-workstation-7-thirdparty-oracle-java-beta")) {
-				bugIds.add("1176260");
+				if (clienttasks.redhatReleaseXY.equals("7.1")) bugIds.add("1176260");
 			}
 			
 			// Bug 1263432 - the RHN RHEL Channels 'rhel-x86_64-<VARIANT>-7-thirdparty-oracle-java-beta' map to a '7.1' version cert; should be '7.2 Beta'
@@ -1656,13 +1667,13 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				rhnChannel.equals("rhel-x86_64-hpc-node-7-thirdparty-oracle-java-beta") ||
 				rhnChannel.equals("rhel-x86_64-server-7-thirdparty-oracle-java-beta") ||
 				rhnChannel.equals("rhel-x86_64-workstation-7-thirdparty-oracle-java-beta")) {
-				bugIds.add("1263432");
+				if (clienttasks.redhatReleaseXY.equals("7.2")) bugIds.add("1263432");
 			}
 			
 			// Bug 1320647 - rhn channels 'rhel-ARCH-workstation-6-thirdparty-oracle-java-beta' should maps to the Beta product cert, not the GA cert.
 			if (rhnChannel.equals("rhel-i386-workstation-6-thirdparty-oracle-java-beta") ||
 				rhnChannel.equals("rhel-x86_64-workstation-6-thirdparty-oracle-java-beta")) {
-				bugIds.add("1320647");
+				if (clienttasks.redhatReleaseXY.equals("6.8")) bugIds.add("1320647");
 			}
 			
 			// Bug 1349584 - RHN RHEL Channels 'rhel-x86_64-<VARIANT>-7-thirdparty-oracle-java' map to a '7.2' version cert; should be '7.3'
@@ -1670,7 +1681,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				rhnChannel.equals("rhel-x86_64-hpc-node-7-thirdparty-oracle-java") ||
 				rhnChannel.equals("rhel-x86_64-server-7-thirdparty-oracle-java") ||
 				rhnChannel.equals("rhel-x86_64-workstation-7-thirdparty-oracle-java")) {
-				bugIds.add("1349584");
+				if (clienttasks.redhatReleaseXY.equals("7.3")) bugIds.add("1349584");
 			}
 			
 			// Bug 1349592 - RHN RHEL Channels 'rhel-x86_64-<VARIANT>-7-thirdparty-oracle-java-beta' map to a '7.2' version cert; should be '7.3 Beta'
@@ -1678,7 +1689,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				rhnChannel.equals("rhel-x86_64-hpc-node-7-thirdparty-oracle-java-beta") ||
 				rhnChannel.equals("rhel-x86_64-server-7-thirdparty-oracle-java-beta") ||
 				rhnChannel.equals("rhel-x86_64-workstation-7-thirdparty-oracle-java-beta")) {
-				bugIds.add("1349592");
+				if (clienttasks.redhatReleaseXY.equals("7.3")) bugIds.add("1349592");
 			}
 			
 			// Bug 1464236 - RHN RHEL Channels 'rhel-x86_64-<VARIANT>-7-thirdparty-oracle-java' map to a '7.3' version cert; should be '7.4'
@@ -1686,7 +1697,90 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				rhnChannel.equals("rhel-x86_64-hpc-node-7-thirdparty-oracle-java") ||
 				rhnChannel.equals("rhel-x86_64-server-7-thirdparty-oracle-java") ||
 				rhnChannel.equals("rhel-x86_64-workstation-7-thirdparty-oracle-java")) {
-				bugIds.add("1464236");
+				if (clienttasks.redhatReleaseXY.equals("7.3")) bugIds.add("1464236");
+			}
+			
+			// Bug 1549766 - Numerous RHN RHEL Channels map to a RHEL '7.4' version certificate instead of the latest '7.5' version
+			if (rhnChannel.equals("rhel-ppc64-server-extras-7") ||
+				rhnChannel.equals("rhel-ppc64-server-extras-7-debuginfo") ||
+				rhnChannel.equals("rhel-ppc64-server-fastrack-7") ||
+				rhnChannel.equals("rhel-ppc64-server-fastrack-7-debuginfo") ||
+				rhnChannel.equals("rhel-ppc64-server-optional-7") ||
+				rhnChannel.equals("rhel-ppc64-server-optional-7-debuginfo") ||
+				rhnChannel.equals("rhel-ppc64-server-optional-fastrack-7") ||
+				rhnChannel.equals("rhel-ppc64-server-optional-fastrack-7-debuginfo") ||
+				rhnChannel.equals("rhel-ppc64-server-rh-common-7") ||
+				rhnChannel.equals("rhel-ppc64-server-rh-common-7-debuginfo") ||
+				rhnChannel.equals("rhel-ppc64-server-supplementary-7") ||
+				rhnChannel.equals("rhel-ppc64-server-supplementary-7-debuginfo") ||
+				rhnChannel.equals("rhel-s390x-server-extras-7") ||
+				rhnChannel.equals("rhel-s390x-server-extras-7-debuginfo") ||
+				rhnChannel.equals("rhel-s390x-server-fastrack-7") ||
+				rhnChannel.equals("rhel-s390x-server-fastrack-7-debuginfo") ||
+				rhnChannel.equals("rhel-s390x-server-optional-7") ||
+				rhnChannel.equals("rhel-s390x-server-optional-7-debuginfo") ||
+				rhnChannel.equals("rhel-s390x-server-optional-fastrack-7") ||
+				rhnChannel.equals("rhel-s390x-server-optional-fastrack-7-debuginfo") ||
+				rhnChannel.equals("rhel-s390x-server-rh-common-7") ||
+				rhnChannel.equals("rhel-s390x-server-rh-common-7-debuginfo") ||
+				rhnChannel.equals("rhel-s390x-server-supplementary-7") ||
+				rhnChannel.equals("rhel-s390x-server-supplementary-7-debuginfo") ||
+				rhnChannel.equals("rhel-x86_64-client-extras-7") ||
+				rhnChannel.equals("rhel-x86_64-client-extras-7-debuginfo") ||
+				rhnChannel.equals("rhel-x86_64-client-fastrack-7") ||
+				rhnChannel.equals("rhel-x86_64-client-fastrack-7-debuginfo") ||
+				rhnChannel.equals("rhel-x86_64-client-optional-7") ||
+				rhnChannel.equals("rhel-x86_64-client-optional-7-debuginfo") ||
+				rhnChannel.equals("rhel-x86_64-client-optional-fastrack-7") ||
+				rhnChannel.equals("rhel-x86_64-client-optional-fastrack-7-debuginfo") ||
+				rhnChannel.equals("rhel-x86_64-client-rh-common-7") ||
+				rhnChannel.equals("rhel-x86_64-client-rh-common-7-debuginfo") ||
+				rhnChannel.equals("rhel-x86_64-client-supplementary-7") ||
+				rhnChannel.equals("rhel-x86_64-client-supplementary-7-debuginfo") ||
+				rhnChannel.equals("rhel-x86_64-hpc-node-extras-7") ||
+				rhnChannel.equals("rhel-x86_64-hpc-node-extras-7-debuginfo") ||
+				rhnChannel.equals("rhel-x86_64-hpc-node-fastrack-7") ||
+				rhnChannel.equals("rhel-x86_64-hpc-node-fastrack-7-debuginfo") ||
+				rhnChannel.equals("rhel-x86_64-hpc-node-optional-7") ||
+				rhnChannel.equals("rhel-x86_64-hpc-node-optional-7-debuginfo") ||
+				rhnChannel.equals("rhel-x86_64-hpc-node-optional-fastrack-7") ||
+				rhnChannel.equals("rhel-x86_64-hpc-node-optional-fastrack-7-debuginfo") ||
+				rhnChannel.equals("rhel-x86_64-hpc-node-rh-common-7") ||
+				rhnChannel.equals("rhel-x86_64-hpc-node-rh-common-7-debuginfo") ||
+				rhnChannel.equals("rhel-x86_64-hpc-node-supplementary-7") ||
+				rhnChannel.equals("rhel-x86_64-hpc-node-supplementary-7-debuginfo") ||
+				rhnChannel.equals("rhel-x86_64-server-extras-7") ||
+				rhnChannel.equals("rhel-x86_64-server-extras-7-debuginfo") ||
+				rhnChannel.equals("rhel-x86_64-server-fastrack-7") ||
+				rhnChannel.equals("rhel-x86_64-server-fastrack-7-debuginfo") ||
+				rhnChannel.equals("rhel-x86_64-server-ha-fastrack-7") ||
+				rhnChannel.equals("rhel-x86_64-server-ha-fastrack-7-debuginfo") ||
+				rhnChannel.equals("rhel-x86_64-server-optional-7") ||
+				rhnChannel.equals("rhel-x86_64-server-optional-7-debuginfo") ||
+				rhnChannel.equals("rhel-x86_64-server-optional-fastrack-7") ||
+				rhnChannel.equals("rhel-x86_64-server-optional-fastrack-7-debuginfo") ||
+				rhnChannel.equals("rhel-x86_64-server-rh-common-7") ||
+				rhnChannel.equals("rhel-x86_64-server-rh-common-7-debuginfo") ||
+				rhnChannel.equals("rhel-x86_64-server-rs-fastrack-7") ||
+				rhnChannel.equals("rhel-x86_64-server-rs-fastrack-7-debuginfo") ||
+				rhnChannel.equals("rhel-x86_64-server-supplementary-7") ||
+				rhnChannel.equals("rhel-x86_64-server-supplementary-7-debuginfo") ||
+				rhnChannel.equals("rhel-x86_64-server-v2vwin-7") ||
+				rhnChannel.equals("rhel-x86_64-server-v2vwin-7-debuginfo") ||
+				rhnChannel.equals("rhel-x86_64-workstation-extras-7") ||
+				rhnChannel.equals("rhel-x86_64-workstation-extras-7-debuginfo") ||
+				rhnChannel.equals("rhel-x86_64-workstation-fastrack-7") ||
+				rhnChannel.equals("rhel-x86_64-workstation-fastrack-7-debuginfo") ||
+				rhnChannel.equals("rhel-x86_64-workstation-optional-7") ||
+				rhnChannel.equals("rhel-x86_64-workstation-optional-7-debuginfo") ||
+				rhnChannel.equals("rhel-x86_64-workstation-optional-fastrack-7") ||
+				rhnChannel.equals("rhel-x86_64-workstation-optional-fastrack-7-debuginfo") ||
+				rhnChannel.equals("rhel-x86_64-workstation-rh-common-7") ||
+				rhnChannel.equals("rhel-x86_64-workstation-rh-common-7-debuginfo") ||
+				rhnChannel.equals("rhel-x86_64-workstation-supplementary-7") ||
+				rhnChannel.equals("rhel-x86_64-workstation-supplementary-7-debuginfo") ||
+				rhnChannel.equals("")) {
+				if (clienttasks.redhatReleaseXY.equals("7.5")) bugIds.add("1549766");
 			}
 			
 			// Object bugzilla, String productBaselineRhnChannel, String productBaselineProductId
@@ -3063,6 +3157,14 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				rhnAvailableChildChannel.equals("rhel-x86_64-server-7-ost-12-debuginfo")) {
 				// Bug 1519979 - rhel-x86_64-server-7-ost-[9|10|11|12] channel maps are absent from channel-cert-mapping.txt
 				bugIds.add("1519979");
+			}
+			
+			if (rhnAvailableChildChannel.equals("rhel-x86_64-client-7-thirdparty-oracle-java") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-server-7-thirdparty-oracle-java") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-workstation-7-thirdparty-oracle-java") ||
+				rhnAvailableChildChannel.equals("rhel-x86_64-hpc-node-7-thirdparty-oracle-java")) {
+				// Bug 1550219 - missing RHN channel mappings for rhel-x86_64-<VARIANT>-7-thirdparty-oracle-java
+				bugIds.add("1550219");
 			}
 			
 			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));

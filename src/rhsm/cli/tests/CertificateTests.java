@@ -216,7 +216,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void testDefaultProductCertVersion() {
-		if (polarionPlannedIn==null) throw new SkipException("No automation property value for 'polarion.planned_in' was supplied to assert that the expected '"+clienttasks.productCertDefaultDir+"' cert(s) version was supplied.");
+		if (polarionPlannedIn.equalsIgnoreCase("None")) throw new SkipException("No automation property value for 'polarion.planned_in' was supplied to assert that the expected '"+clienttasks.productCertDefaultDir+"' cert(s) version was supplied.");
 		
 		// predict the expected product cert version based on the polarion.planned_in property
 		String expectedProductCertVersion = clienttasks.redhatReleaseXY;	// 7.5
@@ -303,15 +303,21 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 				break;
 			case 419: // Red Hat Enterprise Linux for ARM 64
 				expectedTags = Arrays.asList("rhel-#,rhel-alt-#,rhel-alt-#-armv8-a".replaceAll("#",clienttasks.redhatReleaseX).split("\\s*,\\s*"));
-				// TODO ADD WORKAROUND FOR Bug 1518886 - RHEL-ALT-7.5 product certs should also provide tag "rhel-7"
+				// ADD WORKAROUND FOR Bug 1518886 - RHEL-ALT-7.5 product certs should also provide tag "rhel-7"
+				// UPDATE: BUG 1518886 was CLOSED WONTFIX in favor of the fix from Bug 1510024 which now recognizes rhel-alt-# as a RHEL product
+				expectedTags = Arrays.asList("rhel-alt-#,rhel-alt-#-armv8-a".replaceAll("#",clienttasks.redhatReleaseX).split("\\s*,\\s*"));
 				break;
 			case 420: // Red Hat Enterprise Linux for Power 9
 				expectedTags = Arrays.asList("rhel-#,rhel-alt-#,rhel-alt-#-power9".replaceAll("#",clienttasks.redhatReleaseX).split("\\s*,\\s*"));
-				// TODO ADD WORKAROUND FOR Bug 1518886 - RHEL-ALT-7.5 product certs should also provide tag "rhel-7"
+				// ADD WORKAROUND FOR Bug 1518886 - RHEL-ALT-7.5 product certs should also provide tag "rhel-7"
+				// UPDATE: BUG 1518886 was CLOSED WONTFIX in favor of the fix from Bug 1510024 which now recognizes rhel-alt-# as a RHEL product
+				expectedTags = Arrays.asList("rhel-alt-#,rhel-alt-#-power9".replaceAll("#",clienttasks.redhatReleaseX).split("\\s*,\\s*"));
 				break;
 			case 434: // Red Hat Enterprise Linux for IBM System z (Structure A)
 				expectedTags = Arrays.asList("rhel-#,rhel-alt-#,rhel-alt-#-system-z-a".replaceAll("#",clienttasks.redhatReleaseX).split("\\s*,\\s*"));
-				// TODO ADD WORKAROUND FOR Bug 1518886 - RHEL-ALT-7.5 product certs should also provide tag "rhel-7"
+				// ADD WORKAROUND FOR Bug 1518886 - RHEL-ALT-7.5 product certs should also provide tag "rhel-7"
+				// UPDATE: BUG 1518886 was CLOSED WONTFIX in favor of the fix from Bug 1510024 which now recognizes rhel-alt-# as a RHEL product
+				expectedTags = Arrays.asList("rhel-alt-#,rhel-alt-#-system-z-a".replaceAll("#",clienttasks.redhatReleaseX).split("\\s*,\\s*"));
 				break;
 			case 363: // Red Hat Enterprise Linux for ARM 64 Beta
 				expectedTags = Arrays.asList("rhel-alt-#,rhel-alt-#-armv8-a".replaceAll("#",clienttasks.redhatReleaseX).split("\\s*,\\s*"));

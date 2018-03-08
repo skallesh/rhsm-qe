@@ -2302,9 +2302,27 @@ if (false) {
 		return EntitlementCert.parseStdoutFromOpensslX509(certificates);
 	}
 	public List<EntitlementCert> getCurrentEntitlementCerts() {
+		
+		if (false) {	// effectively commented out
+			// STRANGELY THIS ALGORITHM OCCASIONALY TAKES MORE THAN 30 MIN (sshCommandRunner emergencyTimeout > 18000000lMS); LET'S TRY A LESS AGRESSIVE ALGORITHM
+			//	2018-02-22 15:22:57.940  FINE: ssh root@bkr-hv03-guest12.dsal.lab.eng.bos.redhat.com find /etc/pki/entitlement -regex "/.+/[0-9]+.pem" -exec rct cat-cert {} \;
+			//	2018-02-22 15:52:58.081  SEVERE: Test Failed: testReposListPreservesSimultaneousEnablementOfRedhatRepos
+			//	java.lang.RuntimeException: net.schmizz.sshj.connection.ConnectionException: Timeout expired
+			//	        at com.redhat.qe.tools.SSHCommandRunner.run(SSHCommandRunner.java:177)
+			//	        at com.redhat.qe.tools.SSHCommandRunner.runCommand(SSHCommandRunner.java:317)
+			//	        at com.redhat.qe.tools.SSHCommandRunner.runCommandAndWait(SSHCommandRunner.java:354)
+			//	        at com.redhat.qe.tools.SSHCommandRunner.runCommandAndWaitWithoutLogging(SSHCommandRunner.java:337)
+			//	        at rhsm.cli.tasks.SubscriptionManagerTasks.getCurrentEntitlementCerts(SubscriptionManagerTasks.java:2305)
 		sshCommandRunner.runCommandAndWaitWithoutLogging("find "+entitlementCertDir+" -regex \"/.+/[0-9]+.pem\" -exec rct cat-cert {} \\;");
 		String certificates = sshCommandRunner.getStdout();
 		return EntitlementCert.parse(certificates);
+		}
+		
+		List<EntitlementCert> entitlementCerts = new ArrayList<EntitlementCert>();
+		for (File serialPemFile : getCurrentEntitlementCertFiles()) {
+			entitlementCerts.add(getEntitlementCertFromEntitlementCertFile(serialPemFile));
+		}
+		return entitlementCerts;
 	}
 	
 	/**

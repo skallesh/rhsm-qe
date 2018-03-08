@@ -800,6 +800,18 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 		// get the yum repolist of enabled repos on the running docker image
 		SSHCommandResult enabledYumRepolistResultOnRunningDockerImage = RemoteFileTasks.runCommandAndAssert(client, "docker run --rm "+dockerImage+" yum repolist enabled", 0, "repolist:", null);
 		List<String> enabledYumReposOnRunningDockerImage = clienttasks.getYumRepolistFromSSHCommandResult(enabledYumRepolistResultOnRunningDockerImage);
+		
+		// TEMPORARY WORKAROUND FOR BUG
+		if (clienttasks.redhatReleaseX.equals("7") && clienttasks.variant.equals("Workstation") && enabledYumReposOnRunningDockerImage.isEmpty()) {
+			boolean invokeWorkaroundWhileBugIsOpen = true;
+			String bugId="1551129"; // Bug 1551129 - entitlements from a RHEL7.5 Workstation host fail to flow through to a docker container with docker from latest-EXTRAS-7-RHEL-7
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
+			if (invokeWorkaroundWhileBugIsOpen) {
+				throw new SkipException("Skipping this test on variant '"+clienttasks.variant+"' while docker bug '"+bugId+"' is open");
+			}
+		}
+		// END OF WORKAROUND
+		
 		// assert that only the appropriate entitled content sets appear in the yum repolist on the running docker image
 		for (EntitlementCert entitlementCertOnHost : entitlementCertsOnHost ) {
 			for (ContentNamespace contentNamespaceOnHost : entitlementCertOnHost.contentNamespaces) {
@@ -980,7 +992,7 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 		List<EntitlementCert> entitlementHostCerts = EntitlementCert.parse(certificates);
 		
 		// Test 1A: assert the listed filenames match
-		Assert.assertEquals(entitlementCertListingResult.getStdout().trim(), entitlementHostCertListingResult.getStdout().trim(), "The entitlement cert files accessible in directory '"+entitlementHostDir+"' within a running container match the entitlment cert files found in the host's directory '"+entitlementDir+"'.");
+		Assert.assertEquals(entitlementHostCertListingResult.getStdout().trim(), entitlementCertListingResult.getStdout().trim(), "The entitlement cert files accessible in directory '"+entitlementHostDir+"' within a running container match the entitlment cert files found in the host's directory '"+entitlementDir+"'.");
 		
 		// Test 1B: assert entitlementHostCerts are equivalent to entitlementCerts
 		for (EntitlementCert entitlementCert : entitlementCerts) {
@@ -1001,7 +1013,7 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 		entitlementHostCertListingResult = client.runCommandAndWait("docker run --rm "+dockerImage+" ls "+entitlementHostDir+" | sort");
 		
 		// Test 2: assert the listed filenames match (after more entitlements have been attached to the host)
-		Assert.assertEquals(entitlementCertListingResult.getStdout().trim(), entitlementHostCertListingResult.getStdout().trim(), "The entitlement cert files accessible in directory '"+entitlementHostDir+"' within a running container match the entitlment cert files found in the host's directory '"+entitlementDir+"'.");
+		Assert.assertEquals(entitlementHostCertListingResult.getStdout().trim(), entitlementCertListingResult.getStdout().trim(), "The entitlement cert files accessible in directory '"+entitlementHostDir+"' within a running container match the entitlment cert files found in the host's directory '"+entitlementDir+"'.");
 	}
 	
 	
