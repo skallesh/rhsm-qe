@@ -4,6 +4,8 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.testng.SkipException;
 import org.testng.annotations.Test;
 
@@ -12,6 +14,7 @@ import com.redhat.qe.Assert;
 import rhsm.base.CandlepinType;
 import rhsm.base.ConsumerType;
 import rhsm.base.SubscriptionManagerCLITestScript;
+import rhsm.cli.tasks.CandlepinTasks;
 import rhsm.data.ContentNamespace;
 import rhsm.data.EntitlementCert;
 import rhsm.data.Repo;
@@ -83,18 +86,34 @@ public class RHUITests extends SubscriptionManagerCLITestScript {
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier1")
 	@Test(	description="register to the stage/prod environment as a RHUI consumer type",
-			groups={"Tier1Tests", "blockedByBug-1496550"},
+			groups={"Tier1Tests", "blockedByBug-1496550", "blockedByBug-1554482"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void testRegisterRHUIConsumer() {
+	public void testRegisterRHUIConsumer() throws JSONException, Exception {
+		SSHCommandResult result;
+		
 		// register a RHUI consumer type
 		if (sm_serverType.equals(CandlepinType.standalone)) {
-			SSHCommandResult result = clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,ConsumerType.RHUI,null,null,null,null,null,(String)null,null,null, null, true, null, null, null, null, null);
+			result = clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,ConsumerType.RHUI,null,null,null,null,null,(String)null,null,null, null, true, null, null, null, null, null);
 			Assert.assertEquals(result.getStderr().trim(), String.format("Unit type '%s' could not be found.", ConsumerType.RHUI));
 			Assert.assertEquals(result.getExitCode(), Integer.valueOf(70));
 			throw new SkipException("On a candlpin server of type '"+sm_serverType+"': "+result.getStderr().trim());
 		} else
-		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,ConsumerType.RHUI,null,null,null,null,null,(String)null,null,null, null, true, null, null, null, null, null);
+		result = clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,ConsumerType.RHUI,null,null,null,null,null,(String)null,null,null, null, true, null, null, null, null, null);
+		
+		// assert the RHUI consumer type
+		String consumerId = clienttasks.getCurrentConsumerId(result);
+		String path = "/consumers/"+consumerId+"?include=type";
+		JSONObject jsonConsumerType= new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, path));
+		//	{
+		//	    "type": {
+		//	        "id": "0",
+		//	        "label": "RHUI",
+		//	        "manifest": false
+		//	    }
+		//	}
+		String actualType = jsonConsumerType.getJSONObject("type").getString("label");
+		Assert.assertEquals(actualType, ConsumerType.RHUI.toString(), "Consumer type.label returned from Candlepin API for GET on '"+path+"' after registering with --type='"+ConsumerType.RHUI+"'");
 	}
 
 	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
