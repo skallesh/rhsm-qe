@@ -904,7 +904,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 			groups={"Tier2Tests"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void testRegisterWithNameAndType(Object bugzilla, String username, String password, String owner, String name, ConsumerType type, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex) {
+	public void testRegisterWithNameAndType(Object bugzilla, String username, String password, String owner, String name, ConsumerType type, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex) throws Exception {
 		
 		// start fresh by unregistering
 		clienttasks.unregister(null, null, null, null);
@@ -916,6 +916,22 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		if (expectedExitCode!=null)Assert.assertEquals(sshCommandResult.getExitCode(), expectedExitCode,"ExitCode after register with --name="+name+" --type="+type+" options:");
 		if (expectedStdoutRegex!=null) Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), expectedStdoutRegex,"Stdout after register with --name="+name+" --type="+type+" options:");
 		if (expectedStderrRegex!=null) Assert.assertContainsMatch(sshCommandResult.getStderr().trim(), expectedStderrRegex,"Stderr after register with --name="+name+" --type="+type+" options:");
+		
+		// assert the type
+		if (expectedExitCode!=null && expectedExitCode==0) {
+			String consumerId = clienttasks.getCurrentConsumerId(sshCommandResult);
+			String path = "/consumers/"+consumerId+"?include=type";
+			JSONObject jsonConsumerType= new JSONObject(servertasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, path));
+			//	{
+			//	    "type": {
+			//	        "id": "0",
+			//	        "label": "system",
+			//	        "manifest": false
+			//	    }
+			//	}
+			String actualType = jsonConsumerType.getJSONObject("type").getString("label");
+			Assert.assertEquals(actualType, type.toString(), "Consumer type.label returned from Candlepin API for GET on '"+path+"' after registering with --type='"+type+"'");
+		}
 	}
 	
 
