@@ -167,6 +167,8 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 			msgId = msgId.replace("couldn't","could not");
 			msgId = msgId.replace("Shouldn't","Should not");
 			msgId = msgId.replace("shouldn't","should not");
+			msgId = msgId.replace("isn't", "is not");	// fails on hunspell-1.2.8-16.el6
+			msgId = msgId.replace("aren't", "are not");	// fails on hunspell-1.2.8-16.el6
 			msgId = msgId.replace("consumerid", "consumer_id");
 			msgId = msgId.replace("consumer_uuid", "consumer_universally_unique_identifier");
 			msgId = msgId.replace("subscription-manager config --rhsm", "subscription-manager configure --red-hat-subscription-manager");
