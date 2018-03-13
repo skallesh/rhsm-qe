@@ -15,6 +15,7 @@ import org.testng.annotations.Test;
 import rhsm.base.CandlepinType;
 import rhsm.base.SubscriptionManagerCLITestScript;
 import rhsm.cli.tasks.CandlepinTasks;
+import rhsm.cli.tasks.SubscriptionManagerTasks;
 import rhsm.data.InstalledProduct;
 import rhsm.data.ProductSubscription;
 import rhsm.data.SubscriptionPool;
@@ -260,7 +261,11 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 						Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(255), "The exit code from attempt to attach subscription '"+pool.subscriptionName+"' with quantity '"+quantityAttempted+"' which should be an error.");
 					}
 				} else if (quantityAttempted%poolInstanceMultiplier!=0) {
-					Assert.assertEquals(sshCommandResult.getStdout().trim(), String.format("Subscription '%s' must be attached using a quantity evenly divisible by %s",pool.subscriptionName,poolInstanceMultiplier), "The stdout from attempt to attach subscription '"+pool.subscriptionName+"' with quantity '"+quantityAttempted+"' which is not evenly divisible by the instance_multiplier '"+poolInstanceMultiplier+"'.");	// expected stdout message changed by Bug 1033365 - request to improve unfriendly message: Quantity '1' is not a multiple of instance multiplier '2'
+					String expectedStdout = String.format("Subscription '%s' must be attached using a quantity evenly divisible by %s",pool.subscriptionName,poolInstanceMultiplier);
+					if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.3.1-1")) {	// commit 0d5fefcfa8c1c2485921d2dee6633879b1e06931 Correct incorrect punctuation in user messages
+						expectedStdout = String.format("Subscription \"%s\" must be attached using a quantity evenly divisible by %s",pool.subscriptionName,poolInstanceMultiplier);
+					}
+					Assert.assertEquals(sshCommandResult.getStdout().trim(), expectedStdout, "The stdout from attempt to attach subscription '"+pool.subscriptionName+"' with quantity '"+quantityAttempted+"' which is not evenly divisible by the instance_multiplier '"+poolInstanceMultiplier+"'.");	// expected stdout message changed by Bug 1033365 - request to improve unfriendly message: Quantity '1' is not a multiple of instance multiplier '2'
 					Assert.assertEquals(sshCommandResult.getStderr().trim(), "", "The stderr from attempt to attach subscription '"+pool.subscriptionName+"' with quantity '"+quantityAttempted+"' which is not evenly divisible by the instance_multiplier '"+poolInstanceMultiplier+"'.");
 					Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(1)/* TODO figure out if this is a bug.  should it be 255?*/, "The exit code from attempt to attach subscription '"+pool.subscriptionName+"' with quantity '"+quantityAttempted+"' which is not evenly divisible by the instance_multiplier '"+poolInstanceMultiplier+"'.");
 				} else {
