@@ -172,7 +172,10 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 		//	    raise RestlibException(response['status'], error_msg, response.get('headers'))
 		//	RestlibException: SKU product not available to this development unit: 'dev-mkt-product'
 		if (jsonDevSkuProduct.has("displayMessage")) {
-			expectedStdError = "SKU product not available to this development unit: '"+devSku+"'";
+			expectedStdError = String.format("SKU product not available to this development unit: '%s'", devSku);
+			if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.3.1-1")) {	// commit 0d5fefcfa8c1c2485921d2dee6633879b1e06931 Correct incorrect punctuation in user messages
+				expectedStdError = String.format("SKU product not available to this development unit: \"%s\"", devSku);
+			}			
 			expectedLogError = "RestlibException: "+expectedStdError;
 			Assert.assertEquals(registerResult.getStderr().trim(), expectedStdError, "When attempting to autosubscribe a consumer with an unknown dev_sku fact against a candlepin.standalone=false server, stderr reports '"+expectedStdError+"'.");
 			// TEMPORARY WORKAROUND
@@ -205,7 +208,12 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 			if (jsonProduct.has("displayMessage")) {
 				// indicative that: // Product with ID '69' could not be found.
 				String expectedDisplayMessage = String.format("Product with UUID '%s' could not be found.",installedProduct.productId);
-				if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) expectedDisplayMessage = String.format("Product with ID '%s' could not be found.",installedProduct.productId);
+				if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) {
+					expectedDisplayMessage = String.format("Product with ID '%s' could not be found.",installedProduct.productId);
+				}
+				if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.3.1-1")) {	// commit 0d5fefcfa8c1c2485921d2dee6633879b1e06931 Correct incorrect punctuation in user messages
+					expectedDisplayMessage = String.format("Product with ID \"%s\" could not be found.",installedProduct.productId);
+				}	
 				Assert.assertEquals(jsonProduct.getString("displayMessage"),expectedDisplayMessage);
 				log.info("Installed Product ID '"+installedProduct.productId+"' ("+installedProduct.productName+") was not recognized by our candlepin server.  Therefore this product will not be entitled by the devSku.");
 			} else {
