@@ -1015,6 +1015,9 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 			//	Pool is restricted to physical systems: '8a9087e3443db08f01443db1810c125e'.
 			SSHCommandResult result = clienttasks.subscribe_(null, null, hostPoolId, null, null, null, null, null, null, null, null, null, null);
 			String expectedMsg = String.format("Pool is restricted to physical systems: '%s'.", hostPoolId);
+			if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.3.1-1")) {	// commit 0d5fefcfa8c1c2485921d2dee6633879b1e06931 Correct incorrect punctuation in user messages
+				expectedMsg = String.format("Pool is restricted to physical systems: \"%s\".",hostPoolId);
+			}
 			Assert.assertEquals(result.getStdout().trim(), expectedMsg, "Stdout from an attempt to subscribe a virtual system to physical_only pool: "+hostPool);
 			Assert.assertEquals(result.getStderr(), "", "Stderr from an attempt to subscribe a virtual system to physical_only pool: "+hostPool);
 			Assert.assertEquals(result.getExitCode(), Integer.valueOf(1), "Exitcode from an attempt to subscribe a virtual system to physical_only pool: "+hostPool);
@@ -1064,7 +1067,11 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 		// Unable to entitle consumer to the pool with id '8a90f8b42e3e7f2e012e3e7fc653013e'.: rulefailed.virt.only
 		//Assert.assertContainsMatch(result.getStdout(), "^Unable to entitle consumer to the pool with id '"+guestPoolId+"'.:");
 		// RHEL58: Pool is restricted to virtual guests: '8a90f85734205a010134205ae8d80403'.
-		Assert.assertEquals(result.getStdout().trim(), "Pool is restricted to virtual guests: '"+guestPoolId+"'.");
+		String expectedStdout = "Pool is restricted to virtual guests: '"+guestPoolId+"'.";
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.3.1-1")) {	// commit 0d5fefcfa8c1c2485921d2dee6633879b1e06931 Correct incorrect punctuation in user messages
+			expectedStdout = String.format("Pool is restricted to virtual guests: \"%s\".",guestPoolId);
+		}
+		Assert.assertEquals(result.getStdout().trim(), expectedStdout);
 
 	}
 

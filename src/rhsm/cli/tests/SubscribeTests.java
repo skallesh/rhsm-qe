@@ -1434,12 +1434,21 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			if (quantity>1 && !CandlepinTasks.isPoolProductMultiEntitlement(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId)) {
 				expectedSubscribeResultStdoutSubString = String.format("Multi-entitlement not supported for pool with id '%s'.",pool.poolId);
 				if (!clienttasks.workaroundForBug876764(sm_serverType)) expectedSubscribeResultStdoutSubString = String.format("Multi-entitlement not supported for pool with ID '%s'.",pool.poolId);
+				if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.3.1-1")) {	// commit 0d5fefcfa8c1c2485921d2dee6633879b1e06931 Correct incorrect punctuation in user messages
+					expectedSubscribeResultStdoutSubString = String.format("Multi-entitlement not supported for pool with ID \"%s\".",pool.poolId);
+				}
 				Assert.assertTrue(subscribeResult.getStdout().contains(expectedSubscribeResultStdoutSubString),"Subscribe attempt to non-multi-entitlement pool '"+pool.poolId+"' was NOT successful when subscribing with --quantity greater than one.");				
 			} else if (isSystemVirtual && CandlepinTasks.isPoolRestrictedToPhysicalSystems(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId)) {	// Note: the "Multi-entitlement not supported" restriction is thrown before "Pool is restricted to physical systems"
 				expectedSubscribeResultStdoutSubString = String.format("Pool is restricted to physical systems: '%s'.",pool.poolId);
+				if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.3.1-1")) {	// commit 0d5fefcfa8c1c2485921d2dee6633879b1e06931 Correct incorrect punctuation in user messages
+					expectedSubscribeResultStdoutSubString = String.format("Pool is restricted to physical systems: \"%s\".",pool.poolId);
+				}
 				Assert.assertTrue(subscribeResult.getStdout().contains(expectedSubscribeResultStdoutSubString),"Subscribe attempt to physical_only pool '"+pool.poolId+"' was NOT successful when system is virtual.");				
 			} else if (!isSystemVirtual && CandlepinTasks.isPoolRestrictedToVirtualSystems(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId)) {	// Note: the "Multi-entitlement not supported" restriction is thrown before "Pool is restricted to virtual systems"
 				expectedSubscribeResultStdoutSubString = String.format("Pool is restricted to virtual guests: '%s'.",pool.poolId);
+				if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.3.1-1")) {	// commit 0d5fefcfa8c1c2485921d2dee6633879b1e06931 Correct incorrect punctuation in user messages
+					expectedSubscribeResultStdoutSubString = String.format("Pool is restricted to virtual guests: \"%s\".",pool.poolId);
+				}
 				Assert.assertTrue(subscribeResult.getStdout().contains(expectedSubscribeResultStdoutSubString),"Subscribe attempt to virt_only pool '"+pool.poolId+"' was NOT successful when system is physical.");				
 			} else if (pool.quantity.equalsIgnoreCase("unlimited") || quantity <= Integer.valueOf(pool.quantity)) {
 				//Assert.assertTrue(subscribeResult.getStdout().contains(String.format("Successfully consumed a subscription from the pool with id %s.",pool.poolId)),"Subscribe to pool '"+pool.poolId+"' was successful when subscribing with --quantity less than or equal to the pool's availability.");	// Bug 812410 - Subscription-manager subscribe CLI feedback 
@@ -1449,6 +1458,9 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 				expectedSubscribeResultStdoutSubString = String.format("No entitlements are available from the pool with id '%s'.",pool.poolId);	// expected string changed by bug 876758
 				expectedSubscribeResultStdoutSubString = String.format("No subscriptions are available from the pool with id '%s'.",pool.poolId);
 				if (!clienttasks.workaroundForBug876764(sm_serverType)) expectedSubscribeResultStdoutSubString = String.format("No subscriptions are available from the pool with ID '%s'.",pool.poolId);
+				if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.3.1-1")) {	// commit 0d5fefcfa8c1c2485921d2dee6633879b1e06931 Correct incorrect punctuation in user messages
+					expectedSubscribeResultStdoutSubString = String.format("No subscriptions are available from the pool with ID \"%s\".",pool.poolId);
+				}
 				Assert.assertTrue(subscribeResult.getStdout().contains(expectedSubscribeResultStdoutSubString),"Subscribe to pool '"+pool.poolId+"' was NOT successful when subscribing with --quantity greater than the pool's availability.");
 			}
 		}
@@ -2128,6 +2140,9 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 				expectedStdout = String.format("No entitlements are available from the pool with id '%s'.",pool.poolId);	// expected string changed by bug 876758
 				expectedStdout = String.format("No subscriptions are available from the pool with id '%s'.",pool.poolId);
 				if (!clienttasks.workaroundForBug876764(sm_serverType)) expectedStdout = String.format("No subscriptions are available from the pool with ID '%s'.",pool.poolId);
+				if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.3.1-1")) {	// commit 0d5fefcfa8c1c2485921d2dee6633879b1e06931 Correct incorrect punctuation in user messages
+					expectedStdout = String.format("No subscriptions are available from the pool with ID \"%s\".",pool.poolId);
+				}
 				if (!CandlepinType.hosted.equals(sm_serverType)) {	// exclude this test from running on a hosted server since parallel running tests often consume available quantities affecting the expected results
 					ll.add(Arrays.asList(new Object[] {null,						pool,	String.valueOf(Integer.valueOf(pool.quantity)+1),	Integer.valueOf(1),		"^"+expectedStdout+"$",	null}));
 					ll.add(Arrays.asList(new Object[] {null,						pool,	String.valueOf(Integer.valueOf(pool.quantity)+10),	Integer.valueOf(1),		"^"+expectedStdout+"$",	null}));
@@ -2147,6 +2162,9 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			ll.add(Arrays.asList(new Object[] {null,								pool,	"1",												Integer.valueOf(0),		expectedStdout,	null}));
 			expectedStdout = String.format("Multi-entitlement not supported for pool with id '%s'.",pool.poolId);
 			if (!clienttasks.workaroundForBug876764(sm_serverType))  expectedStdout = String.format("Multi-entitlement not supported for pool with ID '%s'.",pool.poolId);
+			if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.3.1-1")) {	// commit 0d5fefcfa8c1c2485921d2dee6633879b1e06931 Correct incorrect punctuation in user messages
+				expectedStdout = String.format("Multi-entitlement not supported for pool with ID \"%s\".",pool.poolId);
+			}
 			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("722975"),		pool,	"2",												Integer.valueOf(1),		"^"+expectedStdout+"$",	null}));
 		} else {
 			ll.add(Arrays.asList(new Object[] {null,	null,	null,	null,	null,	"Could NOT find an available subscription pool with \"multi-entitlement\" product attribute set false (or absent)."}));
@@ -2182,6 +2200,9 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 				}
 				expectedStdout = String.format("No subscriptions are available from the pool with id '%s'.",pool.poolId);
 				if (!clienttasks.workaroundForBug876764(sm_serverType)) expectedStdout = String.format("No subscriptions are available from the pool with ID '%s'.",pool.poolId);
+				if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.3.1-1")) {	// commit 0d5fefcfa8c1c2485921d2dee6633879b1e06931 Correct incorrect punctuation in user messages
+					expectedStdout = String.format("No subscriptions are available from the pool with ID \"%s\".",pool.poolId);
+				}
 				if (!CandlepinType.hosted.equals(sm_serverType)) {	// exclude this test from running on a hosted server since parallel running tests often consume available quantities affecting the expected results
 					ll.add(Arrays.asList(new Object[] {null,						pool,	String.valueOf(Integer.valueOf(pool.quantity) - Integer.valueOf(pool.quantity)%instanceMultiplier + instanceMultiplier),		Integer.valueOf(1),		"^"+expectedStdout+"$",	null}));	// testing with a quantity one increment over the availability
 					ll.add(Arrays.asList(new Object[] {null,						pool,	String.valueOf(Integer.valueOf(pool.quantity) - Integer.valueOf(pool.quantity)%instanceMultiplier + instanceMultiplier*10),		Integer.valueOf(1),		"^"+expectedStdout+"$",	null}));	// testing with a quantity ten increments over the availability
