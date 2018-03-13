@@ -4416,6 +4416,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 							if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0"))
 								expectedDisplayMessage = "Product with ID '" + AvailSub.productId
 										+ "' cannot be deleted while subscriptions exist.";
+							if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.3.1-1")) {	// commit 0d5fefcfa8c1c2485921d2dee6633879b1e06931 Correct incorrect punctuation in user messages
+								expectedDisplayMessage = String.format("Product with ID \"%s\" cannot be deleted while subscriptions exist.",AvailSub.productId);
+							}	
 							Assert.assertEquals(jsonConsumer.getString("displayMessage"), expectedDisplayMessage);
 						}
 					}
