@@ -1283,6 +1283,30 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 			return;
 		}
 		
+		if (classicRhnChannel.equals("rhel-x86_64-server-6-rhevm-3.6") ||
+			classicRhnChannel.equals("rhel-x86_64-server-6-rhevm-3.6-debuginfo")) {
+			// Bug 1320592 - rhel-x86_64-server-6-rhevm-3.6 channel maps are absent from channel-cert-mapping.txt 
+			log.warning("(jkurik 12/06/2017) This issue does not meet the inclusion criteria for the Production 3 Phase and will be marked as CLOSED/WONTFIX. https://bugzilla.redhat.com/show_bug.cgi?id=1320592#c5");
+			Assert.assertTrue(!channelsToProductCertFilenamesMap.containsKey(classicRhnChannel), "Special case RHN Classic channel '"+classicRhnChannel+"' is NOT accounted for in subscription-manager-migration-data file '"+channelCertMappingFilename+"'.");
+			return;
+		}
+		
+		if (classicRhnChannel.equals("rhel-x86_64-server-6-rh-gluster-3-nfs") ||
+			classicRhnChannel.equals("rhel-x86_64-server-6-rh-gluster-3-nfs-debuginfo")) {
+			// Bug 1393557 - rhel-x86_64-server-6-rh-gluster-3-nfs channel maps are absent from channel-cert-mapping.txt
+			log.warning("(jkurik 12/06/2017) This issue does not meet the inclusion criteria for the Production 3 Phase and will be marked as CLOSED/WONTFIX. https://bugzilla.redhat.com/show_bug.cgi?id=1393557#c4");
+			Assert.assertTrue(!channelsToProductCertFilenamesMap.containsKey(classicRhnChannel), "Special case RHN Classic channel '"+classicRhnChannel+"' is NOT accounted for in subscription-manager-migration-data file '"+channelCertMappingFilename+"'.");
+			return;
+		}
+		
+		if (classicRhnChannel.equals("rhel-x86_64-server-6-ost-3-cts") ||
+			classicRhnChannel.equals("rhel-x86_64-server-6-ost-3-cts-debuginfo")) {
+			// Bug 1232465 - rhel-x86_64-server-6-ost-3-cts channel maps are missing from channel-cert-mapping.txt
+			log.warning("(jkurik 12/06/2017) This issue does not meet the inclusion criteria for the Production 3 Phase and will be marked as CLOSED/WONTFIX. https://bugzilla.redhat.com/show_bug.cgi?id=1232465#c5");
+			Assert.assertTrue(!channelsToProductCertFilenamesMap.containsKey(classicRhnChannel), "Special case RHN Classic channel '"+classicRhnChannel+"' is NOT accounted for in subscription-manager-migration-data file '"+channelCertMappingFilename+"'.");
+			return;
+		}
+		
 		// skip all missing beta channels and ignore their absence from the migration data (as generally agreed upon by dev/qe/pm team)
 		if (!channelsToProductCertFilenamesMap.containsKey(classicRhnChannel) && 
 			(classicRhnChannel.contains("-beta-")||classicRhnChannel.endsWith("-beta"))) {
