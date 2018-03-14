@@ -194,6 +194,9 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 			if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "0.9.37-1"/*candlepin-common-1.0.17-1*/)) {	// commit f51d8f98869f5ab6f519b665f97653f8608a6ca6	// Bug 1167856 - candlepin msgids with unescaped single quotes will not print the single quotes
 				expectedMessage = "The activation key name '"+badName+"' must be alphanumeric or include the characters '-' or '_'";
 			}
+			if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.3.1-1")) {	// commit 0d5fefcfa8c1c2485921d2dee6633879b1e06931 Correct incorrect punctuation in user messages
+				expectedMessage = String.format("The activation key name \"%s\" must be alphanumeric or include the characters \"%s\" or \"%s\"",badName,"-","_");
+			}
 			Assert.assertEquals(displayMessage, expectedMessage, "Expected the creation of this activation key named '"+badName+"' to fail.");
 		} else {
 			log.warning("The absense of a displayMessage indicates the activation key creation was probably successful when we expected it to fail due to an invalid name '"+badName+"'.");
@@ -232,10 +235,14 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		
 		// assert that the creation was NOT successful (contains a displayMessage)
 		if (jsonActivationKey.has("displayMessage")) {
-			String displayMessage = jsonActivationKey.getString("displayMessage");
 			// Activation key name [dupkey] is already in use for owner [admin]
-			//Assert.assertEquals(displayMessage,"Activation key name ["+name+"] is already in use for owner ["+sm_clientOrg+"]","Expected the attempted creation of a duplicate activation key named '"+name+"' for owner '"+sm_clientOrg+"' to fail.");
-			Assert.assertEquals(displayMessage,"The activation key name '"+name+"' is already in use for owner "+sm_clientOrg+"","Expected the attempted creation of a duplicate activation key named '"+name+"' for owner '"+sm_clientOrg+"' to fail.");
+			String displayMessage = jsonActivationKey.getString("displayMessage");
+			String expectedMessage = "Activation key name ["+name+"] is already in use for owner ["+sm_clientOrg+"]";
+			expectedMessage = "The activation key name '"+name+"' is already in use for owner "+sm_clientOrg;
+			if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.3.1-1")) {	// commit 0d5fefcfa8c1c2485921d2dee6633879b1e06931 Correct incorrect punctuation in user messages
+				expectedMessage = String.format("The activation key name \"%s\" is already in use for owner %s",name,sm_clientOrg);
+			}
+			Assert.assertEquals(displayMessage,expectedMessage,"Expected the attempted creation of a duplicate activation key named '"+name+"' for owner '"+sm_clientOrg+"' to fail.");
 		} else {
 			log.warning("The absense of a displayMessage indicates the activation key creation was probably successful when we expected it to fail due to a duplicate name '"+name+"'.");
 			Assert.assertFalse (name.equals(jsonActivationKey.getString("name")),"The following activation key should not have been created with a duplicate name '"+name+"': "+jsonActivationKey);
@@ -1409,7 +1416,11 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		// assert that the creation was NOT successful (contains a displayMessage)
 		if (jsonActivationKey.has("displayMessage")) {
 			String displayMessage = jsonActivationKey.getString("displayMessage");
-			Assert.assertEquals(displayMessage, String.format("Service level '%s' is not available to units of organization %s.",mapActivationKeyRequest.get("serviceLevel"),sm_clientOrg),"Expected the creation of this activation key to fail because this service level is non-existant for any of the subscriptions in this org.");
+			String expectedMessage = String.format("Service level '%s' is not available to units of organization %s.",mapActivationKeyRequest.get("serviceLevel"),sm_clientOrg);
+			if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.3.1-1")) {	// commit 0d5fefcfa8c1c2485921d2dee6633879b1e06931 Correct incorrect punctuation in user messages
+				expectedMessage = String.format("Service level \"%s\" is not available to units of organization %s.",mapActivationKeyRequest.get("serviceLevel"),sm_clientOrg);
+			}
+			Assert.assertEquals(displayMessage,expectedMessage,"Expected the creation of this activation key to fail because this service level is non-existant for any of the subscriptions in this org.");
 		} else {
 			log.warning("The absense of a displayMessage indicates the activation key creation was probably successful when we expected it to fail due to an invalid service level '"+mapActivationKeyRequest.get("serviceLevel")+"'.");
 			Assert.fail("The following activation key should not have been created with bad serviceLevel '"+mapActivationKeyRequest.get("serviceLevel")+"': "+jsonActivationKey);
