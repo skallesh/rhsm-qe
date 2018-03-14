@@ -180,7 +180,7 @@ public class CandlepinTasks {
 		Assert.assertTrue(RemoteFileTasks.testExists(sshCommandRunner, serverInstallDir),"Found the server install directory "+serverInstallDir);
 		
 		// git the correct version of candlepin to deploy
-		RemoteFileTasks.searchReplaceFile(sshCommandRunner, "/etc/sudoers", "\\(^Defaults[[:space:]]\\+requiretty\\)", "#\\1");	// Needed to prevent error:  sudo: sorry, you must have a tty to run sudo
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "sudo sed -i 's/\\(^Defaults[[:space:]]\\+requiretty\\)/#\\1/g' /etc/sudoers", Integer.valueOf(0));	// RemoteFileTasks.searchReplaceFile(sshCommandRunner, "/etc/sudoers", "\\(^Defaults[[:space:]]\\+requiretty\\)", "#\\1");	// Comment out the line "Defaults requiretty" from the /etc/sudoers file because it will prevent error:  sudo: sorry, you must have a tty to run sudo
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+" && git reset --hard HEAD && git checkout master && git pull", Integer.valueOf(0), null, "(Already on|Switched to branch) 'master'");
 		if (branch.equals("candlepin-latest-tag")) {  // see commented python code at the end of this file */
 			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+" && git tag | grep candlepin-2.0 | sort -t . -k 3 -n | tail -1", Integer.valueOf(0), "^candlepin", null);
