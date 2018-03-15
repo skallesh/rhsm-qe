@@ -138,7 +138,7 @@ public class BashCompletionTests extends SubscriptionManagerCLITestScript{
 				client.runCommandAndWait("rpm --install http://dl.fedoraproject.org/pub/epel/5/x86_64/bash-completion-1.3-7.el5.noarch.rpm");
 			}
 			if (clienttasks.redhatReleaseX.equals("6")) {
-				client.runCommandAndWait("yum install --assumeyes --quiet http://dl.fedoraproject.org/pub/epel/6/x86_64/bash-completion-1.3-7.el6.noarch.rpm");
+				client.runCommandAndWait("yum install --assumeyes --quiet http://dl.fedoraproject.org/pub/epel/6/x86_64/Packages/b/bash-completion-1.3-7.el6.noarch.rpm");
 			}
 		}
 		
