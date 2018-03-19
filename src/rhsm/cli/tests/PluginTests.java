@@ -905,7 +905,8 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_haUsername,sm_haPassword,sm_haOrg,null,null,null,null,null,null,null,(String)null,null,null, null, true, null, null, null, null, null));
 
 		// make sure that there are no ha packages and no productId installed
-		for (String haPackage : sm_haPackages) {
+		List<String> haPackages = HighAvailabilityTests.getHighAvailabilityPackages(clienttasks.redhatReleaseXY, clienttasks.arch);
+		for (String haPackage : haPackages) {
 			if (clienttasks.isPackageInstalled(haPackage)) clienttasks.yumRemovePackage(haPackage);
 		}
 		InstalledProduct haInstalledProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", haProductId, clienttasks.getCurrentlyInstalledProducts());
@@ -920,12 +921,13 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		
 		// Subscribe to the High Availability subscription SKU
 		List<SubscriptionPool> availableSubscriptionPools = clienttasks.getCurrentlyAvailableSubscriptionPools();
-		SubscriptionPool haPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", sm_haSku, availableSubscriptionPools);
+		String haSku = HighAvailabilityTests.getHighAvailabilitySku(clienttasks.arch);
+		SubscriptionPool haPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", haSku, availableSubscriptionPools);
 		if (clienttasks.variant.equals("Server") && getArchesOfferringHighAvailabilityContent().contains(clienttasks.arch)) {
-			Assert.assertNotNull(haPool, "A subscription pool for High Availability SKU '"+sm_haSku+"' is available.");
+			Assert.assertNotNull(haPool, "A subscription pool for High Availability SKU '"+haSku+"' is available.");
 			clienttasks.subscribe(null,null,haPool.poolId, null,null,null,null,null,null,null,null, null, null);
 		} else {
-			throw new SkipException("Not expecting High Availability subscription SKU '"+sm_haSku+"' to offer content on a RHEL '"+clienttasks.redhatReleaseX+"' '"+clienttasks.variant+"' system with arch '"+clienttasks.arch+"'.");
+			throw new SkipException("Not expecting High Availability subscription SKU '"+haSku+"' to offer content on a RHEL '"+clienttasks.redhatReleaseX+"' '"+clienttasks.variant+"' system with arch '"+clienttasks.arch+"'.");
 		}
 		// Note: Despite that subscription RH00025 will be available on these arches...
 		// There will not be any HA content available unless product cert providing tag rhel-5-server or rhel-6-server or rhel-7-server is installed
@@ -935,9 +937,9 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		//	"value": "x86_64,ppc64,ia64,ppc,x86"
 		
 		// INFO: rhel-ha-for-rhel-7-server-rpms/7Server/x86_64 is enabled by default
-		// NOT ANYMORE, WE NOW NEED TO ENABLE THE ADDON REPO (A GOOD CHANGE BY REL-ENG DURING THE RHEL7.4 TEST PHASE)
-		if (clienttasks.redhatReleaseX.equals("7") && clienttasks.arch.equals("x86_64")) {
-			clienttasks.repos(null, null, null, "rhel-ha-for-rhel-7-server-rpms", null, null, null, null, null);
+		// NOT ANYMORE, WE NOW NEED TO ENABLE THE ADDON REPO (A GOOD CHANGE BY REL-ENG DURING THE RHEL7.4 TEST PHASE, AND APPLIED TO ALL RELEASES)
+		if (/*clienttasks.redhatReleaseX.equals("7") && */clienttasks.arch.equals("x86_64")) {
+			clienttasks.repos(null, null, null, "rhel-ha-for-rhel-"+clienttasks.redhatReleaseX+"-server-rpms", null, null, null, null, null);
 		}
 		
 		// INFO: rhel-ha-for-rhel-7-for-system-z-rpms/7Server/s390x is NOT enabled by default
@@ -951,7 +953,7 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 
 		// do a yum install of an ha package
 		// WARNING! Package ccs also belongs to Resilient Storage which may cause productId 90 to also be installed from one of the beaker repos, therefore --disablerepo=beaker*
-		clienttasks.yumInstallPackage(sm_haPackages.get(0),"--disablerepo=beaker-*");	// yum -y install ccs --disablerepo=beaker-*
+		clienttasks.yumInstallPackage(haPackages.get(0),"--disablerepo=beaker-*");	// yum -y install ccs --disablerepo=beaker-*
 		//sleep(5000);	// give the plugin hooks a chance to be called; I think this is an async process
 		
 
@@ -997,8 +999,9 @@ public class PluginTests extends SubscriptionManagerCLITestScript {
 		try {if (invokeWorkaroundWhileBugIsOpen/*&&BzChecker.getInstance().isBugOpen(bugId)*/) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
 		if (invokeWorkaroundWhileBugIsOpen) {
 			// remove the HA package that was installed by prior test verifyEnabledProductIdInstallTestPluginHooksAreCalled_Test
-			if (!sm_haPackages.isEmpty() && clienttasks.isPackageInstalled(sm_haPackages.get(0))) {
-				clienttasks.yumRemovePackage(sm_haPackages.get(0));	// yum -y remove ccs
+			List<String> haPackages = HighAvailabilityTests.getHighAvailabilityPackages(clienttasks.redhatReleaseXY, clienttasks.arch);
+			if (!haPackages.isEmpty() && clienttasks.isPackageInstalled(haPackages.get(0))) {
+				clienttasks.yumRemovePackage(haPackages.get(0));	// yum -y remove ccs
 			}
 			
 			// remove the HA product cert too

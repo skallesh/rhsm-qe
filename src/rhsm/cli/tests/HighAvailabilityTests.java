@@ -1,6 +1,7 @@
 package rhsm.cli.tests;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -97,7 +98,7 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 		
 		// verify no High Availability packages are installed
 		boolean haPackagesInstalled = false;
-		for (String pkg: sm_haPackages) {
+		for (String pkg: /*sm_haPackages*/getHighAvailabilityPackages(clienttasks.redhatReleaseXY, clienttasks.arch)) {
 			if (clienttasks.isPackageInstalled(pkg)) {
 				haPackagesInstalled = true;
 				log.warning("Did not expect High Availability package '"+pkg+"' to be instaled.");				
@@ -258,19 +259,20 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void testSubscribeToHighAvailabilitySKU() {
+		String haSku = getHighAvailabilitySku(clienttasks.arch);
 		
 		// assert that the High Availability subscription SKU is found in the all available list
 		List<SubscriptionPool> allAvailableSubscriptionPools = clienttasks.getCurrentlyAllAvailableSubscriptionPools();
-		Assert.assertNotNull(SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", sm_haSku, allAvailableSubscriptionPools), "High Availability subscription SKU '"+sm_haSku+"' is available for consumption when the client arch is ignored.");
+		Assert.assertNotNull(SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", haSku, allAvailableSubscriptionPools), "High Availability subscription SKU '"+haSku+"' is available for consumption when the client arch is ignored.");
 		
 		// assert that the High Availability subscription SKU is found in the available list only on x86_64,x86 arches; see https://docspace.corp.redhat.com/docs/DOC-63084
 		List<SubscriptionPool> availableSubscriptionPools = clienttasks.getCurrentlyAvailableSubscriptionPools();
-		SubscriptionPool haPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", sm_haSku, availableSubscriptionPools);
+		SubscriptionPool haPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", haSku, availableSubscriptionPools);
 		if (!haSupportedArches.contains(clienttasks.arch)) {
-			Assert.assertNull(haPool, "High Availability subscription SKU '"+sm_haSku+"' should NOT be available for consumption on a system whose arch '"+clienttasks.arch+"' is NOT among the supported arches "+haSupportedArches);
-			throw new SkipException("Cannot consume High Availability subscription SKU '"+sm_haSku+"' on a system whose arch '"+clienttasks.arch+"' is NOT among the supported arches "+haSupportedArches);
+			Assert.assertNull(haPool, "High Availability subscription SKU '"+haSku+"' should NOT be available for consumption on a system whose arch '"+clienttasks.arch+"' is NOT among the supported arches "+haSupportedArches);
+			throw new SkipException("Cannot consume High Availability subscription SKU '"+haSku+"' on a system whose arch '"+clienttasks.arch+"' is NOT among the supported arches "+haSupportedArches);
 		}
-		Assert.assertNotNull(haPool, "High Availability subscription SKU '"+sm_haSku+"' is available for consumption on a system whose arch '"+clienttasks.arch+"' is among the supported arches "+haSupportedArches);
+		Assert.assertNotNull(haPool, "High Availability subscription SKU '"+haSku+"' is available for consumption on a system whose arch '"+clienttasks.arch+"' is among the supported arches "+haSupportedArches);
 		
 		// Subscribe to the High Availability subscription SKU
 		haEntitlementCertFile = clienttasks.subscribeToSubscriptionPool(haPool,/*sm_serverAdminUsername*/sm_haUsername,/*sm_serverAdminPassword*/sm_haPassword,sm_serverUrl);
@@ -293,9 +295,9 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 	public void testHighAvailabilityPackagesAreAvailabile() {
 		
 		// INFO: rhel-ha-for-rhel-7-server-rpms/7Server/x86_64 is enabled by default
-		// NOT ANYMORE, WE NOW NEED TO ENABLE THE ADDON REPO (A GOOD CHANGE BY REL-ENG DURING THE RHEL7.4 TEST PHASE)
-		if (clienttasks.redhatReleaseX.equals("7") && clienttasks.arch.equals("x86_64")) {
-			clienttasks.repos(null, null, null, "rhel-ha-for-rhel-7-server-rpms", null, null, null, null, null);
+		// NOT ANYMORE, WE NOW NEED TO ENABLE THE ADDON REPO (A GOOD CHANGE BY REL-ENG DURING THE RHEL7.4 TEST PHASE, AND APPLIED TO ALL RELEASES)
+		if (/*clienttasks.redhatReleaseX.equals("7") && */clienttasks.arch.equals("x86_64")) {
+			clienttasks.repos(null, null, null, "rhel-ha-for-rhel-"+clienttasks.redhatReleaseX+"-server-rpms", null, null, null, null, null);
 		}
 		
 		// INFO: rhel-ha-for-rhel-7-for-system-z-rpms/7Server/s390x is NOT enabled by default
@@ -305,7 +307,7 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 		
 		List<String> availablePackages = clienttasks.getYumListAvailable(null);
 		boolean foundAllExpectedPkgs = true;
-		for (String expectedPkg: sm_haPackages) {
+		for (String expectedPkg: /*sm_haPackages*/getHighAvailabilityPackages(clienttasks.redhatReleaseXY, clienttasks.arch)) {
 			boolean foundExpectedPkg = false;
 			for (String availablePkg: availablePackages) {	// availablePackages are suffixed by their arch like this: ccs.x86_64 libesmtp.i686 python-tw-forms.noarch
 				if (availablePkg.startsWith(expectedPkg+".")) {
@@ -709,7 +711,58 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 	public List<String> haSupportedArches			= null; // set in assertRhelServerBeforeClass()
 	protected String haProductId					= null;	// set in assertRhelServerBeforeClass()
 
+	/**
+	 * @param redhatReleaseXY
+	 * @param arch
+	 * @return an expected list of High Availability packages on the CDN for the requested RHEL release and arch 
+	 */
+	static List<String> getHighAvailabilityPackages(String redhatReleaseXY, String arch) {
+		List<String> haPackages=new ArrayList<String>();
+		
+		Integer redhatReleaseX = Integer.valueOf(redhatReleaseXY.split("\\.")[0]);
+		Integer redhatReleaseY = Integer.valueOf(redhatReleaseXY.split("\\.")[1]);
+		
+		if (redhatReleaseX>=5) {	// rhel5
+			if (arch.equals("x86_64")||arch.equals("i386")) {
+				haPackages = Arrays.asList(new String[]{"Cluster_Administration-bn-IN", "Cluster_Administration-de-DE", "Cluster_Administration-en-US", "Cluster_Administration-es-ES", "Cluster_Administration-fr-FR", "Cluster_Administration-gu-IN", "Cluster_Administration-hi-IN", "Cluster_Administration-it-IT", "Cluster_Administration-ja-JP", "Cluster_Administration-kn-IN", "Cluster_Administration-ko-KR", "Cluster_Administration-ml-IN", "Cluster_Administration-mr-IN", "Cluster_Administration-or-IN", "Cluster_Administration-pa-IN", "Cluster_Administration-pt-BR", "Cluster_Administration-ru-RU", "Cluster_Administration-si-LK", "Cluster_Administration-ta-IN", "Cluster_Administration-te-IN", "Cluster_Administration-zh-CN", "Cluster_Administration-zh-TW", "cluster-cim", "cluster-snmp", "ipvsadm", "luci", "modcluster", "piranha", "rgmanager", "ricci", "system-config-cluster"});
+			}
+		}
+		if (redhatReleaseX>=6 && redhatReleaseY>=5) {	// rhel6.5
+			if (arch.equals("x86_64")||arch.equals("i386")) {
+				haPackages = Arrays.asList(new String[]{"ccs", "cluster-cim", "cluster-glue", "cluster-glue-libs", "cluster-glue-libs-devel", "cluster-snmp", "clusterlib", "clusterlib-devel", "cman", "corosync", "corosynclib", "corosynclib-devel", "fence-virt", "fence-virtd-checkpoint", "foghorn", "libesmtp-devel", "libqb", "libqb-devel", "libtool-ltdl-devel", "luci", "modcluster", "omping", "openais", "openaislib", "openaislib-devel", "pacemaker", "pacemaker-cli", "pacemaker-cluster-libs", "pacemaker-cts", "pacemaker-doc", "pacemaker-libs", "pacemaker-libs-devel", "pcs", "python-repoze-what-plugins-sql", "python-repoze-what-quickstart", "python-repoze-who-friendlyform", "python-repoze-who-plugins-sa", "python-tw-forms", "resource-agents", "rgmanager", "ricci"});
+			}
+		}
+		if (redhatReleaseX>=7) {	// rhel7
+			if (arch.equals("x86_64")) {
+				haPackages = Arrays.asList(new String[]{"corosync", "corosynclib", "corosynclib-devel", "dlm", "dlm-devel", "dlm-lib", "ipvsadm", "ldirectord", "libqb", "libqb-devel", "libtool-ltdl-devel", "lvm2-cluster", "omping", "pacemaker", "pacemaker-cli", "pacemaker-cluster-libs", "pacemaker-cts", "pacemaker-doc", "pacemaker-libs", "pacemaker-libs-devel", "pcs", "resource-agents"});
+			}
+		}
+		if (redhatReleaseX>=7 && redhatReleaseY>=1) {	// rhel7.1
+			if (arch.equals("x86_64")) {
+				haPackages = Arrays.asList(new String[]{"omping", "clufter-cli", "clufter-lib-ccs", "clufter-lib-general", "clufter-lib-pcs", "corosync", " corosynclib", "corosynclib-devel", "libqb", "libqb-devel", "pacemaker", "pacemaker-cli", "pacemaker-cluster-libs", " pacemaker-cts", "pacemaker-doc", "pacemaker-libs", "pacemaker-libs-devel", "pacemaker-nagios-plugins-metadata", "pacemaker-remote", "pcs", "python-clufter", "resource-agents", "sbd"});
+			}
+			if (arch.equals("s390x")) {
+				haPackages = Arrays.asList(new String[]{"omping", "clufter-cli", "clufter-lib-ccs", "clufter-lib-general", "clufter-lib-pcs", "corosync", " corosynclib", "corosynclib-devel", "libqb", "libqb-devel", "pacemaker", "pacemaker-cli", "pacemaker-cluster-libs", " pacemaker-cts", "pacemaker-doc", "pacemaker-libs", "pacemaker-libs-devel", "pacemaker-nagios-plugins-metadata", "pacemaker-remote", "pcs", "python-clufter", "resource-agents"});
+			}
+		}
+		
+		return haPackages;
+	}
 	
+	/**
+	 * @param arch
+	 * @return a SKU that provides access to High Availability content (assuming the subscription has been granted to the currently registered consumer)
+	 */
+	static String getHighAvailabilitySku(String arch) {
+		String haSku=null;
+		if (arch.equals("x86_64")||arch.equals("i386")) {
+			haSku = "RH00025"; // High Availability
+		}
+		if (arch.equals("s390x")) {
+			haSku = "RH00546"; // High Availability for IBM System z
+		}
+		return haSku;
+	}
 	
 	
 	

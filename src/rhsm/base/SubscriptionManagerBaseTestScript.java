@@ -101,7 +101,7 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 	public String sm_haUsername					= getProperty("sm.ha.username", "");
 	public String sm_haPassword					= getProperty("sm.ha.password", "");
 	public String sm_haOrg						= getProperty("sm.ha.org", null);
-	public String sm_haSku						= getProperty("sm.ha.sku", "");
+//	public String sm_haSku						= getProperty("sm.ha.sku", "");
 	
 	public String sm_usernameWithUnacceptedTC	= getProperty("sm.client.username.unacceptedTC","");
 	public String sm_passwordWithUnacceptedTC	= getProperty("sm.client.password.unacceptedTC","");
@@ -172,7 +172,7 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 	protected List<String> sm_rpmInstallUrls					= new ArrayList<String>();
 	protected List<String> sm_rpmUpdateUrls						= new ArrayList<String>();
 	protected List<String> sm_repoCaCertUrls					= new ArrayList<String>();
-	protected List<String> sm_haPackages						= new ArrayList<String>();
+//	protected List<String> sm_haPackages						= new ArrayList<String>();
 	protected List<String> sm_dockerRpmInstallUrls				= new ArrayList<String>();
 	protected List<String> sm_dockerImages						= new ArrayList<String>();
 	protected List<String> sm_yumInstallZStreamUpdatePackages	= new ArrayList<String>();
@@ -196,7 +196,7 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 		if (!getProperty("sm.rpm.installurls", "").equals("")) 					sm_rpmInstallUrls					= Arrays.asList(getProperty("sm.rpm.installurls", "").trim().split(" *, *"));
 		if (!getProperty("sm.rpm.updateurls", "").equals("")) 					sm_rpmUpdateUrls					= Arrays.asList(getProperty("sm.rpm.updateurls", "").trim().split(" *, *"));
 		if (!getProperty("sm.rhsm.repoCaCert.urls", "").equals(""))				sm_repoCaCertUrls					= Arrays.asList(getProperty("sm.rhsm.repoCaCert.urls", "").trim().split(" *, *"));
-		if (!getProperty("sm.ha.packages", "").equals(""))						sm_haPackages						= Arrays.asList(getProperty("sm.ha.packages", "").trim().split(" *, *"));
+//		if (!getProperty("sm.ha.packages", "").equals(""))						sm_haPackages						= Arrays.asList(getProperty("sm.ha.packages", "").trim().split(" *, *"));
     // if (false) {	// BEING DELETED
     //   if (!getProperty("sm.docker.rpm.installurls", "").equals("")) 			sm_dockerRpmInstallUrls				= Arrays.asList(getProperty("sm.docker.rpm.installurls", "").trim().split(" *, *"));
     // }
