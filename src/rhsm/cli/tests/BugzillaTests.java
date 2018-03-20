@@ -139,23 +139,19 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 
 		// using the entitlement certificates to get the productid
 		File localProductIdFile = new File("/tmp/productid");
-		RemoteFileTasks
-				.runCommandAndAssert(
-						client, "curl --stderr /dev/null --insecure --tlsv1 --cert " + certFile + " --key " + keyFile
-								+ " " + rhelRepoUrlToProductId + " " + " | tee " + localProductIdFile,
-						Integer.valueOf(0));
-
+		// curl --stderr /dev/null --insecure --tlsv1 --cert /etc/pki/entitlement/3708865569463790383.pem --key /etc/pki/entitlement/3708865569463790383-key.pem https://cdn.redhat.com/content/eus/rhel/server/6/6.1/x86_64/os/repodata/productid  | tee /tmp/productid
+		SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(client, "curl --stderr /dev/null --insecure --tlsv1 --cert "+certFile+" --key "+keyFile+" "+rhelRepoUrlToProductId+" | tee "+localProductIdFile, Integer.valueOf(0));
+		if (result.getStdout().contains("File not found")) Assert.fail("Failed to find a productid file on the CDN at '"+rhelRepoUrlToProductId+"'.");
+		
 		// create a ProductCert corresponding to the productid file
 		ProductCert productIdCert = clienttasks.getProductCertFromProductCertFile(localProductIdFile);
 		log.info("Actual product cert from CDN '" + rhelRepoUrlToProductId + "': " + productIdCert);
 
 		// assert the expected productIdCert release version
-
 		Assert.assertEquals(productIdCert.productNamespace.version, release,
 				"Version of the productid on the CDN at '" + rhelRepoUrlToProductId
 						+ "' that will be installed by the yum product-id plugin after setting the subscription-manager release to '"
 						+ release + "'.");
-
 	}
 
 	@DataProvider(name = "VerifyEUSRHELProductCertVersionFromEachCDNReleaseVersion_TestData")
