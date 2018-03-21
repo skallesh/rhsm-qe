@@ -626,7 +626,7 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier1")
 	@Test(	description="Verify that the migration product certs match those from rhn definitions",
-			groups={"Tier1Tests","blockedByBug-799152","blockedByBug-814360","blockedByBug-861420","blockedByBug-861470","blockedByBug-872959","blockedByBug-875760","blockedByBug-875802","blockedByBug-1305695"},
+			groups={"Tier1Tests","blockedByBug-799152","blockedByBug-814360","blockedByBug-861420","blockedByBug-861470","blockedByBug-872959","blockedByBug-875760","blockedByBug-875802","blockedByBug-1305695","blockedByBug-1555913"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void testMigrationProductCertsMatchThoseFromRhnDefinitions() {
