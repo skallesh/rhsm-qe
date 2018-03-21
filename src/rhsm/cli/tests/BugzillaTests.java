@@ -141,7 +141,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		File localProductIdFile = new File("/tmp/productid");
 		// curl --stderr /dev/null --insecure --tlsv1 --cert /etc/pki/entitlement/3708865569463790383.pem --key /etc/pki/entitlement/3708865569463790383-key.pem https://cdn.redhat.com/content/eus/rhel/server/6/6.1/x86_64/os/repodata/productid  | tee /tmp/productid
 		SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(client, "curl --stderr /dev/null --insecure --tlsv1 --cert "+certFile+" --key "+keyFile+" "+rhelRepoUrlToProductId+" | tee "+localProductIdFile, Integer.valueOf(0));
-		if (result.getStdout().contains("File not found")) Assert.fail("Failed to find a productid file on the CDN at '"+rhelRepoUrlToProductId+"'.");
+		
+		String fileNotFound = "File not found.";
+		
+		// releases with no EUS support...
+		if (release.equals("6.8") || release.equals("6.9") || release.equals("6.10")) {
+			log.warning("There is no EUS support scheduled for RHEL '"+release+"'.  See https://pp.engineering.redhat.com/pp/product/rhel/release/rhel-6-9/schedule/overview");
+			Assert.assertTrue(result.getStdout().contains(fileNotFound), "Expected attempt to fetch the EUS productid results in '"+fileNotFound+"'");
+			throw new SkipException("There is no EUS support for RHEL '"+release+"'.");
+		}
+		
+		if (result.getStdout().contains(fileNotFound)) Assert.fail("Failed to find a productid file on the CDN at '"+rhelRepoUrlToProductId+"'.  It is possible that RHEL release '"+release+"' has no EUS support; check the Product Pages for RHEL https://pp.engineering.redhat.com/pp/product/rhel/ to see if EUS is on the Schedule.");
 		
 		// create a ProductCert corresponding to the productid file
 		ProductCert productIdCert = clienttasks.getProductCertFromProductCertFile(localProductIdFile);
@@ -262,30 +272,40 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		// add each available release as a row to the dataProvider
 		// TODO bug 1369516 should be added to the BlockedByBzBug for all rows
 		// against ppc64le
-		for (
-
-		String release : clienttasks.getCurrentlyAvailableReleases(null, null, null, null))
-
-		{
-			if (!((release.matches("7.0")) || (release.matches("7Server")) || (release.matches("6Server")))) {
-				List<String> bugIds = new ArrayList<String>();
+		for (String release : clienttasks.getCurrentlyAvailableReleases(null, null, null, null)) {
+			// skip the latest releases; e.g. 6Server
+			if (!isFloat(release)) continue;
+			
+			List<String> bugIds = new ArrayList<String>();
+			if (release.startsWith("6")) {
 				if (release.matches("6.4") && clienttasks.variant.equals("Server") && clienttasks.arch.equals("x86_64"))
-					bugIds.add("1357574");
-				if (release.matches("6.5") && clienttasks.variant.equals("Server") && clienttasks.arch.equals("x86_64"))
-					bugIds.add("1357574");
-				if (release.matches("6.6") && clienttasks.variant.equals("Server") && clienttasks.arch.equals("x86_64"))
-					bugIds.add("1357574");
+					bugIds.add("1357574");	// https://bugzilla.redhat.com/show_bug.cgi?id=1357574#c16
+				if (release.matches("6.4") && clienttasks.variant.equals("Server") && clienttasks.arch.equals("i386"))
+					bugIds.add("1357574");	// https://bugzilla.redhat.com/show_bug.cgi?id=1357574#c18
+				if (release.matches("6.5") && clienttasks.variant.equals("Server") && clienttasks.arch.equals("i386"))
+					bugIds.add("1357574");	// https://bugzilla.redhat.com/show_bug.cgi?id=1357574#c18
+				if (release.matches("6.6") && clienttasks.variant.equals("Server") && clienttasks.arch.equals("i386"))
+					bugIds.add("1357574");	// https://bugzilla.redhat.com/show_bug.cgi?id=1357574#c18
+				if (release.matches("6.4") && clienttasks.variant.equals("Server") && clienttasks.arch.equals("s390x"))
+					bugIds.add("1357574");	// https://bugzilla.redhat.com/show_bug.cgi?id=1357574#c18
+				if (release.matches("6.5") && clienttasks.variant.equals("Server") && clienttasks.arch.equals("s390x"))
+					bugIds.add("1357574");	// https://bugzilla.redhat.com/show_bug.cgi?id=1357574#c18
+				if (release.matches("6.6") && clienttasks.variant.equals("Server") && clienttasks.arch.equals("s390x"))
+					bugIds.add("1357574");	// https://bugzilla.redhat.com/show_bug.cgi?id=1357574#c18
+				if (release.matches("6.5") && clienttasks.variant.equals("Server") && clienttasks.arch.equals("ppc64"))
+					bugIds.add("1357574");	// https://bugzilla.redhat.com/show_bug.cgi?id=1357574#c19
+				if (release.matches("6.6") && clienttasks.variant.equals("Server") && clienttasks.arch.equals("ppc64"))
+					bugIds.add("1357574");	// https://bugzilla.redhat.com/show_bug.cgi?id=1357574#c19
 				if (release.matches("6.7") && clienttasks.variant.equals("Server") && clienttasks.arch.equals("x86_64"))
 					bugIds.add("1352162");
-				if (release.matches("6.8") && clienttasks.variant.equals("Server") && clienttasks.arch.equals("x86_64"))
-					bugIds.add("1352162");
-				else if (release.matches("7.1"))
-					// && clienttasks.variant.equals("Server"))
-					bugIds.add("1369920");
-
-				BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[] {}));
-				ll.add(Arrays.asList(new Object[] { blockedByBzBug, release, rhelRepoUrl, eusEntitlementCerts.file }));
 			}
+			if (release.startsWith("7")) {
+				if (release.matches("7.1")) // && clienttasks.variant.equals("Server"))
+					bugIds.add("1369920");
+			}
+			
+			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[] {}));
+			ll.add(Arrays.asList(new Object[] { blockedByBzBug, release, rhelRepoUrl, eusEntitlementCerts.file }));
 		}
 
 		return ll;
