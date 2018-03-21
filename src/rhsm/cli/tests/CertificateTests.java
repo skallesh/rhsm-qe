@@ -1208,23 +1208,31 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		for (String release : clienttasks.getCurrentlyAvailableReleases(null, null, null, null)) {
 			List<String> bugIds = new ArrayList<String>();
 			
-			if (release.equals("6.2")) bugIds.add("1214856"); 	// Bug 1214856 - cdn.redhat.com has the wrong productId version for rhel 6.2 and 6.4
-			if (release.equals("6.4")) bugIds.add("1214856"); 	// Bug 1214856 - cdn.redhat.com has the wrong productId version for rhel 6.2 and 6.4
-			if (release.equals("6.6") && clienttasks.variant.matches("Client|Server") && clienttasks.arch.matches("i\\d86")) bugIds.add("1302409"); 	// Bug 1302409 - cdn.redhat.com has the wrong productId version for rhel 6.6
-			if (release.equals("7.2") && clienttasks.arch.equals("aarch64")) bugIds.add("1261163"); 	// Bug 1261163 - uncertain of expected release listing on rhel72 arm system
-			if (release.equals("7.2") && clienttasks.arch.equals("aarch64")) bugIds.add("1441281"); 	// Bug 1441281 - production CDN productid files 404: Not Found. for ARM releasever 7.2
-			if (release.equals("7.2") && clienttasks.arch.equals("ppc64le")) bugIds.add("1261171"); 	// Bug 1261171 - uncertain of expected release listing on rhel72 ppc64le system
-			if (release.equals("7.2") && clienttasks.variant.equals("ComputeNode") && release.equals("7.1")) bugIds.add("1267732"); 	// Bug 1267732 - production CDN productid files 404: Not Found. for ComputeNode releasever 7.1 and 7Server
-			if (release.equals("7.2") && clienttasks.variant.equals("ComputeNode") && release.equals("7ComputeNode")) bugIds.add("1267732"); 	// Bug 1267732 - production CDN productid files 404: Not Found. for ComputeNode releasever 7.1 and 7Server
-			if (!release.matches("7.0|7.1") && clienttasks.variant.equals("Server") && clienttasks.arch.equals("x86_64")) bugIds.add("1338857"); 	// Bug 1338857 - cdn.redhat.com has the wrong productId version for rhel 7.2
-			if (!release.matches("7.0|7.1") && clienttasks.variant.equals("Server") && clienttasks.arch.equals("s390x")) bugIds.add("1356738"); 	// Bug 1356738 - cdn.redhat.com has the wrong repodata/productId version at server/7/7.2/s390x and server/7/7Server/s390x
-			if (!release.matches("7.0|7.1") && clienttasks.variant.equals("Server") && clienttasks.arch.equals("ppc64")) bugIds.add("1356740"); 	// Bug 1356740 - cdn.redhat.com has the wrong repodata/productId version at server/7/7.2/ppc64 and server/7/7Server/ppc64
-			if (!release.matches("7.0|7.1") && clienttasks.variant.equals("Workstation") && clienttasks.arch.equals("x86_64")) bugIds.add("1356710"); 	// Bug 1356710 - cdn.redhat.com has the wrong repodata/productId version at workstation/7/7.2 and workstation/7/7Workstation
-			if (!release.matches("7.0|7.1") && clienttasks.variant.equals("ComputeNode") && clienttasks.arch.equals("x86_64")) bugIds.add("1356722"); 	// Bug 1356722 - cdn.redhat.com has the wrong repodata/productId version at computenode/7/7.2 and computenode/7/7ComputeNode
-			if (!release.matches("7.0|7.1") && clienttasks.variant.equals("Client") && clienttasks.arch.equals("x86_64")) bugIds.add("1356729"); 	// Bug 1356729 - cdn.redhat.com has the wrong repodata/productId version at client/7/7.2 and client/7/7Client
-			if (release.matches("7.0|7.1|7.2") && clienttasks.variant.equals("Server") && clienttasks.arch.equals("ppc64le")) bugIds.add("1351754"); 	// Bug 1351754 - production CDN productid files 404: Not Found. for Power, little endian releasever 7.1, 7.2, and 7Server
-			if (release.matches("7.*") && clienttasks.variant.equals("Server") && clienttasks.arch.equals("aarch64")) bugIds.add("1351800"); 	// Bug 1351800 - production CDN productid files 404: Not Found. for ARM releasever 7.1, 7.2, and 7Server
-			
+			// NOTE: As older releases go EOL, these bugs may be CLOSED WONTFIX
+			// Under the Product Pages schedule for each older release, look for EUS/AMC/TUS/E4S EOL dates under Major Milestones
+			// https://pp.engineering.redhat.com/pp/product/rhel/overview
+			if (release.startsWith("6")) {
+				if (release.equals("6.2")) bugIds.add("1214856"); 	// Bug 1214856 - cdn.redhat.com has the wrong productId version for rhel 6.2 and 6.4
+				if (release.equals("6.4")) bugIds.add("1214856"); 	// Bug 1214856 - cdn.redhat.com has the wrong productId version for rhel 6.2 and 6.4
+				if (release.equals("6.2") && !clienttasks.variant.equals("Server") && !clienttasks.arch.equals("x86_64")) bugIds.add("1559114"); 	// Bug 1559114 - cdn.redhat.com has the wrong productId version for many variants/arches of RHEL 6.2 and 6.4
+				if (release.equals("6.4") && !clienttasks.variant.equals("Server") && !clienttasks.arch.equals("x86_64")) bugIds.add("1559114"); 	// Bug 1559114 - cdn.redhat.com has the wrong productId version for many variants/arches of RHEL 6.2 and 6.4
+				if (release.equals("6.6") && clienttasks.variant.matches("Client|Server") && clienttasks.arch.matches("i\\d86")) bugIds.add("1302409"); 	// Bug 1302409 - cdn.redhat.com has the wrong productId version for rhel 6.6
+			}
+			if (release.startsWith("7")) {
+				if (release.equals("7.2") && clienttasks.arch.equals("aarch64")) bugIds.add("1261163"); 	// Bug 1261163 - uncertain of expected release listing on rhel72 arm system
+				if (release.equals("7.2") && clienttasks.arch.equals("aarch64")) bugIds.add("1441281"); 	// Bug 1441281 - production CDN productid files 404: Not Found. for ARM releasever 7.2
+				if (release.equals("7.2") && clienttasks.arch.equals("ppc64le")) bugIds.add("1261171"); 	// Bug 1261171 - uncertain of expected release listing on rhel72 ppc64le system
+				if (release.equals("7.2") && clienttasks.variant.equals("ComputeNode") && release.equals("7.1")) bugIds.add("1267732"); 	// Bug 1267732 - production CDN productid files 404: Not Found. for ComputeNode releasever 7.1 and 7Server
+				if (release.equals("7.2") && clienttasks.variant.equals("ComputeNode") && release.equals("7ComputeNode")) bugIds.add("1267732"); 	// Bug 1267732 - production CDN productid files 404: Not Found. for ComputeNode releasever 7.1 and 7Server
+				if (!release.matches("7.0|7.1") && clienttasks.variant.equals("Server") && clienttasks.arch.equals("x86_64")) bugIds.add("1338857"); 	// Bug 1338857 - cdn.redhat.com has the wrong productId version for rhel 7.2
+				if (!release.matches("7.0|7.1") && clienttasks.variant.equals("Server") && clienttasks.arch.equals("s390x")) bugIds.add("1356738"); 	// Bug 1356738 - cdn.redhat.com has the wrong repodata/productId version at server/7/7.2/s390x and server/7/7Server/s390x
+				if (!release.matches("7.0|7.1") && clienttasks.variant.equals("Server") && clienttasks.arch.equals("ppc64")) bugIds.add("1356740"); 	// Bug 1356740 - cdn.redhat.com has the wrong repodata/productId version at server/7/7.2/ppc64 and server/7/7Server/ppc64
+				if (!release.matches("7.0|7.1") && clienttasks.variant.equals("Workstation") && clienttasks.arch.equals("x86_64")) bugIds.add("1356710"); 	// Bug 1356710 - cdn.redhat.com has the wrong repodata/productId version at workstation/7/7.2 and workstation/7/7Workstation
+				if (!release.matches("7.0|7.1") && clienttasks.variant.equals("ComputeNode") && clienttasks.arch.equals("x86_64")) bugIds.add("1356722"); 	// Bug 1356722 - cdn.redhat.com has the wrong repodata/productId version at computenode/7/7.2 and computenode/7/7ComputeNode
+				if (!release.matches("7.0|7.1") && clienttasks.variant.equals("Client") && clienttasks.arch.equals("x86_64")) bugIds.add("1356729"); 	// Bug 1356729 - cdn.redhat.com has the wrong repodata/productId version at client/7/7.2 and client/7/7Client
+				if (release.matches("7.0|7.1|7.2") && clienttasks.variant.equals("Server") && clienttasks.arch.equals("ppc64le")) bugIds.add("1351754"); 	// Bug 1351754 - production CDN productid files 404: Not Found. for Power, little endian releasever 7.1, 7.2, and 7Server
+				if (release.matches("7.*") && clienttasks.variant.equals("Server") && clienttasks.arch.equals("aarch64")) bugIds.add("1351800"); 	// Bug 1351800 - production CDN productid files 404: Not Found. for ARM releasever 7.1, 7.2, and 7Server
+			}
 			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 			
 			// Object blockedByBug, String release, String rhelRepoUrl, File rhelEntitlementCertFile, File caCertFile
@@ -1406,15 +1414,19 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		//	RHEL-6.5.0 		zsh-4.3.10-7.el6
 		//	RHEL-7.0.0		sudo-1.8.6p7-11.el7
 		//	RHEL-7.1.0		sudo-1.8.6p7-12.el7
-
+		
+		// NOTE: As older releases go EOL, these bugs may be CLOSED WONTFIX
+		// Under the Product Pages schedule for each older release, look for EUS/AMC/TUS/E4S EOL dates under Major Milestones
+		// https://pp.engineering.redhat.com/pp/product/rhel/overview
+		
 		// Object blockedByBug, String testPackage, String oldProductCertVersion, String oldRelease, String newerRelease
 		if (clienttasks.redhatReleaseX.equals("5")) {
 			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1086301","1102107","1119809"}),	"zsh",	"5.8 Beta",	"5.8",	"5.9"}));
 			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1086301","1102107","1119809"}),	"zsh",	"5.8",		"5.8",	"5.9"}));
 		}
 		else if (clienttasks.redhatReleaseX.equals("6")) {
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1035115","1000281","1120573","1214856"}),	"zsh",	"6.3 Beta",	"6.3",	"6.4"}));
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1035115","1000281","1120573","1214856"}),	"zsh",	"6.3",		"6.3",	"6.4"}));
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1035115","1000281","1120573","1214856","1559114"}),	"zsh",	"6.3 Beta",	"6.3",	"6.4"}));
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1035115","1000281","1120573","1214856","1559114"}),	"zsh",	"6.3",		"6.3",	"6.4"}));
 			//ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1035115","1000281","1120573"}),	"zsh",	"6.1-Beta",	"6.1",	"6.5"}));	// will fail on ppc64 and s390x because the 6.1-Beta product cert tags do not provide any content (on ppc64 rhel-6.1-beta productId=74 Tags: rhel-6,rhel-6-premium-architectures) (on s390x rhel-6.1-beta productId=72 Tags: rhel-6,rhel-6-mainframe)  Not opening any bug since it was a Beta.
 			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1035115","1000281","1120573"}),	"zsh",	"6.1",		"6.1",	"6.5"}));
 			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1035115","1000281","1120573"}),	"zsh",	"6.3 Beta",	"6.3",	"6.5"}));
@@ -1439,7 +1451,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 //TODO UNCOMMENT FOR RHEL74	TESTING		ll.add(Arrays.asList(new Object[]{blockedByBugs,	"Red_Hat_Enterprise_Linux-Release_Notes-7-fr-FR",	"7.2 Beta",	"7.2",	"7.3"}));
 //TODO UNCOMMENT FOR RHEL74	TESTING		ll.add(Arrays.asList(new Object[]{blockedByBugs,	"Red_Hat_Enterprise_Linux-Release_Notes-7-fr-FR",	"7.2",		"7.2",	"7.3"}));
 		}
-		else if (Integer.valueOf(clienttasks.redhatReleaseX)>7) {
+		else {
 			ll.add(Arrays.asList(new Object[]{null,	"FIXME: Unhandled Release",	"1.0 Beta",	"1.0",	"1.1"}));
 		}
 		return ll;
