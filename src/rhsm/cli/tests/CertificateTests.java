@@ -1214,8 +1214,10 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 			if (release.startsWith("6")) {
 				if (release.equals("6.2")) bugIds.add("1214856"); 	// Bug 1214856 - cdn.redhat.com has the wrong productId version for rhel 6.2 and 6.4
 				if (release.equals("6.4")) bugIds.add("1214856"); 	// Bug 1214856 - cdn.redhat.com has the wrong productId version for rhel 6.2 and 6.4
-				if (release.equals("6.2") && !clienttasks.variant.equals("Server") && !clienttasks.arch.equals("x86_64")) bugIds.add("1559114"); 	// Bug 1559114 - cdn.redhat.com has the wrong productId version for many variants/arches of RHEL 6.2 and 6.4
-				if (release.equals("6.4") && !clienttasks.variant.equals("Server") && !clienttasks.arch.equals("x86_64")) bugIds.add("1559114"); 	// Bug 1559114 - cdn.redhat.com has the wrong productId version for many variants/arches of RHEL 6.2 and 6.4
+				if (release.equals("6.2") && clienttasks.variant.equals("Server") && clienttasks.arch.matches("i386|ppc64|s390x")) bugIds.add("1559114"); 	// Bug 1559114 - cdn.redhat.com has the wrong productId version for many variants/arches of RHEL 6.2 and 6.4
+				if (release.equals("6.4") && clienttasks.variant.equals("Server") && clienttasks.arch.matches("i386|ppc64|s390x")) bugIds.add("1559114"); 	// Bug 1559114 - cdn.redhat.com has the wrong productId version for many variants/arches of RHEL 6.2 and 6.4
+				if (release.equals("6.2") && clienttasks.variant.matches("Workstation|Client|ComputeNode")) bugIds.add("1559114"); 	// Bug 1559114 - cdn.redhat.com has the wrong productId version for many variants/arches of RHEL 6.2 and 6.4
+				if (release.equals("6.4") && clienttasks.variant.matches("Workstation|Client|ComputeNode")) bugIds.add("1559114"); 	// Bug 1559114 - cdn.redhat.com has the wrong productId version for many variants/arches of RHEL 6.2 and 6.4
 				if (release.equals("6.6") && clienttasks.variant.matches("Client|Server") && clienttasks.arch.matches("i\\d86")) bugIds.add("1302409"); 	// Bug 1302409 - cdn.redhat.com has the wrong productId version for rhel 6.6
 			}
 			if (release.startsWith("7")) {
