@@ -6051,7 +6051,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	@AfterClass(groups = "setup")
+	@AfterClass(groups = "setup", alwaysRun=true)
 	public void restoreProductDefaultCerts() {
 		client.runCommandAndWait("ls -1 " + clienttasks.productCertDefaultDir + "/*.bak");
 		String lsBakFiles = client.getStdout().trim();

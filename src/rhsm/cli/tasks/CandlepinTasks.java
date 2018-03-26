@@ -3722,7 +3722,7 @@ schema generation failed
 		
 		// TODO fix this logic for candlepin running on rhel7 which is based on f18
 		if (redhatReleaseX>=7 || fedoraReleaseX>=16)	{	// the Fedora 16+ way...
-			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "systemctl restart "+tomcat+".service && systemctl enable "+tomcat+".service && systemctl is-active "+tomcat+".service", Integer.valueOf(0), "^active$", null);
+			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "sudo systemctl restart "+tomcat+".service && sudo systemctl enable "+tomcat+".service && sudo systemctl is-active "+tomcat+".service", Integer.valueOf(0), "^active$", null);
 		} else {	// the old Fedora way...
 			RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"chkconfig "+tomcat+" on && service "+tomcat+" restart",Integer.valueOf(0),"^Starting "+tomcat+": +\\[  OK  \\]$",null);
 		}
