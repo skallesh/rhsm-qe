@@ -199,7 +199,7 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript {
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
 	@Test(	description = "Verify that the guest_limit attribute is global across guest-limit subscriptions",
-			groups = {"Tier2Tests"},
+			groups = {"Tier2Tests","blockedByBug-1555582"},
 			enabled = true)
 	public void testGuestLimitIsGlobal() throws JSONException, Exception {
 		String consumerId = clienttasks.getCurrentConsumerId(
@@ -356,7 +356,7 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript {
 		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir", tmpProductCertDir);
 	}
 
-	@AfterClass(groups = "setup") // called after class for insurance
+	@AfterClass(groups = "setup", alwaysRun=true) // called after class for insurance
 	public void restoreRhsmProductCertDir() {
 		if (clienttasks == null)
 			return;
@@ -450,7 +450,7 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript {
 		Assert.assertNotNull(rhsmProductCertDir);
 	}
 
-	@AfterClass(groups = "setup")
+	@AfterClass(groups = "setup", alwaysRun=true)
 	public void restoreProductDefaultCerts() {
 		client.runCommandAndWait("ls -1 " + clienttasks.productCertDefaultDir + "/*.bak");
 		String lsBakFiles = client.getStdout().trim();
