@@ -6,8 +6,10 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.testng.SkipException;
 import org.testng.annotations.AfterClass;
@@ -2747,6 +2749,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 				ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug(new String[]{"1345962","1119688"}),						sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	null,				null,						null,						"bad-proxy",				sm_basicauthproxyPort,		sm_basicauthproxyUsername,	sm_basicauthproxyPassword,	Integer.valueOf(70),	null,	nErrMsg,	basicauthproxy,	sm_basicauthproxyLog,	null}));
 			}
 			ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug(new String[]{"1345962","1119688"}),						sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	null,				null,						null,						sm_basicauthproxyHostname,	sm_basicauthproxyPort+"0",	sm_basicauthproxyUsername,	sm_basicauthproxyPassword,	Integer.valueOf(70),	null,	nErrMsg,	basicauthproxy,	sm_basicauthproxyLog,	null}));
+if (false) {	// DELETEME in favor of blockedByBadAuthBugs below
 			if (clienttasks.isPackageVersion("python-rhsm",">=","1.18.5-1") && Integer.valueOf(clienttasks.redhatReleaseX)>=7) {	// post commit 214103dcffce29e31858ffee414d79c1b8063970	Reduce usage of m2crypto https://github.com/candlepin/python-rhsm/pull/184
 				ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug(new String[]{"1345962","1119688","755258","1176219"}),	sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	null,				null,						null,						sm_basicauthproxyHostname,	sm_basicauthproxyPort,		"bad-username",				sm_basicauthproxyPassword,	Integer.valueOf(70),	null,	nErrMsg,	basicauthproxy,	sm_basicauthproxyLog,	"TCP_DENIED"}));
 				ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug(new String[]{"1345962","1119688","755258","1176219"}),	sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	null,				null,						null,						sm_basicauthproxyHostname,	sm_basicauthproxyPort,		sm_basicauthproxyUsername,	"bad-password",				Integer.valueOf(70),	null,	nErrMsg,	basicauthproxy,	sm_basicauthproxyLog,	"TCP_DENIED"}));
@@ -2758,6 +2761,23 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 				ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug(new String[]{"1345962","1119688","755258","1176219"}),	sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	null,				null,						null,						sm_basicauthproxyHostname,	sm_basicauthproxyPort,		"bad-username",				"bad-password",				Integer.valueOf(70),	null,	pErr407Msg,	basicauthproxy,	sm_basicauthproxyLog,	"TCP_DENIED"}));
 				ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug(new String[]{"1345962","1119688","755258","1176219"}),	sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	null,				null,						null,						sm_basicauthproxyHostname,	sm_basicauthproxyPort,		""/*no username*/,			""/*no password*/,			Integer.valueOf(70),	null,	pErr407Msg,	basicauthproxy,	sm_basicauthproxyLog,	"TCP_DENIED"}));
 			}
+}
+			Set<String> badAuthBugIds = new HashSet<String>();
+			badAuthBugIds.addAll(Arrays.asList("1345962","1119688","755258","1176219"));
+			if (Integer.valueOf(clienttasks.redhatReleaseX)>=7) badAuthBugIds.add("1560727");	// Bug 1560727 - Uncaught proxy authentication failure (407) on RHEL7
+			BlockedByBzBug blockedByBadAuthBugs = new BlockedByBzBug(badAuthBugIds.toArray(new String[]{}));
+			if (clienttasks.isPackageVersion("python-rhsm",">=","1.18.5-1")) {	// post commit 214103dcffce29e31858ffee414d79c1b8063970	Reduce usage of m2crypto https://github.com/candlepin/python-rhsm/pull/184
+				ll.add(Arrays.asList(new Object[]{	blockedByBadAuthBugs,	sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	null,				null,						null,						sm_basicauthproxyHostname,	sm_basicauthproxyPort,		"bad-username",				sm_basicauthproxyPassword,	Integer.valueOf(70),	null,	pErrConMsg,	basicauthproxy,	sm_basicauthproxyLog,	"TCP_DENIED"}));
+				ll.add(Arrays.asList(new Object[]{	blockedByBadAuthBugs,	sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	null,				null,						null,						sm_basicauthproxyHostname,	sm_basicauthproxyPort,		sm_basicauthproxyUsername,	"bad-password",				Integer.valueOf(70),	null,	pErrConMsg,	basicauthproxy,	sm_basicauthproxyLog,	"TCP_DENIED"}));
+				ll.add(Arrays.asList(new Object[]{	blockedByBadAuthBugs,	sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	null,				null,						null,						sm_basicauthproxyHostname,	sm_basicauthproxyPort,		"bad-username",				"bad-password",				Integer.valueOf(70),	null,	pErrConMsg,	basicauthproxy,	sm_basicauthproxyLog,	"TCP_DENIED"}));
+				ll.add(Arrays.asList(new Object[]{	blockedByBadAuthBugs,	sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	null,				null,						null,						sm_basicauthproxyHostname,	sm_basicauthproxyPort,		""/*no username*/,			""/*no password*/,			Integer.valueOf(70),	null,	pErrConMsg,	basicauthproxy,	sm_basicauthproxyLog,	"TCP_DENIED"}));
+			} else {
+				ll.add(Arrays.asList(new Object[]{	blockedByBadAuthBugs,	sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	null,				null,						null,						sm_basicauthproxyHostname,	sm_basicauthproxyPort,		"bad-username",				sm_basicauthproxyPassword,	Integer.valueOf(70),	null,	pErr407Msg,	basicauthproxy,	sm_basicauthproxyLog,	"TCP_DENIED"}));
+				ll.add(Arrays.asList(new Object[]{	blockedByBadAuthBugs,	sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	null,				null,						null,						sm_basicauthproxyHostname,	sm_basicauthproxyPort,		sm_basicauthproxyUsername,	"bad-password",				Integer.valueOf(70),	null,	pErr407Msg,	basicauthproxy,	sm_basicauthproxyLog,	"TCP_DENIED"}));
+				ll.add(Arrays.asList(new Object[]{	blockedByBadAuthBugs,	sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	null,				null,						null,						sm_basicauthproxyHostname,	sm_basicauthproxyPort,		"bad-username",				"bad-password",				Integer.valueOf(70),	null,	pErr407Msg,	basicauthproxy,	sm_basicauthproxyLog,	"TCP_DENIED"}));
+				ll.add(Arrays.asList(new Object[]{	blockedByBadAuthBugs,	sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	null,				null,						null,						sm_basicauthproxyHostname,	sm_basicauthproxyPort,		""/*no username*/,			""/*no password*/,			Integer.valueOf(70),	null,	pErr407Msg,	basicauthproxy,	sm_basicauthproxyLog,	"TCP_DENIED"}));	
+			}
+			
 			ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug(new String[]{"1345962","1119688","755258"}),				sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	basicauthproxyUrl,	null,						null,						"bad-proxy",				sm_basicauthproxyPort+"0",	sm_basicauthproxyUsername,	sm_basicauthproxyPassword,	Integer.valueOf(0),		null,	null,		basicauthproxy,	sm_basicauthproxyLog,	"TCP_MISS"}));
 			ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug(new String[]{"1345962","1119688","755258"}),				sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	basicauthproxyUrl,	sm_basicauthproxyUsername,	null,						"bad-proxy",				sm_basicauthproxyPort+"0",	"bad-username",				sm_basicauthproxyPassword,	Integer.valueOf(0),		null,	null,		basicauthproxy,	sm_basicauthproxyLog,	"TCP_MISS"}));
 			ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug(new String[]{"1345962","1119688","755258","838242"}),	sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	basicauthproxyUrl,	sm_basicauthproxyUsername,	sm_basicauthproxyPassword,	"bad-proxy",				sm_basicauthproxyPort+"0",	"bad-username",				"bad-password",				Integer.valueOf(0),		null,	null,		basicauthproxy,	sm_basicauthproxyLog,	"TCP_MISS"}));
