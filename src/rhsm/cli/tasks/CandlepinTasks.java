@@ -285,7 +285,8 @@ public class CandlepinTasks {
 		 */
 		//RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"/proxy && bundle install", Integer.valueOf(0), "Your bundle is complete!", null);	// Your bundle is complete! Use `bundle show [gemname]` to see where a bundled gem is installed.
 		//RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+" && bundle install", Integer.valueOf(0), "Your bundle is complete!", null);	// Your bundle is complete! Use `bundle show [gemname]` to see where a bundled gem is installed.
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+" && bundle install", Integer.valueOf(0), "Your bundle is complete!|Bundle complete!", null);	// Your bundle is complete! Use `bundle show [gemname]` to see where a bundled gem is installed.
+		//RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+" && bundle install", Integer.valueOf(0), "Your bundle is complete!|Bundle complete!", null);	// Your bundle is complete! Use `bundle show [gemname]` to see where a bundled gem is installed.
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+" && bundle install --without=proton", Integer.valueOf(0), "Your bundle is complete!|Bundle complete!", null);	// Your bundle is complete! Use `bundle show [gemname]` to see where a bundled gem is installed.
 		
 		//TODO You may encounter this error on Fedora 23
 		// An error occurred while installing rjb (1.4.8), and Bundler cannot continue.
@@ -318,7 +319,8 @@ public class CandlepinTasks {
 			//RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "export TESTDATA=1 && export FORCECERT=1 && export GENDB=1 && export HOSTNAME="+hostname+" && export IMPORTDIR="+serverImportDir+" && cd "+serverInstallDir+"/server && bin/deploy", Integer.valueOf(0), "Initialized!", null);
 			//started throwing... Stderr: tput: No value for $TERM and no -T specified
 			//RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "export TERM=xterm && export TESTDATA=1 && export FORCECERT=1 && export GENDB=1 && export HOSTEDTEST=\"hostedtest\" && export HOSTNAME="+hostname+" && export IMPORTDIR="+serverImportDir+" && cd "+serverInstallDir+"/server && bin/deploy", Integer.valueOf(0), "Initialized!", null);
-			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "export TERM=xterm && export HOSTNAME="+hostname+" && export IMPORTDIR="+serverImportDir+" && cd "+serverInstallDir+"/server && bin/deploy -fHgt", Integer.valueOf(0), "Initialized!", null);
+			//RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "export TERM=xterm && export HOSTNAME="+hostname+" && export IMPORTDIR="+serverImportDir+" && cd "+serverInstallDir+"/server && bin/deploy -fHgt", Integer.valueOf(0), "Initialized!", null);
+			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "export TERM=xterm && export HOSTNAME="+hostname+" && export IMPORTDIR="+serverImportDir+" && cd "+serverInstallDir+"/server && bundle exec bin/deploy -fHgt", Integer.valueOf(0), "Initialized!", null);
 		} else {
 			//RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "export TESTDATA=1 && export FORCECERT=1 && export GENDB=1 && export HOSTNAME="+hostname+" && export IMPORTDIR="+serverImportDir+" && cd "+serverInstallDir+"/proxy && buildconf/scripts/deploy", Integer.valueOf(0), "Initialized!", null);
 			//RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "export TESTDATA=1 && export FORCECERT=1 && export GENDB=1 && export HOSTNAME="+hostname+" && export IMPORTDIR="+serverImportDir+" && cd "+serverInstallDir+" && buildconf/scripts/deploy", Integer.valueOf(0), "Initialized!", null);
