@@ -340,7 +340,11 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
 		
 		// register with autosubscribe and force (to unregister anyone that is already registered)
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, true, null, null, null, null, null);
+		SSHCommandResult result = clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, true, null, null, null, null, null);
+		if (servertasks.statusStandalone) {
+			Assert.assertEquals(result.getStderr().trim(), "Development units may only be used on hosted servers and with orgs that have active subscriptions.", "Expected stderr when /etc/candlepin/candlepin candlepin.standalone=true  (typical of Satellite deployment).");
+			throw new SkipException("Detected that candlepin status standalone=true.  DevSku support is only applicable when /etc/candlepin/candlepin candlepin.standalone=false  (typical of a hosted candlepin server).");
+		}
 		
 		// get the autosubscribed productSubscription
 		List<ProductSubscription> productSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
@@ -351,7 +355,7 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 		clienttasks.unsubscribe(null, devSkuProductSubscription1.serialNumber, null, null, null, null, null);
 		
 		// verify that the pool from which the devSku was entitled is no longer consumable after having removed the devSku entitlement
-		SSHCommandResult result = clienttasks.subscribe_(null, null, devSkuProductSubscription1.poolId, null, null, null, null, null, null, null, null, null, null);
+		result = clienttasks.subscribe_(null, null, devSkuProductSubscription1.poolId, null, null, null, null, null, null, null, null, null, null);
 		String expectedStdout = String.format("Pool with id %s could not be found.",devSkuProductSubscription1.poolId);
 		Assert.assertEquals(result.getStdout().trim(), expectedStdout, "After removing a devSku entitlement, its pool should no longer be consumable.");
 		
@@ -398,7 +402,11 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
 		
 		// register with autosubscribe and force (to unregister anyone that is already registered)
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, true, null, null, null, null, null);
+		SSHCommandResult result = clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, true, null, null, null, null, null);
+		if (servertasks.statusStandalone) {
+			Assert.assertEquals(result.getStderr().trim(), "Development units may only be used on hosted servers and with orgs that have active subscriptions.", "Expected stderr when /etc/candlepin/candlepin candlepin.standalone=true  (typical of Satellite deployment).");
+			throw new SkipException("Detected that candlepin status standalone=true.  DevSku support is only applicable when /etc/candlepin/candlepin candlepin.standalone=false  (typical of a hosted candlepin server).");
+		}
 		
 		// are we fully compliant? complianceStatus=="valid"
 		String complianceStatus;
@@ -459,7 +467,11 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
 		
 		// register with autosubscribe and force (to unregister anyone that is already registered)
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, true, null, null, null, null, null);
+		SSHCommandResult result = clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, true, null, null, null, null, null);
+		if (servertasks.statusStandalone) {
+			Assert.assertEquals(result.getStderr().trim(), "Development units may only be used on hosted servers and with orgs that have active subscriptions.", "Expected stderr when /etc/candlepin/candlepin candlepin.standalone=true  (typical of Satellite deployment).");
+			throw new SkipException("Detected that candlepin status standalone=true.  DevSku support is only applicable when /etc/candlepin/candlepin candlepin.standalone=false  (typical of a hosted candlepin server).");
+		}
 		
 		// get the autosubscribed productSubscription
 		List<ProductSubscription> productSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
@@ -501,11 +513,13 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void testAutosubscribeAfterChangingDevSkuFacts() throws JSONException, Exception {
-		
+		if (servertasks.statusStandalone) {
+			throw new SkipException("Detected that candlepin status standalone=true.  DevSku support is only applicable when /etc/candlepin/candlepin candlepin.standalone=false  (typical of a hosted candlepin server).");
+		}
 		boolean isGuest = Boolean.valueOf(clienttasks.getFactValue("virt.is_guest"));
 		
 		// register with force to get a fresh consumer
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg,null,null,null,null,false,null,null,(List)null,null,null,null,true,false,null,null,null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg,null,null,null,null,false,null,null,(List<String>)null,null,null,null,true,false,null,null,null, null);
 		
 		// find two value SKUs that can be used as a dev_sku
 		List <SubscriptionPool> subscriptionPools = clienttasks.getCurrentlyAvailableSubscriptionPools();
@@ -619,6 +633,10 @@ public class DevSKUTests extends SubscriptionManagerCLITestScript {
 		
 		// register with autosubscribe and force (to unregister anyone that is already registered)
 		SSHCommandResult result = clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, true, null, null, null, null, null);
+		if (servertasks.statusStandalone) {
+			Assert.assertEquals(result.getStderr().trim(), "Development units may only be used on hosted servers and with orgs that have active subscriptions.", "Expected stderr when /etc/candlepin/candlepin candlepin.standalone=true  (typical of Satellite deployment).");
+			throw new SkipException("Detected that candlepin status standalone=true.  DevSku support is only applicable when /etc/candlepin/candlepin candlepin.standalone=false  (typical of a hosted candlepin server).");
+		}
 		String expectedMsg = "Unable to find available subscriptions for all your installed products.";
 		Assert.assertTrue(result.getStdout().trim().endsWith(expectedMsg),"Register with autosubscribe ends with this message when an unknown product is installed '"+expectedMsg+"'.");
 		

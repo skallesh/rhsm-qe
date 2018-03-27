@@ -5670,6 +5670,8 @@ if (false) {
 			sshCommandResult.getStdout().trim().startsWith("Pool is restricted") ||							// Pool is restricted to virtual guests: '8a90f85734205a010134205ae8d80403'.
 																											// Pool is restricted to physical systems: '8a9086d3443c043501443c052aec1298'.
 																											// Pool is restricted to unmapped virtual guests: '8a9087e34c2f214a014c2f22a7d11ad0'
+//DON'T TOLERATE STDERR RESULTS HERE
+//			sshCommandResult.getStderr().trim().startsWith("Development units may only be used on") ||		// Development units may only be used on hosted servers and with orgs that have active subscriptions.
 			sshCommandResult.getStdout().trim().startsWith("All installed products are covered") ||			// All installed products are covered by valid entitlements. No need to update subscriptions at this time.
 			sshCommandResult.getStdout().trim().startsWith("No Installed products on system.") ||			// No Installed products on system. No need to attach subscriptions.
 			sshCommandResult.getStdout().trim().startsWith("Unable to entitle consumer")) {					// Unable to entitle consumer to the pool with id '8a90f8b42e3e7f2e012e3e7fc653013e'.: rulefailed.virt.only
