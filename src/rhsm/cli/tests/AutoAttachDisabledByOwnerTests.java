@@ -55,21 +55,21 @@ public class AutoAttachDisabledByOwnerTests extends SubscriptionManagerCLITestSc
 	CandlepinTasks.putResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,
 		resourcePath, jsonData);
 	/*
-	 * verify register with auto-attach works on a owner with
-	 * autobindDisabled=false
+	 * verify register with auto-attach doesnot work on a owner with
+	 * autobindDisabled=true
 	 */
 	SSHCommandResult result = clienttasks.register(sm_clientUsername, sm_clientPassword, owner, null, null, null,
 		null, true, null, null, (String) null, null, null, null, true, null, null, null, null, null);
 
-	String expected = String.format("Ignoring request to auto-attach. It is disabled for org '%s'.",owner);
-
+	String expected = String.format("Ignoring request to auto-attach. It is disabled for org \"%s\".",owner);
+	System.out.println("expected message" + expected);
 	Assert.assertTrue(result.getStderr().trim().equals(expected),"indicating autobindDisabled is set true on owner");
 	SSHCommandResult consumedSubscriptions = clienttasks.list(null, null, true, null, null, null, null, null, null,null, null, null, null, null);
 	Assert.assertTrue(consumedSubscriptions.getStdout().trim().equals(expectedConsumedPoolResult));
 
 	/* verify if healing works on a owner with autobindDisabled=false */
 	clienttasks.autoheal(null, true, null, null, null, null, null);
-	String logMessage = "Ignoring request to auto-attach. It is disabled for org '" + owner + "'.";
+	String logMessage = String.format("Ignoring request to auto-attach. It is disabled for org \"%s\".",owner);
 	String logMarker = System.currentTimeMillis()
 		+ " disable auto-attach by Owner test , healing section ****************************************";
 	RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, logMarker);
@@ -98,7 +98,7 @@ public class AutoAttachDisabledByOwnerTests extends SubscriptionManagerCLITestSc
 	 */
 	result = clienttasks.subscribe_(true, null, (String) null, null, null, null, null, null, null, null, null,
 		null, null);
-	expected = String.format("Ignoring request to auto-attach. It is disabled for org '%s'.",owner);
+	expected = String.format("Ignoring request to auto-attach. It is disabled for org \"%s\".",owner);
 	Assert.assertTrue(result.getStderr().trim().equals(expected), "indicating auto-attach is disabled for owner");
 	consumedSubscriptions = clienttasks.list(null, null, true, null, null, null, null, null, null, null, null, null,
 		null, null);
@@ -115,7 +115,7 @@ public class AutoAttachDisabledByOwnerTests extends SubscriptionManagerCLITestSc
 	result = clienttasks.register(sm_clientUsername, sm_clientPassword, owner, null, null, null, null, true, null,
 		null, (String) null, null, null, null, true, null, null, null, null, null);
 
-	expected = String.format("Ignoring request to auto-attach. It is disabled for org '%s'.",owner);
+	expected = String.format("Ignoring request to auto-attach. It is disabled for org \"%s\".",owner);
 	Assert.assertFalse(result.getStderr().trim().equals(expected),
 		"indicationg autobindDisabled is set false on owner");
 	consumedSubscriptions = clienttasks.list(null, null, true, null, null, null, null, null, null, null, null, null,
@@ -128,7 +128,7 @@ public class AutoAttachDisabledByOwnerTests extends SubscriptionManagerCLITestSc
 	 */
 	clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 	result = clienttasks.subscribe(true, null, (String) null, null, null, null, null, null, null, null, null, null, null);
-	expected = String.format("Ignoring request to auto-attach. It is disabled for org '%s'.",owner);
+	expected = String.format("Ignoring request to auto-attach. It is disabled for org \"%s\".",owner);
 
 	Assert.assertFalse(result.getStderr().trim().equals(expected), "indicating auto-attach is disabled for owner");
 	consumedSubscriptions = clienttasks.list(null, null, true, null, null, null, null, null, null, null, null, null,
@@ -139,7 +139,7 @@ public class AutoAttachDisabledByOwnerTests extends SubscriptionManagerCLITestSc
 	 */
 	clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 	clienttasks.autoheal(null, true, null, null, null, null, null);
-	logMessage = "Ignoring request to auto-attach. It is disabled for org '" + owner + "'.";
+	logMessage = String.format("Ignoring request to auto-attach. It is disabled for org \"%s\".",owner);
 	logMarker = System.currentTimeMillis()
 		+ " disable auto-attach by Owner test , healing section ****************************************";
 	RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, logMarker);
@@ -165,7 +165,6 @@ public class AutoAttachDisabledByOwnerTests extends SubscriptionManagerCLITestSc
 	SSHCommandResult registerResult = clienttasks.register(null, null, owner, null, null, null, null, null, null, null, jsonActivationKey.getString("name"), null, null, null, true, null, null, null, null, null);
 	Integer expectedExitCode = new Integer(0);
 	Assert.assertContainsMatch(registerResult.getStdout().trim(), "The system has been registered with ID: [a-f,0-9,\\-]{36}", "Registering a system using an activationKey(auto-attach enabled) created against a owner with auto-attach disabled at owner level should succeed but auto-attach should fail.");
-	System.out.println(registerResult.getStderr());
 	//	Assert.assertEquals(registerResult.getStderr().trim(), expected, "Registering a system using an activationKey(auto-attach enabled) created against a owner with auto-attach disabled at owner level should succeed but auto-attach should fail.");
 	Assert.assertEquals(registerResult.getExitCode(), expectedExitCode, "The exitCode from registering a system using an activationKey(auto-attach enabled) created against a owner with auto-attach disabled at owner level"); 
 

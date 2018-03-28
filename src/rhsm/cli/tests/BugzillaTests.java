@@ -801,7 +801,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier3")
 	@Test(	description = "verify if Registering with an activation key which has run out of susbcriptions results in a system, but no identity certificate",
-			groups = {"Tier3Tests","RegisterWithActivationKeyWithExpiredPool", "blockedByBug-803814" },
+			groups = {"Tier3Tests","RegisterWithActivationKeyWithExpiredPool", "blockedByBug-803814", "blockedByBug-1555582" },
 			enabled = true)
 	public void testRegisterUsingActivationKeyWithExpiredPool() throws Exception {
 		int endingMinutesFromNow = 1;
@@ -1450,7 +1450,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier3")
 	@Test(	description = "create virt-only pool and check if lists on available list of physical and virtual machine",
-			groups = {"Tier3Tests","createVirtOnlyPool"},
+			groups = {"Tier3Tests","createVirtOnlyPool","blockedByBug-1555582"},
 			enabled = true)
 	public void testCreateVirtOnlyPool() throws Exception {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
@@ -1573,7 +1573,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		BigInteger serialNumber = clienttasks.getSerialNumberFromEntitlementCertFile(entitlementCertFile);
 
 		clienttasks.unsubscribe(null, serialNumber, null, null, null, null, null);
-		sleep(2/* min */ * 60 * 1000); // give the server time to update;
+		sleep(2/* min */ * 90 * 1000); // give the server time to update;
 		// schedule is set in
 		// /etc/candlepin/candlepin.conf
 		// pinsetter.org.candlepin.pinsetter.tasks.CertificateRevocationListTask.schedule=0
@@ -1600,7 +1600,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier3")
 	@Test(	description = "Consumer unsubscribed when Subscription revoked",
-			groups = {"Tier3Tests","ConsumerUnsubscribedWhenSubscriptionRevoked", "blockedByBug-947429" },
+			groups = {"Tier3Tests","ConsumerUnsubscribedWhenSubscriptionRevoked", "blockedByBug-947429","blockedByBug-1555582" },
 			enabled = true)
 	@ImplementsNitrateTest(caseId = 56025)
 	public void testConsumerUnsubscribedWhenSubscriptionRevoked() throws Exception {
@@ -2070,7 +2070,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier3")
 	@Test(	description = "verify expiration of entitlement certs",
-			groups = {"Tier3Tests","ExpirationOfEntitlementCerts","blockedByBug-907638", "blockedByBug-953830" },
+			groups = {"Tier3Tests","ExpirationOfEntitlementCerts","blockedByBug-907638", "blockedByBug-953830" , "blockedByBug-1555582"},
 			enabled = true)
 	public void testExpirationOfEntitlementCerts() throws JSONException, Exception {
 		int endingMinutesFromNow = 1;
@@ -2142,7 +2142,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier3")
 	@Test(	description = "verify if Entitlement certs are downloaded if subscribed to expired pool",
-			groups = {"Tier3Tests","SubscribeToexpiredEntitlement", "blockedByBug-907638" },
+			groups = {"Tier3Tests","SubscribeToexpiredEntitlement", "blockedByBug-907638","blockedByBug-1555582" },
 			enabled = true)
 	public void testSubscribeToExpiredEntitlement() throws JSONException, Exception {
 
@@ -2794,7 +2794,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier3")
 	@Test(	description = /*TODO */"please provide a description",
-			groups = {"Tier3Tests","certificateStacking", "blockedByBug-726409", "blockedByBug-1183175" },
+			groups = {"Tier3Tests","certificateStacking", "blockedByBug-726409", "blockedByBug-1183175","blockedByBug-1555582" },
 			enabled = true)
 	public void testCertificateStacking() throws JSONException, Exception {
 		Map<String, String> attributes = new HashMap<String, String>();
@@ -3108,7 +3108,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier3")
 	@Test(	description = "verify fix for Bug 755677 - failing to add a virt unlimited pool to an activation key",
-			groups = {"Tier3Tests","AddingVirtualPoolToActivationKey", "blockedByBug-755677" },
+			groups = {"Tier3Tests","AddingVirtualPoolToActivationKey", "blockedByBug-755677","blockedByBug-1555582" },
 			enabled = true)
 	public void testAddingVirtualPoolToActivationKey() throws JSONException, Exception {
 		Integer addQuantity = 1;
@@ -3361,7 +3361,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier3")
 	@Test(	description = "verify if Repos List is empty for FutureSubscription",
-			groups = {"Tier3Tests","EmptyReposListForFutureSubscription", "blockedByBug-958775","blockedByBug-1440180" },
+			groups = {"Tier3Tests","EmptyReposListForFutureSubscription", "blockedByBug-958775","blockedByBug-1440180","blockedByBug-1555582" },
 			enabled = true)
 	public void testEmptyReposListForFutureSubscription() throws JSONException, Exception {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
@@ -3788,7 +3788,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier3")
 	@Test(	description = "verify healing of installed products without taking future subscriptions into consideration",
-			groups = {"Tier3Tests","VerifyHealingForFutureSubscription", "blockedByBug-907638","blockedByBug-1440180" },
+			groups = {"Tier3Tests","VerifyHealingForFutureSubscription", "blockedByBug-907638","blockedByBug-1440180","blockedByBug-1555582" },
 			enabled = true)
 	public void testHealingForFutureSubscription() throws JSONException, Exception {
 		String productId = null;
@@ -4195,7 +4195,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier3")
 	@Test(	description = "subscription-manager unsubscribe --all on expired subscriptions removes certs from entitlement folder",
-			groups = {"Tier3Tests","VerifyUnsubscribeAllForExpiredSubscription", "blockedByBug-852630","blockedByBug-906550" },
+			groups = {"Tier3Tests","VerifyUnsubscribeAllForExpiredSubscription", "blockedByBug-852630","blockedByBug-906550","blockedByBug-1555582" },
 			enabled = true)
 	public void testUnsubscribeAllForExpiredSubscription() throws JSONException, Exception {
 	    	clienttasks.clean();
@@ -4891,7 +4891,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier3")
 	@Test(	description = "Auto-heal for Expired subscription",
-			groups = {"Tier3Tests","AutohealForExpired", "blockedByBug-746088","blockedByBug-907638", "blockedByBug-907400" },
+			groups = {"Tier3Tests","AutohealForExpired", "blockedByBug-746088","blockedByBug-907638", "blockedByBug-907400","blockedByBug-1555582" },
 			enabled = true)
 	public void testAutohealForExpiredSubscription() throws JSONException, Exception {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
@@ -5178,7 +5178,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier3")
 	@Test(	description = "Verify if future entitlements are disregarded by autosubscribe when determining what should be subscribed to satisfy compliance today",
-			groups = {"Tier3Tests","VerifyFutureSubscription_Test", "blockedByBug-746035","blockedByBug-1440180" },
+			groups = {"Tier3Tests","VerifyFutureSubscription_Test", "blockedByBug-746035","blockedByBug-1440180","blockedByBug-1555582" },
 			enabled = true)
 	public void testFutureSubscription() throws Exception {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
