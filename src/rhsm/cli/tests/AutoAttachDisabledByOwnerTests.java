@@ -163,6 +163,9 @@ public class AutoAttachDisabledByOwnerTests extends SubscriptionManagerCLITestSc
 			"/owners/" + owner + "/activation_keys", jsonActivationKeyRequest.toString()));
 	clienttasks.unregister(null, null, null, null);
 	SSHCommandResult registerResult = clienttasks.register(null, null, owner, null, null, null, null, null, null, null, jsonActivationKey.getString("name"), null, null, null, true, null, null, null, null, null);
+	
+	/*Todo talk to John regarding change in exitcode from 0 to 1 */  
+	
 	Integer expectedExitCode = new Integer(0);
 	Assert.assertContainsMatch(registerResult.getStdout().trim(), "The system has been registered with ID: [a-f,0-9,\\-]{36}", "Registering a system using an activationKey(auto-attach enabled) created against a owner with auto-attach disabled at owner level should succeed but auto-attach should fail.");
 	//	Assert.assertEquals(registerResult.getStderr().trim(), expected, "Registering a system using an activationKey(auto-attach enabled) created against a owner with auto-attach disabled at owner level should succeed but auto-attach should fail.");
