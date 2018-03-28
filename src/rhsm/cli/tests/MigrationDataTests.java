@@ -3012,6 +3012,8 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 			if (rhnAvailableChildChannel.equals("rhel-x86_64-server-6-rh-gluster-3-samba-debuginfo")) {
 				// Bug 1286842 - 'rhel-x86_64-server-6-rh-gluster-3-samba-debuginfo' channel map is missing from channel-cert-mapping.txt
 				bugIds.add("1286842");
+				// Bug 1561715 - 'rhel-x86_64-server-6-rh-gluster-3-samba-debuginfo' channel map is missing from channel-cert-mapping.txt
+				bugIds.add("1561715");
 			}
 			
 			if (rhnAvailableChildChannel.equals("rhel-x86_64-server-6-cf-ce-1-beta") ||
@@ -3058,6 +3060,8 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				rhnAvailableChildChannel.equals("rhel-x86_64-server-hpn-fastrack-6-debuginfo")) {
 				// Bug 1320597 - rhel-x86_64-server-hpn-fastrack-6 channel maps are absent from channel-cert-mapping.txt
 				bugIds.add("1320597");
+				// Bug 1561724 - rhel-x86_64-server-hpn-fastrack-6 channel maps are absent from channel-cert-mapping.txt
+				bugIds.add("1561724");
 			}
 			
 			if (rhnAvailableChildChannel.equals("rhel-x86_64-server-hpn-6") ||
