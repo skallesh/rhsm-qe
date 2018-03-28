@@ -977,8 +977,18 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		}
 		
 		List<String> expectedRequiresList = new ArrayList<String>();
-		if (Integer.valueOf(clienttasks.redhatReleaseX)<7) {
+		if (Integer.valueOf(clienttasks.redhatReleaseX)<6) {
 			Assert.fail("Did not expect package '"+pkg+"' to be installed on RHEL release '"+clienttasks.redhatReleaseX+"'.");
+		}
+		if (clienttasks.redhatReleaseX.equals("6")) {
+			expectedRequiresList.addAll(Arrays.asList(new String[]{
+					//none
+					"manual: subscription-manager = "+clienttasks.installedPackageVersionMap.get("subscription-manager").replace("subscription-manager-", "").replaceFirst("\\."+clienttasks.arch, ""),	// "manual: subscription-manager = 1.15.6-1.el7"	// Bug 1165771
+			}));
+			
+			if (clienttasks.isPackageVersion("subscription-manager-plugin-container",">=","1.20.1-1")) {	// commit 76c52b9002906d80b17baf6af4da67e648ce2415 1422196: Update container certs after plugin install
+				expectedRequiresList.add("post: /bin/sh");
+			}
 		}
 		if (clienttasks.redhatReleaseX.equals("7")) {
 			expectedRequiresList.addAll(Arrays.asList(new String[]{
