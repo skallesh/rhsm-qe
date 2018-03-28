@@ -493,7 +493,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 				expectedRequiresList.add("manual: yum >= 3.2.29-73");
 			}
 			
-			if		(clienttasks.isPackageVersion("subscription-manager",">=","1.10.5-1"))	expectedRequiresList.remove("manual: python-simplejson");		// Bug 1006748 - remove subscription-manager dependency on python-simplejson; subscription-manager commit ee34aef839d0cb367e558f1cd7559590d95cd636
+			if (clienttasks.isPackageVersion("subscription-manager",">=","1.10.5-1"))	expectedRequiresList.remove("manual: python-simplejson");		// Bug 1006748 - remove subscription-manager dependency on python-simplejson; subscription-manager commit ee34aef839d0cb367e558f1cd7559590d95cd636
 			
 		}
 		if (clienttasks.redhatReleaseX.equals("7")) {
@@ -563,7 +563,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		}
 		
 		// add the expected version of python-rhsm
-		if 		(clienttasks.isPackageVersion("subscription-manager",">=","1.20.3-1"))	expectedRequiresList.add((clienttasks.redhatReleaseX.equals("5")?"":"manual: ")+"subscription-manager-rhsm = "+clienttasks.installedPackageVersionMap.get("subscription-manager").replace("subscription-manager-", "").replaceFirst("-1\\..+", "")/*strips off -1.git.17.485ba1e.el7.x86_64*/);	// commit f445b6486a962d12185a5afe69e768d0a605e175	Move python-rhsm build into subscription-manager
+		if 		(clienttasks.isPackageVersion("subscription-manager",">=","1.20.3-1"))	expectedRequiresList.add((clienttasks.redhatReleaseX.equals("5")?"":"manual: ")+"subscription-manager-rhsm = "+clienttasks.installedPackageVersionMap.get("subscription-manager").replace("subscription-manager-", "").replaceFirst("-\\d+\\..+", "")/*strips off -1.git.17.485ba1e.el7.x86_64*/);	// commit f445b6486a962d12185a5afe69e768d0a605e175	Move python-rhsm build into subscription-manager
 		else if	(clienttasks.isPackageVersion("subscription-manager",">=","1.20.2-1"))	expectedRequiresList.add((clienttasks.redhatReleaseX.equals("5")?"":"manual: ")+"python-rhsm >= 1.20.2");		// RHEL7.5	// commit 00c1100b1fb0cb207be94f95892cfa5c9a9fbfae
 		else if	(clienttasks.isPackageVersion("subscription-manager",">=","1.20.0-1"))	expectedRequiresList.add((clienttasks.redhatReleaseX.equals("5")?"":"manual: ")+"python-rhsm >= 1.20.0");		// RHEL7.5	// commit c2383f6cc1745d4d22f83b836bc64b2cd1423b32
 		else if	(clienttasks.isPackageVersion("subscription-manager",">=","1.19.18-1"))	expectedRequiresList.add((clienttasks.redhatReleaseX.equals("5")?"":"manual: ")+"python-rhsm >= 1.19.9");		// RHEL7.4	// commit 2ad6cb20a37c7904b67cb8405663ea987c3e50df
