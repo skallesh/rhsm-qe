@@ -524,6 +524,9 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		} else {
 			String expectedStdout = String.format("This consumer is already subscribed to the product matching pool with id '%s'.",pool.poolId);
 			if (!clienttasks.workaroundForBug876764(sm_serverType)) expectedStdout = String.format("This unit has already had the subscription matching pool ID '%s' attached.",pool.poolId);
+			if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.3.1-1")) {	// commit 0d5fefcfa8c1c2485921d2dee6633879b1e06931 Correct incorrect punctuation in user messages
+				expectedStdout = String.format("This unit has already had the subscription matching pool ID \"%s\" attached.",pool.poolId);
+			}
 			Assert.assertEquals(subscribeStdout, expectedStdout,
 				"subscribe command returns proper message when the same consumer attempts to subscribe to a non-multi-entitlement pool more than once.");
 			Assert.assertTrue(RemoteFileTasks.testExists(client, clienttasks.entitlementCertDir+File.separator+serial1+".pem"),
@@ -597,6 +600,9 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 				subscribeResultMessage = String.format("Successfully attached a subscription for: %s",poolNames.get(poolId));
 				String subscribeResultSubMessage = String.format("This consumer is already subscribed to the product matching pool with id '%s'.",poolId);
 				if (!clienttasks.workaroundForBug876764(sm_serverType)) subscribeResultSubMessage = String.format("This unit has already had the subscription matching pool ID '%s' attached.",poolId);
+				if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.3.1-1")) {	// commit 0d5fefcfa8c1c2485921d2dee6633879b1e06931 Correct incorrect punctuation in user messages
+					subscribeResultSubMessage = String.format("This unit has already had the subscription matching pool ID \"%s\" attached.",poolId);
+				}
 				subscribeResultMessage += "\n"+subscribeResultSubMessage;
 				Assert.assertTrue(subscribeResult.getStdout().contains(subscribeResultMessage),"The duplicate subscribe result for pool '"+poolId+"' contains: "+subscribeResultMessage);			
 			}
@@ -1065,6 +1071,9 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		String expectedDryrunResult = String.format("Service level %s is not available to consumers of organization %s.","FOO",sm_clientOrg);	// valid before bug fix 864508
 		expectedDryrunResult = String.format("Service level '%s' is not available to consumers of organization %s.","FOO",sm_clientOrg);
 		if (!clienttasks.workaroundForBug876764(sm_serverType)) expectedDryrunResult = String.format("Service level '%s' is not available to units of organization %s.","FOO",sm_clientOrg);
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.3.1-1")) {	// commit 0d5fefcfa8c1c2485921d2dee6633879b1e06931 Correct incorrect punctuation in user messages
+			expectedDryrunResult = String.format("Service level \"%s\" is not available to units of organization %s.","FOO",sm_clientOrg);
+		}
 		Assert.assertEquals(jsonDryrunResult.getString("displayMessage"),expectedDryrunResult, "JSON results from a Candlepin Restful API call to dry-run with an unavailable service level.");
 	}
 
