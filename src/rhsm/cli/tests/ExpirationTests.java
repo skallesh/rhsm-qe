@@ -48,7 +48,7 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
 	@Test(	description="subscribe to a pool that will expire soon and assert the entitlements are removed after it expires",
-			groups={"Tier2Tests","blockedByBug-655835","blockedByBug-660713","blockedByBug-854312","blockedByBug-907638","blockedByBug-994266"}, dependsOnGroups={},
+			groups={"Tier2Tests","blockedByBug-655835","blockedByBug-660713","blockedByBug-854312","blockedByBug-907638","blockedByBug-994266","blockedByBug-1555582"}, dependsOnGroups={},
 			enabled=true)
 	public void testEntitlementsAfterSubscriptionExpires() throws Exception{
 		clienttasks.restart_rhsmcertd(certFrequency, null, true);
@@ -158,7 +158,7 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
 	@Test(	description="assert that a soon to expire pool is removed from availablity after it expires",
-			groups={"Tier2Tests"}, dependsOnGroups={},
+			groups={"Tier2Tests","blockedByBug-1555582"}, dependsOnGroups={},
 			enabled=true)
 	public void testPoolIsRemovedAfterSubscriptionExpires() throws Exception {
 		
@@ -187,7 +187,7 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
 	@Test(	description="assert that a soon to be available pool is not yet available",
-			groups={"Tier2Tests"}, dependsOnGroups={},
+			groups={"Tier2Tests","blockedByBug-1555582"}, dependsOnGroups={},
 			enabled=true)
 	public void testPoolIsNotYetAvailableUntilTheStartDate() throws Exception {
 		
