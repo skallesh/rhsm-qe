@@ -187,7 +187,8 @@ public class AutoAttachDisabledByOwnerTests extends SubscriptionManagerCLITestSc
 	Assert.assertContainsMatch(registerResult.getStdout().trim(), "The system has been registered with ID: [a-f,0-9,\\-]{36}", "Registering a system using an activationKey(auto-attach enabled) created against a owner with auto-attach disabled at owner level should succeed but auto-attach should fail.");
 	//	Assert.assertEquals(registerResult.getStderr().trim(), expected, "Registering a system using an activationKey(auto-attach enabled) created against a owner with auto-attach disabled at owner level should succeed but auto-attach should fail.");
 	Assert.assertEquals(registerResult.getExitCode(), expectedExitCode, "The exitCode from registering a system using an activationKey(auto-attach enabled) created against a owner with auto-attach disabled at owner level"); 
-	//yet to assert the error as I am waiting for the bug that blocks this test to be fixed so that I can assert the proper string
+	Assert.fail("Now that bug 1489894 has been fixed, an additional step is needed to accurately assert the registerResult.");
+
     }
 
     @AfterGroups(groups = "setup", value = { "DisableOwner" }, enabled = true)
