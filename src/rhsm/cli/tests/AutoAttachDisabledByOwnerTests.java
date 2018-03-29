@@ -23,6 +23,7 @@ import com.redhat.qe.tools.SSHCommandResult;
 
 import rhsm.base.SubscriptionManagerCLITestScript;
 import rhsm.cli.tasks.CandlepinTasks;
+import rhsm.cli.tasks.SubscriptionManagerTasks;
 
 /**
  * @author skallesh
@@ -42,7 +43,7 @@ public class AutoAttachDisabledByOwnerTests extends SubscriptionManagerCLITestSc
 	    posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 	    tags= "Tier3")
     @Test(	description = "Disable Auto attach by Owner",
-    groups = {"Tier3Tests","DisableOwner","blockedByBug-1382355"},
+    groups = {"Tier3Tests","DisableOwner","blockedByBug-1382355","blockedByBug-1489894"},
     enabled = true)
     public void testDisableAutoAttachByOwner() throws Exception {
 	JSONObject jsonData = new JSONObject();
@@ -55,21 +56,27 @@ public class AutoAttachDisabledByOwnerTests extends SubscriptionManagerCLITestSc
 	CandlepinTasks.putResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,
 		resourcePath, jsonData);
 	/*
-	 * verify register with auto-attach works on a owner with
-	 * autobindDisabled=false
+	 * verify register with auto-attach doesnot work on a owner with
+	 * autobindDisabled=true
 	 */
 	SSHCommandResult result = clienttasks.register(sm_clientUsername, sm_clientPassword, owner, null, null, null,
 		null, true, null, null, (String) null, null, null, null, true, null, null, null, null, null);
 
 	String expected = String.format("Ignoring request to auto-attach. It is disabled for org '%s'.",owner);
-
+	if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.3.1-1")) {	// commit 0d5fefcfa8c1c2485921d2dee6633879b1e06931 Correct incorrect punctuation in user messages
+			expected = String.format("Ignoring request to auto-attach. It is disabled for org \"%s\".",owner);
+	}
+	
 	Assert.assertTrue(result.getStderr().trim().equals(expected),"indicating autobindDisabled is set true on owner");
 	SSHCommandResult consumedSubscriptions = clienttasks.list(null, null, true, null, null, null, null, null, null,null, null, null, null, null);
 	Assert.assertTrue(consumedSubscriptions.getStdout().trim().equals(expectedConsumedPoolResult));
 
 	/* verify if healing works on a owner with autobindDisabled=false */
 	clienttasks.autoheal(null, true, null, null, null, null, null);
-	String logMessage = "Ignoring request to auto-attach. It is disabled for org '" + owner + "'.";
+	String logMessage = String.format("Ignoring request to auto-attach. It is disabled for org '%s'.",owner);
+	if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.3.1-1")) {	// commit 0d5fefcfa8c1c2485921d2dee6633879b1e06931 Correct incorrect punctuation in user messages
+		logMessage = String.format("Ignoring request to auto-attach. It is disabled for org \"%s\".",owner);
+	}	
 	String logMarker = System.currentTimeMillis()
 		+ " disable auto-attach by Owner test , healing section ****************************************";
 	RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, logMarker);
@@ -99,6 +106,9 @@ public class AutoAttachDisabledByOwnerTests extends SubscriptionManagerCLITestSc
 	result = clienttasks.subscribe_(true, null, (String) null, null, null, null, null, null, null, null, null,
 		null, null);
 	expected = String.format("Ignoring request to auto-attach. It is disabled for org '%s'.",owner);
+	if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.3.1-1")) {	// commit 0d5fefcfa8c1c2485921d2dee6633879b1e06931 Correct incorrect punctuation in user messages
+		expected = String.format("Ignoring request to auto-attach. It is disabled for org \"%s\".",owner);
+	}
 	Assert.assertTrue(result.getStderr().trim().equals(expected), "indicating auto-attach is disabled for owner");
 	consumedSubscriptions = clienttasks.list(null, null, true, null, null, null, null, null, null, null, null, null,
 		null, null);
@@ -116,6 +126,9 @@ public class AutoAttachDisabledByOwnerTests extends SubscriptionManagerCLITestSc
 		null, (String) null, null, null, null, true, null, null, null, null, null);
 
 	expected = String.format("Ignoring request to auto-attach. It is disabled for org '%s'.",owner);
+	if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.3.1-1")) {	// commit 0d5fefcfa8c1c2485921d2dee6633879b1e06931 Correct incorrect punctuation in user messages
+		expected = String.format("Ignoring request to auto-attach. It is disabled for org \"%s\".",owner);
+	}
 	Assert.assertFalse(result.getStderr().trim().equals(expected),
 		"indicationg autobindDisabled is set false on owner");
 	consumedSubscriptions = clienttasks.list(null, null, true, null, null, null, null, null, null, null, null, null,
@@ -129,7 +142,9 @@ public class AutoAttachDisabledByOwnerTests extends SubscriptionManagerCLITestSc
 	clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 	result = clienttasks.subscribe(true, null, (String) null, null, null, null, null, null, null, null, null, null, null);
 	expected = String.format("Ignoring request to auto-attach. It is disabled for org '%s'.",owner);
-
+	if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.3.1-1")) {	// commit 0d5fefcfa8c1c2485921d2dee6633879b1e06931 Correct incorrect punctuation in user messages
+		expected = String.format("Ignoring request to auto-attach. It is disabled for org \"%s\".",owner);
+	}
 	Assert.assertFalse(result.getStderr().trim().equals(expected), "indicating auto-attach is disabled for owner");
 	consumedSubscriptions = clienttasks.list(null, null, true, null, null, null, null, null, null, null, null, null,
 		null, null);
@@ -139,7 +154,10 @@ public class AutoAttachDisabledByOwnerTests extends SubscriptionManagerCLITestSc
 	 */
 	clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 	clienttasks.autoheal(null, true, null, null, null, null, null);
-	logMessage = "Ignoring request to auto-attach. It is disabled for org '" + owner + "'.";
+	logMessage = String.format("Ignoring request to auto-attach. It is disabled for org '%s'.",owner);
+	if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.3.1-1")) {	// commit 0d5fefcfa8c1c2485921d2dee6633879b1e06931 Correct incorrect punctuation in user messages
+		logMessage = String.format("Ignoring request to auto-attach. It is disabled for org \"%s\".",owner);
+	}
 	logMarker = System.currentTimeMillis()
 		+ " disable auto-attach by Owner test , healing section ****************************************";
 	RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, logMarker);
@@ -163,11 +181,13 @@ public class AutoAttachDisabledByOwnerTests extends SubscriptionManagerCLITestSc
 			"/owners/" + owner + "/activation_keys", jsonActivationKeyRequest.toString()));
 	clienttasks.unregister(null, null, null, null);
 	SSHCommandResult registerResult = clienttasks.register(null, null, owner, null, null, null, null, null, null, null, jsonActivationKey.getString("name"), null, null, null, true, null, null, null, null, null);
-	Integer expectedExitCode = new Integer(0);
+	
+	//Integer expectedExitCode = new Integer(0);
+	Integer expectedExitCode = new Integer(1); //this is working as expected as activation with auto-attach disabled on owner will fail the auto-attach process, hence exit code is 1.  
 	Assert.assertContainsMatch(registerResult.getStdout().trim(), "The system has been registered with ID: [a-f,0-9,\\-]{36}", "Registering a system using an activationKey(auto-attach enabled) created against a owner with auto-attach disabled at owner level should succeed but auto-attach should fail.");
-	System.out.println(registerResult.getStderr());
 	//	Assert.assertEquals(registerResult.getStderr().trim(), expected, "Registering a system using an activationKey(auto-attach enabled) created against a owner with auto-attach disabled at owner level should succeed but auto-attach should fail.");
 	Assert.assertEquals(registerResult.getExitCode(), expectedExitCode, "The exitCode from registering a system using an activationKey(auto-attach enabled) created against a owner with auto-attach disabled at owner level"); 
+	Assert.fail("Now that bug 1489894 has been fixed, an additional step is needed to accurately assert the registerResult.");
 
     }
 
