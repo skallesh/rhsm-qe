@@ -141,8 +141,10 @@ public class AutoAttachDisabledByOwnerTests extends SubscriptionManagerCLITestSc
 	 */
 	clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 	result = clienttasks.subscribe(true, null, (String) null, null, null, null, null, null, null, null, null, null, null);
-	expected = String.format("Ignoring request to auto-attach. It is disabled for org \"%s\".",owner);
-
+	expected = String.format("Ignoring request to auto-attach. It is disabled for org '%s'.",owner);
+	if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.3.1-1")) {	// commit 0d5fefcfa8c1c2485921d2dee6633879b1e06931 Correct incorrect punctuation in user messages
+		expected = String.format("Ignoring request to auto-attach. It is disabled for org \"%s\".",owner);
+	}
 	Assert.assertFalse(result.getStderr().trim().equals(expected), "indicating auto-attach is disabled for owner");
 	consumedSubscriptions = clienttasks.list(null, null, true, null, null, null, null, null, null, null, null, null,
 		null, null);
