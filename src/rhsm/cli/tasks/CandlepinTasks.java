@@ -447,7 +447,7 @@ schema generation failed
 					statusCapabilities.add(jsonStatus.getJSONArray("managerCapabilities").getString(i));
 				}
 	
-				//	# curl --insecure --user testuser1:password --request GET https://jsefler-f14-candlepin.usersys.redhat.com:8443/candlepin/status --stderr /dev/null | python -msimplejson/tool
+				//	# curl --insecure --user testuser1:password --request GET https://jsefler-f14-candlepin.usersys.redhat.com:8443/candlepin/status --stderr /dev/null | python -m simplejson/tool
 				//	{
 				//	    "release": "1", 
 				//	    "result": true, 
@@ -779,7 +779,8 @@ schema generation failed
 		// Example: curl --insecure --user testuser1:password --request GET https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/consumers/e60d7786-1f61-4dec-ad19-bde068dd3c19 | python -mjson.tool
 		String user		= (authenticator==null || authenticator.isEmpty())? "":"--user "+authenticator+":"+password+" ";
 		String request	= "--request "+get.getName()+" ";
-		log.info("SSH alternative to HTTP request: curl --stderr /dev/null --insecure "+user+request+"'"+get.getURI()+"'"+" | python -m simplejson/tool");
+//		log.info("SSH alternative to HTTP request: curl --stderr /dev/null --insecure "+user+request+"'"+get.getURI()+"'"+" | python -m simplejson/tool");
+		log.info("SSH alternative to HTTP request: curl --stderr /dev/null --insecure "+user+request+"'"+get.getURI()+"'"+" | python -m json/tool");	// python -m simplejson/tool worked well on RHEL5
 		
 		String response = getHTTPResponseAsString(client, get, authenticator, password);
 /* 8/21/2015 DELETEME IF TRY CATCH BLOCK IN doHTTPRequest WORKS BETTER
@@ -1213,7 +1214,7 @@ schema generation failed
 		*/
 		jsonOrg.put(attributeName, attributeValue);
 		
-		//	[root@jsefler-63server ~]# curl -k -u admin:admin --request PUT --data '{"defaultServiceLevel": "PREMIUM"}' --header 'accept:application/json' --header 'content-type: application/json' --stderr /dev/null https://jsefler-f14-candlepin.usersys.redhat.com:8443/candlepin/owners/admin | python -msimplejson/tool
+		//	[root@jsefler-63server ~]# curl -k -u admin:admin --request PUT --data '{"defaultServiceLevel": "PREMIUM"}' --header 'accept:application/json' --header 'content-type: application/json' --stderr /dev/null https://jsefler-f14-candlepin.usersys.redhat.com:8443/candlepin/owners/admin | python -m simplejson/tool
 		//	{
 		//	    "contentPrefix": null, 
 		//	    "created": "2012-05-15T00:07:23.109+0000", 
@@ -3804,7 +3805,7 @@ schema generation failed
 		
 		JSONObject jsonData = new JSONObject();
 		
-		//	[root@jsefler-63server ~]# curl -k -u admin:admin --request PUT --data '{   "contentPrefix": null,     "created": "2012-05-15T00:07:23.109+0000",     "defaultServiceLevel": "PREMIUM",   "displayName": "Admin Owner",    "href": "/owners/admin",     "id": "8a90f814374dd1f101374dd216e50002",     "key": "admin",     "parentOwner": null,    "updated": "2012-05-15T00:07:23.109+0000",     "upstreamUuid": null}' --header 'accept:application/json' --header 'content-type: application/json' --stderr /dev/null https://jsefler-f14-candlepin.usersys.redhat.com:8443/candlepin/owners/admin | python -msimplejson/tool
+		//	[root@jsefler-63server ~]# curl -k -u admin:admin --request PUT --data '{   "contentPrefix": null,     "created": "2012-05-15T00:07:23.109+0000",     "defaultServiceLevel": "PREMIUM",   "displayName": "Admin Owner",    "href": "/owners/admin",     "id": "8a90f814374dd1f101374dd216e50002",     "key": "admin",     "parentOwner": null,    "updated": "2012-05-15T00:07:23.109+0000",     "upstreamUuid": null}' --header 'accept:application/json' --header 'content-type: application/json' --stderr /dev/null https://jsefler-f14-candlepin.usersys.redhat.com:8443/candlepin/owners/admin | python -m simplejson/tool
 		//	{
 		//	    "contentPrefix": null, 
 		//	    "created": "2012-05-15T00:07:23.109+0000", 
