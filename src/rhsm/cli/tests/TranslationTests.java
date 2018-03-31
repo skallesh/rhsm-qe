@@ -191,8 +191,10 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 		// also test the system.default_locale fact for an unknown locale
 		if (clienttasks.isPackageVersion("python-rhsm", ">=", "1.19.3-1")) {	// commit 0670d70540a24a8e173d347e2240dcfb7535608a Bug 1425922: System locale in facts
 			String systemDefaultLocaleFact = "system.default_locale";
-			String systemDefaultLocale = client.runCommandAndWait("locale | grep LANG").getStdout().trim().split("=")[1];
-			Assert.assertEquals(clienttasks.getFactValue(systemDefaultLocaleFact), systemDefaultLocale, "The system's value for fact '"+systemDefaultLocaleFact+"'.");
+			String systemDefaultLocaleFactValue = clienttasks.getFactValue(systemDefaultLocaleFact);
+			String localeLANG = client.runCommandAndWait("locale | grep LANG").getStdout().trim().split("=")[1];
+			// UTF-8 and UTF8 are interchangeable (UTF8 appears as the fact value on RHEL6)
+			Assert.assertEquals(systemDefaultLocaleFactValue.replace("UTF8", "UTF-8"), localeLANG.replace("UTF8", "UTF-8"), "The system's value for fact '"+systemDefaultLocaleFact+"' matches the locale LANG. (Note: UTF-8 and UTF8 are interchangeable)");
 		}
 	}
 	
