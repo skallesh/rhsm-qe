@@ -2568,6 +2568,34 @@ if (false) {
 		return installedRhelProduct.status.equals("Subscribed");
 	}
 	
+	
+	
+	/**
+	 * Given a list of the currently installed product certs (that could include duplicate productIds), filter
+	 * out the product certs from /etc/pki/product-default/ that are trumped by a duplicate productId.
+	 * @param productCerts
+	 * @return 
+	 */
+	public List<ProductCert> filterTrumpedDefaultProductCerts(List<ProductCert> productCerts) {
+		List<ProductCert> filteredProductCerts = new ArrayList<ProductCert>();
+		for (ProductCert productCert : productCerts) {
+			if (!productCert.file.getPath().startsWith(productCertDefaultDir)) {
+				if (ProductCert.findFirstInstanceWithMatchingFieldFromList("productId", productCert.productId, filteredProductCerts) == null) {
+					filteredProductCerts.add(productCert);
+				}
+			}
+		}
+		for (ProductCert productCert : productCerts) {
+			if (productCert.file.getPath().startsWith(productCertDefaultDir)) {
+				if (ProductCert.findFirstInstanceWithMatchingFieldFromList("productId", productCert.productId, filteredProductCerts) == null) {
+					filteredProductCerts.add(productCert);
+				}
+			}
+		}
+
+		return filteredProductCerts;
+	}
+	
 	/**
 	 * @return a ConsumerCert object corresponding to the current identity certificate parsed from the output of: openssl x509 -noout -text -in /etc/pki/consumer/cert.pem
 	 */
