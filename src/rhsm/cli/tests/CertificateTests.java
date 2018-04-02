@@ -29,6 +29,7 @@ import com.redhat.qe.Assert;
 import com.redhat.qe.auto.bugzilla.BlockedByBzBug;
 import com.redhat.qe.auto.bugzilla.BugzillaAPIException;
 import com.redhat.qe.auto.bugzilla.BzChecker;
+import com.redhat.qe.auto.bugzilla.IBugzillaAPI.bzState;
 import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.jul.TestRecords;
@@ -694,6 +695,20 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
 			if (invokeWorkaroundWhileBugIsOpen) {
 				log.warning("While bug '"+bugId+"' is open, we will skip the empty stderr assertion on RHEL6");
+				return;
+			}
+		}
+		// END OF WORKAROUND
+		// PERMANENT WORKAROUND FOR BUG CLOSED WONTFIX
+		//	201804021421:14.051 - FINE: ssh root@jsefler-rhel6.usersys.redhat.com su non-root-user --command 'rct cat-cert /etc/pki/consumer/cert.pem'
+		//	201804021421:14.525 - FINE: Stdout: Unable to read certificate file '/etc/pki/consumer/cert.pem': Error loading certificate: [Errno 13] Permission denied: '/etc/pki/consumer/cert.pem'
+		//	201804021421:14.525 - FINE: Stderr: 2018-04-02 14:21:14,425 [DEBUG] rct:8270:MainThread @https.py:61 - Using m2crypto wrappers to provide httplib and ssl
+		if (clienttasks.redhatReleaseX.equals("6") && Integer.valueOf(clienttasks.redhatReleaseXY.split("\\.")[1])>=10) {	// if this minor release of RHEL6 is >= 6.10
+			boolean invokeWorkaroundWhileBugIsClosed = true;
+			String bugId="1562412"; // Bug 1562412 - a DEBUG logging statement surfaces to stderr when trying to rct cat-cert a protected file as a non-root-user
+			try {if (invokeWorkaroundWhileBugIsClosed&&(BzChecker.getInstance().getBugState(bugId)==bzState.CLOSED)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsClosed=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
+			if (invokeWorkaroundWhileBugIsClosed) {
+				log.warning("Since bug '"+bugId+"' was CLOSED WONTFIX on RHEL6, we will skip the empty stderr assertion for RHEL6.10+");
 				return;
 			}
 		}
