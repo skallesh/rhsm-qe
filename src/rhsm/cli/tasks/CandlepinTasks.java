@@ -4207,7 +4207,8 @@ schema generation failed
 	}
 	
 	
-	public static JSONObject createSubscriptionPoolRequestBody(String url, Integer quantity, Date startDate, Date endDate, String productId, Integer contractNumber, Integer accountNumber, List<String> providedProducts, List<Map<String, String>> brandingMaps) throws JSONException{
+	public static JSONObject createSubscriptionPoolRequestBody(String url, Integer quantity, Date startDate, Date endDate, String productId, Integer contractNumber, Integer accountNumber, List<String> providedProducts, List<Map<String, String>> brandingMaps) throws Exception{
+		JSONObject jsonStatus = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(/*authenticator*/null,/*password*/null,url,"/status"));
 		
 		//	[root@jsefler-rhel7 ~]# curl -k --user admin:admin --stderr /dev/null --request POST --data '{"product":{"id":"awesomeos-server-basic"},"startDate":"Tue, 13 Sep 2016 01:00:00 -0400","accountNumber":123456,"quantity":20,"endDate":"Wed, 13 Sep 2099 01:00:00 -0400","contractNumber":123,"providedProducts":[{"productId":"37060"}]}' --header 'accept: application/json' --header 'content-type: application/json' https://jsefler-candlepin.usersys.redhat.com:8443/candlepin/owners/admin/pools | python -mjson.tool
 		//	{
@@ -4337,12 +4338,15 @@ schema generation failed
 			}
 			sub.put("branding", jsonBrandings);
 		}
-
-		JSONObject prod = new JSONObject();
-		prod.put("id", productId);
 		
-		sub.put("product", prod);
-
+		if (SubscriptionManagerTasks.isVersion(jsonStatus.getString("version"), ">=", "2.3.1-1")) {	// candlepin commit 9dc6f555f16e70aec0c56e105aeef0c73c2080b1 Implemented PoolDTO, EntitlementDTO and BrandingDTO
+			sub.put("productId", productId);	
+		} else {
+			JSONObject prod = new JSONObject();
+			prod.put("id", productId);	
+			sub.put("product", prod);
+		}
+		
 		return sub;
 	}
 
