@@ -1214,7 +1214,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		mapActivationKeyRequest.clear();
 		mapActivationKeyRequest.put("releaseVer", releaseVer);
 		jsonActivationKeyRequest = new JSONObject(mapActivationKeyRequest);
-		//	[root@jsefler-7 ~]# curl --stderr /dev/null --insecure --user testuser1:password --request PUT --data '{"releaseVer":"R_2.0"}' --header 'accept: application/json' --header 'content-type: application/json' https://jsefler-f14-candlepin.usersys.redhat.com:8443/candlepin/activation_keys/8a9087e3452995d301452d14c41e3858 | python -msimplejson/tool
+		//	[root@jsefler-7 ~]# curl --stderr /dev/null --insecure --user testuser1:password --request PUT --data '{"releaseVer":"R_2.0"}' --header 'accept: application/json' --header 'content-type: application/json' https://jsefler-f14-candlepin.usersys.redhat.com:8443/candlepin/activation_keys/8a9087e3452995d301452d14c41e3858 | python -m simplejson/tool
 		jsonActivationKey = new JSONObject(CandlepinTasks.putResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/activation_keys/"+jsonActivationKey.getString("id"), jsonActivationKeyRequest));
 		//	[root@jsefler-7 ~]# curl --stderr /dev/null --insecure --user admin:admin --request GET https://jsefler-f14-candlepin.usersys.redhat.com:8443/candlepin/activation_keys/8a9087e3452995d301452d14c41e3858 | python -m simplejson/tool
 		//	{
@@ -1487,7 +1487,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		mapActivationKeyRequest.put("serviceLevel", serviceLevel);
 		jsonActivationKeyRequest = new JSONObject(mapActivationKeyRequest);
 		jsonActivationKey = new JSONObject(CandlepinTasks.putResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/activation_keys/"+jsonActivationKey.getString("id"), jsonActivationKeyRequest));
-		//	[root@jsefler-7 ~]# curl --stderr /dev/null --insecure --user testuser1:password --request PUT --data '{"serviceLevel":"Premium"}' --header 'accept: application/json' --header 'content-type: application/json' https://jsefler-f14-candlepin.usersys.redhat.com:8443/candlepin/activation_keys/8a9087e3452995d301452ec233313b7a | python -msimplejson/tool
+		//	[root@jsefler-7 ~]# curl --stderr /dev/null --insecure --user testuser1:password --request PUT --data '{"serviceLevel":"Premium"}' --header 'accept: application/json' --header 'content-type: application/json' https://jsefler-f14-candlepin.usersys.redhat.com:8443/candlepin/activation_keys/8a9087e3452995d301452ec233313b7a | python -m simplejson/tool
 		//	{
 		//	    "contentOverrides": [],
 		//	    "created": "2014-04-04T22:00:50.225+0000",

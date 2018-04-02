@@ -1200,7 +1200,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 				// actual guestIds
 				//DEBUGGING jsonConsumer.put("guestIds", new JSONArray(expectedGuestIdsOnHostB));
 				actualGuestIds.clear();
-				//[root@jsefler-stage-6server ~]# curl --insecure --user testuser1:password --request GET https://jsefler-f14-5candlepin.usersys.redhat.com:8443/candlepin/consumers/8b7fe5e5-7178-4bad-b686-2ff8c6c19112 | python -msimplejson/tool
+				//[root@jsefler-stage-6server ~]# curl --insecure --user testuser1:password --request GET https://jsefler-f14-5candlepin.usersys.redhat.com:8443/candlepin/consumers/8b7fe5e5-7178-4bad-b686-2ff8c6c19112 | python -m simplejson/tool
 				//  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
 				//                                 Dload  Upload   Total   Spent    Left  Speed
 				//100 14242    0 14242    0     0  76993      0 --:--:-- --:--:-- --:--:--  135k

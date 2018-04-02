@@ -579,7 +579,7 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 			throw new SkipException("High Availability is not offered on '"+rhelProductCert.productName+"'");
 		}
 		
-		//	[root@ibm-js22-vios-02-lp2 ~]# curl -k -u stage_test_2:PASSWORD http://rubyvip.web.stage.ext.phx2.redhat.com:80/clonepin/candlepin/pools/8a99f9843c01ccba013c037a0fa0015a | python -msimplejson/tool
+		//	[root@ibm-js22-vios-02-lp2 ~]# curl -k -u stage_test_2:PASSWORD http://rubyvip.web.stage.ext.phx2.redhat.com:80/clonepin/candlepin/pools/8a99f9843c01ccba013c037a0fa0015a | python -m simplejson/tool
 		//    "productAttributes": [
 		//                          {
 		//                              "created": "2013-07-22T19:47:22.000+0000", 

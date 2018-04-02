@@ -369,7 +369,7 @@ public class OrgsTests extends SubscriptionManagerCLITestScript {
 		JSONObject jsonOwner;
 		
 		//	Example Owner...
-		//	[root@jsefler-7 ~]# curl --stderr /dev/null --insecure --user admin:admin --request GET https://jsefler-f14-candlepin.usersys.redhat.com:8443/candlepin/owners/daughter | python -msimplejson/tool{
+		//	[root@jsefler-7 ~]# curl --stderr /dev/null --insecure --user admin:admin --request GET https://jsefler-f14-candlepin.usersys.redhat.com:8443/candlepin/owners/daughter | python -m simplejson/tool{
 		//	    "contentPrefix": null,
 		//	    "created": "2014-03-14T12:49:13.558+0000",
 		//	    "defaultServiceLevel": null,
@@ -394,7 +394,7 @@ public class OrgsTests extends SubscriptionManagerCLITestScript {
 		// the mother adopts the daughter...
 		/* The following throws a Runtime Error; 3/14/2014 Development says the parentOwner attribute was never completely developed.  Do not test it.
 		jsonOwner = CandlepinTasks.setAttributeForOrg(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, daughter, "parentOwner", mother);
-		[root@jsefler-7 ~]# curl --stderr /dev/null --insecure --user admin:admin --request PUT --data '{"parentOwner":"mother"}' --header 'accept: application/json' --header 'content-type: application/json' https://jsefler-f14-candlepin.usersys.redhat.com:8443/candlepin/owners/daughter | python -msimplejson/tool
+		[root@jsefler-7 ~]# curl --stderr /dev/null --insecure --user admin:admin --request PUT --data '{"parentOwner":"mother"}' --header 'accept: application/json' --header 'content-type: application/json' https://jsefler-f14-candlepin.usersys.redhat.com:8443/candlepin/owners/daughter | python -m simplejson/tool
 		{
 		    "displayMessage": "Runtime Error org.hibernate.TransientPropertyValueException: object references an unsaved transient instance - save the transient instance before flushing: org.candlepin.model.Owner.parentOwner -> org.candlepin.model.Owner at org.hibernate.engine.spi.CascadingAction$8.noCascade:380",
 		    "requestUuid": "6169b416-6302-4dbd-a412-c8d55a723391"

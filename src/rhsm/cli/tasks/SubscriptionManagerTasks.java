@@ -1256,7 +1256,7 @@ if (false) {
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "rm -rf "+translateToolkitDir+" && mkdir "+translateToolkitDir, new Integer(0));
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "wget --no-verbose --no-check-certificate --output-document="+translateToolkitTarPath+" "+tarUrl,Integer.valueOf(0),null,"-> \""+translateToolkitTarPath+"\"");
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "tar --extract --directory="+translateToolkitDir+" --file="+translateToolkitTarPath,Integer.valueOf(0));
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+translateToolkitDir+"/translate-toolkit* && ./setup.py install --force", Integer.valueOf(0));
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+translateToolkitDir+"/translate-toolkit-* && sudo ./setup.py install --force", Integer.valueOf(0));
 		sshCommandRunner.runCommandAndWait("rm -rf ~/.local");	// 9/27/2013 Fix for the following... Traceback ImportError: cannot import name pofilter
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "which pofilter", Integer.valueOf(0));
 	}
@@ -2566,6 +2566,34 @@ if (false) {
 		InstalledProduct installedRhelProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", rhelProductCert.productId, getCurrentlyInstalledProducts());
 		if (installedRhelProduct==null) Assert.fail("Could not find the installed product corresponding to the current RHEL product cert: "+rhelProductCert);
 		return installedRhelProduct.status.equals("Subscribed");
+	}
+	
+	
+	
+	/**
+	 * Given a list of the currently installed product certs (that could include duplicate productIds), filter
+	 * out the product certs from /etc/pki/product-default/ that are trumped by a duplicate productId.
+	 * @param productCerts
+	 * @return 
+	 */
+	public List<ProductCert> filterTrumpedDefaultProductCerts(List<ProductCert> productCerts) {
+		List<ProductCert> filteredProductCerts = new ArrayList<ProductCert>();
+		for (ProductCert productCert : productCerts) {
+			if (!productCert.file.getPath().startsWith(productCertDefaultDir)) {
+				if (ProductCert.findFirstInstanceWithMatchingFieldFromList("productId", productCert.productId, filteredProductCerts) == null) {
+					filteredProductCerts.add(productCert);
+				}
+			}
+		}
+		for (ProductCert productCert : productCerts) {
+			if (productCert.file.getPath().startsWith(productCertDefaultDir)) {
+				if (ProductCert.findFirstInstanceWithMatchingFieldFromList("productId", productCert.productId, filteredProductCerts) == null) {
+					filteredProductCerts.add(productCert);
+				}
+			}
+		}
+
+		return filteredProductCerts;
 	}
 	
 	/**

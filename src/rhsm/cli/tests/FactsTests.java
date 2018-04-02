@@ -1510,18 +1510,19 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		//	[root@jsefler-rhel7 ~]# locale | grep LANG
 		//	LANG=en_US.UTF-8
 		String systemDefaultLocale = client.runCommandAndWait("locale | grep LANG").getStdout().trim().split("=")[1];
-		Assert.assertEquals(systemDefaultLocaleFactValue, systemDefaultLocale, "The system's value for fact '"+systemDefaultLocaleFact+"'.");
+		// UTF-8 and UTF8 are interchangeable (UTF8 appears as the fact value on RHEL6)
+		Assert.assertEquals(systemDefaultLocaleFactValue.replace("UTF8", "UTF-8"), systemDefaultLocale.replace("UTF8", "UTF-8"), "The system's value for fact '"+systemDefaultLocaleFact+"' matches the locale LANG. (Note: UTF-8 and UTF8 are interchangeable)");
 		
 		// TEST 2
 		// loop through all the supported LANGS and assert that the fact is collected and the value is expected when the shell is run in each LANG
 		for (String lang : TranslationTests.supportedLangs) {
-			lang += ".UTF-8";	// append -UTF-8
+			lang += ".UTF-8";	// append .UTF-8
 			
 			// get the facts for lang using the locale variable "LC_ALL"
 			Map<String,String> langFacts = clienttasks.getFacts("LC_ALL",lang,systemDefaultLocaleFact);
 			
 			// assert that the collected value for fact "system.default_locale" matches the LANG of the shell
-			Assert.assertEquals(langFacts.get(systemDefaultLocaleFact), lang, "The system's value for fact '"+systemDefaultLocaleFact+"' when run in a shell where LC_ALL='"+lang+"'.");
+			Assert.assertEquals(langFacts.get(systemDefaultLocaleFact).replace("UTF8", "UTF-8"), lang, "The system's value for fact '"+systemDefaultLocaleFact+"' when run in a shell where LC_ALL='"+lang+"'. (Note: UTF-8 and UTF8 are interchangeable)");
 		}
 	}
 	
