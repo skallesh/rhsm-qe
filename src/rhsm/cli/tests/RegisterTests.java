@@ -953,11 +953,6 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 			String consumerType = jsonConsumerType.getString("label");
 			registerableConsumerTypes.add(consumerType);
 		}
-		if (clienttasks.isPackageVersion("subscription-manager",">=","1.20.2-1")) {	// post commit e0c34a729e9e347ab1e0f4f5fa656c8b20205fdf RFE Bug 1461003: Deprecate --type option on register command
-			// TODO I think the version check above should trigger on a server version commit not sub-man
-			// Allowing a RHUI type to register is now acceptable, but not advertised
-			if (!registerableConsumerTypes.contains(ConsumerType.RHUI.toString())) registerableConsumerTypes.add(ConsumerType.RHUI.toString());
-		}
 		
 		// iterate across all ConsumerType values and append rows to the dataProvider
 		for (ConsumerType type : ConsumerType.values()) {
@@ -1007,7 +1002,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 						//	FINE: ExitCode: 70
 						expectedStdoutRegex = null;
 						//	Note: assuming there is at least one installed product since our client is a RHEL product afterall
-						expectedStderrRegex = "A unit type of \"share\" cannot have installed products";
+						expectedStderrRegex = String.format("A unit type of \"%s\" cannot have installed products","share");
 						expectedExitCode = Integer.valueOf(70);
 					}
 				}	
@@ -1016,6 +1011,12 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 				String expectedStderrRegex = "No such consumer type: "+type;
 				if (!clienttasks.workaroundForBug876764(sm_serverType)) expectedStderrRegex = "No such unit type: "+type;
 				expectedStderrRegex = String.format("Unit type '%s' could not be found.",type);	// changed to this by bug 876758 comment 5; https://bugzilla.redhat.com/show_bug.cgi?id=876758#c5
+				if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.3.1-1")) {	// commit 0d5fefcfa8c1c2485921d2dee6633879b1e06931 Correct incorrect punctuation in user messages
+					expectedStderrRegex = String.format("Unit type \"%s\" could not be found.",type);
+				}
+				if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.3.4-1")) {	// commit f87515e457c8b74cfaeaf9c0e47f019c241e8355 Changed Consumer.type to Consumer.typeId
+					expectedStderrRegex = String.format("Invalid unit type: %s",type);
+				}
 				Integer expectedExitCode = new Integer(255);
 				if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) expectedExitCode = new Integer(70);	// EX_SOFTWARE	// post commit df95529a5edd0be456b3528b74344be283c4d258
 				ll.add(Arrays.asList(new Object[]{null,	username,	password,	owner,	name,	type,	expectedExitCode,	null,	expectedStderrRegex}));
