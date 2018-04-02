@@ -17,6 +17,7 @@ import org.testng.annotations.Test;
 
 import rhsm.base.SubscriptionManagerCLITestScript;
 import rhsm.cli.tasks.CandlepinTasks;
+import rhsm.cli.tasks.SubscriptionManagerTasks;
 import rhsm.data.Org;
 import rhsm.data.SubscriptionPool;
 
@@ -360,7 +361,7 @@ public class OrgsTests extends SubscriptionManagerCLITestScript {
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
 	@Test(	description="create an owner via the candlepin api and then update fields on the owner",
-			groups={"Tier2Tests","CreateAnOwnerAndSetAttributesOnTheOwner_Test"},
+			groups={"Tier2Tests","CreateAnOwnerAndSetAttributesOnTheOwner_Test", "blockedByBug-1563003"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void testCreateAnOwnerAndSetAttributesOnTheOwner() throws Exception {
@@ -403,11 +404,16 @@ public class OrgsTests extends SubscriptionManagerCLITestScript {
 		*/
 		jsonOwner = CandlepinTasks.setAttributeForOrg(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, daughter, "displayName", "Annie Jones");
 		Assert.assertEquals(jsonOwner.getString("displayName"), "Annie Jones", "The candlepin API appears to have updated the displayName: "+jsonOwner);
+		String defaultServiceLevel = "Eternal Gratitude";
+		String expectedMsg = String.format("Service level '%s' is not available to units of organization %s.", defaultServiceLevel,daughter);
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.3.1-1")) {	// commit 0d5fefcfa8c1c2485921d2dee6633879b1e06931 Correct incorrect punctuation in user messages
+			expectedMsg = String.format("Service level \"%s\" is not available to units of organization %s.", defaultServiceLevel,daughter);
+		}
 		try {
-			jsonOwner = CandlepinTasks.setAttributeForOrg(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, daughter, "defaultServiceLevel", "Eternal Gratitude");
+			jsonOwner = CandlepinTasks.setAttributeForOrg(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, daughter, "defaultServiceLevel", defaultServiceLevel);
 			Assert.fail("Expected an attempt to update org with an unavailable service level to fail.");
 		} catch (AssertionError ae) {
-			Assert.assertEquals(ae.getMessage(), "Attempt to update org 'daughter' failed: Service level 'Eternal Gratitude' is not available to units of organization daughter.");
+			Assert.assertEquals(ae.getMessage(), "Attempt to update org 'daughter' failed: "+expectedMsg);
 		}
 	}
 	@BeforeGroups(value={"CreateAnOwnerAndSetAttributesOnTheOwner_Test"},groups={"setup"})
