@@ -266,7 +266,7 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier3")
 	@Test(	description = "Verify revoking contentAccessMode set on the owner removes extra entitlement",
-			groups = {"Tier3Tests","blockedByBug-1448855" },
+			groups = {"Tier3Tests","blockedByBug-1448855","testRevokingContentAccessModeOnOwnerRemovesEntitlement" },
 			enabled = true)
     public void testRevokingContentAccessModeOnOwnerRemovesEntitlement() throws Exception {
 
