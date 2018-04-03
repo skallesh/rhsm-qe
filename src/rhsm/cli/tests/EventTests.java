@@ -301,8 +301,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 			// forward to newer task
 			CandlepinTasks.updateSubscriptionDatesAndRefreshPoolsUsingRESTfulAPIUsingPoolId(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl, testPool.poolId,newStartDate,null);
 		}else
-			CandlepinTasks.updateSubscriptionDatesAndRefreshPoolsUsingRESTfulAPIUsingPoolId(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl, testPool.poolId,newStartDate,null);
-
+			/*OLD*/	CandlepinTasks.updateSubscriptionDatesAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl, CandlepinTasks.getSubscriptionIdForPoolId(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl, testPool.poolId),newStartDate,null);
 		// assert the consumer feed...
 		List<String> newEventTitles = new ArrayList<String>();
 		//newEventTitles.add("ENTITLEMENT MODIFIED");

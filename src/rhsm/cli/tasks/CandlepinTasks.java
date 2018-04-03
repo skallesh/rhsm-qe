@@ -4431,16 +4431,12 @@ schema generation failed
 		
 		// get the existing subscription for default values
 				JSONObject jsonSubscription = new JSONObject(getResourceUsingRESTfulAPI(authenticator, password, url, "/pools/"+poolId));
-				
-				
-				
-				// create a jsonOwner
+		// create a jsonOwner
 				JSONObject jsonOwner = new JSONObject();
 				jsonOwner.put("key", jsonSubscription.getJSONObject("owner").getString("key"));
 				
 				// create a jsonProduct
 				JSONObject jsonProduct = new JSONObject();
-				System.out.println("product id is ........"+ jsonSubscription.get("productId"));
 				jsonProduct.put("id", jsonSubscription.get("productId"));
 				
 				// create a requestBody
@@ -4461,7 +4457,7 @@ schema generation failed
 				// refresh the pools
 				JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(authenticator,password,url,jsonOwner.getString("key"));
 				jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(authenticator,password,url,jobDetail,"FINISHED", 5*1000, 1);
-
+				System.out.println("httpResponse is ...."+ httpResponse);
 				return httpResponse;		
 	}
 
