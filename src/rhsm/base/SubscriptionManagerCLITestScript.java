@@ -147,6 +147,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			servertasks.updateConfFileParameter("candlepin.standalone", "true");
 			
 			// re-configure candlepin.conf to purge the candlepin CRL list every 2 min
+			// TODO: If the tests that depend on this config are isolated to one class, then it would be smarter to dynamically set this and restartTomcat() within a BeforeClass and AfterClass
 			String candlepinConfFileParameter = "pinsetter.org.fedoraproject.candlepin.pinsetter.tasks.CertificateRevocationListTask.schedule";	// applicable on candlepin-0.4
 			if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "0.5")) {
 				candlepinConfFileParameter = "pinsetter.org.candlepin.pinsetter.tasks.CertificateRevocationListTask.schedule";	// applicable on candlepin-0.5
@@ -156,12 +157,14 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			servertasks.updateConfFileParameter(candlepinConfFileParameter,"0 0\\/2 * * * ?");  // every 2 minutes
 			
 			// re-configure candlepin.conf to purge candlepin of expired pools every 2 min (defaults to one hour)
+			// TODO: If the tests that depend on this config are isolated to one class, then it would be smarter to dynamically set this and restartTomcat() within a BeforeClass and AfterClass
 			candlepinConfFileParameter = "pinsetter.org.candlepin.pinsetter.tasks.ExpiredPoolsJob.schedule";
 			servertasks.uncommentConfFileParameter(candlepinConfFileParameter);
 			if (servertasks.getConfFileParameter(candlepinConfFileParameter)==null) servertasks.addConfFileParameter("\n# purge candlepin of expired pools every 2 min (defaults to one hour) (RHSMQE was here)\n"+candlepinConfFileParameter,"0 0/2 * * * ?");
 			servertasks.updateConfFileParameter(candlepinConfFileParameter,"0 0\\/2 * * * ?");  // every 2 minutes
 			
 			// re-configure candlepin.conf with a secret consumer name to trigger the canActivate attribute
+			// TODO: If the tests that depend on this config are isolated to one class, then it would be smarter to dynamically set this and restartTomcat() within a BeforeClass and AfterClass
 			candlepinConfFileParameter = "candlepin.subscription.activation.debug_prefix";
 			servertasks.uncommentConfFileParameter(candlepinConfFileParameter);
 			if (servertasks.getConfFileParameter(candlepinConfFileParameter)==null) servertasks.addConfFileParameter("\n# secret consumer name to trigger the canActivate attribute (RHSMQE was here)\n"+candlepinConfFileParameter,"redeem");
