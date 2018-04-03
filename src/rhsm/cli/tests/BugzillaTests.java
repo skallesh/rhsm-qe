@@ -39,6 +39,7 @@ import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 import com.redhat.qe.tools.SSHCommandRunner;
+import com.sun.syndication.feed.synd.SyndFeed;
 
 import rhsm.base.CandlepinType;
 import rhsm.base.ConsumerType;
@@ -1013,6 +1014,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				providedProductId.get(providedProductId.size() - 1), clienttasks.getCurrentlyInstalledProducts());
 		Assert.assertEquals(AfterAttaching.status, "Partially Subscribed",
 				"Verified that installed product is partially subscribed even after attaching a future subscription");
+		
 
 	}
 
@@ -1400,7 +1402,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier3")
 	@Test(	description = "verify Future subscription added to the activation key ",
-			groups = {"Tier3Tests","AddingFutureSubscriptionToActivationKey","blockedByBug-1440180" },
+			groups = {"Tier3Tests","AddingFutureSubscriptionToActivationKey","blockedByBug-1440180" ,"blockedByBug-1555582"},
 			enabled = true)
 	public void testAddingFutureSubscriptionToActivationKey() throws Exception {
 		Integer addQuantity = 1;
@@ -1636,6 +1638,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword,
 				sm_serverUrl, sm_clientOrg, 20, -1 * 24 * 60/* 1 day ago */,
 				15 * 24 * 60/* 15 days from now */, getRandInt(), getRandInt(), productId, providedProductIds, null);
+		
 		server.runCommandAndWait("rm -rf " + CandlepinTasks.candlepinCRLFile);
 		for (SubscriptionPool pool : clienttasks.getCurrentlyAllAvailableSubscriptionPools()) {
 			if (pool.productId.equals(productId)) {
@@ -1647,6 +1650,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				+ productId + "' created by and needed for this test.");
 		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
 		List<ProductSubscription> consumedSusbscription = clienttasks.getCurrentlyConsumedProductSubscriptions();
+
 		Assert.assertFalse(consumedSusbscription.isEmpty());
 		CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword,
 				sm_serverUrl, sm_clientOrg, productId);
@@ -6065,5 +6069,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			}
 		}
 	}
+	
+	
 
 }
