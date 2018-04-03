@@ -4445,8 +4445,7 @@ schema generation failed
 				
 				// create a requestBody
 				JSONObject requestBody = new JSONObject();
-				System.out.println("json value ..." + jsonSubscription.getJSONObject("subscriptionId"));
-				requestBody.put("id", jsonSubscription.getJSONObject("subscriptionId"));
+				requestBody.put("id", jsonSubscription.get("subscriptionId"));
 				SimpleDateFormat sdf = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z");
 				if (startCalendar!=null)	requestBody.put("startDate", sdf.format(startCalendar.getTime())); else requestBody.put("startDate", jsonSubscription.getString("startDate"));
 				if (endCalendar!=null)		requestBody.put("endDate", sdf.format(endCalendar.getTime())); else requestBody.put("endDate", jsonSubscription.getString("endDate"));
