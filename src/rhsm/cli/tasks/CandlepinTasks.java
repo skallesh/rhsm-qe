@@ -173,7 +173,8 @@ public class CandlepinTasks {
 		
 		// make sure we have been given a branch to deploy
 		if (branch==null || branch.equals("")) {
-			log.info("Skipping deploy of candlepin server since no branch was specified.");
+			log.info("Skipping deploy of candlepin server since no branch was specified.  Instead we will restart tomcat to pick up any config changes.");
+			restartTomcat();
 			return;
 		}
 		log.info("Upgrading the server to the latest git tag...");

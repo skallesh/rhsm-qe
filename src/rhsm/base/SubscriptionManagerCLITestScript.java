@@ -141,13 +141,46 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		// setup the candlepin server (only when the candlepin server is standalone)
 		if (server!=null && sm_serverType.equals(CandlepinType.standalone)) {
 			
-			// NOTE: After updating the candlepin.conf file, the server needs to be restarted, therefore this will not work against the Hosted IT server which we don't want to restart or deploy
-			//       I suggest manually setting this on hosted and asking calfanso to restart
-			if (servertasks.getConfFileParameter("pinsetter.org.fedoraproject.candlepin.pinsetter.tasks.CertificateRevocationListTask.schedule")==null) {
-				servertasks.addConfFileParameter("\n# purge the CRL list every 2 min\npinsetter.org.fedoraproject.candlepin.pinsetter.tasks.CertificateRevocationListTask.schedule","0 0/2 * * * ?");
-			} else {
-				servertasks.updateConfFileParameter("pinsetter.org.fedoraproject.candlepin.pinsetter.tasks.CertificateRevocationListTask.schedule","0 0\\/2 * * * ?");  // every 2 minutes
+			// re-configure candlepin.conf to standalone true
+			servertasks.uncommentConfFileParameter("candlepin.standalone");
+			if (servertasks.getConfFileParameter("candlepin.standalone")==null) servertasks.addConfFileParameter ("\n# standalone true (default) is indicative of a Satellite deployment versus false which is indicative of the Customer Portal (RHSMQE was here)\n"+"candlepin.standalone", "true");	// default - indicative of a Satellite deployment
+			servertasks.updateConfFileParameter("candlepin.standalone", "true");
+			
+			// re-configure candlepin.conf to purge the candlepin CRL list every 2 min
+			String candlepinConfFileParameter = "pinsetter.org.fedoraproject.candlepin.pinsetter.tasks.CertificateRevocationListTask.schedule";	// applicable on candlepin-0.4
+			if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "0.5")) {
+				candlepinConfFileParameter = "pinsetter.org.candlepin.pinsetter.tasks.CertificateRevocationListTask.schedule";	// applicable on candlepin-0.5
 			}
+			servertasks.uncommentConfFileParameter(candlepinConfFileParameter);
+			if (servertasks.getConfFileParameter(candlepinConfFileParameter)==null) servertasks.addConfFileParameter("\n# purge the candlepin CRL list every 2 min (defaults to once a day at noon  0 0 12 * * ?) (RHSMQE was here)\n"+candlepinConfFileParameter,"0 0/2 * * * ?");
+			servertasks.updateConfFileParameter(candlepinConfFileParameter,"0 0\\/2 * * * ?");  // every 2 minutes
+			
+			// re-configure candlepin.conf to purge candlepin of expired pools every 2 min (defaults to one hour)
+			candlepinConfFileParameter = "pinsetter.org.candlepin.pinsetter.tasks.ExpiredPoolsJob.schedule";
+			servertasks.uncommentConfFileParameter(candlepinConfFileParameter);
+			if (servertasks.getConfFileParameter(candlepinConfFileParameter)==null) servertasks.addConfFileParameter("\n# purge candlepin of expired pools every 2 min (defaults to one hour) (RHSMQE was here)\n"+candlepinConfFileParameter,"0 0/2 * * * ?");
+			servertasks.updateConfFileParameter(candlepinConfFileParameter,"0 0\\/2 * * * ?");  // every 2 minutes
+			
+			// re-configure candlepin.conf with a secret consumer name to trigger the canActivate attribute
+			candlepinConfFileParameter = "candlepin.subscription.activation.debug_prefix";
+			servertasks.uncommentConfFileParameter(candlepinConfFileParameter);
+			if (servertasks.getConfFileParameter(candlepinConfFileParameter)==null) servertasks.addConfFileParameter("\n# secret consumer name to trigger the canActivate attribute (RHSMQE was here)\n"+candlepinConfFileParameter,"redeem");
+			servertasks.updateConfFileParameter(candlepinConfFileParameter,"redeem");
+			
+			// re-configure candlepin.conf with INFO logging to keep down the logs
+			/*
+			candlepinConfFileParameter = "log4j.logger.org.candlepin.policy.js.compliance";
+			servertasks.uncommentConfFileParameter(candlepinConfFileParameter);
+			if (servertasks.getConfFileParameter(candlepinConfFileParameter)==null) servertasks.addConfFileParameter("\n# (RHSMQE was here)\n"+candlepinConfFileParameter,"INFO");
+			servertasks.updateConfFileParameter(candlepinConfFileParameter,"INFO");
+			candlepinConfFileParameter = "log4j.logger.org.candlepin";
+			servertasks.uncommentConfFileParameter(candlepinConfFileParameter);
+			if (servertasks.getConfFileParameter(candlepinConfFileParameter)==null) servertasks.addConfFileParameter("\n# (RHSMQE was here)\n"+candlepinConfFileParameter,"INFO");
+			servertasks.updateConfFileParameter(candlepinConfFileParameter,"INFO");
+			*/
+			
+			// After all of the candlepin.conf updates above, the server needs to be restarted; let's assume deploy() will take care of that.
+			
 			servertasks.cleanOutCRL();
 			servertasks.deploy();
 			server.runCommandAndWait("df -h");

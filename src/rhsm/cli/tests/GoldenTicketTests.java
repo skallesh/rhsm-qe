@@ -453,9 +453,12 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
 			if (client1tasks!=null) client1tasks.removeAllCerts(true, true, false);
 			if (client2tasks!=null) client2tasks.removeAllCerts(true, true, false);
 			// update candlepin.conf and re-deploy
-			servertasks.updateConfFileParameter("candlepin.standalone", "false");
-			//Adding the parameter "module.config.hosted.configuration.module" is better as we dont have it most of the times
-			servertasks.addConfFileParameter("module.config.hosted.configuration.module","org.candlepin.hostedtest.AdapterOverrideModule");
+			servertasks.uncommentConfFileParameter("candlepin.standalone");
+			if (servertasks.getConfFileParameter("candlepin.standalone")==null) servertasks.addConfFileParameter ("\n# standalone true (default) is indicative of a Satellite deployment versus false which is indicative of the Customer Portal (RHSMQE was here)\n"+"candlepin.standalone", "true");	// default - indicative of a Satellite deployment
+			servertasks.updateConfFileParameter("candlepin.standalone", "false");	// indicative of a Customer Portal deployment
+			servertasks.uncommentConfFileParameter("module.config.hosted.configuration.module");
+			if (servertasks.getConfFileParameter("module.config.hosted.configuration.module")==null) servertasks.addConfFileParameter("\n# uncomment when candlepin.standalone=false (RHSMQE was here)\n"+"module.config.hosted.configuration.module","org.candlepin.hostedtest.AdapterOverrideModule");
+			servertasks.updateConfFileParameter("module.config.hosted.configuration.module","org.candlepin.hostedtest.AdapterOverrideModule");
 			servertasks.redeploy();
 			setupBeforeClassRedeployedCandlepin=true;
 			// re-initialize after re-deploy
@@ -476,8 +479,8 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
 			if (client1tasks!=null) client1tasks.removeAllCerts(true, true, false);
 			if (client2tasks!=null) client2tasks.removeAllCerts(true, true, false);
 			// update candlepin.conf and re-deploy
-			servertasks.updateConfFileParameter("candlepin.standalone", "true");
-			servertasks.removeConfFileParameter("module.config.hosted.configuration.module");   
+			servertasks.updateConfFileParameter("candlepin.standalone", "true");	// default - indicative of a Satellite deployment
+			servertasks.commentConfFileParameter("module.config.hosted.configuration.module");
 			servertasks.redeploy();
 			// re-initialize after re-deploy
 			servertasks.initialize(clienttasks.candlepinAdminUsername,clienttasks.candlepinAdminPassword,clienttasks.candlepinUrl);

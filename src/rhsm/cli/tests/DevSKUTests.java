@@ -738,10 +738,11 @@ if (/*!debugTest*/false) { // keep for historical reference but never execute
 			if (client1tasks!=null) client1tasks.removeAllCerts(true, true, false);
 			if (client2tasks!=null) client2tasks.removeAllCerts(true, true, false);
 			// update candlepin.conf and re-deploy
-			if (servertasks.getConfFileParameter("candlepin.standalone")==null) servertasks.addConfFileParameter ("candlepin.standalone", "true");	// default - indicative of a Satellite deployment
+			servertasks.uncommentConfFileParameter("candlepin.standalone");
+			if (servertasks.getConfFileParameter("candlepin.standalone")==null) servertasks.addConfFileParameter ("\n# standalone true (default) is indicative of a Satellite deployment versus false which is indicative of the Customer Portal (RHSMQE was here)\n"+"candlepin.standalone", "true");	// default - indicative of a Satellite deployment
 			servertasks.updateConfFileParameter("candlepin.standalone", "false");	// indicative of a Customer Portal deployment
 			servertasks.uncommentConfFileParameter("module.config.hosted.configuration.module");
-			if (servertasks.getConfFileParameter("module.config.hosted.configuration.module")==null) servertasks.addConfFileParameter("module.config.hosted.configuration.module","org.candlepin.hostedtest.AdapterOverrideModule");
+			if (servertasks.getConfFileParameter("module.config.hosted.configuration.module")==null) servertasks.addConfFileParameter("\n# uncomment when candlepin.standalone=false (RHSMQE was here)\n"+"module.config.hosted.configuration.module","org.candlepin.hostedtest.AdapterOverrideModule");
 			servertasks.updateConfFileParameter("module.config.hosted.configuration.module","org.candlepin.hostedtest.AdapterOverrideModule");
 			servertasks.redeploy();
 			setupBeforeClassRedeployedCandlepin=true;
