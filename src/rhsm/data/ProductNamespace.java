@@ -392,7 +392,8 @@ public class ProductNamespace extends AbstractCommandLineData {
 	
 	static public List<ProductNamespace> parse(String rawCertificate) {
 		// where did this rawCertificate come from?
-		if (rawCertificate.contains("Signature Algorithm: sha1WithRSAEncryption"))
+		if (rawCertificate.contains("Signature Algorithm: sha1WithRSAEncryption") ||
+			rawCertificate.contains("Signature Algorithm: sha256WithRSAEncryption"))
 			return parseStdoutFromOpensslX509(rawCertificate);
 		else
 			return parseStdoutFromRctCatCert(rawCertificate);

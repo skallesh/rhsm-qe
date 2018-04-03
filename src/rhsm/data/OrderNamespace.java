@@ -436,7 +436,8 @@ public class OrderNamespace extends AbstractCommandLineData {
 	
 	static public OrderNamespace parse(String rawCertificate) {
 		// where did this rawCertificate come from?
-		if (rawCertificate.contains("Signature Algorithm: sha1WithRSAEncryption")||rawCertificate.contains("Signature Algorithm: sha256WithRSAEncryption"))
+		if (rawCertificate.contains("Signature Algorithm: sha1WithRSAEncryption") ||
+			rawCertificate.contains("Signature Algorithm: sha256WithRSAEncryption"))
 			return parseStdoutFromOpensslX509(rawCertificate);
 		else
 			return parseStdoutFromRctCatCert(rawCertificate);

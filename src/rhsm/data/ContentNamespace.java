@@ -506,7 +506,8 @@ public class ContentNamespace extends AbstractCommandLineData {
 	
 	static public List<ContentNamespace> parse(String rawCertificate) {
 		// where did this rawCertificate come from?
-		if (rawCertificate.contains("Signature Algorithm: sha1WithRSAEncryption"))
+		if (rawCertificate.contains("Signature Algorithm: sha1WithRSAEncryption") ||
+			rawCertificate.contains("Signature Algorithm: sha256WithRSAEncryption"))
 			return parseStdoutFromOpensslX509(rawCertificate);
 		else
 			return parseStdoutFromRctCatCert(rawCertificate);
