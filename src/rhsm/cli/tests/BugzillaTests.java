@@ -39,7 +39,7 @@ import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 import com.redhat.qe.tools.SSHCommandRunner;
-import com.sun.syndication.feed.synd.SyndFeed;
+
 
 import rhsm.base.CandlepinType;
 import rhsm.base.ConsumerType;
