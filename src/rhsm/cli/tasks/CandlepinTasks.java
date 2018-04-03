@@ -4440,6 +4440,7 @@ schema generation failed
 				
 				// create a jsonProduct
 				JSONObject jsonProduct = new JSONObject();
+				System.out.println("product id is ........"+ jsonSubscription.getJSONObject("productId"));
 				jsonProduct.put("id", jsonSubscription.getJSONObject("productId"));
 				
 				// create a requestBody
