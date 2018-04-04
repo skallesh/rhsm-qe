@@ -4441,7 +4441,7 @@ schema generation failed
 				
 				// create a requestBody
 				JSONObject requestBody = new JSONObject();
-				requestBody.put("id", jsonSubscription.get("subscriptionId"));
+				requestBody.put("id", poolId);
 				SimpleDateFormat sdf = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z");
 				if (startCalendar!=null)	requestBody.put("startDate", sdf.format(startCalendar.getTime())); else requestBody.put("startDate", jsonSubscription.getString("startDate"));
 				if (endCalendar!=null)		requestBody.put("endDate", sdf.format(endCalendar.getTime())); else requestBody.put("endDate", jsonSubscription.getString("endDate"));
@@ -4450,13 +4450,8 @@ schema generation failed
 				requestBody.put("product",jsonProduct);
 				
 				
-				// update the subscription
-				JSONObject jsonStatus = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(/*authenticator*/null,/*password*/null,url,"/status"));
-				if (SubscriptionManagerTasks.isVersion(jsonStatus.getString("version"), ">=", "2.3.2-1")) {	// candlepin commit 9c448315c843c0a20167236af7591359d895613a Discontinue ambiguous subscription resources in sharing world
-					 httpResponse = CandlepinTasks.putResourceUsingRESTfulAPI(authenticator,password,url,"/owners/"+jsonSubscription.getJSONObject("owner").getString("key")+"/subscriptions",requestBody);
-
-				}else
-				 httpResponse = CandlepinTasks.putResourceUsingRESTfulAPI(authenticator,password,url,"/owners/subscriptions",requestBody);
+				// update the subscription using poolid
+				 httpResponse = CandlepinTasks.putResourceUsingRESTfulAPI(authenticator,password,url,"/owners/pools",requestBody);
 				// httpResponse will be null; not a string representation of the jsonSubscription!  
 				
 				// refresh the pools
