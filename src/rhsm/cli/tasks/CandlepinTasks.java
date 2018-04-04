@@ -4451,7 +4451,7 @@ schema generation failed
 				
 				
 				// update the subscription using poolid
-				 httpResponse = CandlepinTasks.putResourceUsingRESTfulAPI(authenticator,password,url,"/owners/pools",requestBody);
+				 httpResponse = CandlepinTasks.putResourceUsingRESTfulAPI(authenticator,password,url,"/owners/"+jsonSubscription.getJSONObject("owner").getString("key")+"/pools",requestBody);
 				// httpResponse will be null; not a string representation of the jsonSubscription!  
 				
 				// refresh the pools
