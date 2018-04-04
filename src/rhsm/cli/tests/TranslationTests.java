@@ -1626,7 +1626,10 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 		if (clienttasks==null) return ll;
 		
 		String uErrMsg = servertasks.invalidCredentialsRegexMsg();
-
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-1")) {	// post commit 630e1a2eb06e6bfacac669ce11f38e228c907ea9 1507030: RestlibExceptions should show they originate server-side
+			uErrMsg = ("^"+"HTTP error (401 - Unauthorized): "+servertasks.invalidCredentialsMsg()+"$").replaceAll("\\(","\\\\(").replaceAll("\\)","\\\\)");	// HTTP error (401 - Unauthorized): Invalid Credentials
+		}
+		
 		// Object bugzilla, String lang, String username, String password, Integer exitCode, String stdoutRegex, String stderrRegex
 		
 		// registration test for a user who is invalid
