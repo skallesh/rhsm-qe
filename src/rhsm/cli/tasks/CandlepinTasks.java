@@ -4451,13 +4451,17 @@ schema generation failed
 				
 				
 				// update the subscription using poolid
-				 httpResponse = CandlepinTasks.putResourceUsingRESTfulAPI(authenticator,password,url,"/owners/"+jsonSubscription.getJSONObject("owner").getString("key")+"/pools",requestBody);
+				JSONObject jsonStatus = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(/*authenticator*/null,/*password*/null,url,"/status"));
+				if (SubscriptionManagerTasks.isVersion(jsonStatus.getString("version"), ">=", "2.0.0"))
+					 httpResponse = CandlepinTasks.putResourceUsingRESTfulAPI(authenticator,password,url,"/owners/"+jsonSubscription.getJSONObject("owner").getString("key")+"/pools",requestBody);
+				else
+					 httpResponse = CandlepinTasks.putResourceUsingRESTfulAPI(authenticator,password,url,"/owners/pools",requestBody);
+
 				// httpResponse will be null; not a string representation of the jsonSubscription!  
 				
 				// refresh the pools
 				JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(authenticator,password,url,jsonOwner.getString("key"));
 				jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(authenticator,password,url,jobDetail,"FINISHED", 5*1000, 1);
-				System.out.println("httpResponse is ...."+ httpResponse);
 				return httpResponse;		
 	}
 
