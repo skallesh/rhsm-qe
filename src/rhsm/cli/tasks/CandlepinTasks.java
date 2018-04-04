@@ -4427,7 +4427,7 @@ schema generation failed
 	
 	public static String updateSubscriptionDatesAndRefreshPoolsUsingRESTfulAPIUsingPoolId(String authenticator,
 			String password, String url, String poolId, Calendar startCalendar, Calendar endCalendar) throws JSONException, Exception {
-		
+			String httpResponse=null;
 		
 		// get the existing subscription for default values
 				JSONObject jsonSubscription = new JSONObject(getResourceUsingRESTfulAPI(authenticator, password, url, "/pools/"+poolId));
@@ -4451,7 +4451,12 @@ schema generation failed
 				
 				
 				// update the subscription
-				String httpResponse = CandlepinTasks.putResourceUsingRESTfulAPI(authenticator,password,url,"/owners/subscriptions",requestBody);
+				JSONObject jsonStatus = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(/*authenticator*/null,/*password*/null,url,"/status"));
+				if (SubscriptionManagerTasks.isVersion(jsonStatus.getString("version"), ">=", "2.3.4-1")) {	// candlepin commit 9c448315c843c0a20167236af7591359d895613a Discontinue ambiguous subscription resources in sharing world
+					 httpResponse = CandlepinTasks.putResourceUsingRESTfulAPI(authenticator,password,url,"/owners/"+jsonSubscription.getJSONObject("owner").getString("key")+"/subscriptions",requestBody);
+
+				}else
+				 httpResponse = CandlepinTasks.putResourceUsingRESTfulAPI(authenticator,password,url,"/owners/subscriptions",requestBody);
 				// httpResponse will be null; not a string representation of the jsonSubscription!  
 				
 				// refresh the pools
