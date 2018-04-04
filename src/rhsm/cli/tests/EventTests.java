@@ -1152,6 +1152,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 //		} else {
 //			Assert.assertEquals(newConsumerFeed.getEntries().size(), feedLimit, "The event feed length for consumer '"+consumerUuid+"' has hit the max entry count as set by the Candlepin class AtomResource/ConsumerResource/OwnerResource hard-coded variable feedlimit.");			
 //		}
+		System.out.println("newEventTitles.length is ...."+ newEventTitles.length);
 		Assert.assertEquals(getFeedGrowthCount(newConsumerFeed,oldConsumerFeed), newEventTitles.length, newEventTitles.length+" new event feed entries for consumer '"+consumerUuid+"' has been pushed onto the stack.");
 
 		int i=0;
