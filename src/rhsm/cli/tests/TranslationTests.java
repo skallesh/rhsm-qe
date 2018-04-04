@@ -1214,7 +1214,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	@BeforeClass (groups="setup")
 	public void initializeSupportedLocalesBeforeClass() {
 		supportedLocales = Arrays.asList(		"as",	"bn_IN","de_DE","es_ES","fr",	"gu",	"hi",	"it",	"ja",	"kn",	"ko",	"ml",	"mr",	"or",	"pa",	"pt_BR","ru",	"ta_IN","te",	"zh_CN","zh_TW"); 
-		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.20.10-1")) {	// commit ? // Bug 1520648 - Subscription manager ignores variants of locale
+		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.20.10-1"/*RHEL-7.5 branch*/ /*"1.21.2-1" master branch*/)) {	// commit 8b512b06526ed3387fa0c3481670c88bab15b9d1 Update zanata config // Bug 1520648 - Subscription manager ignores variants of locale
 			supportedLocales = Arrays.asList(	"as",	"bn_IN","de",	"es",	"fr",	"gu",	"hi",	"it",	"ja",	"kn",	"ko",	"ml",	"mr",	"or",	"pa",	"pt_BR","ru",	"ta_IN","te",	"zh_CN","zh_TW"); 
 		}
 	}
