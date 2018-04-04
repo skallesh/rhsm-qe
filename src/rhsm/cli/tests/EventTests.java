@@ -297,7 +297,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		} else
 /*OLD*/	
 		//NEW TODO CandlepinTasks.updateSubscriptionPoolDatesUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl, testPool.poolId,newStartDate,null);
-		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.3.4-1")) {	// candlepin commit 9c448315c843c0a20167236af7591359d895613a Discontinue ambiguous subscription resources in sharing world
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.3.2-1")) {	// candlepin commit 9c448315c843c0a20167236af7591359d895613a Discontinue ambiguous subscription resources in sharing world
 			// forward to newer task
 			CandlepinTasks.updateSubscriptionDatesAndRefreshPoolsUsingRESTfulAPIUsingPoolId(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl, testPool.poolId,newStartDate,null);
 		}else
