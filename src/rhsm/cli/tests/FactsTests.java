@@ -1644,9 +1644,31 @@ if (false) { // DO NOT RUN, BUT NOT READY TO DELETE CODE
 		
 		// TODO assert specific proc_cpuinfo.common facts are now collected on aarch64
 	}
-	
-	
-	
+
+	/**
+	 * @author redakkan
+	 * @throws Exception
+	 * @throws JSONException
+	 */
+	@TestDefinition(//update=true // uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RedHatEnterpriseLinux7},
+			testCaseID= {"", ""},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
+	@Test( description = "Verify the uptime in facts list",
+			groups ={"Tier1Tests","blockedByBug-1527727"},
+			enabled = true)
+	public void testUptimeInFacts()throws JSONException,Exception{
+	//	if (clienttasks.isPackageVersion("subscription-manager","<","1.22.x.y")){ //TODO update version
+			//TODO Not Yet implemented
+	//		throw new SkipException("This test applies to a newer version of subscription-manager containing the fix for bug 1527727");
+	//	}
+		String upTime =client.runCommandAndWait("uptime -s").getStdout().trim();
+		Assert.assertEquals(clienttasks.getFactValue("system.uptime"),upTime, "System fact system.uptime matches the system value of uptime -s." );
+	}
+
 	// Candidates for an automated Test:
 	// TODO https://bugzilla.redhat.com/show_bug.cgi?id=669513
 	// TODO https://bugzilla.redhat.com/show_bug.cgi?id=664847#2
