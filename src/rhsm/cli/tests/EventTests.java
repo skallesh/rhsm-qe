@@ -1173,7 +1173,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		int e=0;
 		for (String newEventTitle : newEventTitles) log.info(String.format("  Expecting entry[%d].title %s",e++,newEventTitle));
 		int feedGrowthCount = getFeedGrowthCount(newConsumerFeed,oldConsumerFeed);
-		System.out.println("feeddddddd growth count is.............."+newConsumerFeed + "  ......." +oldConsumerFeed + "........"+feedGrowthCount);
+		System.out.println("feeddddddd growth count is.............."+newConsumerFeed.getEntries().size() + "  ......." +oldConsumerFeed.getEntries().size() + "........"+feedGrowthCount);
 
 		Assert.assertTrue(feedGrowthCount>=newEventTitles.length, "At least "+newEventTitles.length+" new event feed entries for consumer '"+consumerUuid+"' have been pushed onto the stack (actual="+feedGrowthCount+").");
 
