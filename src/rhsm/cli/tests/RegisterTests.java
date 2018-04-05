@@ -1014,7 +1014,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 				if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.3.1-1")) {	// commit 0d5fefcfa8c1c2485921d2dee6633879b1e06931 Correct incorrect punctuation in user messages
 					expectedStderrRegex = String.format("Unit type \"%s\" could not be found.",type);
 				}
-				if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.3.4-1")) {	// commit f87515e457c8b74cfaeaf9c0e47f019c241e8355 Changed Consumer.type to Consumer.typeId
+				if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.3.5-1")) {	// commit f87515e457c8b74cfaeaf9c0e47f019c241e8355 Changed Consumer.type to Consumer.typeId
 					expectedStderrRegex = String.format("Invalid unit type: %s",type);
 				}
 				Integer expectedExitCode = new Integer(255);
