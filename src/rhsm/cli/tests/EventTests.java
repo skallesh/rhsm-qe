@@ -295,9 +295,13 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,ownerKey);
 		jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,jobDetail,"FINISHED", 10*1000, 3);
 		} else
-/*OLD*/	CandlepinTasks.updateSubscriptionDatesAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl, CandlepinTasks.getSubscriptionIdForPoolId(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl, testPool.poolId),newStartDate,null);
-//NEW TODO CandlepinTasks.updateSubscriptionPoolDatesUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl, testPool.poolId,newStartDate,null);
-
+/*OLD*/	
+		//NEW TODO CandlepinTasks.updateSubscriptionPoolDatesUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl, testPool.poolId,newStartDate,null);
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.1.1-1")) 	// candlepin commit 9c448315c843c0a20167236af7591359d895613a Discontinue ambiguous subscription resources in sharing world
+			// forward to newer task
+			CandlepinTasks.updateSubscriptionDatesAndRefreshPoolsUsingRESTfulAPIUsingPoolId(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl, testPool.poolId,newStartDate,null);
+		else
+			/*OLD*/	CandlepinTasks.updateSubscriptionDatesAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl, CandlepinTasks.getSubscriptionIdForPoolId(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl, testPool.poolId),newStartDate,null);
 		// assert the consumer feed...
 		List<String> newEventTitles = new ArrayList<String>();
 		//newEventTitles.add("ENTITLEMENT MODIFIED");
@@ -1148,6 +1152,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 //		} else {
 //			Assert.assertEquals(newConsumerFeed.getEntries().size(), feedLimit, "The event feed length for consumer '"+consumerUuid+"' has hit the max entry count as set by the Candlepin class AtomResource/ConsumerResource/OwnerResource hard-coded variable feedlimit.");			
 //		}
+		System.out.println("newEventTitles.length is ...."+ newEventTitles.length);
 		Assert.assertEquals(getFeedGrowthCount(newConsumerFeed,oldConsumerFeed), newEventTitles.length, newEventTitles.length+" new event feed entries for consumer '"+consumerUuid+"' has been pushed onto the stack.");
 
 		int i=0;
@@ -1167,8 +1172,8 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		log.info("Expecting the new feed for consumer ("+consumerUuid+") to have grown by at least ("+newEventTitles.length+") events ("+ignoreEventTitles+" events will be ignored):");
 		int e=0;
 		for (String newEventTitle : newEventTitles) log.info(String.format("  Expecting entry[%d].title %s",e++,newEventTitle));
-
 		int feedGrowthCount = getFeedGrowthCount(newConsumerFeed,oldConsumerFeed);
+
 		Assert.assertTrue(feedGrowthCount>=newEventTitles.length, "At least "+newEventTitles.length+" new event feed entries for consumer '"+consumerUuid+"' have been pushed onto the stack (actual="+feedGrowthCount+").");
 
 		int i=0;
