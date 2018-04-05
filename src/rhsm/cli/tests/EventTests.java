@@ -297,10 +297,10 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		} else
 /*OLD*/	
 		//NEW TODO CandlepinTasks.updateSubscriptionPoolDatesUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl, testPool.poolId,newStartDate,null);
-		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.3.2-1")) {	// candlepin commit 9c448315c843c0a20167236af7591359d895613a Discontinue ambiguous subscription resources in sharing world
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.3.2-1")) 	// candlepin commit 9c448315c843c0a20167236af7591359d895613a Discontinue ambiguous subscription resources in sharing world
 			// forward to newer task
 			CandlepinTasks.updateSubscriptionDatesAndRefreshPoolsUsingRESTfulAPIUsingPoolId(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl, testPool.poolId,newStartDate,null);
-		}else
+		else
 			/*OLD*/	CandlepinTasks.updateSubscriptionDatesAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl, CandlepinTasks.getSubscriptionIdForPoolId(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl, testPool.poolId),newStartDate,null);
 		// assert the consumer feed...
 		List<String> newEventTitles = new ArrayList<String>();
@@ -1174,6 +1174,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		for (String newEventTitle : newEventTitles) log.info(String.format("  Expecting entry[%d].title %s",e++,newEventTitle));
 
 		int feedGrowthCount = getFeedGrowthCount(newConsumerFeed,oldConsumerFeed);
+		System.out.println("newEventTitles.length........" + newEventTitles.length);
 		Assert.assertTrue(feedGrowthCount>=newEventTitles.length, "At least "+newEventTitles.length+" new event feed entries for consumer '"+consumerUuid+"' have been pushed onto the stack (actual="+feedGrowthCount+").");
 
 		int i=0;
