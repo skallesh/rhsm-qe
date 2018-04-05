@@ -4436,7 +4436,8 @@ schema generation failed
 	public static String updateSubscriptionDatesAndRefreshPoolsUsingRESTfulAPIUsingPoolId(String authenticator,
 			String password, String url, String poolId, Calendar startCalendar, Calendar endCalendar) throws JSONException, Exception {
 			String httpResponse=null;
-		
+// THIS IS EFFECTIVELY A DUPLICATE IMPLEMENTATION OF updateSubscriptionPoolDatesUsingRESTfulAPI(...)
+			
 		// get the existing subscription for default values
 				JSONObject jsonSubscription = new JSONObject(getResourceUsingRESTfulAPI(authenticator, password, url, "/pools/"+poolId));
 		// create a jsonOwner
@@ -4473,18 +4474,31 @@ schema generation failed
 				return httpResponse;		
 	}
 
+	/**
+	 * This is a replacement for updateSubscriptionDatesAndRefreshPoolsUsingRESTfulAPI(...) after candlepin commit 9c448315c843c0a20167236af7591359d895613a Discontinue ambiguous subscription resources in sharing world
+	 * @param authenticator
+	 * @param password
+	 * @param url
+	 * @param poolId
+	 * @param startCalendar
+	 * @param endCalendar
+	 * @return
+	 * @throws JSONException
+	 * @throws Exception
+	 */
 	public static String updateSubscriptionPoolDatesUsingRESTfulAPI(String authenticator, String password, String url, String poolId, Calendar startCalendar, Calendar endCalendar) throws JSONException, Exception  {
-Assert.fail("THIS METHIOD IS UNDER DEVELOPMENT.  Blocked by candlepin bugs 1500837 1500843");
+		//Assert.fail("THIS METHIOD IS UNDER DEVELOPMENT.  Blocked by candlepin bugs 1500837 1500843");
+		JSONObject jsonStatus = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(/*authenticator*/null,/*password*/null,url,"/status"));
+		if (SubscriptionManagerTasks.isVersion(jsonStatus.getString("version"), "<", "2.3.1-1")) {	// candlepin commit 9c448315c843c0a20167236af7591359d895613a Discontinue ambiguous subscription resources in sharing world
+			Assert.fail("This method applies to candlepin-2.3.1-1 and newer.  Reconsider method updateSubscriptionDatesAndRefreshPoolsUsingRESTfulAPI(...) for older candlepins."); 
+		}
+		
 		// get the existing subscription pool for default values
 		JSONObject jsonPool = new JSONObject(getResourceUsingRESTfulAPI(authenticator, password, url, "/pools/"+poolId));
 		
 		// create a jsonOwner
 		JSONObject jsonOwner = new JSONObject();
 		jsonOwner.put("key", jsonPool.getJSONObject("owner").getString("key"));
-		
-		// create a jsonProduct
-//		JSONObject jsonProduct = new JSONObject();
-//		jsonProduct.put("id", jsonPool.getJSONObject("product").getString("id"));
 		
 		// create a requestBody
 		JSONObject requestBody = new JSONObject();
@@ -4494,17 +4508,11 @@ Assert.fail("THIS METHIOD IS UNDER DEVELOPMENT.  Blocked by candlepin bugs 15008
 		if (endCalendar!=null)		requestBody.put("endDate", sdf.format(endCalendar.getTime())); else requestBody.put("endDate", jsonPool.getString("endDate"));
 		requestBody.put("quantity",jsonPool.getInt("quantity"));
 		requestBody.put("owner",jsonOwner);
-//		requestBody.put("product",jsonProduct);
-		
 		
 		// update the subscription pool
 		String httpResponse = CandlepinTasks.putResourceUsingRESTfulAPI(authenticator,password,url,"/owners/"+jsonOwner.getString("key")+"/pools",requestBody);
 		// httpResponse will be null; not a string representation of the jsonSubscription!  
 		
-		// refresh the pools
-//		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(authenticator,password,url,jsonOwner.getString("key"));
-//		jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(authenticator,password,url,jobDetail,"FINISHED", 5*1000, 1);
-
 		return httpResponse;
 	}
 	
