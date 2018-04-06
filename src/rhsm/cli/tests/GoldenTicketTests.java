@@ -199,7 +199,7 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier3")
 	@Test(	description = "Verify golden ticket entitlement is granted when system is registered using an activationkey belonging to an org that has a contentAccessMode set",
-			groups = {"Tier3Tests","testGoldenTicketIsGrantedWhenRegisteredUsingActivationKey"},
+			groups = {"Tier3Tests","testGoldenTicketIsGrantedWhenRegisteredUsingActivationKey","blockedByBug-1564453"},
 			enabled = true)
     public void testGoldenTicketIsGrantedWhenRegisteredUsingActivationKey() throws JSONException, Exception {
 
