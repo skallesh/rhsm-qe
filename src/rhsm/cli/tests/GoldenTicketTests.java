@@ -70,6 +70,7 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
 			groups = {"Tier3Tests","blockedByBug-1425438"},
 			enabled = true)
     public void testGoldenTicketFunctionality() throws Exception {
+	clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "manage_repos", "1");
 
 	CandlepinTasks.setAttributeForOrg(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, org,
 		attributeName, attributeValue);
@@ -269,7 +270,8 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
 			groups = {"Tier3Tests","blockedByBug-1448855","testRevokingContentAccessModeOnOwnerRemovesEntitlement" },
 			enabled = true)
     public void testRevokingContentAccessModeOnOwnerRemovesEntitlement() throws Exception {
-
+	
+	clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "manage_repos", "1");
 	CandlepinTasks.setAttributeForOrg(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, org,
 		attributeName, attributeValue);
 	clienttasks.register(sm_clientUsername, sm_clientPassword, org, null, null, null, null, null, null, null,
