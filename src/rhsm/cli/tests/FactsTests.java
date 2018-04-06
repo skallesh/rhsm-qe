@@ -1651,7 +1651,7 @@ if (false) { // DO NOT RUN, BUT NOT READY TO DELETE CODE
 	 * @throws JSONException
 	 */
 	@TestDefinition(//update=true // uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
-			projectID=  {Project.RedHatEnterpriseLinux7},
+			projectID=  {Project.RHEL6,Project.RedHatEnterpriseLinux7},
 			testCaseID= {"", ""},
 			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
@@ -1661,6 +1661,10 @@ if (false) { // DO NOT RUN, BUT NOT READY TO DELETE CODE
 			groups ={"Tier1Tests","blockedByBug-1527727"},
 			enabled = true)
 	public void testUptimeInFacts()throws JSONException,Exception{
+		if (clienttasks.redhatReleaseX.equals("6")){
+			log.warning("The applicability of this test on RHEL6 has not been decided.");
+			//throw new SkipException("TODO");
+		}
 	//	if (clienttasks.isPackageVersion("subscription-manager","<","1.22.x.y")){ //TODO update version
 			//TODO Not Yet implemented
 	//		throw new SkipException("This test applies to a newer version of subscription-manager containing the fix for bug 1527727");
