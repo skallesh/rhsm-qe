@@ -70,6 +70,7 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
 			groups = {"Tier3Tests","blockedByBug-1425438"},
 			enabled = true)
     public void testGoldenTicketFunctionality() throws Exception {
+	clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "manage_repos", "1");
 
 	CandlepinTasks.setAttributeForOrg(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, org,
 		attributeName, attributeValue);
@@ -198,7 +199,7 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier3")
 	@Test(	description = "Verify golden ticket entitlement is granted when system is registered using an activationkey belonging to an org that has a contentAccessMode set",
-			groups = {"Tier3Tests","testGoldenTicketIsGrantedWhenRegisteredUsingActivationKey"},
+			groups = {"Tier3Tests","testGoldenTicketIsGrantedWhenRegisteredUsingActivationKey","blockedByBug-1564453"},
 			enabled = true)
     public void testGoldenTicketIsGrantedWhenRegisteredUsingActivationKey() throws JSONException, Exception {
 
@@ -269,7 +270,8 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
 			groups = {"Tier3Tests","blockedByBug-1448855","testRevokingContentAccessModeOnOwnerRemovesEntitlement" },
 			enabled = true)
     public void testRevokingContentAccessModeOnOwnerRemovesEntitlement() throws Exception {
-
+	
+	clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "manage_repos", "1");
 	CandlepinTasks.setAttributeForOrg(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, org,
 		attributeName, attributeValue);
 	clienttasks.register(sm_clientUsername, sm_clientPassword, org, null, null, null, null, null, null, null,
