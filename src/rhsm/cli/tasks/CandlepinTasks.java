@@ -4433,7 +4433,7 @@ schema generation failed
 		return httpResponse;
 	}
 	
-	public static String updateSubscriptionDatesAndRefreshPoolsUsingRESTfulAPIUsingPoolId(String authenticator,
+	/*public static String updateSubscriptionDatesAndRefreshPoolsUsingRESTfulAPIUsingPoolId(String authenticator,
 			String password, String url, String poolId, Calendar startCalendar, Calendar endCalendar) throws JSONException, Exception {
 			String httpResponse=null;
 // THIS IS EFFECTIVELY A DUPLICATE IMPLEMENTATION OF updateSubscriptionPoolDatesUsingRESTfulAPI(...)
@@ -4460,7 +4460,7 @@ schema generation failed
 				
 				
 				// update the subscription using poolid
-				JSONObject jsonStatus = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(/*authenticator*/null,/*password*/null,url,"/status"));
+				JSONObject jsonStatus = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(authenticatornull,passwordnull,url,"/status"));
 				if (SubscriptionManagerTasks.isVersion(jsonStatus.getString("version"), ">=", "2.0.0"))
 					 httpResponse = CandlepinTasks.putResourceUsingRESTfulAPI(authenticator,password,url,"/owners/"+jsonSubscription.getJSONObject("owner").getString("key")+"/pools",requestBody);
 				else
@@ -4472,7 +4472,7 @@ schema generation failed
 				JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(authenticator,password,url,jsonOwner.getString("key"));
 				jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(authenticator,password,url,jobDetail,"FINISHED", 5*1000, 1);
 				return httpResponse;		
-	}
+	}*/
 
 	/**
 	 * This is a replacement for updateSubscriptionDatesAndRefreshPoolsUsingRESTfulAPI(...) after candlepin commit 9c448315c843c0a20167236af7591359d895613a Discontinue ambiguous subscription resources in sharing world
