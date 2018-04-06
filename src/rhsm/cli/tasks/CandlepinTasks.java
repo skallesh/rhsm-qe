@@ -418,8 +418,13 @@ schema generation failed
 		export TESTDATA=1 && export FORCECERT=1 && export GENDB=1 && export HOSTNAME=jsefler-f14-candlepin.usersys.redhat.com && export IMPORTDIR= && cd /root/candlepin/server && bundle exec bin/deploy
 		 */
 		
-		// also connect to the candlepin server database
-		dbConnection = connectToDatabase(dbSqlDriver,dbHostname,dbPort,dbName,dbUsername,dbPassword);  // do this after the call to deploy since deploy will restart postgresql
+		// also connect to the candlepin server database (because after the call to redeploy implies a restart of postgresql)
+		initializeConnectionToDatabase();
+	}
+	
+	public void initializeConnectionToDatabase() {
+		// connect to the candlepin server database
+		dbConnection = connectToDatabase(dbSqlDriver,dbHostname,dbPort,dbName,dbUsername,dbPassword);
 	}
 	
 	public void initialize(String adminUsername, String adminPassword, String serverUrl) throws IOException, JSONException {

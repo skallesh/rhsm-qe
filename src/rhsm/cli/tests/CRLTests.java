@@ -58,7 +58,8 @@ public class CRLTests extends SubscriptionManagerCLITestScript{
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier3")
 	@Test(	description="subscription-manager-cli: change subscription pool start/end dates and refresh subscription pools",
-			groups={"Tier3Tests","ChangeSubscriptionPoolStartEndDatesAndRefreshSubscriptionPools_Test"},
+			groups={"Tier3Tests","testChangeToSubscriptionPoolStartEndDatesAndRefreshSubscriptionPools"},
+			priority=10,
 			dependsOnGroups={},
 			//dataProvider="getAvailableSubscriptionPoolsData",	// very thorough, but takes too long to execute and rarely finds more bugs
 			//dataProvider="getRandomSubsetOfAvailableSubscriptionPoolsData",
@@ -87,13 +88,16 @@ public class CRLTests extends SubscriptionManagerCLITestScript{
 		//			* the original entitlement certificates on the client should be removed
 		//		   	* new certs should be dropped to the client
 		//			* the crl list on the server should be poplulated w/ the old entitlement cert serials
-		if (servertasks.dbConnection==null) throw new SkipException("This testcase requires a connection to the candlepin database.");
-		
+		if (servertasks.dbConnection==null) {
+			throw new SkipException("This testcase requires a connection to the candlepin database.");
+		}
+		// also connect to the candlepin server database
+
 		/* https://bugzilla.redhat.com/show_bug.cgi?id=663455#c1 < DUE TO THESE IMPLEMENTED CHANGES, THE FOLLOWING IS NO LONGER APPROPRIATE...
 		// Before proceeding with this test, determine if the productId provided by this subscription pool has already been entitled.
 		// This will happen when more than one pool has been created under a different contract/serial so as to increase the
 		// total quantity of entitlements available to the consumers.
-		if (alreadySubscribedProductIdsInChangeSubscriptionPoolStartEndDatesAndRefreshSubscriptionPools_Test.contains(pool.productId)) {
+		if (alreadySubscribedProductIdsIntestChangeToSubscriptionPoolStartEndDatesAndRefreshSubscriptionPools.contains(pool.productId)) {
 			log.info("Because the productId '"+pool.productId+"' from this pool has already been subscribed to via a previously available pool, it only makes sense to skip this iteration of the test.");
 			log.info("However, for the sake of testing, let's attempt to subscribe to it anyway and assert that our subscribe request is blocked with an appropriate message...");
 			SSHCommandResult sshCommandResult = clienttasks.subscribe(pool.poolId, null, null, null, null, null, null, null);
@@ -111,7 +115,7 @@ public class CRLTests extends SubscriptionManagerCLITestScript{
 		log.info("Subscribe client (already registered as a system under username '"+sm_clientUsername+"') to subscription pool "+pool+"...");
 		File entitlementCertFile = clienttasks.subscribeToSubscriptionPool(pool,/*sm_serverAdminUsername*/sm_clientUsername,/*sm_serverAdminPassword*/sm_clientPassword,sm_serverUrl);
 		Assert.assertNotNull(entitlementCertFile, "Our attempt to subscribe resulted in a new entitlement cert on our system.");
-		alreadySubscribedProductIdsInChangeSubscriptionPoolStartEndDatesAndRefreshSubscriptionPools_Test.add(pool.productId);
+		alreadySubscribedProductIdsIntestChangeToSubscriptionPoolStartEndDatesAndRefreshSubscriptionPools.add(pool.productId);
 		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
 
 		log.info("Verify that the currently consumed product subscriptions that came from this subscription pool have the same start and end date as the pool...");
@@ -225,7 +229,7 @@ public class CRLTests extends SubscriptionManagerCLITestScript{
 		// FIXME The following will cause failures for pools that originate from a virtualization aware subscription.  It would be nice to re-subscribe, but first we need to determine if this pool came from a virt-aware subscription and excude it from the resubscribe
 		//clienttasks.subscribeToSubscriptionPool(pool);
 	}
-	protected List<String> alreadySubscribedProductIdsInChangeSubscriptionPoolStartEndDatesAndRefreshSubscriptionPools_Test = new ArrayList<String>();
+	protected List<String> alreadySubscribedProductIdsIntestChangeToSubscriptionPoolStartEndDatesAndRefreshSubscriptionPools = new ArrayList<String>();
 
 
 	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
@@ -237,6 +241,7 @@ public class CRLTests extends SubscriptionManagerCLITestScript{
 			tags= "Tier3")
 	@Test(	description="verify that candlepin's crl file does not contain duplicate serials otherwise it may be growing out of control",
 			groups = {"Tier3Tests","blockedByBug-1399356"},
+			priority=20,	// to ensure that at least one test that registers and revokes an entitlement happens before this test
 			enabled=true)
 	public void testCandlepinCRLForDuplicates() {
 		if (sm_serverType.equals(CandlepinType.hosted)) throw new SkipException("This test requires that your candlepin server NOT be a hosted RHN Classic system.");
@@ -245,7 +250,7 @@ public class CRLTests extends SubscriptionManagerCLITestScript{
 		// make sure servertasks.candlepinCRLFile exists.
 		// if not we should wait two cycles of pinsetter.org.candlepin.pinsetter.tasks.ExpiredPoolsJob.schedule defined in /etc/candlepin/candlepin.conf and then check again
 		if (!RemoteFileTasks.testExists(server, servertasks.candlepinCRLFile)) {
-			Assert.fail("Expected CRL file '"+servertasks.candlepinCRLFile+"' to exist.  We probably have to wait for the next trigger of the ExpiredPoolsJob.schedule.");
+			Assert.fail("Expected CRL file '"+servertasks.candlepinCRLFile+"' to exist.  We probably have to wait for the next trigger of the ExpiredPoolsJob.schedule to revoke an entitlement granted&removed from a prior testcase.");
 		}
 		
 		// get the currently revoked certs
@@ -367,11 +372,15 @@ public class CRLTests extends SubscriptionManagerCLITestScript{
 	
 	// Configuration Methods ***********************************************************************
 
-	@BeforeGroups(groups={"setup"},value="ChangeSubscriptionPoolStartEndDatesAndRefreshSubscriptionPools_Test")
-	protected void getClientOwnerBeforeGroups() throws JSONException, Exception {
+	@BeforeGroups(groups={"setup"},value="testChangeToSubscriptionPoolStartEndDatesAndRefreshSubscriptionPools")
+	protected void setupBeforeTestChangeToSubscriptionPoolStartEndDatesAndRefreshSubscriptionPools() throws JSONException, Exception {
+		if (servertasks.dbConnection==null) servertasks.initializeConnectionToDatabase();
+		if (servertasks.dbConnection==null) {
+			throw new SkipException("This testcase requires a connection to the candlepin database.");
+		}
+		
 		String consumerId = clienttasks.getCurrentConsumerId();
 		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerId);
-
 	}
 
 	
