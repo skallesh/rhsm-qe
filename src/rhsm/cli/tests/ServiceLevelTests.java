@@ -645,11 +645,10 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		String expectedStdout = "Cannot set a service level for a consumer that is not available to its organization.";
 		expectedStdout = String.format("Service level %s is not available to consumers of organization %s.","FOO",sm_clientOrg);	// valid before bug fix 864508
 		expectedStdout = String.format("Service level '%s' is not available to consumers of organization %s.","FOO",sm_clientOrg);// valid before bug fix 864508
-		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.3.1-1")) {	// commit 0d5fefcfa8c1c2485921d2dee6633879b1e06931 Correct incorrect punctuation in user messages
-			expectedStdout = String.format("Service level \"%s\" is not available to consumers of organization %s.","FOO",sm_clientOrg);// valid before bug fix 864508
-
-		}
 		if (!clienttasks.workaroundForBug876764(sm_serverType)) expectedStdout = String.format("Service level '%s' is not available to units of organization %s.","FOO",sm_clientOrg);
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.3.1-1")) {	// commit 0d5fefcfa8c1c2485921d2dee6633879b1e06931 Correct incorrect punctuation in user messages
+			expectedStdout = String.format("Service level \"%s\" is not available to units of organization %s.","FOO",sm_clientOrg);
+		}
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) expectedExitCode = new Integer(70);	// EX_SOFTWARE	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.9-1")) {String swap=expectedStderr; expectedStderr=expectedStdout; expectedStdout=swap;}	// post commit a695ef2d1da882c5f851fde90a24f957b70a63ad
 		Assert.assertEquals(result.getExitCode(), expectedExitCode, "Exit code from an attempt to subscribe with auto and an unavailable service level.");
@@ -1032,12 +1031,10 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		SSHCommandResult result = clienttasks.service_level_(null, null, unavailableSericeLevel, null, null, null, null, null, null, null, null, null, null);
 		String expectedStderr = String.format("Service level %s is not available to consumers of organization %s.",unavailableSericeLevel,org); 	// valid before bug fix 864508
 		expectedStderr = String.format("Service level '%s' is not available to consumers of organization %s.",unavailableSericeLevel,org);
-		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.3.1-1")) {	// commit 0d5fefcfa8c1c2485921d2dee6633879b1e06931 Correct incorrect punctuation in user messages
-			expectedStderr = String.format("Service level \"%s\" is not available to consumers of organization %s.",unavailableSericeLevel,org);
-
-		}
 		if (!clienttasks.workaroundForBug876764(sm_serverType)) expectedStderr = String.format("Service level '%s' is not available to units of organization %s.",unavailableSericeLevel,org);
-		
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.3.1-1")) {	// commit 0d5fefcfa8c1c2485921d2dee6633879b1e06931 Correct incorrect punctuation in user messages
+			expectedStderr = String.format("Service level \"%s\" is not available to units of organization %s.",unavailableSericeLevel,org);
+		}
 		Integer expectedExitCode = new Integer(255);
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) expectedExitCode = new Integer(70);	// EX_SOFTWARE	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
 		Assert.assertEquals(result.getExitCode(), expectedExitCode, "ExitCode from service-level --set with unavailable serviceLevel");
