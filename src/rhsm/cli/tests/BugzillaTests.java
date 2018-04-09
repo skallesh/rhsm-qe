@@ -40,7 +40,6 @@ import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 import com.redhat.qe.tools.SSHCommandRunner;
 
-
 import rhsm.base.CandlepinType;
 import rhsm.base.ConsumerType;
 import rhsm.base.SubscriptionManagerCLITestScript;
@@ -2122,8 +2121,10 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		String expiredOnString = expiredOnDateFormat.format(endDate.getTime());
 		String expectedStdout = "Unable to entitle consumer to the pool with id '" + expiringPoolId
 				+ "'.: Subscriptions for " + expiringSubscriptionPool.productId + " expired on: " + expiredOnString;
-		expectedStdout = String.format("Unable to attach pool with ID '%s'.: Subscriptions for %s expired on: %s.",
-				expiringSubscriptionPool.poolId, expiringSubscriptionPool.productId, expiredOnString);
+		expectedStdout = String.format("Unable to attach pool with ID '%s'.: Subscriptions for %s expired on: %s.", expiringSubscriptionPool.poolId, expiringSubscriptionPool.productId, expiredOnString);
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.3.1-1")) {	// commit 0d5fefcfa8c1c2485921d2dee6633879b1e06931 Correct incorrect punctuation in user messages
+			expectedStdout = expectedStdout.replaceAll("'", "\"");	// replace single quotes with double quotes
+		}
 		if (!result.trim().equals(expectedStdout)) {
 			String alternativeStdout = String.format("Pool with id %s could not be found.", expiringPoolId);
 			Assert.assertEquals(result.trim(), alternativeStdout,
