@@ -361,7 +361,7 @@ public class OrgsTests extends SubscriptionManagerCLITestScript {
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
 	@Test(	description="create an owner via the candlepin api and then update fields on the owner",
-			groups={"Tier2Tests","CreateAnOwnerAndSetAttributesOnTheOwner_Test", "blockedByBug-1563003"},
+			groups={"Tier2Tests","CreateAnOwnerAndSetAttributesOnTheOwner_Test", "blockedByBug-1563003","blockedByBug-1565066"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void testCreateAnOwnerAndSetAttributesOnTheOwner() throws Exception {
