@@ -301,7 +301,7 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 		RemoteFileTasks.runCommandAndAssert(client,"cp "+productCert32060.file+" "+tmpProductCertDir,Integer.valueOf(0));
 		RemoteFileTasks.runCommandAndAssert(client,"cp "+productCert37060.file+" "+tmpProductCertDir,Integer.valueOf(0));
 		String stdoutResult=client.runCommandAndWait("cat "+Brand_Name).getStdout();
-		if(!stdoutResult.equals(null)) {
+		if(stdoutResult.contains("Branded")) {
 			RemoteFileTasks.runCommandAndWait(client,"rm -f "+Brand_Name, TestRecords.action());
 		}
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
