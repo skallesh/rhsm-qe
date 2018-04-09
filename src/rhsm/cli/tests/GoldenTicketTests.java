@@ -325,7 +325,7 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.MEDIUM, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier3")
     @Test(	description = "Verify SKU level contentOverride is given priority over default golden ticket one",
-    		groups = {"Tier3Tests","blockedByBug-1427069"},
+    		groups = {"Tier3Tests","blockedByBug-1427069","testRepoOverridePreference"},
     		enabled = true)
     public void testRepoOverridePreference() throws Exception {
 	List<Repo> availableRepos= new ArrayList<Repo>();
@@ -335,7 +335,7 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
 	String ExpectedRepoMsg = "There were no available repositories matching the specified criteria.";
 	CandlepinTasks.setAttributeForOrg(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, org,
 		attributeName, attributeValue);
-	String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null,
+	String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, org, null, null, null, null, null,
 		null, null, (String) null, null, null, null, true, null, null, null, null, null));
 	String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_clientUsername, sm_clientPassword, sm_serverUrl,
 		consumerId);
