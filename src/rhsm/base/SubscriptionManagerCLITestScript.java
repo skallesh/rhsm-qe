@@ -1769,7 +1769,11 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		String poolResource = "/pools/"+pool.poolId;
 			   poolResource = "/pools/"+masterPoolId;
 		JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, poolResource));
+		// get the json Marketing Product
+		JSONObject jsonMarketingProduct = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, jsonPool.getJSONObject("owner").getString("href")+"/products/"+jsonPool.getString("productId")));
 		String instanceMultiplier = CandlepinTasks.getPoolProductAttributeValue(jsonPool, "instance_multiplier");
+		
+		// get a slimmed down version of the pool
 		String exclude = "?exclude=created"	// excluding data feels like the right thing to do, but could be the wrong thing if it is not calculated data - TODO: review with devel
 				+ "&exclude=consumed"
 				+ "&exclude=calculatedAttributes"
@@ -1786,6 +1790,11 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		// re-adjust the quantity on the json pool when instance based
 		if (instanceMultiplier!=null) {
 			jsonPool.put("quantity", jsonPool.getInt("quantity")/Integer.valueOf(instanceMultiplier));
+		}
+		
+		// re-adjust the quantity on the json pool when the marketing product has a multiplier
+		if (jsonMarketingProduct.has("multiplier")) {
+			jsonPool.put("quantity", jsonPool.getInt("quantity")/jsonMarketingProduct.getInt("multiplier"));
 		}
 		
 		// change the start/end dates on the json pool
