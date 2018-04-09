@@ -370,7 +370,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.LOW, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier3")
 	@Test(	description= "verify Product certs not be generated with a tag value of None",
-			groups= {"Tier3Tests","VerifyProductCertWithNoneTag", "blockedByBug-955824" },
+			groups= {"Tier1Tests","VerifyProductCertWithNoneTag", "blockedByBug-955824" },
 			enabled= true)
 	public void testProductCertWithNoneTag() throws Exception {
 		String baseProductsDir = "/usr/share/rhsm/product/RHEL-" + clienttasks.redhatReleaseX;
@@ -2754,8 +2754,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier3")
-	@Test(	description = /*TODO */"please provide a description",
-			groups = {"Tier3Tests","VerifyRHELWorkstationSubscription", "blockedByBug-739790" },
+	@Test(	description = "Verify Product Red Hat Enterprise Linux Workstation has a valid stacking_id and its socket_limit is not 0 so that RHEL Workstation product is not always in a partially subscribed state even though you attach the sufficient quantity required to make system fully complaint",
+			groups = {"Tier1Tests","VerifyRHELWorkstationSubscription", "blockedByBug-739790" },
 			enabled = true)
 	public void testRHELWorkstationSubscription() throws JSONException, Exception {
 		InstalledProduct workstation = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", "71",
@@ -2765,14 +2765,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 					"This test is only applicable on a RHEL Workstation where product 71 is installed.");
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
 				null, (List<String>) null, (String) null, null, null, true, false, null, null, null, null);
-		/*
-		 * too time consuming; replace with
-		 * subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively(); for
-		 * (SubscriptionPool availList : clienttasks
-		 * .getCurrentlyAvailableSubscriptionPools()) {
-		 * clienttasks.subscribe_(null, null, availList.poolId, null, null,
-		 * null, null, null, null, null, null); }
-		 */
+
 		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
 		boolean assertedWorkstationProduct = false;
 		for (InstalledProduct installed : clienttasks.getCurrentlyInstalledProducts()) {
