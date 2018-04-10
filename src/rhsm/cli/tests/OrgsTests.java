@@ -390,7 +390,13 @@ public class OrgsTests extends SubscriptionManagerCLITestScript {
 	
 		// a loving mother searches for a daughter...
 		jsonOwner = CandlepinTasks.createOwnerUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, mother, "Mrs. Jones","TLC (Tender Loving Care)", null, null, null);
-		Assert.assertNotNull(jsonOwner.getString("id"), "The candlepin API appears to have created a new owner: "+jsonOwner);
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.3.4-1"/*TODO CHANGE TO "2.3.5-1" ONCE TAGGED*/)) {	// commit 2bfd5488c0566a1b3551007901cb978c37b51a57 Improved error output surrounding owner creation and service levels	// Bug 1563003 - Service level "Merry Maid Service" is not available to units of organization null. 
+			// assert we can no longer specify a defaultServiceLevel with owner creation
+			Assert.assertTrue(jsonOwner.has("displayMessage"), "Expecting attempt to POST a new owner with any defaultServiceLevel to fail with a display message as decided in https://bugzilla.redhat.com/show_bug.cgi?id=1563003#c1");
+			Assert.assertEquals(jsonOwner.getString("displayMessage"), "The default service level cannot be specified during owner creation");
+		} else {
+			Assert.assertNotNull(jsonOwner.getString("id"), "The candlepin API appears to have created a new owner with a defaultServiceLevel: "+jsonOwner);
+		}
 		
 		// the mother adopts the daughter...
 		/* The following throws a Runtime Error; 3/14/2014 Development says the parentOwner attribute was never completely developed.  Do not test it.
