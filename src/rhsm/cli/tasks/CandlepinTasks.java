@@ -903,12 +903,28 @@ schema generation failed
 			// END OF WORKAROUND
 		}
 		
+		// The system is unable to complete the requested transaction; try again
+		if (response!=null && response.startsWith("{")) {
+			JSONObject responseAsJSONObect = new JSONObject(response);
+			if (responseAsJSONObect.has("displayMessage")) {
+				if (responseAsJSONObect.getString("displayMessage").contains("The system is unable to complete the requested transaction")) {
+					log.warning("Attempt to GET resource '"+path+"' failed: "+responseAsJSONObect.getString("displayMessage"));
+					log.warning("Re-attempting one more time to get a valid response from the server...");
+					sleep(10*1000);	// wait 10 seconds
+					response = getHTTPResponseAsString(client, get, authenticator, password);
+				}
+			}
+		}
+		
+		// log displayMessage from response
 		if (response!=null && response.startsWith("{")) {
 			JSONObject responseAsJSONObect = new JSONObject(response);
 			if (responseAsJSONObect.has("displayMessage")) {				
 				log.warning("Attempt to GET resource '"+path+"' failed: "+responseAsJSONObect.getString("displayMessage"));
 			}
 		}
+		
+		// return the response
 		return response;
 	}
 	
