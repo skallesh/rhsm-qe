@@ -348,9 +348,6 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
 		    break;
 	    }
 	}
-	//clienttasks.subscribe(null, null,subscriptionPoolId, null, null, null, null, null, null, null, null, null, null);
-	//List<Repo> 
-	
 	availableRepos =  clienttasks.getCurrentlySubscribedRepos();
 	SSHCommandResult repoResult = clienttasks.repos(false, false, true, (String) null, null, null, null, null, null);
 	Assert.assertNotEquals(repoResult.getStdout().toString().trim(), ExpectedRepoMsg);
@@ -390,7 +387,8 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
 		resourcePath, jsonDataToEnable);
 	CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,
 		ownerKey);
-	clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
+	//clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
+	clienttasks.unsubscribe(null, null, subscriptionPoolId, null, null, null, null);
 	clienttasks.subscribe(null, null, subscriptionPoolId, null, null, null, null, null, null, null, null,null, null);
 	Assert.assertTrue(clienttasks.repos_(null, true, null, (String) null, null, null, null, null, null).getStdout()
 		.contains(repoIdToEnable),"After subscribing to SKU '" + subscriptionPoolProductId + "' which contains a content_override_enabled for repoId '" + repoIdToEnable + "' (contentid='"
