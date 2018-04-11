@@ -630,7 +630,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier3")
 	@Test(	description="subscription-manager: subscribe with auto while specifying an unavailable service level",
-			groups={"debugTest","Tier3Tests","blockedByBug-795798","blockedByBug-864508"},
+			groups={"Tier3Tests","blockedByBug-795798","blockedByBug-864508"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void testAutoSubscribeWithUnavailableServiceLevel() {
