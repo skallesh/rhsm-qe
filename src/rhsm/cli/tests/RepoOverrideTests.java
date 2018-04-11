@@ -238,48 +238,45 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 		Map<String,String> repoOverrideNameValueMap = new HashMap<String,String>();
 		repoOverrideNameValueMap.put("enabled", "0");	// it is okay to add an override for "enabled"
 		
+		// test variation 1
 		repoOverrideNameValueMap.put("name", "Repo Name");
 		result = clienttasks.repo_override_(null, null, repoids, null, repoOverrideNameValueMap, null, null, null, null);
-		Assert.assertEquals(result.getExitCode(), Integer.valueOf(1), "ExitCode from an attempt to add repo-overrides for baseurl, name, and label for repoids: "+repoids);
-		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
-			Assert.assertEquals(result.getStdout().trim(), "", "Stdout from an attempt add a repo-overrides for baseurl, name, and label for repoids: "+repoids);
-			Assert.assertEquals(result.getStderr().trim(), "Not allowed to override values for: name", "Stderr from an attempt add a repo-overrides for baseurl, name, and label for repoids: "+repoids);
-		} else {
-			Assert.assertEquals(result.getStderr().trim(), "", "Stderr from an attempt add a repo-overrides for baseurl, name, and label for repoids: "+repoids);
-			Assert.assertEquals(result.getStdout().trim(), "Not allowed to override values for: name", "Stdout from an attempt add a repo-overrides for baseurl, name, and label for repoids: "+repoids);
-		}
+		String expectedStdout = "";
+		expectedStdout = "Not allowed to override values for: name";
+		String expectedStderr = "";
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.9-1")) {String swap=expectedStderr; expectedStderr=expectedStdout; expectedStdout=swap;}	// post commit a695ef2d1da882c5f851fde90a24f957b70a63ad
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-1")) expectedStderr = "HTTP error (400 - Bad Request): "+expectedStderr;	// post commit 630e1a2eb06e6bfacac669ce11f38e228c907ea9 1507030: RestlibExceptions should show they originate server-side	
+		Assert.assertEquals(result.getExitCode(), Integer.valueOf(1), "ExitCode from an attempt to add repo-overrides for name for repoids: "+repoids);
+		Assert.assertEquals(result.getStdout().trim(), expectedStdout, "Stdout from an attempt add a repo-overrides for name for repoids: "+repoids);
+		Assert.assertEquals(result.getStderr().trim(), expectedStderr, "Stderr from an attempt add a repo-overrides for name for repoids: "+repoids);
 		
+		// test variation 2
 		repoOverrideNameValueMap.put("label", "repo-label");
 		result = clienttasks.repo_override_(null, null, repoids, null, repoOverrideNameValueMap, null, null, null, null);
-		Assert.assertEquals(result.getExitCode(), Integer.valueOf(1), "ExitCode from an attempt to add repo-overrides for baseurl, name, and label for repoids: "+repoids);
-		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
-			Assert.assertEquals(result.getStdout().trim(), "", "Stdout from an attempt add a repo-overrides for baseurl, name, and label for repoids: "+repoids);
-			Assert.assertMatch(result.getStderr().trim(), "Not allowed to override values for: (name, label|label, name)", "Stderr from an attempt add a repo-overrides for baseurl, name, and label for repoids: "+repoids);
-		} else {
-			Assert.assertEquals(result.getStderr().trim(), "", "Stderr from an attempt add a repo-overrides for baseurl, name, and label for repoids: "+repoids);
-			Assert.assertEquals(result.getStdout().trim(), "Not allowed to override values for: name, label", "Stdout from an attempt add a repo-overrides for baseurl, name, and label for repoids: "+repoids);
-		}
+		expectedStdout = "Not allowed to override values for: name, label";
+		expectedStdout = "Not allowed to override values for: (name, label|label, name)";
+		expectedStderr = "";
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.9-1")) {String swap=expectedStderr; expectedStderr=expectedStdout; expectedStdout=swap;}	// post commit a695ef2d1da882c5f851fde90a24f957b70a63ad
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-1")) expectedStderr = "HTTP error (400 - Bad Request): ".replaceAll("\\(","\\\\(").replaceAll("\\)","\\\\)")+expectedStderr;	// post commit 630e1a2eb06e6bfacac669ce11f38e228c907ea9 1507030: RestlibExceptions should show they originate server-side	
+		Assert.assertEquals(result.getExitCode(), Integer.valueOf(1), "ExitCode from an attempt to add repo-overrides for name and label for repoids: "+repoids);
+		Assert.assertEquals(result.getStdout().trim(), expectedStdout, "Stdout from an attempt add a repo-overrides for name and label for repoids: "+repoids);
+		Assert.assertMatch(result.getStderr().trim(), expectedStderr, "Stderr from an attempt add a repo-overrides for name and label for repoids: "+repoids);
 		
+		// test variation 3
 		repoOverrideNameValueMap.put("baseurl", "https://cdn.redhat.com/repo-override-baseurl/$releasever/$basearch");
 		result = clienttasks.repo_override_(null, null, repoids, null, repoOverrideNameValueMap, null, null, null, null);
-		Assert.assertEquals(result.getExitCode(), Integer.valueOf(1), "ExitCode from an attempt to add repo-overrides for baseurl, name, and label for repoids: "+repoids);
-		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
-			Assert.assertEquals(result.getStdout().trim(), "", "Stdout from an attempt add a repo-overrides for baseurl, name, and label for repoids: "+repoids);
-			String notAllowedToOverrideRegex = "(name, label, baseurl|label, name, baseurl|name, baseurl, label|label, baseurl, name|baseurl, name, label|baseurl, label, name)";
-			if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.10-1") && servertasks.statusStandalone) {	// candlepin commit bbba2dfc1ba44a16fef3d483caf4e7d4eaf63c10
-				log.info("Starting in candlepin version 2.0.10-1, the restriction on overriding the baseurl has been lifted against a standalone candlepin server for the benefit of mirror lists in Satellite.  See https://trello.com/c/6IKbKppZ/7-work-with-satellite-team-to-design-out-mirror-lists-for-subscription-manager");
-				notAllowedToOverrideRegex = "(name, label|label, name)";
-			}
-			Assert.assertMatch(result.getStderr().trim(), "Not allowed to override values for: "+notAllowedToOverrideRegex, "Stderr from an attempt add a repo-overrides for baseurl, name, and label for repoids: "+repoids);
-		} else {
-			Assert.assertEquals(result.getStderr().trim(), "", "Stderr from an attempt add a repo-overrides for baseurl, name, and label for repoids: "+repoids);
-			String notAllowedToOverrideRegex = "name, label, baseurl";
-			if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.10-1") && servertasks.statusStandalone) {	// candlepin commit bbba2dfc1ba44a16fef3d483caf4e7d4eaf63c10
-				log.info("Starting in candlepin version 2.0.10-1, the restriction on overriding the baseurl has been lifted against a standalone candlepin server for the benefit of mirror lists in Satellite.  See https://trello.com/c/6IKbKppZ/7-work-with-satellite-team-to-design-out-mirror-lists-for-subscription-manager");
-				notAllowedToOverrideRegex = "name, label";
-			}
-			Assert.assertEquals(result.getStdout().trim(), "Not allowed to override values for: "+notAllowedToOverrideRegex, "Stdout from an attempt add a repo-overrides for baseurl, name, and label for repoids: "+repoids);
+		String notAllowedToOverrideRegex = "(name, label, baseurl|label, name, baseurl|name, baseurl, label|label, baseurl, name|baseurl, name, label|baseurl, label, name)";
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.10-1") && servertasks.statusStandalone) {	// candlepin commit bbba2dfc1ba44a16fef3d483caf4e7d4eaf63c10
+			log.info("Starting in candlepin version 2.0.10-1, the restriction on overriding the baseurl has been lifted against a standalone candlepin server for the benefit of mirror lists in Satellite.  See https://trello.com/c/6IKbKppZ/7-work-with-satellite-team-to-design-out-mirror-lists-for-subscription-manager");
+			notAllowedToOverrideRegex = "(name, label|label, name)";
 		}
+		expectedStdout = "Not allowed to override values for: "+notAllowedToOverrideRegex;
+		expectedStderr = "";
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.9-1")) {String swap=expectedStderr; expectedStderr=expectedStdout; expectedStdout=swap;}	// post commit a695ef2d1da882c5f851fde90a24f957b70a63ad
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-1")) expectedStderr = "HTTP error (400 - Bad Request): ".replaceAll("\\(","\\\\(").replaceAll("\\)","\\\\)")+expectedStderr;	// post commit 630e1a2eb06e6bfacac669ce11f38e228c907ea9 1507030: RestlibExceptions should show they originate server-side			
+		Assert.assertEquals(result.getExitCode(), Integer.valueOf(1), "ExitCode from an attempt to add repo-overrides for baseurl, name, and label for repoids: "+repoids);
+		Assert.assertEquals(result.getStdout().trim(), expectedStdout, "Stdout from an attempt add a repo-overrides for baseurl, name, and label for repoids: "+repoids);
+		Assert.assertMatch(result.getStderr().trim(), expectedStderr, "Stderr from an attempt add a repo-overrides for baseurl, name, and label for repoids: "+repoids);
 	}
 
 	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
@@ -310,16 +307,16 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 		// Bug 1033583 ^
 		//	[root@jsefler-7 ~]# subscription-manager repo-override --repo=repo1 --add=param:value_7890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456
 		//	Name and value of the override must not exceed 255 characters.
+		String expectedStdout = "";
+		expectedStdout = "Name and value of the override must not exceed 255 characters.";
+		expectedStdout = "Name, value, and label of the override must not exceed 255 characters.";
+		expectedStdout = "value: size must be between 0 and 255";
+		String expectedStderr = "";
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.9-1")) {String swap=expectedStderr; expectedStderr=expectedStdout; expectedStdout=swap;}	// post commit a695ef2d1da882c5f851fde90a24f957b70a63ad
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-1")) expectedStderr = "HTTP error (400 - Bad Request): "+expectedStderr;	// post commit 630e1a2eb06e6bfacac669ce11f38e228c907ea9 1507030: RestlibExceptions should show they originate server-side
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(1), "ExitCode from an attempt to add a repo-override with a value exceeding 255 chars.");
-		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
-			Assert.assertEquals(result.getStdout().trim(), "", "Stdout from an attempt to add a repo-override with a value exceeding 255 chars.");
-			Assert.assertEquals(result.getStderr().trim(), "value: size must be between 0 and 255", "Stderr from an attempt to add a repo-override with a value exceeding 255 chars.");
-		} else {
-			Assert.assertEquals(result.getStderr().trim(), "", "Stderr from an attempt to add a repo-override with a value exceeding 255 chars.");
-			//Assert.assertEquals(result.getStdout().trim(), "Name and value of the override must not exceed 255 characters.", "Stdout from an attempt to add a repo-override with a value exceeding 255 chars.");	// stdout changed by candlepin commit 8a3a1da251673408fc630db35b455cd805b03315
-			//Assert.assertEquals(result.getStdout().trim(), "Name, value, and label of the override must not exceed 255 characters.", "Stdout from an attempt to add a repo-override with a value exceeding 255 chars.");	// stdout changed by candlepin commit a0db7c35f8d7ee71daeabaf39788b3f47206e0e0; 1065369: Use Hibernate Validation to supersede database error reporting.
-			Assert.assertEquals(result.getStdout().trim(), "value: size must be between 0 and 255", "Stdout from an attempt to add a repo-override with a value exceeding 255 chars.");
-		}
+		Assert.assertEquals(result.getStdout().trim(), expectedStdout, "Stdout from an attempt to add a repo-override with a value exceeding 255 chars.");
+		Assert.assertEquals(result.getStderr().trim(), expectedStderr, "Stderr from an attempt to add a repo-override with a value exceeding 255 chars.");
 		
 		// attempt to create a very long parameter "name" override
 		repoOverrideNameValueMap.clear();
@@ -330,16 +327,15 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 		// Bug 1033583 ^
 		//	[root@jsefler-7 ~]# subscription-manager repo-override --repo=repo1 --add=param_7890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456:value
 		//	Name and value of the override must not exceed 255 characters.
+		expectedStdout = "Name and value of the override must not exceed 255 characters.";
+		expectedStdout = "Name, value, and label of the override must not exceed 255 characters.";
+		expectedStdout = "name: size must be between 0 and 255";
+		expectedStderr = "";
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.9-1")) {String swap=expectedStderr; expectedStderr=expectedStdout; expectedStdout=swap;}	// post commit a695ef2d1da882c5f851fde90a24f957b70a63ad
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-1")) expectedStderr = "HTTP error (400 - Bad Request): "+expectedStderr;	// post commit 630e1a2eb06e6bfacac669ce11f38e228c907ea9 1507030: RestlibExceptions should show they originate server-side
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(1), "ExitCode from an attempt to add a repo-override with a name exceeding 255 chars.");
-		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
-			Assert.assertEquals(result.getStdout().trim(), "", "Stdout from an attempt to add a repo-override with a name exceeding 255 chars.");
-			Assert.assertEquals(result.getStderr().trim(), "name: size must be between 0 and 255", "Stderr from an attempt to add a repo-override with a name exceeding 255 chars.");
-		} else {
-			Assert.assertEquals(result.getStderr().trim(), "", "Stderr from an attempt to add a repo-override with a name exceeding 255 chars.");
-			//Assert.assertEquals(result.getStdout().trim(), "Name and value of the override must not exceed 255 characters.", "Stdout from an attempt to add a repo-override with a name exceeding 255 chars.");	// stdout changed by candlepin commit 8a3a1da251673408fc630db35b455cd805b03315
-			//Assert.assertEquals(result.getStdout().trim(), "Name, value, and label of the override must not exceed 255 characters.", "Stdout from an attempt to add a repo-override with a name exceeding 255 chars.");
-			Assert.assertEquals(result.getStdout().trim(), "name: size must be between 0 and 255", "Stdout from an attempt to add a repo-override with a name exceeding 255 chars.");
-		}
+		Assert.assertEquals(result.getStdout().trim(), expectedStdout, "Stdout from an attempt to add a repo-override with a name exceeding 255 chars.");
+		Assert.assertEquals(result.getStderr().trim(), expectedStderr, "Stderr from an attempt to add a repo-override with a name exceeding 255 chars.");
 		
 		// attempt to create a very long "label" override
 		repoOverrideNameValueMap.clear();
@@ -347,15 +343,14 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 		result = clienttasks.repo_override_(null, null, "label_7890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456", null, repoOverrideNameValueMap, null, null, null, null);
 		//	[root@jsefler-7 ~]# subscription-manager repo-override --repo=repo_67890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456 --add=param:value
 		//	Name, value, and label of the override must not exceed 255 characters.
+		expectedStdout = "Name, value, and label of the override must not exceed 255 characters.";
+		expectedStdout = "contentLabel: size must be between 0 and 255";
+		expectedStderr = "";
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.9-1")) {String swap=expectedStderr; expectedStderr=expectedStdout; expectedStdout=swap;}	// post commit a695ef2d1da882c5f851fde90a24f957b70a63ad
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-1")) expectedStderr = "HTTP error (400 - Bad Request): "+expectedStderr;	// post commit 630e1a2eb06e6bfacac669ce11f38e228c907ea9 1507030: RestlibExceptions should show they originate server-side
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(1), "ExitCode from an attempt to add a repo-override with a label exceeding 255 chars.");
-		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
-			Assert.assertEquals(result.getStdout().trim(), "", "Stdout from an attempt to add a repo-override with a label exceeding 255 chars.");
-			Assert.assertEquals(result.getStderr().trim(), "contentLabel: size must be between 0 and 255", "Stderr from an attempt to add a repo-override with a label exceeding 255 chars.");
-		} else {
-			Assert.assertEquals(result.getStderr().trim(), "", "Stderr from an attempt to add a repo-override with a label exceeding 255 chars.");
-			//Assert.assertEquals(result.getStdout().trim(), "Name, value, and label of the override must not exceed 255 characters.", "Stdout from an attempt to add a repo-override with a label exceeding 255 chars.");
-			Assert.assertEquals(result.getStdout().trim(), "contentLabel: size must be between 0 and 255", "Stdout from an attempt to add a repo-override with a label exceeding 255 chars.");
-		}
+		Assert.assertEquals(result.getStdout().trim(), expectedStdout, "Stdout from an attempt to add a repo-override with a label exceeding 255 chars.");
+		Assert.assertEquals(result.getStderr().trim(), expectedStderr, "Stderr from an attempt to add a repo-override with a label exceeding 255 chars.");
 	}
 
 	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
