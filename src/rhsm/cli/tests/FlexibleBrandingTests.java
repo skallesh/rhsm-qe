@@ -297,10 +297,13 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 		
 		// reset the installed product certs and reset the brand file
 		clienttasks.removeAllCerts(false, false, true);
+		RemoteFileTasks.runCommandAndWait(client,"rm -f "+Brand_Name, TestRecords.action());
 		RemoteFileTasks.runCommandAndAssert(client,"cp "+productCert32060.file+" "+tmpProductCertDir,Integer.valueOf(0));
 		RemoteFileTasks.runCommandAndAssert(client,"cp "+productCert37060.file+" "+tmpProductCertDir,Integer.valueOf(0));
-		RemoteFileTasks.runCommandAndWait(client,"rm -f "+Brand_Name, TestRecords.action());
-		
+		String stdoutResult=client.runCommandAndWait("cat "+Brand_Name).getStdout();
+		if(stdoutResult.contains("Branded")) {
+			RemoteFileTasks.runCommandAndWait(client,"rm -f "+Brand_Name, TestRecords.action());
+		}
 		clienttasks.register(sm_clientUsername, sm_clientPassword,
 				sm_clientOrg, null, null, null, null, true, null, null,
 				(String) null, null, null, null, null, false, null, null, null, null);
@@ -311,8 +314,8 @@ public class FlexibleBrandingTests extends SubscriptionManagerCLITestScript {
 		//	[DEBUG] subscription-manager:29170:MainThread @rhelentbranding.py:121 - Installed branded product: <rhsm.certificate2.Product object at 0x1591a10>
 		//	[DEBUG] subscription-manager:29170:MainThread @rhelentbranding.py:124 - 2 entitlement certs with brand info found
 		//	[WARNING] subscription-manager:29170:MainThread @rhelentbranding.py:95 - More than one entitlement provided branded name information for an installed RHEL product
-		
 		String result=client.runCommandAndWait("cat "+Brand_Name).getStderr();
+
 		String expectedMessage="cat: /var/lib/rhsm/branded_name: No such file or directory";
 		Assert.assertEquals(result.trim(), expectedMessage);
 	}

@@ -123,7 +123,13 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		
 		String command = clienttasks.rhsmComplianceD+" -s";
 		SSHCommandResult result = client.runCommandAndWait(command);
-		Assert.assertEquals(result.getExitCode(), Integer.valueOf(0),"ExitCode from command '"+command+"'.");
+		Integer expectedExitCode = Integer.valueOf(0);
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.1-1")) { // subscription-manager commit cb374ec918c7592aaf1f1aed6d5730d931a7ee4e Generate bin scripts via setuptools entry_points
+			// exit code 0 was actually a bug that was inadvertently fixed by commit cb374ec918c7592aaf1f1aed6d5730d931a7ee4e
+			// expected exitCode comes from RHSM_REGISTRATION_REQUIRED = 5 in cert_sorter.py https://github.com/candlepin/subscription-manager/blob/d17e16065df81c531bd775a67e7f584b53f99637/src/subscription_manager/cert_sorter.py
+			expectedExitCode = Integer.valueOf(5);
+		}
+		Assert.assertEquals(result.getExitCode(), expectedExitCode,"ExitCode from command '"+command+"'.");
 		Assert.assertTrue(result.getStdout().isEmpty(),"Stdout from command '"+command+"' is empty.");
 		Assert.assertTrue(result.getStderr().isEmpty(),"Stderr from command '"+command+"' is empty.");
 		
@@ -147,7 +153,18 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		//	/usr/lib64/python2.4/site-packages/rhsm/certificate.py:123: DeprecationWarning: Call to deprecated function: hasNow
 		//	  category=DeprecationWarning)
 		//	[root@rhsm-accept-rhel5 ~]#
-		Assert.assertEquals(result.getExitCode(), Integer.valueOf(0),"ExitCode from command '"+command+"'.");
+		expectedExitCode = Integer.valueOf(0);
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.1-1")) { // subscription-manager commit cb374ec918c7592aaf1f1aed6d5730d931a7ee4e Generate bin scripts via setuptools entry_points
+			// from cert_sorter.py
+			//	RHSM_VALID = 0
+			//	RHSM_EXPIRED = 1
+			//	RHSM_WARNING = 2
+			//	RHN_CLASSIC = 3
+			//	RHSM_PARTIALLY_VALID = 4
+			//	RHSM_REGISTRATION_REQUIRED = 5
+			expectedExitCode = clienttasks.status(null, null, null, null, null).getExitCode();	// TODO this probably works for RHSM_VALID and RHSM_EXPIRED/INVALID
+		}
+		Assert.assertEquals(result.getExitCode(), expectedExitCode,"ExitCode from command '"+command+"'.");
 		Assert.assertTrue(result.getStdout().isEmpty(),"Stdout from command '"+command+"' is empty.");
 		Assert.assertTrue(result.getStderr().isEmpty(),"Stderr from command '"+command+"' is empty.");
 	}

@@ -69,6 +69,7 @@ public class CRLTests extends SubscriptionManagerCLITestScript{
 	@ImplementsNitrateTest(caseId=56025)
 	public void testChangeToSubscriptionPoolStartEndDatesAndRefreshSubscriptionPools(SubscriptionPool originalPool) throws Exception {
 ///*debugTesting*/if (!originalPool.productId.equals("awesomeos-instancebased")) throw new SkipException("DebugTesting");
+///*debugTesting*/if (!originalPool.productId.equals("management-100")) throw new SkipException("DebugTesting");
 		//		https://tcms.engineering.redhat.com/case/56025/?from_plan=2634
 		//		Actions:
 		//

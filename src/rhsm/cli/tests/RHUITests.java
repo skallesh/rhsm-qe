@@ -15,6 +15,7 @@ import rhsm.base.CandlepinType;
 import rhsm.base.ConsumerType;
 import rhsm.base.SubscriptionManagerCLITestScript;
 import rhsm.cli.tasks.CandlepinTasks;
+import rhsm.cli.tasks.SubscriptionManagerTasks;
 import rhsm.data.ContentNamespace;
 import rhsm.data.EntitlementCert;
 import rhsm.data.Repo;
@@ -95,7 +96,11 @@ public class RHUITests extends SubscriptionManagerCLITestScript {
 		// register a RHUI consumer type
 		if (sm_serverType.equals(CandlepinType.standalone)) {
 			result = clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,ConsumerType.RHUI,null,null,null,null,null,(String)null,null,null, null, true, null, null, null, null, null);
-			Assert.assertEquals(result.getStderr().trim(), String.format("Unit type '%s' could not be found.", ConsumerType.RHUI));
+			String expectedStderr = String.format("Unit type '%s' could not be found.", ConsumerType.RHUI);
+			if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.3.5-1")) {	// commit f87515e457c8b74cfaeaf9c0e47f019c241e8355 Changed Consumer.type to Consumer.typeId
+				expectedStderr = String.format("Invalid unit type: %s",ConsumerType.RHUI);
+			}
+			Assert.assertEquals(result.getStderr().trim(), expectedStderr);
 			Assert.assertEquals(result.getExitCode(), Integer.valueOf(70));
 			throw new SkipException("On a candlpin server of type '"+sm_serverType+"': "+result.getStderr().trim());
 		} else

@@ -8075,28 +8075,69 @@ if (false) {
 	}
 	
 	/**
-	 * Attempt to: yum -y groupinstall "group" AND assert a "Complete!" result
+	 * Attempt to: yum -y groupinstall "group" AND assert a "Complete!" result.<br>
+	 *  Note: Just because a group appears in yum grouplist, that does not mean the package members in the group are available for install.  There are also some rules regarding how packages are marked to indicate whether or not the group is considered installed (see man yum).  If necessary the method will try to group install with --skip-broken which means the group may not be fully installed at the end of this method. <br>
+	 *  Learn more about groups at https://www.certdepot.net/rhel7-get-started-package-groups/
 	 * @param group
 	 * @return SSHCommandResult from the attempt to groupinstall
-	 *  TODO IS THIS TRUE? WARNING: Just because a group appears in yum grouplist, that does not mean the package members in the group are available for install.  There are also some rules regarding how packages are marked to indicate whether or not the group is considered installed (see man yum)
-	 *  Learn more about groups at https://www.certdepot.net/rhel7-get-started-package-groups/
 	 */
 	public SSHCommandResult yumInstallGroup (String group) {
-		SSHCommandResult result = yumInstallGroup_(group);
+		boolean skipBroken=false;
+		SSHCommandResult result = yumInstallGroup_(group, "--disableplugin=rhnplugin");	// --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
+		
+		// Because we test composes of RHEL that include packages that are not yet released to production (and therefore not available in the SKUs we are testing with), we can end up with a yum group install error like this...
+		//	--> Finished Dependency Resolution
+		//	Error: Package: libreport-2.0.9-33.el6.x86_64 (rhel-6-hpc-node-rpms)
+		//	           Requires: libreport-filesystem = 2.0.9-33.el6
+		//	           Installed: libreport-filesystem-2.0.9-34.el6.x86_64 (@anaconda-RedHatEnterpriseLinux-201804071340.x86_64/6.10)
+		//	               libreport-filesystem = 2.0.9-34.el6
+		//	           Available: libreport-filesystem-2.0.9-24.el6.x86_64 (rhel-6-hpc-node-rpms)
+		//	               libreport-filesystem = 2.0.9-24.el6
+		//	           Available: libreport-filesystem-2.0.9-25.el6_7.x86_64 (rhel-6-hpc-node-rpms)
+		//	               libreport-filesystem = 2.0.9-25.el6_7
+		//	           Available: libreport-filesystem-2.0.9-32.el6.x86_64 (rhel-6-hpc-node-rpms)
+		//	               libreport-filesystem = 2.0.9-32.el6
+		//	           Available: libreport-filesystem-2.0.9-33.el6.x86_64 (rhel-6-hpc-node-rpms)
+		//	               libreport-filesystem = 2.0.9-33.el6
+		//	**********************************************************************
+		//	yum can be configured to try to resolve such errors by temporarily enabling
+		//	disabled repos and searching for missing dependencies.
+		//	To enable this functionality please set 'notify_only=0' in /etc/yum/pluginconf.d/search-disabled-repos.conf
+		//	**********************************************************************
+		//
+		//	 You could try using --skip-broken to work around the problem
+		//	 You could try running: rpm -Va --nofiles --nodigest
+		
+		// let's try again with --skip-broken when this happens
+		if (!result.getExitCode().equals(Integer.valueOf(0))) {
+			String regex = "Error: Package: .+ Requires: .+ Installed: .+ \\(@anaconda.*\\).* You could try using --skip-broken to work around the problem";
+			regex = "Error: Package: .+\\n\\s+Requires: .+\\n\\s+Installed: .+ \\(@anaconda.*\\)(\\n.*)+ You could try using --skip-broken to work around the problem";
+			if (SubscriptionManagerCLITestScript.doesStringContainMatches(result.getStdout(),regex)) {
+				skipBroken = true;
+				log.warning("Attempting to group install '"+group+"' with option --skip-broken...");
+				result = yumInstallGroup_(group, "--disableplugin=rhnplugin --skip-broken");				
+			}
+		}
+		
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(0), "ExitCode from attempt to yum groupinstall '"+group+"'.");
 		Assert.assertContainsMatch(result.getStdout(), "^Complete!$", "Stdout from attempt to yum groupinstall '"+group+"'.");
-		Assert.assertTrue(!this.yumGroupList("Available", ""/*"--disablerepo=* --enablerepo="+repo*/).contains(group),"Yum group is NOT Available after calling '"+command+"'.");
+		if (skipBroken) {
+			log.warning("Skipping the assertion that group '"+group+"' is fully installed because we attempted to groupinstall with option --skip-broken");
+		} else {
+			Assert.assertTrue(!this.yumGroupList("Available", ""/*"--disablerepo=* --enablerepo="+repo*/).contains(group),"Yum group is NOT Available after calling '"+command+"'.");
+		}
 		return result;
 	}
 	/**
 	 * Attempt to: yum -y groupinstall "group" WITHOUT asserting result
-	 * @param group
+	 * @param group e.g. "Debugging Tools"
+	 * @param options e.g. "--disableplugin=rhnplugin"
 	 * @return SSHCommandResult from the attempt to groupinstall
 	 *  WARNING: Just because a group appears in yum grouplist, that does not mean the package members in the group are available for install.  There are also some rules regarding how packages are marked to indicate whether or not the group is considered installed (see man yum)
 	 *  Learn more about groups at https://www.certdepot.net/rhel7-get-started-package-groups/
 	 */
-	public SSHCommandResult yumInstallGroup_ (String group) {
-		String command = "yum -y groupinstall \""+group+"\" --disableplugin=rhnplugin"; // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
+	public SSHCommandResult yumInstallGroup_ (String group, String options) {
+		String command = String.format("yum -y groupinstall \"%s\" %s",group, options);
 		return this.sshCommandRunner.runCommandAndWait(command);
 	}
 	

@@ -659,15 +659,20 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			if (polarionPlannedIn.toLowerCase().contains("Snap".toLowerCase())) {
 				List<File> productCertFiles = new ArrayList<File>();
 				if (smt.compose.startsWith("RHEL-ALT")) {	// RHEL-ALT compose
-					if (smt.arch.equals("aarch64")) productCertFiles.add(new File(getProperty("automation.dir", "/tmp")+"/certs/rhel-alt-"+smt.redhatReleaseXY+"-beta/363_.pem"));	// Red Hat Enterprise Linux for ARM 64 Beta
-					if (smt.arch.equals("ppc64le")) productCertFiles.add(new File(getProperty("automation.dir", "/tmp")+"/certs/rhel-alt-"+smt.redhatReleaseXY+"-beta/362_.pem"));	// Red Hat Enterprise Linux for Power 9 Beta
-					if (smt.arch.equals("s390x"))	productCertFiles.add(new File(getProperty("automation.dir", "/tmp")+"/certs/rhel-alt-"+smt.redhatReleaseXY+"-beta/433_.pem"));	// Red Hat Enterprise Linux for IBM System z (Structure A) Beta
+					if (smt.variant.equals("Server") && smt.arch.equals("aarch64"))		productCertFiles.add(new File(getProperty("automation.dir", "/tmp")+String.format("/certs/rhel-alt-%s-beta/%s-%s-363.pem",smt.redhatReleaseXY,smt.variant,smt.arch)));	// Red Hat Enterprise Linux for ARM 64 Beta
+					if (smt.variant.equals("Server") && smt.arch.equals("ppc64le"))		productCertFiles.add(new File(getProperty("automation.dir", "/tmp")+String.format("/certs/rhel-alt-%s-beta/%s-%s-362.pem",smt.redhatReleaseXY,smt.variant,smt.arch)));	// Red Hat Enterprise Linux for Power 9 Beta
+					if (smt.variant.equals("Server") && smt.arch.equals("s390x"))		productCertFiles.add(new File(getProperty("automation.dir", "/tmp")+String.format("/certs/rhel-alt-%s-beta/%s-%s-433.pem",smt.redhatReleaseXY,smt.variant,smt.arch)));	// Red Hat Enterprise Linux for IBM System z (Structure A) Beta
 				} else if (smt.compose.startsWith("RHEL-")){	// RHEL compose
-					if (smt.arch.equals("ppc64le"))	productCertFiles.add(new File(getProperty("automation.dir", "/tmp")+"/certs/rhel-"+smt.redhatReleaseXY+"-beta/279_.pem"));	// Red Hat Enterprise Linux for Power, little endian
-					if (smt.arch.equals("ppc64"))	productCertFiles.add(new File(getProperty("automation.dir", "/tmp")+"/certs/rhel-"+smt.redhatReleaseXY+"-beta/74_.pem"));	// Red Hat Enterprise Linux for Power, big endian
-					if (smt.arch.equals("s390x"))	productCertFiles.add(new File(getProperty("automation.dir", "/tmp")+"/certs/rhel-"+smt.redhatReleaseXY+"-beta/72_.pem"));	// Red Hat Enterprise Linux for IBM z Systems
-					if (smt.arch.equals("x86_64") && smt.variant.equals("Client"))		productCertFiles.add(new File(getProperty("automation.dir", "/tmp")+"/certs/rhel-"+smt.redhatReleaseXY+"-beta/68_.pem"));	// Red Hat Enterprise Linux Desktop
-					if (smt.arch.equals("x86_64") && smt.variant.equals("ComputeNode"))	productCertFiles.add(new File(getProperty("automation.dir", "/tmp")+"/certs/rhel-"+smt.redhatReleaseXY+"-beta/76_.pem"));	// Red Hat Enterprise Linux for Scientific Computing
+					if (smt.variant.equals("Server") && smt.arch.equals("aarch64"))		productCertFiles.add(new File(getProperty("automation.dir", "/tmp")+String.format("/certs/rhel-%s-beta/%s-%s-294.pem",smt.redhatReleaseXY,smt.variant,smt.arch)));	// Red Hat Enterprise Linux Server for ARM
+					if (smt.variant.equals("Server") && smt.arch.equals("ppc64le"))		productCertFiles.add(new File(getProperty("automation.dir", "/tmp")+String.format("/certs/rhel-%s-beta/%s-%s-279.pem",smt.redhatReleaseXY,smt.variant,smt.arch)));	// Red Hat Enterprise Linux for Power, little endian
+					if (smt.variant.equals("Server") && smt.arch.equals("ppc64"))		productCertFiles.add(new File(getProperty("automation.dir", "/tmp")+String.format("/certs/rhel-%s-beta/%s-%s-74.pem",smt.redhatReleaseXY,smt.variant,smt.arch)));	// Red Hat Enterprise Linux for Power, big endian
+					if (smt.variant.equals("Server") && smt.arch.equals("s390x"))		productCertFiles.add(new File(getProperty("automation.dir", "/tmp")+String.format("/certs/rhel-%s-beta/%s-%s-72.pem",smt.redhatReleaseXY,smt.variant,smt.arch)));	// Red Hat Enterprise Linux for IBM z Systems
+//HTB				if (smt.variant.equals("Server") && smt.arch.equals("x86_64"))		productCertFiles.add(new File(getProperty("automation.dir", "/tmp")+String.format("/certs/rhel-%s-beta/%s-%s-69.pem",smt.redhatReleaseXY,smt.variant,smt.arch)));	// Red Hat Enterprise Linux Server
+					if (smt.variant.equals("Server") && smt.arch.equals("i386"))		productCertFiles.add(new File(getProperty("automation.dir", "/tmp")+String.format("/certs/rhel-%s-beta/%s-%s-69.pem",smt.redhatReleaseXY,smt.variant,smt.arch)));	// Red Hat Enterprise Linux Server
+					if (smt.variant.equals("Client"))									productCertFiles.add(new File(getProperty("automation.dir", "/tmp")+String.format("/certs/rhel-%s-beta/%s-%s-68.pem",smt.redhatReleaseXY,smt.variant,smt.arch)));	// Red Hat Enterprise Linux Desktop
+					if (smt.variant.equals("ComputeNode"))								productCertFiles.add(new File(getProperty("automation.dir", "/tmp")+String.format("/certs/rhel-%s-beta/%s-%s-76.pem",smt.redhatReleaseXY,smt.variant,smt.arch)));	// Red Hat Enterprise Linux for Scientific Computing
+//HTB				if (smt.variant.equals("Workstation") && smt.arch.equals("x86_64"))	productCertFiles.add(new File(getProperty("automation.dir", "/tmp")+String.format("/certs/rhel-%s-beta/%s-%s-71.pem",smt.redhatReleaseXY,smt.variant,smt.arch)));	// Red Hat Enterprise Linux Workstation
+					if (smt.variant.equals("Workstation") && smt.arch.equals("i386"))	productCertFiles.add(new File(getProperty("automation.dir", "/tmp")+String.format("/certs/rhel-%s-beta/%s-%s-71.pem",smt.redhatReleaseXY,smt.variant,smt.arch)));	// Red Hat Enterprise Linux Workstation
 				}
 				log.info("Manually placing a RHEL product cert onto the system to enable more testing...");
 				smt.installProductCerts(productCertFiles);	
@@ -1769,7 +1774,11 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		String poolResource = "/pools/"+pool.poolId;
 			   poolResource = "/pools/"+masterPoolId;
 		JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, poolResource));
+		// get the json Marketing Product
+		JSONObject jsonMarketingProduct = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, jsonPool.getJSONObject("owner").getString("href")+"/products/"+jsonPool.getString("productId")));
 		String instanceMultiplier = CandlepinTasks.getPoolProductAttributeValue(jsonPool, "instance_multiplier");
+		
+		// get a slimmed down version of the pool
 		String exclude = "?exclude=created"	// excluding data feels like the right thing to do, but could be the wrong thing if it is not calculated data - TODO: review with devel
 				+ "&exclude=consumed"
 				+ "&exclude=calculatedAttributes"
@@ -1786,6 +1795,11 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		// re-adjust the quantity on the json pool when instance based
 		if (instanceMultiplier!=null) {
 			jsonPool.put("quantity", jsonPool.getInt("quantity")/Integer.valueOf(instanceMultiplier));
+		}
+		
+		// re-adjust the quantity on the json pool when the marketing product has a multiplier
+		if (jsonMarketingProduct.has("multiplier")) {
+			jsonPool.put("quantity", jsonPool.getInt("quantity")/jsonMarketingProduct.getInt("multiplier"));
 		}
 		
 		// change the start/end dates on the json pool

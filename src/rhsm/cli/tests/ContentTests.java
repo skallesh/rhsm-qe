@@ -497,7 +497,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 				log.warning("This test will likely fail with '"+expectedStdout+"' because there are no available packages from repo '"+repoLabel+"'.");
 			}
 		}
-
+		
 		// install availableGroup
 		clienttasks.yumInstallGroup(availableGroup);
 		
