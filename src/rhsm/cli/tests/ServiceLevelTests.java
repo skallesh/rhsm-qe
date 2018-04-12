@@ -651,6 +651,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		}
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) expectedExitCode = new Integer(70);	// EX_SOFTWARE	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.9-1")) {String swap=expectedStderr; expectedStderr=expectedStdout; expectedStdout=swap;}	// post commit a695ef2d1da882c5f851fde90a24f957b70a63ad
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-1")) expectedStderr = "HTTP error code 400: "+expectedStderr;	// post commit 630e1a2eb06e6bfacac669ce11f38e228c907ea9 1507030: RestlibExceptions should show they originate server-side
 		Assert.assertEquals(result.getExitCode(), expectedExitCode, "Exit code from an attempt to subscribe with auto and an unavailable service level.");
 		Assert.assertEquals(result.getStdout().trim(), expectedStdout, "Stdout from an attempt to subscribe with auto and an unavailable service level.");
 		Assert.assertEquals(result.getStderr().trim(), expectedStderr, "Stderr from an attempt to subscribe with auto and an unavailable service level.");
