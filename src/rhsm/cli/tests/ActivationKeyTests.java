@@ -82,6 +82,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		
 		String expectedStderr = String.format("Activation key '%s' not found for organization '%s'.",unknownActivationKeyName, org);
 		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">", "0.9.30-1")) expectedStderr = String.format("None of the activation keys specified exist for this org.");	// Follows: candlepin-0.9.30-1	// https://github.com/candlepin/candlepin/commit/bcb4b8fd8ee009e86fc9a1a20b25f19b3dbe6b2a
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-1")) expectedStderr = "HTTP error (400 - Bad Request): "+expectedStderr;	// post commit 630e1a2eb06e6bfacac669ce11f38e228c907ea9 1507030: RestlibExceptions should show they originate server-side
 		Integer expectedExitCode = new Integer(255);
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) expectedExitCode = new Integer(70);	// EX_SOFTWARE	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
 		Assert.assertEquals(sshCommandResult.getStderr().trim(), expectedStderr, "Stderr message from an attempt to register with an unknown activation key '"+unknownActivationKeyName+"' to org '"+org+"'.");
