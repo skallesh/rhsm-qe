@@ -682,7 +682,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		
 		// attempt to run command "rct cat-cert /etc/pki/consumer/cert.pem" as non-root-user
 		String command = "rct cat-cert "+consumerCert.file.getPath();
-		SSHCommandResult result = client.runCommandAndWait("su "+nonRootUser+" --command '"+command+"'");
+		SSHCommandResult result = client.runCommandAndWait("su - "+nonRootUser+" --command '"+command+"'");
 		
 		// assert expected results
 		Assert.assertEquals(result.getExitCode(), expectedExitCode, "ExitCode from command '"+command+"' run as a non-root user.");
