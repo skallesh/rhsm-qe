@@ -1847,6 +1847,9 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(70)/*EX_SOFTWARE*/, "The expected exit code from call to '"+rhnMigrateTool+"' with invalid RHSM credentials.");
 		//Assert.assertContainsMatch(sshCommandResult.getStdout(), "Unable to connect to certificate server.  See "+clienttasks.rhsmLogFile+" for more details.", "The expected stdout result from call to "+rhnMigrateTool+" with invalid credentials.");		// valid prior to bug fix 789008
 		String expectedStdout = "Unable to connect to certificate server: "+servertasks.invalidCredentialsMsg()+".  See "+clienttasks.rhsmLogFile+" for more details.";
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-1")) {	// post commit 630e1a2eb06e6bfacac669ce11f38e228c907ea9 1507030: RestlibExceptions should show they originate server-side
+			expectedStdout = "Unable to connect to certificate server: "+"HTTP error (401 - Unauthorized): "+servertasks.invalidCredentialsMsg()+".  See "+clienttasks.rhsmLogFile+" for more details.";
+		}
 		Assert.assertTrue(sshCommandResult.getStdout().trim().endsWith(expectedStdout), "The expected stdout result from call to '"+rhnMigrateTool+"' with invalid RHSM credentials ended with: "+expectedStdout);
 	}
 

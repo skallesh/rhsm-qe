@@ -2730,7 +2730,11 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		String basicauthproxyUrl = String.format("%s:%s", sm_basicauthproxyHostname,sm_basicauthproxyPort); basicauthproxyUrl = basicauthproxyUrl.replaceAll(":$", "");
 		String noauthproxyUrl = String.format("%s:%s", sm_noauthproxyHostname,sm_noauthproxyPort); noauthproxyUrl = noauthproxyUrl.replaceAll(":$", "");
 		String uErrMsg = servertasks.invalidCredentialsMsg(); //"Invalid username or password";
-		String oErrMsg = /*"Organization/Owner bad-org does not exist."*/"Organization bad-org does not exist.";
+		String oErrMsg = "Organization/Owner bad-org does not exist."; oErrMsg = "Organization bad-org does not exist.";
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-1")) {	// post commit 630e1a2eb06e6bfacac669ce11f38e228c907ea9 1507030: RestlibExceptions should show they originate server-side
+			uErrMsg = "HTTP error (401 - Unauthorized): "+uErrMsg;
+			oErrMsg = "HTTP error (400 - Bad Request): "+oErrMsg;
+		}
 		if (sm_serverType.equals(CandlepinType.katello))	oErrMsg = "Couldn't find organization 'bad-org'";
 //		String hostname = clienttasks.getConfParameter("hostname");
 //		String prefix = clienttasks.getConfParameter("prefix");
@@ -3426,7 +3430,11 @@ if (false) {	// DELETEME in favor of blockedByBadAuthBugs below
 						bugIds.add("1263474");
 						blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 						
-						ll.add(Arrays.asList(new Object[]{	blockedByBzBug,	l.get(1),	l.get(2),	l.get(3),	l.get(4),	l.get(5),	l.get(6),	l.get(7),	l.get(8),	l.get(9),	l.get(10),	new Integer(70)/*EX_SOFTWARE*/,	l.get(12),	new String("Standalone candlepin does not support redeeming a subscription."),	l.get(14),	l.get(15),	l.get(16)}));
+						String expectedStderr = "Standalone candlepin does not support redeeming a subscription.";
+						if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-1")) {	// post commit 630e1a2eb06e6bfacac669ce11f38e228c907ea9 1507030: RestlibExceptions should show they originate server-side
+							expectedStderr = "HTTP error code 503: "+expectedStderr;	// HTTP error (401 - Unauthorized): Invalid Credentials
+						}
+						ll.add(Arrays.asList(new Object[]{	blockedByBzBug,	l.get(1),	l.get(2),	l.get(3),	l.get(4),	l.get(5),	l.get(6),	l.get(7),	l.get(8),	l.get(9),	l.get(10),	new Integer(70)/*EX_SOFTWARE*/,	l.get(12),	expectedStderr,	l.get(14),	l.get(15),	l.get(16)}));
 						continue;
 					}
 				}
