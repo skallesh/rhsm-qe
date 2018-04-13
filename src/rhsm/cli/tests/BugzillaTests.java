@@ -3317,6 +3317,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		String expected = "Consumer " + consumerId + " has been deleted";
 		if (!clienttasks.workaroundForBug876764(sm_serverType))
 			expected = "Unit " + consumerId + " has been deleted";
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-1")) expected = "HTTP error code 410: "+expected;	// post commit 630e1a2eb06e6bfacac669ce11f38e228c907ea9 1507030: RestlibExceptions should show they originate server-side
 		Assert.assertEquals(result.getStderr().trim(), expected);
 	}
 
@@ -3344,6 +3345,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		SSHCommandResult result = clienttasks.register_(sm_serverAdminUsername, sm_serverAdminPassword, orgname, null,
 				null, null, null, null, null, null, (String) null, null, null, null, true, null, null, null, null, null);
 		String expected = "Organization " + orgname + " does not exist.";
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-1")) expected = "HTTP error code 400: "+expected;	// post commit 630e1a2eb06e6bfacac669ce11f38e228c907ea9 1507030: RestlibExceptions should show they originate server-side
 		Assert.assertEquals(result.getStderr().trim(), expected);
 	}
 
@@ -3692,6 +3694,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			expectedStdout += String.format("\n" + "Registering to: %s:%s%s", clienttasks.getConfParameter("hostname"),
 					clienttasks.getConfParameter("port"), clienttasks.getConfParameter("prefix"));
 		Assert.assertEquals(result.getStdout().trim(), expectedStdout.trim(), "stdout");
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-1")) expectedStderr = "HTTP error code 404: "+expectedStderr;	// post commit 630e1a2eb06e6bfacac669ce11f38e228c907ea9 1507030: RestlibExceptions should show they originate server-side
 		Assert.assertEquals(result.getStderr().trim(), expectedStderr.trim(), "stderr");
 	}
 
@@ -4370,10 +4373,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 					if (!(providedProductId.isEmpty())) {
 					    break;
 					}
-					
-			}
-			
-
+				}
 			}
 		}
 		InstalledProduct BeforeAttaching = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productName",
@@ -4383,10 +4383,10 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		List<SubscriptionPool> AvailableStackableSubscription = SubscriptionPool
 			.findAllInstancesWithMatchingFieldFromList("productId", productIds,
 					clienttasks.getAvailableSubscriptionsMatchingInstalledProducts());
-		System.out.println(AvailableStackableSubscription.size()+ "size .............");
 		for(SubscriptionPool pools :AvailableStackableSubscription){
-		    clienttasks.subscribeToSubscriptionPool(pools);
-		}
+			quantity = pools.suggested;
+			clienttasks.subscribe(null, null, pools.poolId, null, null, Integer.toString(quantity), null, null,
+					null, null, null, null, null);		}
 		
 		InstalledProduct AfterAttaching = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productName",
 				providedProductId, clienttasks.getCurrentlyInstalledProducts());
@@ -4653,8 +4653,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	public void testAttemptRegisterWithWhiteSpacesInUsername() {
 		SSHCommandResult result = clienttasks.register_("user name", "password", sm_clientOrg, null, null, null, null,
 				null, null, null, (String) null, null, null, null, true, null, null, null, null, null);
-		Assert.assertEquals(result.getStderr().trim(), servertasks.invalidCredentialsMsg(),
-				"The expected stdout result when attempting to register with a username containing whitespace.");
+		String expectedStderr="The expected stdout result when attempting to register with a username containing whitespace.";
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-1")) expectedStderr = "HTTP error code 401: "+expectedStderr;	// post commit 630e1a2eb06e6bfacac669ce11f38e228c907ea9 1507030: RestlibExceptions should show they originate server-side
+		Assert.assertEquals(result.getStderr().trim(), servertasks.invalidCredentialsMsg(),expectedStderr);
 	}
 
 	/**

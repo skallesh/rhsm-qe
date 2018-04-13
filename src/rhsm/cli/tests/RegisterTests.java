@@ -226,7 +226,9 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		// assert the sshCommandResult here
 		if (expectedExitCode!=null) Assert.assertEquals(sshCommandResult.getExitCode(), expectedExitCode);
 		if (expectedStdoutRegex!=null) Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), expectedStdoutRegex);
-		if (expectedStderrRegex!=null) Assert.assertContainsMatch(sshCommandResult.getStderr().trim(), expectedStderrRegex);
+		if (expectedStderrRegex!=null) 
+			if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-1")) expectedStderrRegex = "HTTP error code 401: "+expectedStderrRegex;	// post commit 630e1a2eb06e6bfacac669ce11f38e228c907ea9 1507030: RestlibExceptions should show they originate server-side	
+			Assert.assertContainsMatch(sshCommandResult.getStderr().trim(), expectedStderrRegex);
 	}
 	@DataProvider(name="getAttemptRegistrationWithInvalidCredentials_Test")
 	public Object[][] getAttemptRegistrationWithInvalidCredentials_TestDataAs2dArray() {
@@ -1393,7 +1395,9 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		// assert the sshCommandResult here
 		if (expectedExitCode!=null) Assert.assertEquals(sshCommandResult.getExitCode(), expectedExitCode, "The expected exit code from the register attempt.");
 		if (expectedStdoutRegex!=null) Assert.assertContainsMatch(sshCommandResult.getStdout(), expectedStdoutRegex, "The expected stdout result from register while supplying interactive credentials.");
-		if (expectedStderrRegex!=null) Assert.assertContainsMatch(sshCommandResult.getStderr(), expectedStderrRegex, "The expected stderr result from register while supplying interactive credentials.");
+		if (expectedStderrRegex!=null)
+			if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-1")) expectedStderrRegex = "HTTP error code 401: "+expectedStderrRegex;	// post commit 630e1a2eb06e6bfacac669ce11f38e228c907ea9 1507030: RestlibExceptions should show they originate server-side
+			Assert.assertContainsMatch(sshCommandResult.getStderr(), expectedStderrRegex, "The expected stderr result from register while supplying interactive credentials.");
 	}
 	@DataProvider(name="getRegisterWithInteractivePromptingForCredentials_TestData")
 	public Object[][] getRegisterWithInteractivePromptingForCredentials_TestDataAs2dArray() {
