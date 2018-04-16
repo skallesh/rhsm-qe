@@ -132,6 +132,10 @@ public class RedeemTests extends SubscriptionManagerCLITestScript {
 		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.7-1")) {	// candlepin commit 676ce6c2786203a33ec5eedc8dadcd664a62f09e 1263474: Standalone candlepin now returns the expected error message and code
 			expectedMsgFromCandlepin = "Standalone candlepin does not support redeeming a subscription.";
 		}
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-1")) {
+			expectedMsgFromCandlepin = "HTTP error code 503: "+expectedMsgFromCandlepin;	// post commit 630e1a2eb06e6bfacac669ce11f38e228c907ea9 1507030: RestlibExceptions should show they originate server-side
+		}
+
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.9-1")) {	// post commit a695ef2d1da882c5f851fde90a24f957b70a63ad
 			Assert.assertTrue(redeemResult.getStderr().trim().startsWith(expectedMsgFromCandlepin),"stderr indicates '"+expectedMsgFromCandlepin+"'");
 			Assert.assertEquals(redeemResult.getExitCode(), Integer.valueOf(70)/*EX_SOFTWARE*/,"Exit code from redeem when executed against a standalone candlepin server.");

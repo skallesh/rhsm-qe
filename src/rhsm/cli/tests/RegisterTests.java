@@ -238,7 +238,10 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		if (clienttasks==null) return ll;
 		
 		String uErrMsg = servertasks.invalidCredentialsRegexMsg();
-
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-1")) {	// post commit 630e1a2eb06e6bfacac669ce11f38e228c907ea9 1507030: RestlibExceptions should show they originate server-side
+			uErrMsg = ("^"+"HTTP error (401 - Unauthorized): "+servertasks.invalidCredentialsMsg()+"$").replaceAll("\\(","\\\\(").replaceAll("\\)","\\\\)");	// HTTP error (401 - Unauthorized): Invalid Credentials
+		}
+		
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
 			// Object bugzilla, String username, String password, String owner, String type, String consumerId, Boolean autosubscribe, Boolean force, String debug, Integer exitCode, String stdoutRegex, String stderrRegex
 			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug(new String[]{"1119688"}),								sm_clientUsername,					String.valueOf(getRandInt()),	null,				null,	null,	null,	null,		Boolean.TRUE,	null,	Integer.valueOf(70)/*EX_SOFTWARE*/,	null,	uErrMsg}));
@@ -1404,8 +1407,12 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		if (servertasks==null) return ll;
 		if (clienttasks==null) return ll;
 		
-		String uErrMsg = servertasks.invalidCredentialsRegexMsg();
 		String x = String.valueOf(getRandInt());
+		String uErrMsg = servertasks.invalidCredentialsRegexMsg();
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-1")) {	// post commit 630e1a2eb06e6bfacac669ce11f38e228c907ea9 1507030: RestlibExceptions should show they originate server-side
+			uErrMsg = ("^"+"HTTP error (401 - Unauthorized): "+servertasks.invalidCredentialsMsg()+"$").replaceAll("\\(","\\\\(").replaceAll("\\)","\\\\)");	// HTTP error (401 - Unauthorized): Invalid Credentials
+		}
+		
 		if (client.runCommandAndWait("rpm -q expect").getExitCode().intValue()==0) {	// is expect installed?
 			// Object bugzilla, String promptedUsername, String promptedPassword, String commandLineUsername, String commandLinePassword, String commandLineOwner, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex
 			ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername,			null,						null,				sm_clientPassword,	sm_clientOrg,	new Integer(0),		"The system has been registered with ID: [a-f,0-9,\\-]{36}",				null}));
