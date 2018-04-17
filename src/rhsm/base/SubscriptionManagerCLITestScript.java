@@ -256,9 +256,9 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			infoMsg = client1.runCommandAndWait("uname -a").getStdout();	// Linux jsefler-onprem-server.usersys.redhat.com 2.6.32-122.el6.x86_64 #1 SMP Wed Mar 9 23:54:34 EST 2011 x86_64 x86_64 x86_64 GNU/Linux
 			log.info(infoMsg); output.write(infoMsg+"\n");
 			
-			infoMsg = "# "+client1tasks.listCommand(null, null, null, true, null, null, null, null, null, null, null, null, null, null);
+			infoMsg = "# "+client1tasks.listCommand(null, null, null, true, null, null, null, null, null, null, null, null, null, null, null);
 			log.info(infoMsg); output.write(infoMsg+"\n");
-			infoMsg = client1.runCommandAndWait(client1tasks.listCommand(null, null, null, true, null, null, null, null, null, null, null, null, null, null)).getStdout();
+			infoMsg = client1.runCommandAndWait(client1tasks.listCommand(null, null, null, true, null, null, null, null, null, null, null, null, null, null, null)).getStdout();
 			log.info(infoMsg); output.write(infoMsg+"\n");
 			
 			for (ProductCert productCert : client1tasks.getCurrentProductCerts()) {
@@ -299,9 +299,9 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			infoMsg = client2.runCommandAndWait("uname -a").getStdout();	// Linux jsefler-onprem-server.usersys.redhat.com 2.6.32-122.el6.x86_64 #1 SMP Wed Mar 9 23:54:34 EST 2011 x86_64 x86_64 x86_64 GNU/Linux
 			log.info(infoMsg); output.write(infoMsg+"\n");
 			
-			infoMsg = "# "+client2tasks.listCommand(null, null, null, true, null, null, null, null, null, null, null, null, null, null);
+			infoMsg = "# "+client2tasks.listCommand(null, null, null, true, null, null, null, null, null, null, null, null, null, null, null);
 			log.info(infoMsg); output.write(infoMsg+"\n");
-			infoMsg = client2.runCommandAndWait(client2tasks.listCommand(null, null, null, true, null, null, null, null, null, null, null, null, null, null)).getStdout();
+			infoMsg = client2.runCommandAndWait(client2tasks.listCommand(null, null, null, true, null, null, null, null, null, null, null, null, null, null, null)).getStdout();
 			log.info(infoMsg); output.write(infoMsg+"\n");
 			
 			for (ProductCert productCert : client2tasks.getCurrentProductCerts()) {

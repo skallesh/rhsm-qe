@@ -734,6 +734,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.10.3-1")) options.add("--match-installed");	// added by Bug 654501 - [RFE] subscription-manager list should accept filtering
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.6-1")) options.add("--matches=FILTER_STRING");	// added by Bug 1146125 - [RFE] would like a --contains-text option for subscription-manager list module
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) options.add("--pool-only");	// added by Bug 1159974 - RFE: Add a --pool-only option to the list subcommand	// commit 25cb581cb6ebe13063d0f78a5020715a2854d337
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-1")) options.add("--after=AFTER");	// added by Bug 1479353 - [RFE] subscription-manager list should provide an easier means to show subscriptions which start in the future	// commit ae9df2951ae3d17b50dc7c8f1c1ffa04c9edb8fc
 		options.add("--proxy=PROXY_URL");
 		options.add("--proxyuser=PROXY_USER");
 		options.add("--proxypassword=PROXY_PASSWORD");

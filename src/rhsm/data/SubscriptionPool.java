@@ -288,6 +288,7 @@ public class SubscriptionPool extends AbstractCommandLineData {
 		regexes.put("serviceType",				"Service Type:(.*)");
 		regexes.put("multiEntitlement",			"Multi-Entitlement:(.*)");
 		regexes.put("subscriptionType",			"Subscription Type:(.*)");	// added by Bug 1029968 (replaces multiEntitlement)	// for possible values see https://bugzilla.redhat.com/show_bug.cgi?id=1029968#c2
+		regexes.put("startDate",				"Starts:(.*)");	// added by commit 42004d4d5402802a42f0763caa6615948621dadc	// subscription-manager-1.21.2-1	// for the benefit of RFE Bug 1479353
 		regexes.put("endDate",					"Ends:(.*)");
 		regexes.put("machineType",				"System Type:(.*)");	// changed by bug 874760	"Machine Type:(.*)");
 	

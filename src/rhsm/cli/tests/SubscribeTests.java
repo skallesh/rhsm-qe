@@ -1283,7 +1283,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		
 		// for debugging purposes, list what is currently available so we can see the available quantity before we attempt to attach
-		clienttasks.list_(null, true, null, null, null, null, null, null, null, null, null, null, null, null);
+		clienttasks.list_(null, true, null, null, null, null, null, null, null, null, null, null, null, null, null);
 		
 		// subscribe with quantity
 		SSHCommandResult sshCommandResult = clienttasks.subscribe_(null,null,pool.poolId,null,null,quantity,null,null,null, null, null, null, null);
@@ -1803,7 +1803,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		} else clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null, null, null);
 		
 		// call list with --pool-only to get a random list of available poolids
-		String poolOnlyListCommand = clienttasks.listCommand(all, true, null, null, null, null, matchInstalled, noOverlap, null, true, null, null, null, null);
+		String poolOnlyListCommand = clienttasks.listCommand(all, true, null, null, null, null, null, matchInstalled, noOverlap, null, true, null, null, null, null);
 		String tmpFile = "/tmp/poolIds.txt";
 		//RemoteFileTasks.runCommandAndAssert(client, poolOnlyListCommand+" > "+tmpFile, 0);
 		RemoteFileTasks.runCommandAndAssert(client, poolOnlyListCommand+" > "+tmpFile+" && echo abc123 >> "+tmpFile, 0);
@@ -1893,7 +1893,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		} else clienttasks.unsubscribe_(true, (BigInteger)null, null, null, null, null, null);
 		
 		// call list with --pool-only to get a random list of available poolids
-		String poolOnlyListCommand = clienttasks.listCommand(all, true, null, null, null, null, matchInstalled, noOverlap, null, true, null, null, null, null);
+		String poolOnlyListCommand = clienttasks.listCommand(all, true, null, null, null, null, null, matchInstalled, noOverlap, null, true, null, null, null, null);
 		String tmpFile = "/tmp/poolIds.txt";
 		RemoteFileTasks.runCommandAndAssert(client, poolOnlyListCommand+" > "+tmpFile, 0);
 		SSHCommandResult poolOnlyListResult = client.runCommandAndWait("cat "+tmpFile);

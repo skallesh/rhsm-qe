@@ -68,7 +68,7 @@ public class AutoAttachDisabledByOwnerTests extends SubscriptionManagerCLITestSc
 	}
 	
 	Assert.assertTrue(result.getStderr().trim().equals(expected),"indicating autobindDisabled is set true on owner");
-	SSHCommandResult consumedSubscriptions = clienttasks.list(null, null, true, null, null, null, null, null, null,null, null, null, null, null);
+	SSHCommandResult consumedSubscriptions = clienttasks.list(null, null, true, null, null, null, null, null, null,null, null, null, null, null, null);
 	Assert.assertTrue(consumedSubscriptions.getStdout().trim().equals(expectedConsumedPoolResult));
 
 	/* verify if healing works on a owner with autobindDisabled=false */
@@ -111,7 +111,7 @@ public class AutoAttachDisabledByOwnerTests extends SubscriptionManagerCLITestSc
 	}
 	Assert.assertTrue(result.getStderr().trim().equals(expected), "indicating auto-attach is disabled for owner");
 	consumedSubscriptions = clienttasks.list(null, null, true, null, null, null, null, null, null, null, null, null,
-		null, null);
+		null, null, null);
 	Assert.assertTrue(consumedSubscriptions.getStdout().trim().equals(expectedConsumedPoolResult));
 
 	/*
@@ -132,7 +132,7 @@ public class AutoAttachDisabledByOwnerTests extends SubscriptionManagerCLITestSc
 	Assert.assertFalse(result.getStderr().trim().equals(expected),
 		"indicationg autobindDisabled is set false on owner");
 	consumedSubscriptions = clienttasks.list(null, null, true, null, null, null, null, null, null, null, null, null,
-		null, null);
+		null, null, null);
 	Assert.assertFalse(consumedSubscriptions.getStdout().trim().equals(expectedConsumedPoolResult));
 
 	/*
@@ -147,7 +147,7 @@ public class AutoAttachDisabledByOwnerTests extends SubscriptionManagerCLITestSc
 	}
 	Assert.assertFalse(result.getStderr().trim().equals(expected), "indicating auto-attach is disabled for owner");
 	consumedSubscriptions = clienttasks.list(null, null, true, null, null, null, null, null, null, null, null, null,
-		null, null);
+		null, null, null);
 	Assert.assertFalse(consumedSubscriptions.getStdout().trim().equals(expectedConsumedPoolResult));
 	/*
 	 * verify when disableAutobind is set to false , auto-heal works
