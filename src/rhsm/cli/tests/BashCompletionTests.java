@@ -350,6 +350,11 @@ public class BashCompletionTests extends SubscriptionManagerCLITestScript{
 			if (bashCommand.startsWith("subscription-manager release ")) bugIds.add("1441397");
 			if (bashCommand.startsWith("rhsm-debug system ")) bugIds.add("1441397");
 			
+			// Bug 1568609 - subscription-manager help fixes needed for new "subscription-manager list --after" feature 
+			if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-1")) {	// commit ae9df2951ae3d17b50dc7c8f1c1ffa04c9edb8fc
+				if (bashCommand.startsWith("subscription-manager list")) bugIds.add("1568609");
+			}
+			
 			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 			
 			// append a new row to the dataProvider
