@@ -713,6 +713,17 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 			}
 		}
 		// END OF WORKAROUND
+		// TEMPORARY WORKAROUND
+		if (Integer.valueOf(clienttasks.redhatReleaseX)>=7) {
+			boolean invokeWorkaroundWhileBugIsOpen = true;
+			String bugId="1569188"; // Bug 1569188 - a DEBUG logging statement surfaces to stderr when trying to rct cat-cert a protected file as a non-root-user (edit) 
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
+			if (invokeWorkaroundWhileBugIsOpen) {
+				log.warning("While bug '"+bugId+"' is open, we will skip the empty stderr assertion on RHEL6");
+				return;
+			}
+		}
+		// END OF WORKAROUND
 		Assert.assertEquals(result.getStderr().trim(), "", "Stderr from command '"+command+"' run as a non-root user.");
 	}
 	@AfterGroups(groups={"setup"}, value={"VerifyConsumerCertsAreNotAccessibleByNonRootUserUsingRct_Test"})
