@@ -1318,8 +1318,10 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 		modifiedManPage = modifiedManPage.replaceAll("RHN", "Red Hat Network");
 		modifiedManPage = modifiedManPage.replaceAll("RHSM", "Red Hat Subscription Management");
 		modifiedManPage = modifiedManPage.replaceAll("RHEL", "Red Hat Enterprise Linux");
+		modifiedManPage = modifiedManPage.replaceAll("repomd_gpg_url", "repository_meta_data_G_Not_UNIX_privacy_guard_url");
 		modifiedManPage = modifiedManPage.replaceAll("-url", "-uniform-resource-location");	// locator is not recognized by hunspell-1.2.8-16.el6
 		modifiedManPage = modifiedManPage.replaceAll("_url", "_uniform_resource_location");	// locator is not recognized by hunspell-1.2.8-16.el6
+		modifiedManPage = modifiedManPage.replaceAll("metadata", "data about data");
 		modifiedManPage = modifiedManPage.replaceAll("URL", "Uniform Resource Location");	// Locator is not recognized by hunspell-1.2.8-16.el6
 		modifiedManPage = modifiedManPage.replaceAll("\\.pem", ".certificate");	// Base64-encoded X.509 certificate
 		modifiedManPage = modifiedManPage.replaceAll("PEM file", "Privacy-enhanced mail certificate file");	// Base64-encoded X.509 certificate
