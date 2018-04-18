@@ -1219,7 +1219,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		
 		// verify that NO yum content is available since no entitlements have been granted
 		Integer yumRepolistPackageCount = clienttasks.getYumRepolistPackageCount("enabled");
-		if (yumRepolistPackageCount>0) clienttasks.list_(null, null, true, null, null, null, null, null, null, null, null, null, null, null);	// added only for debugging a failure
+		if (yumRepolistPackageCount>0) clienttasks.list_(null, null, true, null, null, null, null, null, null, null, null, null, null, null, null);	// added only for debugging a failure
 		Assert.assertEquals(yumRepolistPackageCount,new Integer(0),"Expecting no available packages (actual='"+yumRepolistPackageCount+"') because no RHEL subscription have been explicitly attached.");
 		
 		// loop through the available pools looking for those that provide content for this rhelProductCert

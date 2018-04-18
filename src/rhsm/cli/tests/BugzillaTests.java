@@ -203,7 +203,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		ProductCert rhelProductCert = clienttasks.getCurrentRhelProductCert();
 		SubscriptionPool pool = null;
 		for (SubscriptionPool eusSubscriptionPool : SubscriptionPool.parse(
-				clienttasks.list(null, true, null, null, null, null, null, null, "*Extended*", null, null, null, null, null)
+				clienttasks.list(null, true, null, null, null, null, null, null, null, "*Extended*", null, null, null, null, null)
 						.getStdout())) {
 			if ((CandlepinTasks.getPoolProvidedProductIds(sm_client1Username, sm_client1Password, sm_serverUrl,
 					eusSubscriptionPool.poolId).contains(eusProductId))) {
@@ -838,7 +838,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		SSHCommandResult registerResult = clienttasks.register_(null, null, sm_clientOrg, null, null, null, null, null,
 				null, null, name, null, null, null, true, null, null, null, null, null);
 		List<ProductSubscription> consumedResult= clienttasks.getCurrentlyConsumedProductSubscriptions();
-		SSHCommandResult consumedListResult= clienttasks.list(null, null, true, null, null, null, null, null, null, null, null, null, null, null);
+		SSHCommandResult consumedListResult= clienttasks.list(null, null, true, null, null, null, null, null, null, null, null, null, null, null, null);
 
 		String expected_message = "Unable to attach pool with ID '" + expiringPoolId + "'.: Subscriptions for "
 				+ productId + " expired on: " + EndingDate + ".";
@@ -1850,7 +1850,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, LogMarker);
 		// String
 		// result=clienttasks.listAvailableSubscriptionPools().getStdout();
-		String result = clienttasks.list_(null, true, null, null, null, null, null, null, null, null, null, null, null, null)
+		String result = clienttasks.list_(null, true, null, null, null, null, null, null, null, null, null, null, null, null, null)
 				.getStdout();
 		Assert.assertTrue(RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, LogMarker, logMessage)
 				.trim().equals(""));
@@ -3532,7 +3532,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		Assert.assertNotNull(availList);
 		clienttasks.unregister(null, null, null, null);
 		SSHCommandResult listResult = clienttasks.list_(true, true, null, null, null, null, null, null, null, null,
-				null, null, null, null);
+				null, null, null, null, null);
 		String expected = "This system is not yet registered. Try 'subscription-manager register --help' for more information.";
 		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.8-1")) { // post
 			// commit
@@ -3720,7 +3720,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		RemoteFileTasks.runCommandAndAssert(client, "openssl x509 -noout -text -in " + clienttasks.consumerCertFile()
 				+ " > /tmp/stdout; mv /tmp/stdout -f " + clienttasks.consumerCertFile(), 0);
 		SSHCommandResult result = clienttasks.list_(null, true, null, null, null, null, null, null, null, null, null,
-				null, null, null);
+				null, null, null, null);
 		 if(clienttasks.isPackageVersion("subscription-manager", ">=", "1.20.1-1")) {	// commit 79f86e4c043ee751677131ed4e3cf00affd13087
 			Assert.assertEquals(result.getStderr().trim(), "Consumer identity either does not exist or is corrupted. Try register --help", "stdout");
 			    
@@ -4117,7 +4117,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 						+ " > /tmp/stdout; mv /tmp/stdout -f " + certs.get(randomGenerator.nextInt(certs.size())),
 				0);
 		String consumed = clienttasks
-				.list_(null, null, true, null, null, null, null, null, null, null, null, null, null, null).getStderr();
+				.list_(null, null, true, null, null, null, null, null, null, null, null, null, null, null, null).getStderr();
 		String expected = "Error loading certificate";
 		// update the test
 		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.18.4-1")) {
@@ -5592,7 +5592,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		sys.excepthook is missing
 		lost sys.stderr
         */
-		String poolOnlyListCommand = clienttasks.listCommand(true, true, null, null, null, null, null, null, null, true, null, null, null, null);
+		String poolOnlyListCommand = clienttasks.listCommand(true, true, null, null, null, null, null, null, null, null, true, null, null, null, null);
 		String stdinFileSubscribeCommand = clienttasks.subscribeCommand(null, null, (List<String>) null, (List<String>) null, null, null, null, null,InvalidFile, null, null, null, null);
 		SSHCommandResult stdinFileSubscribeCommandResult = client.runCommandAndWait(poolOnlyListCommand +"|" +stdinFileSubscribeCommand, (long) (3/*min*/*60*1000/*timeout*/));
 
@@ -5822,14 +5822,14 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	public List<SubscriptionPool> getAvailableFutureSubscriptionsOndate(String onDateToTest) {
 		return SubscriptionPool.parse(
-				clienttasks.list_(null, true, null, null, null, onDateToTest, null, null, null, null, null, null, null, null)
+				clienttasks.list_(null, true, null, null, null, onDateToTest, null, null, null, null, null, null, null, null, null)
 						.getStdout());
 	}
 
 	protected List<String> listFutureSubscription_OnDate(Boolean available, String ondate) {
 		List<String> PoolId = new ArrayList<String>();
 		SSHCommandResult result = clienttasks.list_(true, true, null, null, null, ondate, null, null, null, null, null,
-				null, null, null);
+				null, null, null, null);
 		List<SubscriptionPool> Pool = SubscriptionPool.parse(result.getStdout());
 		for (SubscriptionPool availablePool : Pool) {
 			if (availablePool.multiEntitlement) {

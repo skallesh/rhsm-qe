@@ -778,6 +778,46 @@ if (false) {
 	}
 	
 	
+	
+	/**
+	 * Configure a rhel-latest-app-stream.repo to http://download.devel.redhat.com/nightly/latest-AppStream-8/compose/AppStream/x86_64/os/ and return the repo label
+	 * @throws IOException
+	 * @throws JSONException
+	 */
+	public String configureLatestAppStreamRepo() throws IOException, JSONException {
+		
+		// locally create a yum.repos.d AppStream repos file
+		
+	    File file = new File("tmp/latest-app-stream.repo"); // this will be in the automation.dir directory on hudson (workspace/automatjon/sm)
+	    // http://download.devel.redhat.com/nightly/latest-AppStream-8/compose/AppStream/x86_64/os/
+	    String baseurlForAppStream = "http://download.devel.redhat.com/nightly/latest-AppStream-"+redhatReleaseX+"/compose/AppStream/$basearch/os/";
+	    baseurlForAppStream = "http://download-node-02.eng.bos.redhat.com/nightly/latest-AppStream-"+redhatReleaseX+"/compose/AppStream/$basearch/os/";
+	    
+	    // check the baseurl for problems
+	    SSHCommandResult baseurlTestResult = sshCommandRunner.runCommandAndWait("curl --stderr /dev/null --insecure --request GET "+baseurlForAppStream.replace("$basearch", arch));
+	    if (baseurlTestResult.getStdout().contains("404 Not Found") || baseurlTestResult.getStdout().contains("The document has moved")) {
+			log.warning("Cannot install updates from latest-AppStream-8 since the baseurl '"+baseurlForAppStream+"' is Not Found.");
+	    	Assert.fail("The Latest AppStream baseurl '"+baseurlForAppStream+"' was Not Found.  Instruct the automator to verify the assembly of this baseurl.");
+	    }
+		
+		// write out the rows of the table...
+    	Writer output = new BufferedWriter(new FileWriter(file));
+	    
+    	// write the rhel-latest-extras repo
+		String repo = "latest-AppStream-8";
+		output.write("["+repo+"]\n");
+		output.write("name     = Latest AppStream updates for RHEL"+redhatReleaseX+"\n");
+		output.write("enabled  = 0\n");
+		output.write("gpgcheck = 0\n");	// needed since the latest extras packages may not be signed until on REL_PREP
+		//output.write("exclude  = redhat-release*\n");	// avoids unwanted updates of rhel-release server variant to workstation
+		output.write("baseurl  = "+baseurlForAppStream+"\n");
+		output.write("\n");
+	    output.close();
+	    
+		RemoteFileTasks.putFile(sshCommandRunner, file.getPath(), "/etc/yum.repos.d/", "0644");
+		return repo;
+	}
+	
 	public void installReleasedRhnClassicPackages(String installOptions, List<String> installPackages) throws IOException, JSONException {
 		
 		// FIRST: prepare a repo for the packages and then yum install
@@ -877,7 +917,7 @@ if (false) {
 	 * @param installOptions
 	 */
 	public void installSubscriptionManagerRPMs(String installOptions) {
-
+		
 		// attempt to install all missing packages
 		List<String> pkgs = new ArrayList<String>();
 		
@@ -895,6 +935,7 @@ if (false) {
 		if /* >= RHEL7.2 */ (redhatReleaseX.equals("7") && Integer.valueOf(redhatReleaseXY.split("\\.")[1])>=2) pkgs = new ArrayList<String>(Arrays.asList(new String[]{"python-rhsm", "subscription-manager", "subscription-manager-gui",   "subscription-manager-initial-setup-addon", "subscription-manager-migration", "subscription-manager-migration-data", "subscription-manager-plugin-ostree", "subscription-manager-plugin-container"}));
 		if /* >= RHEL7.3 */ (redhatReleaseX.equals("7") && Integer.valueOf(redhatReleaseXY.split("\\.")[1])>=3) pkgs = new ArrayList<String>(Arrays.asList(new String[]{"python-rhsm-certificates", "python-rhsm", "subscription-manager", "subscription-manager-gui",   "subscription-manager-initial-setup-addon", "subscription-manager-migration", "subscription-manager-migration-data", "subscription-manager-plugin-ostree", "subscription-manager-plugin-container"}));
 		if /* >= RHEL7.5 */ (redhatReleaseX.equals("7") && Integer.valueOf(redhatReleaseXY.split("\\.")[1])>=5) pkgs = new ArrayList<String>(Arrays.asList(new String[]{"subscription-manager-rhsm-certificates", "subscription-manager-rhsm", "subscription-manager", "subscription-manager-gui",   "subscription-manager-initial-setup-addon", "subscription-manager-migration", "subscription-manager-migration-data", "subscription-manager-plugin-ostree", "subscription-manager-plugin-container", "subscription-manager-cockpit"}));
+		if /* >= RHEL8.0 */ (redhatReleaseX.equals("8") && Integer.valueOf(redhatReleaseXY.split("\\.")[1])>=0) pkgs = new ArrayList<String>(Arrays.asList(new String[]{"subscription-manager-rhsm-certificates", "python3-subscription-manager-rhsm", "subscription-manager", "subscription-manager-gui",   "subscription-manager-initial-setup-addon", "subscription-manager-migration", "subscription-manager-migration-data", "subscription-manager-plugin-ostree", "subscription-manager-plugin-container", "dnf-plugin-subscription-manager.rpm", "subscription-manager-cockpit"}));
 		pkgs.add(0,"expect");	// used for interactive cli prompting
 		pkgs.add(0,"sos");	// used to create an sosreport for debugging hardware
 		pkgs.add(0,"bash-completion");	// used in BashCompletionTests
@@ -903,8 +944,11 @@ if (false) {
 		pkgs.add(0,"policycoreutils-python");	// used for Docker testing - required by docker-selinux package 
 		pkgs.add(0,"net-tools");	// provides netstat which is used to know when vncserver is up
 		pkgs.add(0,"ntp");	// used to synchronize a computer's time with another reference time source.
+		pkgs.add(0,"git");	// used to clone rcm-metadata.git
+		//TODO I don't think we really need to check the version of rhel for the next pkgs, if they don't exist, they just won't be installed. 
 		if /* >= RHEL6 */   (Integer.valueOf(redhatReleaseX)>=6) pkgs.add(0,"python-dateutil");	// dependency for python-rhsm
 		if /* >= RHEL7.5 */ (redhatReleaseX.equals("7") && Integer.valueOf(redhatReleaseXY.split("\\.")[1])>=5) pkgs.add(0,"cockpit");	// indirect dependency for subscription-manager-cockpit, but indirectly requires subscription-manager which means when subscription-manager is removed by yum, then cockpit is also removed
+		if /* >= RHEL8.0 */ (redhatReleaseX.equals("8") && Integer.valueOf(redhatReleaseXY.split("\\.")[1])>=0) pkgs.add(0,"cockpit");	// indirect dependency for subscription-manager-cockpit, but indirectly requires subscription-manager which means when subscription-manager is removed by yum, then cockpit is also removed
 		
 		// TEMPORARY WORKAROUND FOR BUG
 		String bugId = "790116"; boolean invokeWorkaroundWhileBugIsOpen = true;
@@ -949,7 +993,9 @@ if (false) {
 		}
 		
 		// make sure the client's time is accurate
-		if (Integer.valueOf(redhatReleaseX)>=7)	{	// the RHEL7 / F16+ way...
+		if (Integer.valueOf(redhatReleaseX)>=8)	{	// the RHEL8 way...
+			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "systemctl stop ntpd.service && ntpd -q clock.redhat.com && systemctl enable ntpd.service && systemctl start ntpd.service && systemctl is-active ntpd.service", Integer.valueOf(0), "^active$", null);
+		} else if (Integer.valueOf(redhatReleaseX)>=7)	{	// the RHEL7 / F16+ way...
 			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "systemctl stop ntpd.service && ntpdate clock.redhat.com && systemctl enable ntpd.service && systemctl start ntpd.service && systemctl is-active ntpd.service", Integer.valueOf(0), "^active$", null);
 		} else {
 			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "service ntpd stop; ntpdate clock.redhat.com; service ntpd start; chkconfig ntpd on", /*Integer.valueOf(0) DON"T CHECK EXIT CODE SINCE IT RETURNS 1 WHEN STOP FAILS EVEN THOUGH START SUCCEEDS*/null, "Starting ntpd:\\s+\\[  OK  \\]", null);
@@ -2218,7 +2264,7 @@ if (false) {
 	 */
 	public  List<SubscriptionPool> getAvailableSubscriptionsMatchingInstalledProducts() {
 		
-		return SubscriptionPool.parse(list_(null, true, null, null, null, null, true, null, null, null, null, null, null, null).getStdout()); 
+		return SubscriptionPool.parse(list_(null, true, null, null, null, null, null, true, null, null, null, null, null, null, null).getStdout()); 
 	}
 	
 	/**
@@ -2231,7 +2277,7 @@ if (false) {
 	 * @return list of objects representing the subscription-manager list --avail --ondate
 	 */
 	public List<SubscriptionPool> getAvailableFutureSubscriptionsOndate(String onDateToTest) {
-		return SubscriptionPool.parse(list_(null, true, null, null, null, onDateToTest, null, null, null, null, null, null, null, null).getStdout());
+		return SubscriptionPool.parse(list_(null, true, null, null, null, onDateToTest, null, null, null, null, null, null, null, null, null).getStdout());
 	}
 	
 	/**
@@ -5067,7 +5113,7 @@ if (false) {
 	
 	// list module tasks ************************************************************
 	
-	public String listCommand(Boolean all, Boolean available, Boolean consumed, Boolean installed, String servicelevel, String ondate, Boolean matchInstalled, Boolean noOverlap, String matches, Boolean poolOnly, String proxy, String proxyuser, String proxypassword, String noproxy) {
+	public String listCommand(Boolean all, Boolean available, Boolean consumed, Boolean installed, String servicelevel, String ondate, String after, Boolean matchInstalled, Boolean noOverlap, String matches, Boolean poolOnly, String proxy, String proxyuser, String proxypassword, String noproxy) {
 		
 		// assemble the command
 		String command = this.command;				command += " list";	
@@ -5076,6 +5122,7 @@ if (false) {
 		if (consumed!=null && consumed)				command += " --consumed";
 		if (installed!=null && installed)			command += " --installed";
 		if (ondate!=null)							command += " --ondate="+ondate;
+		if (after!=null)							command += " --after="+after;
 		if (servicelevel!=null)						command += " --servicelevel="+String.format(servicelevel.contains(" ")||servicelevel.isEmpty()?"\"%s\"":"%s", servicelevel);	// quote a value containing spaces or is empty
 		if (matchInstalled!=null && matchInstalled)	command += " --match-installed";
 		if (noOverlap!=null && noOverlap)			command += " --no-overlap";
@@ -5097,6 +5144,7 @@ if (false) {
 	 * @param installed TODO
 	 * @param servicelevel TODO
 	 * @param ondate TODO
+	 * @param after TODO
 	 * @param matchInstalled TODO
 	 * @param noOverlap TODO
 	 * @param matches TODO
@@ -5106,9 +5154,9 @@ if (false) {
 	 * @param proxypassword TODO
 	 * @param noproxy TODO
 	 */
-	public SSHCommandResult list_(Boolean all, Boolean available, Boolean consumed, Boolean installed, String servicelevel, String ondate, Boolean matchInstalled, Boolean noOverlap, String matches, Boolean poolOnly, String proxy, String proxyuser, String proxypassword, String noproxy) {
+	public SSHCommandResult list_(Boolean all, Boolean available, Boolean consumed, Boolean installed, String servicelevel, String ondate, String after, Boolean matchInstalled, Boolean noOverlap, String matches, Boolean poolOnly, String proxy, String proxyuser, String proxypassword, String noproxy) {
 		
-		String command = listCommand(all, available, consumed, installed, servicelevel, ondate, matchInstalled, noOverlap, matches, poolOnly, proxy, proxyuser, proxypassword, noproxy);
+		String command = listCommand(all, available, consumed, installed, servicelevel, ondate, after, matchInstalled, noOverlap, matches, poolOnly, proxy, proxyuser, proxypassword, noproxy);
 		
 		// run command without asserting results
 		SSHCommandResult sshCommandResult = sshCommandRunner.runCommandAndWait(command);
@@ -5116,9 +5164,9 @@ if (false) {
 		return sshCommandResult;
 	}
 	
-	public SSHCommandResult list(Boolean all, Boolean available, Boolean consumed, Boolean installed, String servicelevel, String ondate, Boolean matchInstalled, Boolean noOverlap, String matches, Boolean poolOnly, String proxy, String proxyuser, String proxypassword, String noproxy) {
+	public SSHCommandResult list(Boolean all, Boolean available, Boolean consumed, Boolean installed, String servicelevel, String ondate, String after, Boolean matchInstalled, Boolean noOverlap, String matches, Boolean poolOnly, String proxy, String proxyuser, String proxypassword, String noproxy) {
 		
-		SSHCommandResult sshCommandResult = list_(all, available, consumed, installed, servicelevel, ondate, matchInstalled, noOverlap, matches, poolOnly, proxy, proxyuser, proxypassword, noproxy);
+		SSHCommandResult sshCommandResult = list_(all, available, consumed, installed, servicelevel, ondate, after, matchInstalled, noOverlap, matches, poolOnly, proxy, proxyuser, proxypassword, noproxy);
 		
 		// assert results...
 		
@@ -5133,7 +5181,7 @@ if (false) {
 	 */
 	public SSHCommandResult listInstalledProducts() {
 		
-		SSHCommandResult sshCommandResult = list(null,null,null,Boolean.TRUE, null, null, null, null, null, null, null, null, null, null);
+		SSHCommandResult sshCommandResult = list(null,null,null,Boolean.TRUE, null, null, null, null, null, null, null, null, null, null, null);
 		
 		if (getCurrentProductCertFiles().isEmpty() /*&& getCurrentEntitlementCertFiles().isEmpty() NOT NEEDED AFTER DESIGN CHANGE FROM BUG 736424*/) {
 			Assert.assertTrue(sshCommandResult.getStdout().trim().equals("No installed products to list"), "No installed products to list");
@@ -5151,7 +5199,7 @@ if (false) {
 	 */
 	public SSHCommandResult listAvailableSubscriptionPools() {
 
-		SSHCommandResult sshCommandResult = list(null,Boolean.TRUE,null, null, null, null, null, null, null, null, null, null, null, null);
+		SSHCommandResult sshCommandResult = list(null,Boolean.TRUE,null, null, null, null, null, null, null, null, null, null, null, null, null);
 
 		//Assert.assertContainsMatch(sshCommandResult.getStdout(), "Available Subscriptions"); // produces too much logging
 
@@ -5168,11 +5216,11 @@ if (false) {
 		String bugId="638266"; 
 		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 		if (invokeWorkaroundWhileBugIsOpen) {
-			return list_(Boolean.FALSE,Boolean.TRUE,null, null, null, null, null, null, null, null, null, null, null, null);
+			return list_(Boolean.FALSE,Boolean.TRUE,null, null, null, null, null, null, null, null, null, null, null, null, null);
 		}
 		// END OF WORKAROUND
 		
-		SSHCommandResult sshCommandResult = list(Boolean.TRUE,Boolean.TRUE,null, null, null, null, null, null, null, null, null, null, null, null);
+		SSHCommandResult sshCommandResult = list(Boolean.TRUE,Boolean.TRUE,null, null, null, null, null, null, null, null, null, null, null, null, null);
 		
 		//Assert.assertContainsMatch(sshCommandResult.getStdout(), "Available Subscriptions"); // produces too much logging
 
@@ -5185,7 +5233,7 @@ if (false) {
 	 */
 	public SSHCommandResult listConsumedProductSubscriptions() {
 
-		SSHCommandResult sshCommandResult = list(null,null,Boolean.TRUE, null, null, null, null, null, null, null, null, null, null, null);
+		SSHCommandResult sshCommandResult = list(null,null,Boolean.TRUE, null, null, null, null, null, null, null, null, null, null, null, null);
 		
 		List<File> entitlementCertFiles = getCurrentEntitlementCertFiles();
 		String expectedConsumedListMessage="No consumed subscription pools to list";

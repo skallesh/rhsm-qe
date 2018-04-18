@@ -472,7 +472,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		//Assert.assertEquals(result.getStderr().trim(),"",			"Stderr expected after the consumer has been deleted on the server-side.");
 		Assert.assertEquals(result.getStdout().trim()+result.getStderr().trim(),expectedMsg, "Feedback expected after the consumer has been deleted on the server-side.");
 		
-		result = clienttasks.list_(null, true, null, null, null, null, null, null, null, null, null, null, null, null);
+		result = clienttasks.list_(null, true, null, null, null, null, null, null, null, null, null, null, null, null, null);
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.16.4-1")) expectedExitCode=new Integer(69/*EX_UNAVAILABLE*/);	// post commit 616ecda6db6ae8b054d7bbb8ba278bba242f4fd0 bug 1262989
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.16.3-1")) expectedMsg  = String.format("This consumer's profile has been deleted from the server. You can use command clean or unregister to remove local profile.",consumerCert.consumerid);	// post commit 5c48d059bb07b64b92722f249b38aaee7219ab47 bug 1262989
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.16.5-1")) expectedMsg  = String.format("Consumer profile \"%s\" has been deleted from the server. You can use command clean or unregister to remove local profile.",consumerCert.consumerid);	// post commit 3ad13c20f6ab34cf2621bc48cdd7d15a82791d4f bug 1262989

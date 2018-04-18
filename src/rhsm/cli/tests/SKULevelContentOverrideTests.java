@@ -463,7 +463,7 @@ public class SKULevelContentOverrideTests extends SubscriptionManagerCLITestScri
 		clienttasks.removeAllCerts(true, true, false);
 		clienttasks.register(sm_client1Username, sm_client1Password, sm_client1Org);
 		for (SubscriptionPool availableSubscriptionPoolsMatchingInstalled : SubscriptionPool.parse(clienttasks
-				.list(null, true, null, null, null, null, true, null, null, null, null, null, null, null).getStdout())) {
+				.list(null, true, null, null, null, null, null, true, null, null, null, null, null, null, null).getStdout())) {
 
 			SubscriptionPool pool = availableSubscriptionPoolsMatchingInstalled;
 

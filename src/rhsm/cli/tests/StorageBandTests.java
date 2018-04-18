@@ -126,7 +126,7 @@ public class StorageBandTests extends SubscriptionManagerCLITestScript{
 	public void testAutoSubscribeStorageBandSubscription(Object Bugzilla,SubscriptionPool storagebandpool) throws JSONException, Exception{
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String) null, null, null, null, true, null, null, null, null, null);
 		log.info("To auto-attach this system to '"+bandStorageUsage+"'TB of storage entitlements, there must be more than one stackable pool for product SKU '"+storagebandpool.productId+"'.");
-		SSHCommandResult listResult=clienttasks.list(null, true, null, null, null, null, null, null, storagebandpool.productId, null, null, null, null, null);	// to troubleshoot the existance of multiple pools 
+		SSHCommandResult listResult=clienttasks.list(null, true, null, null, null, null, null, null, null, storagebandpool.productId, null, null, null, null, null);	// to troubleshoot the existance of multiple pools 
 		List<SubscriptionPool> availableStorageBandPools = SubscriptionPool.parse(listResult.getStdout());
 		String expectedStatus = availableStorageBandPools.size()>1 ? "Subscribed" : "Not Subscribed";
 		clienttasks.subscribe(true, null, (String)null, null, null, null, null, null, null, null, null, null, null);	
@@ -158,7 +158,7 @@ public class StorageBandTests extends SubscriptionManagerCLITestScript{
 	public void testAutoHealStorageBandSubscription(Object Bugzilla,SubscriptionPool storagebandpool) throws JSONException, Exception{
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String) null, null, null, null, true, null, null, null, null, null);
 		log.info("To auto-heal this system for '"+bandStorageUsage+"'TB of storage, there must be more than one stackable pool for product SKU '"+storagebandpool.productId+"'.");
-		SSHCommandResult listResult=clienttasks.list(null, true, null, null, null, null, null, null, storagebandpool.productId, null, null, null, null, null);	// to troubleshoot the existance of multiple pools 
+		SSHCommandResult listResult=clienttasks.list(null, true, null, null, null, null, null, null, null, storagebandpool.productId, null, null, null, null, null);	// to troubleshoot the existance of multiple pools 
 		List<SubscriptionPool> availableStorageBandPools = SubscriptionPool.parse(listResult.getStdout());
 		String expectedStatus = availableStorageBandPools.size()>1 ? "Subscribed" : "Not Subscribed";
 		clienttasks.autoheal(null, true, null, null, null, null, null);
