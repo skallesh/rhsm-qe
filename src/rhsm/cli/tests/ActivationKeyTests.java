@@ -506,14 +506,20 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 			if (!clienttasks.workaroundForBug876764(sm_serverType)) expectedStderr = String.format("No subscriptions are available from the pool with ID '%s'.",poolId);
 			if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.3.1-1")) {	// commit 0d5fefcfa8c1c2485921d2dee6633879b1e06931 Correct incorrect punctuation in user messages
 				expectedStderr = String.format("No subscriptions are available from the pool with ID \"%s\".",poolId);
+				if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-1")) expectedStderr = "HTTP error (400 - Bad Request): "+expectedStderr;	// post commit 630e1a2eb06e6bfacac669ce11f38e228c907ea9 1507030: RestlibExceptions should show they originate server-side
+
 			}
 			if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">", "0.9.30-1")) {
 				log.info("Prior to candlepin version 0.9.30-1, the expected feedback was: "+expectedStderr);
 				expectedStderr =  "No activation key was applied successfully.";	// Follows: candlepin-0.9.30-1	// https://github.com/candlepin/candlepin/commit/bcb4b8fd8ee009e86fc9a1a20b25f19b3dbe6b2a
+				if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-1")) expectedStderr = "HTTP error (400 - Bad Request): "+expectedStderr;	// post commit 630e1a2eb06e6bfacac669ce11f38e228c907ea9 1507030: RestlibExceptions should show they originate server-side
+
 			}
 			if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.2.0-1")) {	// candlepin commit 08bcd6829cb4c89f737b8b77cbfdb85600a47933   bug 1440924: Adjust message when activation key registration fails
 				log.info("Prior to candlepin version 2.2.0-1 , the expected feedback was: "+expectedStderr);
 				expectedStderr =  "None of the subscriptions on the activation key were available for attaching.";
+				if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-1")) expectedStderr = "HTTP error (400 - Bad Request): "+expectedStderr;	// post commit 630e1a2eb06e6bfacac669ce11f38e228c907ea9 1507030: RestlibExceptions should show they originate server-side
+
 			}
 			Integer expectedExitCode = new Integer(255);
 			if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) expectedExitCode = new Integer(70);	// EX_SOFTWARE	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
@@ -843,14 +849,20 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		if (!clienttasks.workaroundForBug876764(sm_serverType)) expectedStderr = String.format("No subscriptions are available from the pool with ID '%s'.", jsonCurrentPool.getString("id"));
 		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.3.1-1")) {	// commit 0d5fefcfa8c1c2485921d2dee6633879b1e06931 Correct incorrect punctuation in user messages
 			expectedStderr = String.format("No subscriptions are available from the pool with ID \"%s\".",jsonCurrentPool.getString("id"));
+			if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-1")) expectedStderr = "HTTP error (400 - Bad Request): "+expectedStderr;	// post commit 630e1a2eb06e6bfacac669ce11f38e228c907ea9 1507030: RestlibExceptions should show they originate server-side
+
 		}
 		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">", "0.9.30-1")) {
 			log.info("Prior to candlepin version 0.9.30-1, the expected feedback was: "+expectedStderr);
 			expectedStderr =  "No activation key was applied successfully.";	// Follows: candlepin-0.9.30-1	// https://github.com/candlepin/candlepin/commit/bcb4b8fd8ee009e86fc9a1a20b25f19b3dbe6b2a
+			if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-1")) expectedStderr = "HTTP error (400 - Bad Request): "+expectedStderr;	// post commit 630e1a2eb06e6bfacac669ce11f38e228c907ea9 1507030: RestlibExceptions should show they originate server-side
+
 		}
 		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.2.0-1")) {	// candlepin commit 08bcd6829cb4c89f737b8b77cbfdb85600a47933   bug 1440924: Adjust message when activation key registration fails
 			log.info("Prior to candlepin version 2.2.0-1 , the expected feedback was: "+expectedStderr);
 			expectedStderr =  "None of the subscriptions on the activation key were available for attaching.";
+			if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-1")) expectedStderr = "HTTP error (400 - Bad Request): "+expectedStderr;	// post commit 630e1a2eb06e6bfacac669ce11f38e228c907ea9 1507030: RestlibExceptions should show they originate server-side
+
 		}
 		Integer expectedExitCode = new Integer(255);
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) expectedExitCode = new Integer(70);	// EX_SOFTWARE	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
@@ -1645,10 +1657,13 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">", "0.9.30-1")) {
 			log.info("Prior to candlepin version 0.9.30-1, the expected feedback was: "+expectedStderr);
 			expectedStderr =  "No activation key was applied successfully.";	// Follows: candlepin-0.9.30-1	// https://github.com/candlepin/candlepin/commit/bcb4b8fd8ee009e86fc9a1a20b25f19b3dbe6b2a
+			if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-1")) expectedStderr = "HTTP error (400 - Bad Request): "+expectedStderr;	// post commit 630e1a2eb06e6bfacac669ce11f38e228c907ea9 1507030: RestlibExceptions should show they originate server-side
 		}
 		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.2.0-1")) {	// candlepin commit 08bcd6829cb4c89f737b8b77cbfdb85600a47933   bug 1440924: Adjust message when activation key registration fails
 			log.info("Prior to candlepin version 2.2.0-1 , the expected feedback was: "+expectedStderr);
 			expectedStderr =  "None of the subscriptions on the activation key were available for attaching.";
+			if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-1")) expectedStderr = "HTTP error (400 - Bad Request): "+expectedStderr;	// post commit 630e1a2eb06e6bfacac669ce11f38e228c907ea9 1507030: RestlibExceptions should show they originate server-side
+
 		}
 		Assert.assertEquals(result.getStderr().trim(), expectedStderr,"Stderr message from an attempt to register with an activation key whose service level '"+expiredServiceLevel+"' is only supported by a pool that has now expired.");	
 	}
