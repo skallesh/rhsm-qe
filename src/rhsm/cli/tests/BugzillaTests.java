@@ -4654,7 +4654,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		SSHCommandResult result = clienttasks.register_("user name", "password", sm_clientOrg, null, null, null, null,
 				null, null, null, (String) null, null, null, null, true, null, null, null, null, null);
 		String expectedStderr="The expected stdout result when attempting to register with a username containing whitespace.";
-		if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-1")) expectedStderr = "HTTP error (401 - Unauthorized): "+expectedStderr;	// post commit 630e1a2eb06e6bfacac669ce11f38e228c907ea9 1507030: RestlibExceptions should show they originate server-side
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-1")) expectedStderr = "HTTP error (401 - Unauthorized):"+expectedStderr;	// post commit 630e1a2eb06e6bfacac669ce11f38e228c907ea9 1507030: RestlibExceptions should show they originate server-side
 		Assert.assertEquals(result.getStderr().trim(), servertasks.invalidCredentialsMsg(),expectedStderr);
 	}
 
