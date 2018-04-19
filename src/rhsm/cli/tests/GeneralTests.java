@@ -552,7 +552,22 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 				expectedRequiresList.add("manual: python-inotify");
 			}
 		}
-		
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-3")) {	// commit 24ae5cd38e36a4ccfb6a3e9daa5f7c8a7f01c324	  1533905: Remove dependency on yum and chkconfig.  
+			expectedRequiresList.remove("manual: chkconfig");
+			expectedRequiresList.remove("manual: yum >= 3.2.29-73");
+
+		}
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-3")) {	// commit c63a48b81531111cb9fccf69d46e70bb26c2f44e	 1458159: Require latest version of python-dmidecode 
+			expectedRequiresList.remove("manual: python-dmidecode");
+			expectedRequiresList.add("manual: python-dmidecode >= 3.12.2");
+
+		}
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-3")) {	// commit 78da50088f92165fabea0d1a1445baa4d288aac4	 1537473: Subman rpm requires python-setuptools 
+			expectedRequiresList.add("manual: python-setuptools");
+		}
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-3")) {	// commit 4d2c94e26872863a484a0d37e181154688d350d3	  1547354: Add missing requires for python-kitchen  
+			expectedRequiresList.add("manual: python-kitchen");
+		}
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.18.5-1")) {	// commit bb47b2a6b4f3e823240e5f882bd4dc4d57c3b36e	1395794: Include python-decorator as a required dependency
 			expectedRequiresList.add("manual: python-decorator");
 		}
