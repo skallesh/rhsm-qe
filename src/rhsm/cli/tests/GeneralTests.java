@@ -198,7 +198,8 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 
 			// run and verify the command result
 			String expectedStdout = "forcing status signal from cli arg";
-			RemoteFileTasks.runCommandAndAssert(client, command, Integer.valueOf(0), expectedStdout, null);
+			Integer expectedExitCode = Integer.valueOf(0);
+			RemoteFileTasks.runCommandAndAssert(client, command, expectedExitCode, expectedStdout, null);
 			
 			// verify the logs
 			sleep(2000);	// give the message thread time to be logged
@@ -551,8 +552,9 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 			if (clienttasks.isPackageVersion("subscription-manager",">=","1.20.2-1"/*TODO change to 1.20.3-1*/)) {	// commit db7f92dd2a29071eddd3b8de5beedb0fe46352f9	1477958: Use inotify for checking changes of consumer certs
 				expectedRequiresList.add("manual: python-inotify");
 			}
-		}
 		
+		}
+	
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.18.5-1")) {	// commit bb47b2a6b4f3e823240e5f882bd4dc4d57c3b36e	1395794: Include python-decorator as a required dependency
 			expectedRequiresList.add("manual: python-decorator");
 		}
@@ -577,8 +579,24 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		}
 		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.20.1-1")) {	// commit 21d9b5a6b7b3168046bc498e3db2f0469bb54fc2	Simplify subscription-manager spec file
 			expectedRequiresList.add("manual: chkconfig");
+			
+		}
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-3")) {	// commit 24ae5cd38e36a4ccfb6a3e9daa5f7c8a7f01c324	  1533905: Remove dependency on yum and chkconfig.  
+			expectedRequiresList.remove("manual: chkconfig");
+
 		}
 		
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-3")) {	// commit c63a48b81531111cb9fccf69d46e70bb26c2f44e	 1458159: Require latest version of python-dmidecode 
+			expectedRequiresList.remove("manual: python-dmidecode");
+			expectedRequiresList.add("manual: python-dmidecode >= 3.12.2");
+
+		}
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-3")) {	// commit 78da50088f92165fabea0d1a1445baa4d288aac4	 1537473: Subman rpm requires python-setuptools 
+			expectedRequiresList.add("manual: python-setuptools");
+		}
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-3")) {	// commit 4d2c94e26872863a484a0d37e181154688d350d3	  1547354: Add missing requires for python-kitchen  
+			expectedRequiresList.add("manual: python-kitchen");
+		}
 		// add the expected version of python-rhsm
 		if 		(clienttasks.isPackageVersion("subscription-manager",">=","1.20.3-1"))	expectedRequiresList.add((clienttasks.redhatReleaseX.equals("5")?"":"manual: ")+"subscription-manager-rhsm = "+clienttasks.installedPackageVersionMap.get("subscription-manager").replace("subscription-manager-", "").replaceFirst("-\\d+\\..+", "")/*strips off -1.git.17.485ba1e.el7.x86_64*/);	// commit f445b6486a962d12185a5afe69e768d0a605e175	Move python-rhsm build into subscription-manager
 		else if	(clienttasks.isPackageVersion("subscription-manager",">=","1.20.2-1"))	expectedRequiresList.add((clienttasks.redhatReleaseX.equals("5")?"":"manual: ")+"python-rhsm >= 1.20.2");		// RHEL7.5	// commit 00c1100b1fb0cb207be94f95892cfa5c9a9fbfae
