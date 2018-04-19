@@ -554,7 +554,6 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		}
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-3")) {	// commit 24ae5cd38e36a4ccfb6a3e9daa5f7c8a7f01c324	  1533905: Remove dependency on yum and chkconfig.  
 			expectedRequiresList.remove("manual: chkconfig");
-			expectedRequiresList.remove("manual: yum >= 3.2.29-73");
 
 		}
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-3")) {	// commit c63a48b81531111cb9fccf69d46e70bb26c2f44e	 1458159: Require latest version of python-dmidecode 
