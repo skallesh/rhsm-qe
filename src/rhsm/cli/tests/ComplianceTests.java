@@ -427,7 +427,8 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance), factValueForSystemNonCompliance,
 				"When a system has products installed for which only SOME are covered by available subscription pools, the system should NOT become compliant (see value for fact '"+factNameForSystemCompliance+"') even after having subscribed to every available subscription pool.");
 		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.10-1")) {	// commit 13fe8ffd8f876d27079b961fb6675424e65b9a10	Bug 1171602 - subscription-manager status always exits 1
-			Assert.assertEquals(clienttasks.status_(null, null, null, null, null).getExitCode(), new Integer(1), "Expected exitCode from a call to status when the system is '"+factValueForSystemNonCompliance+"'.");
+			Integer expectedExitCode = Integer.valueOf(1);	// from RHSM_EXPIRED = 1 in cert_sorter.py https://github.com/candlepin/subscription-manager/blob/d17e16065df81c531bd775a67e7f584b53f99637/src/subscription_manager/cert_sorter.py
+			Assert.assertEquals(clienttasks.status_(null, null, null, null, null).getExitCode(), expectedExitCode, "Expected exitCode from a call to status when the system is '"+factValueForSystemNonCompliance+"'.");
 		}
 	}
 
@@ -453,7 +454,11 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		// verify the stdout message
 		//RemoteFileTasks.runCommandAndAssert(client, command, Integer.valueOf(0), rhsmComplianceDStdoutMessageWhenNonCompliant, null);
 		sshCommandResult = client.runCommandAndWait(command);
-		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "ExitCode from command '"+command+"'");
+		Integer expectedExitCode = Integer.valueOf(0);
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.1-1")) { // subscription-manager commit cb374ec918c7592aaf1f1aed6d5730d931a7ee4e Generate bin scripts via setuptools entry_points
+			expectedExitCode = Integer.valueOf(1);	// from RHSM_EXPIRED = 1 in cert_sorter.py https://github.com/candlepin/subscription-manager/blob/d17e16065df81c531bd775a67e7f584b53f99637/src/subscription_manager/cert_sorter.py
+		}
+		Assert.assertEquals(sshCommandResult.getExitCode(), expectedExitCode, "ExitCode from command '"+command+"'");
 		Assert.assertEquals(sshCommandResult.getStdout().trim(), rhsmComplianceDStdoutMessageWhenNonCompliant, "Stdout from command '"+command+"'");
 		Assert.assertEquals(sshCommandResult.getStderr().trim(), "", "Stderr from command '"+command+"'");
 		
@@ -461,7 +466,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		sleep(100);	// give the message thread time to be logged
 		//RemoteFileTasks.runCommandAndAssert(client,"tail -1 "+clienttasks.varLogMessagesFile, null, rhsmComplianceDSyslogMessageWhenNonCompliant, null);
 		sshCommandResult = client.runCommandAndWait(command);
-		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "ExitCode from command '"+command+"'");
+		Assert.assertEquals(sshCommandResult.getExitCode(), expectedExitCode, "ExitCode from command '"+command+"'");
 		Assert.assertEquals(sshCommandResult.getStdout().trim(), rhsmComplianceDSyslogMessageWhenNonCompliant, "Stdout from command '"+command+"'");
 		Assert.assertEquals(sshCommandResult.getStderr().trim(), "", "Stderr from command '"+command+"'");
 	}
@@ -539,7 +544,8 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance), factValueForSystemCompliance,
 				"When a system has products installed for which ALL are covered by available subscription pools, the system should become compliant (see value for fact '"+factNameForSystemCompliance+"') after having subscribed to every available subscription pool.");
 		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.10-1")) {	// commit 13fe8ffd8f876d27079b961fb6675424e65b9a10	Bug 1171602 - subscription-manager status always exits 1
-			Assert.assertEquals(clienttasks.status_(null, null, null, null, null).getExitCode(), new Integer(0), "Expected exitCode from a call to status when the system is '"+factValueForSystemCompliance+"'.");
+			Integer expectedExitCode = Integer.valueOf(0);	// from RHSM_VALID = 0 in cert_sorter.py https://github.com/candlepin/subscription-manager/blob/d17e16065df81c531bd775a67e7f584b53f99637/src/subscription_manager/cert_sorter.py
+			Assert.assertEquals(clienttasks.status_(null, null, null, null, null).getExitCode(), expectedExitCode, "Expected exitCode from a call to status when the system is '"+factValueForSystemCompliance+"'.");
 		}
 	}
 
@@ -633,7 +639,8 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance), factValueForSystemNonCompliance,
 				"When a system has products installed for which NONE are covered by available subscription pools, the system should NOT become compliant (see value for fact '"+factNameForSystemCompliance+"') after having subscribed to every available subscription pool.");
 		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.10-1")) {	// commit 13fe8ffd8f876d27079b961fb6675424e65b9a10	Bug 1171602 - subscription-manager status always exits 1
-			Assert.assertEquals(clienttasks.status_(null, null, null, null, null).getExitCode(), new Integer(1), "Expected exitCode from a call to status when the system is '"+factValueForSystemNonCompliance+"'.");
+			Integer expectedExitCode = Integer.valueOf(1);	// from RHSM_EXPIRED = 1 in cert_sorter.py https://github.com/candlepin/subscription-manager/blob/d17e16065df81c531bd775a67e7f584b53f99637/src/subscription_manager/cert_sorter.py
+			Assert.assertEquals(clienttasks.status_(null, null, null, null, null).getExitCode(), expectedExitCode, "Expected exitCode from a call to status when the system is '"+factValueForSystemNonCompliance+"'.");
 		}
 	}
 
@@ -659,7 +666,11 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		// verify the stdout message
 		//RemoteFileTasks.runCommandAndAssert(client, command, Integer.valueOf(0), rhsmComplianceDStdoutMessageWhenNonCompliant, null);
 		sshCommandResult = client.runCommandAndWait(command);
-		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "ExitCode from command '"+command+"'");
+		Integer expectedExitCode = Integer.valueOf(0);
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.1-1")) { // subscription-manager commit cb374ec918c7592aaf1f1aed6d5730d931a7ee4e Generate bin scripts via setuptools entry_points
+			expectedExitCode = Integer.valueOf(1);	// from RHSM_EXPIRED = 1 in cert_sorter.py https://github.com/candlepin/subscription-manager/blob/d17e16065df81c531bd775a67e7f584b53f99637/src/subscription_manager/cert_sorter.py
+		}
+		Assert.assertEquals(sshCommandResult.getExitCode(), expectedExitCode, "ExitCode from command '"+command+"'");
 		Assert.assertEquals(sshCommandResult.getStdout().trim(), rhsmComplianceDStdoutMessageWhenNonCompliant, "Stdout from command '"+command+"'");
 		Assert.assertEquals(sshCommandResult.getStderr().trim(), "", "Stderr from command '"+command+"'");
 		
@@ -667,7 +678,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		sleep(100);	// give the message thread time to be logged
 		//RemoteFileTasks.runCommandAndAssert(client,"tail -1 "+clienttasks.varLogMessagesFile, null, rhsmComplianceDSyslogMessageWhenNonCompliant, null);
 		sshCommandResult = client.runCommandAndWait(command);
-		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "ExitCode from command '"+command+"'");
+		Assert.assertEquals(sshCommandResult.getExitCode(), expectedExitCode, "ExitCode from command '"+command+"'");
 		Assert.assertEquals(sshCommandResult.getStdout().trim(), rhsmComplianceDSyslogMessageWhenNonCompliant, "Stdout from command '"+command+"'");
 		Assert.assertEquals(sshCommandResult.getStderr().trim(), "", "Stderr from command '"+command+"'");
 	}
@@ -743,7 +754,8 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance), factValueForSystemCompliance,
 				"Even after subscribing to all the available subscription pools, a system with no products installed should remain compliant (see value for fact '"+factNameForSystemCompliance+"').");
 		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.10-1")) {	// commit 13fe8ffd8f876d27079b961fb6675424e65b9a10	Bug 1171602 - subscription-manager status always exits 1
-			Assert.assertEquals(clienttasks.status_(null, null, null, null, null).getExitCode(), new Integer(0), "Expected exitCode from a call to status when the system is '"+factValueForSystemCompliance+"'.");
+			Integer expectedExitCode = Integer.valueOf(0);	// from RHSM_VALID = 0 in cert_sorter.py https://github.com/candlepin/subscription-manager/blob/d17e16065df81c531bd775a67e7f584b53f99637/src/subscription_manager/cert_sorter.py
+			Assert.assertEquals(clienttasks.status_(null, null, null, null, null).getExitCode(), expectedExitCode, "Expected exitCode from a call to status when the system is '"+factValueForSystemCompliance+"'.");
 		}
 	}
 
@@ -776,7 +788,11 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 			log.info("Asserting RhsmComplianced while at least one of the current entitlement certs is within its warning period...");
 			//RemoteFileTasks.runCommandAndAssert(client, command, Integer.valueOf(0), rhsmComplianceDStdoutMessageWhenInsideWarningPeriod, null);
 			sshCommandResult = client.runCommandAndWait(command);
-			Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "ExitCode from command '"+command+"'");
+			Integer expectedExitCode = Integer.valueOf(0);
+			if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.1-1")) { // subscription-manager commit cb374ec918c7592aaf1f1aed6d5730d931a7ee4e Generate bin scripts via setuptools entry_points
+				expectedExitCode = Integer.valueOf(2);	// from RHSM_WARNING = 2 in cert_sorter.py https://github.com/candlepin/subscription-manager/blob/d17e16065df81c531bd775a67e7f584b53f99637/src/subscription_manager/cert_sorter.py
+			}
+			Assert.assertEquals(sshCommandResult.getExitCode(), expectedExitCode, "ExitCode from command '"+command+"'");
 			Assert.assertEquals(sshCommandResult.getStdout().trim(), rhsmComplianceDStdoutMessageWhenInsideWarningPeriod, "Stdout from command '"+command+"'");
 			Assert.assertEquals(sshCommandResult.getStderr().trim(), "", "Stderr from command '"+command+"'");
 			
@@ -789,7 +805,8 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		log.info("Asserting RhsmComplianced status before unsubscribing from all currently consumed subscriptions...");
 		//RemoteFileTasks.runCommandAndAssert(client, command, Integer.valueOf(0), rhsmComplianceDStdoutMessageWhenCompliant, null);
 		sshCommandResult = client.runCommandAndWait(command);
-		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "ExitCode from command '"+command+"'");
+		Integer expectedExitCode = Integer.valueOf(0);	// from RHSM_VALID = 0 in cert_sorter.py https://github.com/candlepin/subscription-manager/blob/d17e16065df81c531bd775a67e7f584b53f99637/src/subscription_manager/cert_sorter.py
+		Assert.assertEquals(sshCommandResult.getExitCode(), expectedExitCode, "ExitCode from command '"+command+"'");
 		Assert.assertEquals(sshCommandResult.getStdout().trim(), rhsmComplianceDStdoutMessageWhenCompliant, "Stdout from command '"+command+"'");
 		Assert.assertEquals(sshCommandResult.getStderr().trim(), "", "Stderr from command '"+command+"'");
 		
@@ -798,7 +815,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		//RemoteFileTasks.runCommandAndAssert(client, command, Integer.valueOf(0), rhsmComplianceDStdoutMessageWhenCompliant, null);
 		sshCommandResult = client.runCommandAndWait(command);
-		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "ExitCode from command '"+command+"'");
+		Assert.assertEquals(sshCommandResult.getExitCode(), expectedExitCode, "ExitCode from command '"+command+"'");
 		Assert.assertEquals(sshCommandResult.getStdout().trim(), rhsmComplianceDStdoutMessageWhenCompliant, "Stdout from command '"+command+"'");
 		Assert.assertEquals(sshCommandResult.getStderr().trim(), "", "Stderr from command '"+command+"'");
 		
@@ -898,7 +915,8 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance), factValueForSystemCompliance,
 				"By definition, being registered to RHN Classic implies the system IS compliant no matter what products are installed (see value for fact '"+factNameForSystemCompliance+"').");
 		if (clienttasks.isPackageVersion("subscription-manager", ">=", "1.13.10-1")) {	// commit 13fe8ffd8f876d27079b961fb6675424e65b9a10	Bug 1171602 - subscription-manager status always exits 1
-			Assert.assertEquals(clienttasks.status_(null, null, null, null, null).getExitCode(), new Integer(0), "Expected exitCode from a call to status when the system is '"+factValueForSystemCompliance+"'.");
+			Integer expectedExitCode = Integer.valueOf(0);	// from RHSM_VALID = 0 in cert_sorter.py https://github.com/candlepin/subscription-manager/blob/d17e16065df81c531bd775a67e7f584b53f99637/src/subscription_manager/cert_sorter.py
+			Assert.assertEquals(clienttasks.status_(null, null, null, null, null).getExitCode(), expectedExitCode, "Expected exitCode from a call to status when the system is '"+factValueForSystemCompliance+"'.");
 		}
 	}
 
@@ -923,7 +941,11 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		// verify the stdout message
 		//RemoteFileTasks.runCommandAndAssert(client, command, Integer.valueOf(0), rhsmComplianceDStdoutMessageWhenCompliantByRHNClassic, null);
 		sshCommandResult = client.runCommandAndWait(command);
-		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "ExitCode from command '"+command+"'");
+		Integer expectedExitCode = Integer.valueOf(0);
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.1-1")) { // subscription-manager commit cb374ec918c7592aaf1f1aed6d5730d931a7ee4e Generate bin scripts via setuptools entry_points
+			expectedExitCode = Integer.valueOf(3);	// from RHN_CLASSIC = 3 in cert_sorter.py https://github.com/candlepin/subscription-manager/blob/d17e16065df81c531bd775a67e7f584b53f99637/src/subscription_manager/cert_sorter.py
+		}
+		Assert.assertEquals(sshCommandResult.getExitCode(), expectedExitCode, "ExitCode from command '"+command+"'");
 		Assert.assertEquals(sshCommandResult.getStdout().trim(), rhsmComplianceDStdoutMessageWhenCompliantByRHNClassic, "Stdout from command '"+command+"'");
 		Assert.assertEquals(sshCommandResult.getStderr().trim(), "", "Stderr from command '"+command+"'");
 	}
@@ -1022,7 +1044,11 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		// verify the stdout message
 		//RemoteFileTasks.runCommandAndAssert(client, command, Integer.valueOf(0), rhsmComplianceDStdoutMessageWhenNonCompliant, null);
 		sshCommandResult = client.runCommandAndWait(command);
-		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "ExitCode from command '"+command+"'");
+		Integer expectedExitCode = Integer.valueOf(0);
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.1-1")) { // subscription-manager commit cb374ec918c7592aaf1f1aed6d5730d931a7ee4e Generate bin scripts via setuptools entry_points
+			expectedExitCode = Integer.valueOf(1);	// from RHSM_EXPIRED = 1 in cert_sorter.py https://github.com/candlepin/subscription-manager/blob/d17e16065df81c531bd775a67e7f584b53f99637/src/subscription_manager/cert_sorter.py
+		}
+		Assert.assertEquals(sshCommandResult.getExitCode(), expectedExitCode, "ExitCode from command '"+command+"'");
 		Assert.assertEquals(sshCommandResult.getStdout().trim(), rhsmComplianceDStdoutMessageWhenNonCompliant, "Stdout from command '"+command+"'");
 		Assert.assertEquals(sshCommandResult.getStderr().trim(), "", "Stderr from command '"+command+"'");
 	}
@@ -1174,14 +1200,22 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 			// otherwise verify the rhsmcomplianced status when we should be fully compliant
 			//RemoteFileTasks.runCommandAndAssert(client, command, Integer.valueOf(0), rhsmComplianceDStdoutMessageWhenCompliant, null);
 			sshCommandResult = client.runCommandAndWait(command);
-			Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "ExitCode from command '"+command+"'");
+			Integer expectedExitCode = Integer.valueOf(0);
+			if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.1-1")) { // subscription-manager commit cb374ec918c7592aaf1f1aed6d5730d931a7ee4e Generate bin scripts via setuptools entry_points
+				expectedExitCode = Integer.valueOf(0);	// from RHSM_VALID = 0 in cert_sorter.py https://github.com/candlepin/subscription-manager/blob/d17e16065df81c531bd775a67e7f584b53f99637/src/subscription_manager/cert_sorter.py
+			}
+			Assert.assertEquals(sshCommandResult.getExitCode(), expectedExitCode, "ExitCode from command '"+command+"'");
 			Assert.assertEquals(sshCommandResult.getStdout().trim(), rhsmComplianceDStdoutMessageWhenCompliant, "Stdout from command '"+command+"'");
 			Assert.assertEquals(sshCommandResult.getStderr().trim(), "", "Stderr from command '"+command+"'");
 		} else {
 			// verify the rhsmcomplianced status when there are entitlement certs within their warning period
 			//RemoteFileTasks.runCommandAndAssert(client, command, Integer.valueOf(0), rhsmComplianceDStdoutMessageWhenInsideWarningPeriod, null);
 			sshCommandResult = client.runCommandAndWait(command);
-			Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "ExitCode from command '"+command+"'");
+			Integer expectedExitCode = Integer.valueOf(0);
+			if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.1-1")) { // subscription-manager commit cb374ec918c7592aaf1f1aed6d5730d931a7ee4e Generate bin scripts via setuptools entry_points
+				expectedExitCode = Integer.valueOf(2);	// from RHSM_WARNING = 2 in cert_sorter.py https://github.com/candlepin/subscription-manager/blob/d17e16065df81c531bd775a67e7f584b53f99637/src/subscription_manager/cert_sorter.py
+			}
+			Assert.assertEquals(sshCommandResult.getExitCode(), expectedExitCode, "ExitCode from command '"+command+"'");
 			Assert.assertEquals(sshCommandResult.getStdout().trim(), rhsmComplianceDStdoutMessageWhenInsideWarningPeriod, "Stdout from command '"+command+"'");
 			Assert.assertEquals(sshCommandResult.getStderr().trim(), "", "Stderr from command '"+command+"'");
 		}
