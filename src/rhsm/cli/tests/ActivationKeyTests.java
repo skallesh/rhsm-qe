@@ -788,6 +788,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 				//Assert.assertEquals(registerResult.getStdout().trim(), "", "The expected stdout result the register attempt with activationKey using the wrong org.");
 				String expectedStderr = "Activation key '"+activationKeyName+"' not found for organization '"+differentOrg+"'.";
 				if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">", "0.9.30-1")) expectedStderr = String.format("None of the activation keys specified exist for this org.");	// Follows: candlepin-0.9.30-1	// https://github.com/candlepin/candlepin/commit/bcb4b8fd8ee009e86fc9a1a20b25f19b3dbe6b2a
+				if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-1")) expectedStderr = "HTTP error (400 - Bad Request): "+expectedStderr;	// post commit 630e1a2eb06e6bfacac669ce11f38e228c907ea9 1507030: RestlibExceptions should show they originate server-side
 				Assert.assertEquals(registerResult.getStderr().trim(), expectedStderr, "The expected stderr result from the register attempt with activationKey '"+activationKeyName+"' using the wrong org '"+differentOrg+"'.");
 				Assert.assertNull(clienttasks.getCurrentConsumerCert(), "There should be no consumer cert on the system when register with activation key fails.");	// make sure there is no consumer cert - register with activation key should be 100% successful - if any one part fails, the whole operation fails
 
