@@ -198,7 +198,13 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 
 			// run and verify the command result
 			String expectedStdout = "forcing status signal from cli arg";
-			RemoteFileTasks.runCommandAndAssert(client, command, Integer.valueOf(0), expectedStdout, null);
+			Integer expectedExitCode = Integer.valueOf(0);
+			if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.1-1")) { // subscription-manager commit cb374ec918c7592aaf1f1aed6d5730d931a7ee4e Generate bin scripts via setuptools entry_points
+				// exit code 0 was actually a bug that was inadvertently fixed by commit cb374ec918c7592aaf1f1aed6d5730d931a7ee4e
+				// expected exitCode comes from RHSM_REGISTRATION_REQUIRED = 5 in cert_sorter.py https://github.com/candlepin/subscription-manager/blob/d17e16065df81c531bd775a67e7f584b53f99637/src/subscription_manager/cert_sorter.py
+				expectedExitCode = Integer.valueOf(1);
+			}
+			RemoteFileTasks.runCommandAndAssert(client, command, expectedExitCode, expectedStdout, null);
 			
 			// verify the logs
 			sleep(2000);	// give the message thread time to be logged
