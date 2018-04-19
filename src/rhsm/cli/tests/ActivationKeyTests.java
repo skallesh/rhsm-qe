@@ -607,6 +607,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 				expectedStderr =  "None of the subscriptions on the activation key were available for attaching.";
 			}
 			Integer expectedExitCode = new Integer(255);
+			if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-1")) expectedStderr = "HTTP error (400 - Bad Request): "+expectedStderr;	// post commit 630e1a2eb06e6bfacac669ce11f38e228c907ea9 1507030: RestlibExceptions should show they originate server-side
 			if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) expectedExitCode = new Integer(70);	// EX_SOFTWARE	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
 			Assert.assertEquals(registerResult.getStderr().trim(), expectedStderr,"Expected feedback when pool is restricted to physical systems.");
 			Assert.assertEquals(registerResult.getExitCode(), expectedExitCode, "The exitCode from registering with an activationKey containing a physical_only pool while the registering system is virtual.");
@@ -623,6 +624,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 				expectedStderr =  "None of the subscriptions on the activation key were available for attaching.";
 			}
 			Integer expectedExitCode = new Integer(255);
+			if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-1")) expectedStderr = "HTTP error (400 - Bad Request): "+expectedStderr;	// post commit 630e1a2eb06e6bfacac669ce11f38e228c907ea9 1507030: RestlibExceptions should show they originate server-side
 			if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) expectedExitCode = new Integer(70);	// EX_SOFTWARE	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
 			Assert.assertEquals(registerResult.getStderr().trim(),expectedStderr,"Expected feedback when pool is restricted to virtual guests.");
 			Assert.assertEquals(registerResult.getExitCode(), expectedExitCode, "The exitCode from registering with an activationKey containing a virt_only pool while the registering system is physical.");
