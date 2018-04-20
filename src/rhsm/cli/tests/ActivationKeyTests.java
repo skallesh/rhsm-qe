@@ -469,6 +469,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 				log.info("Prior to candlepin version 2.2.0-1 , the expected feedback was: "+expectedStderr);
 				expectedStderr =  "None of the subscriptions on the activation key were available for attaching.";
 			}
+			if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-1")) expectedStderr = "HTTP error (400 - Bad Request): "+expectedStderr;	// post commit 630e1a2eb06e6bfacac669ce11f38e228c907ea9 1507030: RestlibExceptions should show they originate server-side
 			Integer expectedExitCode = new Integer(255);
 			if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) expectedExitCode = new Integer(70);	// EX_SOFTWARE	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
 			Assert.assertEquals(registerResult.getStderr().trim(), expectedStderr, "Registering a system consumer using an activationKey containing a pool that requires a non-system consumer type should fail.");
@@ -515,6 +516,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 				log.info("Prior to candlepin version 2.2.0-1 , the expected feedback was: "+expectedStderr);
 				expectedStderr =  "None of the subscriptions on the activation key were available for attaching.";
 			}
+			if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-1")) expectedStderr = "HTTP error (400 - Bad Request): "+expectedStderr;	// post commit 630e1a2eb06e6bfacac669ce11f38e228c907ea9 1507030: RestlibExceptions should show they originate server-side
 			Integer expectedExitCode = new Integer(255);
 			if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) expectedExitCode = new Integer(70);	// EX_SOFTWARE	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
 			Assert.assertEquals(registerResult.getStderr().trim(), expectedStderr, "Registering with an activationKey containing a pool for which not enough entitlements remain should fail.");
@@ -595,6 +597,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 				expectedStderr =  "None of the subscriptions on the activation key were available for attaching.";
 			}
 			Integer expectedExitCode = new Integer(255);
+			if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-1")) expectedStderr = "HTTP error (400 - Bad Request): "+expectedStderr;	// post commit 630e1a2eb06e6bfacac669ce11f38e228c907ea9 1507030: RestlibExceptions should show they originate server-side
 			if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) expectedExitCode = new Integer(70);	// EX_SOFTWARE	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
 			Assert.assertEquals(registerResult.getStderr().trim(), expectedStderr,"Expected feedback when pool is restricted to physical systems.");
 			Assert.assertEquals(registerResult.getExitCode(), expectedExitCode, "The exitCode from registering with an activationKey containing a physical_only pool while the registering system is virtual.");
@@ -611,6 +614,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 				expectedStderr =  "None of the subscriptions on the activation key were available for attaching.";
 			}
 			Integer expectedExitCode = new Integer(255);
+			if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-1")) expectedStderr = "HTTP error (400 - Bad Request): "+expectedStderr;	// post commit 630e1a2eb06e6bfacac669ce11f38e228c907ea9 1507030: RestlibExceptions should show they originate server-side
 			if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) expectedExitCode = new Integer(70);	// EX_SOFTWARE	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
 			Assert.assertEquals(registerResult.getStderr().trim(),expectedStderr,"Expected feedback when pool is restricted to virtual guests.");
 			Assert.assertEquals(registerResult.getExitCode(), expectedExitCode, "The exitCode from registering with an activationKey containing a virt_only pool while the registering system is physical.");
@@ -774,6 +778,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 				//Assert.assertEquals(registerResult.getStdout().trim(), "", "The expected stdout result the register attempt with activationKey using the wrong org.");
 				String expectedStderr = "Activation key '"+activationKeyName+"' not found for organization '"+differentOrg+"'.";
 				if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">", "0.9.30-1")) expectedStderr = String.format("None of the activation keys specified exist for this org.");	// Follows: candlepin-0.9.30-1	// https://github.com/candlepin/candlepin/commit/bcb4b8fd8ee009e86fc9a1a20b25f19b3dbe6b2a
+				if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-1")) expectedStderr = "HTTP error (400 - Bad Request): "+expectedStderr;	// post commit 630e1a2eb06e6bfacac669ce11f38e228c907ea9 1507030: RestlibExceptions should show they originate server-side
 				Assert.assertEquals(registerResult.getStderr().trim(), expectedStderr, "The expected stderr result from the register attempt with activationKey '"+activationKeyName+"' using the wrong org '"+differentOrg+"'.");
 				Assert.assertNull(clienttasks.getCurrentConsumerCert(), "There should be no consumer cert on the system when register with activation key fails.");	// make sure there is no consumer cert - register with activation key should be 100% successful - if any one part fails, the whole operation fails
 
@@ -852,6 +857,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 			log.info("Prior to candlepin version 2.2.0-1 , the expected feedback was: "+expectedStderr);
 			expectedStderr =  "None of the subscriptions on the activation key were available for attaching.";
 		}
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-1")) expectedStderr = "HTTP error (400 - Bad Request): "+expectedStderr;	// post commit 630e1a2eb06e6bfacac669ce11f38e228c907ea9 1507030: RestlibExceptions should show they originate server-side
 		Integer expectedExitCode = new Integer(255);
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) expectedExitCode = new Integer(70);	// EX_SOFTWARE	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
 		Assert.assertEquals(registerResult.getStderr().trim(), expectedStderr, "Registering a with an activationKey containing a pool for which not enough entitlements remain should fail.");
@@ -1650,6 +1656,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 			log.info("Prior to candlepin version 2.2.0-1 , the expected feedback was: "+expectedStderr);
 			expectedStderr =  "None of the subscriptions on the activation key were available for attaching.";
 		}
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-1")) expectedStderr = "HTTP error (400 - Bad Request): "+expectedStderr;	// post commit 630e1a2eb06e6bfacac669ce11f38e228c907ea9 1507030: RestlibExceptions should show they originate server-side
 		Assert.assertEquals(result.getStderr().trim(), expectedStderr,"Stderr message from an attempt to register with an activation key whose service level '"+expiredServiceLevel+"' is only supported by a pool that has now expired.");	
 	}
 	protected String expiredServiceLevel = null;

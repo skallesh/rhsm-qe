@@ -100,6 +100,9 @@ public class RHUITests extends SubscriptionManagerCLITestScript {
 			if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.3.5-1")) {	// commit f87515e457c8b74cfaeaf9c0e47f019c241e8355 Changed Consumer.type to Consumer.typeId
 				expectedStderr = String.format("Invalid unit type: %s",ConsumerType.RHUI);
 			}
+			if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-1")) {	// post commit 630e1a2eb06e6bfacac669ce11f38e228c907ea9 1507030: RestlibExceptions should show they originate server-side
+				expectedStderr = "HTTP error (400 - Bad Request): "+expectedStderr;
+			}
 			Assert.assertEquals(result.getStderr().trim(), expectedStderr);
 			Assert.assertEquals(result.getExitCode(), Integer.valueOf(70));
 			throw new SkipException("On a candlpin server of type '"+sm_serverType+"': "+result.getStderr().trim());
