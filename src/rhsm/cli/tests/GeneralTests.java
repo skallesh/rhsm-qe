@@ -178,7 +178,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
 	@Test(	description="assert rhsmd is logged to both /var/log/rhsm/rhsm.log and /var/log/messages",
-			groups={"Tier2Tests","blockedbyBug-976868","blockedByBug-1395794"},
+			groups={"Tier2Tests","blockedbyBug-976868","blockedByBug-1395794","testRhsmdForceSignalsToRhsmlogAndSyslog"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void testRhsmdForceSignalsToRhsmlogAndSyslog() {
@@ -199,6 +199,12 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 			// run and verify the command result
 			String expectedStdout = "forcing status signal from cli arg";
 			Integer expectedExitCode = Integer.valueOf(0);
+			if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.1-1")) { // subscription-manager commit cb374ec918c7592aaf1f1aed6d5730d931a7ee4e Generate bin scripts via setuptools entry_points
+				// exit code 0 was actually a bug that was inadvertently fixed by commit cb374ec918c7592aaf1f1aed6d5730d931a7ee4e
+				if(signal.equals("expired")) expectedExitCode = Integer.valueOf(1);
+				if(signal.equals("warning")) expectedExitCode = Integer.valueOf(2);
+				if(signal.equals("partial")) expectedExitCode = Integer.valueOf(4);
+			}
 			RemoteFileTasks.runCommandAndAssert(client, command, expectedExitCode, expectedStdout, null);
 			
 			// verify the logs
@@ -586,9 +592,9 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 
 		}
 		
-		if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-3")) {	// commit c63a48b81531111cb9fccf69d46e70bb26c2f44e	 1458159: Require latest version of python-dmidecode 
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-3"/*TODO CHANGE TO 1.21.2-4 WHEN IT IS TAGGED*/)) {	// commit c63a48b81531111cb9fccf69d46e70bb26c2f44e	 1458159: Require latest version of python-dmidecode 
 			expectedRequiresList.remove("manual: python-dmidecode");
-			expectedRequiresList.add("manual: python-dmidecode >= 3.12.2");
+			expectedRequiresList.add("manual: python-dmidecode >= 3.12.2-2");
 
 		}
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-3")) {	// commit 78da50088f92165fabea0d1a1445baa4d288aac4	 1537473: Subman rpm requires python-setuptools 
