@@ -730,6 +730,7 @@ if (false) {
 	    baseurlForExtras = "http://download.devel.redhat.com/rel-eng/latest-EXTRAS-7-RHEL-7/compose/"+variant+"/x86_64/os/";	// 302 Found // The document has moved <a href="http://download-node-02.eng.bos.redhat.com/rel-eng/latest-EXTRAS-7-RHEL-7/compose/Workstation/x86_64/os/">here</a>
 	    baseurlForExtras = "http://download-node-02.eng.bos.redhat.com/rel-eng/latest-EXTRAS-7-RHEL-7/compose/"+variant+"/x86_64/os/";
 	    baseurlForExtras = "http://download-node-02.eng.bos.redhat.com/rel-eng/latest-EXTRAS-7-RHEL-7/compose/"+"Server"+"/x86_64/os/";	// "Server" is the ONLY compose for http://download-node-02.eng.bos.redhat.com/rel-eng/latest-EXTRAS-7-RHEL-7/compose/
+	    baseurlForExtras = "http://download-node-02.eng.bos.redhat.com/rel-eng/latest-EXTRAS-"+redhatReleaseXY+"-RHEL-7/compose/"+"Server"+"/x86_64/os/";	// "Server" is the ONLY compose for http://download-node-02.eng.bos.redhat.com/rel-eng/latest-EXTRAS-7.5-RHEL-7/compose/
 	    String baseurlForDeps = "http://download-node-02.eng.bos.redhat.com/rel-eng/latest-RHEL-7/compose/"+variant+"/x86_64/os/";
     
 	    // check the baseurl for problems
