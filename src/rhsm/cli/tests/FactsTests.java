@@ -1650,31 +1650,32 @@ if (false) { // DO NOT RUN, BUT NOT READY TO DELETE CODE
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition(//update=true // uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(update=true, // uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6,Project.RedHatEnterpriseLinux7},
 			testCaseID= {"", ""},
 			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier1")
-	@Test( description = "Verify the uptime in facts list",
+	@Test( description = "Verify the btime in facts list",
 			groups ={"Tier1Tests","blockedByBug-1527727"},
 			enabled = true)
-	public void testUptimeInFacts()throws JSONException,Exception{
+	public void testFactForBootTime()throws JSONException,Exception{
 		// Note: man page for proc states: btime "boot time, in seconds since the Epoch, 1970-01-01 00:00:00 +0000 (UTC)."
 		// How to convert btime into a human readable locale time...
 		// [root@jsefler-rhel7 ~]# date -d @769041601
 		// Sun May 15 18:40:01 EDT 1994
-		if (clienttasks.redhatReleaseX.equals("6")){
-			log.warning("The applicability of this test on RHEL6 has not been decided.");
-			//throw new SkipException("TODO");
-		}
-	//	if (clienttasks.isPackageVersion("subscription-manager","<","1.22.x.y")){ //TODO update version
-			//TODO Not Yet implemented
-	//		throw new SkipException("This test applies to a newer version of subscription-manager containing the fix for bug 1527727");
-	//	}
-		String upTime =client.runCommandAndWait("uptime -s").getStdout().trim();
-		Assert.assertEquals(clienttasks.getFactValue("system.uptime"),upTime, "System fact system.uptime matches the system value of uptime -s." );
+		if (clienttasks.isPackageVersion("subscription-manager","<","1.21.2-3")){
+			//subscription-manager commit 44ace9ba81fff38485b6484b8397e484a190a459 1527727: Add proc_stat.btime fact
+			throw new SkipException(
+					"This test applies to a newer version of subscription manager that includes fixes for bug 1527727.");
+			}
+		String fact="proc_stat.btime";
+		String factValue = clienttasks.getFactValue(fact);
+		String command="awk '/btime/{print $2}' /proc/stat";
+		String bTime=client.runCommandAndWait(command).getStdout().trim();
+
+		Assert.assertEquals(factValue,bTime, "System fact '"+fact+"' matches the system value from '"+command+"'.");
 	}
 
 	// Candidates for an automated Test:
