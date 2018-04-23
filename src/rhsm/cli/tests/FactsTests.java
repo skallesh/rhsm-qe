@@ -1650,7 +1650,7 @@ if (false) { // DO NOT RUN, BUT NOT READY TO DELETE CODE
 	 * @throws Exception
 	 * @throws JSONException
 	 */
-	@TestDefinition(update=true, // uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true, // uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6,Project.RedHatEnterpriseLinux7},
 			testCaseID= {"", ""},
 			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
