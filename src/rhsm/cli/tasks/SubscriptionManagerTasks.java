@@ -946,6 +946,7 @@ if (false) {
 		pkgs.add(0,"net-tools");	// provides netstat which is used to know when vncserver is up
 		pkgs.add(0,"ntp");	// used to synchronize a computer's time with another reference time source.
 		pkgs.add(0,"git");	// used to clone rcm-metadata.git
+		pkgs.add(0,"wget");	// used to get translate-toolkit
 		//TODO I don't think we really need to check the version of rhel for the next pkgs, if they don't exist, they just won't be installed. 
 		if /* >= RHEL6 */   (Integer.valueOf(redhatReleaseX)>=6) pkgs.add(0,"python-dateutil");	// dependency for python-rhsm
 		if /* >= RHEL7.5 */ (redhatReleaseX.equals("7") && Integer.valueOf(redhatReleaseXY.split("\\.")[1])>=5) pkgs.add(0,"cockpit");	// indirect dependency for subscription-manager-cockpit, but indirectly requires subscription-manager which means when subscription-manager is removed by yum, then cockpit is also removed
