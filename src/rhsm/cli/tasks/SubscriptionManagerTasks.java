@@ -730,6 +730,7 @@ if (false) {
 	    baseurlForExtras = "http://download.devel.redhat.com/rel-eng/latest-EXTRAS-7-RHEL-7/compose/"+variant+"/x86_64/os/";	// 302 Found // The document has moved <a href="http://download-node-02.eng.bos.redhat.com/rel-eng/latest-EXTRAS-7-RHEL-7/compose/Workstation/x86_64/os/">here</a>
 	    baseurlForExtras = "http://download-node-02.eng.bos.redhat.com/rel-eng/latest-EXTRAS-7-RHEL-7/compose/"+variant+"/x86_64/os/";
 	    baseurlForExtras = "http://download-node-02.eng.bos.redhat.com/rel-eng/latest-EXTRAS-7-RHEL-7/compose/"+"Server"+"/x86_64/os/";	// "Server" is the ONLY compose for http://download-node-02.eng.bos.redhat.com/rel-eng/latest-EXTRAS-7-RHEL-7/compose/
+	    baseurlForExtras = "http://download-node-02.eng.bos.redhat.com/rel-eng/latest-EXTRAS-"+redhatReleaseXY+"-RHEL-7/compose/"+"Server"+"/x86_64/os/";	// "Server" is the ONLY compose for http://download-node-02.eng.bos.redhat.com/rel-eng/latest-EXTRAS-7.5-RHEL-7/compose/
 	    String baseurlForDeps = "http://download-node-02.eng.bos.redhat.com/rel-eng/latest-RHEL-7/compose/"+variant+"/x86_64/os/";
     
 	    // check the baseurl for problems
@@ -949,6 +950,7 @@ if (false) {
 		if /* >= RHEL6 */   (Integer.valueOf(redhatReleaseX)>=6) pkgs.add(0,"python-dateutil");	// dependency for python-rhsm
 		if /* >= RHEL7.5 */ (redhatReleaseX.equals("7") && Integer.valueOf(redhatReleaseXY.split("\\.")[1])>=5) pkgs.add(0,"cockpit");	// indirect dependency for subscription-manager-cockpit, but indirectly requires subscription-manager which means when subscription-manager is removed by yum, then cockpit is also removed
 		if /* >= RHEL8.0 */ (redhatReleaseX.equals("8") && Integer.valueOf(redhatReleaseXY.split("\\.")[1])>=0) pkgs.add(0,"cockpit");	// indirect dependency for subscription-manager-cockpit, but indirectly requires subscription-manager which means when subscription-manager is removed by yum, then cockpit is also removed
+		if /* >= RHEL8.0 */ (redhatReleaseX.equals("8") && Integer.valueOf(redhatReleaseXY.split("\\.")[1])>=0) {pkgs.add(0,"chrony");pkgs.remove("ntp");}	// replacement for ntp
 		
 		// TEMPORARY WORKAROUND FOR BUG
 		String bugId = "790116"; boolean invokeWorkaroundWhileBugIsOpen = true;
@@ -994,7 +996,7 @@ if (false) {
 		
 		// make sure the client's time is accurate
 		if (Integer.valueOf(redhatReleaseX)>=8)	{	// the RHEL8 way...
-			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "systemctl stop ntpd.service && ntpd -q clock.redhat.com && systemctl enable ntpd.service && systemctl start ntpd.service && systemctl is-active ntpd.service", Integer.valueOf(0), "^active$", null);
+			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "systemctl enable chronyd.service && systemctl restart chronyd.service && chronyc makestep && systemctl is-active chronyd.service", Integer.valueOf(0), "^active$", null);	// chronyc tracking (will show the amount of skew under System time)	// chronyc sources (will show the time sources from where time will sync)	// chronyd -q 'pool pool.ntp.org iburst' (will add a source)
 		} else if (Integer.valueOf(redhatReleaseX)>=7)	{	// the RHEL7 / F16+ way...
 			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "systemctl stop ntpd.service && ntpdate clock.redhat.com && systemctl enable ntpd.service && systemctl start ntpd.service && systemctl is-active ntpd.service", Integer.valueOf(0), "^active$", null);
 		} else {

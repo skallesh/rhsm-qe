@@ -1661,6 +1661,10 @@ if (false) { // DO NOT RUN, BUT NOT READY TO DELETE CODE
 			groups ={"Tier1Tests","blockedByBug-1527727"},
 			enabled = true)
 	public void testUptimeInFacts()throws JSONException,Exception{
+		// Note: man page for proc states: btime "boot time, in seconds since the Epoch, 1970-01-01 00:00:00 +0000 (UTC)."
+		// How to convert btime into a human readable locale time...
+		// [root@jsefler-rhel7 ~]# date -d @769041601
+		// Sun May 15 18:40:01 EDT 1994
 		if (clienttasks.redhatReleaseX.equals("6")){
 			log.warning("The applicability of this test on RHEL6 has not been decided.");
 			//throw new SkipException("TODO");
