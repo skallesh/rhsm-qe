@@ -519,7 +519,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier3")
 	@Test(	description="subscription-manager : list using a proxy server after setting rhsm.config parameters (Positive and Negative Variations)",
-			groups={"Tier3Tests"},
+			groups={"Tier3Tests","blockedByBug-1570558"},
 			dataProvider="getListAttemptsUsingProxyServerViaRhsmConfigData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
@@ -592,7 +592,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier3")
 	@Test(	description="subscription-manager : release using a proxy server after setting rhsm.config parameters (Positive and Negative Variations)",
-			groups={"Tier3Tests"},
+			groups={"Tier3Tests","blockedByBug-1570558"},
 			dataProvider="getReleaseAttemptsUsingProxyServerViaRhsmConfigData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
@@ -675,7 +675,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier3")
 	@Test(	description="subscription-manager : release using a proxy server after setting rhsm.config parameters (Positive and Negative Variations)",
-			groups={"Tier3Tests","blockedByBug-822965","blockedByBug-824530"},
+			groups={"Tier3Tests","blockedByBug-822965","blockedByBug-824530","blockedByBug-1570558"},
 			dataProvider="getReleaseAttemptsUsingProxyServerViaRhsmConfigData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
@@ -1067,7 +1067,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier3")
 	@Test(	description="subscription-manager : facts using a proxy server after setting rhsm.config parameters (Positive and Negative Variations)",
-			groups={"Tier3Tests"},
+			groups={"Tier3Tests","blockedByBug-1570558"},
 			dataProvider="getFactsAttemptsUsingProxyServerViaRhsmConfigData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
@@ -1228,7 +1228,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier3")
 	@Test(	description="subscription-manager : repos using a proxy server after setting rhsm.config parameters (Positive and Negative Variations)",
-			groups={"Tier3Tests","blockedByBug-906642","blockedByBug-909778"},
+			groups={"Tier3Tests","blockedByBug-906642","blockedByBug-909778","blockedByBug-1570558"},
 			dataProvider="getReposAttemptsUsingProxyServerViaRhsmConfigData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
@@ -1348,7 +1348,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier3")
 	@Test(	description="subscription-manager : repo-override --list using a proxy server after setting rhsm.config parameters (Positive and Negative Variations)",
-			groups={"Tier3Tests"},
+			groups={"Tier3Tests","blockedByBug-1570558"},
 			dataProvider="getRepoOverrideAttemptsUsingProxyServerViaRhsmConfigData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
@@ -2736,7 +2736,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		String uErrMsg = servertasks.invalidCredentialsMsg(); //"Invalid username or password";
 		String oErrMsg = "Organization/Owner bad-org does not exist."; oErrMsg = "Organization bad-org does not exist.";
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-1")) {	// post commit 630e1a2eb06e6bfacac669ce11f38e228c907ea9 1507030: RestlibExceptions should show they originate server-side
-			uErrMsg = "HTTP error (401 - Unauthorized): "+uErrMsg;
+		//	uErrMsg = "HTTP error (401 - Unauthorized): "+uErrMsg;
 			oErrMsg = "HTTP error (400 - Bad Request): "+oErrMsg;
 		}
 		if (sm_serverType.equals(CandlepinType.katello))	oErrMsg = "Couldn't find organization 'bad-org'";
@@ -3388,8 +3388,11 @@ if (false) {	// DELETEME in favor of blockedByBadAuthBugs below
 						bugIds.add("1263474");	// Bug 1263474 - subscription-manager redeem is not reporting the response to stdout
 						bugIds.add("1345962");	// Bug 1345962 - unbound method endheaders() must be called with HTTPSConnection instance as first argument (got RhsmProxyHTTPSConnection instance instead)
 						blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
-						
-						ll.add(Arrays.asList(new Object[]{	blockedByBzBug,	l.get(1),	l.get(2),	l.get(3),	l.get(4),	l.get(5),	l.get(6),	new Integer(70)/*EX_SOFTWARE*/,	l.get(8),	new String("Standalone candlepin does not support redeeming a subscription.")}));
+						String errorMsg="Standalone candlepin does not support redeeming a subscription.";
+						if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-1")) {	// post commit 630e1a2eb06e6bfacac669ce11f38e228c907ea9 1507030: RestlibExceptions should show they originate server-side
+							errorMsg = "HTTP error code 503: "+errorMsg;	// HTTP error (401 - Unauthorized): Invalid Credentials
+						}
+						ll.add(Arrays.asList(new Object[]{	blockedByBzBug,	l.get(1),	l.get(2),	l.get(3),	l.get(4),	l.get(5),	l.get(6),	new Integer(70)/*EX_SOFTWARE*/,	l.get(8),	new String(errorMsg)}));
 						continue;
 					}
 				}
