@@ -2610,10 +2610,10 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		String noauthproxyUrl = String.format("%s:%s", sm_noauthproxyHostname,sm_noauthproxyPort); noauthproxyUrl = noauthproxyUrl.replaceAll(":$", "");
 		String uErrMsg = servertasks.invalidCredentialsMsg(); //"Invalid username or password";
 		String oErrMsg = /*"Organization/Owner bad-org does not exist."*/"Organization bad-org does not exist.";
-		/*if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-1")) {	// post commit 630e1a2eb06e6bfacac669ce11f38e228c907ea9 1507030: RestlibExceptions should show they originate server-side
-			uErrMsg = "HTTP error (401 - Unauthorized): "+uErrMsg;
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-1")) {	// post commit 630e1a2eb06e6bfacac669ce11f38e228c907ea9 1507030: RestlibExceptions should show they originate server-side
+		//	uErrMsg = "HTTP error (401 - Unauthorized): "+uErrMsg;
 			oErrMsg = "HTTP error (400 - Bad Request): "+oErrMsg;
-		}RestlibExceptions are not shown with invalid credentials error*/
+		}
 		if (sm_serverType.equals(CandlepinType.katello))	oErrMsg = "Couldn't find organization 'bad-org'";
 		
 		// Object blockedByBug, String username, String password, String org, String proxy, String proxyuser, String proxypassword, Integer exitCode, String stdout, String stderr
@@ -2735,10 +2735,10 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		String noauthproxyUrl = String.format("%s:%s", sm_noauthproxyHostname,sm_noauthproxyPort); noauthproxyUrl = noauthproxyUrl.replaceAll(":$", "");
 		String uErrMsg = servertasks.invalidCredentialsMsg(); //"Invalid username or password";
 		String oErrMsg = "Organization/Owner bad-org does not exist."; oErrMsg = "Organization bad-org does not exist.";
-		/*if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-1")) {	// post commit 630e1a2eb06e6bfacac669ce11f38e228c907ea9 1507030: RestlibExceptions should show they originate server-side
-			uErrMsg = "HTTP error (401 - Unauthorized): "+uErrMsg;
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-1")) {	// post commit 630e1a2eb06e6bfacac669ce11f38e228c907ea9 1507030: RestlibExceptions should show they originate server-side
+		//	uErrMsg = "HTTP error (401 - Unauthorized): "+uErrMsg;
 			oErrMsg = "HTTP error (400 - Bad Request): "+oErrMsg;
-		}restlib exceptions are not shown with invalid credentials error*/
+		}
 		if (sm_serverType.equals(CandlepinType.katello))	oErrMsg = "Couldn't find organization 'bad-org'";
 //		String hostname = clienttasks.getConfParameter("hostname");
 //		String prefix = clienttasks.getConfParameter("prefix");
