@@ -1795,7 +1795,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		servertasks.updateConfFileParameter("log4j.logger.org.candlepin.policy.js.compliance", "DEBUG");
 		servertasks.updateConfFileParameter("log4j.logger.org.candlepin", "DEBUG");
 		servertasks.restartTomcat();
-		sleep(1*60*1000);// adding buffer time for tomcat to be up and running
+		sleep(1*90*1000);// adding buffer time for tomcat to be up and running
 	   	File tomcatLogFile = servertasks.getTomcatLogFile();
 		String LogMarker = System.currentTimeMillis()
 				+ " Testing VerifyAutosubscribeReuseBasicAuthCredntials ********************************";
