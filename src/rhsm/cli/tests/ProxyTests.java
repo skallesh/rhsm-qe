@@ -101,7 +101,9 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		// set the config parameters
 		updateConfFileProxyParameters(proxy_hostnameConfig, proxy_portConfig, proxy_userConfig, proxy_passwordConfig, "");
 		RemoteFileTasks.runCommandAndWait(client,"grep proxy "+clienttasks.rhsmConfFile,TestRecords.action());
-
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-1")) {	// post commit 630e1a2eb06e6bfacac669ce11f38e228c907ea9 1507030: RestlibExceptions should show they originate server-side
+			stderr = "HTTP error (401 - Unauthorized): "+stderr;
+		}
 		// attempt to register
 		SSHCommandResult attemptResult = clienttasks.register_(username, password, org, null, null, null, null, null, null, null, (String)null, null, null, null, null, null, proxy, proxyuser, proxypassword, null);
 		if (exitCode!=null)	Assert.assertEquals(attemptResult.getExitCode(), exitCode, "The exit code from a negative attempt to "+moduleTask+" using a proxy server.");
@@ -1769,7 +1771,9 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		// pad the tail of proxyLog with a message
 		proxyLogMarker = System.currentTimeMillis()+" Testing "+moduleTask+" AttemptsUsingProxyServerDefinedByAnEnvironmentVariable_Test from "+clienttasks.hostname+"...";
 		RemoteFileTasks.markFile(proxyRunner, proxyLog, proxyLogMarker);
-		
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-1")) {	// post commit 630e1a2eb06e6bfacac669ce11f38e228c907ea9 1507030: RestlibExceptions should show they originate server-side
+				stderr = "HTTP error (401 - Unauthorized): "+stderr;
+		}
 		// attempt to register using a proxy server defined by an environment variable (no CLI option nor rhsm.conf [sever] proxy configurations set)
 		attemptResult = client.runCommandAndWait(httpProxyEnvVar+" "+clienttasks.registerCommand(username, password, org, null, null, null, null, null, null, null, (List<String>)null, null, null, null, null, null, null, null, null, null));
 		if (exitCode!=null)	Assert.assertEquals(attemptResult.getExitCode(), exitCode, "The exit code from an attempt to "+moduleTask+" using a proxy server defined by an environment variable '"+httpProxyEnvVar+"'.");
@@ -2611,7 +2615,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		String uErrMsg = servertasks.invalidCredentialsMsg(); //"Invalid username or password";
 		String oErrMsg = /*"Organization/Owner bad-org does not exist."*/"Organization bad-org does not exist.";
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-1")) {	// post commit 630e1a2eb06e6bfacac669ce11f38e228c907ea9 1507030: RestlibExceptions should show they originate server-side
-			uErrMsg = "HTTP error (401 - Unauthorized): "+uErrMsg;
+		//	uErrMsg = "HTTP error (401 - Unauthorized): "+uErrMsg;
 			oErrMsg = "HTTP error (400 - Bad Request): "+oErrMsg;
 		}
 		if (sm_serverType.equals(CandlepinType.katello))	oErrMsg = "Couldn't find organization 'bad-org'";
