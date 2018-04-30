@@ -2470,7 +2470,7 @@ if (false) {
 		//		Version: 5.10
 		//		Arch: i386
 		//		Tags: rhel-5-client-workstation,rhel-5-workstation
-		providingTag += "|" + "rhel-5-client-workstation";
+		if (redhatReleaseX.equals("5")) providingTag += "|" + "rhel-5-client-workstation";
 		
 		// also consider tags used for rhel 7 beta
 		//	[root@ibm-p8-kvm-09-guest-08 rhel-7.0-beta]# for f in $(ls *.pem); do rct cat-cert $f | egrep -A7 'Product:'; done;
@@ -2498,7 +2498,7 @@ if (false) {
 		//		Tags: rhel-7-everything
 		//		Brand Type: 
 		//		Brand Name: 
-		providingTag += "|" + "rhel-7-.*everything";
+		if (redhatReleaseX.equals("7")) providingTag += "|" + "rhel-7-.*everything";
 		
 		// also consider tags used for rhelsa-dp Development Preview
 		//	[root@ibm-p8-kvm-09-guest-08 rhelsa-dp]# for f in $(ls *.pem); do rct cat-cert $f | egrep -A7 'Product:'; done;
@@ -2510,7 +2510,7 @@ if (false) {
 		//		Tags: rhsa-dp-server,rhsa-dp-server-7
 		//		Brand Type: 
 		//		Brand Name: 
-		providingTag += "|" + "rhelsa-dp-.+";
+		if (redhatReleaseX.equals("7")) providingTag += "|" + "rhelsa-dp-.+";
 		
 		// also consider tags used for rhel-alt
 		//	[root@ibm-p8-kvm-09-guest-08 tmp]# git clone git://git.host.prod.eng.bos.redhat.com/rcm/rcm-metadata.git
@@ -2532,9 +2532,34 @@ if (false) {
 		//		Tags: rhel-alt-7,rhel-alt-7-power9
 		//		Brand Type: 
 		//		Brand Name: 
-		providingTag += "|" + "rhel-alt-"+redhatReleaseX;
+		if (redhatReleaseX.equals("7")) providingTag += "|" + "rhel-alt-"+redhatReleaseX;
 		
-		// also consider tags used for rhel-htb High Touch Beta
+		
+		// also consider tags used for rhel-6-VARIANT-htb High Touch Beta
+		//	[root@jsefler-rhel6 tmp]# git clone git://git.host.prod.eng.bos.redhat.com/rcm/rcm-metadata.git
+		//	[root@jsefler-rhel6 tmp]# cd rcm-metadata/product_ids/rhel-6.6-htb/
+		//	[root@jsefler-rhel6 rhel-6.6-htb]# for f in $(ls *.pem); do rct cat-cert $f | egrep -A7 'Product:'; done;
+		//	[root@jsefler-rhel6 rhel-6.6-htb]# for f in $(ls *.pem); do rct cat-cert $f | egrep -A7 'Product:'; done;
+		//	Product:
+		//		ID: 135
+		//		Name: Red Hat Enterprise Linux Server HTB
+		//		Version: 6.6
+		//		Arch: x86_64
+		//		Tags: rhel-6-server-htb
+		//		Brand Type: 
+		//		Brand Name: 
+		//	Product:
+		//		ID: 155
+		//		Name: Red Hat Enterprise Linux Workstation HTB
+		//		Version: 6.6
+		//		Arch: x86_64
+		//		Tags: rhel-6-workstation-htb
+		//		Brand Type: 
+		//		Brand Name: 
+		if (redhatReleaseX.equals("6")) providingTag += "|" + "rhel-"+redhatReleaseX+"-"+variant.toLowerCase()+"-htb";
+		
+		
+		// also consider tags used for rhel-7-htb High Touch Beta
 		//	[root@dell-pem610-01 tmp]# git clone git://git.host.prod.eng.bos.redhat.com/rcm/rcm-metadata.git
 		//	[root@dell-pem610-01 tmp]# cd rcm-metadata/product_ids/rhel-7.5-htb/
 		//	[root@dell-pem610-01 rhel-7.5-htb]# for f in $(ls *.pem); do rct cat-cert $f | egrep -A7 'Product:'; done;
@@ -2554,7 +2579,7 @@ if (false) {
 		//		Tags: rhel-7-htb,rhel-7-workstation
 		//		Brand Type: 
 		//		Brand Name: 
-		providingTag += "|" + "rhel-"+redhatReleaseX+"-htb";
+		if (redhatReleaseX.equals("7")) providingTag += "|" + "rhel-"+redhatReleaseX+"-htb";
 		
 		// get the product certs matching the rhel regex tag
 		List<ProductCert> rhelProductCerts = getCurrentProductCerts(providingTag);
