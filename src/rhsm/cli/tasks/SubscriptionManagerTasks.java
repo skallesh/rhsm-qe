@@ -2537,23 +2537,22 @@ if (false) {
 		
 		// also consider tags used for rhel-6-VARIANT-htb High Touch Beta
 		//	[root@jsefler-rhel6 tmp]# git clone git://git.host.prod.eng.bos.redhat.com/rcm/rcm-metadata.git
-		//	[root@jsefler-rhel6 tmp]# cd rcm-metadata/product_ids/rhel-6.6-htb/
-		//	[root@jsefler-rhel6 rhel-6.6-htb]# for f in $(ls *.pem); do rct cat-cert $f | egrep -A7 'Product:'; done;
-		//	[root@jsefler-rhel6 rhel-6.6-htb]# for f in $(ls *.pem); do rct cat-cert $f | egrep -A7 'Product:'; done;
+		//	[root@jsefler-rhel6 tmp]# cd rcm-metadata/product_ids/rhel-6.10-htb/
+		//	[root@jsefler-rhel6 rhel-6.10-htb]# for f in $(ls *.pem); do rct cat-cert $f | egrep -A7 'Product:'; done;
 		//	Product:
 		//		ID: 135
-		//		Name: Red Hat Enterprise Linux Server HTB
-		//		Version: 6.6
+		//		Name: Red Hat Enterprise Linux 6 Server HTB
+		//		Version: 6.10 HTB
 		//		Arch: x86_64
-		//		Tags: rhel-6-server-htb
+		//		Tags: rhel-6-server-htb,rhel-6-server
 		//		Brand Type: 
 		//		Brand Name: 
 		//	Product:
 		//		ID: 155
-		//		Name: Red Hat Enterprise Linux Workstation HTB
-		//		Version: 6.6
+		//		Name: Red Hat Enterprise Linux 6 Workstation HTB
+		//		Version: 6.10 HTB
 		//		Arch: x86_64
-		//		Tags: rhel-6-workstation-htb
+		//		Tags: rhel-6-workstation-htb,rhel-6-workstation
 		//		Brand Type: 
 		//		Brand Name: 
 		if (redhatReleaseX.equals("6")) providingTag += "|" + "rhel-"+redhatReleaseX+"-"+variant.toLowerCase()+"-htb";
