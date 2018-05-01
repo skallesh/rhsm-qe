@@ -1252,6 +1252,19 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 				}
 				// END OF WORKAROUND
 				
+				// TEMPORARY WORKAROUND
+				if (clienttasks.redhatReleaseX.equals("6") && rhelProductCert.productId.equals("155")) {
+					boolean invokeWorkaroundWhileBugIsOpen = true;
+					String bugId="1573573"; // Bug 1573573 - EngId 155 repo rhel-6-workstation-htb-rpms should be enabled by default 
+					try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
+					if (invokeWorkaroundWhileBugIsOpen) {
+						String enablerepo = "rhel-6-workstation-htb-rpms";
+						log.info("Explicitly enabling repo '"+enablerepo+"' to gain access to HTB Workstation content on RHEL6.");
+						clienttasks.repos(null, null, null, enablerepo, null, null, null, null, null);
+					}
+				}
+				// END OF WORKAROUND
+				
 				// WORKAROUND FOR RHEL-ALT-7.5 aarch64
 				if (clienttasks.redhatReleaseXY.equals("7.5") && rhelProductCert.productId.equals("433")) { // Red Hat Enterprise Linux for IBM System z (Structure A) Beta
 					String repo="rhel-7-for-system-z-a-beta-rpms";
@@ -1265,7 +1278,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 				if (yumRepolistPackageCount>0) {
 					Assert.assertTrue(yumRepolistPackageCount>0,"Expecting many available packages (actual='"+yumRepolistPackageCount+"') of enabled repo content because RHEL subscription '"+pool.subscriptionName+"' SKU '"+pool.productId+"' was just attached.");
 				} else {
-					log.warning("No enabled yum repo content packages are available after attaching RHEL subscription '"+pool.subscriptionName+"'. (This can happen when the RHEL product is brand new and content has not yet been pushed to '"+clienttasks.baseurl+"')");
+					log.warning("No enabled yum repo content packages are available after attaching RHEL subscription '"+pool.subscriptionName+"'. (This can happen when the RHEL product is brand new and content has not yet been pushed to '"+clienttasks.baseurl+"'.  It can also happen when testing Snapshot-1 prior to public release of HTB content.)");
 					rhelYumContentIsAvailable = false;
 				}
 				
