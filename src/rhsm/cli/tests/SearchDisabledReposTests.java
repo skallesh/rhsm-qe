@@ -440,9 +440,24 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 			rhelBaseRepoId = rhelHtbRepoId;
 			rhelOptionalRepoId = rhelOptionalHtbRepoId;
 		}
+		if (rhelProductCert.productId.equals("135")/*Red Hat Enterprise Linux 6 Server HTB*/||
+			rhelProductCert.productId.equals("155")/*Red Hat Enterprise Linux 6 Workstation HTB*/) {
+			log.info("Adjusting the expected base and optional repos because the default installed RHEL product appears to be High Touch Beta (this is expected for Snapshot composes).");
+			rhelBaseRepoId = rhelHtbRepoId;
+			rhelOptionalRepoId = rhelOptionalHtbRepoId;
+		}
+		
 		// assert the base rhel repo is enabled by default
 		Repo rhelBaseRepo = Repo.findFirstInstanceWithMatchingFieldFromList("repoId", rhelBaseRepoId, subscribedRepos);
 		Assert.assertNotNull(rhelBaseRepo, "RHEL base repo id '"+rhelBaseRepoId+"' was found in subscribed repos.");
+		// TEMPORARY WORKAROUND
+		boolean invokeWorkaroundWhileBugIsOpen = true;
+		String bugId="1573573"; // Bug 1573573 - EngId 155 repo rhel-6-workstation-htb-rpms should be enabled by default 
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
+		if (rhelProductCert.productId.equals("155") && invokeWorkaroundWhileBugIsOpen) {
+			log.info("Skipping the assertion that RHEL base repo id '"+rhelBaseRepoId+"' is enabled by default while bug '"+bugId+"' is open.");
+		} else
+		// END OF WORKAROUND
 		Assert.assertTrue(rhelBaseRepo.enabled, "RHEL base repo id '"+rhelBaseRepoId+"' is enabled by default.");
 		
 		// assert the optional rhel repo is disabled by default
