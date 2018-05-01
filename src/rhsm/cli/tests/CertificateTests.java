@@ -174,6 +174,11 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 			}
 			else { 													// i386 i686 ia64 x86_64
 				rhelProductCert = ProductCert.findFirstInstanceWithMatchingFieldFromList("productId", "69", productCerts);	// Red Hat Enterprise Linux Server
+				
+				// this could be a snapshot compose with HTB product 135 installed
+				if (rhelProductCert==null) {
+					rhelProductCert = ProductCert.findFirstInstanceWithMatchingFieldFromList("productId", "135", productCerts);	// Red Hat Enterprise Linux 6 Server HTB
+				}
 			}
 		}
 		else if (clienttasks.releasever.equals("5Client")) {		// i386 i686 x86_64
@@ -185,6 +190,11 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		}
 		else if (clienttasks.releasever.equals("6Workstation")) {	// i386 i686 x86_64
 				rhelProductCert = ProductCert.findFirstInstanceWithMatchingFieldFromList("productId", "71", productCerts);	// Red Hat Enterprise Linux Workstation
+				
+				// this could be a snapshot compose with HTB product 155 installed
+				if (rhelProductCert==null) {
+					rhelProductCert = ProductCert.findFirstInstanceWithMatchingFieldFromList("productId", "155", productCerts);	// Red Hat Enterprise Linux 6 Workstation HTB
+				}
 		}
 		else if (clienttasks.releasever.equals("6ComputeNode")) {	// i386 i686 x86_64
 				rhelProductCert = ProductCert.findFirstInstanceWithMatchingFieldFromList("productId", "76", productCerts);	// Red Hat Enterprise Linux for Scientific Computing
@@ -196,7 +206,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 			if (clienttasks.isPackageVersion("kernel", "==", "4")) {
 				rhelProductCert = clienttasks.getCurrentProductCerts("rhel-alt-7-.*").get(0);	// should only be one (tested by VerifyOnlyOneBaseRHELProductCertIsInstalled_Test)				
 			} else {
-				rhelProductCert = clienttasks.getCurrentProductCerts("rhel-7-.*").get(0);	// should only be one (tested by VerifyOnlyOneBaseRHELProductCertIsInstalled_Test)				
+				rhelProductCert = clienttasks.getCurrentProductCerts("rhel-7-.*").get(0);	// should only be one (tested by VerifyOnlyOneBaseRHELProductCertIsInstalled_Test)	// also matches HTB product cert tags rhel-7-htb		
 			}
 		}
 		
@@ -1304,6 +1314,8 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		// Step 1: determine the currently installed RHEL product cert
 		ProductCert originalRhelProductCert=clienttasks.getCurrentRhelProductCert();
 		Assert.assertNotNull(originalRhelProductCert,"Expected a base RHEL product cert to be installed.");
+		// this test is not applicable to snapshot composes where a HTB product-default is installed
+		if (originalRhelProductCert.productNamespace.providedTags.contains("-htb")) throw new SkipException("This is not applicable to a High Touch Beta compose of RHEL because yum updates from one minor release of RHEL HTB to the next minor release of RHEL HTB is not a supported use case."); 
 		
 		// Step 2: configure a temporary productCertDir and backup the productid json database file
 		log.info("Configuring a temporary product cert directory...");
