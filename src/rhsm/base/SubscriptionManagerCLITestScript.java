@@ -239,7 +239,11 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			
 			infoMsg = "Installed Packages:";
 			log.info(infoMsg); output.write(infoMsg+"\n");
-			infoMsg = client1.runCommandAndWait("rpm -qa | egrep ^subscription-manager").getStdout();	// subscription-manager-0.63-1.el6.i686
+			infoMsg = client1.runCommandAndWait("rpm -qa | egrep subscription-manager").getStdout();	// subscription-manager-0.63-1.el6.i686
+			log.info(infoMsg); output.write(infoMsg+"\n");
+			infoMsg = client1.runCommandAndWait("rpm -qa | egrep ^rhsm-gtk").getStdout();	// subscription-manager-0.63-1.el6.i686
+			log.info(infoMsg); output.write(infoMsg+"\n");
+			infoMsg = client1.runCommandAndWait("rpm -qa | egrep intentctl").getStdout();	// subscription-manager-0.63-1.el6.i686
 			log.info(infoMsg); output.write(infoMsg+"\n");
 			infoMsg = client1.runCommandAndWait("rpm -qa | egrep ^python-rhsm").getStdout();	// python-rhsm-0.63-1.el6.i686
 			log.info(infoMsg); output.write(infoMsg+"\n");
@@ -282,7 +286,11 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			
 			infoMsg = "Installed Packages:";
 			log.info(infoMsg); output.write(infoMsg+"\n");
-			infoMsg = client2.runCommandAndWait("rpm -qa | egrep ^subscription-manager").getStdout();	// subscription-manager-0.63-1.el6.i686
+			infoMsg = client2.runCommandAndWait("rpm -qa | egrep subscription-manager").getStdout();	// subscription-manager-0.63-1.el6.i686
+			log.info(infoMsg); output.write(infoMsg+"\n");
+			infoMsg = client2.runCommandAndWait("rpm -qa | egrep ^rhsm-gtk").getStdout();	// subscription-manager-0.63-1.el6.i686
+			log.info(infoMsg); output.write(infoMsg+"\n");
+			infoMsg = client2.runCommandAndWait("rpm -qa | egrep intentctl").getStdout();	// subscription-manager-0.63-1.el6.i686
 			log.info(infoMsg); output.write(infoMsg+"\n");
 			infoMsg = client2.runCommandAndWait("rpm -qa | egrep ^python-rhsm").getStdout();	// python-rhsm-0.63-1.el6.i686
 			log.info(infoMsg); output.write(infoMsg+"\n");
