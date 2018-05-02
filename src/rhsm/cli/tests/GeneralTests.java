@@ -640,8 +640,53 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		for (String actualRequires : actualRequiresList) if (!expectedRequiresList.contains(actualRequires)) log.warning("The expected requires list does not include the actual requires '"+actualRequires+"'  Is this a new requirement?");
 		Assert.assertTrue(expectedRequiresList.containsAll(actualRequiresList) && actualRequiresList.containsAll(expectedRequiresList), "The actual requires list of packages for '"+pkg+"' matches the expected list "+expectedRequiresList);
 	}
-
-
+	
+	
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"", ""},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
+	@Test(	description="check the rpm requires list for changes to rhsm-gtk",
+			groups={"Tier2Tests"},
+			enabled=true)
+	//@ImplementsTCMS(id="")
+	public void testRpmRequireListForRhsmGtk() {
+		String pkg = "rhsm-gtk";
+		if (!clienttasks.isPackageInstalled(pkg)) throw new SkipException("This test require that package '"+pkg+"' be installed.");
+		String rpmCommand = "rpm --query --requires "+pkg+" --verbose";
+		if (Integer.valueOf(clienttasks.redhatReleaseX) == 5) rpmCommand += " | egrep -v '\\(.*\\)'";
+		if (Integer.valueOf(clienttasks.redhatReleaseX) > 5) rpmCommand += " | egrep -v '(^auto:|^rpmlib:)'";
+		SSHCommandResult sshCommandResult = client.runCommandAndWait(rpmCommand);
+		
+		List<String> actualRequiresList = new ArrayList<String>();
+		for (String requires : Arrays.asList(sshCommandResult.getStdout().trim().split("\\n"))) {
+			if (!requires.trim().isEmpty()) actualRequiresList.add(requires.trim());
+		}
+		
+		List<String> expectedRequiresList = new ArrayList<String>();
+		
+		if (clienttasks.redhatReleaseX.equals("7")) {
+			// rpm --query --requires rhsm-gtk --verbose | egrep -v '(^auto:|^rpmlib:)'
+			expectedRequiresList.addAll(Arrays.asList(new String[]{
+					"manual: font(cantarell)",
+					"manual: gtk3",
+					"manual: pygobject3",
+					"manual: librsvg2("+clienttasks.arch.replace("_","-")+")",	//"manual: librsvg2(x86-64)",
+					"post: scrollkeeper",
+					"postun: scrollkeeper",
+					"manual: usermode-gtk"
+			}));
+		}
+		
+		for (String expectedRequires : expectedRequiresList) if (!actualRequiresList.contains(expectedRequires)) log.warning("The actual requires list is missing expected requires '"+expectedRequires+"'.");
+		for (String actualRequires : actualRequiresList) if (!expectedRequiresList.contains(actualRequires)) log.warning("The expected requires list does not include the actual requires '"+actualRequires+"'  Is this a new requirement?");
+		Assert.assertTrue(expectedRequiresList.containsAll(actualRequiresList) && actualRequiresList.containsAll(expectedRequiresList), "The actual requires list of packages for '"+pkg+"' matches the expected list "+expectedRequiresList);
+	}
+	
+	
 	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-20376", "RHEL7-32168"},
@@ -740,6 +785,18 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 			if (clienttasks.isPackageVersion("subscription-manager-gui",">=","1.20.1-1")) {	// commit f20e28ab12b070095c4045aeecab2ccc9eba31b1 	// Add preliminary zypper support
 				expectedRequiresList.remove("manual: abattis-cantarell-fonts");
 				expectedRequiresList.add("manual: font(cantarell)");
+			}
+			if (clienttasks.isPackageVersion("subscription-manager-gui",">=","1.21.4-1")) {	// commit 23b5409c76d586c4e34440788d612e7ed65e2df6  Stop building subscription-manager-gui, when Python 3 is used
+				// let's start over with the introduction of rhsm-gtk
+				expectedRequiresList.clear();
+				expectedRequiresList.addAll(Arrays.asList(new String[]{
+						"manual: rhsm-gtk = "+clienttasks.installedPackageVersionMap.get("rhsm-gtk").replace("rhsm-gtk-", "").replaceFirst("\\."+clienttasks.arch, ""),	//"manual: rhsm-gtk = 1.9.11-1.el6",
+						"manual: subscription-manager = "+clienttasks.installedPackageVersionMap.get("subscription-manager").replace("subscription-manager-", "").replaceFirst("\\."+clienttasks.arch, ""),	//"manual: subscription-manager = 1.9.11-1.el6",
+						"interp,posttrans: /bin/sh",
+						"post,interp: /bin/sh",
+						"postun,interp: /bin/sh",
+						"manual: gnome-icon-theme"	// added by Bug 995121 - GUI: calendar icon on s390x and ppc64 machines is not displayed
+				}));
 			}
 		}
 		if (clienttasks.isPackageVersion("subscription-manager-gui",">=","1.14.8-1")) {		// commit dc727c4adef8cdc49e319f2d90738e848061da78  Adrian says that these imports were never used

@@ -970,6 +970,11 @@ if (false) {
 				sshCommandRunner.runCommandAndWait("yum -y install "+pkg+" "+installOptions);
 			}
 		}
+		
+		// remember the versions of the packages installed
+		for (String pkg : pkgs) {
+			isPackageVersion(pkg, "==", "0.0");	// this will simply populate the cached Map<String,String> installedPackageVersionMap
+		}
 	}
 	
 	
@@ -1127,16 +1132,6 @@ if (false) {
 			}
 			*/
 		}
-// DELETEME since exitCode assertion was added above
-//		// assert that all of the updated rpms are now installed
-//		for (String rpmPath : rpmPaths.split(" ")) {
-//			rpmPath = rpmPath.trim(); if (rpmPath.isEmpty()) continue;
-//			String pkg = (new File(rpmPath)).getName().replaceFirst("\\.rpm$","");
-//			String rpmPackageVersion = sshCommandRunner.runCommandAndWait("rpm --query --package "+rpmPath).getStdout().trim();
-//			String rpmInstalledVersion = sshCommandRunner.runCommandAndWait("rpm --query "+pkg).getStdout().trim();
-//			Assert.assertEquals(rpmInstalledVersion,rpmPackageVersion, "Local rpm package '"+rpmPath+"' is currently installed.");
-//			pkgsInstalled.add(pkg);
-//		}
 		
 		// remember the versions of the packages installed
 		for (String pkg : pkgsInstalled) {
