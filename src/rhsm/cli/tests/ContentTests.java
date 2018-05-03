@@ -1256,6 +1256,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 				if (clienttasks.redhatReleaseX.equals("6") && rhelProductCert.productId.equals("155")) {
 					boolean invokeWorkaroundWhileBugIsOpen = true;
 					String bugId="1573573"; // Bug 1573573 - EngId 155 repo rhel-6-workstation-htb-rpms should be enabled by default 
+					bugId="1571077"; // Bug 1571077 - [HTB] Repo "rhel-6-workstation-htb-rpms" should be enabled by default for workstation x86_64.
 					try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
 					if (invokeWorkaroundWhileBugIsOpen) {
 						String enablerepo = "rhel-6-workstation-htb-rpms";
