@@ -1259,6 +1259,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 					bugId="1571077"; // Bug 1571077 - [HTB] Repo "rhel-6-workstation-htb-rpms" should be enabled by default for workstation x86_64.
 					try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
 					if (invokeWorkaroundWhileBugIsOpen) {
+						WORKAROUND_BUG_1571077 = true;
 						String enablerepo = "rhel-6-workstation-htb-rpms";
 						log.info("Explicitly enabling repo '"+enablerepo+"' to gain access to HTB Workstation content on RHEL6.");
 						clienttasks.repos(null, null, null, enablerepo, null, null, null, null, null);
@@ -1311,6 +1312,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		Assert.assertTrue(rhelSubscriptionIsAvailable,"Successfully subscribed to at least one available RHEL subscription that provided for our installed RHEL product cert: "+rhelProductCert);
 		Assert.assertTrue(rhelYumContentIsAvailable,"All of the RHEL subscriptions subscribed provided at least one enabled yum content package applicable for our installed RHEL product cert: "+rhelProductCert+" (See WARNINGS logged above for failed subscriptions)");
 	}
+	protected boolean WORKAROUND_BUG_1571077 = false;
 
 
 	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
@@ -1341,6 +1343,14 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		} else {
 			RemoteFileTasks.runCommandAndAssert(client,"service rsyslog stop",Integer.valueOf(0),"^Shutting down system logger: *\\[  OK  \\]$",null);	
 		}
+		
+		// TEMPORARY WORKAROUND
+		if (WORKAROUND_BUG_1571077) {
+			String enablerepo = "rhel-6-workstation-htb-rpms";
+			log.info("Explicitly enabling repo '"+enablerepo+"' to gain access to HTB Workstation content on RHEL6.");
+			clienttasks.repos(null, null, null, enablerepo, null, null, null, null, null);
+		}
+		// END OF WORKAROUND
 		
 		// yum install the package
 		//  Failure From Bug 1211557 - subscription-manager causes failure of yum 
