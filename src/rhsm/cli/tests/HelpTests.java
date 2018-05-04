@@ -1136,10 +1136,10 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 				String rhsmIconHelpCommand = command+" "+helpOption;
 				List <String> usages = new ArrayList<String>();
 				String usage = command+" [OPTIONS]";
-				usage = command+" [OPTION...]"; // usage = rhsmIconCommand+" [OPTION...] rhsm icon"; // Bug 771756 - rhsm-icon --help usage message is misleading 
+				usage = command+" [OPTION...]"; // usage = rhsmIconCommand+" [OPTION...] rhsm icon"; // Bug 771756 - rhsm-icon --help usage message is misleading
 				usages.add(usage);
 				if (!Arrays.asList("6.1","5.7","6.2","5.8","6.3").contains(clienttasks.redhatReleaseXY)) // skip the following rhsmIconHelpCommand usage test since bug 771756 was not fixed until 5.9
-				ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("771756"), rhsmIconHelpCommand, 0, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\?", "\\\\?")+" *$", usages}));
+				ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("771756"), rhsmIconHelpCommand, 0, usage.replace("...","(\\.\\.\\.|…)").replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\?", "\\\\?")+" *$", usages}));
 				ll.add(Arrays.asList(new Object[] {null, rhsmIconHelpCommand, 0, optionsRegex, rhsmIconOptions}));
 			}
 			List <String> rhsmIconGtkOptions = new ArrayList<String>();
@@ -1155,7 +1155,11 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			if (!clienttasks.redhatReleaseX.equals("5"))	rhsmIconGtkOptions.add("--gdk-no-debug=FLAGS");
 			if (!clienttasks.redhatReleaseX.equals("5"))	rhsmIconGtkOptions.add("--gtk-debug=FLAGS");
 			if (!clienttasks.redhatReleaseX.equals("5"))	rhsmIconGtkOptions.add("--gtk-no-debug=FLAGS");
-			if (client.runCommandAndWait("rpm -qf `which rhsm-icon` --requires | egrep '^(gtk|pygtk)'").getStdout().trim().startsWith("gtk3")) {	// if (clienttasks.isPackageVersion("subscription-manager",">=","1.15.3")) {	// commit 3c51d2096ecdd1a7ba6981776bd9aa6959aa2e1e use gtk3 for rhsm-icon
+			String rpmQueryCommand = "rpm -qf `which rhsm-icon` --requires | egrep '^(gtk|pygtk)'";
+			if (clienttasks.isPackageVersion("subscription-manager-gui", ">=", "1.21.4-1")) {	// commit 23b5409c76d586c4e34440788d612e7ed65e2df6 Stop building subscription-manager-gui, when Python 3 is used
+				rpmQueryCommand = "rpm -q rhsm-gtk --requires | egrep '^(gtk|pygtk)'";
+			}
+			if (client.runCommandAndWait(rpmQueryCommand).getStdout().trim().startsWith("gtk3")) {	// if (clienttasks.isPackageVersion("subscription-manager",">=","1.15.3")) {	// commit 3c51d2096ecdd1a7ba6981776bd9aa6959aa2e1e use gtk3 for rhsm-icon
 				// effectively this happens on RHEL >= 7.2
 				// options not offered by gtk3
 				rhsmIconGtkOptions.remove("--screen=SCREEN");
@@ -1311,7 +1315,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			String usage = command+" [OPTIONS]";
 			usage = command+" [OPTION...]";
 			usages.add(usage);
-			ll.add(Arrays.asList(new Object[] {null, commandHelp, 0, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\?", "\\\\?")+" *$", usages}));
+			ll.add(Arrays.asList(new Object[] {null, commandHelp, 0, usage.replace("...","(\\.\\.\\.|…)").replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\?", "\\\\?")+" *$", usages}));
 			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug(new String[]{"876753","882459"}), commandHelp, 0, optionsRegex, new ArrayList<String>(options)}));
 		}
 
