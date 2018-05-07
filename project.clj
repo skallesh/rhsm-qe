@@ -35,7 +35,7 @@
                  [test-clj.testng "1.1.0-SNAPSHOT"]
                  [levand/immuconf "0.1.0"]
                  [com.github.redhatqe.polarize/polarize-meta "0.1.0"]
-                 [com.github.redhatqe.polarizer/reporter "0.2.1"]
+                 [com.github.redhatqe.polarizer/reporter "0.2.3-SNAPSHOT"]
                  [org.json/json "20160810"]
                  [org.seleniumhq.selenium/selenium-java "3.5.2"]
                  [http-kit "2.2.0"]
@@ -49,7 +49,7 @@
   ; regexp of namespaces that contains of tests of our tesgit@github.com:RedHatQE/rhsm-qe.gitts. It is used by quickie.
   :test-matcher #"rhsm\..*-test$"
   :repositories [
-                 ["sonatype" {:url           "https://oss.sonatype.org/content/repositories/releases"
+                 ["sonatype" {:url "https://oss.sonatype.org/content/repositories/releases"
                               ;; If a repository contains releases only setting
                               ;; :snapshots to false will speed up dependencies.
                               :snapshots     false
@@ -62,7 +62,7 @@
                               ;; How often should this repository be checked for
                               ;; snapshot updates? (:daily, :always, or :never)
                               :update        :always}]
-                 ["sonatype-snaps" {:url     "https://oss.sonatype.org/content/repositories/snapshots"
+                 ["sonatype-snaps" {:url "https://oss.sonatype.org/content/repositories/snapshots"
                               ;; If a repository contains releases only setting
                               ;; :snapshots to false will speed up dependencies.
                               :snapshots     true
