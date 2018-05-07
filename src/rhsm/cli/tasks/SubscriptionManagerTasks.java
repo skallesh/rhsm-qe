@@ -4953,7 +4953,8 @@ if (false) {
 			defaultNames.add("pluginConfDir");
 			if (isPackageVersion("subscription-manager",">=","1.10.7-1")) defaultNames.add("full_refresh_on_yum");	// was added as part of RFE Bug 803746
 			if (isPackageVersion("subscription-manager",">=","1.20.2-1")) defaultNames.add("auto_enable_yum_plugins");	// commit 29a9a1db08a2ee920c43891daafdf858082e5d8b	// Bug 1319927 - [RFE] subscription-manager should automatically enable yum plugins
-			if (isPackageVersion("subscription-manager",">=","1.20.2-1"/*TODO change to 1.20.3-1*/)) defaultNames.add("inotify");	// commit db7f92dd2a29071eddd3b8de5beedb0fe46352f9	// Bug 1477958: Use inotify for checking changes of consumer certs
+			if (isPackageVersion("subscription-manager",">=","1.20.3-1")) defaultNames.add("inotify");	// commit db7f92dd2a29071eddd3b8de5beedb0fe46352f9	// Bug 1477958: Use inotify for checking changes of consumer certs
+			if (isPackageVersion("subscription-manager",">=","1.21.1-1")) defaultNames.add("repomd_gpg_url");	// commit 8236fefe942e4a32cb2c2565c63b15d3a9464855	Support configuration of a repo metadata signing key	// RFE Bug 1410638 - [RFE] Give Satellite the ability to select if repo metadata should be signed with the key provided for rpm verification
 		}
 		if (section.equalsIgnoreCase("rhsmcertd")) {
 			defaultNames.add(/*"certFrequency" CHANGED BY BUG 882459 TO*/"certCheckInterval");

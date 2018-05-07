@@ -21,6 +21,7 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import com.redhat.qe.Assert;
+import com.redhat.qe.auto.bugzilla.BlockedByBzBug;
 import com.redhat.qe.auto.bugzilla.BugzillaAPIException;
 import com.redhat.qe.auto.bugzilla.BzChecker;
 import com.redhat.qe.auto.testng.TestNGUtils;
@@ -1517,8 +1518,80 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
-	
-	
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"", ""},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
+	@Test(	description="After setting a new rhsm.conf setting for repomd_gpg_url, verify that the url (or baseurl/repomd_gpg_url when repomd_gpg_url does not start with http) gets included in a comma separated list for gpgkey in the /etc/yum.repos.d/redhat.repo entries",
+			groups={"Tier1Tests","testYumRepoListIncludesConfiguredRepomdGpgUrlInGpgKey"/*,"blockedByBug-1410638"*/},
+			dataProvider="getYumRepoListIncludesConfiguredRepomdGpgUrlInGpgKeyData",
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void testYumRepoListIncludesConfiguredRepomdGpgUrlInGpgKey(Object bugzilla, String repomd_gpg_url) throws JSONException, Exception {
+		if (clienttasks.isPackageVersion("subscription-manager", "<", "1.21.1-1")) { // commit 8236fefe942e4a32cb2c2565c63b15d3a9464855 Support configuration of a repo metadata signing key
+			throw new SkipException("This test applies a newer version of subscription manager that includes fixes for RFE Bugs 1410638 - [RFE] Give Satellite the ability to select if repo metadata should be signed with the key provided for rpm verification");
+		}
+		
+		// configure rhsm.conf with repomd_gpg_url
+		clienttasks.config(null, null, true, new String[]{"rhsm","repomd_gpg_url",repomd_gpg_url});
+		
+//		// refresh the entitlement cert (to ensure redhat.repo is up-to-date)
+//		clienttasks.refresh(null, null, null, null);
+		
+		// what gpgkey URL value should we expect for repomd_gpg_url
+		String expectedGpgKey = null;
+		String baseurl= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsm", "baseurl");
+		// RULE: if repomd_gpg_url does NOT start with "http", prepend the baseurl
+		// RULE: expect a single "/" between baseurl and repomd_gpg_url to create a valid url syntax.  eg. https://baseurl/repomd_gpg_url
+		// RULE: if repomd_gpg_url is empty, then gpgkey should not include an empty string
+		if (!repomd_gpg_url.isEmpty()) expectedGpgKey = repomd_gpg_url;
+		if (!repomd_gpg_url.startsWith("http")) expectedGpgKey = baseurl.replaceFirst("/+$","")+"/"+repomd_gpg_url.replaceFirst("^/+","");
+		if (repomd_gpg_url.isEmpty()) expectedGpgKey = null;
+		log.info("Expecting the gpgkey to contain '"+expectedGpgKey+"' when repomd_gpg_url=\""+repomd_gpg_url+"\" and baseurl=\""+baseurl+"\".  If this is not correct, contact the automator of this testcase to fix the rules for expectedGpgKey.");
+		
+		// assert that all of the yum repos have the correct value for repomd_gpg_url included in the gpgkey
+		List <YumRepo> yumRepos = clienttasks.getCurrentlySubscribedYumRepos();
+		if (yumRepos.isEmpty()) throw new SkipException("This test requires at least one entitled yum repo in '"+clienttasks.redhatRepoFile+"'"); 
+		for (YumRepo yumRepo : yumRepos) {
+			List<String> gpgKeys = new ArrayList<String>();
+			gpgKeys.addAll(Arrays.asList(yumRepo.gpgkey.trim().split(" *, *")));	// Note: the gpgkey property can be a comma separated list of values
+			if (expectedGpgKey==null) {
+				// gpgkey should NOT contain an empty value
+				Assert.assertTrue(!gpgKeys.contains(repomd_gpg_url), "Repo '"+yumRepo.id+"' does NOT contain expected gpgkey '"+expectedGpgKey+"' when repomd_gpg_url in '"+clienttasks.rhsmConfFile+"' is configured with value '"+repomd_gpg_url+"'.");
+			} else {
+				// gpgkey should contain the expectedGpgKey
+				Assert.assertTrue(gpgKeys.contains(expectedGpgKey), "Repo '"+yumRepo.id+"' contains expected gpgkey '"+expectedGpgKey+"' when repomd_gpg_url in '"+clienttasks.rhsmConfFile+"' is configured with value '"+repomd_gpg_url+"'.");
+			}
+		}
+	}
+	@AfterGroups(groups={"setup"}, value={"testYumRepoListIncludesConfiguredRepomdGpgUrlInGpgKey"})
+	public void unconfigureRepomdGpgUrl() {
+		clienttasks.config(null, null, true, new String[]{"rhsm","repomd_gpg_url",""});
+		//clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "manage_repos", "1");
+	}
+	@DataProvider(name="getYumRepoListIncludesConfiguredRepomdGpgUrlInGpgKeyData")
+	public Object[][] getYumRepoListIncludesConfiguredRepomdGpgUrlInGpgKeyDataAs2dArray() throws JSONException, Exception {
+		return TestNGUtils.convertListOfListsTo2dArray(getYumRepoListIncludesConfiguredRepomdGpgUrlInGpgKeyDataAsListOfLists());
+	}
+	protected List<List<Object>>getYumRepoListIncludesConfiguredRepomdGpgUrlInGpgKeyDataAsListOfLists() throws JSONException, Exception {
+		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
+		
+		// register with auto-subscribe to populate redhat.repo
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, null, true, false, null, null, null, null);
+
+		BlockedByBzBug blockedByBug=null;
+		// Object bugzilla, String repomd_gpg_url
+		ll.add(Arrays.asList(new Object[] {blockedByBug,	"http://non-cdn-path/to/a/gpgkey"}));	
+		ll.add(Arrays.asList(new Object[] {blockedByBug,	"https://non-cdn-path/to/a/secure/gpgkey"}));
+		ll.add(Arrays.asList(new Object[] {blockedByBug,	"cdn-gpgkey"}));
+		ll.add(Arrays.asList(new Object[] {blockedByBug,	"/cdn-path/to/a/gpgkey"}));
+		ll.add(Arrays.asList(new Object[] {blockedByBug,	""}));
+		
+		return ll;
+	}
 	
 	
 	
@@ -1536,7 +1609,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	
 	
 	
-	@BeforeClass(groups={"setup"})
+//DdebugTesting	@BeforeClass(groups={"setup"})
 	public void setupBeforeClass() throws JSONException, Exception {
 		currentProductCerts = clienttasks.getCurrentProductCerts();
 		if (clienttasks.getCurrentConsumerId()==null) clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, false, null, null, (String)null, null, null, null, true, false, null, null, null, null);
