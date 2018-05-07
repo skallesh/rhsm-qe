@@ -1537,7 +1537,8 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		
 		// configure rhsm.conf with repomd_gpg_url
 		clienttasks.config(null, null, true, new String[]{"rhsm","repomd_gpg_url",repomd_gpg_url});
-		
+
+//NOT NEEDED
 //		// refresh the entitlement cert (to ensure redhat.repo is up-to-date)
 //		clienttasks.refresh(null, null, null, null);
 		
@@ -1609,7 +1610,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	
 	
 	
-//DdebugTesting	@BeforeClass(groups={"setup"})
+	@BeforeClass(groups={"setup"})
 	public void setupBeforeClass() throws JSONException, Exception {
 		currentProductCerts = clienttasks.getCurrentProductCerts();
 		if (clienttasks.getCurrentConsumerId()==null) clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, false, null, null, (String)null, null, null, null, true, false, null, null, null, null);
