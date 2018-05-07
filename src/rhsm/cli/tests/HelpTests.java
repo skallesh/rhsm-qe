@@ -306,7 +306,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
 	@Test(	description="subscription-manager, subscription-manager-gui, rhn-migrate-classic-to-rhsm, and other CLI tools: assert only expected command line options are available",
-			groups={"Tier2Tests",},
+			groups={"Tier2Tests"},
 			dataProvider="ExpectedCommandLineOptionsData")
 	@ImplementsNitrateTest(caseId=46713)
 	//@ImplementsNitrateTest(caseId=46707)
@@ -336,6 +336,18 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			
 			actualOptions.add(matcher.group().trim());
 		} while (matcher.find());
+		
+		// if necessary, alter the expected options containing "..." to tolerate "…"
+		for (int i = 0; i < expectedOptions.size(); i++) {
+			String expectedOption = expectedOptions.get(i);
+			if (expectedOption.contains("...") && !result.getStdout().contains(expectedOption)) {
+				String alternateExpectedOption = expectedOption.replace("...", "…");
+				if (result.getStdout().contains(alternateExpectedOption)) {
+					log.info("Tolerating expected option '"+alternateExpectedOption+"' as an equivalent to expected option '"+expectedOption+"'.");
+					expectedOptions.set(i, alternateExpectedOption);
+				}
+			}
+		}
 		
 		// assert all of the expectedOptions were found and that no unexpectedOptions were found
 		for (String expectedOption : expectedOptions) {
