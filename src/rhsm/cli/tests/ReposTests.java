@@ -1524,9 +1524,9 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
-			tags= "Tier1")
+			tags= "Tier2")
 	@Test(	description="After setting a new rhsm.conf setting for repomd_gpg_url, verify that the url (or baseurl/repomd_gpg_url when repomd_gpg_url does not start with http) gets included in a comma separated list for gpgkey in the /etc/yum.repos.d/redhat.repo entries",
-			groups={"Tier1Tests","testYumRepoListIncludesConfiguredRepomdGpgUrlInGpgKey"/*,"blockedByBug-1410638"*/},
+			groups={"Tier2Tests","testYumRepoListIncludesConfiguredRepomdGpgUrlInGpgKey"/*,"blockedByBug-1410638"*/},
 			dataProvider="getYumRepoListIncludesConfiguredRepomdGpgUrlInGpgKeyData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
