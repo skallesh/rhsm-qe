@@ -1271,6 +1271,75 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"", ""},
+			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.CRITICAL, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
+	@Test(	description="assert that rhsmcertd does not consume 100% CPU",
+			groups={"Tier1Tests","blockedByBug-1574529"},
+			enabled=true)
+	//@ImplementsTCMS(id="")
+	public void testRhsmcertdFor100PercentCPUConsumption() throws IOException {
+		
+		// get the CPU usage for rhsmcertd
+		//	[root@hp-dl380pgen8-02-vm-1 ~]# ps -C rhsmcertd -o %cpu 
+		//	%CPU
+		//	99.9
+		String cpuPercentageCommand = "ps -C rhsmcertd -o %cpu | tail -1";
+		SSHCommandResult result = client.runCommandAndWait(cpuPercentageCommand);
+		if (!isFloat(result.getStdout().trim())) { // indicator that rhsmcertd service is stopped
+			// restart rhsmcertd
+			log.info("The rhsmcertd process appears to be stopped, let's restart it....");
+			clienttasks.restart_rhsmcertd(null, null, null);	// Note that the splay configuration will be temporarily turned off while restarting rhsmcertd 
+			result = client.runCommandAndWait(cpuPercentageCommand);
+		}
+		Float cpuPercentage = Float.valueOf(result.getStdout().trim());
+		
+		// fail when cpuPercentage exceeds cpuPercentageTolerated for longer than cpuDuration seconds
+		Float cpuPercentageTolerated = 10.0f; // 10.0%
+		int duration = 10; // seconds
+		if (cpuPercentage>cpuPercentageTolerated) {
+			sleep(duration*1000);
+			result = client.runCommandAndWait(cpuPercentageCommand);
+			cpuPercentage = Float.valueOf(result.getStdout().trim());
+		}
+		Assert.assertTrue(cpuPercentage<cpuPercentageTolerated, "The actual %CPU of rhsmcertd '"+cpuPercentage+"' is less than '"+cpuPercentageTolerated+"' for more than '"+duration+"' seconds.");
+		
+		// according to https://bugzilla.redhat.com/show_bug.cgi?id=1574529#c4 we should also test with splay turned on
+		// turn on splay
+		log.info("Testing again with the rhsmcertd splay configuration turned on....");
+		clienttasks.config(null, null, true, new String[] {"rhsmcertd","splay","1"});
+		// restart rhsmcertd service
+		if (Integer.valueOf(clienttasks.redhatReleaseX)>=7)	{	// the RHEL7 / F16+ way...
+			RemoteFileTasks.runCommandAndAssert(client, "systemctl restart rhsmcertd.service && systemctl is-active rhsmcertd.service", Integer.valueOf(0), "^active$", null);
+		} else {
+			// NEW SERVICE RESTART FEEDBACK AFTER IMPLEMENTATION OF Bug 818978 - Missing systemD unit file
+			//	[root@jsefler-59server ~]# service rhsmcertd restart
+			//	Stopping rhsmcertd...                                      [  OK  ]
+			//	Starting rhsmcertd...                                      [  OK  ]
+			RemoteFileTasks.runCommandAndAssert(client,"service rhsmcertd restart",Integer.valueOf(0),"^Starting rhsmcertd\\.\\.\\.\\[  OK  \\]$",null);	
+			
+			// # service rhsmcertd restart
+			// rhsmcertd (pid 10172 10173) is running...
+			RemoteFileTasks.runCommandAndAssert(client,"service rhsmcertd status",Integer.valueOf(0),"^rhsmcertd \\(pid \\d+\\) is running...$",null);		// master/RHEL58 branch
+		}
+		// test the cpu percentage again
+		result = client.runCommandAndWait(cpuPercentageCommand);
+		cpuPercentage = Float.valueOf(result.getStdout().trim());
+		if (cpuPercentage>cpuPercentageTolerated) {
+			sleep(duration*1000);
+			result = client.runCommandAndWait(cpuPercentageCommand);
+			cpuPercentage = Float.valueOf(result.getStdout().trim());
+		}
+		Assert.assertTrue(cpuPercentage<cpuPercentageTolerated, "The actual %CPU of rhsmcertd '"+cpuPercentage+"' is less than '"+cpuPercentageTolerated+"' for more than '"+duration+"' seconds (with rhsm.conf [rhsmcertd]splay=1).");
+	
+	}
+	
+	
+	
 	// Candidates for an automated Test:
 	// TODO Bug 688469 - subscription-manager <module> --help does not work in localized environment. https://github.com/RedHatQE/rhsm-qe/issues/144
 	// TODO Bug 684941 - Deleting a product with a subscription gives ugly error https://github.com/RedHatQE/rhsm-qe/issues/145
