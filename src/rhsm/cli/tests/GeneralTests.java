@@ -903,6 +903,14 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 					"manual: initial-setup-gui >= 0.3.9.24-1",
 					"manual: subscription-manager-gui = "+clienttasks.installedPackageVersionMap.get("subscription-manager-gui").replace("subscription-manager-gui-", "").replaceFirst("\\."+clienttasks.arch, ""),	//"manual: subscription-manager-gui = 1.15.6-1.el7",
 			}));
+			if (clienttasks.isPackageVersion("subscription-manager-gui",">=","1.21.4-1")) {	// commit 23b5409c76d586c4e34440788d612e7ed65e2df6  Stop building subscription-manager-gui, when Python 3 is used
+				// let's start over with the introduction of rhsm-gtk
+				expectedRequiresList.clear();
+				expectedRequiresList.addAll(Arrays.asList(new String[]{
+						"manual: initial-setup-gui >= 0.3.9.24-1",
+						"manual: rhsm-gtk = "+clienttasks.installedPackageVersionMap.get("rhsm-gtk").replace("rhsm-gtk-", "").replaceFirst("\\."+clienttasks.arch, ""),	//"manual: rhsm-gtk = 1.9.11-1.el6",
+				}));
+			}
 		}
 		
 		for (String expectedRequires : expectedRequiresList) if (!actualRequiresList.contains(expectedRequires)) log.warning("The actual requires list is missing expected requires '"+expectedRequires+"'.");
