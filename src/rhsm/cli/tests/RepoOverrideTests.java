@@ -681,7 +681,7 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier3")
 	@Test(	description="verify that the rhsm.full_refresh_on_yum is working properly",
-			groups={"Tier3Tests","VerifyRhsmConfigurationForFullRefreshOnYum_Test"},
+			groups={"Tier3Tests","VerifyRhsmConfigurationForFullRefreshOnYum_Test","blockedByBug-1576582"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
 	public void testRhsmConfigurationForFullRefreshOnYum() {
@@ -745,9 +745,9 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 		clienttasks.config(null, null, true, new String[]{"rhsm","full_refresh_on_yum","1"});
 		clienttasks.getYumRepolist("all");
 		currentYumRepo = YumRepo.findFirstInstanceWithMatchingFieldFromList("id", repoId,  clienttasks.getCurrentlySubscribedYumRepos());
-		name = "retries"; Assert.assertEquals(currentYumRepo.retries,            repoOverrideNameValueMap.get(name), "After setting rhsm.full_refresh_on_yum=1 and invoking a yum transaction, repoId '"+repoId+"' override for parameter '"+name+"' should have been restorted in the '"+clienttasks.redhatRepoFile+"'.");
-		name = "timeout"; Assert.assertEquals(currentYumRepo.timeout,            repoOverrideNameValueMap.get(name), "After setting rhsm.full_refresh_on_yum=1 and invoking a yum transaction, repoId '"+repoId+"' override for parameter '"+name+"' should have been restorted in the '"+clienttasks.redhatRepoFile+"'.");
-		name = "enabled"; Assert.assertEquals(currentYumRepo.enabled.toString(), repoOverrideNameValueMap.get(name), "After setting rhsm.full_refresh_on_yum=1 and invoking a yum transaction, repoId '"+repoId+"' override for parameter '"+name+"' should have been restorted in the '"+clienttasks.redhatRepoFile+"'.");
+		name = "retries"; Assert.assertEquals(currentYumRepo.retries,            repoOverrideNameValueMap.get(name), "After setting rhsm.full_refresh_on_yum=1 and invoking a yum transaction, repoId '"+repoId+"' override for parameter '"+name+"' should have been restored in the '"+clienttasks.redhatRepoFile+"'.");
+		name = "timeout"; Assert.assertEquals(currentYumRepo.timeout,            repoOverrideNameValueMap.get(name), "After setting rhsm.full_refresh_on_yum=1 and invoking a yum transaction, repoId '"+repoId+"' override for parameter '"+name+"' should have been restored in the '"+clienttasks.redhatRepoFile+"'.");
+		name = "enabled"; Assert.assertEquals(currentYumRepo.enabled.toString(), repoOverrideNameValueMap.get(name), "After setting rhsm.full_refresh_on_yum=1 and invoking a yum transaction, repoId '"+repoId+"' override for parameter '"+name+"' should have been restored in the '"+clienttasks.redhatRepoFile+"'.");
 		Assert.assertTrue(RemoteFileTasks.testExists(client, clienttasks.rhsmCacheRepoOverridesFile),"Testing for the restoration of cache file '"+clienttasks.rhsmCacheRepoOverridesFile+"'.");
 		
 		// now let's test that a trigger of rhsmcertd will restore the cache even when rhsm.full_refresh_on_yum=0
