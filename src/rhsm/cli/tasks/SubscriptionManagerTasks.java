@@ -10104,8 +10104,13 @@ if (false) {
 		
 		// compatibility adjustment for python-rhsm* packages obsoleted by subscription-manager-rhsm* packages
 		if (packageName.startsWith("python-rhsm") && isPackageVersion("subscription-manager",">=","1.20.3-1")) {	// commit f445b6486a962d12185a5afe69e768d0a605e175 Move python-rhsm build into subscription-manager
-			log.fine("Adjusting query for isPackageVersion(\""+packageName+"\"...) to isPackageVersion(\""+packageName.replace("python-rhsm", "subscription-manager-rhsm")+"\"...) due to obsoleted package starting in version 1.20.3-1");
-			packageName = packageName.replace("python-rhsm", "subscription-manager-rhsm");
+			if (isPackageInstalled("python3-subscription-manager-rhsm")) { // starting on RHEL8
+				log.fine("Adjusting query for isPackageVersion(\""+packageName+"\"...) to isPackageVersion(\""+packageName.replace("python-rhsm", "python3-subscription-manager-rhsm")+"\"...) due to obsoleted package starting in version 1.20.3-1 AND the fact that this system is running python3.");
+				packageName = packageName.replace("python-rhsm", "python3-subscription-manager-rhsm");	
+			} else {
+				log.fine("Adjusting query for isPackageVersion(\""+packageName+"\"...) to isPackageVersion(\""+packageName.replace("python-rhsm", "subscription-manager-rhsm")+"\"...) due to obsoleted package starting in version 1.20.3-1");
+				packageName = packageName.replace("python-rhsm", "subscription-manager-rhsm");
+			}
 		}
 		
 		// get the currently installed version of the packageName of the form subscription-manager-1.10.14-7.el7.x86_64
