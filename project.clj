@@ -34,7 +34,7 @@
                  [cheshire "5.7.0"]
                  [test-clj.testng "1.1.0-SNAPSHOT"]
                  [levand/immuconf "0.1.0"]
-                 [com.github.redhatqe.polarize/polarize-meta "0.1.0"]
+                 [com.github.redhatqe.polarize/metadata "0.1.0-SNAPSHOT"]
                  [com.github.redhatqe.polarizer/reporter "0.2.3-SNAPSHOT"]
                  [org.json/json "20160810"]
                  [org.seleniumhq.selenium/selenium-java "3.5.2"]
