@@ -62,12 +62,12 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript {
 				@LinkedItem(
 					workitemId= "RHEL6-30331",	// RHSM-REQ : Guest-limited Subscriptions
 					project= Project.RHEL6,
-					role= DefTypes.Role.VERIFIES),
+					role= DefTypes.Role.IS_VERIFIED_BY),
 				@LinkedItem(
 					workitemId= "RHEL7-84959",	// RHSM-REQ : Guest-limited Subscriptions
 					project= Project.RedHatEnterpriseLinux7,
-					role= DefTypes.Role.VERIFIES)},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+					role= DefTypes.Role.IS_VERIFIED_BY)},
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
@@ -124,12 +124,12 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript {
 				@LinkedItem(
 					workitemId= "RHEL6-30331",	// RHSM-REQ : Guest-limited Subscriptions
 					project= Project.RHEL6,
-					role= DefTypes.Role.VERIFIES),
+					role= DefTypes.Role.IS_VERIFIED_BY),
 				@LinkedItem(
 					workitemId= "RHEL7-84959",	// RHSM-REQ : Guest-limited Subscriptions
 					project= Project.RedHatEnterpriseLinux7,
-					role= DefTypes.Role.VERIFIES)},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+					role= DefTypes.Role.IS_VERIFIED_BY)},
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
@@ -189,12 +189,12 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript {
 				@LinkedItem(
 					workitemId= "RHEL6-30331",	// RHSM-REQ : Guest-limited Subscriptions
 					project= Project.RHEL6,
-					role= DefTypes.Role.VERIFIES),
+					role= DefTypes.Role.IS_VERIFIED_BY),
 				@LinkedItem(
 					workitemId= "RHEL7-84959",	// RHSM-REQ : Guest-limited Subscriptions
 					project= Project.RedHatEnterpriseLinux7,
-					role= DefTypes.Role.VERIFIES)},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+					role= DefTypes.Role.IS_VERIFIED_BY)},
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
@@ -249,12 +249,12 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript {
 				@LinkedItem(
 					workitemId= "RHEL6-30331",	// RHSM-REQ : Guest-limited Subscriptions
 					project= Project.RHEL6,
-					role= DefTypes.Role.VERIFIES),
+					role= DefTypes.Role.IS_VERIFIED_BY),
 				@LinkedItem(
 					workitemId= "RHEL7-84959",	// RHSM-REQ : Guest-limited Subscriptions
 					project= Project.RedHatEnterpriseLinux7,
-					role= DefTypes.Role.VERIFIES)},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+					role= DefTypes.Role.IS_VERIFIED_BY)},
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
