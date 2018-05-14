@@ -2384,14 +2384,13 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				null, (String) null, null, null, null, true, false, null, null, null, null);
 
 		logMarker = System.currentTimeMillis() + " Testing Subscribe **********************";
-		RemoteFileTasks.markFile(client, clienttasks.messagesLogFile, logMarker);
+		clienttasks.markSystemLogFile(logMarker);
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		List<String> poolIds = new ArrayList<String>();
 		for (SubscriptionPool pool : pools)
 			poolIds.add(pool.poolId);
 		clienttasks.subscribe(null, null, poolIds, null, null, null, null, null, null, null, null, null, null);
-		tailFromSyslogFile = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.messagesLogFile, logMarker,
-				null);
+		tailFromSyslogFile = clienttasks.getTailFromSystemLogFile(logMarker,null);
 		for (SubscriptionPool pool : pools) {
 			expectedSyslogMessage = String.format("%s: Added subscription for '%s' contract '%s'", clienttasks.command,
 					pool.subscriptionName, pool.contract.isEmpty() ? "None" : pool.contract);
@@ -2432,11 +2431,10 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		}
 
 		logMarker = System.currentTimeMillis() + " Testing Unsubscribe **********************";
-		RemoteFileTasks.markFile(client, clienttasks.messagesLogFile, logMarker);
+		clienttasks.markSystemLogFile(logMarker);
 		List<ProductSubscription> productSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
 		clienttasks.unsubscribe(true, (BigInteger) null, null, null, null, null, null);
-		tailFromSyslogFile = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.messagesLogFile, logMarker,
-				null);
+		tailFromSyslogFile = clienttasks.getTailFromSystemLogFile(logMarker,null);
 		for (ProductSubscription productSubscription : productSubscriptions) {
 			// Feb 3 13:32:34 jsefler-7 subscription-manager: Removed
 			// subscription for 'Awesome OS Server Bundled (2 Sockets, Standard
@@ -2502,12 +2500,11 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		String logMarker, expectedSyslogMessage, tailFromSyslogFile;
 
 		logMarker = System.currentTimeMillis() + " Testing Register **********************";
-		RemoteFileTasks.markFile(client, clienttasks.messagesLogFile, logMarker);
+		clienttasks.markSystemLogFile(logMarker);
 		String identity = clienttasks.getCurrentConsumerId(
 				clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null,
 						null, null, (String) null, null, null, null, true, false, null, null, null, null));
-		tailFromSyslogFile = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.messagesLogFile, logMarker,
-				null);
+		tailFromSyslogFile = clienttasks.getTailFromSystemLogFile(logMarker,null);
 		// Feb 3 12:50:47 jsefler-7 subscription-manager: Registered system with
 		// identity: eddfaf6d-e916-49e3-aa71-e33a2c54e1dd
 		expectedSyslogMessage = String.format("%s: Registered system with identity: %s", clienttasks.command, identity);
@@ -2515,10 +2512,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				+ clienttasks.messagesLogFile + "' contains expected message '" + expectedSyslogMessage + "'.");
 
 		logMarker = System.currentTimeMillis() + " Testing Unregister **********************";
-		RemoteFileTasks.markFile(client, clienttasks.messagesLogFile, logMarker);
+		clienttasks.markSystemLogFile(logMarker);
 		clienttasks.unregister(null, null, null, null);
-		tailFromSyslogFile = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.messagesLogFile, logMarker,
-				null);
+		tailFromSyslogFile = clienttasks.getTailFromSystemLogFile(logMarker,null);
 		// Feb 3 13:39:21 jsefler-7 subscription-manager: Unregistered machine
 		// with identity: 231c2b52-4bc8-4458-8d0a-252b1dd82877
 		expectedSyslogMessage = String.format("%s: Unregistered machine with identity: %s", clienttasks.command,

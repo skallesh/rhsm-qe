@@ -448,7 +448,8 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		if (!configureProductCertDirForSomeProductsSubscribableCompleted) throw new SkipException("Unsatisfied dependency configureProductCertDirForSomeProductsSubscribableCompleted="+configureProductCertDirForSomeProductsSubscribableCompleted);
 		if (clienttasks.getCurrentlyRegisteredOwnerKey()==null) throw new SkipException("Unsatisfied dependency - expected system to already have been registered during a preceding testcase.");
 		String command = clienttasks.rhsmComplianceD+" -s -d";
-		RemoteFileTasks.runCommandAndWait(client, "echo 'Testing "+command+"' >> "+clienttasks.messagesLogFile, TestRecords.action());
+		String marker = "Testing "+command;
+		clienttasks.markSystemLogFile(marker);
 		SSHCommandResult sshCommandResult;
 		
 		// verify the stdout message
@@ -660,7 +661,8 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		if (!configureProductCertDirForNoProductsSubscribableCompleted) throw new SkipException("Unsatisfied dependency configureProductCertDirForNoProductsSubscribableCompleted="+configureProductCertDirForNoProductsSubscribableCompleted);
 		if (clienttasks.getCurrentlyRegisteredOwnerKey()==null) throw new SkipException("Unsatisfied dependency - expected system to already have been registered during a preceding testcase.");
 		String command = clienttasks.rhsmComplianceD+" -s -d";
-		RemoteFileTasks.runCommandAndWait(client, "echo 'Testing "+command+"' >> "+clienttasks.messagesLogFile, TestRecords.action());
+		String marker = "Testing "+command;
+		clienttasks.markSystemLogFile(marker);
 		SSHCommandResult sshCommandResult;
 		
 		// verify the stdout message

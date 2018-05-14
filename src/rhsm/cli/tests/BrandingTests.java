@@ -369,7 +369,7 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 		//	Bill
 		
 		String messagesLogMarker = System.currentTimeMillis()+" Testing BrandbotShouldHandleEmptyBrandingFile_Test...";
-		RemoteFileTasks.markFile(client, clienttasks.messagesLogFile, messagesLogMarker);
+		clienttasks.markSystemLogFile(messagesLogMarker);
 		String actualBrandName,actualPrettyName;
 		log.info("Testing an empty branding file...");
 		// Note: If /var/lib/rhsm/branded_name is written too quickly, this will be found in the rhsm.log...
@@ -384,7 +384,7 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 		actualPrettyName = getCurrentPrettyName();
 		if (actualPrettyName!=null) {
 			// most likely... systemd: start request repeated too quickly for brandbot.service
-			String rhsmLogStatement = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.messagesLogFile, messagesLogMarker, "brandbot").trim();
+			String rhsmLogStatement = clienttasks.getTailFromSystemLogFile(messagesLogMarker, "brandbot").trim();
 			if (!rhsmLogStatement.isEmpty()) log.warning(rhsmLogStatement);
 		}
 		Assert.assertNull(actualPrettyName, "The PRETTY_NAME contained within the os-release file '"+osReleaseFile+"' (should NOT be present when the brand file is empty).");
@@ -402,7 +402,7 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 		actualPrettyName = getCurrentPrettyName();
 		if (actualPrettyName!=null) {
 			// most likely... systemd: start request repeated too quickly for brandbot.service
-			String rhsmLogStatement = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.messagesLogFile, messagesLogMarker, "brandbot").trim();
+			String rhsmLogStatement = clienttasks.getTailFromSystemLogFile(messagesLogMarker, "brandbot").trim();
 			if (!rhsmLogStatement.isEmpty()) log.warning(rhsmLogStatement);
 		}
 		Assert.assertNull(actualPrettyName, "The PRETTY_NAME contained within the os-release file '"+osReleaseFile+"' (should NOT be present when the first line of the brand file is empty).");
