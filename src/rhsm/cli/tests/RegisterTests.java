@@ -307,6 +307,9 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		// stderr after fix Bug 1458423 - registration to stage candlepin for an account that has not accepted terms and conditions should block registration
 		stderr = "You must first accept Red Hat's Terms and conditions. Please visit https://www.redhat.com/wapps/tnc/termsack?event[]=signIn .";
 		stderr += " You may have to log out of and back into the  Customer Portal in order to see the terms.";	// added by Bug 1068766 - (US48790, US51354, US55017) Subscription-manager register leads to unclear message
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-1")) {	// post commit 630e1a2eb06e6bfacac669ce11f38e228c907ea9 1507030: RestlibExceptions should show they originate server-side
+			stderr = "HTTP error (401 - Unauthorized): "+stderr;
+		}
 		String command = clienttasks.registerCommand(username, password, null, null, null, null, null, null, null, null, (String)null, null, null, null, null, null, null, null, null, null);
 		SSHCommandResult result = client.runCommandAndWait(command);
 		Integer expectedExitCode = new Integer(255);
