@@ -638,7 +638,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	
 	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
-			testCaseID= {"", ""},
+			testCaseID= {"RHEL6-51160", "RHEL-133207"}, //importReady=false,
 			linkedWorkItems= {
 				@LinkedItem(project= Project.RHEL6, workitemId= "RHEL6-28564", role= DefTypes.Role.IS_VERIFIED_BY),	// RHSM-REQ : Translation
 				@LinkedItem(project= Project.RedHatEnterpriseLinux7, workitemId= "RHEL7-84942",role= DefTypes.Role.IS_VERIFIED_BY),	// RHSM-REQ : Translation
