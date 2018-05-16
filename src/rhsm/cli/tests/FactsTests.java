@@ -1485,11 +1485,11 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 				@LinkedItem(
 					workitemId= "RHEL6-28536",	// RHSM-REQ : subscription-manager cli facts collection, reporting, and updating
 					project= Project.RHEL6,
-					role= DefTypes.Role.IS_VERIFIED_BY),
+					role= DefTypes.Role.VERIFIES),
 				@LinkedItem(
 					workitemId= "RHEL7-84925",	// RHSM-REQ : subscription-manager cli facts collection, reporting, and updating
 					project= Project.RedHatEnterpriseLinux7,
-					role= DefTypes.Role.IS_VERIFIED_BY)},
+					role= DefTypes.Role.VERIFIES)},
 			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.LOW, automation= DefTypes.Automation.AUTOMATED,
@@ -1656,7 +1656,8 @@ if (false) { // DO NOT RUN, BUT NOT READY TO DELETE CODE
 			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
-			tags= "Tier1")
+			tags= "Tier1",
+      importReady=false)
 	@Test( description = "Verify the btime in facts list",
 			groups ={"Tier1Tests","blockedByBug-1527727"},
 			enabled = true)

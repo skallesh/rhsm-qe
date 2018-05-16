@@ -100,11 +100,11 @@ public class VersionTests extends SubscriptionManagerCLITestScript {
 				@LinkedItem(
 					workitemId= "RHEL6-28549",	// RHSM-REQ : subscription-manager cli version and help information
 					project= Project.RHEL6,
-					role= DefTypes.Role.IS_VERIFIED_BY),
+					role= DefTypes.Role.VERIFIES),
 				@LinkedItem(
 					workitemId= "RHEL7-84938",	// RHSM-REQ : subscription-manager cli version and help information
 					project= Project.RedHatEnterpriseLinux7,
-					role= DefTypes.Role.IS_VERIFIED_BY)},
+					role= DefTypes.Role.VERIFIES)},
 			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,

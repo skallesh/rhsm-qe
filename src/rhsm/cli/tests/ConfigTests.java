@@ -807,11 +807,11 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 //				@LinkedItem(
 //					workitemId= "RHEL6-?????",	// TODO
 //					project= Project.RHEL6,
-//					role= DefTypes.Role.IS_VERIFIED_BY),
+//					role= DefTypes.Role.VERIFIES),
 				@LinkedItem(
 					workitemId= "RHEL7-95149",	// RHEL7-95149 - RHSM-REQ : subscription-manager should automatically enable yum plugins
 					project= Project.RedHatEnterpriseLinux7,
-					role= DefTypes.Role.IS_VERIFIED_BY)},
+					role= DefTypes.Role.VERIFIES)},
 			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
@@ -888,11 +888,11 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 //				@LinkedItem(
 //					workitemId= "RHEL6-?????",	// TODO
 //					project= Project.RHEL6,
-//					role= DefTypes.Role.IS_VERIFIED_BY),
+//					role= DefTypes.Role.VERIFIES),
 				@LinkedItem(
 					workitemId= "RHEL7-95149",	// RHEL7-95149 - RHSM-REQ : subscription-manager should automatically enable yum plugins
 					project= Project.RedHatEnterpriseLinux7,
-					role= DefTypes.Role.IS_VERIFIED_BY)},
+					role= DefTypes.Role.VERIFIES)},
 			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
@@ -1016,11 +1016,11 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 //				@LinkedItem(
 //					workitemId= "RHEL6-?????",	// TODO
 //					project= Project.RHEL6,
-//					role= DefTypes.Role.IS_VERIFIED_BY),
+//					role= DefTypes.Role.VERIFIES),
 				@LinkedItem(
 					workitemId= "RHEL7-95149",	// RHEL7-95149 - RHSM-REQ : subscription-manager should automatically enable yum plugins
 					project= Project.RedHatEnterpriseLinux7,
-					role= DefTypes.Role.IS_VERIFIED_BY)},
+					role= DefTypes.Role.VERIFIES)},
 			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,

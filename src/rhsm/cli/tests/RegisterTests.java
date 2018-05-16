@@ -1985,11 +1985,11 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 				@LinkedItem(
 					workitemId= "RHEL6-28485",	// RHSM-REQ : subscription-manager cli registration and deregistration
 					project= Project.RHEL6,
-					role= DefTypes.Role.IS_VERIFIED_BY),
+					role= DefTypes.Role.VERIFIES),
 				@LinkedItem(
 					workitemId= "RHEL7-91067",	// RHSM-REQ : subscription-manager cli registration and deregistration
 					project= Project.RedHatEnterpriseLinux7,
-					role= DefTypes.Role.IS_VERIFIED_BY)},
+					role= DefTypes.Role.VERIFIES)},
 			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,

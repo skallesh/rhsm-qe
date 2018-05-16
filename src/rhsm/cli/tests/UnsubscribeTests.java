@@ -95,11 +95,11 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 				@LinkedItem(
 					workitemId= "RHEL6-28489",	// RHSM-REQ : subscription-manager cli attaching and removing subscriptions
 					project= Project.RHEL6,
-					role= DefTypes.Role.IS_VERIFIED_BY),
+					role= DefTypes.Role.VERIFIES),
 				@LinkedItem(
 					workitemId= "RHEL7-84911",	// RHSM-REQ : subscription-manager cli attaching and removing subscriptions
 					project= Project.RedHatEnterpriseLinux7,
-					role= DefTypes.Role.IS_VERIFIED_BY)},
+					role= DefTypes.Role.VERIFIES)},
 			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
@@ -178,11 +178,11 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 				@LinkedItem(
 					workitemId= "RHEL6-28489",	// RHSM-REQ : subscription-manager cli attaching and removing subscriptions
 					project= Project.RHEL6,
-					role= DefTypes.Role.IS_VERIFIED_BY),
+					role= DefTypes.Role.VERIFIES),
 				@LinkedItem(
 					workitemId= "RHEL7-84911",	// RHSM-REQ : subscription-manager cli attaching and removing subscriptions
 					project= Project.RedHatEnterpriseLinux7,
-					role= DefTypes.Role.IS_VERIFIED_BY)},
+					role= DefTypes.Role.VERIFIES)},
 			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
@@ -236,11 +236,11 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 				@LinkedItem(
 					workitemId= "RHEL6-28489",	// RHSM-REQ : subscription-manager cli attaching and removing subscriptions
 					project= Project.RHEL6,
-					role= DefTypes.Role.IS_VERIFIED_BY),
+					role= DefTypes.Role.VERIFIES),
 				@LinkedItem(
 					workitemId= "RHEL7-84911",	// RHSM-REQ : subscription-manager cli attaching and removing subscriptions
 					project= Project.RedHatEnterpriseLinux7,
-					role= DefTypes.Role.IS_VERIFIED_BY)},
+					role= DefTypes.Role.VERIFIES)},
 			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
@@ -282,11 +282,11 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 				@LinkedItem(
 					workitemId= "RHEL6-28489",	// RHSM-REQ : subscription-manager cli attaching and removing subscriptions
 					project= Project.RHEL6,
-					role= DefTypes.Role.IS_VERIFIED_BY),
+					role= DefTypes.Role.VERIFIES),
 				@LinkedItem(
 					workitemId= "RHEL7-84911",	// RHSM-REQ : subscription-manager cli attaching and removing subscriptions
 					project= Project.RedHatEnterpriseLinux7,
-					role= DefTypes.Role.IS_VERIFIED_BY)},
+					role= DefTypes.Role.VERIFIES)},
 			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
@@ -324,11 +324,11 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 				@LinkedItem(
 					workitemId= "RHEL6-28489",	// RHSM-REQ : subscription-manager cli attaching and removing subscriptions
 					project= Project.RHEL6,
-					role= DefTypes.Role.IS_VERIFIED_BY),
+					role= DefTypes.Role.VERIFIES),
 				@LinkedItem(
 					workitemId= "RHEL7-84911",	// RHSM-REQ : subscription-manager cli attaching and removing subscriptions
 					project= Project.RedHatEnterpriseLinux7,
-					role= DefTypes.Role.IS_VERIFIED_BY)},
+					role= DefTypes.Role.VERIFIES)},
 			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
@@ -364,11 +364,11 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 				@LinkedItem(
 					workitemId= "RHEL6-28489",	// RHSM-REQ : subscription-manager cli attaching and removing subscriptions
 					project= Project.RHEL6,
-					role= DefTypes.Role.IS_VERIFIED_BY),
+					role= DefTypes.Role.VERIFIES),
 				@LinkedItem(
 					workitemId= "RHEL7-84911",	// RHSM-REQ : subscription-manager cli attaching and removing subscriptions
 					project= Project.RedHatEnterpriseLinux7,
-					role= DefTypes.Role.IS_VERIFIED_BY)},
+					role= DefTypes.Role.VERIFIES)},
 			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
@@ -464,11 +464,11 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 				@LinkedItem(
 					workitemId= "RHEL6-28489",	// RHSM-REQ : subscription-manager cli attaching and removing subscriptions
 					project= Project.RHEL6,
-					role= DefTypes.Role.IS_VERIFIED_BY),
+					role= DefTypes.Role.VERIFIES),
 				@LinkedItem(
 					workitemId= "RHEL7-84911",	// RHSM-REQ : subscription-manager cli attaching and removing subscriptions
 					project= Project.RedHatEnterpriseLinux7,
-					role= DefTypes.Role.IS_VERIFIED_BY)},
+					role= DefTypes.Role.VERIFIES)},
 			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
@@ -607,11 +607,11 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 				@LinkedItem(
 					workitemId= "RHEL6-28489",	// RHSM-REQ : subscription-manager cli attaching and removing subscriptions
 					project= Project.RHEL6,
-					role= DefTypes.Role.IS_VERIFIED_BY),
+					role= DefTypes.Role.VERIFIES),
 				@LinkedItem(
 					workitemId= "RHEL7-84911",	// RHSM-REQ : subscription-manager cli attaching and removing subscriptions
 					project= Project.RedHatEnterpriseLinux7,
-					role= DefTypes.Role.IS_VERIFIED_BY)},
+					role= DefTypes.Role.VERIFIES)},
 			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
@@ -652,11 +652,11 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 				@LinkedItem(
 					workitemId= "RHEL6-28489",	// RHSM-REQ : subscription-manager cli attaching and removing subscriptions
 					project= Project.RHEL6,
-					role= DefTypes.Role.IS_VERIFIED_BY),
+					role= DefTypes.Role.VERIFIES),
 				@LinkedItem(
 					workitemId= "RHEL7-84911",	// RHSM-REQ : subscription-manager cli attaching and removing subscriptions
 					project= Project.RedHatEnterpriseLinux7,
-					role= DefTypes.Role.IS_VERIFIED_BY)},
+					role= DefTypes.Role.VERIFIES)},
 			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
@@ -732,11 +732,11 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 				@LinkedItem(
 					workitemId= "RHEL6-28489",	// RHSM-REQ : subscription-manager cli attaching and removing subscriptions
 					project= Project.RHEL6,
-					role= DefTypes.Role.IS_VERIFIED_BY),
+					role= DefTypes.Role.VERIFIES),
 				@LinkedItem(
 					workitemId= "RHEL7-84911",	// RHSM-REQ : subscription-manager cli attaching and removing subscriptions
 					project= Project.RedHatEnterpriseLinux7,
-					role= DefTypes.Role.IS_VERIFIED_BY)},
+					role= DefTypes.Role.VERIFIES)},
 			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
@@ -794,11 +794,11 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 				@LinkedItem(
 					workitemId= "RHEL6-28489",	// RHSM-REQ : subscription-manager cli attaching and removing subscriptions
 					project= Project.RHEL6,
-					role= DefTypes.Role.IS_VERIFIED_BY),
+					role= DefTypes.Role.VERIFIES),
 				@LinkedItem(
 					workitemId= "RHEL7-84911",	// RHSM-REQ : subscription-manager cli attaching and removing subscriptions
 					project= Project.RedHatEnterpriseLinux7,
-					role= DefTypes.Role.IS_VERIFIED_BY)},
+					role= DefTypes.Role.VERIFIES)},
 			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
@@ -880,11 +880,11 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 				@LinkedItem(
 					workitemId= "RHEL6-28489",	// RHSM-REQ : subscription-manager cli attaching and removing subscriptions
 					project= Project.RHEL6,
-					role= DefTypes.Role.IS_VERIFIED_BY),
+					role= DefTypes.Role.VERIFIES),
 				@LinkedItem(
 					workitemId= "RHEL7-84911",	// RHSM-REQ : subscription-manager cli attaching and removing subscriptions
 					project= Project.RedHatEnterpriseLinux7,
-					role= DefTypes.Role.IS_VERIFIED_BY)},
+					role= DefTypes.Role.VERIFIES)},
 			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
@@ -937,11 +937,11 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 				@LinkedItem(
 					workitemId= "RHEL6-28489",	// RHSM-REQ : subscription-manager cli attaching and removing subscriptions
 					project= Project.RHEL6,
-					role= DefTypes.Role.IS_VERIFIED_BY),
+					role= DefTypes.Role.VERIFIES),
 				@LinkedItem(
 					workitemId= "RHEL7-84911",	// RHSM-REQ : subscription-manager cli attaching and removing subscriptions
 					project= Project.RedHatEnterpriseLinux7,
-					role= DefTypes.Role.IS_VERIFIED_BY)},
+					role= DefTypes.Role.VERIFIES)},
 			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
@@ -1054,11 +1054,11 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 				@LinkedItem(
 					workitemId= "RHEL6-28489",	// RHSM-REQ : subscription-manager cli attaching and removing subscriptions
 					project= Project.RHEL6,
-					role= DefTypes.Role.IS_VERIFIED_BY),
+					role= DefTypes.Role.VERIFIES),
 				@LinkedItem(
 					workitemId= "RHEL7-84911",	// RHSM-REQ : subscription-manager cli attaching and removing subscriptions
 					project= Project.RedHatEnterpriseLinux7,
-					role= DefTypes.Role.IS_VERIFIED_BY)},
+					role= DefTypes.Role.VERIFIES)},
 			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
@@ -1105,11 +1105,11 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 				@LinkedItem(
 					workitemId= "RHEL6-28489",	// RHSM-REQ : subscription-manager cli attaching and removing subscriptions
 					project= Project.RHEL6,
-					role= DefTypes.Role.IS_VERIFIED_BY),
+					role= DefTypes.Role.VERIFIES),
 				@LinkedItem(
 					workitemId= "RHEL7-84911",	// RHSM-REQ : subscription-manager cli attaching and removing subscriptions
 					project= Project.RedHatEnterpriseLinux7,
-					role= DefTypes.Role.IS_VERIFIED_BY)},
+					role= DefTypes.Role.VERIFIES)},
 			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,

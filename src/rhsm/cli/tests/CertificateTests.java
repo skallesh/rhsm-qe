@@ -263,7 +263,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-20037", "RHEL7-51046"},
-			level= DefTypes.Level.COMPONENT, component= "redhat-release-server",	// TODO should be a list of ["redhat-release-server","redhat-release-client","redhat-release-workstation","redhat-release-computenode"]
+			level= DefTypes.Level.COMPONENT,// TODO should be a list of ["redhat-release-server","redhat-release-client","redhat-release-workstation","redhat-release-computenode"]
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier1")

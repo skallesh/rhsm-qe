@@ -2169,11 +2169,11 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 				@LinkedItem(
 					workitemId= "RHEL6-28585",	// RHSM-REQ : Proxy settings
 					project= Project.RHEL6,
-					role= DefTypes.Role.IS_VERIFIED_BY),
+					role= DefTypes.Role.VERIFIES),
 				@LinkedItem(
 					workitemId= "RHEL7-84941",	// RHSM-REQ : Proxy settings
 					project= Project.RedHatEnterpriseLinux7,
-					role= DefTypes.Role.IS_VERIFIED_BY)},
+					role= DefTypes.Role.VERIFIES)},
 			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.MEDIUM, automation= DefTypes.Automation.AUTOMATED,
@@ -2257,11 +2257,11 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 				@LinkedItem(
 					workitemId= "RHEL6-28585",	// RHSM-REQ : Proxy settings
 					project= Project.RHEL6,
-					role= DefTypes.Role.IS_VERIFIED_BY),
+					role= DefTypes.Role.VERIFIES),
 				@LinkedItem(
 					workitemId= "RHEL7-84941",	// RHSM-REQ : Proxy settings
 					project= Project.RedHatEnterpriseLinux7,
-					role= DefTypes.Role.IS_VERIFIED_BY)},
+					role= DefTypes.Role.VERIFIES)},
 			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.MEDIUM, automation= DefTypes.Automation.AUTOMATED,
@@ -2413,11 +2413,11 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 //				@LinkedItem(
 //					workitemId= "",
 //					project= Project.RHEL6,
-//					role= DefTypes.Role.IS_VERIFIED_BY),
+//					role= DefTypes.Role.VERIFIES),
 				@LinkedItem(
 					workitemId= "RHEL7-95148",	// RHSM-REQ : Update 'invalid credentials' error to reflect a warning about network proxies
 					project= Project.RedHatEnterpriseLinux7,
-					role= DefTypes.Role.IS_VERIFIED_BY)},
+					role= DefTypes.Role.VERIFIES)},
 			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.LOW, automation= DefTypes.Automation.AUTOMATED,
