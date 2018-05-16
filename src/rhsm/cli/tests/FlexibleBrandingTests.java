@@ -38,6 +38,7 @@ import com.redhat.qe.tools.RemoteFileTasks;
 /**
  * @author skallesh
  * 
+ * Beware of "Bug 1439201 - udev-kvm-check and brandbot needs a new home" which may eliminate brandbot on RHEL8
  * 
  */
 @Test(groups = {"FlexibleBrandingTests"})
