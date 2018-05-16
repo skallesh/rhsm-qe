@@ -736,8 +736,15 @@ if (false) {
 	    // check the baseurl for problems
 	    SSHCommandResult baseurlTestResult = sshCommandRunner.runCommandAndWait("curl --stderr /dev/null --insecure --request GET "+baseurlForExtras);
 	    if (baseurlTestResult.getStdout().contains("404 Not Found") || baseurlTestResult.getStdout().contains("The document has moved")) {
-			log.warning("Cannot install updates from latest-EXTRAS-7-RHEL-7 since the baseurl '"+baseurlForExtras+"' is Not Found.");
-	    	Assert.fail("The Latest Extras baseurl '"+baseurlForExtras+"' was Not Found.  Instruct the automator to verify the assembly of this baseurl.");
+			log.info("Cannot install updates from latest-EXTRAS-7-RHEL-7 since the baseurl '"+baseurlForExtras+"' is Not Found.");
+			// attempt to use the previous minor release
+		    String baseurlForPreviousExtras = String.format("http://download-node-02.eng.bos.redhat.com/rel-eng/latest-EXTRAS-%.1f-RHEL-7/compose/"+"Server"+"/x86_64/os/",Float.valueOf(redhatReleaseXY)-0.1);	// "Server" is the ONLY compose for http://download-node-02.eng.bos.redhat.com/rel-eng/latest-EXTRAS-7.5-RHEL-7/compose/
+			log.info("Attempting to find extras under the previous minor release...");
+			baseurlTestResult = sshCommandRunner.runCommandAndWait("curl --stderr /dev/null --insecure --request GET "+baseurlForPreviousExtras);
+			if (baseurlTestResult.getStdout().contains("404 Not Found") || baseurlTestResult.getStdout().contains("The document has moved")) {
+				Assert.fail("The Latest Extras baseurl '"+baseurlForExtras+"' was Not Found (and neither was '"+baseurlForPreviousExtras+"').  Instruct the automator to verify the assembly of this baseurl.");
+			}
+			baseurlForExtras = baseurlForPreviousExtras;
 	    }
 	    baseurlTestResult = sshCommandRunner.runCommandAndWait("curl --stderr /dev/null --insecure --request GET "+baseurlForDeps);
 	    if (baseurlTestResult.getStdout().contains("404 Not Found") || baseurlTestResult.getStdout().contains("The document has moved")) {
@@ -10046,6 +10053,67 @@ if (false) {
 			// END OF WORKAROUND
 		}
 	}
+	
+	/**
+	 * Append a unique message to the end of /var/log/messages (on RHEL<=7) or the end of journalctl (on RHEL8+)
+	 * @param marker - a unique message
+	 * @return - the exit code that was echoed onto the end of the system log
+	 */
+	public int markSystemLogFile(String marker) {
+		//	[root@rhel6 ~]# rpm -q rsyslog systemd
+		//	rsyslog-5.8.10-10.el6_6.x86_64
+		//	package systemd is not installed
+		//
+		//	[root@rhel7 ~]# rpm -q rsyslog systemd
+		//	rsyslog-8.24.0-12.el7.x86_64
+		//	systemd-219-42.el7.x86_64
+		//
+		//	[root@drhel8 ~]# rpm -q rsyslog systemd
+		//	package rsyslog is not installed
+		//	systemd-238-6.el8+5.x86_64
+		
+		int exitCode = 0;
+		if (Integer.valueOf(redhatReleaseX) < 8 /* || !isPackageInstalled("systemd") */) {	// Note: RHEL7 should work with BOTH
+			exitCode = RemoteFileTasks.markFile(this.sshCommandRunner, this.messagesLogFile, marker);
+		} else {
+			String command = "echo '"+marker+"' | systemd-cat -t rhsm-qe";
+			exitCode = sshCommandRunner.runCommandAndWait(command, TestRecords.action()).getExitCode();
+		}
+		
+		return exitCode;
+	}
+	
+	/**
+	 * After marking the end of /var/log/messages (on RHEL<=7) or the end of journalctl (on RHEL8+) with a unique
+	 * marker using markSystemLogFile(), get the tail of the log from the time the marker was appended.
+	 * @param marker - a unique message that was already appended to the system log file using markSystemLogFile()
+	 * @param grepPattern - filter the tail of the log using this grep pattern; pass null if no grepping is desired.
+	 * @return
+	 */
+	public String getTailFromSystemLogFile(String marker, String grepPattern) {
+		// Notes:
+		//	"tail -f /var/log/messages" will now become "journalctl -f"
+		//	"grep foobar /var/log/messages" will now become "journalctl | grep foobar". "
+		String tail=null;
+		if (Integer.valueOf(redhatReleaseX) < 8 /* || !isPackageInstalled("systemd") */) {
+			tail = RemoteFileTasks.getTailFromMarkedFile(this.sshCommandRunner, this.messagesLogFile, marker, null).trim();
+		} else {
+			SSHCommandResult result;
+			String command;
+			if (grepPattern!=null) {
+				command = "journalctl | awk '/"+marker+"/,0' | grep -v --text '"+marker+"' | grep --text '"+grepPattern+"'";
+			} else {
+				command = "journalctl | awk '/"+marker+"/,0' | grep -v --text '"+marker+"'";
+			}
+			result= sshCommandRunner.runCommandAndWait(command);
+			Assert.assertContains(Arrays.asList(new Integer[]{0,1}), result.getExitCode());
+			tail = result.getStdout();
+		}
+		
+		return tail;
+	}
+	
+	
 	
 	/**
 	 * Compare the version of an installed package to a given version. For example...

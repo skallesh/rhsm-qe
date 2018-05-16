@@ -119,7 +119,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	protected void testRhsmcertdDoesNotThrowDeprecationWarnings() throws JSONException, Exception {
 		clienttasks.unregister(null, null, null, null);
 		String marker = System.currentTimeMillis()+" Testing verifyRhsmcertdDoesNotThrowDeprecationWarnings_Test...";
-		RemoteFileTasks.markFile(client, clienttasks.messagesLogFile, marker);
+		clienttasks.markSystemLogFile(marker);
 		
 		String command = clienttasks.rhsmComplianceD+" -s";
 		SSHCommandResult result = client.runCommandAndWait(command);
@@ -133,7 +133,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		Assert.assertTrue(result.getStdout().isEmpty(),"Stdout from command '"+command+"' is empty.");
 		Assert.assertTrue(result.getStderr().isEmpty(),"Stderr from command '"+command+"' is empty.");
 		
-		String rhsmcertdLogResult = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.messagesLogFile, marker, null).trim();
+		String rhsmcertdLogResult = clienttasks.getTailFromSystemLogFile(marker, null).trim();
 		String expectedMessage = "In order for Subscription Manager to provide your system with updates, your system must be registered with the Customer Portal. Please enter your Red Hat login to ensure your system is up-to-date.";
 		Assert.assertTrue(rhsmcertdLogResult.contains(expectedMessage),"Syslog contains expected message '"+expectedMessage+"'.");
 		String unexpectedMessage = "DeprecationWarning";
@@ -194,7 +194,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 			String command = clienttasks.rhsmComplianceD+" -s -d -i -f "+signal;
 			String marker = System.currentTimeMillis()+" Testing VerifyRhsmdLogsToRhsmlogAndSyslog_Test...";
 			RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, marker);
-			RemoteFileTasks.markFile(client, clienttasks.messagesLogFile, marker);
+			clienttasks.markSystemLogFile(marker);
 
 			// run and verify the command result
 			String expectedStdout = "forcing status signal from cli arg";
@@ -212,7 +212,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 			String logResult;
 			if (signalMap.get(signal).isEmpty()) {
 				String unExpectedMessage = "Please run subscription-manager for more information.";
-				logResult = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.messagesLogFile, marker, null).trim();
+				logResult = clienttasks.getTailFromSystemLogFile(marker, null).trim();
 				Assert.assertTrue(!logResult.contains(unExpectedMessage),clienttasks.messagesLogFile+" does NOT contain message '"+unExpectedMessage+"'.");
 				logResult = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, marker, null).trim();
 				Assert.assertTrue(!logResult.contains(unExpectedMessage),clienttasks.rhsmLogFile+" does NOT contain message '"+unExpectedMessage+"'.");
@@ -220,7 +220,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 
 			} else {
 				String expectedMessage = signalMap.get(signal);
-				logResult = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.messagesLogFile, marker, null).trim();
+				logResult = clienttasks.getTailFromSystemLogFile(marker, null).trim();
 				Assert.assertTrue(logResult.contains(expectedMessage),clienttasks.messagesLogFile+" contains expected message '"+expectedMessage+"'.");
 				logResult = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, marker, null).trim();
 				Assert.assertTrue(logResult.contains(expectedMessage),clienttasks.rhsmLogFile+" contains expected message '"+expectedMessage+"'.");
@@ -644,7 +644,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	
 	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
-			testCaseID= {"", ""},
+			testCaseID= {"", ""}, importReady=false,
 			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
@@ -1281,7 +1281,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	
 	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
-			testCaseID= {"", ""},
+			testCaseID= {"", ""}, importReady=false,
 			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.CRITICAL, automation= DefTypes.Automation.AUTOMATED,

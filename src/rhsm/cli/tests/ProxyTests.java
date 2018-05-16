@@ -71,6 +71,13 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	public void testRegisterAttemptsUsingProxyServer(Object blockedByBug, String username, String password, String org, String proxy, String proxyuser, String proxypassword, Integer exitCode, String stdout, String stderr) {
 		String moduleTask = "register";
 		
+		// alter expected stderr for invalid credentials from bug 1507030
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-1")) {	// post commit 630e1a2eb06e6bfacac669ce11f38e228c907ea9 1507030: RestlibExceptions should show they originate server-side
+			if (stderr!=null && stderr.contains(servertasks.invalidCredentialsMsg())) {
+				stderr = "HTTP error (401 - Unauthorized): "+stderr;
+			}
+		}
+		
 		SSHCommandResult attemptResult = clienttasks.register_(username, password, org, null, null, null, null, null, null, null, (String)null, null, null, null, null, null, proxy, proxyuser, proxypassword, null);
 		if (exitCode!=null)	Assert.assertEquals(attemptResult.getExitCode(), exitCode, "The exit code from an attempt to "+moduleTask+" using a proxy server.");
 		if (stdout!=null)	Assert.assertEquals(attemptResult.getStdout().trim(), stdout, "The stdout from an attempt to "+moduleTask+" using a proxy server.");
@@ -2625,7 +2632,9 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		String uErrMsg = servertasks.invalidCredentialsMsg(); //"Invalid username or password";
 		String oErrMsg = /*"Organization/Owner bad-org does not exist."*/"Organization bad-org does not exist.";
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-1")) {	// post commit 630e1a2eb06e6bfacac669ce11f38e228c907ea9 1507030: RestlibExceptions should show they originate server-side
-		//	uErrMsg = "HTTP error (401 - Unauthorized): "+uErrMsg;
+			/* logic for expected uErrMsg moved directly to testRegisterAttemptsUsingProxyServer() since non-register modules using this dataProvider don't need it
+			uErrMsg = "HTTP error (401 - Unauthorized): "+uErrMsg;
+			*/
 			oErrMsg = "HTTP error (400 - Bad Request): "+oErrMsg;
 		}
 		if (sm_serverType.equals(CandlepinType.katello))	oErrMsg = "Couldn't find organization 'bad-org'";
