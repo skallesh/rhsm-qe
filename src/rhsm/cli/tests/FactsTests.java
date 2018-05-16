@@ -1656,8 +1656,7 @@ if (false) { // DO NOT RUN, BUT NOT READY TO DELETE CODE
 			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
-			tags= "Tier1",
-      importReady=false)
+			tags= "Tier1")
 	@Test( description = "Verify the btime in facts list",
 			groups ={"Tier1Tests","blockedByBug-1527727"},
 			enabled = true)
