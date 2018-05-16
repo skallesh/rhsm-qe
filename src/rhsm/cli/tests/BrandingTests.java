@@ -55,7 +55,9 @@ import com.github.redhatqe.polarize.metadata.DefTypes.Project;
  * Dec  4 14:23:59 jsefler-7 systemd: brandbot.service start request repeated too quickly, refusing to start.
  * Dec  4 14:23:59 jsefler-7 systemd: Unit brandbot.service entered failed state.
  * 
- * Beware of future "[Bug 1357648] Brandbot cannot be disabled" which may impact these tests
+ * Beware of "Bug 1357648 - Brandbot cannot be disabled" which may impact these tests
+ * 
+ * Beware of "Bug 1439201 - udev-kvm-check and brandbot needs a new home" which may eliminate brandbot on RHEL8
  */
 @Test(groups = {"BrandingTests"})
 public class BrandingTests extends SubscriptionManagerCLITestScript {
