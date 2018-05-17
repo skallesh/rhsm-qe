@@ -8248,5 +8248,15 @@
       "id" : "RHEL-133207",
       "parameters" : [ "bugzilla", "translationFile" ]
     }
+  },
+    "rhsm.cli.tests.ListTests.testListAllAvailableAfterDate" : {
+    "RHEL6" : {
+      "id" : "RHEL6-51163",
+      "parameters" : [ "bugzilla", "yyyy_MM_dd" ]
+    },
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL-133333",
+      "parameters" : [ "bugzilla", "yyyy_MM_dd" ]
+    }
   }
 }
