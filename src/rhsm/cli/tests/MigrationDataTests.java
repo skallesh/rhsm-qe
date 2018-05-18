@@ -1659,6 +1659,14 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 				// skip Red Hat Certificate System
 				//	rhel-x86_64-server-5-rhcmsys-8
 				if (rhnChannel.contains("-rhcmsys-")) continue;
+				
+				// skip all fastrack rpms due to EOL..
+				// https://bugzilla.redhat.com/show_bug.cgi?id=1555913#c8
+				// https://bugzilla.redhat.com/show_bug.cgi?id=1549766#c4
+				// Red Hat Enterprise Linux 7 Server - Fastrack (RPMs)  rhel-7-server-fastrack-rpms
+				// Red Hat Enterprise Linux 6 Server - Fastrack (RPMs)  rhel-6-server-fastrack-rpms
+				// Red Hat Enterprise Linux 5 Server - Fastrack (RPMs)  rhel-5-server-fastrack-rpms
+				if (rhnChannel.contains("-fastrack-")) continue;
 			}
 			
 			// bugzillas
