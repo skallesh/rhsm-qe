@@ -1341,6 +1341,18 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 			}
 			// END OF WORKAROUND
 			
+			// TEMPORARY WORKAROUND FOR BUG
+			if (entryDescription.equals("null")) {
+				String bugId = "1578968"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1578968 - candlepin atom feeds are missing the description field 
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
+				if (invokeWorkaroundWhileBugIsOpen) {
+					log.warning("Encountered an atom feed entry with a '"+entryDescription+"' event");
+					log.warning("Skipping non-null for an atom feed entry description while Bug '"+bugId+"' is open.");
+					continue;
+				}
+			}
+			// END OF WORKAROUND
+			
 			if (entryDescription.toLowerCase().contains("unknown event")) {
 				Assert.fail("Encountered an atom feed entry with an unknown event: "+entryAsString);
 			}
