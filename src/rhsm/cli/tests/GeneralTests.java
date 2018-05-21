@@ -23,6 +23,7 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import rhsm.base.SubscriptionManagerCLITestScript;
+import rhsm.data.ProductSubscription;
 
 import com.redhat.qe.Assert;
 import com.redhat.qe.auto.bugzilla.BlockedByBzBug;
@@ -162,7 +163,19 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 			//	RHN_CLASSIC = 3
 			//	RHSM_PARTIALLY_VALID = 4
 			//	RHSM_REGISTRATION_REQUIRED = 5
-			expectedExitCode = clienttasks.status(null, null, null, null, null).getExitCode();	// TODO this probably works for RHSM_VALID and RHSM_EXPIRED/INVALID
+			// Note: this expectedExitCode will probably work for RHSM_VALID and RHSM_EXPIRED/INVALID
+			expectedExitCode = clienttasks.status(null, null, null, null, null).getExitCode();
+			
+			// Note: if a temporary SKU is being consumed, then RHSM_PARTIALLY_VALID = 4 will be expectedExitCode
+			for (ProductSubscription productSubscription : clienttasks.getCurrentlyConsumedProductSubscriptions()) {
+				if (productSubscription.subscriptionType.contains("(Temporary)")) {
+					log.info("Since the system is currently consuming at least one temporary subscription, the expected exitCode from '"+command+"' should match RHSM_PARTIALLY_VALID = 4");
+					expectedExitCode = new Integer(4);
+					break;
+				}
+			}
+			
+			// TODO may still want to test for RHSM_WARNING = 2 case
 		}
 		Assert.assertEquals(result.getExitCode(), expectedExitCode,"ExitCode from command '"+command+"'.");
 		Assert.assertTrue(result.getStdout().isEmpty(),"Stdout from command '"+command+"' is empty.");
