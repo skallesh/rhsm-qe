@@ -1268,6 +1268,13 @@ public class MigrationDataTests extends SubscriptionManagerCLITestScript {
 			Assert.assertTrue(!channelsToProductCertFilenamesMap.containsKey(classicRhnChannel), "Special case RHN Classic channel '"+classicRhnChannel+"' is NOT accounted for in subscription-manager-migration-data file '"+channelCertMappingFilename+"'.");
 			return;
 		}
+		if (classicRhnChannel.equals("rhel-x86_64-server-hpn-fastrack-6") ||
+			classicRhnChannel.equals("rhel-x86_64-server-hpn-fastrack-6-debuginfo")) {
+			// Bug 1561724 - rhel-x86_64-server-hpn-fastrack-6 channel maps are absent from channel-cert-mapping.txt
+			log.warning("(lkocman and jfedor 05/10/2018) Fastrack is EOL I'd not continue to update it at all... please ingore all fast-track repos. Those are not used anymore. https://bugzilla.redhat.com/show_bug.cgi?id=1561724#c3");
+			Assert.assertTrue(!channelsToProductCertFilenamesMap.containsKey(classicRhnChannel), "Special case RHN Classic channel '"+classicRhnChannel+"' is NOT accounted for in subscription-manager-migration-data file '"+channelCertMappingFilename+"'.");
+			return;
+		}
 		if (classicRhnChannel.equals("rhel-x86_64-rhev-mgmt-agent-7-beta") ||
 			classicRhnChannel.equals("rhel-x86_64-rhev-mgmt-agent-7-beta-debuginfo")) {
 			// Bug 1435245 - RHN channels to product cert maps for "rhel-x86_64-rhev-mgmt-agent-7-beta*" disappeared
