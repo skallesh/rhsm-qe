@@ -31,6 +31,7 @@ import com.redhat.qe.Assert;
 import com.redhat.qe.auto.bugzilla.BugzillaAPIException;
 import com.redhat.qe.auto.bugzilla.BzChecker;
 import com.redhat.qe.tools.RemoteFileTasks;
+import com.redhat.qe.tools.SSHCommandResult;
 import com.github.redhatqe.polarize.metadata.DefTypes.PosNeg;
 import com.github.redhatqe.polarize.metadata.DefTypes.Project;
 
@@ -691,6 +692,22 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 	public void skipBrandingTestsForOldVerionsBeforeClass() {
 		if (clienttasks.isPackageVersion("subscription-manager","<","1.10.14-7") && clienttasks.isPackageVersion("python-rhsm","<","1.10.12-2")) {	// rhel7.0 GA packages
 			throw new SkipException("Flexible Branding is a subscription feature available in RHEL7.");
+		}
+	}
+	
+	/**
+	 * Reference: RHEL8 Bug 1439201 - udev-kvm-check and brandbot needs a new home
+	 */
+	@BeforeClass(groups="setup",dependsOnMethods={"skipBrandingTestsForOldVerionsBeforeClass"})
+	public void skipBrandingTestsWhenBrandbotServiceIsNotFoundOnRhel8() {
+		if (Integer.valueOf(clienttasks.redhatReleaseX)>=8) {
+			SSHCommandResult result = client.runCommandAndWait("systemctl status brandbot.service");
+			//	ssh root@jsefler-rhel8.usersys.redhat.com systemctl status brandbot.service
+			//	Stdout: 
+			//	Stderr: Unit brandbot.service could not be found.
+			if (result.getStderr().trim().equals("Unit brandbot.service could not be found.")) {
+				throw new SkipException("As decided in the mail threads referenced in https://bugzilla.redhat.com/show_bug.cgi?id=1439201#c5, the brandbot.service will not be available on RHEL8.  If brandbot.service is available, automated tests will be attempted.");
+			}
 		}
 	}
 }
