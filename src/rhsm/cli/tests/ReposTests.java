@@ -477,6 +477,18 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	//@ImplementsNitrateTest(caseId=)
 	public void testReposListIsDisabledByConfigurationAfterRhsmManageReposIsConfiguredOff() throws JSONException, Exception{
 		
+		// TEMPORARY WORKAROUND FOR BUG
+		if (clienttasks.redhatReleaseX.equals("8")) {
+			String bugId = "1581445";	// Bug 1581445 - rhsm configuration manage_repos is not working on RHEL8
+			boolean invokeWorkaroundWhileBugIsOpen = true;
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
+			if (invokeWorkaroundWhileBugIsOpen) {
+				// TODO Determine if this is also be blocked on RHEL7.6
+				throw new SkipException("This test is blockedByBug-"+bugId+" on RHEL8");
+			}
+		}
+		// END OF WORKAROUND
+		
 		// manually set the manage_repos to 1
 		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "manage_repos", "1");
 		
