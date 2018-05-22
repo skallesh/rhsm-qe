@@ -210,6 +210,10 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 			}
 		}
 		
+		if (Integer.valueOf(clienttasks.redhatReleaseX)>=8) {
+			rhelProductCert = clienttasks.getCurrentProductCerts("rhel-8-.*").get(0);	// should only be one (tested by VerifyOnlyOneBaseRHELProductCertIsInstalled_Test)	// also matches HTB product cert tags rhel-8-htb		
+		}
+		
 		Assert.assertNotNull(rhelProductCert,"Found an installed product cert that matches the system's base RHEL release version '"+clienttasks.releasever+"' on arch '"+clienttasks.arch+"':");
 		log.info(rhelProductCert.toString());
 	}
