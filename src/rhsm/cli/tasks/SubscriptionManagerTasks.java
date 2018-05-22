@@ -151,6 +151,9 @@ public class SubscriptionManagerTasks {
 		arch			= sshCommandRunner.runCommandAndWait("uname --machine").getStdout().trim();  // uname -i --hardware-platform :print the hardware platform or "unknown"	// uname -m --machine :print the machine hardware name
 		//releasever		= sshCommandRunner.runCommandAndWait("rpm -q --qf \"%{VERSION}\\n\" --whatprovides /etc/redhat-release").getStdout().trim();  // e.g. 5Server		// cut -f 5 -d : /etc/system-release-cpe	// rpm -q --queryformat "%{VERSION}\n" --whatprovides system-release		// rpm -q --queryformat "%{VERSION}\n" --whatprovides /etc/redhat-release	// does not work on RHEL7, returns "7.0" instead of "7Server"
 		releasever		= sshCommandRunner.runCommandAndWait("python -c 'import yum, pprint; yb = yum.YumBase(); pprint.pprint(yb.conf.yumvar[\"releasever\"], width=1)' | egrep -v 'Loaded plugins|This system' | cut -f 2 -d \\'").getStdout().trim();  // e.g. 5Server 6Server 7Server	// python -c 'import yum, pprint; yb = yum.YumBase(); pprint.pprint(yb.conf.yumvar["releasever"], width=1)' | grep -v 'Loaded plugins' | cut -f 2 -d \'
+		if (releasever.isEmpty()) {	// try this
+			releasever	= sshCommandRunner.runCommandAndWait("python3 -c 'import dnf; yb = dnf.Base(); print(yb.conf.releasever)'").getStdout().trim();  // e.g. 8.0	// TODO confirm with RCM if this is correct	on RHEL8		
+		}
 		
 		//		rhsmComplianceD	= sshCommandRunner.runCommandAndWait("rpm -ql subscription-manager | grep libexec/rhsm").getStdout().trim();
 		redhatRelease	= sshCommandRunner.runCommandAndWait("cat /etc/redhat-release").getStdout().trim();
@@ -167,6 +170,7 @@ public class SubscriptionManagerTasks {
 		Assert.assertTrue(matcher.find(),"Extracted RHEL redhatReleaseXY from '"+redhatRelease+"'");
 		redhatReleaseXY = matcher.group();
 		redhatReleaseX = redhatReleaseXY.replaceFirst("\\..*", "");
+		
 		
 		// TODO This is a WORKAROUND to treat an ARM Development Preview as a RHEL7.0 system.  Not sure if this is what we ultimately want.
 		/* 3/18/2015 NO LONGER NEEDED NOW THAT THE GA PRODUCT Red Hat Enterprise Linux Server for ARM ProductId=294 HAS BEEN CREATED
