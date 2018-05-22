@@ -944,7 +944,7 @@ if (false) {
 		if /* >= RHEL7.3 */ (redhatReleaseX.equals("7") && Integer.valueOf(redhatReleaseXY.split("\\.")[1])>=3) pkgs = new ArrayList<String>(Arrays.asList(new String[]{"python-rhsm-certificates", "python-rhsm", "subscription-manager", "subscription-manager-gui",   "subscription-manager-initial-setup-addon", "subscription-manager-migration", "subscription-manager-migration-data", "subscription-manager-plugin-ostree", "subscription-manager-plugin-container"}));
 		if /* >= RHEL7.5 */ (redhatReleaseX.equals("7") && Integer.valueOf(redhatReleaseXY.split("\\.")[1])>=5) pkgs = new ArrayList<String>(Arrays.asList(new String[]{"subscription-manager-rhsm-certificates", "subscription-manager-rhsm", "subscription-manager", "subscription-manager-gui",   "subscription-manager-initial-setup-addon", "subscription-manager-migration", "subscription-manager-migration-data", "subscription-manager-plugin-ostree", "subscription-manager-plugin-container", "subscription-manager-cockpit"}));
 		if /* >= RHEL7.6 */ (redhatReleaseX.equals("7") && Integer.valueOf(redhatReleaseXY.split("\\.")[1])>=6) pkgs = new ArrayList<String>(Arrays.asList(new String[]{"subscription-manager-rhsm-certificates", "subscription-manager-rhsm", "subscription-manager", "rhsm-gtk", "subscription-manager-gui",   "subscription-manager-initial-setup-addon", "subscription-manager-migration", "subscription-manager-migration-data", "subscription-manager-plugin-ostree", "subscription-manager-plugin-container", "subscription-manager-cockpit"}));
-		if /* >= RHEL8.0 */ (redhatReleaseX.equals("8") && Integer.valueOf(redhatReleaseXY.split("\\.")[1])>=0) pkgs = new ArrayList<String>(Arrays.asList(new String[]{"python3-intentctl", "subscription-manager-rhsm-certificates", "python3-subscription-manager-rhsm", "subscription-manager", "rhsm-gtk", "subscription-manager-initial-setup-addon", "subscription-manager-migration", "subscription-manager-migration-data", "subscription-manager-plugin-ostree", "subscription-manager-plugin-container", "dnf-plugin-subscription-manager.rpm", "subscription-manager-cockpit"}));
+		if /* >= RHEL8.0 */ (redhatReleaseX.equals("8") && Integer.valueOf(redhatReleaseXY.split("\\.")[1])>=0) pkgs = new ArrayList<String>(Arrays.asList(new String[]{"python3-intentctl", "subscription-manager-rhsm-certificates", "python3-subscription-manager-rhsm", /*"dnf-plugin-subscription-manager", commenting out for the sake of Bug 1581410*/"subscription-manager", "rhsm-gtk", "subscription-manager-initial-setup-addon", "subscription-manager-migration", "subscription-manager-migration-data", "subscription-manager-plugin-ostree", "subscription-manager-plugin-container", "subscription-manager-cockpit"}));
 		pkgs.add(0,"expect");	// used for interactive cli prompting
 		pkgs.add(0,"sos");	// used to create an sosreport for debugging hardware
 		pkgs.add(0,"bash-completion");	// used in BashCompletionTests
@@ -966,10 +966,24 @@ if (false) {
 		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 		if (invokeWorkaroundWhileBugIsOpen) {
 			String pkg = "subscription-manager-migration-data";
-			log.warning("Skipping the install of "+pkg+".");
+			log.warning("Skipping the install of '"+pkg+"'.");
 			pkgs.remove(pkg);
 		}
 		// END OF WORKAROUND
+		
+		// TEMPORARY WORKAROUND FOR BUG
+		if (redhatReleaseX.equals("8")) {
+			/*String*/ bugId = "1581410";	// Bug 1581410 - package subscription-manager should require dnf-plugin-subscription-manager on RHEL8
+			/*boolean*/ invokeWorkaroundWhileBugIsOpen = true;
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			if (invokeWorkaroundWhileBugIsOpen) {
+				String pkg = "dnf-plugin-subscription-manager";
+				log.warning("Forcing the install of '"+pkg+"' while bug '"+bugId+"' is open.");
+				pkgs.add(pkg);
+			}
+		}
+		// END OF WORKAROUND
+		
 		for (String pkg : pkgs) {
 			if (pkg.equals("subscription-manager-gnome") && isPackageInstalled("subscription-manager-gui")) continue;	// avoid downgrading
 			if (!isPackageInstalled(pkg)) {
