@@ -343,6 +343,19 @@ public class StatusTests extends SubscriptionManagerCLITestScript{
 			} else {
 				// since this productSubscription is not current, its status details should be reported in the Status report under the subscription's name. 
 				for (String statusDetail : productSubscription.statusDetails) {
+					
+					// TEMPORARY WORKAROUND FOR BUG
+					if (clienttasks.redhatReleaseX.equals("8") && statusDetail.equals("Subscription has not begun")) {
+						String bugId = "1580996";	// Bug 1580996 - RHEL8 subscription-manager list --consumed shows Status Details: "Subscription has not begun" expected "Subscription is current"
+						boolean invokeWorkaroundWhileBugIsOpen = true;
+						try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
+						if (invokeWorkaroundWhileBugIsOpen) {
+							log.warning("Skipping the assert that status detail '"+statusDetail+"' from consumed subscription '"+productSubscription.productName+"' is included in the list of overall status details while bug '"+bugId+"' is open.");
+							continue;
+						}
+					}
+					// END OF WORKAROUND
+					
 					Assert.assertTrue(!getSubstringMatches(statusResult.getStdout(), "(^|/)"+productSubscription.productName.replaceAll("\\(","\\\\(").replaceAll("\\)","\\\\)")+"(|/.+):(\\n- .*)*?\\n- "+statusDetail.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)")).isEmpty(),
 							"Expecting the status detail '"+statusDetail+"' of consumed subscription '"+productSubscription.productName+"' to appear in the list of overall status details.");
 					//Assert.assertTrue(!doesStringContainMatches(listStatusResult.getStdout(), "(\\n^- "+statusDetail+"){2,}"),
