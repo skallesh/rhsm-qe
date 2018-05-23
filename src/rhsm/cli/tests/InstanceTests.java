@@ -285,6 +285,15 @@ public class InstanceTests extends SubscriptionManagerCLITestScript {
 				if (clienttasks.isPackageVersion("subscription-manager",">=", "1.13.13-1")) {	 // commit 252ec4520fb6272b00ae379703cd004f558aac63	// bug 1180400: "Status Details" are now populated on CLI
 					expectedStatusDetails = Arrays.asList(new String[]{"Subscription is current"});	// Bug 1180400 - Status datails is blank in list consumed output
 				}
+				// TEMPORARY WORKAROUND FOR BUG
+				String bugId = "1580996";	// Bug 1580996 - RHEL8 subscription-manager list --consumed shows Status Details: "Subscription has not begun" expected "Subscription is current"
+				boolean invokeWorkaroundWhileBugIsOpen = true;
+				List<String> unexpectedStatusDetailsFromBug1580996 = Arrays.asList(new String[]{"Subscription has not begun"});
+				try {if (clienttasks.redhatReleaseX.equals("8") && productSubscription.statusDetails.equals(unexpectedStatusDetailsFromBug1580996) && invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
+				if (clienttasks.redhatReleaseX.equals("8") && productSubscription.statusDetails.equals(unexpectedStatusDetailsFromBug1580996) && invokeWorkaroundWhileBugIsOpen) {
+					log.warning("Skipping the assert that status details "+productSubscription.statusDetails+" from consumed product subscription '"+productSubscription.productName+"' equals "+expectedStatusDetails+" while bug '"+bugId+"' is open.");
+				} else
+				// END OF WORKAROUND
 				Assert.assertEquals(productSubscription.statusDetails, expectedStatusDetails, "The statusDetails from the consumed product subscription '"+productSubscription.productName+"' poolId='"+productSubscription.poolId+"' should be "+expectedStatusDetails+" indicating compliance.");
 			} else {
 				List<String> expectedStatusDetails = Arrays.asList(new String[]{String.format("Only supports %s of %s sockets.",(quantityAttached*poolSockets)/poolInstanceMultiplier,systemSockets)});	// Message changed by candlepin commit 43a17952c724374c3fee735642bce52811a1e386 covers -> supports
