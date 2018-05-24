@@ -35,7 +35,7 @@ public class CleanTests extends SubscriptionManagerCLITestScript {
 	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID = {"RHEL6-20022", "RHEL7-51039"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier1")
@@ -78,7 +78,7 @@ public class CleanTests extends SubscriptionManagerCLITestScript {
 	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID = {"RHEL6-20021", "RHEL7-51038"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier1")
@@ -102,7 +102,7 @@ public class CleanTests extends SubscriptionManagerCLITestScript {
 	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID = {"RHEL6-36617", "RHEL7-51428"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
@@ -125,7 +125,7 @@ public class CleanTests extends SubscriptionManagerCLITestScript {
 	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID = {"RHEL6-36618", "RHEL7-51429"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")

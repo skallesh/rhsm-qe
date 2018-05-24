@@ -49,7 +49,7 @@ public class InstanceBasedTests extends SubscriptionManagerCLITestScript {
 	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-36689", "RHEL7-51534"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
@@ -90,7 +90,7 @@ public class InstanceBasedTests extends SubscriptionManagerCLITestScript {
 	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-36691", "RHEL7-51536"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
@@ -138,7 +138,7 @@ public class InstanceBasedTests extends SubscriptionManagerCLITestScript {
 	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-36688", "RHEL7-51533"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
@@ -214,7 +214,7 @@ public class InstanceBasedTests extends SubscriptionManagerCLITestScript {
 	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-36687", "RHEL7-51532"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
@@ -275,7 +275,7 @@ public class InstanceBasedTests extends SubscriptionManagerCLITestScript {
 	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-36690", "RHEL7-51535"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")

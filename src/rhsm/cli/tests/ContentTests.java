@@ -63,7 +63,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID = {"RHEL6-25987", "RHEL7-51485"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags="Tier2")
@@ -188,7 +188,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID = {"RHEL6-20085", "RHEL7-51099"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags="Tier1")
@@ -241,7 +241,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID = {"RHEL6-20082", "RHEL7-51098"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags="Tier1")
@@ -384,7 +384,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID = {"RHEL6-22222", "RHEL7-55190"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags="Tier1")
@@ -455,7 +455,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID = {"RHEL6-25986", "RHEL7-56655"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags="Tier2")
@@ -591,7 +591,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID = {"RHEL6-20083", "RHEL7-51096"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags="Tier1")
@@ -734,7 +734,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID = {"RHEL6-36652", "RHEL7-51484"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags="Tier2")
@@ -810,7 +810,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID = {"RHEL6-36653", "RHEL7-51486"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags="Tier2")
@@ -826,7 +826,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID = {"RHEL6-36654", "RHEL7-51487"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags="Tier2")
@@ -842,7 +842,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID = {"RHEL6-20086", "RHEL7-51097"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags="Tier1")
@@ -899,7 +899,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID = {"RHEL6-20080", "RHEL7-33076"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags="Tier1")
@@ -961,7 +961,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID = {"RHEL6-20081", "RHEL7-50720"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags="Tier1")
@@ -1186,7 +1186,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID = {"RHEL6-20084", "RHEL7-55189"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags="Tier1")
@@ -1252,6 +1252,21 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 				}
 				// END OF WORKAROUND
 				
+				// TEMPORARY WORKAROUND
+				if (clienttasks.redhatReleaseX.equals("6") && rhelProductCert.productId.equals("155")) {
+					boolean invokeWorkaroundWhileBugIsOpen = true;
+					String bugId="1573573"; // Bug 1573573 - EngId 155 repo rhel-6-workstation-htb-rpms should be enabled by default 
+					bugId="1571077"; // Bug 1571077 - [HTB] Repo "rhel-6-workstation-htb-rpms" should be enabled by default for workstation x86_64.
+					try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
+					if (invokeWorkaroundWhileBugIsOpen) {
+						WORKAROUND_BUG_1571077 = true;
+						String enablerepo = "rhel-6-workstation-htb-rpms";
+						log.info("Explicitly enabling repo '"+enablerepo+"' to gain access to HTB Workstation content on RHEL6.");
+						clienttasks.repos(null, null, null, enablerepo, null, null, null, null, null);
+					}
+				}
+				// END OF WORKAROUND
+				
 				// WORKAROUND FOR RHEL-ALT-7.5 aarch64
 				if (clienttasks.redhatReleaseXY.equals("7.5") && rhelProductCert.productId.equals("433")) { // Red Hat Enterprise Linux for IBM System z (Structure A) Beta
 					String repo="rhel-7-for-system-z-a-beta-rpms";
@@ -1265,7 +1280,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 				if (yumRepolistPackageCount>0) {
 					Assert.assertTrue(yumRepolistPackageCount>0,"Expecting many available packages (actual='"+yumRepolistPackageCount+"') of enabled repo content because RHEL subscription '"+pool.subscriptionName+"' SKU '"+pool.productId+"' was just attached.");
 				} else {
-					log.warning("No enabled yum repo content packages are available after attaching RHEL subscription '"+pool.subscriptionName+"'. (This can happen when the RHEL product is brand new and content has not yet been pushed to '"+clienttasks.baseurl+"')");
+					log.warning("No enabled yum repo content packages are available after attaching RHEL subscription '"+pool.subscriptionName+"'. (This can happen when the RHEL product is brand new and content has not yet been pushed to '"+clienttasks.baseurl+"'.  It can also happen when testing Snapshot-1 prior to public release of HTB content.)");
 					rhelYumContentIsAvailable = false;
 				}
 				
@@ -1297,12 +1312,13 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		Assert.assertTrue(rhelSubscriptionIsAvailable,"Successfully subscribed to at least one available RHEL subscription that provided for our installed RHEL product cert: "+rhelProductCert);
 		Assert.assertTrue(rhelYumContentIsAvailable,"All of the RHEL subscriptions subscribed provided at least one enabled yum content package applicable for our installed RHEL product cert: "+rhelProductCert+" (See WARNINGS logged above for failed subscriptions)");
 	}
+	protected boolean WORKAROUND_BUG_1571077 = false;
 
 
 	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID = {"RHEL6-20087", "RHEL7-55191"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags="Tier1")
@@ -1327,6 +1343,14 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		} else {
 			RemoteFileTasks.runCommandAndAssert(client,"service rsyslog stop",Integer.valueOf(0),"^Shutting down system logger: *\\[  OK  \\]$",null);	
 		}
+		
+		// TEMPORARY WORKAROUND
+		if (WORKAROUND_BUG_1571077) {
+			String enablerepo = "rhel-6-workstation-htb-rpms";
+			log.info("Explicitly enabling repo '"+enablerepo+"' to gain access to HTB Workstation content on RHEL6.");
+			clienttasks.repos(null, null, null, enablerepo, null, null, null, null, null);
+		}
+		// END OF WORKAROUND
 		
 		// yum install the package
 		//  Failure From Bug 1211557 - subscription-manager causes failure of yum 
@@ -1396,7 +1420,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 					workitemId= "RHEL7-84951",	// RHSM-REQ : Modifier Subscriptions (EUS)
 					project= Project.RedHatEnterpriseLinux7,
 					role= DefTypes.Role.RELATES_TO)},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier1")

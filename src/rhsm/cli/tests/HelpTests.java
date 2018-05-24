@@ -40,7 +40,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-21764", "RHEL7-51271"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
@@ -62,7 +62,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-21758", "RHEL7-51265"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
@@ -81,7 +81,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-21759", "RHEL7-51266"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
@@ -108,7 +108,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-21762", "RHEL7-51269"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
@@ -135,7 +135,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6},
 			testCaseID= {"RHEL6-25813"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
@@ -182,7 +182,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-21763", "RHEL7-51270"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
@@ -209,7 +209,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-21760", "RHEL7-51267"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
@@ -228,7 +228,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-21761", "RHEL7-51268"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
@@ -248,7 +248,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-22220", "RHEL7-51264"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
@@ -301,12 +301,12 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-21757", "RHEL7-51263"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
 	@Test(	description="subscription-manager, subscription-manager-gui, rhn-migrate-classic-to-rhsm, and other CLI tools: assert only expected command line options are available",
-			groups={"Tier2Tests",},
+			groups={"Tier2Tests"},
 			dataProvider="ExpectedCommandLineOptionsData")
 	@ImplementsNitrateTest(caseId=46713)
 	//@ImplementsNitrateTest(caseId=46707)
@@ -336,6 +336,18 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			
 			actualOptions.add(matcher.group().trim());
 		} while (matcher.find());
+		
+		// if necessary, alter the expected options containing "..." to tolerate "…"
+		for (int i = 0; i < expectedOptions.size(); i++) {
+			String expectedOption = expectedOptions.get(i);
+			if (expectedOption.contains("...") && !result.getStdout().contains(expectedOption)) {
+				String alternateExpectedOption = expectedOption.replace("...", "…");
+				if (result.getStdout().contains(alternateExpectedOption)) {
+					log.info("Tolerating expected option '"+alternateExpectedOption+"' as an equivalent to expected option '"+expectedOption+"'.");
+					expectedOptions.set(i, alternateExpectedOption);
+				}
+			}
+		}
 		
 		// assert all of the expectedOptions were found and that no unexpectedOptions were found
 		for (String expectedOption : expectedOptions) {
@@ -1136,10 +1148,10 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 				String rhsmIconHelpCommand = command+" "+helpOption;
 				List <String> usages = new ArrayList<String>();
 				String usage = command+" [OPTIONS]";
-				usage = command+" [OPTION...]"; // usage = rhsmIconCommand+" [OPTION...] rhsm icon"; // Bug 771756 - rhsm-icon --help usage message is misleading 
+				usage = command+" [OPTION...]"; // usage = rhsmIconCommand+" [OPTION...] rhsm icon"; // Bug 771756 - rhsm-icon --help usage message is misleading
 				usages.add(usage);
 				if (!Arrays.asList("6.1","5.7","6.2","5.8","6.3").contains(clienttasks.redhatReleaseXY)) // skip the following rhsmIconHelpCommand usage test since bug 771756 was not fixed until 5.9
-				ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("771756"), rhsmIconHelpCommand, 0, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\?", "\\\\?")+" *$", usages}));
+				ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("771756"), rhsmIconHelpCommand, 0, usage.replace("...","(\\.\\.\\.|…)").replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\?", "\\\\?")+" *$", usages}));
 				ll.add(Arrays.asList(new Object[] {null, rhsmIconHelpCommand, 0, optionsRegex, rhsmIconOptions}));
 			}
 			List <String> rhsmIconGtkOptions = new ArrayList<String>();
@@ -1155,7 +1167,11 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			if (!clienttasks.redhatReleaseX.equals("5"))	rhsmIconGtkOptions.add("--gdk-no-debug=FLAGS");
 			if (!clienttasks.redhatReleaseX.equals("5"))	rhsmIconGtkOptions.add("--gtk-debug=FLAGS");
 			if (!clienttasks.redhatReleaseX.equals("5"))	rhsmIconGtkOptions.add("--gtk-no-debug=FLAGS");
-			if (client.runCommandAndWait("rpm -qf `which rhsm-icon` --requires | egrep '^(gtk|pygtk)'").getStdout().trim().startsWith("gtk3")) {	// if (clienttasks.isPackageVersion("subscription-manager",">=","1.15.3")) {	// commit 3c51d2096ecdd1a7ba6981776bd9aa6959aa2e1e use gtk3 for rhsm-icon
+			String rpmQueryCommand = "rpm -qf `which rhsm-icon` --requires | egrep '^(gtk|pygtk)'";
+			if (clienttasks.isPackageVersion("subscription-manager-gui", ">=", "1.21.4-1")) {	// commit 23b5409c76d586c4e34440788d612e7ed65e2df6 Stop building subscription-manager-gui, when Python 3 is used
+				rpmQueryCommand = "rpm -q rhsm-gtk --requires | egrep '^(gtk|pygtk)'";
+			}
+			if (client.runCommandAndWait(rpmQueryCommand).getStdout().trim().startsWith("gtk3")) {	// if (clienttasks.isPackageVersion("subscription-manager",">=","1.15.3")) {	// commit 3c51d2096ecdd1a7ba6981776bd9aa6959aa2e1e use gtk3 for rhsm-icon
 				// effectively this happens on RHEL >= 7.2
 				// options not offered by gtk3
 				rhsmIconGtkOptions.remove("--screen=SCREEN");
@@ -1311,7 +1327,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			String usage = command+" [OPTIONS]";
 			usage = command+" [OPTION...]";
 			usages.add(usage);
-			ll.add(Arrays.asList(new Object[] {null, commandHelp, 0, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\?", "\\\\?")+" *$", usages}));
+			ll.add(Arrays.asList(new Object[] {null, commandHelp, 0, usage.replace("...","(\\.\\.\\.|…)").replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\?", "\\\\?")+" *$", usages}));
 			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug(new String[]{"876753","882459"}), commandHelp, 0, optionsRegex, new ArrayList<String>(options)}));
 		}
 

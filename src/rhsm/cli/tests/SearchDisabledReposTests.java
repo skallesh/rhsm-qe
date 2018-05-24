@@ -45,7 +45,7 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-20088", "RHEL7-51100"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier1")
@@ -84,7 +84,7 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-20089", "RHEL7-55192"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier1")
@@ -440,9 +440,25 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 			rhelBaseRepoId = rhelHtbRepoId;
 			rhelOptionalRepoId = rhelOptionalHtbRepoId;
 		}
+		if (rhelProductCert.productId.equals("135")/*Red Hat Enterprise Linux 6 Server HTB*/||
+			rhelProductCert.productId.equals("155")/*Red Hat Enterprise Linux 6 Workstation HTB*/) {
+			log.info("Adjusting the expected base and optional repos because the default installed RHEL product appears to be High Touch Beta (this is expected for Snapshot composes).");
+			rhelBaseRepoId = rhelHtbRepoId;
+			rhelOptionalRepoId = rhelOptionalHtbRepoId;
+		}
+		
 		// assert the base rhel repo is enabled by default
 		Repo rhelBaseRepo = Repo.findFirstInstanceWithMatchingFieldFromList("repoId", rhelBaseRepoId, subscribedRepos);
 		Assert.assertNotNull(rhelBaseRepo, "RHEL base repo id '"+rhelBaseRepoId+"' was found in subscribed repos.");
+		// TEMPORARY WORKAROUND
+		boolean invokeWorkaroundWhileBugIsOpen = true;
+		String bugId="1573573"; // Bug 1573573 - EngId 155 repo rhel-6-workstation-htb-rpms should be enabled by default 
+		bugId="1571077"; // Bug 1571077 - [HTB] Repo "rhel-6-workstation-htb-rpms" should be enabled by default for workstation x86_64.
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
+		if (rhelProductCert.productId.equals("155") && invokeWorkaroundWhileBugIsOpen) {
+			log.info("Skipping the assertion that RHEL base repo id '"+rhelBaseRepoId+"' is enabled by default while bug '"+bugId+"' is open.");
+		} else
+		// END OF WORKAROUND
 		Assert.assertTrue(rhelBaseRepo.enabled, "RHEL base repo id '"+rhelBaseRepoId+"' is enabled by default.");
 		
 		// assert the optional rhel repo is disabled by default
@@ -480,7 +496,7 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-22226", "RHEL7-55194"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier1")
@@ -533,7 +549,7 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-22227", "RHEL7-55193"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier1")
@@ -612,7 +628,7 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-22228", "RHEL7-55195"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier1")
@@ -710,7 +726,7 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-22229", "RHEL7-55196"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier1")
@@ -886,7 +902,7 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-22230", "RHEL7-55197"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier1")
@@ -1145,7 +1161,7 @@ public class SearchDisabledReposTests extends SubscriptionManagerCLITestScript{
 	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-22231", "RHEL7-55198"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier1")

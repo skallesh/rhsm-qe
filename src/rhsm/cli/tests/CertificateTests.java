@@ -71,7 +71,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID = {"RHEL6-20031", "RHEL7-51044"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier1")
@@ -142,7 +142,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID = {"RHEL6-20036", "RHEL7-51045"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier1")
@@ -174,6 +174,11 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 			}
 			else { 													// i386 i686 ia64 x86_64
 				rhelProductCert = ProductCert.findFirstInstanceWithMatchingFieldFromList("productId", "69", productCerts);	// Red Hat Enterprise Linux Server
+				
+				// this could be a snapshot compose with HTB product 135 installed
+				if (rhelProductCert==null) {
+					rhelProductCert = ProductCert.findFirstInstanceWithMatchingFieldFromList("productId", "135", productCerts);	// Red Hat Enterprise Linux 6 Server HTB
+				}
 			}
 		}
 		else if (clienttasks.releasever.equals("5Client")) {		// i386 i686 x86_64
@@ -185,6 +190,11 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		}
 		else if (clienttasks.releasever.equals("6Workstation")) {	// i386 i686 x86_64
 				rhelProductCert = ProductCert.findFirstInstanceWithMatchingFieldFromList("productId", "71", productCerts);	// Red Hat Enterprise Linux Workstation
+				
+				// this could be a snapshot compose with HTB product 155 installed
+				if (rhelProductCert==null) {
+					rhelProductCert = ProductCert.findFirstInstanceWithMatchingFieldFromList("productId", "155", productCerts);	// Red Hat Enterprise Linux 6 Workstation HTB
+				}
 		}
 		else if (clienttasks.releasever.equals("6ComputeNode")) {	// i386 i686 x86_64
 				rhelProductCert = ProductCert.findFirstInstanceWithMatchingFieldFromList("productId", "76", productCerts);	// Red Hat Enterprise Linux for Scientific Computing
@@ -196,8 +206,12 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 			if (clienttasks.isPackageVersion("kernel", "==", "4")) {
 				rhelProductCert = clienttasks.getCurrentProductCerts("rhel-alt-7-.*").get(0);	// should only be one (tested by VerifyOnlyOneBaseRHELProductCertIsInstalled_Test)				
 			} else {
-				rhelProductCert = clienttasks.getCurrentProductCerts("rhel-7-.*").get(0);	// should only be one (tested by VerifyOnlyOneBaseRHELProductCertIsInstalled_Test)				
+				rhelProductCert = clienttasks.getCurrentProductCerts("rhel-7-.*").get(0);	// should only be one (tested by VerifyOnlyOneBaseRHELProductCertIsInstalled_Test)	// also matches HTB product cert tags rhel-7-htb		
 			}
+		}
+		
+		if (Integer.valueOf(clienttasks.redhatReleaseX)>=8) {
+			rhelProductCert = clienttasks.getCurrentProductCerts("rhel-8-.*").get(0);	// should only be one (tested by VerifyOnlyOneBaseRHELProductCertIsInstalled_Test)	// also matches HTB product cert tags rhel-8-htb		
 		}
 		
 		Assert.assertNotNull(rhelProductCert,"Found an installed product cert that matches the system's base RHEL release version '"+clienttasks.releasever+"' on arch '"+clienttasks.arch+"':");
@@ -208,7 +222,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID = {"RHEL6-20037", "RHEL7-51046"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier1")
@@ -253,7 +267,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-20037", "RHEL7-51046"},
-			level= DefTypes.Level.COMPONENT, component= "redhat-release-server",	// TODO should be a list of ["redhat-release-server","redhat-release-client","redhat-release-workstation","redhat-release-computenode"]
+			level= DefTypes.Level.COMPONENT, //component= "redhat-release-server",	// TODO should be a list of ["redhat-release-server","redhat-release-client","redhat-release-workstation","redhat-release-computenode"]
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier1")
@@ -376,7 +390,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID = {"RHEL6-20033", "RHEL7-33094"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier1")
@@ -421,7 +435,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID = {"RHEL6-20029", "RHEL7-51904"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier1")
@@ -574,7 +588,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID = {"RHEL6-36643", "RHEL7-51454"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
@@ -606,7 +620,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID = {"RHEL6-36641", "RHEL7-51452"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
@@ -625,7 +639,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID = {"RHEL6-36641", "RHEL7-51452"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
@@ -736,7 +750,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID = {"RHEL6-20030", "RHEL7-33093"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier1")
@@ -797,7 +811,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID = {"RHEL6-20032", "RHEL7-33086"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier1")
@@ -834,7 +848,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID = {"RHEL6-36639", "RHEL7-51451"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
@@ -869,7 +883,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID = {"RHEL6-36644", "RHEL7-51455"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
@@ -912,7 +926,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID = {"RHEL6-20035", "RHEL7-33079"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier1")
@@ -955,7 +969,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID = {"RHEL6-36642", "RHEL7-51453"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
@@ -1089,7 +1103,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID = {"RHEL6-20028", "RHEL7-33082"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier1")
@@ -1285,7 +1299,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID = {"RHEL6-36366", "RHEL7-33085"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier1")
@@ -1304,6 +1318,8 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		// Step 1: determine the currently installed RHEL product cert
 		ProductCert originalRhelProductCert=clienttasks.getCurrentRhelProductCert();
 		Assert.assertNotNull(originalRhelProductCert,"Expected a base RHEL product cert to be installed.");
+		// this test is not applicable to snapshot composes where a HTB product-default is installed
+		if (originalRhelProductCert.productNamespace.providedTags.contains("-htb")) throw new SkipException("This is not applicable to a High Touch Beta compose of RHEL because yum updates from one minor release of RHEL HTB to the next minor release of RHEL HTB is not a supported use case."); 
 		
 		// Step 2: configure a temporary productCertDir and backup the productid json database file
 		log.info("Configuring a temporary product cert directory...");
@@ -1558,7 +1574,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID = {"RHEL6-20034", "RHEL7-55176"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier1")

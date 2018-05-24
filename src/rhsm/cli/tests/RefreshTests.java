@@ -36,7 +36,7 @@ public class RefreshTests extends SubscriptionManagerCLITestScript {
 	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-20023", "RHEL7-51040"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags="Tier1")
@@ -133,7 +133,7 @@ public class RefreshTests extends SubscriptionManagerCLITestScript {
 	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-36619", "RHEL7-51430"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags="Tier2")
@@ -152,7 +152,7 @@ public class RefreshTests extends SubscriptionManagerCLITestScript {
 		
 		// mark the /var/log/messages so we can search for an abrt afterwards
 		String marker = "SM TestClass marker "+String.valueOf(System.currentTimeMillis());	// using a timestamp on the class marker will help identify the test class during which a denial is logged
-		RemoteFileTasks.markFile(client, clienttasks.messagesLogFile, marker);
+		clienttasks.markSystemLogFile(marker);
 		clienttasks.restart_rhsmcertd(null,null,null);
 		
 		// ON RHEL6...
@@ -184,7 +184,7 @@ public class RefreshTests extends SubscriptionManagerCLITestScript {
 		//	Nov  5 16:13:49 jsefler-7 systemd: Started Enable periodic update of entitlement certificates..
 		
 		// verify that no subscription-manager abrt was logged to /var/log/messages 
-		Assert.assertTrue(RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.messagesLogFile, marker, "abrt").trim().equals(""), "No segfault was logged in '"+clienttasks.messagesLogFile+"' on "+client.getConnection().getRemoteHostname()+" while regression testing bug 725535.");
+		Assert.assertTrue(clienttasks.getTailFromSystemLogFile(marker, "abrt").trim().equals(""), "No segfault was logged in '"+clienttasks.messagesLogFile+"' on "+client.getConnection().getRemoteHostname()+" while regression testing bug 725535.");
 		//Assert.assertTrue(RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.varLogMessagesFile, marker, null).trim().equals(""), "No segfault was logged in '"+clienttasks.varLogMessagesFile+"' on "+client.getConnection().getRemoteHostname()+" while regression testing bug 725535.");
 		//Assert.assertTrue(RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.varLogMessagesFile, marker, clienttasks.hostname.split("\\.")[0]+"' | grep -v 'Enable periodic update of entitlement certificates").trim().equals(""), "No segfault was logged in '"+clienttasks.varLogMessagesFile+"' on "+client.getConnection().getRemoteHostname()+" while regression testing bug 725535.");
 	}

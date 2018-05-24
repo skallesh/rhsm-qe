@@ -8238,5 +8238,35 @@
       "id" : "RHEL7-51490",
       "parameters" : [ ]
     }
-  }
+  },
+  "rhsm.cli.tests.TranslationTests.testTranslationsDoNotEndInUnwantedColon" : {
+    "RHEL6" : {
+      "id" : "RHEL6-51160",
+      "parameters" : [ "bugzilla", "translationFile" ]
+    },
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL-133207",
+      "parameters" : [ "bugzilla", "translationFile" ]
+    }
+  },
+    "rhsm.cli.tests.ListTests.testListAllAvailableAfterDate" : {
+    "RHEL6" : {
+      "id" : "RHEL6-51163",
+      "parameters" : [ "bugzilla", "yyyy_MM_dd" ]
+    },
+    "RedHatEnterpriseLinux7" : {
+      "id" : "RHEL-133333",
+      "parameters" : [ "bugzilla", "yyyy_MM_dd" ]
+    }
+  },
+          "rhsm.cli.tests.GeneralTests.testRpmRequireListForRhsmGtk": {
+            "RHEL6": {
+                "id": "RHEL6-51164",
+                "parameters": []
+            },      
+            "RedHatEnterpriseLinux7": {
+                "id": "RHEL-133334",
+                "parameters": []
+            }
+        }
 }

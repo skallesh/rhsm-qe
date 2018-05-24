@@ -239,7 +239,11 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			
 			infoMsg = "Installed Packages:";
 			log.info(infoMsg); output.write(infoMsg+"\n");
-			infoMsg = client1.runCommandAndWait("rpm -qa | egrep ^subscription-manager").getStdout();	// subscription-manager-0.63-1.el6.i686
+			infoMsg = client1.runCommandAndWait("rpm -qa | egrep subscription-manager").getStdout();	// subscription-manager-0.63-1.el6.i686
+			log.info(infoMsg); output.write(infoMsg+"\n");
+			infoMsg = client1.runCommandAndWait("rpm -qa | egrep ^rhsm-gtk").getStdout();	// subscription-manager-0.63-1.el6.i686
+			log.info(infoMsg); output.write(infoMsg+"\n");
+			infoMsg = client1.runCommandAndWait("rpm -qa | egrep intentctl").getStdout();	// subscription-manager-0.63-1.el6.i686
 			log.info(infoMsg); output.write(infoMsg+"\n");
 			infoMsg = client1.runCommandAndWait("rpm -qa | egrep ^python-rhsm").getStdout();	// python-rhsm-0.63-1.el6.i686
 			log.info(infoMsg); output.write(infoMsg+"\n");
@@ -282,7 +286,11 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			
 			infoMsg = "Installed Packages:";
 			log.info(infoMsg); output.write(infoMsg+"\n");
-			infoMsg = client2.runCommandAndWait("rpm -qa | egrep ^subscription-manager").getStdout();	// subscription-manager-0.63-1.el6.i686
+			infoMsg = client2.runCommandAndWait("rpm -qa | egrep subscription-manager").getStdout();	// subscription-manager-0.63-1.el6.i686
+			log.info(infoMsg); output.write(infoMsg+"\n");
+			infoMsg = client2.runCommandAndWait("rpm -qa | egrep ^rhsm-gtk").getStdout();	// subscription-manager-0.63-1.el6.i686
+			log.info(infoMsg); output.write(infoMsg+"\n");
+			infoMsg = client2.runCommandAndWait("rpm -qa | egrep intentctl").getStdout();	// subscription-manager-0.63-1.el6.i686
 			log.info(infoMsg); output.write(infoMsg+"\n");
 			infoMsg = client2.runCommandAndWait("rpm -qa | egrep ^python-rhsm").getStdout();	// python-rhsm-0.63-1.el6.i686
 			log.info(infoMsg); output.write(infoMsg+"\n");
@@ -675,10 +683,12 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 					if (smt.variant.equals("Server") && smt.arch.equals("s390x"))		productCertFiles.add(new File(getProperty("automation.dir", "/tmp")+String.format("/certs/rhel-%s-beta/%s-%s-72.pem",smt.redhatReleaseXY,smt.variant,smt.arch)));	// Red Hat Enterprise Linux for IBM z Systems
 //HTB				if (smt.variant.equals("Server") && smt.arch.equals("x86_64"))		productCertFiles.add(new File(getProperty("automation.dir", "/tmp")+String.format("/certs/rhel-%s-beta/%s-%s-69.pem",smt.redhatReleaseXY,smt.variant,smt.arch)));	// Red Hat Enterprise Linux Server
 					if (smt.variant.equals("Server") && smt.arch.equals("i386"))		productCertFiles.add(new File(getProperty("automation.dir", "/tmp")+String.format("/certs/rhel-%s-beta/%s-%s-69.pem",smt.redhatReleaseXY,smt.variant,smt.arch)));	// Red Hat Enterprise Linux Server
+					if (smt.variant.equals("Server") && smt.arch.equals("i686"))		productCertFiles.add(new File(getProperty("automation.dir", "/tmp")+String.format("/certs/rhel-%s-beta/%s-%s-69.pem",smt.redhatReleaseXY,smt.variant,"i386")));	// Red Hat Enterprise Linux Server
 					if (smt.variant.equals("Client"))									productCertFiles.add(new File(getProperty("automation.dir", "/tmp")+String.format("/certs/rhel-%s-beta/%s-%s-68.pem",smt.redhatReleaseXY,smt.variant,smt.arch)));	// Red Hat Enterprise Linux Desktop
 					if (smt.variant.equals("ComputeNode"))								productCertFiles.add(new File(getProperty("automation.dir", "/tmp")+String.format("/certs/rhel-%s-beta/%s-%s-76.pem",smt.redhatReleaseXY,smt.variant,smt.arch)));	// Red Hat Enterprise Linux for Scientific Computing
 //HTB				if (smt.variant.equals("Workstation") && smt.arch.equals("x86_64"))	productCertFiles.add(new File(getProperty("automation.dir", "/tmp")+String.format("/certs/rhel-%s-beta/%s-%s-71.pem",smt.redhatReleaseXY,smt.variant,smt.arch)));	// Red Hat Enterprise Linux Workstation
 					if (smt.variant.equals("Workstation") && smt.arch.equals("i386"))	productCertFiles.add(new File(getProperty("automation.dir", "/tmp")+String.format("/certs/rhel-%s-beta/%s-%s-71.pem",smt.redhatReleaseXY,smt.variant,smt.arch)));	// Red Hat Enterprise Linux Workstation
+					if (smt.variant.equals("Workstation") && smt.arch.equals("i686"))	productCertFiles.add(new File(getProperty("automation.dir", "/tmp")+String.format("/certs/rhel-%s-beta/%s-%s-71.pem",smt.redhatReleaseXY,smt.variant,"i386")));	// Red Hat Enterprise Linux Workstation
 				}
 				log.info("Manually placing a RHEL product cert onto the system to enable more testing...");
 				smt.installProductCerts(productCertFiles);	

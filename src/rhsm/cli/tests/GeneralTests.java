@@ -23,6 +23,7 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import rhsm.base.SubscriptionManagerCLITestScript;
+import rhsm.data.ProductSubscription;
 
 import com.redhat.qe.Assert;
 import com.redhat.qe.auto.bugzilla.BlockedByBzBug;
@@ -47,7 +48,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-20373", "RHEL7-32155"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
@@ -72,7 +73,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-20380", "RHEL7-61488"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
@@ -91,7 +92,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-20293", "RHEL7-32164"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
@@ -110,7 +111,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-19943", "RHEL7-32162"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier1")
@@ -119,7 +120,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	protected void testRhsmcertdDoesNotThrowDeprecationWarnings() throws JSONException, Exception {
 		clienttasks.unregister(null, null, null, null);
 		String marker = System.currentTimeMillis()+" Testing verifyRhsmcertdDoesNotThrowDeprecationWarnings_Test...";
-		RemoteFileTasks.markFile(client, clienttasks.messagesLogFile, marker);
+		clienttasks.markSystemLogFile(marker);
 		
 		String command = clienttasks.rhsmComplianceD+" -s";
 		SSHCommandResult result = client.runCommandAndWait(command);
@@ -133,7 +134,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		Assert.assertTrue(result.getStdout().isEmpty(),"Stdout from command '"+command+"' is empty.");
 		Assert.assertTrue(result.getStderr().isEmpty(),"Stderr from command '"+command+"' is empty.");
 		
-		String rhsmcertdLogResult = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.messagesLogFile, marker, null).trim();
+		String rhsmcertdLogResult = clienttasks.getTailFromSystemLogFile(marker, null).trim();
 		String expectedMessage = "In order for Subscription Manager to provide your system with updates, your system must be registered with the Customer Portal. Please enter your Red Hat login to ensure your system is up-to-date.";
 		Assert.assertTrue(rhsmcertdLogResult.contains(expectedMessage),"Syslog contains expected message '"+expectedMessage+"'.");
 		String unexpectedMessage = "DeprecationWarning";
@@ -162,7 +163,19 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 			//	RHN_CLASSIC = 3
 			//	RHSM_PARTIALLY_VALID = 4
 			//	RHSM_REGISTRATION_REQUIRED = 5
-			expectedExitCode = clienttasks.status(null, null, null, null, null).getExitCode();	// TODO this probably works for RHSM_VALID and RHSM_EXPIRED/INVALID
+			// Note: this expectedExitCode will probably work for RHSM_VALID and RHSM_EXPIRED/INVALID
+			expectedExitCode = clienttasks.status(null, null, null, null, null).getExitCode();
+			
+			// Note: if a temporary SKU is being consumed, then RHSM_PARTIALLY_VALID = 4 will be expectedExitCode
+			for (ProductSubscription productSubscription : clienttasks.getCurrentlyConsumedProductSubscriptions()) {
+				if (productSubscription.subscriptionType.contains("(Temporary)")) {
+					log.info("Since the system is currently consuming at least one temporary subscription, the expected exitCode from '"+command+"' should match RHSM_PARTIALLY_VALID = 4");
+					expectedExitCode = new Integer(4);
+					break;
+				}
+			}
+			
+			// TODO may still want to test for RHSM_WARNING = 2 case
 		}
 		Assert.assertEquals(result.getExitCode(), expectedExitCode,"ExitCode from command '"+command+"'.");
 		Assert.assertTrue(result.getStdout().isEmpty(),"Stdout from command '"+command+"' is empty.");
@@ -173,7 +186,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-20391", "RHEL7-32157"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
@@ -194,7 +207,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 			String command = clienttasks.rhsmComplianceD+" -s -d -i -f "+signal;
 			String marker = System.currentTimeMillis()+" Testing VerifyRhsmdLogsToRhsmlogAndSyslog_Test...";
 			RemoteFileTasks.markFile(client, clienttasks.rhsmLogFile, marker);
-			RemoteFileTasks.markFile(client, clienttasks.messagesLogFile, marker);
+			clienttasks.markSystemLogFile(marker);
 
 			// run and verify the command result
 			String expectedStdout = "forcing status signal from cli arg";
@@ -212,7 +225,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 			String logResult;
 			if (signalMap.get(signal).isEmpty()) {
 				String unExpectedMessage = "Please run subscription-manager for more information.";
-				logResult = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.messagesLogFile, marker, null).trim();
+				logResult = clienttasks.getTailFromSystemLogFile(marker, null).trim();
 				Assert.assertTrue(!logResult.contains(unExpectedMessage),clienttasks.messagesLogFile+" does NOT contain message '"+unExpectedMessage+"'.");
 				logResult = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, marker, null).trim();
 				Assert.assertTrue(!logResult.contains(unExpectedMessage),clienttasks.rhsmLogFile+" does NOT contain message '"+unExpectedMessage+"'.");
@@ -220,7 +233,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 
 			} else {
 				String expectedMessage = signalMap.get(signal);
-				logResult = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.messagesLogFile, marker, null).trim();
+				logResult = clienttasks.getTailFromSystemLogFile(marker, null).trim();
 				Assert.assertTrue(logResult.contains(expectedMessage),clienttasks.messagesLogFile+" contains expected message '"+expectedMessage+"'.");
 				logResult = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.rhsmLogFile, marker, null).trim();
 				Assert.assertTrue(logResult.contains(expectedMessage),clienttasks.rhsmLogFile+" contains expected message '"+expectedMessage+"'.");
@@ -233,7 +246,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-20374", "RHEL7-32169"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
@@ -268,7 +281,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-20384", "RHEL7-32171"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
@@ -344,7 +357,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-36512", "RHEL7-59018"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
@@ -379,7 +392,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-20301", "RHEL7-32161"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
@@ -442,7 +455,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-20299", "RHEL7-32159"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
@@ -656,12 +669,57 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		for (String actualRequires : actualRequiresList) if (!expectedRequiresList.contains(actualRequires)) log.warning("The expected requires list does not include the actual requires '"+actualRequires+"'  Is this a new requirement?");
 		Assert.assertTrue(expectedRequiresList.containsAll(actualRequiresList) && actualRequiresList.containsAll(expectedRequiresList), "The actual requires list of packages for '"+pkg+"' matches the expected list "+expectedRequiresList);
 	}
-
-
+	
+	
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL6-51164", "RHEL-133334"}, //importReady=false,
+			level= DefTypes.Level.COMPONENT,
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier2")
+	@Test(	description="check the rpm requires list for changes to rhsm-gtk",
+			groups={"Tier2Tests"},
+			enabled=true)
+	//@ImplementsTCMS(id="")
+	public void testRpmRequireListForRhsmGtk() {
+		String pkg = "rhsm-gtk";
+		if (!clienttasks.isPackageInstalled(pkg)) throw new SkipException("This test require that package '"+pkg+"' be installed.");
+		String rpmCommand = "rpm --query --requires "+pkg+" --verbose";
+		if (Integer.valueOf(clienttasks.redhatReleaseX) == 5) rpmCommand += " | egrep -v '\\(.*\\)'";
+		if (Integer.valueOf(clienttasks.redhatReleaseX) > 5) rpmCommand += " | egrep -v '(^auto:|^rpmlib:)'";
+		SSHCommandResult sshCommandResult = client.runCommandAndWait(rpmCommand);
+		
+		List<String> actualRequiresList = new ArrayList<String>();
+		for (String requires : Arrays.asList(sshCommandResult.getStdout().trim().split("\\n"))) {
+			if (!requires.trim().isEmpty()) actualRequiresList.add(requires.trim());
+		}
+		
+		List<String> expectedRequiresList = new ArrayList<String>();
+		
+		if (clienttasks.redhatReleaseX.equals("7")) {
+			// rpm --query --requires rhsm-gtk --verbose | egrep -v '(^auto:|^rpmlib:)'
+			expectedRequiresList.addAll(Arrays.asList(new String[]{
+					"manual: font(cantarell)",
+					"manual: gtk3",
+					"manual: pygobject3",
+					"manual: librsvg2("+clienttasks.arch.replace("_","-")+")",	//"manual: librsvg2(x86-64)",
+					"post: scrollkeeper",
+					"postun: scrollkeeper",
+					"manual: usermode-gtk"
+			}));
+		}
+		
+		for (String expectedRequires : expectedRequiresList) if (!actualRequiresList.contains(expectedRequires)) log.warning("The actual requires list is missing expected requires '"+expectedRequires+"'.");
+		for (String actualRequires : actualRequiresList) if (!expectedRequiresList.contains(actualRequires)) log.warning("The expected requires list does not include the actual requires '"+actualRequires+"'  Is this a new requirement?");
+		Assert.assertTrue(expectedRequiresList.containsAll(actualRequiresList) && actualRequiresList.containsAll(expectedRequiresList), "The actual requires list of packages for '"+pkg+"' matches the expected list "+expectedRequiresList);
+	}
+	
+	
 	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-20376", "RHEL7-32168"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
@@ -757,6 +815,18 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 				expectedRequiresList.remove("manual: abattis-cantarell-fonts");
 				expectedRequiresList.add("manual: font(cantarell)");
 			}
+			if (clienttasks.isPackageVersion("subscription-manager-gui",">=","1.21.4-1")) {	// commit 23b5409c76d586c4e34440788d612e7ed65e2df6  Stop building subscription-manager-gui, when Python 3 is used
+				// let's start over with the introduction of rhsm-gtk
+				expectedRequiresList.clear();
+				expectedRequiresList.addAll(Arrays.asList(new String[]{
+						"manual: rhsm-gtk = "+clienttasks.installedPackageVersionMap.get("rhsm-gtk").replace("rhsm-gtk-", "").replaceFirst("\\."+clienttasks.arch, ""),	//"manual: rhsm-gtk = 1.9.11-1.el6",
+						"manual: subscription-manager = "+clienttasks.installedPackageVersionMap.get("subscription-manager").replace("subscription-manager-", "").replaceFirst("\\."+clienttasks.arch, ""),	//"manual: subscription-manager = 1.9.11-1.el6",
+						"interp,posttrans: /bin/sh",
+						"post,interp: /bin/sh",
+						"postun,interp: /bin/sh",
+						"manual: gnome-icon-theme"	// added by Bug 995121 - GUI: calendar icon on s390x and ppc64 machines is not displayed
+				}));
+			}
 		}
 		if (clienttasks.isPackageVersion("subscription-manager-gui",">=","1.14.8-1")) {		// commit dc727c4adef8cdc49e319f2d90738e848061da78  Adrian says that these imports were never used
 			expectedRequiresList.remove("manual: gnome-python2");
@@ -777,7 +847,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-20393", "RHEL7-32175"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
@@ -831,7 +901,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-20399", "RHEL7-51274"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
@@ -862,6 +932,14 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 					"manual: initial-setup-gui >= 0.3.9.24-1",
 					"manual: subscription-manager-gui = "+clienttasks.installedPackageVersionMap.get("subscription-manager-gui").replace("subscription-manager-gui-", "").replaceFirst("\\."+clienttasks.arch, ""),	//"manual: subscription-manager-gui = 1.15.6-1.el7",
 			}));
+			if (clienttasks.isPackageVersion("subscription-manager-gui",">=","1.21.4-1")) {	// commit 23b5409c76d586c4e34440788d612e7ed65e2df6  Stop building subscription-manager-gui, when Python 3 is used
+				// let's start over with the introduction of rhsm-gtk
+				expectedRequiresList.clear();
+				expectedRequiresList.addAll(Arrays.asList(new String[]{
+						"manual: initial-setup-gui >= 0.3.9.24-1",
+						"manual: rhsm-gtk = "+clienttasks.installedPackageVersionMap.get("rhsm-gtk").replace("rhsm-gtk-", "").replaceFirst("\\."+clienttasks.arch, ""),	//"manual: rhsm-gtk = 1.9.11-1.el6",
+				}));
+			}
 		}
 		
 		for (String expectedRequires : expectedRequiresList) if (!actualRequiresList.contains(expectedRequires)) log.warning("The actual requires list is missing expected requires '"+expectedRequires+"'.");
@@ -873,7 +951,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-20390", "RHEL7-32182"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
@@ -924,7 +1002,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-20394", "RHEL7-32174"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
@@ -968,7 +1046,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-20400", "RHEL7-32167"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
@@ -1011,7 +1089,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-20294", "RHEL7-32179"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
@@ -1067,7 +1145,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-20296", "RHEL7-32158"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
@@ -1112,7 +1190,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-20367", "RHEL7-32177"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
@@ -1161,7 +1239,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-20383", "RHEL7-51273"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
@@ -1184,7 +1262,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-20292", "RHEL7-51272"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
@@ -1228,6 +1306,75 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		// END OF WORKAROUND
 		Assert.assertMatch(result.getStdout().trim(), "None\nLoaded plugins:.*\nNone", "Stdout");
 	}
+	
+	
+	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"", ""}, importReady=false,
+			level= DefTypes.Level.COMPONENT,
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.CRITICAL, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
+	@Test(	description="assert that rhsmcertd does not consume 100% CPU",
+			groups={"Tier1Tests","blockedByBug-1574529"},
+			enabled=true)
+	//@ImplementsTCMS(id="")
+	public void testRhsmcertdFor100PercentCPUConsumption() throws IOException {
+		
+		// get the CPU usage for rhsmcertd
+		//	[root@hp-dl380pgen8-02-vm-1 ~]# ps -C rhsmcertd -o %cpu 
+		//	%CPU
+		//	99.9
+		String cpuPercentageCommand = "ps -C rhsmcertd -o %cpu | tail -1";
+		SSHCommandResult result = client.runCommandAndWait(cpuPercentageCommand);
+		if (!isFloat(result.getStdout().trim())) { // indicator that rhsmcertd service is stopped
+			// restart rhsmcertd
+			log.info("The rhsmcertd process appears to be stopped, let's restart it....");
+			clienttasks.restart_rhsmcertd(null, null, null);	// Note that the splay configuration will be temporarily turned off while restarting rhsmcertd 
+			result = client.runCommandAndWait(cpuPercentageCommand);
+		}
+		Float cpuPercentage = Float.valueOf(result.getStdout().trim());
+		
+		// fail when cpuPercentage exceeds cpuPercentageTolerated for longer than cpuDuration seconds
+		Float cpuPercentageTolerated = 10.0f; // 10.0%
+		int duration = 10; // seconds
+		if (cpuPercentage>cpuPercentageTolerated) {
+			sleep(duration*1000);
+			result = client.runCommandAndWait(cpuPercentageCommand);
+			cpuPercentage = Float.valueOf(result.getStdout().trim());
+		}
+		Assert.assertTrue(cpuPercentage<cpuPercentageTolerated, "The actual %CPU of rhsmcertd '"+cpuPercentage+"' is less than '"+cpuPercentageTolerated+"' for more than '"+duration+"' seconds.");
+		
+		// according to https://bugzilla.redhat.com/show_bug.cgi?id=1574529#c4 we should also test with splay turned on
+		// turn on splay
+		log.info("Testing again with the rhsmcertd splay configuration turned on....");
+		clienttasks.config(null, null, true, new String[] {"rhsmcertd","splay","1"});
+		// restart rhsmcertd service
+		if (Integer.valueOf(clienttasks.redhatReleaseX)>=7)	{	// the RHEL7 / F16+ way...
+			RemoteFileTasks.runCommandAndAssert(client, "systemctl restart rhsmcertd.service && systemctl is-active rhsmcertd.service", Integer.valueOf(0), "^active$", null);
+		} else {
+			// NEW SERVICE RESTART FEEDBACK AFTER IMPLEMENTATION OF Bug 818978 - Missing systemD unit file
+			//	[root@jsefler-59server ~]# service rhsmcertd restart
+			//	Stopping rhsmcertd...                                      [  OK  ]
+			//	Starting rhsmcertd...                                      [  OK  ]
+			RemoteFileTasks.runCommandAndAssert(client,"service rhsmcertd restart",Integer.valueOf(0),"^Starting rhsmcertd\\.\\.\\.\\[  OK  \\]$",null);	
+			
+			// # service rhsmcertd restart
+			// rhsmcertd (pid 10172 10173) is running...
+			RemoteFileTasks.runCommandAndAssert(client,"service rhsmcertd status",Integer.valueOf(0),"^rhsmcertd \\(pid \\d+\\) is running...$",null);		// master/RHEL58 branch
+		}
+		// test the cpu percentage again
+		result = client.runCommandAndWait(cpuPercentageCommand);
+		cpuPercentage = Float.valueOf(result.getStdout().trim());
+		if (cpuPercentage>cpuPercentageTolerated) {
+			sleep(duration*1000);
+			result = client.runCommandAndWait(cpuPercentageCommand);
+			cpuPercentage = Float.valueOf(result.getStdout().trim());
+		}
+		Assert.assertTrue(cpuPercentage<cpuPercentageTolerated, "The actual %CPU of rhsmcertd '"+cpuPercentage+"' is less than '"+cpuPercentageTolerated+"' for more than '"+duration+"' seconds (with rhsm.conf [rhsmcertd]splay=1).");
+	
+	}
+	
 	
 	
 	// Candidates for an automated Test:

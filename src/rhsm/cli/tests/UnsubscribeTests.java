@@ -46,7 +46,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-27126", "RHEL7-51409"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
@@ -66,7 +66,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-27124", "RHEL7-51397"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
@@ -100,7 +100,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 					workitemId= "RHEL7-84911",	// RHSM-REQ : subscription-manager cli attaching and removing subscriptions
 					project= Project.RedHatEnterpriseLinux7,
 					role= DefTypes.Role.VERIFIES)},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier1")
@@ -183,7 +183,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 					workitemId= "RHEL7-84911",	// RHSM-REQ : subscription-manager cli attaching and removing subscriptions
 					project= Project.RedHatEnterpriseLinux7,
 					role= DefTypes.Role.VERIFIES)},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
@@ -241,7 +241,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 					workitemId= "RHEL7-84911",	// RHSM-REQ : subscription-manager cli attaching and removing subscriptions
 					project= Project.RedHatEnterpriseLinux7,
 					role= DefTypes.Role.VERIFIES)},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
@@ -287,7 +287,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 					workitemId= "RHEL7-84911",	// RHSM-REQ : subscription-manager cli attaching and removing subscriptions
 					project= Project.RedHatEnterpriseLinux7,
 					role= DefTypes.Role.VERIFIES)},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
@@ -329,7 +329,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 					workitemId= "RHEL7-84911",	// RHSM-REQ : subscription-manager cli attaching and removing subscriptions
 					project= Project.RedHatEnterpriseLinux7,
 					role= DefTypes.Role.VERIFIES)},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
@@ -369,7 +369,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 					workitemId= "RHEL7-84911",	// RHSM-REQ : subscription-manager cli attaching and removing subscriptions
 					project= Project.RedHatEnterpriseLinux7,
 					role= DefTypes.Role.VERIFIES)},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
@@ -469,7 +469,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 					workitemId= "RHEL7-84911",	// RHSM-REQ : subscription-manager cli attaching and removing subscriptions
 					project= Project.RedHatEnterpriseLinux7,
 					role= DefTypes.Role.VERIFIES)},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
@@ -612,7 +612,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 					workitemId= "RHEL7-84911",	// RHSM-REQ : subscription-manager cli attaching and removing subscriptions
 					project= Project.RedHatEnterpriseLinux7,
 					role= DefTypes.Role.VERIFIES)},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
@@ -657,7 +657,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 					workitemId= "RHEL7-84911",	// RHSM-REQ : subscription-manager cli attaching and removing subscriptions
 					project= Project.RedHatEnterpriseLinux7,
 					role= DefTypes.Role.VERIFIES)},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
@@ -737,7 +737,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 					workitemId= "RHEL7-84911",	// RHSM-REQ : subscription-manager cli attaching and removing subscriptions
 					project= Project.RedHatEnterpriseLinux7,
 					role= DefTypes.Role.VERIFIES)},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier1")
@@ -799,7 +799,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 					workitemId= "RHEL7-84911",	// RHSM-REQ : subscription-manager cli attaching and removing subscriptions
 					project= Project.RedHatEnterpriseLinux7,
 					role= DefTypes.Role.VERIFIES)},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier1")
@@ -885,7 +885,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 					workitemId= "RHEL7-84911",	// RHSM-REQ : subscription-manager cli attaching and removing subscriptions
 					project= Project.RedHatEnterpriseLinux7,
 					role= DefTypes.Role.VERIFIES)},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier1")
@@ -942,7 +942,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 					workitemId= "RHEL7-84911",	// RHSM-REQ : subscription-manager cli attaching and removing subscriptions
 					project= Project.RedHatEnterpriseLinux7,
 					role= DefTypes.Role.VERIFIES)},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
@@ -1059,7 +1059,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 					workitemId= "RHEL7-84911",	// RHSM-REQ : subscription-manager cli attaching and removing subscriptions
 					project= Project.RedHatEnterpriseLinux7,
 					role= DefTypes.Role.VERIFIES)},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
@@ -1110,7 +1110,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 					workitemId= "RHEL7-84911",	// RHSM-REQ : subscription-manager cli attaching and removing subscriptions
 					project= Project.RedHatEnterpriseLinux7,
 					role= DefTypes.Role.VERIFIES)},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")

@@ -31,6 +31,7 @@ import com.redhat.qe.Assert;
 import com.redhat.qe.auto.bugzilla.BugzillaAPIException;
 import com.redhat.qe.auto.bugzilla.BzChecker;
 import com.redhat.qe.tools.RemoteFileTasks;
+import com.redhat.qe.tools.SSHCommandResult;
 import com.github.redhatqe.polarize.metadata.DefTypes.PosNeg;
 import com.github.redhatqe.polarize.metadata.DefTypes.Project;
 
@@ -55,7 +56,9 @@ import com.github.redhatqe.polarize.metadata.DefTypes.Project;
  * Dec  4 14:23:59 jsefler-7 systemd: brandbot.service start request repeated too quickly, refusing to start.
  * Dec  4 14:23:59 jsefler-7 systemd: Unit brandbot.service entered failed state.
  * 
- * Beware of future "[Bug 1357648] Brandbot cannot be disabled" which may impact these tests
+ * Beware of "Bug 1357648 - Brandbot cannot be disabled" which may impact these tests
+ * 
+ * Beware of "Bug 1439201 - udev-kvm-check and brandbot needs a new home" which may eliminate brandbot on RHEL8
  */
 @Test(groups = {"BrandingTests"})
 public class BrandingTests extends SubscriptionManagerCLITestScript {
@@ -72,7 +75,7 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID = {"RHEL6-19955", "RHEL7-51004"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier1")
@@ -120,7 +123,7 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID = {"RHEL6-19956", "RHEL7-51005"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier1")
@@ -146,7 +149,7 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID = {"RHEL6-19957", "RHEL7-55161"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier1")
@@ -179,7 +182,7 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID = {"RHEL6-19958", "RHEL7-55162"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier1")
@@ -212,7 +215,7 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID = {"RHEL6-19959", "RHEL7-55163"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier1")
@@ -248,7 +251,7 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID = {"RHEL6-36539", "RHEL7-51312"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
@@ -280,7 +283,7 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID = {Project.RedHatEnterpriseLinux7},
 			testCaseID = {"RHEL7-51314"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
@@ -304,7 +307,7 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID = {Project.RedHatEnterpriseLinux7},
 			testCaseID = {"RHEL7-51313"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
@@ -343,7 +346,7 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID = {"RHEL6-36538", "RHEL7-51311"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
@@ -369,7 +372,7 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 		//	Bill
 		
 		String messagesLogMarker = System.currentTimeMillis()+" Testing BrandbotShouldHandleEmptyBrandingFile_Test...";
-		RemoteFileTasks.markFile(client, clienttasks.messagesLogFile, messagesLogMarker);
+		clienttasks.markSystemLogFile(messagesLogMarker);
 		String actualBrandName,actualPrettyName;
 		log.info("Testing an empty branding file...");
 		// Note: If /var/lib/rhsm/branded_name is written too quickly, this will be found in the rhsm.log...
@@ -384,7 +387,7 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 		actualPrettyName = getCurrentPrettyName();
 		if (actualPrettyName!=null) {
 			// most likely... systemd: start request repeated too quickly for brandbot.service
-			String rhsmLogStatement = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.messagesLogFile, messagesLogMarker, "brandbot").trim();
+			String rhsmLogStatement = clienttasks.getTailFromSystemLogFile(messagesLogMarker, "brandbot").trim();
 			if (!rhsmLogStatement.isEmpty()) log.warning(rhsmLogStatement);
 		}
 		Assert.assertNull(actualPrettyName, "The PRETTY_NAME contained within the os-release file '"+osReleaseFile+"' (should NOT be present when the brand file is empty).");
@@ -402,7 +405,7 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 		actualPrettyName = getCurrentPrettyName();
 		if (actualPrettyName!=null) {
 			// most likely... systemd: start request repeated too quickly for brandbot.service
-			String rhsmLogStatement = RemoteFileTasks.getTailFromMarkedFile(client, clienttasks.messagesLogFile, messagesLogMarker, "brandbot").trim();
+			String rhsmLogStatement = clienttasks.getTailFromSystemLogFile(messagesLogMarker, "brandbot").trim();
 			if (!rhsmLogStatement.isEmpty()) log.warning(rhsmLogStatement);
 		}
 		Assert.assertNull(actualPrettyName, "The PRETTY_NAME contained within the os-release file '"+osReleaseFile+"' (should NOT be present when the first line of the brand file is empty).");
@@ -689,6 +692,22 @@ public class BrandingTests extends SubscriptionManagerCLITestScript {
 	public void skipBrandingTestsForOldVerionsBeforeClass() {
 		if (clienttasks.isPackageVersion("subscription-manager","<","1.10.14-7") && clienttasks.isPackageVersion("python-rhsm","<","1.10.12-2")) {	// rhel7.0 GA packages
 			throw new SkipException("Flexible Branding is a subscription feature available in RHEL7.");
+		}
+	}
+	
+	/**
+	 * Reference: RHEL8 Bug 1439201 - udev-kvm-check and brandbot needs a new home
+	 */
+	@BeforeClass(groups="setup",dependsOnMethods={"skipBrandingTestsForOldVerionsBeforeClass"})
+	public void skipBrandingTestsWhenBrandbotServiceIsNotFoundOnRhel8() {
+		if (Integer.valueOf(clienttasks.redhatReleaseX)>=8) {
+			SSHCommandResult result = client.runCommandAndWait("systemctl status brandbot.service");
+			//	ssh root@jsefler-rhel8.usersys.redhat.com systemctl status brandbot.service
+			//	Stdout: 
+			//	Stderr: Unit brandbot.service could not be found.
+			if (result.getStderr().trim().equals("Unit brandbot.service could not be found.")) {
+				throw new SkipException("As decided in the mail threads referenced in https://bugzilla.redhat.com/show_bug.cgi?id=1439201#c5, the brandbot.service will not be available on RHEL8.  If brandbot.service is available, automated tests will be attempted.");
+			}
 		}
 	}
 }

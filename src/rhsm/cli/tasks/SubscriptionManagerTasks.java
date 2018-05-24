@@ -151,6 +151,9 @@ public class SubscriptionManagerTasks {
 		arch			= sshCommandRunner.runCommandAndWait("uname --machine").getStdout().trim();  // uname -i --hardware-platform :print the hardware platform or "unknown"	// uname -m --machine :print the machine hardware name
 		//releasever		= sshCommandRunner.runCommandAndWait("rpm -q --qf \"%{VERSION}\\n\" --whatprovides /etc/redhat-release").getStdout().trim();  // e.g. 5Server		// cut -f 5 -d : /etc/system-release-cpe	// rpm -q --queryformat "%{VERSION}\n" --whatprovides system-release		// rpm -q --queryformat "%{VERSION}\n" --whatprovides /etc/redhat-release	// does not work on RHEL7, returns "7.0" instead of "7Server"
 		releasever		= sshCommandRunner.runCommandAndWait("python -c 'import yum, pprint; yb = yum.YumBase(); pprint.pprint(yb.conf.yumvar[\"releasever\"], width=1)' | egrep -v 'Loaded plugins|This system' | cut -f 2 -d \\'").getStdout().trim();  // e.g. 5Server 6Server 7Server	// python -c 'import yum, pprint; yb = yum.YumBase(); pprint.pprint(yb.conf.yumvar["releasever"], width=1)' | grep -v 'Loaded plugins' | cut -f 2 -d \'
+		if (releasever.isEmpty()) {	// try this
+			releasever	= sshCommandRunner.runCommandAndWait("python3 -c 'import dnf; yb = dnf.Base(); print(yb.conf.releasever)'").getStdout().trim();  // e.g. 8.0	// TODO confirm with RCM if this is correct	on RHEL8		
+		}
 		
 		//		rhsmComplianceD	= sshCommandRunner.runCommandAndWait("rpm -ql subscription-manager | grep libexec/rhsm").getStdout().trim();
 		redhatRelease	= sshCommandRunner.runCommandAndWait("cat /etc/redhat-release").getStdout().trim();
@@ -167,6 +170,7 @@ public class SubscriptionManagerTasks {
 		Assert.assertTrue(matcher.find(),"Extracted RHEL redhatReleaseXY from '"+redhatRelease+"'");
 		redhatReleaseXY = matcher.group();
 		redhatReleaseX = redhatReleaseXY.replaceFirst("\\..*", "");
+		
 		
 		// TODO This is a WORKAROUND to treat an ARM Development Preview as a RHEL7.0 system.  Not sure if this is what we ultimately want.
 		/* 3/18/2015 NO LONGER NEEDED NOW THAT THE GA PRODUCT Red Hat Enterprise Linux Server for ARM ProductId=294 HAS BEEN CREATED
@@ -736,8 +740,15 @@ if (false) {
 	    // check the baseurl for problems
 	    SSHCommandResult baseurlTestResult = sshCommandRunner.runCommandAndWait("curl --stderr /dev/null --insecure --request GET "+baseurlForExtras);
 	    if (baseurlTestResult.getStdout().contains("404 Not Found") || baseurlTestResult.getStdout().contains("The document has moved")) {
-			log.warning("Cannot install updates from latest-EXTRAS-7-RHEL-7 since the baseurl '"+baseurlForExtras+"' is Not Found.");
-	    	Assert.fail("The Latest Extras baseurl '"+baseurlForExtras+"' was Not Found.  Instruct the automator to verify the assembly of this baseurl.");
+			log.info("Cannot install updates from latest-EXTRAS-7-RHEL-7 since the baseurl '"+baseurlForExtras+"' is Not Found.");
+			// attempt to use the previous minor release
+		    String baseurlForPreviousExtras = String.format("http://download-node-02.eng.bos.redhat.com/rel-eng/latest-EXTRAS-%.1f-RHEL-7/compose/"+"Server"+"/x86_64/os/",Float.valueOf(redhatReleaseXY)-0.1);	// "Server" is the ONLY compose for http://download-node-02.eng.bos.redhat.com/rel-eng/latest-EXTRAS-7.5-RHEL-7/compose/
+			log.info("Attempting to find extras under the previous minor release...");
+			baseurlTestResult = sshCommandRunner.runCommandAndWait("curl --stderr /dev/null --insecure --request GET "+baseurlForPreviousExtras);
+			if (baseurlTestResult.getStdout().contains("404 Not Found") || baseurlTestResult.getStdout().contains("The document has moved")) {
+				Assert.fail("The Latest Extras baseurl '"+baseurlForExtras+"' was Not Found (and neither was '"+baseurlForPreviousExtras+"').  Instruct the automator to verify the assembly of this baseurl.");
+			}
+			baseurlForExtras = baseurlForPreviousExtras;
 	    }
 	    baseurlTestResult = sshCommandRunner.runCommandAndWait("curl --stderr /dev/null --insecure --request GET "+baseurlForDeps);
 	    if (baseurlTestResult.getStdout().contains("404 Not Found") || baseurlTestResult.getStdout().contains("The document has moved")) {
@@ -936,7 +947,8 @@ if (false) {
 		if /* >= RHEL7.2 */ (redhatReleaseX.equals("7") && Integer.valueOf(redhatReleaseXY.split("\\.")[1])>=2) pkgs = new ArrayList<String>(Arrays.asList(new String[]{"python-rhsm", "subscription-manager", "subscription-manager-gui",   "subscription-manager-initial-setup-addon", "subscription-manager-migration", "subscription-manager-migration-data", "subscription-manager-plugin-ostree", "subscription-manager-plugin-container"}));
 		if /* >= RHEL7.3 */ (redhatReleaseX.equals("7") && Integer.valueOf(redhatReleaseXY.split("\\.")[1])>=3) pkgs = new ArrayList<String>(Arrays.asList(new String[]{"python-rhsm-certificates", "python-rhsm", "subscription-manager", "subscription-manager-gui",   "subscription-manager-initial-setup-addon", "subscription-manager-migration", "subscription-manager-migration-data", "subscription-manager-plugin-ostree", "subscription-manager-plugin-container"}));
 		if /* >= RHEL7.5 */ (redhatReleaseX.equals("7") && Integer.valueOf(redhatReleaseXY.split("\\.")[1])>=5) pkgs = new ArrayList<String>(Arrays.asList(new String[]{"subscription-manager-rhsm-certificates", "subscription-manager-rhsm", "subscription-manager", "subscription-manager-gui",   "subscription-manager-initial-setup-addon", "subscription-manager-migration", "subscription-manager-migration-data", "subscription-manager-plugin-ostree", "subscription-manager-plugin-container", "subscription-manager-cockpit"}));
-		if /* >= RHEL8.0 */ (redhatReleaseX.equals("8") && Integer.valueOf(redhatReleaseXY.split("\\.")[1])>=0) pkgs = new ArrayList<String>(Arrays.asList(new String[]{"subscription-manager-rhsm-certificates", "python3-subscription-manager-rhsm", "subscription-manager", "subscription-manager-gui",   "subscription-manager-initial-setup-addon", "subscription-manager-migration", "subscription-manager-migration-data", "subscription-manager-plugin-ostree", "subscription-manager-plugin-container", "dnf-plugin-subscription-manager.rpm", "subscription-manager-cockpit"}));
+		if /* >= RHEL7.6 */ (redhatReleaseX.equals("7") && Integer.valueOf(redhatReleaseXY.split("\\.")[1])>=6) pkgs = new ArrayList<String>(Arrays.asList(new String[]{"subscription-manager-rhsm-certificates", "subscription-manager-rhsm", "subscription-manager", "rhsm-gtk", "subscription-manager-gui",   "subscription-manager-initial-setup-addon", "subscription-manager-migration", "subscription-manager-migration-data", "subscription-manager-plugin-ostree", "subscription-manager-plugin-container", "subscription-manager-cockpit"}));
+		if /* >= RHEL8.0 */ (redhatReleaseX.equals("8") && Integer.valueOf(redhatReleaseXY.split("\\.")[1])>=0) pkgs = new ArrayList<String>(Arrays.asList(new String[]{"python3-intentctl", "subscription-manager-rhsm-certificates", "python3-subscription-manager-rhsm", /*"dnf-plugin-subscription-manager", commenting out for the sake of Bug 1581410*/"subscription-manager", "rhsm-gtk", "subscription-manager-initial-setup-addon", "subscription-manager-migration", "subscription-manager-migration-data", "subscription-manager-plugin-ostree", "subscription-manager-plugin-container", "subscription-manager-cockpit"}));
 		pkgs.add(0,"expect");	// used for interactive cli prompting
 		pkgs.add(0,"sos");	// used to create an sosreport for debugging hardware
 		pkgs.add(0,"bash-completion");	// used in BashCompletionTests
@@ -946,6 +958,7 @@ if (false) {
 		pkgs.add(0,"net-tools");	// provides netstat which is used to know when vncserver is up
 		pkgs.add(0,"ntp");	// used to synchronize a computer's time with another reference time source.
 		pkgs.add(0,"git");	// used to clone rcm-metadata.git
+		pkgs.add(0,"wget");	// used to get translate-toolkit
 		//TODO I don't think we really need to check the version of rhel for the next pkgs, if they don't exist, they just won't be installed. 
 		if /* >= RHEL6 */   (Integer.valueOf(redhatReleaseX)>=6) pkgs.add(0,"python-dateutil");	// dependency for python-rhsm
 		if /* >= RHEL7.5 */ (redhatReleaseX.equals("7") && Integer.valueOf(redhatReleaseXY.split("\\.")[1])>=5) pkgs.add(0,"cockpit");	// indirect dependency for subscription-manager-cockpit, but indirectly requires subscription-manager which means when subscription-manager is removed by yum, then cockpit is also removed
@@ -957,16 +970,35 @@ if (false) {
 		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 		if (invokeWorkaroundWhileBugIsOpen) {
 			String pkg = "subscription-manager-migration-data";
-			log.warning("Skipping the install of "+pkg+".");
+			log.warning("Skipping the install of '"+pkg+"'.");
 			pkgs.remove(pkg);
 		}
 		// END OF WORKAROUND
+		
+		// TEMPORARY WORKAROUND FOR BUG
+		if (redhatReleaseX.equals("8")) {
+			/*String*/ bugId = "1581410";	// Bug 1581410 - package subscription-manager should require dnf-plugin-subscription-manager on RHEL8
+			/*boolean*/ invokeWorkaroundWhileBugIsOpen = true;
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			if (invokeWorkaroundWhileBugIsOpen) {
+				String pkg = "dnf-plugin-subscription-manager";
+				log.warning("Forcing the install of '"+pkg+"' while bug '"+bugId+"' is open.");
+				pkgs.add(pkg);
+			}
+		}
+		// END OF WORKAROUND
+		
 		for (String pkg : pkgs) {
 			if (pkg.equals("subscription-manager-gnome") && isPackageInstalled("subscription-manager-gui")) continue;	// avoid downgrading
 			if (!isPackageInstalled(pkg)) {
 				//Assert.assertEquals(sshCommandRunner.runCommandAndWait("yum -y install "+pkg+" "+installOptions).getExitCode(),Integer.valueOf(0), "Yum installed package: "+pkg);
 				sshCommandRunner.runCommandAndWait("yum -y install "+pkg+" "+installOptions);
 			}
+		}
+		
+		// remember the versions of the packages installed
+		for (String pkg : pkgs) {
+			isPackageVersion(pkg, "==", "0.0");	// this will simply populate the cached Map<String,String> installedPackageVersionMap
 		}
 	}
 	
@@ -1125,16 +1157,6 @@ if (false) {
 			}
 			*/
 		}
-// DELETEME since exitCode assertion was added above
-//		// assert that all of the updated rpms are now installed
-//		for (String rpmPath : rpmPaths.split(" ")) {
-//			rpmPath = rpmPath.trim(); if (rpmPath.isEmpty()) continue;
-//			String pkg = (new File(rpmPath)).getName().replaceFirst("\\.rpm$","");
-//			String rpmPackageVersion = sshCommandRunner.runCommandAndWait("rpm --query --package "+rpmPath).getStdout().trim();
-//			String rpmInstalledVersion = sshCommandRunner.runCommandAndWait("rpm --query "+pkg).getStdout().trim();
-//			Assert.assertEquals(rpmInstalledVersion,rpmPackageVersion, "Local rpm package '"+rpmPath+"' is currently installed.");
-//			pkgsInstalled.add(pkg);
-//		}
 		
 		// remember the versions of the packages installed
 		for (String pkg : pkgsInstalled) {
@@ -2469,7 +2491,7 @@ if (false) {
 		//		Version: 5.10
 		//		Arch: i386
 		//		Tags: rhel-5-client-workstation,rhel-5-workstation
-		providingTag += "|" + "rhel-5-client-workstation";
+		if (redhatReleaseX.equals("5")) providingTag += "|" + "rhel-5-client-workstation";
 		
 		// also consider tags used for rhel 7 beta
 		//	[root@ibm-p8-kvm-09-guest-08 rhel-7.0-beta]# for f in $(ls *.pem); do rct cat-cert $f | egrep -A7 'Product:'; done;
@@ -2497,7 +2519,7 @@ if (false) {
 		//		Tags: rhel-7-everything
 		//		Brand Type: 
 		//		Brand Name: 
-		providingTag += "|" + "rhel-7-.*everything";
+		if (redhatReleaseX.equals("7")) providingTag += "|" + "rhel-7-.*everything";
 		
 		// also consider tags used for rhelsa-dp Development Preview
 		//	[root@ibm-p8-kvm-09-guest-08 rhelsa-dp]# for f in $(ls *.pem); do rct cat-cert $f | egrep -A7 'Product:'; done;
@@ -2509,7 +2531,7 @@ if (false) {
 		//		Tags: rhsa-dp-server,rhsa-dp-server-7
 		//		Brand Type: 
 		//		Brand Name: 
-		providingTag += "|" + "rhelsa-dp-.+";
+		if (redhatReleaseX.equals("7")) providingTag += "|" + "rhelsa-dp-.+";
 		
 		// also consider tags used for rhel-alt
 		//	[root@ibm-p8-kvm-09-guest-08 tmp]# git clone git://git.host.prod.eng.bos.redhat.com/rcm/rcm-metadata.git
@@ -2531,9 +2553,33 @@ if (false) {
 		//		Tags: rhel-alt-7,rhel-alt-7-power9
 		//		Brand Type: 
 		//		Brand Name: 
-		providingTag += "|" + "rhel-alt-"+redhatReleaseX;
+		if (redhatReleaseX.equals("7")) providingTag += "|" + "rhel-alt-"+redhatReleaseX;
 		
-		// also consider tags used for rhel-htb High Touch Beta
+		
+		// also consider tags used for rhel-6-VARIANT-htb High Touch Beta
+		//	[root@jsefler-rhel6 tmp]# git clone git://git.host.prod.eng.bos.redhat.com/rcm/rcm-metadata.git
+		//	[root@jsefler-rhel6 tmp]# cd rcm-metadata/product_ids/rhel-6.10-htb/
+		//	[root@jsefler-rhel6 rhel-6.10-htb]# for f in $(ls *.pem); do rct cat-cert $f | egrep -A7 'Product:'; done;
+		//	Product:
+		//		ID: 135
+		//		Name: Red Hat Enterprise Linux 6 Server HTB
+		//		Version: 6.10 HTB
+		//		Arch: x86_64
+		//		Tags: rhel-6-server-htb,rhel-6-server
+		//		Brand Type: 
+		//		Brand Name: 
+		//	Product:
+		//		ID: 155
+		//		Name: Red Hat Enterprise Linux 6 Workstation HTB
+		//		Version: 6.10 HTB
+		//		Arch: x86_64
+		//		Tags: rhel-6-workstation-htb,rhel-6-workstation
+		//		Brand Type: 
+		//		Brand Name: 
+		if (redhatReleaseX.equals("6")) providingTag += "|" + "rhel-"+redhatReleaseX+"-"+variant.toLowerCase()+"-htb";
+		
+		
+		// also consider tags used for rhel-7-htb High Touch Beta
 		//	[root@dell-pem610-01 tmp]# git clone git://git.host.prod.eng.bos.redhat.com/rcm/rcm-metadata.git
 		//	[root@dell-pem610-01 tmp]# cd rcm-metadata/product_ids/rhel-7.5-htb/
 		//	[root@dell-pem610-01 rhel-7.5-htb]# for f in $(ls *.pem); do rct cat-cert $f | egrep -A7 'Product:'; done;
@@ -2553,7 +2599,7 @@ if (false) {
 		//		Tags: rhel-7-htb,rhel-7-workstation
 		//		Brand Type: 
 		//		Brand Name: 
-		providingTag += "|" + "rhel-"+redhatReleaseX+"-htb";
+		if (redhatReleaseX.equals("7")) providingTag += "|" + "rhel-"+redhatReleaseX+"-htb";
 		
 		// get the product certs matching the rhel regex tag
 		List<ProductCert> rhelProductCerts = getCurrentProductCerts(providingTag);
@@ -4932,7 +4978,8 @@ if (false) {
 			defaultNames.add("pluginConfDir");
 			if (isPackageVersion("subscription-manager",">=","1.10.7-1")) defaultNames.add("full_refresh_on_yum");	// was added as part of RFE Bug 803746
 			if (isPackageVersion("subscription-manager",">=","1.20.2-1")) defaultNames.add("auto_enable_yum_plugins");	// commit 29a9a1db08a2ee920c43891daafdf858082e5d8b	// Bug 1319927 - [RFE] subscription-manager should automatically enable yum plugins
-			if (isPackageVersion("subscription-manager",">=","1.20.2-1"/*TODO change to 1.20.3-1*/)) defaultNames.add("inotify");	// commit db7f92dd2a29071eddd3b8de5beedb0fe46352f9	// Bug 1477958: Use inotify for checking changes of consumer certs
+			if (isPackageVersion("subscription-manager",">=","1.20.3-1")) defaultNames.add("inotify");	// commit db7f92dd2a29071eddd3b8de5beedb0fe46352f9	// Bug 1477958: Use inotify for checking changes of consumer certs
+			if (isPackageVersion("subscription-manager",">=","1.21.1-1")) defaultNames.add("repomd_gpg_url");	// commit 8236fefe942e4a32cb2c2565c63b15d3a9464855	Support configuration of a repo metadata signing key	// RFE Bug 1410638 - [RFE] Give Satellite the ability to select if repo metadata should be signed with the key provided for rpm verification
 		}
 		if (section.equalsIgnoreCase("rhsmcertd")) {
 			defaultNames.add(/*"certFrequency" CHANGED BY BUG 882459 TO*/"certCheckInterval");
@@ -10026,6 +10073,67 @@ if (false) {
 	}
 	
 	/**
+	 * Append a unique message to the end of /var/log/messages (on RHEL<=7) or the end of journalctl (on RHEL8+)
+	 * @param marker - a unique message
+	 * @return - the exit code that was echoed onto the end of the system log
+	 */
+	public int markSystemLogFile(String marker) {
+		//	[root@rhel6 ~]# rpm -q rsyslog systemd
+		//	rsyslog-5.8.10-10.el6_6.x86_64
+		//	package systemd is not installed
+		//
+		//	[root@rhel7 ~]# rpm -q rsyslog systemd
+		//	rsyslog-8.24.0-12.el7.x86_64
+		//	systemd-219-42.el7.x86_64
+		//
+		//	[root@drhel8 ~]# rpm -q rsyslog systemd
+		//	package rsyslog is not installed
+		//	systemd-238-6.el8+5.x86_64
+		
+		int exitCode = 0;
+		if (Integer.valueOf(redhatReleaseX) < 8 /* || !isPackageInstalled("systemd") */) {	// Note: RHEL7 should work with BOTH
+			exitCode = RemoteFileTasks.markFile(this.sshCommandRunner, this.messagesLogFile, marker);
+		} else {
+			String command = "echo '"+marker+"' | systemd-cat -t rhsm-qe";
+			exitCode = sshCommandRunner.runCommandAndWait(command, TestRecords.action()).getExitCode();
+		}
+		
+		return exitCode;
+	}
+	
+	/**
+	 * After marking the end of /var/log/messages (on RHEL<=7) or the end of journalctl (on RHEL8+) with a unique
+	 * marker using markSystemLogFile(), get the tail of the log from the time the marker was appended.
+	 * @param marker - a unique message that was already appended to the system log file using markSystemLogFile()
+	 * @param grepPattern - filter the tail of the log using this grep pattern; pass null if no grepping is desired.
+	 * @return
+	 */
+	public String getTailFromSystemLogFile(String marker, String grepPattern) {
+		// Notes:
+		//	"tail -f /var/log/messages" will now become "journalctl -f"
+		//	"grep foobar /var/log/messages" will now become "journalctl | grep foobar". "
+		String tail=null;
+		if (Integer.valueOf(redhatReleaseX) < 8 /* || !isPackageInstalled("systemd") */) {
+			tail = RemoteFileTasks.getTailFromMarkedFile(this.sshCommandRunner, this.messagesLogFile, marker, null).trim();
+		} else {
+			SSHCommandResult result;
+			String command;
+			if (grepPattern!=null) {
+				command = "journalctl | awk '/"+marker+"/,0' | grep -v --text '"+marker+"' | grep --text '"+grepPattern+"'";
+			} else {
+				command = "journalctl | awk '/"+marker+"/,0' | grep -v --text '"+marker+"'";
+			}
+			result= sshCommandRunner.runCommandAndWait(command);
+			Assert.assertContains(Arrays.asList(new Integer[]{0,1}), result.getExitCode());
+			tail = result.getStdout();
+		}
+		
+		return tail;
+	}
+	
+	
+	
+	/**
 	 * Compare the version of an installed package to a given version. For example...
 	 * @param packageName - "subscription-manager"
 	 * @param comparator - valid values: ">", "<", ">=", "<=", "=="  (for not equals functionality, simply ! the return value of "==")
@@ -10082,8 +10190,13 @@ if (false) {
 		
 		// compatibility adjustment for python-rhsm* packages obsoleted by subscription-manager-rhsm* packages
 		if (packageName.startsWith("python-rhsm") && isPackageVersion("subscription-manager",">=","1.20.3-1")) {	// commit f445b6486a962d12185a5afe69e768d0a605e175 Move python-rhsm build into subscription-manager
-			log.fine("Adjusting query for isPackageVersion(\""+packageName+"\"...) to isPackageVersion(\""+packageName.replace("python-rhsm", "subscription-manager-rhsm")+"\"...) due to obsoleted package starting in version 1.20.3-1");
-			packageName = packageName.replace("python-rhsm", "subscription-manager-rhsm");
+			if (isPackageInstalled("python3-subscription-manager-rhsm")) { // starting on RHEL8
+				log.fine("Adjusting query for isPackageVersion(\""+packageName+"\"...) to isPackageVersion(\""+packageName.replace("python-rhsm", "python3-subscription-manager-rhsm")+"\"...) due to obsoleted package starting in version 1.20.3-1 AND the fact that this system is running python3.");
+				packageName = packageName.replace("python-rhsm", "python3-subscription-manager-rhsm");	
+			} else {
+				log.fine("Adjusting query for isPackageVersion(\""+packageName+"\"...) to isPackageVersion(\""+packageName.replace("python-rhsm", "subscription-manager-rhsm")+"\"...) due to obsoleted package starting in version 1.20.3-1");
+				packageName = packageName.replace("python-rhsm", "subscription-manager-rhsm");
+			}
 		}
 		
 		// get the currently installed version of the packageName of the form subscription-manager-1.10.14-7.el7.x86_64

@@ -100,7 +100,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 				@LinkedItem(project= Project.RHEL6, workitemId= "RHEL6-28564", role= DefTypes.Role.VERIFIES),	// RHSM-REQ : Translation
 				@LinkedItem(project= Project.RedHatEnterpriseLinux7, workitemId= "RHEL7-84942",role= DefTypes.Role.VERIFIES),	// RHSM-REQ : Translation
 			},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
@@ -129,7 +129,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 				@LinkedItem(project= Project.RHEL6, workitemId= "RHEL6-28485", role= DefTypes.Role.VERIFIES),	// RHSM-REQ : subscription-manager cli registration and deregistration
 				@LinkedItem(project= Project.RedHatEnterpriseLinux7, workitemId= "RHEL7-84906",role= DefTypes.Role.VERIFIES),	// RHSM-REQ : subscription-manager cli registration and deregistration
 			},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier1")
@@ -161,7 +161,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 				@LinkedItem(project= Project.RHEL6, workitemId= "RHEL6-28485", role= DefTypes.Role.VERIFIES),	// RHSM-REQ : subscription-manager cli registration and deregistration
 				@LinkedItem(project= Project.RedHatEnterpriseLinux7, workitemId= "RHEL7-84906",role= DefTypes.Role.VERIFIES),	// RHSM-REQ : subscription-manager cli registration and deregistration
 			},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
@@ -208,7 +208,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 				@LinkedItem(project= Project.RHEL6, workitemId= "RHEL6-28485", role= DefTypes.Role.VERIFIES),	// RHSM-REQ : subscription-manager cli registration and deregistration
 				@LinkedItem(project= Project.RedHatEnterpriseLinux7, workitemId= "RHEL7-84906",role= DefTypes.Role.VERIFIES),	// RHSM-REQ : subscription-manager cli registration and deregistration
 			},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.NEGATIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
@@ -245,7 +245,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 				@LinkedItem(project= Project.RHEL6, workitemId= "RHEL6-28485", role= DefTypes.Role.VERIFIES),	// RHSM-REQ : subscription-manager cli registration and deregistration
 				@LinkedItem(project= Project.RedHatEnterpriseLinux7, workitemId= "RHEL7-84906",role= DefTypes.Role.VERIFIES),	// RHSM-REQ : subscription-manager cli registration and deregistration
 			},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
@@ -314,7 +314,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 				@LinkedItem(project= Project.RHEL6, workitemId= "RHEL6-28564", role= DefTypes.Role.VERIFIES),	// RHSM-REQ : Translation
 				@LinkedItem(project= Project.RedHatEnterpriseLinux7, workitemId= "RHEL7-84942",role= DefTypes.Role.VERIFIES),	// RHSM-REQ : Translation
 			},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier1")
@@ -357,7 +357,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 				@LinkedItem(project= Project.RHEL6, workitemId= "RHEL6-28564", role= DefTypes.Role.VERIFIES),	// RHSM-REQ : Translation
 				@LinkedItem(project= Project.RedHatEnterpriseLinux7, workitemId= "RHEL7-84942",role= DefTypes.Role.VERIFIES),	// RHSM-REQ : Translation
 			},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier1")
@@ -525,7 +525,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 				@LinkedItem(project= Project.RHEL6, workitemId= "RHEL6-28564", role= DefTypes.Role.VERIFIES),	// RHSM-REQ : Translation
 				@LinkedItem(project= Project.RedHatEnterpriseLinux7, workitemId= "RHEL7-84942",role= DefTypes.Role.VERIFIES),	// RHSM-REQ : Translation
 			},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.LOW, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier3")
@@ -545,7 +545,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 				@LinkedItem(project= Project.RHEL6, workitemId= "RHEL6-28564", role= DefTypes.Role.VERIFIES),	// RHSM-REQ : Translation
 				@LinkedItem(project= Project.RedHatEnterpriseLinux7, workitemId= "RHEL7-84942",role= DefTypes.Role.VERIFIES),	// RHSM-REQ : Translation
 			},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.LOW, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier3")
@@ -565,7 +565,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 				@LinkedItem(project= Project.RHEL6, workitemId= "RHEL6-28564", role= DefTypes.Role.VERIFIES),	// RHSM-REQ : Translation
 				@LinkedItem(project= Project.RedHatEnterpriseLinux7, workitemId= "RHEL7-84942",role= DefTypes.Role.VERIFIES),	// RHSM-REQ : Translation
 			},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.LOW, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier3")
@@ -586,7 +586,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 				@LinkedItem(project= Project.RHEL6, workitemId= "RHEL6-28564", role= DefTypes.Role.VERIFIES),	// RHSM-REQ : Translation
 				@LinkedItem(project= Project.RedHatEnterpriseLinux7, workitemId= "RHEL7-84942",role= DefTypes.Role.VERIFIES),	// RHSM-REQ : Translation
 			},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
@@ -638,12 +638,12 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	
 	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
-			testCaseID= {"", ""},
+			testCaseID= {"RHEL6-51160", "RHEL-133207"}, //importReady=false,
 			linkedWorkItems= {
 				@LinkedItem(project= Project.RHEL6, workitemId= "RHEL6-28564", role= DefTypes.Role.VERIFIES),	// RHSM-REQ : Translation
 				@LinkedItem(project= Project.RedHatEnterpriseLinux7, workitemId= "RHEL7-84942",role= DefTypes.Role.VERIFIES),	// RHSM-REQ : Translation
 			},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
@@ -707,7 +707,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 				@LinkedItem(project= Project.RHEL6, workitemId= "RHEL6-28564", role= DefTypes.Role.VERIFIES),	// RHSM-REQ : Translation
 				@LinkedItem(project= Project.RedHatEnterpriseLinux7, workitemId= "RHEL7-84942",role= DefTypes.Role.VERIFIES),	// RHSM-REQ : Translation
 			},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.MEDIUM, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier3")
@@ -752,7 +752,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-21767", "RHEL7-51283"},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.LOW, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier3")
@@ -826,7 +826,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 				@LinkedItem(project= Project.RHEL6, workitemId= "RHEL6-28564", role= DefTypes.Role.VERIFIES),	// RHSM-REQ : Translation
 				@LinkedItem(project= Project.RedHatEnterpriseLinux7, workitemId= "RHEL7-84942",role= DefTypes.Role.VERIFIES),	// RHSM-REQ : Translation
 			},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
@@ -1055,7 +1055,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 				@LinkedItem(project= Project.RHEL6, workitemId= "RHEL6-28563", role= DefTypes.Role.RELATES_TO),	// RHSM-REQ : Yum installation of entitled content and product certificates
 				@LinkedItem(project= Project.RedHatEnterpriseLinux7, workitemId= "RHEL7-84940",role= DefTypes.Role.RELATES_TO),	// RHSM-REQ : Yum installation of entitled content and product certificates
 			},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier1")
@@ -1133,7 +1133,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 				@LinkedItem(project= Project.RHEL6, workitemId= "RHEL6-28564", role= DefTypes.Role.VERIFIES),	// RHSM-REQ : Translation
 				@LinkedItem(project= Project.RedHatEnterpriseLinux7, workitemId= "RHEL7-84942",role= DefTypes.Role.VERIFIES),	// RHSM-REQ : Translation
 			},
-			level= DefTypes.Level.COMPONENT, component= "subscription-manager",
+			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
