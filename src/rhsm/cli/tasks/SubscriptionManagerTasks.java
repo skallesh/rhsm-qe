@@ -2326,7 +2326,7 @@ if (false) {
 	}
 	
 	/**
-	 * @return list of objects representing the subscription-manager list --available --matchinstalled
+	 * @return list of objects representing the subscription-manager list --available --match-installed
 	 */
 	public  List<SubscriptionPool> getAvailableSubscriptionsMatchingInstalledProducts() {
 		
