@@ -792,15 +792,15 @@ if (false) {
 	
 	
 	/**
-	 * Configure a rhel-latest-app-stream.repo to http://download.devel.redhat.com/nightly/latest-AppStream-8/compose/AppStream/x86_64/os/ and return the repo label
+	 * Configure a latest-AppStream-8.repo to http://download.devel.redhat.com/nightly/latest-AppStream-8/compose/AppStream/$basearch/os/ and return the repo id "latest-AppStream-8"
 	 * @throws IOException
 	 * @throws JSONException
 	 */
 	public String configureLatestAppStreamRepo() throws IOException, JSONException {
 		
 		// locally create a yum.repos.d AppStream repos file
-		
-	    File file = new File("tmp/latest-app-stream.repo"); // this will be in the automation.dir directory on hudson (workspace/automatjon/sm)
+		String repo = "latest-AppStream-8";
+	    File file = new File("tmp/"+repo+".repo"); // this will be in the automation.dir directory on hudson (workspace/automatjon/sm)
 	    // http://download.devel.redhat.com/nightly/latest-AppStream-8/compose/AppStream/x86_64/os/
 	    String baseurlForAppStream = "http://download.devel.redhat.com/nightly/latest-AppStream-"+redhatReleaseX+"/compose/AppStream/$basearch/os/";
 	    baseurlForAppStream = "http://download-node-02.eng.bos.redhat.com/nightly/latest-AppStream-"+redhatReleaseX+"/compose/AppStream/$basearch/os/";
@@ -808,21 +808,58 @@ if (false) {
 	    // check the baseurl for problems
 	    SSHCommandResult baseurlTestResult = sshCommandRunner.runCommandAndWait("curl --stderr /dev/null --insecure --request GET "+baseurlForAppStream.replace("$basearch", arch));
 	    if (baseurlTestResult.getStdout().contains("404 Not Found") || baseurlTestResult.getStdout().contains("The document has moved")) {
-			log.warning("Cannot install updates from latest-AppStream-8 since the baseurl '"+baseurlForAppStream+"' is Not Found.");
-	    	Assert.fail("The Latest AppStream baseurl '"+baseurlForAppStream+"' was Not Found.  Instruct the automator to verify the assembly of this baseurl.");
+			log.warning("Cannot install updates from "+repo+" since the baseurl '"+baseurlForAppStream+"' is Not Found.");
+	    	Assert.fail("The baseurl '"+baseurlForAppStream+"' was Not Found.  Instruct the automator to verify the assembly of this baseurl.");
 	    }
 		
 		// write out the rows of the table...
     	Writer output = new BufferedWriter(new FileWriter(file));
 	    
     	// write the rhel-latest-extras repo
-		String repo = "latest-AppStream-8";
 		output.write("["+repo+"]\n");
-		output.write("name     = Latest AppStream updates for RHEL"+redhatReleaseX+"\n");
+		output.write("name     = Latest AppStream content for RHEL"+redhatReleaseX+" (for RHSM-QE)\n");
 		output.write("enabled  = 0\n");
 		output.write("gpgcheck = 0\n");	// needed since the latest extras packages may not be signed until on REL_PREP
 		//output.write("exclude  = redhat-release*\n");	// avoids unwanted updates of rhel-release server variant to workstation
 		output.write("baseurl  = "+baseurlForAppStream+"\n");
+		output.write("\n");
+	    output.close();
+	    
+		RemoteFileTasks.putFile(sshCommandRunner, file.getPath(), "/etc/yum.repos.d/", "0644");
+		return repo;
+	}
+	
+	/**
+	 * Configure a latest-BaseOS-8.repo to http://download-node-02.eng.bos.redhat.com/nightly/latest-RHEL-8/compose/BaseOS/$basearch/os/ and return the repo id "latest-BaseOS-8"
+	 * @throws IOException
+	 * @throws JSONException
+	 */
+	public String configureLatestBaseOSRepo() throws IOException, JSONException {
+		
+		// locally create a yum.repos.d AppStream repos file
+		String repo = "latest-BaseOS-8";
+	    File file = new File("tmp/"+repo+".repo"); // this will be in the automation.dir directory on hudson (workspace/automatjon/sm)
+	    // http://download.devel.redhat.com/nightly/latest-AppStream-8/compose/AppStream/x86_64/os/
+	    String baseurlForBaseOS = "http://download.devel.redhat.com/nightly/latest-RHEL-"+redhatReleaseX+"/compose/BaseOS/$basearch/os/";
+	    baseurlForBaseOS = "http://download-node-02.eng.bos.redhat.com/nightly/latest-RHEL-"+redhatReleaseX+"/compose/BaseOS/$basearch/os/";
+	    
+	    // check the baseurl for problems
+	    SSHCommandResult baseurlTestResult = sshCommandRunner.runCommandAndWait("curl --stderr /dev/null --insecure --request GET "+baseurlForBaseOS.replace("$basearch", arch));
+	    if (baseurlTestResult.getStdout().contains("404 Not Found") || baseurlTestResult.getStdout().contains("The document has moved")) {
+			log.warning("Cannot install updates from "+repo+" since the baseurl '"+baseurlForBaseOS+"' is Not Found.");
+	    	Assert.fail("The baseurl '"+baseurlForBaseOS+"' was Not Found.  Instruct the automator to verify the assembly of this baseurl.");
+	    }
+		
+		// write out the rows of the table...
+    	Writer output = new BufferedWriter(new FileWriter(file));
+	    
+    	// write the rhel-latest-extras repo
+		output.write("["+repo+"]\n");
+		output.write("name     = Latest BaseOS content for RHEL"+redhatReleaseX+" (for RHSM-QE)\n");
+		output.write("enabled  = 0\n");
+		output.write("gpgcheck = 0\n");	// needed since the latest extras packages may not be signed until on REL_PREP
+		//output.write("exclude  = redhat-release*\n");	// avoids unwanted updates of rhel-release server variant to workstation
+		output.write("baseurl  = "+baseurlForBaseOS+"\n");
 		output.write("\n");
 	    output.close();
 	    
@@ -964,6 +1001,8 @@ if (false) {
 		if /* >= RHEL7.5 */ (redhatReleaseX.equals("7") && Integer.valueOf(redhatReleaseXY.split("\\.")[1])>=5) pkgs.add(0,"cockpit");	// indirect dependency for subscription-manager-cockpit, but indirectly requires subscription-manager which means when subscription-manager is removed by yum, then cockpit is also removed
 		if /* >= RHEL8.0 */ (redhatReleaseX.equals("8") && Integer.valueOf(redhatReleaseXY.split("\\.")[1])>=0) pkgs.add(0,"cockpit");	// indirect dependency for subscription-manager-cockpit, but indirectly requires subscription-manager which means when subscription-manager is removed by yum, then cockpit is also removed
 		if /* >= RHEL8.0 */ (redhatReleaseX.equals("8") && Integer.valueOf(redhatReleaseXY.split("\\.")[1])>=0) {pkgs.add(0,"chrony");pkgs.remove("ntp");}	// replacement for ntp
+		if /* >= RHEL8.0 */ (redhatReleaseX.equals("8") && Integer.valueOf(redhatReleaseXY.split("\\.")[1])>=0) {pkgs.remove("python-dateutil");}	// old dep for python-rhsm is no longer needed on RHEL8
+		if /* >= RHEL8.0 */ (redhatReleaseX.equals("8") && Integer.valueOf(redhatReleaseXY.split("\\.")[1])>=0) {pkgs.remove("policycoreutils-python");}	// TODO is this still required by docker-selinux package
 		
 		// TEMPORARY WORKAROUND FOR BUG
 		String bugId = "790116"; boolean invokeWorkaroundWhileBugIsOpen = true;
@@ -1074,16 +1113,19 @@ if (false) {
 			log.info("Removing existing package "+pkg+"...");
 			if (pkg.startsWith("katello-ca-consumer")) {
 				sshCommandRunner.runCommandAndWait("yum -y remove $(rpm -qa | grep katello-ca-consumer) "+installOptions);
+				installedPackageVersionMap.remove(pkg);
 				continue;
 			}
 			// compatibility adjustment for python-rhsm* packages obsoleted by subscription-manager-rhsm* packages
 			if (pkg.startsWith("subscription-manager-rhsm")) {	// commit f445b6486a962d12185a5afe69e768d0a605e175 Move python-rhsm build into subscription-manager
 				String obsoletedPackage = pkg.replace("subscription-manager-rhsm", "python-rhsm");
 				sshCommandRunner.runCommandAndWait("yum -y remove "+obsoletedPackage+" "+installOptions);
+				installedPackageVersionMap.remove(obsoletedPackage);
 			}
 			//sshCommandRunner.runCommandAndWait("yum -y remove "+pkg+" "+installOptions);	// inadvertently causes removal of cockpit-system which requires subscription-manager and then there is no way to get it back when subscription-manager-cockpit is installed; therefore let's use rpm --erase --no-deps
 			sshCommandRunner.runCommandAndWait("rpm --erase --nodeps "+pkg);
 			RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"rpm -q "+pkg,Integer.valueOf(1),"package "+pkg+" is not installed",null);
+			installedPackageVersionMap.remove(pkg);
 		}
 		
 		// install new rpms
