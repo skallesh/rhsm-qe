@@ -8,6 +8,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.redhat.qe.auto.bugzilla.BugzillaAPIException;
+import com.redhat.qe.auto.bugzilla.BzChecker;
 import com.redhat.qe.auto.testng.TestScript;
 import rhsm.cli.tasks.CandlepinTasks;
 import com.redhat.qe.tools.SSHCommandRunner;
@@ -197,13 +199,33 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 		if (!getProperty("sm.rpm.updateurls", "").equals("")) 					sm_rpmUpdateUrls					= Arrays.asList(getProperty("sm.rpm.updateurls", "").trim().split(" *, *"));
 		if (!getProperty("sm.rhsm.repoCaCert.urls", "").equals(""))				sm_repoCaCertUrls					= Arrays.asList(getProperty("sm.rhsm.repoCaCert.urls", "").trim().split(" *, *"));
 //		if (!getProperty("sm.ha.packages", "").equals(""))						sm_haPackages						= Arrays.asList(getProperty("sm.ha.packages", "").trim().split(" *, *"));
-    // if (false) {	// BEING DELETED
-    //   if (!getProperty("sm.docker.rpm.installurls", "").equals("")) 			sm_dockerRpmInstallUrls				= Arrays.asList(getProperty("sm.docker.rpm.installurls", "").trim().split(" *, *"));
-    // }
-if (!getProperty("sm.docker.images", "").equals("")) 					sm_dockerImages						= Arrays.asList(getProperty("sm.docker.images", "").trim().split(" *, *"));
+		if (!getProperty("sm.docker.images", "").equals("")) 					sm_dockerImages						= Arrays.asList(getProperty("sm.docker.images", "").trim().split(" *, *"));
 		if (!getProperty("sm.client.yumInstallZStreamUpdatePackages", "").equals(""))						sm_yumInstallZStreamUpdatePackages						= Arrays.asList(getProperty("sm.client.yumInstallZStreamUpdatePackages", "").trim().split(" *, *")); // default of "" implies update every package
 
 //		if (sm_yumInstallZStreamUpdates) 										sm_yumInstallOptions += " --enablerepo=rhel-zstream";
+		
+		
+		// TEMPORARY WORKAROUND
+		// find the list index for "dnf-plugin-subscription-manager" and move it to the end of the list while Bug 1581410 is open
+		List<String> rpmInstallUrls = new ArrayList<String>();
+		int j=-1;
+		for (int i = 0; i < sm_rpmInstallUrls.size(); i++) {
+			String rpmInstallUrl = sm_rpmInstallUrls.get(i);
+			rpmInstallUrls.add(rpmInstallUrl);
+			if (rpmInstallUrl.contains("dnf-plugin-subscription-manager")) {
+				boolean invokeWorkaroundWhileBugIsOpen = true;
+				String bugId="1581410";	// Bug 1581410 - package subscription-manager should require dnf-plugin-subscription-manager on RHEL8
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				if (invokeWorkaroundWhileBugIsOpen) {
+					j=i;
+				}
+			}
+		}
+		if (j>=0) {
+			rpmInstallUrls.add(rpmInstallUrls.remove(j));
+			sm_rpmInstallUrls = rpmInstallUrls;
+		}
+		// END OF WORKAROUND
 		
 		if (sm_serverUrl==null)
 			sm_serverUrl					= getProperty("sm.server.url","");

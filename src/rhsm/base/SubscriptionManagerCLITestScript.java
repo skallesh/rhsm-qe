@@ -565,14 +565,14 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	
 	public void setupClient(SubscriptionManagerTasks smt, File serverCaCertFile, List<File> generatedProductCertFiles) throws IOException, JSONException{		
 		
-		String yumInstallOptionsToEnableLatestAppStream = "";
+		String yumInstallOptionsToEnableLatestRHEL8 = "";
 		if (Integer.valueOf(clienttasks.redhatReleaseX)>=8) {
-			yumInstallOptionsToEnableLatestAppStream += " --enablerepo="+clienttasks.configureLatestAppStreamRepo();
+			yumInstallOptionsToEnableLatestRHEL8 += " --enablerepo="+clienttasks.configureLatestBaseOSRepo() + " --enablerepo="+clienttasks.configureLatestAppStreamRepo();
 		}
 		
-		smt.installSubscriptionManagerRPMs(sm_yumInstallOptions+yumInstallOptionsToEnableLatestAppStream);
+		smt.installSubscriptionManagerRPMs(sm_yumInstallOptions+yumInstallOptionsToEnableLatestRHEL8);
 		if (sm_yumInstallZStreamUpdates)	{
-			smt.installZStreamUpdates(sm_yumInstallOptions+yumInstallOptionsToEnableLatestAppStream, sm_yumInstallZStreamUpdatePackages, sm_yumInstallZStreamComposeUrl, sm_yumInstallZStreamBrewUrl, sm_ciMessage);
+			smt.installZStreamUpdates(sm_yumInstallOptions+yumInstallOptionsToEnableLatestRHEL8, sm_yumInstallZStreamUpdatePackages, sm_yumInstallZStreamComposeUrl, sm_yumInstallZStreamBrewUrl, sm_ciMessage);
 		}
 		sm_rpmUpdateUrls.addAll(getRpmUpdateUrlsFromCiMessage(sm_ciMessage));
 		smt.installSubscriptionManagerRPMs(sm_rpmInstallUrls,sm_rpmUpdateUrls,sm_yumInstallOptions, jenkinsUsername,jenkinsPassword);

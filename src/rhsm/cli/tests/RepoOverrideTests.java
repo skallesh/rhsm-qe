@@ -837,7 +837,7 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 	 * @return a list of YumRepos that result after randomly attaching a subscription
 	 */
 	protected List<YumRepo> attachRandomSubscriptionThatProvidesYumRepos() {
-		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
+		List<SubscriptionPool> pools = clienttasks.getAvailableSubscriptionsMatchingInstalledProducts();		// clienttasks.getCurrentlyAvailableSubscriptionPools();	// leads to "Access rate limit exceeded" on s390x
 		if (pools.isEmpty()) throw new SkipException("Cannot randomly pick a pool for subscribing when there are no available pools for testing."); 
 		List<YumRepo> yumRepos;	// = new ArrayList<YumRepo>();
 		do {
