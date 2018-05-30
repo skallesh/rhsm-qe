@@ -10156,7 +10156,7 @@ if (false) {
 		//	"grep foobar /var/log/messages" will now become "journalctl | grep foobar". "
 		String tail=null;
 		if (Integer.valueOf(redhatReleaseX) < 8 /* || !isPackageInstalled("systemd") */) {
-			tail = RemoteFileTasks.getTailFromMarkedFile(this.sshCommandRunner, this.messagesLogFile, marker, null).trim();
+			tail = RemoteFileTasks.getTailFromMarkedFile(this.sshCommandRunner, this.messagesLogFile, marker, grepPattern).trim();
 		} else {
 			SSHCommandResult result;
 			String command;
