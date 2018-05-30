@@ -71,7 +71,7 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 		}
 		
 		// wait for pool to expire
-		sleep(endingMinutesFromNow*60*1000 + 0*1000); // plus a 10 sec buffer; changed to 0 sec - the buffer creates too large of an opportunity for rhsmcertd to run and wipe out the expired cert
+		sleep(endingMinutesFromNow*60*1000 + 1*1000); // plus a 1 sec buffer (Note that the buffer creates a small window of opportunity that rhsmcertd can potentially run and wipe out the expired cert)
 		String rhsmcertdLogMarker = System.currentTimeMillis()+" Testing VerifyEntitlementsAfterSubscriptionExpires_Test...";
 		RemoteFileTasks.markFile(client, clienttasks.rhsmcertdLogFile, rhsmcertdLogMarker);
 ///*debugTesting*/sleep(certFrequency*60*1000);	// to delay the assert long enough for rhsmcertd to trigger and delete the expired cert; used to force the code path through the "if (expiredProductSubscription==null)" code block that follows
