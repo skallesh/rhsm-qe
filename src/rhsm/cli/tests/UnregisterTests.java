@@ -130,6 +130,7 @@ public class UnregisterTests extends SubscriptionManagerCLITestScript {
 		// TEMPORARY WORKAROUND
 		/*boolean*/ invokeWorkaroundWhileBugIsOpen = true;
 		/*String*/ bugId="1576962";	// Bug 1576962 - org.freedesktop.DBus.Error.Spawn.ExecFailed: Cannot launch daemon, file not found or permissions invalid
+		/*String*/ bugId="1555384";	// Bug 1555384 - Broken Exec= line in com.redhat.SubscriptionManager.service 
 		try {if (logTail.contains(unexpectedLogMessage) && invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
 		if (logTail.contains(unexpectedLogMessage) && invokeWorkaroundWhileBugIsOpen) {
 			log.warning("Skipping the final assert in '"+clienttasks.rhsmLogFile+"' that unexpected log message '"+unexpectedLogMessage+"' should not be encountered during an unregister while bug '"+bugId+"' is open.");
