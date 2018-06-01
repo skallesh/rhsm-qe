@@ -23,6 +23,7 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import rhsm.base.SubscriptionManagerCLITestScript;
+import rhsm.data.InstalledProduct;
 import rhsm.data.ProductSubscription;
 
 import com.redhat.qe.Assert;
@@ -166,7 +167,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 			// Note: this expectedExitCode will probably work for RHSM_VALID and RHSM_EXPIRED/INVALID
 			expectedExitCode = clienttasks.status(null, null, null, null, null).getExitCode();
 			
-			// Note: if a temporary SKU is being consumed, then RHSM_PARTIALLY_VALID = 4 will be expectedExitCode
+			// Note: if a temporary SKU is being consumed, then RHSM_PARTIALLY_VALID = 4 will be expectedExitCode...
 			for (ProductSubscription productSubscription : clienttasks.getCurrentlyConsumedProductSubscriptions()) {
 				if (productSubscription.subscriptionType.contains("(Temporary)")) {
 					log.info("Since the system is currently consuming at least one temporary subscription, the expected exitCode from '"+command+"' should match RHSM_PARTIALLY_VALID = 4");
@@ -175,7 +176,16 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 				}
 			}
 			
-			// TODO may still want to test for RHSM_WARNING = 2 case
+			// Note (cont'd): TODO may still want to test for RHSM_WARNING = 2 case
+			
+			// Note (cont'd): but if any installed product is Not Subscribed, then the system is still INVALID and trumps RHSM_PARTIALLY_VALID
+			for (InstalledProduct installedProduct : clienttasks.getCurrentlyInstalledProducts()) {
+				if (installedProduct.status.equals("Not Subscribed")) {
+					log.info("Since the system has at least one installed product with no subscription coverage, the expected exitCode from '"+command+"' should match RHSM_EXPIRED/INVALID = 1");
+					expectedExitCode = new Integer(1);
+					break;
+				}
+			}
 		}
 		Assert.assertEquals(result.getExitCode(), expectedExitCode,"ExitCode from command '"+command+"'.");
 		Assert.assertTrue(result.getStdout().isEmpty(),"Stdout from command '"+command+"' is empty.");
