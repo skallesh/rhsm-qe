@@ -723,27 +723,39 @@ if (false) {
 		if (!installOptions.contains("--disablerepo=*")) installOptions = "--disablerepo=* "+installOptions;
 		}
 		
+		// exclude the beaker repos
+		installOptions += " --disablerepo=beaker*";
+		
 		// avoid ERROR: can not find RHNS CA file: /usr/share/rhn/RHN-ORG-TRUSTED-SSL-CERT
 		installOptions += " --disableplugin=rhnplugin";
 		
 		// locally create a yum.repos.d extras repos file (and include latest-RHEL-7 for dependencies)
-
 	    File file = new File("tmp/latest.repo"); // this will be in the automation.dir directory on hudson (workspace/automatjon/sm)
 	    // http://download.devel.redhat.com/rel-eng/latest-EXTRAS-7-RHEL-7/compose/Server/x86_64/os/
-	    String baseurlForExtras = "http://download.devel.redhat.com/rel-eng/latest-EXTRAS-7-RHEL-7/compose/"+variant+"/$basearch/os/";
-	    baseurlForExtras = "http://download.devel.redhat.com/rel-eng/latest-EXTRAS-7-RHEL-7/compose/"+variant+"/x86_64/os/";	// 302 Found // The document has moved <a href="http://download-node-02.eng.bos.redhat.com/rel-eng/latest-EXTRAS-7-RHEL-7/compose/Workstation/x86_64/os/">here</a>
-	    baseurlForExtras = "http://download-node-02.eng.bos.redhat.com/rel-eng/latest-EXTRAS-7-RHEL-7/compose/"+variant+"/x86_64/os/";
-	    baseurlForExtras = "http://download-node-02.eng.bos.redhat.com/rel-eng/latest-EXTRAS-7-RHEL-7/compose/"+"Server"+"/x86_64/os/";	// "Server" is the ONLY compose for http://download-node-02.eng.bos.redhat.com/rel-eng/latest-EXTRAS-7-RHEL-7/compose/
-	    baseurlForExtras = "http://download-node-02.eng.bos.redhat.com/rel-eng/latest-EXTRAS-"+redhatReleaseXY+"-RHEL-7/compose/"+"Server"+"/x86_64/os/";	// "Server" is the ONLY compose for http://download-node-02.eng.bos.redhat.com/rel-eng/latest-EXTRAS-7.5-RHEL-7/compose/
-	    String baseurlForDeps = "http://download-node-02.eng.bos.redhat.com/rel-eng/latest-RHEL-7/compose/"+variant+"/x86_64/os/";
+	    String baseurlForExtras = "http://download.devel.redhat.com/rel-eng/latest-EXTRAS-7-RHEL-7/compose/"+variant+"/"+arch+"/os/";
+	    baseurlForExtras = "http://download.devel.redhat.com/rel-eng/latest-EXTRAS-7-RHEL-7/compose/"+variant+"/"+arch+"/os/";	// 302 Found // The document has moved <a href="http://download-node-02.eng.bos.redhat.com/rel-eng/latest-EXTRAS-7-RHEL-7/compose/Workstation/x86_64/os/">here</a>
+	    baseurlForExtras = "http://download-node-02.eng.bos.redhat.com/rel-eng/latest-EXTRAS-7-RHEL-7/compose/"+variant+"/"+arch+"/os/";
+	    baseurlForExtras = "http://download-node-02.eng.bos.redhat.com/rel-eng/latest-EXTRAS-7-RHEL-7/compose/"+"Server"+"/"+arch+"/os/";	// "Server" is the ONLY compose for http://download-node-02.eng.bos.redhat.com/rel-eng/latest-EXTRAS-7-RHEL-7/compose/
+	    baseurlForExtras = "http://download-node-02.eng.bos.redhat.com/rel-eng/latest-EXTRAS-"+redhatReleaseXY+"-RHEL-7/compose/"+"Server"+"/"+arch+"/os/";	// "Server" is the ONLY compose for http://download-node-02.eng.bos.redhat.com/rel-eng/latest-EXTRAS-7.5-RHEL-7/compose/
+	    String baseurlForDeps = "http://download-node-02.eng.bos.redhat.com/rel-eng/latest-RHEL-7/compose/"+variant+"/"+arch+"/os/";
+	    // modify the repo when this is a RHEL-ALT system
+	    ProductCert rhelProductCert = getCurrentRhelProductCert();
+	    if (redhatReleaseX.equals("7")) {
+	    	if (rhelProductCert.productId.equals("419")||	// Red Hat Enterprise Linux for ARM 64
+	    		rhelProductCert.productId.equals("420")||	// Red Hat Enterprise Linux for Power 9
+	    		rhelProductCert.productId.equals("434")) {	// Red Hat Enterprise Linux for IBM System z (Structure A)
+	    		baseurlForDeps = baseurlForDeps.replace("RHEL-7", "RHEL-ALT-7");
+	    	}
+	    }
     
 	    // check the baseurl for problems
 	    SSHCommandResult baseurlTestResult = sshCommandRunner.runCommandAndWait("curl --stderr /dev/null --insecure --request GET "+baseurlForExtras);
 	    if (baseurlTestResult.getStdout().contains("404 Not Found") || baseurlTestResult.getStdout().contains("The document has moved")) {
-			log.info("Cannot install updates from latest-EXTRAS-7-RHEL-7 since the baseurl '"+baseurlForExtras+"' is Not Found.");
+			log.info("Cannot install updates from latest-EXTRAS since the baseurl '"+baseurlForExtras+"' is Not Found.");
 			// attempt to use the previous minor release
-		    String baseurlForPreviousExtras = String.format("http://download-node-02.eng.bos.redhat.com/rel-eng/latest-EXTRAS-%.1f-RHEL-7/compose/"+"Server"+"/x86_64/os/",Float.valueOf(redhatReleaseXY)-0.1);	// "Server" is the ONLY compose for http://download-node-02.eng.bos.redhat.com/rel-eng/latest-EXTRAS-7.5-RHEL-7/compose/
-			log.info("Attempting to find extras under the previous minor release...");
+//		    String baseurlForPreviousExtras = String.format("http://download-node-02.eng.bos.redhat.com/rel-eng/latest-EXTRAS-%.1f-RHEL-7/compose/"+"Server"+"/"+arch+"/os/",Float.valueOf(redhatReleaseXY)-0.1);	// "Server" is the ONLY compose for http://download-node-02.eng.bos.redhat.com/rel-eng/latest-EXTRAS-7.5-RHEL-7/compose/
+		    String baseurlForPreviousExtras = baseurlForExtras.replace(redhatReleaseXY, String.format("%.1f",Float.valueOf(redhatReleaseXY)-0.1));
+		    log.info("Attempting to find extras under the previous minor release...");
 			baseurlTestResult = sshCommandRunner.runCommandAndWait("curl --stderr /dev/null --insecure --request GET "+baseurlForPreviousExtras);
 			if (baseurlTestResult.getStdout().contains("404 Not Found") || baseurlTestResult.getStdout().contains("The document has moved")) {
 				Assert.fail("The Latest Extras baseurl '"+baseurlForExtras+"' was Not Found (and neither was '"+baseurlForPreviousExtras+"').  Instruct the automator to verify the assembly of this baseurl.");
@@ -752,7 +764,7 @@ if (false) {
 	    }
 	    baseurlTestResult = sshCommandRunner.runCommandAndWait("curl --stderr /dev/null --insecure --request GET "+baseurlForDeps);
 	    if (baseurlTestResult.getStdout().contains("404 Not Found") || baseurlTestResult.getStdout().contains("The document has moved")) {
-			log.warning("Cannot install updates from latest-RHEL-7 since the baseurl '"+baseurlForDeps+"' is Not Found.");
+			log.warning("Cannot install updates from latest-RHEL since the baseurl '"+baseurlForDeps+"' is Not Found.");
 	    	Assert.fail("The Latest baseurl '"+baseurlForDeps+"' was Not Found.  Instruct the automator to verify the assembly of this baseurl.");
 	    }
 		
@@ -760,7 +772,7 @@ if (false) {
     	Writer output = new BufferedWriter(new FileWriter(file));
 	    
     	// write the rhel-latest-extras repo
-		String repo = "latest-EXTRAS-7-RHEL-7-"+variant;
+		String repo = baseurlForExtras.split("/")[4];	// extract out the latest directory from the path for use as the repoid
 		output.write("["+repo+"]\n");
 		output.write("name     = Latest Extras updates for RHEL"+redhatReleaseX+" "+variant+"\n");
 		output.write("enabled  = 0\n");
@@ -768,7 +780,7 @@ if (false) {
 		//output.write("exclude  = redhat-release*\n");	// avoids unwanted updates of rhel-release server variant to workstation
 		output.write("baseurl  = "+baseurlForExtras+"\n");
 	    installOptions += " --enablerepo="+repo;
-		repo = "latest-RHEL-7-"+variant;
+		repo = baseurlForDeps.split("/")[4];	// extract out the latest directory from the path for use as the repoid
 		output.write("["+repo+"]\n");
 		output.write("name     = Latest updates for RHEL"+redhatReleaseX+" "+variant+"\n");
 		output.write("enabled  = 0\n");
@@ -786,7 +798,8 @@ if (false) {
 		for (String updatePackage : updatePackages) updatePackagesAsString += updatePackage+" "; updatePackagesAsString=updatePackagesAsString.trim();
 		
 		// run yum update
-		Assert.assertEquals(sshCommandRunner.runCommandAndWait("yum -y update "+updatePackagesAsString+" "+installOptions).getExitCode(),Integer.valueOf(0), "Yum updated from latest extras repo: "+baseurlForExtras);
+		String command = isPackageInstalled("docker") ? "update" : "install"; 
+		Assert.assertEquals(sshCommandRunner.runCommandAndWait("yum -y "+command+" "+updatePackagesAsString+" "+installOptions).getExitCode(),Integer.valueOf(0), "Yum updated from latest extras repo: "+baseurlForExtras);
 	}
 	
 	

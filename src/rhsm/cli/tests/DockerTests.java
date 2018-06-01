@@ -519,7 +519,9 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 	public void testInstallDockerPackageOnHost() throws IOException, JSONException {
 		// assert that the host system is rhel7+
 		if (Integer.valueOf(clienttasks.redhatReleaseX)<7) throw new SkipException("Installation of docker.rpm is only applicable on RHEL7+");
+		if (false) {	// docker is now available on multiple architectures, stop skipping
 		if (!clienttasks.arch.equals("x86_64")) throw new SkipException("Installation of docker.rpm is only applicable on arch x86_64");
+		}
 		if (clienttasks.variant.equals("Workstation")) log.warning("Installation of docker on Workstation is blocked by dependedncy on oci-register-machine >= 1:0-1.8.  TODO: need a blocked by bug number.  The Orion project will expand the installablility of docker to include Workstation.");	// TODO need a blocked by bug number.
 		if (!clienttasks.variant.equals("Server") && !clienttasks.variant.equals("Workstation")) throw new SkipException("Installation of docker.rpm is only applicable on variant Server and Workstation.  This variant is '"+clienttasks.variant+"'.");
 		
@@ -541,14 +543,14 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 		// better way of installing docker (useful on static clients)
 		SSHCommandResult localCommandResult = runLocalCommand("rpm -q python-BeautifulSoup");	// Prerequisite on slave: sudo yum install python-BeautifulSoup
 		if (!localCommandResult.getExitCode().equals(Integer.valueOf(0))) Assert.fail("python-BeautifulSoup must be installed on the executing slave in order to run .scripts/get-brew-rpm to install docker from brew.   localCommandResult: "+localCommandResult);
-		List<String> dockerRpmInstallUrls = new ArrayList<String>();
+		List<String> dockerRpmInstallUrls = new ArrayList<String>(); String dockerRpmInstallUrl;
 		//dockerRpmInstallUrls.add(runLocalCommand("./scripts/get-brew-rpm docker --rpmname=docker                       --release=el7 --regress --arch="+clienttasks.arch).getStdout());
 		//dockerRpmInstallUrls.add(runLocalCommand("./scripts/get-brew-rpm docker --rpmname=docker         --version=1.0 --release=el7 --regress --arch="+clienttasks.arch).getStdout());	// --version=1.0 is blocked by Bug 1121239 - docker pull from custom registry errors on Invalid Namespace Name	// Error: Invalid namespace name (registry.access.redhat.com), only [a-z0-9_] are allowed, size between 4 and 30
-		dockerRpmInstallUrls.add(runLocalCommand("./scripts/get-brew-rpm docker --rpmname=docker           --version=1.1 --release=el7 --regress --arch="+clienttasks.arch).getStdout());
-		dockerRpmInstallUrls.add(runLocalCommand("./scripts/get-brew-rpm docker --rpmname=docker-selinux   --version=1.6 --release=el7 --regress --arch="+clienttasks.arch).getStdout());	// --version=1.6 is the first build with docker-selinux	// avoid: Error response from daemon: Cannot start container fd39344bea2cf56e48467488745ac3b007eb904f185a240853103f112a87bdd3: permission denied
-		//dockerRpmInstallUrls.add(runLocalCommand("./scripts/get-brew-rpm docker --rpmname=docker-forward-journald  --release=el7 --regress --arch="+clienttasks.arch).getStdout());
-		//dockerRpmInstallUrls.add(runLocalCommand("./scripts/get-brew-rpm docker --rpmname=docker-common            --release=el7 --regress --arch="+clienttasks.arch).getStdout());
-		clienttasks.installSubscriptionManagerRPMs(dockerRpmInstallUrls, null, sm_yumInstallOptions, "", "");
+		dockerRpmInstallUrl = runLocalCommand("./scripts/get-brew-rpm docker --rpmname=docker           --version=1.1 --release=el7 --regress --arch="+clienttasks.arch).getStdout().trim();  if (!dockerRpmInstallUrl.isEmpty()) dockerRpmInstallUrls.add(dockerRpmInstallUrl);
+		dockerRpmInstallUrl = runLocalCommand("./scripts/get-brew-rpm docker --rpmname=docker-selinux   --version=1.6 --release=el7 --regress --arch="+clienttasks.arch).getStdout().trim();  if (!dockerRpmInstallUrl.isEmpty()) dockerRpmInstallUrls.add(dockerRpmInstallUrl);	// --version=1.6 is the first build with docker-selinux	// avoid: Error response from daemon: Cannot start container fd39344bea2cf56e48467488745ac3b007eb904f185a240853103f112a87bdd3: permission denied
+		//dockerRpmInstallUrl = runLocalCommand("./scripts/get-brew-rpm docker --rpmname=docker-forward-journald  --release=el7 --regress --arch="+clienttasks.arch).getStdout();  if (!dockerRpmInstallUrl.isEmpty()) dockerRpmInstallUrls.add(dockerRpmInstallUrl);
+		//dockerRpmInstallUrl = runLocalCommand("./scripts/get-brew-rpm docker --rpmname=docker-common            --release=el7 --regress --arch="+clienttasks.arch).getStdout();  if (!dockerRpmInstallUrl.isEmpty()) dockerRpmInstallUrls.add(dockerRpmInstallUrl);
+		if (!dockerRpmInstallUrls.isEmpty()) clienttasks.installSubscriptionManagerRPMs(dockerRpmInstallUrls, null, sm_yumInstallOptions, "", "");
 		
 		// best way of updating docker (from a RHEL subscription) when possible - will give us the latest released version of docker
 		if (!sm_serverType.equals(CandlepinType.standalone)) {
@@ -557,8 +559,11 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 				// valid repos:
 				//	rhel-7-server-extras-rpms/x86_64
 				//	rhel-7-workstation-extras-rpms/x86_64
+				//	rhel-7-for-system-z-a-extras-rpms/7Server/s390x
+				//	rhel-7-for-power-le-extras-rpms/ppc64le
+				String command = clienttasks.isPackageInstalled("docker") ? "update" : "install"; 
 				//avoid "No packages marked for update" by ignoring results of yumUpdatePackageFromRepo(...)
-				clienttasks.yumDoPackageFromRepo_("update","docker", "rhel-7-"+clienttasks.variant.toLowerCase()+"-extras-rpms", "--nogpgcheck");
+				clienttasks.yumDoPackageFromRepo_(command,"docker", "rhel-"+clienttasks.redhatReleaseX+"-*-extras-rpms", "--disablerepo=beaker* --nogpgcheck");
 			}
 		}
 		
@@ -724,7 +729,7 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier1")
-	@Test(	description="verify a running container has yum repolist access to appropriate content from the host's entitlement",
+	@Test(	description="verify a running container has yum repolist access to appropriate content from the host's entitlement, and yum install a package in the container when the RHEL host is subscribed.",
 			groups={"Tier1Tests"},
 			dependsOnMethods={"testYumRepolistIsEmptyOnRunningDockerImageWhenHostIsUnregistered"},
 			dataProvider="getDockerImageData",
@@ -858,10 +863,8 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 			}
 		}
 		
-		// let's test installing a simple package (zsh)
-		boolean installedPackage = false;
-		if (enabledYumReposOnRunningDockerImage.contains("rhel-6-server-rpms") ||
-			enabledYumReposOnRunningDockerImage.contains("rhel-7-server-rpms")) {
+		// finally, let's test installing a simple package (zsh) when the RHEL host is subscribed
+		if (clienttasks.isRhelProductCertSubscribed()) {	// when the host RHEL product is subscribed, then its RHEL container should be able to install RHEL content!
 			RemoteFileTasks.runCommandAndAssert(client, "docker run --rm "+dockerImage+" yum -y install zsh", 0, "Complete!", null);
 			//	[root@jsefler-7 ~]# docker run --rm docker-registry.usersys.redhat.com/brew/rhel7:latest yum -y install zsh
 			//	Loaded plugins: product-id, subscription-manager
@@ -909,9 +912,7 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 			//	  zsh.x86_64 0:5.0.2-7.el7                                                      
 			//
 			//	Complete!
-			installedPackage = true;
 		}
-		if (!installedPackage) log.warning("Skipped attempts to install a package since the rhel-(6|7)-server-rpms repo was not entitled.");
 	}
 
 
@@ -1161,10 +1162,30 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 	}
 	protected List<List<Object>> getDockerImageDataAsListOfLists() {
 		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
-
-		// get the names of the docker images to be tested from an input parameter
-		for (String dockerImage : sm_dockerImages) {
-			ll.add(Arrays.asList(new Object[]{null, dockerImage}));
+		
+		// choose the names of the docker images to be pulled and tested
+//		for (String dockerImage : sm_dockerImages) {
+//			ll.add(Arrays.asList(new Object[]{null, dockerImage}));
+//		}
+		if (clienttasks.arch.equals("x86_64")) {
+			ll.add(Arrays.asList(new Object[]{null, "registry.access.redhat.com/rhel6:latest"}));
+			ll.add(Arrays.asList(new Object[]{null, "registry.access.redhat.com/rhel7:latest"}));
+//			ll.add(Arrays.asList(new Object[]{null, "registry.access.redhat.com/rhel8:latest"}));	// TODO Not Yet Available
+		}
+		if (clienttasks.arch.equals("s390x")) {
+			ll.add(Arrays.asList(new Object[]{null, "registry.access.redhat.com/rhel7-s390x:latest"}));
+//			ll.add(Arrays.asList(new Object[]{null, "registry.access.redhat.com/rhel7:latest"}));	// TODO Not Yet Available
+//			ll.add(Arrays.asList(new Object[]{null, "registry.access.redhat.com/rhel8:latest"}));	// TODO Not Yet Available
+		}
+		if (clienttasks.arch.equals("ppc64le")) {
+			ll.add(Arrays.asList(new Object[]{null, "registry.access.redhat.com/rhel7-ppc64le:latest"}));
+			ll.add(Arrays.asList(new Object[]{null, "registry.access.redhat.com/rhel7:latest"}));	// I think this is considered a multi-arch image? meaning that docker pull is smart enough to distinguish the architecture for this image from the arch of the host running docker pull.
+//			ll.add(Arrays.asList(new Object[]{null, "registry.access.redhat.com/rhel8:latest"}));	// TODO Not Yet Available
+		}
+		if (clienttasks.arch.equals("aarch64")) {
+//			ll.add(Arrays.asList(new Object[]{null, "registry.access.redhat.com/rhel7-aarch64:latest"}));	// TODO Not Yet Available
+//			ll.add(Arrays.asList(new Object[]{null, "registry.access.redhat.com/rhel7:latest"}));	// TODO Not Yet Available
+//			ll.add(Arrays.asList(new Object[]{null, "registry.access.redhat.com/rhel8:latest"}));	// TODO Not Yet Available
 		}
 		
 		return ll;
