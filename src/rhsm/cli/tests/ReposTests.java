@@ -1623,7 +1623,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	
 	
 	
-//debugTesting	@BeforeClass(groups={"setup"})
+	@BeforeClass(groups={"setup"})
 	public void setupBeforeClass() throws JSONException, Exception {
 		currentProductCerts = clienttasks.getCurrentProductCerts();
 		if (clienttasks.getCurrentConsumerId()==null) clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, false, null, null, (String)null, null, null, null, true, false, null, null, null, null);
