@@ -1549,10 +1549,11 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		
 		// configure rhsm.conf with repomd_gpg_url
 		clienttasks.config(null, null, true, new String[]{"rhsm","repomd_gpg_url",repomd_gpg_url});
-
-//NOT NEEDED
-//		// refresh the entitlement cert (to ensure redhat.repo is up-to-date)
-//		clienttasks.refresh(null, null, null, null);
+		
+		// trigger the yum plugin for subscription-manager
+		log.info("Triggering the yum plugin for subscription-manager which will refresh the redhat.repo to pull in the repomd_gpg_url configuration into the individual repo gpgkey values (a comma separated list)...");
+		//clienttasks.getYumRepolist("all");
+	    client.runCommandAndWait("yum -q repolist --disableplugin=rhnplugin"); // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
 		
 		// what gpgkey URL value should we expect for repomd_gpg_url
 		String expectedGpgKey = null;
@@ -1570,13 +1571,13 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		if (yumRepos.isEmpty()) throw new SkipException("This test requires at least one entitled yum repo in '"+clienttasks.redhatRepoFile+"'"); 
 		for (YumRepo yumRepo : yumRepos) {
 			List<String> gpgKeys = new ArrayList<String>();
-			gpgKeys.addAll(Arrays.asList(yumRepo.gpgkey.trim().split(" *, *")));	// Note: the gpgkey property can be a comma separated list of values
+			if (yumRepo.gpgkey!=null) gpgKeys.addAll(Arrays.asList(yumRepo.gpgkey.trim().split(" *, *")));	// Note: the gpgkey property can be a comma separated list of values
 			if (expectedGpgKey==null) {
 				// gpgkey should NOT contain an empty value
-				Assert.assertTrue(!gpgKeys.contains(repomd_gpg_url), "Repo '"+yumRepo.id+"' does NOT contain expected gpgkey '"+expectedGpgKey+"' when repomd_gpg_url in '"+clienttasks.rhsmConfFile+"' is configured with value '"+repomd_gpg_url+"'.");
+				Assert.assertTrue(!gpgKeys.contains(repomd_gpg_url), "Repo '"+yumRepo.id+"' (with actual value gpgkey='"+yumRepo.gpgkey+"') does NOT contain expected gpgkey '"+expectedGpgKey+"' when repomd_gpg_url in '"+clienttasks.rhsmConfFile+"' is configured with value '"+repomd_gpg_url+"'.");
 			} else {
 				// gpgkey should contain the expectedGpgKey
-				Assert.assertTrue(gpgKeys.contains(expectedGpgKey), "Repo '"+yumRepo.id+"' contains expected gpgkey '"+expectedGpgKey+"' when repomd_gpg_url in '"+clienttasks.rhsmConfFile+"' is configured with value '"+repomd_gpg_url+"'.");
+				Assert.assertTrue(gpgKeys.contains(expectedGpgKey), "Repo '"+yumRepo.id+"' (with actual value gpgkey='"+yumRepo.gpgkey+"') contains expected gpgkey '"+expectedGpgKey+"' when repomd_gpg_url in '"+clienttasks.rhsmConfFile+"' is configured with value '"+repomd_gpg_url+"'.");
 			}
 		}
 	}
@@ -1622,7 +1623,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	
 	
 	
-	@BeforeClass(groups={"setup"})
+//debugTesting	@BeforeClass(groups={"setup"})
 	public void setupBeforeClass() throws JSONException, Exception {
 		currentProductCerts = clienttasks.getCurrentProductCerts();
 		if (clienttasks.getCurrentConsumerId()==null) clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, false, null, null, (String)null, null, null, null, true, false, null, null, null, null);
