@@ -1608,6 +1608,204 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
+    /**
+	 * @author skallesh
+	 * @throws Exception
+	 * @throws JSONException
+	 * 
+	 * Reference: http://etherpad.corp.redhat.com/RepomdgpgurlTests
+	 */
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RedHatEnterpriseLinux7},
+			testCaseID= {""}, importReady=false,
+			level= DefTypes.Level.COMPONENT,
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description = "Verify the installaction of packages are prevented without verification of the gpgkey repository metadata as configured in the rhsm.conf [rhsm]repomd_gpg_url",
+			groups = {"Tier3Tests","testRepomdGpgUrl"/*,"blockedByBug-1410638"*/},
+			enabled = true)
+	public void testRepomdGpgUrl(){
+		if (clienttasks.isPackageVersion("subscription-manager", "<", "1.21.1-1")) { // commit 8236fefe942e4a32cb2c2565c63b15d3a9464855 Support configuration of a repo metadata signing key
+			throw new SkipException("This test applies a newer version of subscription manager that includes fixes for RFE Bugs 1410638 - [RFE] Give Satellite the ability to select if repo metadata should be signed with the key provided for rpm verification");
+		}
+		
+		Map<String,String> repoOverrideNameValueMap = new HashMap<String,String>();
+		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
+		client.runCommandAndWait("yum-config-manager --disable beaker*");	// just in case the system came from Beaker
+		
+		// register and attach the pool (created in setupBeforeRepomdGpgUrlTest) that provides the CentOS product
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null,(String) null, null, null, null, true, null, null, null, null, null);
+		clienttasks.subscribe(null, null, testRepomdGpgUrlPoolId, null, null, null, null, null, null, null, null, null, null);
+		
+		
+		log.info("Case 1: Invalid repomd_gpg_url in rhsm.conf with repo_gpgcheck and gpgcheck turned on");
+		String baseurl="http://download.devel.redhat.com";
+		String repomd_gpg_url="foo";
+		listOfSectionNameValues.clear();
+		listOfSectionNameValues.add(new String[] { "rhsm", "baseurl", baseurl });	// set the CDN baseurl to download.devel.redhat.com
+		listOfSectionNameValues.add(new String[] { "rhsm", "repomd_gpg_url", repomd_gpg_url });
+		clienttasks.config(null, null, true, listOfSectionNameValues);
+		repoOverrideNameValueMap.clear();
+		repoOverrideNameValueMap.put("gpgcheck", "1");
+		repoOverrideNameValueMap.put("repo_gpgcheck", "1");	// alternative to setting repo_gpgcheck in /etc/yum.conf to 1;
+		clienttasks.repo_override(null, null, contentLabel, null, repoOverrideNameValueMap, null, null, null, null);
+		client.runCommandAndWait("find /var/lib/yum -name "+contentLabel+" -exec rm -rf {} \\;");	// delete any keys that might have already been imported from a former test execution
+		clienttasks.yumClean("all");	// needed to remove the keys from the yum cache in case this test was run once before
+		Assert.assertNotNull(Repo.findFirstInstanceWithMatchingFieldFromList("repoId", contentLabel, clienttasks.getCurrentlySubscribedRepos()), "Found expected repoId '"+contentLabel+"' among the currently subscribed repos.");
+		//	[root@jsefler-rhel7 ~]# yum -q repolist
+		//	This system is not registered with RHN Classic or Red Hat Satellite.
+		//	You can use rhn_register to register.
+		//	Red Hat Satellite or RHN Classic support will be disabled.
+		//	http://download.devel.redhat.com/released/CentOS/7.1/updates/x86_64/repodata/repomd.xml: [Errno -1] Gpg Keys not imported, cannot verify repomd.xml for repo centos-71-rpms
+		//	Trying other mirror.
+		//	http://download.devel.redhat.com/released/CentOS/7.1/updates/x86_64/repodata/repomd.xml: [Errno -1] Gpg Keys not imported, cannot verify repomd.xml for repo centos-71-rpms
+		//	Trying other mirror.
+		//	repo id                                   repo name                                     status
+		//	centos-71-rpms                            CentOS 7.1 Content                            0
+		String expectedStderr = String.format("%s: [Errno -1] Gpg Keys not imported, cannot verify repomd.xml for repo %s", baseurl+contentUrl+"repodata/repomd.xml", contentLabel);
+		Assert.assertTrue(client.runCommandAndWait("yum repolist -y").getStderr().contains(expectedStderr), "Stderr from yum repolist transaction contains expected '"+expectedStderr+"' because repomd.xml cannot be verified with key '"+repomd_gpg_url+"'.");
+		Assert.assertTrue(client.runCommandAndWait("yum install zsh -y").getStderr().contains(expectedStderr), "Stderr from yum install transaction contains expected '"+expectedStderr+"' because repomd.xml cannot be verified with key '"+repomd_gpg_url+"'.");
+		
+		
+		log.info("Case 2: Invalid repomd_gpg_url in rhsm.conf with repo_gpgcheck and gpgcheck turned off");
+		repoOverrideNameValueMap.clear();
+		repoOverrideNameValueMap.put("repo_gpgcheck", "0");	// alternative to setting repo_gpgcheck in /etc/yum.conf to 0;
+		repoOverrideNameValueMap.put("gpgcheck", "0");
+		clienttasks.repo_override(null, null, contentLabel, null, repoOverrideNameValueMap, null, null, null, null);
+		client.runCommandAndWait("find /var/lib/yum -name "+contentLabel+" -exec rm -rf {} \\;");	// delete any keys that might have already been imported from the case above
+		clienttasks.yumClean("all");
+		Assert.assertTrue(!client.runCommandAndWait("yum repolist -y").getStderr().contains(expectedStderr), "Stderr from yum repolist transaction does NOT contain '"+expectedStderr+"' because repomd.xml verification is turned off.");
+		Assert.assertTrue(!client.runCommandAndWait("yum install zsh -y").getStderr().contains(expectedStderr), "Stderr from yum install transaction does NOT contain '"+expectedStderr+"' because repomd.xml verification is turned off.");
+		
+		// now remove the freshly installed package from case 2 (which did NOT require the gpgkey) in preparation for case 3 (which will require the gpgkey)..."
+		clienttasks.yumRemovePackage("zsh");
+		
+		
+		log.info("Case 3 : Valid repomd_gpg_url in rhsm.conf with repo_gpgcheck override turned on (same as if set to 1 in /etc/yum.conf"); 
+		repomd_gpg_url = "http://download.devel.redhat.com/released/CentOS/RPM-GPG-KEY-CentOS-7";	// url to the gpgkey to verify the signature at http://download.devel.redhat.com/released/CentOS/7.1/updates/x86_64/repodata/repomd.xml.asc
+		listOfSectionNameValues.clear();
+		listOfSectionNameValues.add(new String[] { "rhsm", "repomd_gpg_url", repomd_gpg_url });
+		clienttasks.config(null, null, true, listOfSectionNameValues);
+		repoOverrideNameValueMap.clear();
+		repoOverrideNameValueMap.put("repo_gpgcheck", "1");
+		repoOverrideNameValueMap.put("gpgcheck", "1");
+		clienttasks.repo_override(null, null, contentLabel, null, repoOverrideNameValueMap, null, null, null, null);
+		client.runCommandAndWait("find /var/lib/yum -name "+contentLabel+" -exec rm -rf {} \\;");	// delete any keys that might have already been imported from the case above
+		clienttasks.yumClean("all");
+		SSHCommandResult yumRepolistResult = client.runCommandAndWait("yum repolist -y");
+		//	201806051824:42.835 - FINE: ssh root@jsefler-rhel7.usersys.redhat.com yum repolist
+		//	201806051826:41.318 - FINE: Stdout: 
+		//	Loaded plugins: langpacks, product-id, rhnplugin, search-disabled-repos,
+		//	              : subscription-manager
+		//	Retrieving key from http://download.devel.redhat.com/released/CentOS/RPM-GPG-KEY-CentOS-7
+		//	201806051826:41.355 - FINE: Stderr: 
+		//	This system is not registered with RHN Classic or Red Hat Satellite.
+		//	You can use rhn_register to register.
+		//	Red Hat Satellite or RHN Classic support will be disabled.
+		//	Importing GPG key 0xF4A80EB5:
+		//	 Userid     : "CentOS-7 Key (CentOS 7 Official Signing Key) <security@centos.org>"
+		//	 Fingerprint: 6341 ab27 53d7 8a78 a7c2 7bb1 24c6 a8a7 f4a8 0eb5
+		//	 From       : http://download.devel.redhat.com/released/CentOS/RPM-GPG-KEY-CentOS-7
+		Assert.assertFalse(yumRepolistResult.getStderr().contains(expectedStderr), "Stderr from yum repolist transaction does NOT contain '"+expectedStderr+"' because repomd.xml verification is turned on with a valid repomd_gpg_url configured in rhsm.conf.");
+// TODO Commenting out this assert due to a bug in yum stderr when multiple gpgUrls are set on the content set (multiple because I purposefully added wrong version 6 key in the setupBeforeRepomdGpgUrlTest())
+//		String expectedStderrRegex = "Importing GPG key 0xF4A80EB5:.*\\n.*\\n.*\\n From *: "+repomd_gpg_url;
+//		Assert.assertTrue(doesStringContainMatches(yumRepolistResult.getStderr(), expectedStderrRegex), "Stderr from yum repolist transaction indicates that a gpgkey from '"+repomd_gpg_url+"' was successfully imported. (asserting presence of regex '"+expectedStderrRegex+"')");
+		String expectedStdout = "Retrieving key from "+repomd_gpg_url;
+		Assert.assertTrue(yumRepolistResult.getStdout().contains(expectedStdout), "Stdout from yum repolist transaction indicates that a gpgkey from '"+repomd_gpg_url+"' was successfully retrieved. (asserting presence of '"+expectedStdout+"')");
+		clienttasks.yumInstallPackageFromRepo("zsh", contentLabel, null);
+	}
+	@AfterGroups(groups = { "setup" }, value = {"testRepomdGpgUrl" })
+	public void cleanupAfterRepomdGpgUrlTest() {
+		
+		// restore the rhsm.conf configuration values
+		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
+		if (testRepomdGpgUrlBaseurlConfigBeforeTest!=null) listOfSectionNameValues.add(new String[] { "rhsm", "baseurl".toLowerCase(),testRepomdGpgUrlBaseurlConfigBeforeTest });
+		if (testRepomdGpgUrlRepomdgpgurlConfigBeforeTest!=null) listOfSectionNameValues.add(new String[] { "rhsm", "repomd_gpg_url".toLowerCase(),testRepomdGpgUrlRepomdgpgurlConfigBeforeTest });
+		clienttasks.config(null, null, true, listOfSectionNameValues);
+		
+		// unregister the system to clean off entitlements from this test
+		clienttasks.unregister(null, null, null, null);
+	}
+	@SuppressWarnings("deprecation")
+	@BeforeGroups(groups = "setup", value = {"testRepomdGpgUrl"}, enabled = true)
+	protected void setupBeforeRepomdGpgUrlTest() throws JSONException, Exception {
+		
+		// remove package zsh in case it was installed during a previous run/test
+		String pkg = "zsh";
+		if (clienttasks.isPackageInstalled(pkg)) clienttasks.yumRemovePackage(pkg);
+		
+		// remove the gpg keys from yum libs that were imported during a former execution of this test
+		//	[root@jsefler-rhel7 ~]# find /var/lib/yum -name RepomdLabel -exec echo {} \;
+		//	/var/lib/yum/repos/x86_64/7Server/RepomdLabel
+		//	[root@jsefler-rhel7 ~]# ls -l /var/lib/yum/repos/x86_64/7Server/RepomdLabel
+		//	total 0
+		//	drwxr-xr-x. 2 root root 99 Jun  4 17:31 gpgdir
+		//	drwxr-xr-x. 2 root root 99 Jun  4 17:31 gpgdir-ro
+		client.runCommandAndWait("find /var/lib/yum -name "+contentLabel+" -exec rm -rf {} \\;");
+		clienttasks.yumClean("all");	// not really sufficient here; will need to be run just after the repo_gpgcheck is set to true in yum.conf or repo-override
+		
+		// remember the original rhsm.conf configuration
+		testRepomdGpgUrlBaseurlConfigBeforeTest = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "baseurl");
+		testRepomdGpgUrlRepomdgpgurlConfigBeforeTest = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "repomd_gpg_url");
+			
+		// delete the marketing product (a.k.a Product Subscription or SKU)
+		CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, marketingProductId);
+		String resourcePath = "/products/" + marketingProductId;
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) resourcePath = "/owners/" + sm_clientOrg + resourcePath;
+		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,resourcePath);
+		
+		
+		// create a new engineering product
+		Map<String, String> attributes = new HashMap<String, String>();
+		String engineeringProductName = "CentOS 7.1";
+		String engineeringProductId = "10071";	// must be numeric (and unique)
+		attributes.clear();
+		attributes.put("version", "7.1");
+		attributes.put("arch", "x86_64");	// give the product an arch too
+		// delete already existing engineering product
+		resourcePath = "/products/"+engineeringProductId;
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) resourcePath = "/owners/"+sm_clientOrg+resourcePath;
+		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, resourcePath);
+		// create a new engineering product (SVC)
+		attributes.put("type", "SVC");
+		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, engineeringProductName, engineeringProductId, 1, attributes, null);
+		
+		// create and add a content set with a contentUrl to a repo that requires a gpg key to an existing engineering product
+		// (using internal http://download.devel.redhat.com/released/CentOS/7.1/updates/x86_64/repodata/ which has a repomd.xml.asc)
+		String contentId = engineeringProductId+"001";
+		resourcePath = "/content/"+contentId;
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0")) resourcePath = "/owners/"+sm_clientOrg+resourcePath;
+		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, resourcePath);
+		CandlepinTasks.createContentUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, contentName, contentId, contentLabel, "yum", "CentOS Vendor", contentUrl, "http://download.devel.redhat.com/released/CentOS/RPM-GPG-KEY-CentOS-6"/*unnecessarily adding the wrong key (old version 6) to add an interesting twist; version 6 key will be retrieved by yum but will not verify version 7 contentUrl */, "0", null, "x86_64", null);
+		CandlepinTasks.addContentToProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, engineeringProductId, contentId, true);
+		
+		// create a new marketing product (MKT) and subscription pool that provides the engineering product
+		List<String> providedProductIds = new ArrayList<String>();
+		providedProductIds.clear();
+	    providedProductIds.add(engineeringProductId);
+		attributes.clear();
+		attributes.put("requires_consumer_type", "system");
+		attributes.put("version", "7.1");
+		attributes.put("variant", "server");
+		attributes.put("arch", "x86_64");
+		attributes.put("warning_period", "30");
+		attributes.put("type", "MKT");
+		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,sm_clientOrg, marketingProductName, marketingProductId, 1, attributes, null);
+		testRepomdGpgUrlPoolId = CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, 7/*quantity*/, -1*24*60/*starts 1 day ago*/, 15*24*60/*ends 15 days from now*/, getRandInt(), getRandInt(), marketingProductId, providedProductIds, null).getString("id");
+	}
+	// private class variables used by testRepomdGpgUrl() and it's configuration methods
+	private String marketingProductId = "centos-71";
+	private String marketingProductName = "CentOS 7.1 Subscription";
+	private String contentName = "CentOS 7.1 Content";
+	private String contentLabel = "centos-71-rpms";
+	private String contentUrl = "/released/CentOS/7.1/updates/x86_64/";
+	private String testRepomdGpgUrlBaseurlConfigBeforeTest;
+	private String testRepomdGpgUrlRepomdgpgurlConfigBeforeTest;
+	private String testRepomdGpgUrlPoolId=null;
+	
+	
+	
 	
 	
 	
