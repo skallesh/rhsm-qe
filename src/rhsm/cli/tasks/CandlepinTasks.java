@@ -59,6 +59,7 @@ import rhsm.data.RevokedCert;
 
 import com.redhat.qe.Assert;
 import com.redhat.qe.auto.bugzilla.BzChecker;
+import com.redhat.qe.auto.bugzilla.IBugzillaAPI.bzState;
 import com.redhat.qe.auto.bugzilla.BugzillaAPIException;
 import com.redhat.qe.auto.selenium.Base64;
 import com.redhat.qe.jul.TestRecords;
@@ -448,6 +449,13 @@ schema generation failed
 				statusRelease		= jsonStatus.getString("release");
 				statusResult		= jsonStatus.getBoolean("result");
 				statusVersion		= jsonStatus.getString("version");
+				// TEMPORARY WORKAROUND
+				String bugId = "1588202"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1588202 - candlepin/status API is returning timeUTC as null
+				try {if (invokeWorkaroundWhileBugIsOpen && BzChecker.getInstance().getBugState(bugId)!=bzState.CLOSED) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				if (invokeWorkaroundWhileBugIsOpen) {
+					log.warning("Ignoring the value of timeUTC from candlepin/status while bug '"+bugId+"' is not CLOSED.");
+				} else
+				// END OF WORKAROUND
 				statusTimeUTC		= jsonStatus.getString("timeUTC");
 			try {
 				statusStandalone	= jsonStatus.getBoolean("standalone");
