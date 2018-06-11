@@ -1538,7 +1538,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
 	@Test(	description="After setting a new rhsm.conf setting for repomd_gpg_url, verify that the url (or baseurl/repomd_gpg_url when repomd_gpg_url does not start with http) gets included in a comma separated list for gpgkey in the /etc/yum.repos.d/redhat.repo entries",
-			groups={"Tier2Tests","testYumRepoListIncludesConfiguredRepomdGpgUrlInGpgKey"/*,"blockedByBug-1410638"*/},
+			groups={"Tier2Tests","testYumRepoListIncludesConfiguredRepomdGpgUrlInGpgKey","blockedByBug-1589288"/*,"blockedByBug-1410638"*/},
 			dataProvider="getYumRepoListIncludesConfiguredRepomdGpgUrlInGpgKeyData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -1623,7 +1623,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier3")
 	@Test(	description = "Verify the installaction of packages are prevented without verification of the gpgkey repository metadata as configured in the rhsm.conf [rhsm]repomd_gpg_url",
-			groups = {"Tier3Tests","testRepomdGpgUrl"/*,"blockedByBug-1410638"*/},
+			groups = {"Tier3Tests","testRepomdGpgUrl","blockedByBug-1589288"/*,"blockedByBug-1410638"*/},
 			enabled = true)
 	public void testRepomdGpgUrl(){
 		if (clienttasks.isPackageVersion("subscription-manager", "<", "1.21.1-1")) { // commit 8236fefe942e4a32cb2c2565c63b15d3a9464855 Support configuration of a repo metadata signing key
