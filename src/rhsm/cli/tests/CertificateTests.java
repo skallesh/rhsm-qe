@@ -1503,8 +1503,10 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 			//ll.add(Arrays.asList(new Object[]{null,	"Red_Hat_Enterprise_Linux-Release_Notes-7-fr-FR",	"7.0 Beta",	"7.0",	"7.1"}));	// There is no 7.0 Beta product cert id 69 that can be updated.  The 7.0 Beta product cert is product id 226 Everything
 			if (!clienttasks.arch.equals("ppc64le") && !clienttasks.arch.equals("aarch64"))	// ppc64le and aarch64 did not exist on 7.0 nor 7.1; exclude this row on these arches
 			ll.add(Arrays.asList(new Object[]{blockedByBugs,	"Red_Hat_Enterprise_Linux-Release_Notes-7-fr-FR",	"7.1 Beta",	"7.1",	"7.2"}));
-//TODO UNCOMMENT FOR RHEL74	TESTING		ll.add(Arrays.asList(new Object[]{blockedByBugs,	"Red_Hat_Enterprise_Linux-Release_Notes-7-fr-FR",	"7.2 Beta",	"7.2",	"7.3"}));
-//TODO UNCOMMENT FOR RHEL74	TESTING		ll.add(Arrays.asList(new Object[]{blockedByBugs,	"Red_Hat_Enterprise_Linux-Release_Notes-7-fr-FR",	"7.2",		"7.2",	"7.3"}));
+			ll.add(Arrays.asList(new Object[]{blockedByBugs,	"Red_Hat_Enterprise_Linux-Release_Notes-7-fr-FR",	"7.2 Beta",	"7.2",	"7.3"}));
+			ll.add(Arrays.asList(new Object[]{blockedByBugs,	"Red_Hat_Enterprise_Linux-Release_Notes-7-fr-FR",	"7.2",		"7.2",	"7.3"}));
+			ll.add(Arrays.asList(new Object[]{null,				"Red_Hat_Enterprise_Linux-Release_Notes-7-fr-FR",	"7.4 Beta",	"7.4",	"7.5"}));
+			ll.add(Arrays.asList(new Object[]{null,				"Red_Hat_Enterprise_Linux-Release_Notes-7-fr-FR",	"7.4",		"7.4",	"7.5"}));
 		}
 		else {
 			ll.add(Arrays.asList(new Object[]{null,	"FIXME: Unhandled Release",	"1.0 Beta",	"1.0",	"1.1"}));
