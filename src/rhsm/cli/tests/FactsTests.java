@@ -1652,8 +1652,7 @@ if (false) { // DO NOT RUN, BUT NOT READY TO DELETE CODE
 	 */
 	@TestDefinition(//update=true, // uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RedHatEnterpriseLinux7},
-			testCaseID= {"RHEL-135254"},
-			//importReady=false, // comment out or delete when this TestDefinition is good and ready to be imported as a testcase into Polarion.
+			testCaseID= {"RHEL-135254"}, //importReady=false, // comment out or delete when this TestDefinition is good and ready to be imported as a testcase into Polarion to retrieve a testCaseID
 			linkedWorkItems= {
 				@LinkedItem(
 					workitemId= "RHEL-130547",	// RHSM-REQ : Subscription-manager should report uptime or last booted time as a system fact

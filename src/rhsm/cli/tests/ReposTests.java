@@ -40,6 +40,7 @@ import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 
 import com.github.redhatqe.polarize.metadata.DefTypes;
+import com.github.redhatqe.polarize.metadata.LinkedItem;
 import com.github.redhatqe.polarize.metadata.TestDefinition;
 import com.github.redhatqe.polarize.metadata.TestType;
 import com.github.redhatqe.polarize.metadata.DefTypes.PosNeg;
@@ -1531,13 +1532,18 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
-			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
-			testCaseID= {"", ""}, importReady=false,
+			projectID=  {Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL-135298"}, //importReady=false, // comment out or delete when this TestDefinition is good and ready to be imported as a testcase into Polarion to retrieve a testCaseID
+			linkedWorkItems= {
+				@LinkedItem(
+					workitemId= "RHEL-134518",	// RHSM-REQ : Give Satellite the ability to select if repo metadata should be signed with the key provided for rpm verification
+					project= Project.RedHatEnterpriseLinux7,
+					role= DefTypes.Role.VERIFIES)},
 			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
-	@Test(	description="After setting a new rhsm.conf setting for repomd_gpg_url, verify that the url (or baseurl/repomd_gpg_url when repomd_gpg_url does not start with http) gets included in a comma separated list for gpgkey in the /etc/yum.repos.d/redhat.repo entries",
+	@Test(	description="After setting a new rhsm.conf setting for repomd_gpg_url, verify that it (or baseurl/repomd_gpg_url when repomd_gpg_url does not start with http) is included in a comma separated list for gpgkey in the /etc/yum.repos.d/redhat.repo entries",
 			groups={"Tier2Tests","testYumRepoListIncludesConfiguredRepomdGpgUrlInGpgKey","blockedByBug-1589288"/*,"blockedByBug-1410638"*/},
 			dataProvider="getYumRepoListIncludesConfiguredRepomdGpgUrlInGpgKeyData",
 			enabled=true)
@@ -1617,12 +1623,17 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	 */
 	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID = {Project.RedHatEnterpriseLinux7},
-			testCaseID= {""}, importReady=false,
+			testCaseID= {"RHEL-135299"}, //importReady=false, // comment out or delete when this TestDefinition is good and ready to be imported as a testcase into Polarion to retrieve a testCaseID
+			linkedWorkItems= {
+				@LinkedItem(
+					workitemId= "RHEL-134518",	// RHSM-REQ : Give Satellite the ability to select if repo metadata should be signed with the key provided for rpm verification
+					project= Project.RedHatEnterpriseLinux7,
+					role= DefTypes.Role.VERIFIES)},
 			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier3")
-	@Test(	description = "Verify the installaction of packages are prevented without verification of the gpgkey repository metadata as configured in the rhsm.conf [rhsm]repomd_gpg_url",
+	@Test(	description = "Verify the installaction of packages from a content set with a gpgurl when the repository repo_gpgcheck and gpgcheck is set along with a repomd_gpg_url configured in the rhsm.conf",
 			groups = {"Tier3Tests","testRepomdGpgUrl","blockedByBug-1589288"/*,"blockedByBug-1410638"*/},
 			enabled = true)
 	public void testRepomdGpgUrl(){

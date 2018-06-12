@@ -8447,6 +8447,12 @@
                 "parameters": []
             }
         },
+        "rhsm.cli.tests.ReposTests.testRepomdGpgUrl": {
+            "RedHatEnterpriseLinux7": {
+                "id": "RHEL-135299",
+                "parameters": []
+            }
+        },
         "rhsm.cli.tests.ReposTests.testReposDisable": {
             "RHEL6": {
                 "id": "RHEL6-20388",
@@ -8711,6 +8717,15 @@
             "RedHatEnterpriseLinux7": {
                 "id": "RHEL7-99418",
                 "parameters": []
+            }
+        },
+        "rhsm.cli.tests.ReposTests.testYumRepoListIncludesConfiguredRepomdGpgUrlInGpgKey": {
+            "RedHatEnterpriseLinux7": {
+                "id": "RHEL-135298",
+                "parameters": [
+                    "bugzilla",
+                    "repomd_gpg_url"
+                ]
             }
         },
         "rhsm.cli.tests.ReposTests.testYumRepoListPreservesAdditionalOptionsToRedhatReposUsingManualEdits": {
