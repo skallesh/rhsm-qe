@@ -4409,6 +4409,15 @@
                 "parameters": []
             }
         },
+        "rhsm.cli.tests.ListTests.testListAvailableAfterDate": {
+            "RedHatEnterpriseLinux7": {
+                "id": "RHEL-135300",
+                "parameters": [
+                    "bugzilla",
+                    "yyyy_MM_dd"
+                ]
+            }
+        },
         "rhsm.cli.tests.ListTests.testListAvailableConsumedInstalledWithMatchesNothing": {
             "RHEL6": {
                 "id": "RHEL6-36561",

@@ -49,6 +49,7 @@ import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 
 import com.github.redhatqe.polarize.metadata.DefTypes;
+import com.github.redhatqe.polarize.metadata.LinkedItem;
 import com.github.redhatqe.polarize.metadata.TestDefinition;
 import com.github.redhatqe.polarize.metadata.TestType;
 import com.github.redhatqe.polarize.metadata.DefTypes.PosNeg;
@@ -808,14 +809,19 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		
 		// TODO: Should also include some assertion for the --all option.
 	}
-	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
-			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
-			testCaseID= {"", ""}, importReady=false,
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL-135300"},  //importReady=false, // comment out or delete when this TestDefinition is good and ready to be imported as a testcase into Polarion to retrieve a testCaseID
+			linkedWorkItems= {
+				@LinkedItem(
+					workitemId= "RHEL7-84909",	// RHSM-REQ : subscription-manager cli listing of products and subscriptions	
+					project= Project.RedHatEnterpriseLinux7,
+					role= DefTypes.Role.VERIFIES)},
 			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier2")
-	@Test(	description="subscription-manager: subcription manager list subscription pools available after a specified date",
+	@Test(	description="subscription-manager: subcription manager list available pools after a specified date",
 			groups={"Tier2Tests","blockedByBug-1479353"},
 			dataProvider="getAfterDateData",
 			enabled=true)
