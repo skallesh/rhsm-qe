@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.github.redhatqe.polarize.metadata.DefTypes;
+import com.github.redhatqe.polarize.metadata.LinkedItem;
 import com.github.redhatqe.polarize.metadata.TestDefinition;
 import com.github.redhatqe.polarize.metadata.TestType;
 import com.github.redhatqe.polarize.metadata.DefTypes.PosNeg;
@@ -1302,9 +1303,18 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	
-	@TestDefinition(//update=true	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
-			testCaseID= {"", ""}, importReady=false,
+			testCaseID= {"RHEL6-51178", "RHEL-135301"}, //importReady=false, // comment out or delete when this TestDefinition is good and ready to be imported as a testcase into Polarion to retrieve a testCaseID
+			linkedWorkItems= {
+				@LinkedItem(
+					workitemId= "RHEL6-28478",	// RHSM-REQ : Subscription-manager Command-Line Tool (subscription-manager)
+					project= Project.RHEL6,
+					role= DefTypes.Role.VERIFIES),
+				@LinkedItem(
+					workitemId= "RHEL7-84899",	// RHSM-REQ : Subscription-manager Command-Line Tool (subscription-manager)
+					project= Project.RedHatEnterpriseLinux7,
+					role= DefTypes.Role.VERIFIES)},
 			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.CRITICAL, automation= DefTypes.Automation.AUTOMATED,

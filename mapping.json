@@ -3387,6 +3387,16 @@
                 "parameters": []
             }
         },
+        "rhsm.cli.tests.GeneralTests.testRhsmcertdFor100PercentCPUConsumption": {
+            "RHEL6": {
+                "id": "RHEL6-51178",
+                "parameters": []
+            },
+            "RedHatEnterpriseLinux7": {
+                "id": "RHEL-135301",
+                "parameters": []
+            }
+        },
         "rhsm.cli.tests.GeneralTests.testRhsmdForceSignalsToRhsmlogAndSyslog": {
             "RHEL6": {
                 "id": "RHEL6-20391",
