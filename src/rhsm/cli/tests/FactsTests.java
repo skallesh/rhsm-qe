@@ -1651,13 +1651,19 @@ if (false) { // DO NOT RUN, BUT NOT READY TO DELETE CODE
 	 * @throws JSONException
 	 */
 	@TestDefinition(//update=true, // uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
-			projectID=  {Project.RHEL6,Project.RedHatEnterpriseLinux7},
-			testCaseID= {"", ""}, importReady=false,
+			projectID=  {Project.RedHatEnterpriseLinux7},
+			testCaseID= {"RHEL-135254"},
+			//importReady=false, // comment out or delete when this TestDefinition is good and ready to be imported as a testcase into Polarion.
+			linkedWorkItems= {
+				@LinkedItem(
+					workitemId= "RHEL-130547",	// RHSM-REQ : Subscription-manager should report uptime or last booted time as a system fact
+					project= Project.RedHatEnterpriseLinux7,
+					role= DefTypes.Role.VERIFIES)},
 			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier1")
-	@Test( description = "Verify the btime in facts list",
+	@Test( description = "Verify the presence and value of btime in facts list",
 			groups ={"Tier1Tests","blockedByBug-1527727"},
 			enabled = true)
 	public void testFactForBootTime()throws JSONException,Exception{
