@@ -817,6 +817,7 @@ if (false) {
 	    // http://download.devel.redhat.com/nightly/latest-AppStream-8/compose/AppStream/x86_64/os/
 	    String baseurlForAppStream = "http://download.devel.redhat.com/nightly/latest-AppStream-"+redhatReleaseX+"/compose/AppStream/$basearch/os/";
 	    baseurlForAppStream = "http://download-node-02.eng.bos.redhat.com/nightly/latest-AppStream-"+redhatReleaseX+"/compose/AppStream/$basearch/os/";
+	    baseurlForAppStream = "http://download-node-02.eng.bos.redhat.com/nightly/latest-RHEL-"+redhatReleaseX+"/compose/AppStream/$basearch/os/";
 	    
 	    // check the baseurl for problems
 	    SSHCommandResult baseurlTestResult = sshCommandRunner.runCommandAndWait("curl --stderr /dev/null --insecure --request GET "+baseurlForAppStream.replace("$basearch", arch));

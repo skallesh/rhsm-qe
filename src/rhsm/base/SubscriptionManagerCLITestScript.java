@@ -873,6 +873,17 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 				//	[root@jsefler-os7 ~]# ls -l /var/tmp/sosreport-jsefler-os7.usersys.redhat.com-20141013121912.tar.xz
 				//	-rw-r--r--. 1 root root 5444 Oct 13 12:19 /var/tmp/sosreport-jsefler-os7.usersys.redhat.com-20141013121912.tar.xz
 				//	[root@jsefler-os7 ~]# 
+				// TEMPORARY WORKAROUND
+				if (clienttasks.redhatReleaseX.equals("8")) {
+					boolean invokeWorkaroundWhileBugIsOpen = true;
+					String bugId="1591491"; // Bug 1591491 - Traceback when running sosreport on RHEL8 
+					try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+					if (invokeWorkaroundWhileBugIsOpen) {
+						log.warning("Skipping the collection of an sos report while bug '"+bugId+"' is open.");
+						return;
+					}
+				}
+				// END OF WORKAROUND
 				SSHCommandResult sosResult = client.runCommandAndWait("sosreport --batch --tmp-dir=/var/tmp --only-plugins="+plugins);
 				File remoteFile = new File(getSubstringMatches(sosResult.getStdout(), "/var/tmp/sosreport-.+\\.tar\\.(xz|bz2)").get(0));	// /var/tmp/sosreport-jsefler-os7.usersys.redhat.com-20141013121912.tar.xz	// /var/tmp/sosreport-jsefler-5.usersys.redhat.com.tar.bz2
 				if (RemoteFileTasks.testExists(client, remoteFile.getPath())) {
