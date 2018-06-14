@@ -698,22 +698,18 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 		String logResult;
 		
 		if (clienttasks.redhatReleaseX.equals("8")) {
-			//	2017-05-12 17:51:10,209 [ERROR] subscription-manager:23673:MainThread @utils.py:274 - Error while checking server version: ('The read operation timed out',)
-			//	2017-05-12 17:51:10,209 [ERROR] subscription-manager:23673:MainThread @utils.py:276 - ('The read operation timed out',)
+			// socket.timeout: The read operation timed out
+		    	// 2018-06-14 11:00:40,388 [ERROR] subscription-manager:4005:MainThread @utils.py:262 - Timeout error while checking server version
+
 			expectedLogMessage = "Timeout error while checking server version";
-			
-			//	[root@ibm-x3650m4-02-vm-06 ~]# time subscription-manager version
-			//	server type: Red Hat Subscription Management
-			//	subscription management server: Unknown
-			//	subscription management rules: Unknown
-			//	subscription-manager: 1.22.0-1.git.9.80bd3bc.el8+7
 
-			//	real	0m0.678s
-			//	user	0m0.554s
-			//	sys	0m0.064s
-
-			expectedStderr = ""; // question to jsefler,no stderr yet, do we need to open a bug for it ?
+			boolean invokeWorkaroundWhileBugIsOpen = true;
+			String bugId="1526622"; // Bug 1526622 - the productid plugin should never delete a /etc/pki/product-default/<ID>.pem cert provided by the redhat-release-<VARIANT>.rpm
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
+			if (invokeWorkaroundWhileBugIsOpen) {
+			expectedStderr = ""; 
 			expectedStdout = "";
+			}
 			
 		}
 		// test the default server_time value of 180 seconds
