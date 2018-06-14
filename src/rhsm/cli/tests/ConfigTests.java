@@ -697,6 +697,25 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 		String marker = System.currentTimeMillis()+" Testing VerifyConfigServerTimeouts_Test...";
 		String logResult;
 		
+		if (clienttasks.redhatReleaseX.equals("8")) {
+			//	2017-05-12 17:51:10,209 [ERROR] subscription-manager:23673:MainThread @utils.py:274 - Error while checking server version: ('The read operation timed out',)
+			//	2017-05-12 17:51:10,209 [ERROR] subscription-manager:23673:MainThread @utils.py:276 - ('The read operation timed out',)
+			expectedLogMessage = "Timeout error while checking server version";
+			
+			//	[root@ibm-x3650m4-02-vm-06 ~]# time subscription-manager version
+			//	server type: Red Hat Subscription Management
+			//	subscription management server: Unknown
+			//	subscription management rules: Unknown
+			//	subscription-manager: 1.22.0-1.git.9.80bd3bc.el8+7
+
+			//	real	0m0.678s
+			//	user	0m0.554s
+			//	sys	0m0.064s
+
+			expectedStderr = ""; // question to jsefler,no stderr yet, do we need to open a bug for it ?
+			expectedStdout = "";
+			
+		}
 		// test the default server_time value of 180 seconds
 		if (clienttasks.redhatReleaseX.equals("7")) {
 			//	2017-05-12 17:51:10,209 [ERROR] subscription-manager:23673:MainThread @utils.py:274 - Error while checking server version: ('The read operation timed out',)
