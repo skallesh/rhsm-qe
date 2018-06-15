@@ -714,7 +714,7 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 				    expectedStderr = ""; 
 				    expectedStdout = "";
 			}
-			// END OF WORKAROUND , delete this workaround and add this bug to blockedbybug list
+			// END OF WORKAROUND , delete this workaround and add this bug to blockedbybug list after the bug is fixed
 						
 		}
 		// test the default server_time value of 180 seconds
