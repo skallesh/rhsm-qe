@@ -697,6 +697,25 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 		String marker = System.currentTimeMillis()+" Testing VerifyConfigServerTimeouts_Test...";
 		String logResult;
 		
+		if (clienttasks.redhatReleaseX.equals("8")) {
+			// socket.timeout: The read operation timed out
+		    	// 2018-06-14 11:00:40,388 [ERROR] subscription-manager:4005:MainThread @utils.py:262 - Timeout error while checking server version
+
+			expectedLogMessage = "Timeout error while checking server version";
+			expectedStderr = "Unable to verify server's identity: timed out";
+
+			boolean invokeWorkaroundWhileBugIsOpen = true;
+			String bugId="1591399"; //Bug 1591399 - traceback on console when the subscription-manager socket timesout against SSL connection 
+			try {
+			    if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {
+			    log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+") that is reproduceable only on rhel8");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}
+			    } catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
+			if (invokeWorkaroundWhileBugIsOpen) {
+				    expectedStderr = ""; 
+				    expectedStdout = "";
+			}
+						
+		}
 		// test the default server_time value of 180 seconds
 		if (clienttasks.redhatReleaseX.equals("7")) {
 			//	2017-05-12 17:51:10,209 [ERROR] subscription-manager:23673:MainThread @utils.py:274 - Error while checking server version: ('The read operation timed out',)
