@@ -1917,23 +1917,33 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		// calling register without insecure should now fail (throwing stderr "certificate verify failed")
 		sshCommandResult = clienttasks.register_(sm_clientUsername,sm_clientPassword, sm_clientOrg, null,null,null,null,null,null,null,(String)null,null,false,null,null,null,null,null,null, null);
 		Integer expectedExitCode = new Integer(255);
+		String expectedStderr = "certificate verify failed";
+		String expectedStdout = "";
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) expectedExitCode = new Integer(70);	// EX_SOFTWARE	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
 		Assert.assertEquals(sshCommandResult.getExitCode(), expectedExitCode, "Exitcode from the register command when configuration rhsm.ca_cert_dir has been falsified.");
-		 if (clienttasks.isPackageVersion("python-rhsm",">=","1.18.5-1") && Integer.valueOf(clienttasks.redhatReleaseX)>=7) {	// post python-rhsm commit 214103dcffce29e31858ffee414d79c1b8063970   Reduce usage of m2crypto (#184) (RHEL7+)
-		     	Assert.assertTrue(sshCommandResult.getStderr().trim().startsWith("Unable to verify server's identity: [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed"), "Stderr from the orgs command when configuration rhsm.ca_cert_dir has been falsified.");
-		     	Assert.assertEquals(sshCommandResult.getStdout().trim(), String.format("Registering to: %s:%s%s",clienttasks.getConfParameter("hostname"),clienttasks.getConfParameter("port"),clienttasks.getConfParameter("prefix")), "Stdout from the register command when configuration rhsm.ca_cert_dir has been falsified.");
+		if (clienttasks.isPackageVersion("python-rhsm",">=","1.18.5-1") && Integer.valueOf(clienttasks.redhatReleaseX)>=7) {	// post python-rhsm commit 214103dcffce29e31858ffee414d79c1b8063970   Reduce usage of m2crypto (#184) (RHEL7+)
+			expectedStderr = "Unable to verify server's identity: [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed";
+			expectedStdout = String.format("Registering to: %s:%s%s",clienttasks.getConfParameter("hostname"),clienttasks.getConfParameter("port"),clienttasks.getConfParameter("prefix"));
+			Assert.assertTrue(sshCommandResult.getStderr().trim().startsWith(expectedStderr), "Stderr from the orgs command when configuration rhsm.ca_cert_dir has been falsified starts with '"+expectedStderr+"'.");
+			Assert.assertEquals(sshCommandResult.getStdout().trim(), expectedStdout, "Stdout from the register command when configuration rhsm.ca_cert_dir has been falsified.");
 		} else if (clienttasks.isPackageVersion("subscription-manager",">=","1.15.9-2")) {	// post subscription-manager commit d5014cda1c234d36943383b69898f2a651202b89   Bug 985157 - [RFE] Specify which username to enter when registering with subscription-manager
-			Assert.assertEquals(sshCommandResult.getStderr().trim(), "Unable to verify server's identity: certificate verify failed", "Stderr from the register command when configuration rhsm.ca_cert_dir has been falsified.");
-			Assert.assertEquals(sshCommandResult.getStdout().trim(), String.format("Registering to: %s:%s%s",clienttasks.getConfParameter("hostname"),clienttasks.getConfParameter("port"),clienttasks.getConfParameter("prefix")), "Stdout from the register command when configuration rhsm.ca_cert_dir has been falsified.");
+			expectedStderr = "Unable to verify server's identity: certificate verify failed";
+			expectedStdout = String.format("Registering to: %s:%s%s",clienttasks.getConfParameter("hostname"),clienttasks.getConfParameter("port"),clienttasks.getConfParameter("prefix"));
+			Assert.assertEquals(sshCommandResult.getStderr().trim(), expectedStderr, "Stderr from the register command when configuration rhsm.ca_cert_dir has been falsified.");
+			Assert.assertEquals(sshCommandResult.getStdout().trim(), expectedStdout, "Stdout from the register command when configuration rhsm.ca_cert_dir has been falsified.");
 		} else if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.9-1")) {	// post commit a695ef2d1da882c5f851fde90a24f957b70a63ad
-			Assert.assertEquals(sshCommandResult.getStderr().trim(), "Unable to verify server's identity: certificate verify failed", "Stderr from the register command when configuration rhsm.ca_cert_dir has been falsified.");
-			Assert.assertEquals(sshCommandResult.getStdout().trim(), "", "Stdout from the register command when configuration rhsm.ca_cert_dir has been falsified.");
+			expectedStderr = "Unable to verify server's identity: certificate verify failed";
+			expectedStdout = "";	
+			Assert.assertEquals(sshCommandResult.getStderr().trim(), expectedStderr, "Stderr from the register command when configuration rhsm.ca_cert_dir has been falsified.");
+			Assert.assertEquals(sshCommandResult.getStdout().trim(), expectedStdout, "Stdout from the register command when configuration rhsm.ca_cert_dir has been falsified.");
 		} else if (clienttasks.isPackageVersion("subscription-manager",">=","1.10.9-1")) {	// post commit 3366b1c734fd27faf48313adf60cf051836af115
-			Assert.assertEquals(sshCommandResult.getStderr().trim(), "", "Stderr from the register command when configuration rhsm.ca_cert_dir has been falsified.");
-			Assert.assertEquals(sshCommandResult.getStdout().trim(), "Unable to verify server's identity: certificate verify failed", "Stdout from the register command when configuration rhsm.ca_cert_dir has been falsified.");
+			expectedStderr = "";
+			expectedStdout = "Unable to verify server's identity: certificate verify failed";
+			Assert.assertEquals(sshCommandResult.getStderr().trim(), expectedStderr, "Stderr from the register command when configuration rhsm.ca_cert_dir has been falsified.");
+			Assert.assertEquals(sshCommandResult.getStdout().trim(), expectedStdout, "Stdout from the register command when configuration rhsm.ca_cert_dir has been falsified.");
 		} else {
-			Assert.assertEquals(sshCommandResult.getStderr().trim(), "certificate verify failed", "Stderr from the register command when configuration rhsm.ca_cert_dir has been falsified.");
-			Assert.assertEquals(sshCommandResult.getStdout().trim(), "", "Stdout from the register command when configuration rhsm.ca_cert_dir has been falsified.");
+			Assert.assertEquals(sshCommandResult.getStderr().trim(), expectedStderr, "Stderr from the register command when configuration rhsm.ca_cert_dir has been falsified.");
+			Assert.assertEquals(sshCommandResult.getStdout().trim(), expectedStdout, "Stdout from the register command when configuration rhsm.ca_cert_dir has been falsified.");
 		}
 		
 		// calling register with insecure should now pass
