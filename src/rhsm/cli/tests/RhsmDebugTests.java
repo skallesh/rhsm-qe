@@ -99,6 +99,33 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 
 	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID= {"", ""}, importReady=false, // comment out or delete when this TestDefinition is good and ready to be imported as a testcase into Polarion to retrieve a testCaseID
+			level= DefTypes.Level.COMPONENT,
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.LOW, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier3")
+	@Test(	description="after registering and subscribing, call rhsm-debug system with --no-archive and a --destination that is not on teh same filesystem as /var/spool/rhsm/debug",
+			groups={"Tier3Tests","blockedByBug-1175284"},
+			enabled=true)
+			//@ImplementsNitrateTest(caseId=)
+	public void testRhsmDebugSystemWithNoArchiveAndDestinationOnDifferentFilesystem() {
+		
+		// [root@jsefler-rhel7 ~]# rhsm-debug system --no-archive --destination /dev/null
+		// To use the no-archive option, the destination directory '/dev/null' must exist on the same file system as the data assembly directory '/var/spool/rhsm/debug'.
+		
+		String desDir = "/dev/null";
+		String varDir = "/var/spool/rhsm/debug";
+		if (client.runCommandAndWait("stat -c %d "+desDir).getStdout().equals(client.runCommandAndWait("stat -c %d "+varDir).getStdout())) {
+			throw new SkipException("Skipping this test since the destination directory '"+desDir+"' appears to be on the same filesystem as '"+varDir+"'.");
+		}
+		
+		// run the rhsmDebugSystemTest with --no-archive and a --destination value that is not on the same filesystem as /var/spool/rhsm/debug
+		verifyRhsmDebugSystemTestWithOptions("/dev/null",true, null, null, null);
+	}
+
+
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID=  {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID= {"RHEL6-36658", "RHEL7-51504"},
 			level= DefTypes.Level.COMPONENT,
 			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
@@ -540,6 +567,45 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(result.getExitCode(), new Integer(0), "The exit code from an attempt to run '"+rhsmDebugSystemCommand+"'.");
 		Assert.assertEquals(result.getStderr().trim(), "", "The stderr from an attempt to run '"+rhsmDebugSystemCommand+"'.");
 		
+		// get the rhsmDebugFile from stdout (and the existence of the rhsmDebugFile)
+		File rhsmDebugSystemFile = new File("/dev/null");
+		if (result.getStdout().contains(":")) {	// avoid java.lang.ArrayIndexOutOfBoundsException: 1
+			// Wrote: /tmp/rhsm-debug-system-20140115-457636.tar.gz
+			rhsmDebugSystemFile = new File(result.getStdout().split(":")[1].trim());	
+		}
+		
+		// assert the --no-archive feedback
+		if (noArchive!=null && noArchive) {
+			
+			// SPECIAL CASE after fix to Bug 1175284 - rhsm-debug --no-archive --destination <destination Loc> throws [Errno 18] Invalid cross-device link
+			//	[root@bkr-hv01-guest27 ~]# rhsm-debug system --no-archive
+			//	To use the no-archive option, the destination directory '/tmp' must exist on the same file system as the data assembly directory '/var/spool/rhsm/debug'.
+			//	[root@bkr-hv01-guest27 ~]# stat -c '%d %m' /tmp
+			//	42 /tmp
+			//	[root@bkr-hv01-guest27 ~]# stat -c '%d %m' /var/spool/rhsm/debug
+			//	64768 /
+			String desDir = destination!=null? destination:"/tmp";
+			String varDir = "/var/spool/rhsm/debug";
+			if (!client.runCommandAndWait("stat -c %d "+desDir).getStdout().equals(client.runCommandAndWait("stat -c %d "+varDir).getStdout())) {
+				log.info("As a result of the fix for Bug 1175284, rhsm-debug will abort when destination directory '"+desDir+"' and '"+varDir+"' are not on the same filesystem.");
+				String expectedStdout = String.format("To use the no-archive option, the destination directory '%s' must exist on the same file system as the data assembly directory '%s'.",desDir,varDir);
+				Assert.assertEquals(result.getStdout().trim(), expectedStdout, "The stderr from an attempt to run '"+rhsmDebugSystemCommand+"' when destination directory '"+desDir+"' and '"+varDir+"' are not on the same filesystem.");
+				return;	// nothing more to assert
+			}
+			
+			//	[root@jsefler-7 ~]# rhsm-debug system --help | grep -A1 -- --no-archive
+			//	  --no-archive          data will be in an uncompressed directory
+			//	[root@jsefler-7 ~]# rhsm-debug system --no-archive 
+			//	Wrote: /tmp/rhsm-debug-system-20140121-141587
+			String expectedEndsWith = ".tar.gz";
+			Assert.assertTrue(!result.getStdout().trim().endsWith(expectedEndsWith), "The stdout from an attempt to run '"+rhsmDebugSystemCommand+"' should indicate that the written file does NOT end with '"+expectedEndsWith+"'.");
+			Assert.assertTrue(isDirectory(client, rhsmDebugSystemFile.getPath()), "The result of '"+rhsmDebugSystemCommand+"' is an existing directory.");
+		} else {
+			String expectedEndsWith = ".tar.gz";
+			Assert.assertTrue(result.getStdout().trim().endsWith(expectedEndsWith), "The stdout from an attempt to run '"+rhsmDebugSystemCommand+"' should indicate that the written file ends with '"+expectedEndsWith+"'.");
+			Assert.assertTrue(isFile(client, rhsmDebugSystemFile.getPath()), "The result of '"+rhsmDebugSystemCommand+"' is an existing file.");
+		}
+		
 		// assert the --destination feedback	// Bug 1040338 - Display successful stdout feedback to the user with the actual --destination value used by "rhsm-debug system" command
 		if (destination!=null) {
 			//	[root@jsefler-7 ~]# rhsm-debug system --destination /tmp/dir
@@ -555,24 +621,6 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 			//	                        the destination location of the result; default is /tmp
 			String expectedStartsWith = "Wrote: "+"/tmp/";
 			Assert.assertTrue(result.getStdout().trim().startsWith(expectedStartsWith), "The stdout from an attempt to run '"+rhsmDebugSystemCommand+"' should indicate that it '"+expectedStartsWith+"'.");
-		}
-		
-		// get the rhsmDebugFile from stdout (and the existence of the rhsmDebugFile)
-		File rhsmDebugSystemFile = new File(result.getStdout().split(":")[1].trim());	// Wrote: /tmp/rhsm-debug-system-20140115-457636.tar.gz
-		
-		// assert the --no-archive feedback
-		if (noArchive!=null && noArchive) {
-			//	[root@jsefler-7 ~]# rhsm-debug system --help | grep -A1 -- --no-archive
-			//	  --no-archive          data will be in an uncompressed directory
-			//	[root@jsefler-7 ~]# rhsm-debug system --no-archive 
-			//	Wrote: /tmp/rhsm-debug-system-20140121-141587
-			String expectedEndsWith = ".tar.gz";
-			Assert.assertTrue(!result.getStdout().trim().endsWith(expectedEndsWith), "The stdout from an attempt to run '"+rhsmDebugSystemCommand+"' should indicate that the written file does NOT end with '"+expectedEndsWith+"'.");
-			Assert.assertTrue(isDirectory(client, rhsmDebugSystemFile.getPath()), "The result of '"+rhsmDebugSystemCommand+"' is an existing directory.");
-		} else {
-			String expectedEndsWith = ".tar.gz";
-			Assert.assertTrue(result.getStdout().trim().endsWith(expectedEndsWith), "The stdout from an attempt to run '"+rhsmDebugSystemCommand+"' should indicate that the written file ends with '"+expectedEndsWith+"'.");
-			Assert.assertTrue(isFile(client, rhsmDebugSystemFile.getPath()), "The result of '"+rhsmDebugSystemCommand+"' is an existing file.");
 		}
 		
 		// explode the rhsmDebugFile
