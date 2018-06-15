@@ -1919,9 +1919,8 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		Integer expectedExitCode = new Integer(255);
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) expectedExitCode = new Integer(70);	// EX_SOFTWARE	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
 		Assert.assertEquals(sshCommandResult.getExitCode(), expectedExitCode, "Exitcode from the register command when configuration rhsm.ca_cert_dir has been falsified.");
-		
 		if (clienttasks.isPackageVersion("python-rhsm",">=","1.18.5-1") && Integer.valueOf(clienttasks.redhatReleaseX)>=7) {	// post python-rhsm commit 214103dcffce29e31858ffee414d79c1b8063970   Reduce usage of m2crypto (#184) (RHEL7+)
-			Assert.assertEquals(sshCommandResult.getStderr().trim(), "Unable to verify server's identity: [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed (_ssl.c:579)", "Stderr from the register command when configuration rhsm.ca_cert_dir has been falsified.");
+			Assert.assertTrue(sshCommandResult.getStderr().trim().startsWith("Unable to verify server's identity: [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed"), "\"Stderr from the orgs command when configuration rhsm.ca_cert_dir has been falsified.");
 			Assert.assertEquals(sshCommandResult.getStdout().trim(), String.format("Registering to: %s:%s%s",clienttasks.getConfParameter("hostname"),clienttasks.getConfParameter("port"),clienttasks.getConfParameter("prefix")), "Stdout from the register command when configuration rhsm.ca_cert_dir has been falsified.");
 		} else if (clienttasks.isPackageVersion("subscription-manager",">=","1.15.9-2")) {	// post subscription-manager commit d5014cda1c234d36943383b69898f2a651202b89   Bug 985157 - [RFE] Specify which username to enter when registering with subscription-manager
 			Assert.assertEquals(sshCommandResult.getStderr().trim(), "Unable to verify server's identity: certificate verify failed", "Stderr from the register command when configuration rhsm.ca_cert_dir has been falsified.");
