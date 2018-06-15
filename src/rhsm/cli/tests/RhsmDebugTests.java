@@ -301,6 +301,7 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 		String expectedStderr = "[Errno 20] Not a directory:";	// [Errno 20] Not a directory: '/tmp/foo/rhsm-debug-system-20140121-342280.tar.gz'
 		Integer expectedExitCode = new Integer(255);
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) expectedExitCode = new Integer(70);	// EX_SOFTWARE	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+		// TEMPORARY WORKAROUND
 		if (clienttasks.redhatReleaseX.equals("8")) {
 			boolean invokeWorkaroundWhileBugIsOpen = true;
 			String bugId="1591618"; // Bug 1591618 - call to rhsm-debug system with a bad (already existing as a file) --destination option throws network error
@@ -310,6 +311,8 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 			}
 							
 		}
+		// END OF WORKAROUND , delete this workaround and add this bug to blockedbybug list after the bug is fixed
+
 		// assert results
 		Assert.assertEquals(result.getExitCode(), expectedExitCode, "The exit code from an attempt to run '"+rhsmDebugSystemCommand+"'.");
 		Assert.assertTrue(result.getStderr().trim().startsWith(expectedStderr), "The stderr from an attempt to run '"+rhsmDebugSystemCommand+"' should indicate '"+expectedStderr+"'.");
