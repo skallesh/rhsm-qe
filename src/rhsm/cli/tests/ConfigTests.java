@@ -698,19 +698,67 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 		String logResult;
 		
 		if (clienttasks.redhatReleaseX.equals("8")) {
-			// socket.timeout: The read operation timed out
-		    	// 2018-06-14 11:00:40,388 [ERROR] subscription-manager:4005:MainThread @utils.py:262 - Timeout error while checking server version
-			// TEMPORARY WORKAROUND
-
+			//	2018-06-15 14:36:33,059 [ERROR] subscription-manager:28335:MainThread @utils.py:256 - Timeout error while checking server version
+			//	2018-06-15 14:36:33,059 [ERROR] subscription-manager:28335:MainThread @utils.py:257 - The read operation timed out
 			expectedLogMessage = "Timeout error while checking server version";
+			
+			// TODO Confirm these predictions for stdout stderr values after bug 1591399 is fixed
 			expectedStderr = "Unable to verify server's identity: timed out";
+		    expectedStdout = "";
+		    
+			// TEMPORARY WORKAROUND
+			//	[root@bkr-hv01-guest27 ~]# time subscription-manager version
+			//	Traceback (most recent call last):
+			//	  File "/usr/sbin/subscription-manager", line 11, in <module>
+			//	    load_entry_point('subscription-manager==1.21.4', 'console_scripts', 'subscription-manager')()
+			//	  File "/usr/lib64/python3.6/site-packages/subscription_manager/scripts/subscription_manager.py", line 85, in main
+			//	    return managercli.ManagerCLI().main()
+			//	  File "/usr/lib64/python3.6/site-packages/subscription_manager/managercli.py", line 2662, in main
+			//	    ret = CLI.main(self)
+			//	  File "/usr/lib64/python3.6/site-packages/subscription_manager/cli.py", line 183, in main
+			//	    return cmd.main()
+			//	  File "/usr/lib64/python3.6/site-packages/subscription_manager/managercli.py", line 498, in main
+			//	    return_code = self._do_command()
+			//	  File "/usr/lib64/python3.6/site-packages/subscription_manager/managercli.py", line 2581, in _do_command
+			//	    self.log_server_version()
+			//	  File "/usr/lib64/python3.6/site-packages/subscription_manager/managercli.py", line 353, in log_server_version
+			//	    self.server_versions = get_server_versions(self.no_auth_cp, exception_on_timeout=True)
+			//	  File "/usr/lib64/python3.6/site-packages/subscription_manager/utils.py", line 250, in get_server_versions
+			//	    if cp.supports_resource("status"):
+			//	  File "/usr/lib64/python3.6/site-packages/rhsm/connection.py", line 897, in supports_resource
+			//	    self._load_supported_resources()
+			//	  File "/usr/lib64/python3.6/site-packages/rhsm/connection.py", line 884, in _load_supported_resources
+			//	    resources_list = self.conn.request_get("/")
+			//	  File "/usr/lib64/python3.6/site-packages/rhsm/connection.py", line 693, in request_get
+			//	    return self._request("GET", method, headers=headers)
+			//	  File "/usr/lib64/python3.6/site-packages/rhsm/connection.py", line 719, in _request
+			//	    info=info, headers=headers)
+			//	  File "/usr/lib64/python3.6/site-packages/rhsm/connection.py", line 575, in _request
+			//	    response = conn.getresponse()
+			//	  File "/usr/lib64/python3.6/http/client.py", line 1331, in getresponse
+			//	    response.begin()
+			//	  File "/usr/lib64/python3.6/http/client.py", line 297, in begin
+			//	    version, status, reason = self._read_status()
+			//	  File "/usr/lib64/python3.6/http/client.py", line 258, in _read_status
+			//	    line = str(self.fp.readline(_MAXLINE + 1), "iso-8859-1")
+			//	  File "/usr/lib64/python3.6/socket.py", line 586, in readinto
+			//	    return self._sock.recv_into(b)
+			//	  File "/usr/lib64/python3.6/ssl.py", line 1009, in recv_into
+			//	    return self.read(nbytes, buffer)
+			//	  File "/usr/lib64/python3.6/ssl.py", line 871, in read
+			//	    return self._sslobj.read(len, buffer)
+			//	  File "/usr/lib64/python3.6/ssl.py", line 631, in read
+			//	    v = self._sslobj.read(len, buffer)
+			//	socket.timeout: The read operation timed out
+			//
+			//	real	3m0.575s
+			//	user	0m0.333s
+			//	sys	0m0.043s
 			boolean invokeWorkaroundWhileBugIsOpen = true;
 			String bugId="1591399"; //Bug 1591399 - traceback on console when the subscription-manager socket timesout against SSL connection 
-			try {
-			    if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {
-			    log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+") that is reproduceable only on rhel8");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}
-			    } catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+") that is reproduceable only on rhel8");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
 			if (invokeWorkaroundWhileBugIsOpen) {
+				log.warning("While bug '"+bugId+"' is open, we will effectively skip the assertion of the expected stderr and stdout.");
 				    expectedStderr = ""; 
 				    expectedStdout = "";
 			}
