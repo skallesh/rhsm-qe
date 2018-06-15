@@ -588,6 +588,22 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.18.5-1")) {	// commit bb47b2a6b4f3e823240e5f882bd4dc4d57c3b36e	1395794: Include python-decorator as a required dependency
 			expectedRequiresList.add("manual: python-decorator");
 		}
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-3")) {	// commit 24ae5cd38e36a4ccfb6a3e9daa5f7c8a7f01c324	  1533905: Remove dependency on yum and chkconfig.  
+			expectedRequiresList.remove("manual: chkconfig");
+			expectedRequiresList.remove("manual: yum >= 3.2.29-73");
+
+		}
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-3")) {	// commit c63a48b81531111cb9fccf69d46e70bb26c2f44e	 1458159: Require latest version of python-dmidecode 
+			expectedRequiresList.remove("manual: python-dmidecode");
+			expectedRequiresList.add("manual: python-dmidecode >= 3.12.2");
+
+		}
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-3")) {	// commit 78da50088f92165fabea0d1a1445baa4d288aac4	 1537473: Subman rpm requires python-setuptools 
+			expectedRequiresList.add("manual: python-setuptools");
+		}
+		if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-3")) {	// commit 4d2c94e26872863a484a0d37e181154688d350d3	  1547354: Add missing requires for python-kitchen  
+			expectedRequiresList.add("manual: python-kitchen");
+		}
 		
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.19.0-1")) {	// commit 2aa48ef65ec9c98f395abb114285135512325fe3	Provide DBus objects for configuration, facts, and registration
 			expectedRequiresList.add("manual: dbus-x11");
@@ -1474,11 +1490,6 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 				ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1162170"}),		clienttasks.command+" list --pool-only",									new Integer(64),	"","Error: --pool-only is only applicable with --available and/or --consumed"}));
 				ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1162170"}),		clienttasks.command+" list --pool-only --installed",						new Integer(64),	"","Error: --pool-only is only applicable with --available and/or --consumed"}));
 			}
-			if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-1")) {	// post commit 2e4c2b8ab686bd240b99acb8d9c149e4aa7010d8
-				ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1479353"}),		clienttasks.command+" list --after=2018-01-01",								new Integer(64),	"","Error: --after is only applicable with --available"}));
-				ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1479353"}),		clienttasks.command+" list --after=2018-01-01 --ondate=2018-01-01 --avail",	new Integer(64),	"","Error: --after cannot be used with --ondate"}));	
-			}
-
 			ll.add(Arrays.asList(new Object[]{null,													clienttasks.command+" repo-override --repo",								new Integer(2),		clienttasks.command+": error: --repo option requires an argument",	"Usage: subscription-manager repo-override [OPTIONS]"}));
 			ll.add(Arrays.asList(new Object[]{null,										 			clienttasks.command+" repo-override --remove",								new Integer(2),		clienttasks.command+": error: --remove option requires an argument",	"Usage: subscription-manager repo-override [OPTIONS]"}));
 			ll.add(Arrays.asList(new Object[]{null,													clienttasks.command+" repo-override --add",									new Integer(2),		clienttasks.command+": error: --add option requires an argument",	"Usage: subscription-manager repo-override [OPTIONS]"}));
