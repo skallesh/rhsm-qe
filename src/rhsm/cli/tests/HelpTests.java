@@ -93,10 +93,11 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		if (clienttasks==null) throw new SkipException("A client connection is needed for this test.");
 		String guiCommand = clienttasks.command+"-gui";
 		// is the guiCommand installed?
-		if (client.runCommandAndWait("rpm -q "+guiCommand).getStdout().contains("is not installed")) {
-			RemoteFileTasks.runCommandAndAssert(client,"man -P cat "+guiCommand,1,null,"^No manual entry for "+guiCommand);
-			RemoteFileTasks.runCommandAndAssert(client,"whatis "+guiCommand,0,"^"+guiCommand+": nothing appropriate",null);
-			log.warning("In this test we only verified the existence of the man page; NOT the contents!");
+		if (!clienttasks.isPackageInstalled(guiCommand)) {	// subscription-manager-gui is provided by subscription-manager-gui rpm
+			RemoteFileTasks.runCommandAndAssert(client,"man -P cat "+guiCommand,null,null,"^No manual entry for "+guiCommand);
+//			RemoteFileTasks.runCommandAndAssert(client,"whatis "+guiCommand,null,"^"+guiCommand+": nothing appropriate",null);		// exits with different codes on different versions of RHEL (not important for this test)
+			SSHCommandResult whatisResult = client.runCommandAndWait("whatis "+guiCommand);
+			Assert.assertContainsMatch(whatisResult.getStderr()+whatisResult.getStdout(), "^"+guiCommand+": nothing appropriate", "Result from an attempt to ask 'whatis "+guiCommand+"' returns: ");
 			throw new SkipException(guiCommand+" is not installed and therefore its man page is also not installed.");
 		} else {
 			RemoteFileTasks.runCommandAndAssert(client,"man -P cat "+guiCommand,0);
@@ -120,10 +121,11 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		if (clienttasks==null) throw new SkipException("A client connection is needed for this test.");
 		String command = "rhsm-icon"; //iconCommand = "rhsm-compliance-icon"; // prior to bug 771726
 		// is the command installed?
-		if (client.runCommandAndWait("rpm -q "+clienttasks.command+"-gui").getStdout().contains("is not installed")) {
-			RemoteFileTasks.runCommandAndAssert(client,"man -P cat "+command,1,null,"^No manual entry for "+command);
-			RemoteFileTasks.runCommandAndAssert(client,"whatis "+command,0,"^"+command+": nothing appropriate",null);
-			log.warning("In this test we only verified the existence of the man page; NOT the contents!");
+		if (!clienttasks.isPackageInstalled(clienttasks.command+"-gui")) {	// rhsm-icon is provided by subscription-manager-gui rpm
+			RemoteFileTasks.runCommandAndAssert(client,"man -P cat "+command,null,null,"^No manual entry for "+command);
+//			RemoteFileTasks.runCommandAndAssert(client,"whatis "+command,null,"^"+command+": nothing appropriate",null);	// exits with different codes on different versions of RHEL (not important for this test)
+			SSHCommandResult whatisResult = client.runCommandAndWait("whatis "+command);
+			Assert.assertContainsMatch(whatisResult.getStderr()+whatisResult.getStdout(), "^"+command+": nothing appropriate", "Result from an attempt to ask 'whatis "+command+"' returns: ");
 			throw new SkipException(command+" is not installed and therefore its man page is also not installed.");
 		} else {
 			RemoteFileTasks.runCommandAndAssert(client,"man -P cat "+command,0);
@@ -148,10 +150,11 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		String command = MigrationTests.installNumTool;
 		SSHCommandResult result;
 		// is the command installed?
-		if (client.runCommandAndWait("rpm -q "+clienttasks.command+"-migration").getStdout().contains("is not installed")) {
-			RemoteFileTasks.runCommandAndAssert(client,"man -P cat "+command,1,null,"^No manual entry for "+command);
-			RemoteFileTasks.runCommandAndAssert(client,"whatis "+command,0,"^"+command+": nothing appropriate",null);
-			log.warning("In this test we only verified the existence of the man page; NOT the contents!");
+		if (!clienttasks.isPackageInstalled(clienttasks.command+"-migration")) {
+			RemoteFileTasks.runCommandAndAssert(client,"man -P cat "+command,null,null,"^No manual entry for "+command);
+//			RemoteFileTasks.runCommandAndAssert(client,"whatis "+command,null,"^"+command+": nothing appropriate",null);	// exits with different codes on different versions of RHEL (not important for this test)
+			SSHCommandResult whatisResult = client.runCommandAndWait("whatis "+command);
+			Assert.assertContainsMatch(whatisResult.getStderr()+whatisResult.getStdout(), "^"+command+": nothing appropriate", "Result from an attempt to ask 'whatis "+command+"' returns: ");
 			throw new SkipException(command+" is not installed and therefore its man page cannot be installed.");
 			
 		} else if (!clienttasks.redhatReleaseX.equals("5")) {
@@ -194,10 +197,11 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		if (clienttasks==null) throw new SkipException("A client connection is needed for this test.");
 		String command = MigrationTests.rhnMigrateTool;
 		// is the command installed?
-		if (client.runCommandAndWait("rpm -q "+clienttasks.command+"-migration").getStdout().contains("is not installed")) {
-			RemoteFileTasks.runCommandAndAssert(client,"man -P cat "+command,1,null,"^No manual entry for "+command);
-			RemoteFileTasks.runCommandAndAssert(client,"whatis "+command,0,"^"+command+": nothing appropriate",null);
-			log.warning("In this test we only verified the existence of the man page; NOT the contents!");
+		if (!clienttasks.isPackageInstalled(clienttasks.command+"-migration")) {	// rhsm-migrate-classic-to-rhsm is provided by subscription-manager-migration rpm
+			RemoteFileTasks.runCommandAndAssert(client,"man -P cat "+command,null,null,"^No manual entry for "+command);
+//			RemoteFileTasks.runCommandAndAssert(client,"whatis "+command,null,"^"+command+": nothing appropriate",null);	// exits with different codes on different versions of RHEL (not important for this test)
+			SSHCommandResult whatisResult = client.runCommandAndWait("whatis "+command);
+			Assert.assertContainsMatch(whatisResult.getStderr()+whatisResult.getStdout(), "^"+command+": nothing appropriate", "Result from an attempt to ask 'whatis "+command+"' returns: ");
 			throw new SkipException(command+" is not installed and therefore its man page is also not installed.");
 		} else {
 			RemoteFileTasks.runCommandAndAssert(client,"man -P cat "+command,0);
