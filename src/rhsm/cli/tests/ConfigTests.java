@@ -700,10 +700,10 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 		if (clienttasks.redhatReleaseX.equals("8")) {
 			// socket.timeout: The read operation timed out
 		    	// 2018-06-14 11:00:40,388 [ERROR] subscription-manager:4005:MainThread @utils.py:262 - Timeout error while checking server version
+			// TEMPORARY WORKAROUND
 
 			expectedLogMessage = "Timeout error while checking server version";
 			expectedStderr = "Unable to verify server's identity: timed out";
-
 			boolean invokeWorkaroundWhileBugIsOpen = true;
 			String bugId="1591399"; //Bug 1591399 - traceback on console when the subscription-manager socket timesout against SSL connection 
 			try {
@@ -714,7 +714,8 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 				    expectedStderr = ""; 
 				    expectedStdout = "";
 			}
-			
+			// END OF WORKAROUND , delete this workaround and add this bug to blockedbybug list after the bug is fixed
+						
 		}
 		// test the default server_time value of 180 seconds
 		if (clienttasks.redhatReleaseX.equals("7")) {

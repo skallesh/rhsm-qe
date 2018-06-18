@@ -301,22 +301,18 @@ public class RhsmDebugTests extends SubscriptionManagerCLITestScript {
 		String expectedStderr = "[Errno 20] Not a directory:";	// [Errno 20] Not a directory: '/tmp/foo/rhsm-debug-system-20140121-342280.tar.gz'
 		Integer expectedExitCode = new Integer(255);
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) expectedExitCode = new Integer(70);	// EX_SOFTWARE	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
+		// TEMPORARY WORKAROUND
 		if (clienttasks.redhatReleaseX.equals("8")) {
 			boolean invokeWorkaroundWhileBugIsOpen = true;
-			String bugId="1591618"; //Bug 1591618 - call to rhsm-debug system with a bad (already existing as a file) --destination option throws network error 
-			try {
-			    if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {
-			    log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+") that is reproduceable only on rhel8");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}
-			    } catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
+			String bugId="1591618"; // Bug 1591618 - call to rhsm-debug system with a bad (already existing as a file) --destination option throws network error
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
 			if (invokeWorkaroundWhileBugIsOpen) {
-				//[root@ibm-x3650m4-02-vm-06 ~]# rhsm-debug system --destination=/tmp/foo
-				//Network error, unable to connect to server. Please see /var/log/rhsm/rhsm.log for more information.
-				//[root@ibm-x3650m4-02-vm-06 ~]# echo $?
-				//70
-			    	expectedStderr = "Network error, unable to connect to server. Please see /var/log/rhsm/rhsm.log for more information."; 
+				throw new SkipException("Skipping this test while bug '"+bugId+"' is open");
 			}
+							
 		}
-		
+		// END OF WORKAROUND , delete this workaround and add this bug to blockedbybug list after the bug is fixed
+
 		// assert results
 		Assert.assertEquals(result.getExitCode(), expectedExitCode, "The exit code from an attempt to run '"+rhsmDebugSystemCommand+"'.");
 		Assert.assertTrue(result.getStderr().trim().startsWith(expectedStderr), "The stderr from an attempt to run '"+rhsmDebugSystemCommand+"' should indicate '"+expectedStderr+"'.");
