@@ -544,7 +544,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 			if (clienttasks.isPackageVersion("subscription-manager",">=","1.10.5-1"))	expectedRequiresList.remove("manual: python-simplejson");		// Bug 1006748 - remove subscription-manager dependency on python-simplejson; subscription-manager commit ee34aef839d0cb367e558f1cd7559590d95cd636
 			
 		}
-		if (clienttasks.redhatReleaseX.equals("7")) {
+		if (clienttasks.redhatReleaseX.equals("7")||clienttasks.redhatReleaseX.equals("8")) {
 			expectedRequiresList.addAll(Arrays.asList(new String[]{
 					"post: systemd",	//"post: systemd-units",	// changed for rhel7 by commit f67310381587a96a37933abf22985b97de373887  Bug 850331 - Introduce new systemd-rpm macros in subscription-manager spec file 
 					"preun: systemd",	//"preun: systemd-units",	// changed for rhel7 by commit f67310381587a96a37933abf22985b97de373887  Bug 850331 - Introduce new systemd-rpm macros in subscription-manager spec file 
@@ -692,7 +692,8 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		
 		List<String> expectedRequiresList = new ArrayList<String>();
 		
-		if (clienttasks.redhatReleaseX.equals("7")) {
+		//if (clienttasks.redhatReleaseX.equals("7")) { // this will only test for rhel7
+		 if(Integer.valueOf(clienttasks.redhatReleaseX)>=7){
 			// rpm --query --requires rhsm-gtk --verbose | egrep -v '(^auto:|^rpmlib:)'
 			expectedRequiresList.addAll(Arrays.asList(new String[]{
 					"manual: font(cantarell)",
@@ -922,7 +923,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		if (Integer.valueOf(clienttasks.redhatReleaseX)<7) {
 			Assert.fail("Did not expect package '"+pkg+"' to be installed on RHEL release '"+clienttasks.redhatReleaseX+"'.");
 		}
-		if (clienttasks.redhatReleaseX.equals("7")) {
+		if (clienttasks.redhatReleaseX.equals("7")||clienttasks.redhatReleaseX.equals("8")) {
 			expectedRequiresList.addAll(Arrays.asList(new String[]{
 					"manual: initial-setup-gui >= 0.3.9.24-1",
 					"manual: subscription-manager-gui = "+clienttasks.installedPackageVersionMap.get("subscription-manager-gui").replace("subscription-manager-gui-", "").replaceFirst("\\."+clienttasks.arch, ""),	//"manual: subscription-manager-gui = 1.15.6-1.el7",
@@ -979,7 +980,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 //			Assert.assertTrue(actualRequiresList.containsAll(expectedRequiresList), "The actual requires list of packages for '"+pkg+"' contains the expected list "+expectedRequiresList);
 //			return;
 		}
-		if (clienttasks.redhatReleaseX.equals("6") || clienttasks.redhatReleaseX.equals("7")) {
+		if (clienttasks.redhatReleaseX.equals("6") || clienttasks.redhatReleaseX.equals("7")||clienttasks.redhatReleaseX.equals("8")) {
 			expectedRequiresList.addAll(Arrays.asList(new String[]{
 					"manual: subscription-manager = "+clienttasks.installedPackageVersionMap.get("subscription-manager").replace("subscription-manager-", "").replaceFirst("\\."+clienttasks.arch, ""),	// "manual: subscription-manager = 1.9.11-1.el6"
 					"manual: rhnlib"
@@ -1066,7 +1067,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		if (Integer.valueOf(clienttasks.redhatReleaseX)<7) {
 			Assert.fail("Did not expect package '"+pkg+"' to be installed on RHEL release '"+clienttasks.redhatReleaseX+"'.");
 		}
-		if (clienttasks.redhatReleaseX.equals("7")) {
+		if (clienttasks.redhatReleaseX.equals("7") || clienttasks.redhatReleaseX.equals("8")) {
 			expectedRequiresList.addAll(Arrays.asList(new String[]{
 					"manual: pygobject3-base",
 					"manual: python-iniparse >= 0.4",
@@ -1130,7 +1131,16 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 				expectedRequiresList.add("post,interp: /bin/sh");
 			}
 		}
-		
+		if (clienttasks.redhatReleaseX.equals("8")) {
+			expectedRequiresList.addAll(Arrays.asList(new String[]{
+					//none
+					"manual: subscription-manager = "+clienttasks.installedPackageVersionMap.get("subscription-manager").replace("subscription-manager-", "").replaceFirst("\\."+clienttasks.arch, ""),	// "manual: subscription-manager = 1.15.6-1.el7"	// Bug 1165771
+			}));
+			
+			if (clienttasks.isPackageVersion("subscription-manager-plugin-container",">=","1.20.1-1")) {	// commit 76c52b9002906d80b17baf6af4da67e648ce2415 1422196: Update container certs after plugin install
+				expectedRequiresList.add("post,interp: /bin/sh");
+			}
+		}
 		for (String expectedRequires : expectedRequiresList) if (!actualRequiresList.contains(expectedRequires)) log.warning("The actual requires list is missing expected requires '"+expectedRequires+"'.");
 		for (String actualRequires : actualRequiresList) if (!expectedRequiresList.contains(actualRequires)) log.warning("The expected requires list does not include the actual requires '"+actualRequires+"'  Is this a new requirement?");
 		Assert.assertTrue(expectedRequiresList.containsAll(actualRequiresList) && actualRequiresList.containsAll(expectedRequiresList), "The actual requires list of packages for '"+pkg+"' matches the expected list "+expectedRequiresList);
