@@ -130,6 +130,7 @@ public class SubscriptionManagerTasks {
 	public String releasever						= null;	// of the client; 5Server 5Client
 	public String compose							= "";	// from beaker
 	public Boolean isFipsEnabled					= null; // of the client	sysctl crypto.fips_enabled => crypto.fips_enabled = 1
+	public Float pythonVersion						= null; // used to interpret subscription-manager
 	
 	protected String currentlyRegisteredUsername	= null;	// most recent username used during register
 	protected String currentlyRegisteredPassword	= null;	// most recent password used during register
@@ -194,6 +195,11 @@ public class SubscriptionManagerTasks {
 		
 		// FIPS mode
 		isFipsEnabled = sshCommandRunner.runCommandAndWait("sysctl crypto.fips_enabled").getStdout().trim().equals("crypto.fips_enabled = 1")? true:false;
+		
+		// version of python interpreter
+		// [root@jsefler-rhel6 ~]# rpm -q --requires subscription-manager | grep 'python(abi)' | cut -d= -f2
+		//  2.6
+		pythonVersion = Float.valueOf(sshCommandRunner.runCommandAndWait("rpm -q --requires "+this.command+" | grep 'python(abi)' | cut -d= -f2").getStdout().trim()); 
 		
 		// predict sockets on the system   http://libvirt.org/formatdomain.html#elementsCPU
 		/* 5/6/2013: DON'T PREDICT THIS USING lscpu ANY MORE.  IT LEADS TO TOO MANY TEST FAILURES TO TROUBLESHOOT.  INSTEAD, RELY ON FactsTests.MatchingCPUSocketsFact_Test() TO ASSERT BUGZILLA Bug 751205 - cpu_socket(s) facts value occasionally differs from value reported by lscpu (which is correct?)
