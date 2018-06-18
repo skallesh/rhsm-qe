@@ -7156,14 +7156,14 @@ if (false) {
 	
 	/**
 	 * @param options [all|enabled|disabled] [--option=...]
-	 * @return array of repo labels returned from a call to yum repolist [options]
+	 * @return array of repo ids returned from a call to yum repolist [options]
 	 */
 	public ArrayList<String> getYumRepolist(String options){
 		if (options==null) options="";
 		ArrayList<String> repoList = new ArrayList<String>();
 		sshCommandRunner.runCommandAndWaitWithoutLogging("killall -9 yum");
 		sshCommandRunner.runCommandAndWait("yum repolist "+options+" --disableplugin=rhnplugin"); // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
-				
+		
 		// TEMPORARY WORKAROUND FOR BUG
 		if (this.redhatReleaseX.equals("5")) {
 			boolean invokeWorkaroundWhileBugIsOpen = true;
@@ -7200,7 +7200,7 @@ if (false) {
 		// getYumRepolistPackageCount() ASSUMES sshCommandRunner.getStdout() CAME FROM THE CALL TO yum repolist
 
 		// Example sshCommandRunner.getStdout()
-		//	[root@jsefler-itclient01 product]# yum repolist all
+		//	[root@rhel-6 product]# yum repolist all
 		//	Loaded plugins: pidplugin, refresh-packagekit, rhnplugin, rhsmplugin
 		//	Updating Red Hat repositories.
 		//	INFO:repolib:repos updated: 0
@@ -7214,14 +7214,16 @@ if (false) {
 		//	red-hat-enterprise-linux-6-entitlement-alpha-optional-debug-rpms               Red Hat Enterprise Linux 6 Entitlement Alpha - Opti disabled
 		//	red-hat-enterprise-linux-6-entitlement-alpha-optional-debug-rpms-updates       Red Hat Enterprise Linux 6 Entitlement Alpha - Opti disabled
 		//	repolist: 3,394
+		//	[root@rhel-6 product]# 
 		
-		//	[root@athlon6 ~]# yum repolist enabled --disableplugin=rhnplugin
+		//	[root@rhel-6 ~]# yum repolist enabled --disableplugin=rhnplugin
 		//	Loaded plugins: product-id, refresh-packagekit, security, subscription-manager
 		//	No plugin match for: rhnplugin
 		//	Updating certificate-based repositories.
 		//	repolist: 0
+		//	[root@rhel-6 product]# 
 		
-		//	[root@localhost ~]# yum repolist all
+		//	[root@rhel-7 ~]# yum repolist all
 		//	Loaded plugins: product-id, subscription-manager
 		//	This system is receiving updates from Red Hat Subscription Management.
 		//	repo id                         repo name                                              status
@@ -7229,18 +7231,40 @@ if (false) {
 		//	!rhel-7-public-beta-rpms        Red Hat Enterprise Linux 7 Public Beta (RPMs)          enabled: 9,497
 		//	rhel-7-public-beta-source-rpms  Red Hat Enterprise Linux 7 Public Beta (Source RPMs)   disabled
 		//	repolist: 9,497
+		//	[root@rhel-7 ~]# 
+		
+		//	[root@rhel-8 ~]# yum repolist 2>/tmp/stderr
+		//	repo id                                   repo name                                  status
+		//	beaker-AppStream                          beaker-AppStream                            3,782
+		//	beaker-AppStream-debuginfo                beaker-AppStream-debuginfo                  3,718
+		//	beaker-BaseOS                             beaker-BaseOS                               2,314
+		//	beaker-BaseOS-debuginfo                   beaker-BaseOS-debuginfo                     3,175
+		//	beaker-harness                            beaker-harness                                 62
+		//	beaker-tasks                              beaker-tasks                               27,314
+		//	[root@rhel-8 ~]# 
+		
 		return getYumRepolistFromSSHCommandResult(new SSHCommandResult(sshCommandRunner.getExitCode(), sshCommandRunner.getStdout(), sshCommandRunner.getStderr()));
 	}
 	public ArrayList<String> getYumRepolistFromSSHCommandResult(SSHCommandResult yumRepoListResult){
 		ArrayList<String> repoList = new ArrayList<String>();
-		String[] availRepos = yumRepoListResult.getStdout().split("\\n");
+		String[] availRepos = yumRepoListResult.getStdout().trim().split("\\n");
 		int repolistStartLn = 0;
 		int repolistEndLn = 0;
-		for(int i=0;i<availRepos.length;i++)
-			if (availRepos[i].startsWith("repo id")) // marks the start of the list
-				repolistStartLn = i + 1;
-			else if (availRepos[i].startsWith("repolist:")) // marks the end of the list
+		for(int i=0;i<availRepos.length;i++) {
+			if (availRepos[i].startsWith("repo id")) {// marks the start of the list
+				repolistStartLn = i + 1; // the list starts on the next line after "repo id"
+				repolistEndLn = repolistStartLn; // assume it ends there too
+			}
+			else if (availRepos[i].startsWith("repolist:")) {// marks the end of the list (absent on RHEL8)
 				repolistEndLn = i;
+				break;	// no need to read anymore lines
+			}
+			else {
+				repolistEndLn++;
+			}
+		}
+		
+		// extract the repo ids from the first word of the lines between "repo id" and "repolist:"
 		if (repolistStartLn>0)
 			for(int i=repolistStartLn;i<repolistEndLn;i++)
 				repoList.add(availRepos[i].split(" ")[0]);
