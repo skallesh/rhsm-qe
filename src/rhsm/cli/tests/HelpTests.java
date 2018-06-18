@@ -262,11 +262,14 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		
 		// tolerate historically acceptable behaviors
 
-		//	[jsefler@jseflerT5400 ~]$ ssh root@jsefler-6.usersys.redhat.com subscription-manager-gui --help
+		if(Integer.valueOf(clienttasks.redhatReleaseX)>=8) {
+		    throw new SkipException("Skipping this test on RHEL8 as subscription-manager-gui is retired in favour of cockpit");
+		    
+		}//	[jsefler@jseflerT5400 ~]$ ssh root@jsefler-6.usersys.redhat.com subscription-manager-gui --help
 		//	Unable to open a display
 		//	[jsefler@jseflerT5400 ~]$ echo $?
 		//	1
-		if (Integer.valueOf(1).equals(result.getExitCode())) {
+		else if (Integer.valueOf(1).equals(result.getExitCode())) {
 			Assert.assertEquals(result.getStdout().trim(), "Unable to open a display","Stdout from calling subscription-manager-gui --help with no X-Display");
 			Assert.assertEquals(result.getStderr().trim(), "","Stderr from calling subscription-manager-gui --help with no X-Display");
 		}
