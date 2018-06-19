@@ -1305,8 +1305,10 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	public void testPythonRhsmDoesNotSetSocketDefaultTimeout() throws IOException {
 		if (clienttasks.isPackageVersion("python-rhsm", "<", "1.14.2-1")) throw new SkipException("Blocking bugzilla 1195446 was not fixed until version python-rhsm-1.14.2-1");	// python-rhsm commit a974e5d636009fa41bec2b4a9d33f853e9e72a2b
 		
-		// copy the ismanagedtest.py script to the client
-		File socketgetdefaulttimeouttestFile = new File(System.getProperty("automation.dir", null)+"/scripts/socketgetdefaulttimeouttest.py");
+		// copy the socketgetdefaulttimeouttest.py script to the client
+		String script = "socketgetdefaulttimeouttest.py";
+		if (Float.valueOf(clienttasks.pythonVersion)>=3.0f) script = "python3-socketgetdefaulttimeouttest.py";
+		File socketgetdefaulttimeouttestFile = new File(System.getProperty("automation.dir", null)+"/scripts/"+script);
 		if (!socketgetdefaulttimeouttestFile.exists()) Assert.fail("Failed to find expected script: "+socketgetdefaulttimeouttestFile);
 		RemoteFileTasks.putFile(client, socketgetdefaulttimeouttestFile.toString(), "/usr/local/bin/", "0755");
 		
@@ -1325,7 +1327,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		//	None
 		//	Loaded plugins: langpacks, product-id
 		//	None
-		SSHCommandResult result = client.runCommandAndWait("socketgetdefaulttimeouttest.py");
+		SSHCommandResult result = client.runCommandAndWait(script);
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(0), "ExitCode from prior command.");
 		// TEMPORARY WORKAROUND
 		boolean invokeWorkaroundWhileBugIsOpen = true;
