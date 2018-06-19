@@ -396,14 +396,15 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			groups = {"Tier3Tests","VerifyrhsmDebugWithNoArchive", "blockedByBug-1175284" },
 			enabled = true)
 	public void testRhsmDebugWithNoArchive() throws Exception {
-		String path = "/tmp/rhsmDebug/";
+		String path = "/home/tmp-dir";
 		client.runCommandAndWait("rm -rf " + path + " && mkdir -p " + path); // pre
 		// cleanup
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null,
 				null, (String) null, null, null, null, true, null, null, null, null, null);
 		SSHCommandResult result = client
 				.runCommandAndWait(clienttasks.rhsmDebugSystemCommand(path, true, null, null, null, null, null, null, null));
-		Assert.assertContainsMatch(result.getStdout(), "Wrote: " + path + "rhsm-debug-system");
+		String expectedStderr= "To use the no-archive option, the destination directory '"+path+"' must exist on the same file system as the data assembly directory '/var/spool/rhsm/debug'.";
+		Assert.assertContainsMatch(result.getStderr(),expectedStderr,path +" is not on the same file system as the data assembly directory '/var/spool/rhsm/debug' , so rhsm-debug --no-archive --destination "+path+ "will not write anything." );
 		client.runCommandAndWait("rm -rf " + path);
 
 	}

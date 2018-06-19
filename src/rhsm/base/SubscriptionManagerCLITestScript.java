@@ -566,8 +566,14 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	public void setupClient(SubscriptionManagerTasks smt, File serverCaCertFile, List<File> generatedProductCertFiles) throws IOException, JSONException{		
 		
 		String yumInstallOptionsToEnableLatestRHEL8 = "";
+		
+		// on RHEL8, let's create a latest-BaseOS-8 and latest-AppStream-8 repo (as needed)
 		if (Integer.valueOf(clienttasks.redhatReleaseX)>=8) {
-			yumInstallOptionsToEnableLatestRHEL8 += " --enablerepo="+clienttasks.configureLatestBaseOSRepo() + " --enablerepo="+clienttasks.configureLatestAppStreamRepo();
+			// before creating and enabling a yum repo for the latest BaseOS and AppStream repos,
+			// check to see if this system from beaker already has them...
+			List<String> yumRepoIds = clienttasks.getYumRepolist("enabled");
+			if (!yumRepoIds.contains("beaker-BaseOS")) yumInstallOptionsToEnableLatestRHEL8 += " --enablerepo="+clienttasks.configureLatestBaseOSRepo();
+			if (!yumRepoIds.contains("beaker-AppStream")) yumInstallOptionsToEnableLatestRHEL8 += " --enablerepo="+clienttasks.configureLatestAppStreamRepo();
 		}
 		
 		smt.installSubscriptionManagerRPMs(sm_yumInstallOptions+yumInstallOptionsToEnableLatestRHEL8);

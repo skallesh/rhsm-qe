@@ -544,7 +544,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 			if (clienttasks.isPackageVersion("subscription-manager",">=","1.10.5-1"))	expectedRequiresList.remove("manual: python-simplejson");		// Bug 1006748 - remove subscription-manager dependency on python-simplejson; subscription-manager commit ee34aef839d0cb367e558f1cd7559590d95cd636
 			
 		}
-		if (clienttasks.redhatReleaseX.equals("7")) {
+		if (clienttasks.redhatReleaseX.equals("7")||clienttasks.redhatReleaseX.equals("8")) {
 			expectedRequiresList.addAll(Arrays.asList(new String[]{
 					"post: systemd",	//"post: systemd-units",	// changed for rhel7 by commit f67310381587a96a37933abf22985b97de373887  Bug 850331 - Introduce new systemd-rpm macros in subscription-manager spec file 
 					"preun: systemd",	//"preun: systemd-units",	// changed for rhel7 by commit f67310381587a96a37933abf22985b97de373887  Bug 850331 - Introduce new systemd-rpm macros in subscription-manager spec file 
@@ -708,7 +708,8 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		
 		List<String> expectedRequiresList = new ArrayList<String>();
 		
-		if (clienttasks.redhatReleaseX.equals("7")) {
+		//if (clienttasks.redhatReleaseX.equals("7")) { // this will only test for rhel7
+		 if(Integer.valueOf(clienttasks.redhatReleaseX)>=7){
 			// rpm --query --requires rhsm-gtk --verbose | egrep -v '(^auto:|^rpmlib:)'
 			expectedRequiresList.addAll(Arrays.asList(new String[]{
 					"manual: font(cantarell)",
@@ -938,7 +939,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		if (Integer.valueOf(clienttasks.redhatReleaseX)<7) {
 			Assert.fail("Did not expect package '"+pkg+"' to be installed on RHEL release '"+clienttasks.redhatReleaseX+"'.");
 		}
-		if (clienttasks.redhatReleaseX.equals("7")) {
+		if (clienttasks.redhatReleaseX.equals("7")||clienttasks.redhatReleaseX.equals("8")) {
 			expectedRequiresList.addAll(Arrays.asList(new String[]{
 					"manual: initial-setup-gui >= 0.3.9.24-1",
 					"manual: subscription-manager-gui = "+clienttasks.installedPackageVersionMap.get("subscription-manager-gui").replace("subscription-manager-gui-", "").replaceFirst("\\."+clienttasks.arch, ""),	//"manual: subscription-manager-gui = 1.15.6-1.el7",
@@ -995,7 +996,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 //			Assert.assertTrue(actualRequiresList.containsAll(expectedRequiresList), "The actual requires list of packages for '"+pkg+"' contains the expected list "+expectedRequiresList);
 //			return;
 		}
-		if (clienttasks.redhatReleaseX.equals("6") || clienttasks.redhatReleaseX.equals("7")) {
+		if (clienttasks.redhatReleaseX.equals("6") || clienttasks.redhatReleaseX.equals("7")||clienttasks.redhatReleaseX.equals("8")) {
 			expectedRequiresList.addAll(Arrays.asList(new String[]{
 					"manual: subscription-manager = "+clienttasks.installedPackageVersionMap.get("subscription-manager").replace("subscription-manager-", "").replaceFirst("\\."+clienttasks.arch, ""),	// "manual: subscription-manager = 1.9.11-1.el6"
 					"manual: rhnlib"
@@ -1082,7 +1083,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		if (Integer.valueOf(clienttasks.redhatReleaseX)<7) {
 			Assert.fail("Did not expect package '"+pkg+"' to be installed on RHEL release '"+clienttasks.redhatReleaseX+"'.");
 		}
-		if (clienttasks.redhatReleaseX.equals("7")) {
+		if (clienttasks.redhatReleaseX.equals("7") || clienttasks.redhatReleaseX.equals("8")) {
 			expectedRequiresList.addAll(Arrays.asList(new String[]{
 					"manual: pygobject3-base",
 					"manual: python-iniparse >= 0.4",
@@ -1146,7 +1147,16 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 				expectedRequiresList.add("post,interp: /bin/sh");
 			}
 		}
-		
+		if (clienttasks.redhatReleaseX.equals("8")) {
+			expectedRequiresList.addAll(Arrays.asList(new String[]{
+					//none
+					"manual: subscription-manager = "+clienttasks.installedPackageVersionMap.get("subscription-manager").replace("subscription-manager-", "").replaceFirst("\\."+clienttasks.arch, ""),	// "manual: subscription-manager = 1.15.6-1.el7"	// Bug 1165771
+			}));
+			
+			if (clienttasks.isPackageVersion("subscription-manager-plugin-container",">=","1.20.1-1")) {	// commit 76c52b9002906d80b17baf6af4da67e648ce2415 1422196: Update container certs after plugin install
+				expectedRequiresList.add("post,interp: /bin/sh");
+			}
+		}
 		for (String expectedRequires : expectedRequiresList) if (!actualRequiresList.contains(expectedRequires)) log.warning("The actual requires list is missing expected requires '"+expectedRequires+"'.");
 		for (String actualRequires : actualRequiresList) if (!expectedRequiresList.contains(actualRequires)) log.warning("The expected requires list does not include the actual requires '"+actualRequires+"'  Is this a new requirement?");
 		Assert.assertTrue(expectedRequiresList.containsAll(actualRequiresList) && actualRequiresList.containsAll(expectedRequiresList), "The actual requires list of packages for '"+pkg+"' matches the expected list "+expectedRequiresList);
@@ -1453,6 +1463,12 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		if (clienttasks==null) return ll;
 		
+		// the version of optparse from python dictates this stdout format
+		// python<3		subscription-manager: error: --repo option requires an argument
+		// python>=3	subscription-manager: error: --repo option requires 1 argument
+		String anArgument = "an argument";
+		if (Float.valueOf(clienttasks.pythonVersion) >= 3.0f) anArgument = "1 argument";
+		
 		// due to design changes, this is a decent place to dump old commands that have been removed
 				
 		// negative tests that require the system to be unregistered first...
@@ -1493,6 +1509,14 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 			ll.add(Arrays.asList(new Object[]{null,													clienttasks.command+" repo-override --repo",								new Integer(2),		clienttasks.command+": error: --repo option requires an argument",	"Usage: subscription-manager repo-override [OPTIONS]"}));
 			ll.add(Arrays.asList(new Object[]{null,										 			clienttasks.command+" repo-override --remove",								new Integer(2),		clienttasks.command+": error: --remove option requires an argument",	"Usage: subscription-manager repo-override [OPTIONS]"}));
 			ll.add(Arrays.asList(new Object[]{null,													clienttasks.command+" repo-override --add",									new Integer(2),		clienttasks.command+": error: --add option requires an argument",	"Usage: subscription-manager repo-override [OPTIONS]"}));
+			if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-1")) {	// post commit 2e4c2b8ab686bd240b99acb8d9c149e4aa7010d8
+				ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1479353"}),		clienttasks.command+" list --after=2018-01-01",								new Integer(64),	"","Error: --after is only applicable with --available"}));
+				ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1479353"}),		clienttasks.command+" list --after=2018-01-01 --ondate=2018-01-01 --avail",	new Integer(64),	"","Error: --after cannot be used with --ondate"}));	
+			}
+
+			ll.add(Arrays.asList(new Object[]{null,													clienttasks.command+" repo-override --repo",								new Integer(2),		clienttasks.command+": error: --repo option requires "+anArgument,	"Usage: subscription-manager repo-override [OPTIONS]"}));
+			ll.add(Arrays.asList(new Object[]{null,										 			clienttasks.command+" repo-override --remove",								new Integer(2),		clienttasks.command+": error: --remove option requires "+anArgument,	"Usage: subscription-manager repo-override [OPTIONS]"}));
+			ll.add(Arrays.asList(new Object[]{null,													clienttasks.command+" repo-override --add",									new Integer(2),		clienttasks.command+": error: --add option requires "+anArgument,	"Usage: subscription-manager repo-override [OPTIONS]"}));
 			ll.add(Arrays.asList(new Object[]{null,													clienttasks.command+" repo-override --add=foo",								new Integer(2),		clienttasks.command+": error: --add arguments should be in the form of \"name:value\"",	"Usage: subscription-manager repo-override [OPTIONS]"}));
 			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1119688"}),			clienttasks.command+" repo-override --repo=foo",							new Integer(64),	"","Error: The --repo option must be used with --list or --add or --remove."}));
 			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1119688"}),			clienttasks.command+" repo-override --remove=foo",							new Integer(64),	"","Error: You must specify a repository to modify"}));
@@ -1566,9 +1590,9 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 				ll.add(Arrays.asList(new Object[]{null,						clienttasks.command+" list --match-installed",								new Integer(255),	"Error: --match-installed is only applicable with --available", ""}));
 			}
 			if (clienttasks.isPackageVersion("subscription-manager",">=","1.10.7-1")) {
-				ll.add(Arrays.asList(new Object[]{null,						clienttasks.command+" repo-override --repo",								new Integer(2),		clienttasks.command+": error: --repo option requires an argument",	"Usage: subscription-manager repo-override [OPTIONS]"}));
-				ll.add(Arrays.asList(new Object[]{null,						clienttasks.command+" repo-override --remove",								new Integer(2),		clienttasks.command+": error: --remove option requires an argument",	"Usage: subscription-manager repo-override [OPTIONS]"}));
-				ll.add(Arrays.asList(new Object[]{null,						clienttasks.command+" repo-override --add",									new Integer(2),		clienttasks.command+": error: --add option requires an argument",	"Usage: subscription-manager repo-override [OPTIONS]"}));
+				ll.add(Arrays.asList(new Object[]{null,						clienttasks.command+" repo-override --repo",								new Integer(2),		clienttasks.command+": error: --repo option requires "+anArgument,	"Usage: subscription-manager repo-override [OPTIONS]"}));
+				ll.add(Arrays.asList(new Object[]{null,						clienttasks.command+" repo-override --remove",								new Integer(2),		clienttasks.command+": error: --remove option requires "+anArgument,	"Usage: subscription-manager repo-override [OPTIONS]"}));
+				ll.add(Arrays.asList(new Object[]{null,						clienttasks.command+" repo-override --add",									new Integer(2),		clienttasks.command+": error: --add option requires "+anArgument,	"Usage: subscription-manager repo-override [OPTIONS]"}));
 				ll.add(Arrays.asList(new Object[]{null,						clienttasks.command+" repo-override --add=foo",								new Integer(2),		clienttasks.command+": error: --add arguments should be in the form of \"name:value\"",	"Usage: subscription-manager repo-override [OPTIONS]"}));
 				ll.add(Arrays.asList(new Object[]{null,						clienttasks.command+" repo-override --repo=foo",							new Integer(255),	"Error: The --repo option must be used with --list or --add or --remove.",	""}));
 				ll.add(Arrays.asList(new Object[]{null,						clienttasks.command+" repo-override --remove=foo",							new Integer(255),	"Error: You must specify a repository to modify",	""}));
