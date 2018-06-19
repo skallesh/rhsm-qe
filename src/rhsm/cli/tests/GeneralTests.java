@@ -544,7 +544,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 			if (clienttasks.isPackageVersion("subscription-manager",">=","1.10.5-1"))	expectedRequiresList.remove("manual: python-simplejson");		// Bug 1006748 - remove subscription-manager dependency on python-simplejson; subscription-manager commit ee34aef839d0cb367e558f1cd7559590d95cd636
 			
 		}
-		if (clienttasks.redhatReleaseX.equals("7")||clienttasks.redhatReleaseX.equals("8")) {
+		if (clienttasks.redhatReleaseX.equals("7")) {
 			expectedRequiresList.addAll(Arrays.asList(new String[]{
 					"post: systemd",	//"post: systemd-units",	// changed for rhel7 by commit f67310381587a96a37933abf22985b97de373887  Bug 850331 - Introduce new systemd-rpm macros in subscription-manager spec file 
 					"preun: systemd",	//"preun: systemd-units",	// changed for rhel7 by commit f67310381587a96a37933abf22985b97de373887  Bug 850331 - Introduce new systemd-rpm macros in subscription-manager spec file 
@@ -659,6 +659,33 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		else if	(clienttasks.isPackageVersion("subscription-manager",">=","1.8.22-1"))	expectedRequiresList.add((clienttasks.redhatReleaseX.equals("5")?"":"manual: ")+"python-rhsm >= 1.8.16-1");		// RHEL5.10
 		else if	(clienttasks.isPackageVersion("subscription-manager",">=","1.0.13-1"))	expectedRequiresList.add((clienttasks.redhatReleaseX.equals("5")?"":"manual: ")+"python-rhsm >= 1.0.5");		// RHEL5.9
 		
+		
+		if (clienttasks.redhatReleaseX.equals("8")) {
+			expectedRequiresList.clear();	// clear the list from the version history above and start fresh on RHEL8 where python3 is now the default
+			expectedRequiresList.addAll(Arrays.asList(new String[]{
+					"post: systemd",	//"post: systemd-units",	// changed for rhel7 by commit f67310381587a96a37933abf22985b97de373887  Bug 850331 - Introduce new systemd-rpm macros in subscription-manager spec file 
+					"preun: systemd",	//"preun: systemd-units",	// changed for rhel7 by commit f67310381587a96a37933abf22985b97de373887  Bug 850331 - Introduce new systemd-rpm macros in subscription-manager spec file 
+					"postun: systemd",	//"postun: systemd-units",	// changed for rhel7 by commit f67310381587a96a37933abf22985b97de373887  Bug 850331 - Introduce new systemd-rpm macros in subscription-manager spec file 
+					"config: config(subscription-manager) = "+clienttasks.installedPackageVersionMap.get("subscription-manager").replace("subscription-manager-", "").replaceFirst("\\."+clienttasks.arch, ""),	//"config: config(subscription-manager) = 1.10.14-7.el7
+					"post,interp: /bin/sh",
+					"preun,interp: /bin/sh",
+					"postun,interp: /bin/sh",
+					"manual: python3-dateutil",
+					"manual: python3-dbus",
+					"manual: python3-decorator",
+					"manual: python3-dmidecode >= 3.12.2-2",
+					"manual: python3-ethtool",
+					"manual: python3-gobject",
+					"manual: python3-iniparse",
+					"manual: python3-inotify",
+					"manual: python3-kitchen",
+					"manual: python3-setuptools",
+					"manual: python3-six",
+					"manual: python3-subscription-manager-rhsm = "+clienttasks.installedPackageVersionMap.get("subscription-manager").replace("subscription-manager-", "").replaceFirst("-\\d+\\..+", "")/*strips off -1.git.17.485ba1e.el7.x86_64*/,	// commit f445b6486a962d12185a5afe69e768d0a605e175	Move python-rhsm build into subscription-manager
+					"manual: usermode",
+					"manual: virt-what"
+			}));
+		}
 		
 		for (String expectedRequires : expectedRequiresList) if (!actualRequiresList.contains(expectedRequires)) log.warning("The actual requires list is missing expected requires '"+expectedRequires+"'.");
 		for (String actualRequires : actualRequiresList) if (!expectedRequiresList.contains(actualRequires)) log.warning("The expected requires list does not include the actual requires '"+actualRequires+"'  Is this a new requirement?");
