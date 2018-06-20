@@ -67,10 +67,7 @@ public class SubscriptionManagerTasks {
 	public final String rhsmLoggingConfFile	= "/etc/rhsm/logging.conf";	// NO LONGER EXISTS in subscription-manager-1.17.10-1	// RHEL7.3 commit d84b15f42c2e4521e130b939039960c0846b849c 1334916: Move logging configuration to rhsm.conf
 	public final String factsDir			= "/etc/rhsm/facts";
 	public final String rhsmUpdateFile		= "/var/run/rhsm/update"; // during RHEL74: replaced by two files /var/run/rhsm/next_auto_attach_update and /var/run/rhsm/next_cert_check_update by commit e9f8421285fc6541166065a8b55ee89b9a425246 1435013: Add splay option to rhsmcertd, randomize over interval
-	public final String yumPluginConfFileForSubscriptionManager	= "/etc/yum/pluginconf.d/subscription-manager.conf"; // "/etc/yum/pluginconf.d/rhsmplugin.conf"; renamed by dev on 11/24/2010
-	public final String yumPluginConfFileForProductId			= "/etc/yum/pluginconf.d/product-id.conf";
-	public final String yumPluginConfFileForRhn					= "/etc/yum/pluginconf.d/rhnplugin.conf";
-	public final String yumPluginConfFileForSearchDisabledRepos	= "/etc/yum/pluginconf.d/search-disabled-repos.conf";
+
 	public final String rhnSystemIdFile		= "/etc/sysconfig/rhn/systemid";
 	public final String rhnUp2dateFile		= "/etc/sysconfig/rhn/up2date";
 	public final String rhsmFactsJsonFile	= "/var/lib/rhsm/facts/facts.json";
@@ -131,6 +128,10 @@ public class SubscriptionManagerTasks {
 	public String compose							= "";	// from beaker
 	public Boolean isFipsEnabled					= null; // of the client	sysctl crypto.fips_enabled => crypto.fips_enabled = 1
 	public Float pythonVersion						= null; // used to interpret subscription-manager
+	public String yumPluginConfFileForSubscriptionManager	= null;
+	public String yumPluginConfFileForProductId				= null;
+	public String yumPluginConfFileForRhn					= null;
+	public String yumPluginConfFileForSearchDisabledRepos	= null;
 	
 	protected String currentlyRegisteredUsername	= null;	// most recent username used during register
 	protected String currentlyRegisteredPassword	= null;	// most recent password used during register
@@ -199,7 +200,55 @@ public class SubscriptionManagerTasks {
 		// version of python interpreter
 		// [root@jsefler-rhel6 ~]# rpm -q --requires subscription-manager | grep 'python(abi)' | cut -d= -f2
 		//  2.6
-		pythonVersion = Float.valueOf(sshCommandRunner.runCommandAndWait("rpm -q --requires "+this.command+" | grep 'python(abi)' | cut -d= -f2").getStdout().trim()); 
+		pythonVersion = Float.valueOf(sshCommandRunner.runCommandAndWait("rpm -q --requires "+this.command+" | grep 'python(abi)' | cut -d= -f2").getStdout().trim());
+		
+		// location for yum plugins (Note: on RHEL8, yum is redirected to dnf which has a new location for plugins)
+		yumPluginConfFileForSubscriptionManager	= "/etc/yum/pluginconf.d/subscription-manager.conf"; // "/etc/yum/pluginconf.d/rhsmplugin.conf"; renamed by dev on 11/24/2010
+		yumPluginConfFileForProductId			= "/etc/yum/pluginconf.d/product-id.conf";
+		yumPluginConfFileForRhn					= "/etc/yum/pluginconf.d/rhnplugin.conf";
+		yumPluginConfFileForSearchDisabledRepos	= "/etc/yum/pluginconf.d/search-disabled-repos.conf";
+		if (!sshCommandRunner.runCommandAndWait("rpm -q --requires yum | egrep ^dnf").getStdout().trim().isEmpty()); {	// check if yum requires dnf
+			yumPluginConfFileForSubscriptionManager	= "/etc/dnf/plugins/subscription-manager.conf";
+			yumPluginConfFileForProductId			= "/etc/dnf/plugins/product-id.conf";
+			yumPluginConfFileForRhn					= "/etc/dnf/plugins/rhnplugin.conf";
+			yumPluginConfFileForSearchDisabledRepos	= "/etc/dnf/plugins/search-disabled-repos.conf";
+		}
+		// TEMPORARY WORKAROUND FOR BUG
+		if (redhatReleaseX.equals("8")) { 
+		String bugId = "1593002"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1593002 - [RFE] provide a dnf config file to disable subscription-manager and product-id plugins
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
+			for (String yumPluginConfFile : Arrays.asList(new String[]{yumPluginConfFileForSubscriptionManager, yumPluginConfFileForProductId, yumPluginConfFileForRhn, yumPluginConfFileForSearchDisabledRepos})) {
+				if (!RemoteFileTasks.testExists(runner, yumPluginConfFile)) {
+					log.warning("Manually creating dnf config file '"+yumPluginConfFile+"' while bug '"+bugId+"' is open.");
+					sshCommandRunner.runCommandAndWait("echo -e '[main]\nenabled=1' > "+yumPluginConfFile);
+				}				
+			}
+		}
+		}
+		// END OF WORKAROUND
+		
+		// TEMPORARY WORKAROUND FOR BUG
+		if (redhatReleaseX.equals("8")) {
+			String dnfConfFile = "/etc/dnf/dnf.conf";
+			String bugId = "1583842"; boolean invokeWorkaroundWhileBugIsOpen = true;	// Bug 1583842 - dnf plugins from dnf-plugin-subscription-manager are not loaded by the default dnf config
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			if (invokeWorkaroundWhileBugIsOpen) {
+				
+				// If we alter the default dnf pluginpath, then product-id and subscription-manager plugins will load...
+				if (getConfFileParameter(dnfConfFile,"pluginpath")==null) {
+					log.warning("Manually altering the dnf pluginpath while bug '"+bugId+"' is open so that the product-id and subscription-manager plugins will load.");
+					addConfFileParameter (dnfConfFile,"\n# Adding WORKAROUND for Bugzilla "+bugId+" \npluginpath","/usr/lib64/python3.6/site-packages/dnf-plugins,/usr/lib/python3.6/site-packages/dnf-plugins");
+				}
+			} else {
+				// Once the blug is closed, let's remove this WORKAROUND...
+				if (getConfFileParameter(dnfConfFile,"pluginpath")!=null) {
+					log.warning("Manually commenting out the dnf pluginpath since bug '"+bugId+"' is closed.");
+					commentConfFileParameter(dnfConfFile,"pluginpath");
+				}
+			}
+		}
+		// END OF WORKAROUND
 		
 		// predict sockets on the system   http://libvirt.org/formatdomain.html#elementsCPU
 		/* 5/6/2013: DON'T PREDICT THIS USING lscpu ANY MORE.  IT LEADS TO TOO MANY TEST FAILURES TO TROUBLESHOOT.  INSTEAD, RELY ON FactsTests.MatchingCPUSocketsFact_Test() TO ASSERT BUGZILLA Bug 751205 - cpu_socket(s) facts value occasionally differs from value reported by lscpu (which is correct?)
