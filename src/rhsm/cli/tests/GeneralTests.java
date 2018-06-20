@@ -950,7 +950,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		if (Integer.valueOf(clienttasks.redhatReleaseX)<7) {
 			Assert.fail("Did not expect package '"+pkg+"' to be installed on RHEL release '"+clienttasks.redhatReleaseX+"'.");
 		}
-		if (clienttasks.redhatReleaseX.equals("7")||clienttasks.redhatReleaseX.equals("8")) {
+		if (clienttasks.redhatReleaseX.equals("7")) {
 			expectedRequiresList.addAll(Arrays.asList(new String[]{
 					"manual: initial-setup-gui >= 0.3.9.24-1",
 					"manual: subscription-manager-gui = "+clienttasks.installedPackageVersionMap.get("subscription-manager-gui").replace("subscription-manager-gui-", "").replaceFirst("\\."+clienttasks.arch, ""),	//"manual: subscription-manager-gui = 1.15.6-1.el7",
@@ -963,6 +963,13 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 						"manual: rhsm-gtk = "+clienttasks.installedPackageVersionMap.get("rhsm-gtk").replace("rhsm-gtk-", "").replaceFirst("\\."+clienttasks.arch, ""),	//"manual: rhsm-gtk = 1.9.11-1.el6",
 				}));
 			}
+		}
+		
+		if (clienttasks.redhatReleaseX.equals("8")) {
+			expectedRequiresList.addAll(Arrays.asList(new String[]{
+				"manual: initial-setup-gui >= 0.3.9.24-1",
+				"manual: rhsm-gtk = "+clienttasks.installedPackageVersionMap.get("rhsm-gtk").replace("rhsm-gtk-", "").replaceFirst("\\."+clienttasks.arch, ""),	//"manual: rhsm-gtk = 1.9.11-1.el6",
+			}));
 		}
 		
 		for (String expectedRequires : expectedRequiresList) if (!actualRequiresList.contains(expectedRequires)) log.warning("The actual requires list is missing expected requires '"+expectedRequires+"'.");
@@ -1094,10 +1101,18 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		if (Integer.valueOf(clienttasks.redhatReleaseX)<7) {
 			Assert.fail("Did not expect package '"+pkg+"' to be installed on RHEL release '"+clienttasks.redhatReleaseX+"'.");
 		}
-		if (clienttasks.redhatReleaseX.equals("7") || clienttasks.redhatReleaseX.equals("8")) {
+		if (clienttasks.redhatReleaseX.equals("7")) {
 			expectedRequiresList.addAll(Arrays.asList(new String[]{
 					"manual: pygobject3-base",
 					"manual: python-iniparse >= 0.4",
+					"manual: subscription-manager = "+clienttasks.installedPackageVersionMap.get("subscription-manager").replace("subscription-manager-", "").replaceFirst("\\."+clienttasks.arch, ""),	// "manual: subscription-manager = 1.15.6-1.el7"	// Bug 1165771
+					//TODO subscription-manager >= 1.15.9-5  account for Bug 1185958: Make ostree plugin depend on ostree
+			}));
+		}
+		if (clienttasks.redhatReleaseX.equals("8")) {
+			expectedRequiresList.addAll(Arrays.asList(new String[]{
+					"manual: pygobject3-base",
+					"manual: python3-iniparse >= 0.4",
 					"manual: subscription-manager = "+clienttasks.installedPackageVersionMap.get("subscription-manager").replace("subscription-manager-", "").replaceFirst("\\."+clienttasks.arch, ""),	// "manual: subscription-manager = 1.15.6-1.el7"	// Bug 1165771
 					//TODO subscription-manager >= 1.15.9-5  account for Bug 1185958: Make ostree plugin depend on ostree
 			}));
