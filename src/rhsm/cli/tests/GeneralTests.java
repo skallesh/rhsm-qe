@@ -1536,9 +1536,13 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 				ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1162170"}),		clienttasks.command+" list --pool-only",									new Integer(64),	"","Error: --pool-only is only applicable with --available and/or --consumed"}));
 				ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1162170"}),		clienttasks.command+" list --pool-only --installed",						new Integer(64),	"","Error: --pool-only is only applicable with --available and/or --consumed"}));
 			}
-			if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-1")) {	// post commit 2e4c2b8ab686bd240b99acb8d9c149e4aa7010d8
+			if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-1") && clienttasks.isPackageVersion("subscription-manager","<","1.22.1-1")) {	// post commit 2e4c2b8ab686bd240b99acb8d9c149e4aa7010d8
 				ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1479353"}),		clienttasks.command+" list --after=2018-01-01",								new Integer(64),	"","Error: --after is only applicable with --available"}));
 				ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1479353"}),		clienttasks.command+" list --after=2018-01-01 --ondate=2018-01-01 --avail",	new Integer(64),	"","Error: --after cannot be used with --ondate"}));	
+			}
+			if (clienttasks.isPackageVersion("subscription-manager",">=","1.22.1-1")) {	// post commit 292f9783e7d504dca78854b05a5f698d35597037
+				ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1479353","1589296"}),		clienttasks.command+" list --afterdate=2018-01-01",								new Integer(64),	"","Error: --afterdate is only applicable with --available"}));
+				ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1479353","1589296"}),		clienttasks.command+" list --afterdate=2018-01-01 --ondate=2018-01-01 --avail",	new Integer(64),	"","Error: --afterdate cannot be used with --ondate"}));	
 			}
 
 			ll.add(Arrays.asList(new Object[]{null,													clienttasks.command+" repo-override --repo",								new Integer(2),		clienttasks.command+": error: --repo option requires "+anArgument,	"Usage: subscription-manager repo-override [OPTIONS]"}));
