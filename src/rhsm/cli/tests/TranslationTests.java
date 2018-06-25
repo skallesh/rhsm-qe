@@ -319,7 +319,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier1")
 	@Test(	description="verify that only the expected rhsm.mo tranlation files are installed for each of the supported locales",
-			groups={"Tier1Tests", "blockedByBug-824100"},
+			groups={"Tier1Tests", "blockedByBug-824100", "blockedByBug-1594891"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void testOnlyExpectedTranslationFilesAreInstalled() {
