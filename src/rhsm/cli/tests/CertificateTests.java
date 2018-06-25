@@ -1259,6 +1259,8 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		for (String release : clienttasks.getCurrentlyAvailableReleases(null, null, null, null)) {
 			List<String> bugIds = new ArrayList<String>();
 			
+			if (release.equals("multiarch")||release.equals("x86_64")) bugIds.add("1589835");	// Bug 1589835 - Values "multiarch" and "x86_64" are listed in subscription-manager release --list
+			
 			// NOTE: As older releases go EOL, these bugs may be CLOSED WONTFIX
 			// Under the Product Pages schedule for each older release, look for EUS/AMC/TUS/E4S EOL dates under Major Milestones
 			// https://pp.engineering.redhat.com/pp/product/rhel/overview
@@ -1277,14 +1279,14 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 				if (release.equals("7.2") && clienttasks.arch.equals("ppc64le")) bugIds.add("1261171"); 	// Bug 1261171 - uncertain of expected release listing on rhel72 ppc64le system
 				if (release.equals("7.2") && clienttasks.variant.equals("ComputeNode") && release.equals("7.1")) bugIds.add("1267732"); 	// Bug 1267732 - production CDN productid files 404: Not Found. for ComputeNode releasever 7.1 and 7Server
 				if (release.equals("7.2") && clienttasks.variant.equals("ComputeNode") && release.equals("7ComputeNode")) bugIds.add("1267732"); 	// Bug 1267732 - production CDN productid files 404: Not Found. for ComputeNode releasever 7.1 and 7Server
-				if (!release.matches("7.0|7.1") && clienttasks.variant.equals("Server") && clienttasks.arch.equals("x86_64")) bugIds.add("1338857"); 	// Bug 1338857 - cdn.redhat.com has the wrong productId version for rhel 7.2
-				if (!release.matches("7.0|7.1") && clienttasks.variant.equals("Server") && clienttasks.arch.equals("s390x")) bugIds.add("1356738"); 	// Bug 1356738 - cdn.redhat.com has the wrong repodata/productId version at server/7/7.2/s390x and server/7/7Server/s390x
-				if (!release.matches("7.0|7.1") && clienttasks.variant.equals("Server") && clienttasks.arch.equals("ppc64")) bugIds.add("1356740"); 	// Bug 1356740 - cdn.redhat.com has the wrong repodata/productId version at server/7/7.2/ppc64 and server/7/7Server/ppc64
-				if (!release.matches("7.0|7.1") && clienttasks.variant.equals("Workstation") && clienttasks.arch.equals("x86_64")) bugIds.add("1356710"); 	// Bug 1356710 - cdn.redhat.com has the wrong repodata/productId version at workstation/7/7.2 and workstation/7/7Workstation
-				if (!release.matches("7.0|7.1") && clienttasks.variant.equals("ComputeNode") && clienttasks.arch.equals("x86_64")) bugIds.add("1356722"); 	// Bug 1356722 - cdn.redhat.com has the wrong repodata/productId version at computenode/7/7.2 and computenode/7/7ComputeNode
-				if (!release.matches("7.0|7.1") && clienttasks.variant.equals("Client") && clienttasks.arch.equals("x86_64")) bugIds.add("1356729"); 	// Bug 1356729 - cdn.redhat.com has the wrong repodata/productId version at client/7/7.2 and client/7/7Client
+				if (release.matches("7.2|7.3") && clienttasks.variant.equals("Server") && clienttasks.arch.equals("x86_64")) bugIds.add("1338857"); 	// Bug 1338857 - cdn.redhat.com has the wrong productId version for rhel 7.2
+				if (release.matches("7.2|7.3") && clienttasks.variant.equals("Server") && clienttasks.arch.equals("s390x")) bugIds.add("1356738"); 	// Bug 1356738 - cdn.redhat.com has the wrong repodata/productId version at server/7/7.2/s390x and server/7/7Server/s390x
+				if (release.matches("7.2|7.3") && clienttasks.variant.equals("Server") && clienttasks.arch.equals("ppc64")) bugIds.add("1356740"); 	// Bug 1356740 - cdn.redhat.com has the wrong repodata/productId version at server/7/7.2/ppc64 and server/7/7Server/ppc64
+				if (release.matches("7.2|7.3") && clienttasks.variant.equals("Workstation") && clienttasks.arch.equals("x86_64")) bugIds.add("1356710"); 	// Bug 1356710 - cdn.redhat.com has the wrong repodata/productId version at workstation/7/7.2 and workstation/7/7Workstation
+				if (release.matches("7.2|7.3") && clienttasks.variant.equals("ComputeNode") && clienttasks.arch.equals("x86_64")) bugIds.add("1356722"); 	// Bug 1356722 - cdn.redhat.com has the wrong repodata/productId version at computenode/7/7.2 and computenode/7/7ComputeNode
+				if (release.matches("7.2|7.3") && clienttasks.variant.equals("Client") && clienttasks.arch.equals("x86_64")) bugIds.add("1356729"); 	// Bug 1356729 - cdn.redhat.com has the wrong repodata/productId version at client/7/7.2 and client/7/7Client
 				if (release.matches("7.0|7.1|7.2") && clienttasks.variant.equals("Server") && clienttasks.arch.equals("ppc64le")) bugIds.add("1351754"); 	// Bug 1351754 - production CDN productid files 404: Not Found. for Power, little endian releasever 7.1, 7.2, and 7Server
-				if (release.matches("7.*") && clienttasks.variant.equals("Server") && clienttasks.arch.equals("aarch64")) bugIds.add("1351800"); 	// Bug 1351800 - production CDN productid files 404: Not Found. for ARM releasever 7.1, 7.2, and 7Server
+				if (release.matches("7.1|7.2") && clienttasks.variant.equals("Server") && clienttasks.arch.equals("aarch64")) bugIds.add("1351800"); 	// Bug 1351800 - production CDN productid files 404: Not Found. for ARM releasever 7.1, 7.2, and 7Server
 			}
 			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 			
