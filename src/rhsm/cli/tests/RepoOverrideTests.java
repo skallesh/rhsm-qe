@@ -112,16 +112,19 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 			Assert.assertEquals(result.getStdout().trim(), "Repository 'foo-bar' does not currently exist, but the override has been added.", "Stdout (against a standalone candlepin version >= 2.0.10-1) from an attempt to repo-override the baseurl of yumRepo: "+yumRepo);
 			Assert.assertEquals(result.getStderr().trim(), "", "Stderr (against a standalone candlepin version >= 2.0.10-1) from an attempt to repo-override the baseurl of yumRepo: "+yumRepo);
 		} else {	// original candlepin behavior denies baseurl overrides
-			
-			Assert.assertEquals(result.getExitCode(), Integer.valueOf(1), "ExitCode from an attempt to repo-override the baseurl of yumRepo: "+yumRepo);		
-	
+			String expectedStdout = "Not allowed to override values for: baseurl";
+			String expectedStderr = "";
 			if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
-				Assert.assertEquals(result.getStdout().trim(), "", "Stdout from an attempt to repo-override the baseurl of yumRepo: "+yumRepo);
-				Assert.assertEquals(result.getStderr().trim(), "Not allowed to override values for: baseurl", "Stderr from an attempt to repo-override the baseurl of yumRepo: "+yumRepo);
-			} else {
-				Assert.assertEquals(result.getStderr().trim(), "", "Stderr from an attempt to repo-override the baseurl of yumRepo: "+yumRepo);
-				Assert.assertEquals(result.getStdout().trim(), "Not allowed to override values for: baseurl", "Stdout from an attempt to repo-override the baseurl of yumRepo: "+yumRepo);
+				String tmpStdout = expectedStdout;	// swap expected stdout and stderr
+				expectedStdout = expectedStderr;
+				expectedStderr = tmpStdout;
 			}
+			if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-1")) {	// post commit 630e1a2eb06e6bfacac669ce11f38e228c907ea9 1507030: RestlibExceptions should show they originate server-side
+				expectedStderr = "HTTP error (400 - Bad Request): "+expectedStderr;	
+			}
+			Assert.assertEquals(result.getExitCode(), Integer.valueOf(1), "ExitCode from an attempt to repo-override the baseurl of yumRepo: "+yumRepo);		
+			Assert.assertEquals(result.getStdout().trim(), expectedStdout, "Stdout from an attempt to repo-override the baseurl of yumRepo: "+yumRepo);
+			Assert.assertEquals(result.getStderr().trim(), expectedStderr, "Stderr from an attempt to repo-override the baseurl of yumRepo: "+yumRepo);
 		}
 	}
 
@@ -160,14 +163,19 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 			Assert.assertEquals(result.getStderr().trim(), "", "Stderr (against a standalone candlepin version >= 2.0.10-1) from an attempt to repo-override the baseurl of yumRepo: "+yumRepo);
 		} else {	// original candlepin behavior denies baseurl overrides
 			
-			Assert.assertEquals(result.getExitCode(), Integer.valueOf(1), "ExitCode from an attempt to repo-override the "+baseUrl+" (note the case) of yumRepo '"+yumRepo.id+"'.");		
+			String expectedStdout = "Not allowed to override values for: "+baseUrl;
+			String expectedStderr = "";
 			if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
-				Assert.assertEquals(result.getStdout().trim(), "", "Stdout from an attempt to repo-override the '"+baseUrl+"' (note the case) of yumRepo '"+yumRepo.id+"'.");
-				Assert.assertEquals(result.getStderr().trim(), "Not allowed to override values for: "+baseUrl, "Stderr from an attempt to repo-override the '"+baseUrl+"' (note the case) of yumRepo '"+yumRepo.id+"'.");
-			} else {
-				Assert.assertEquals(result.getStderr().trim(), "", "Stderr from an attempt to repo-override the '"+baseUrl+"' (note the case) of yumRepo '"+yumRepo.id+"'.");
-				Assert.assertEquals(result.getStdout().trim(), "Not allowed to override values for: "+baseUrl, "Stdout from an attempt to repo-override the '"+baseUrl+"' (note the case) of yumRepo '"+yumRepo.id+"'.");
+				String tmpStdout = expectedStdout;	// swap expected stdout and stderr
+				expectedStdout = expectedStderr;
+				expectedStderr = tmpStdout;
 			}
+			if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-1")) {	// post commit 630e1a2eb06e6bfacac669ce11f38e228c907ea9 1507030: RestlibExceptions should show they originate server-side
+				expectedStderr = "HTTP error (400 - Bad Request): "+expectedStderr;	
+			}
+			Assert.assertEquals(result.getExitCode(), Integer.valueOf(1), "ExitCode from an attempt to repo-override the baseurl '"+baseUrl+"' (note the case) of yumRepo '"+yumRepo.id+"'.");		
+			Assert.assertEquals(result.getStdout().trim(), expectedStdout, "Stdout from an attempt to repo-override the baseurl '"+baseUrl+"' (note the case) of yumRepo '"+yumRepo.id+"'.");
+			Assert.assertEquals(result.getStderr().trim(), expectedStderr, "Stderr from an attempt to repo-override the baseurl '"+baseUrl+"' (note the case) of yumRepo '"+yumRepo.id+"'.");
 		}
 		// attempt to override two bASeUrL and baseurl
 		//repoOverrideNameValueMap.put("baseurl", "https://cdn.redhat.com/repo-override-testing/$releasever/$basearch");
@@ -181,14 +189,19 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 			Assert.assertEquals(result.getStdout().trim(), "Repository 'foo-bar' does not currently exist, but the override has been added.", "Stdout (against a standalone candlepin version >= 2.0.10-1) from an attempt to repo-override the baseurl of yumRepo: "+yumRepo);
 			Assert.assertEquals(result.getStderr().trim(), "", "Stderr (against a standalone candlepin version >= 2.0.10-1) from an attempt to repo-override the baseurl of yumRepo: "+yumRepo);
 		} else {	// original candlepin behavior denies baseurl overrides
-			Assert.assertEquals(result.getExitCode(), Integer.valueOf(1), "ExitCode from an attempt to repo-override "+baseUrl+" (note the case) and 'baseurl' of yumRepo '"+yumRepo.id+"'.");		
+			String expectedStdout = "Not allowed to override values for: "+baseUrl+", baseurl";
+			String expectedStderr = "";
 			if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.8-1")) {	// post commit df95529a5edd0be456b3528b74344be283c4d258 bug 1119688
-				Assert.assertEquals(result.getStdout().trim(), "", "Stdout from an attempt to repo-override the '"+baseUrl+"' (note the case) and 'baseurl' of yumRepo '"+yumRepo.id+"'.");
-				Assert.assertEquals(result.getStderr().trim(), "Not allowed to override values for: "+baseUrl+", baseurl", "Stderr from an attempt to repo-override the '"+baseUrl+"' (note the case) and 'baseurl' of yumRepo '"+yumRepo.id+"'.");
-			} else {
-				Assert.assertEquals(result.getStderr().trim(), "", "Stderr from an attempt to repo-override the '"+baseUrl+"' (note the case) and 'baseurl' of yumRepo '"+yumRepo.id+"'.");
-				Assert.assertEquals(result.getStdout().trim(), "Not allowed to override values for: "+baseUrl+", baseurl", "Stdout from an attempt to repo-override the '"+baseUrl+"' (note the case) and 'baseurl' of yumRepo '"+yumRepo.id+"'.");
+				String tmpStdout = expectedStdout;	// swap expected stdout and stderr
+				expectedStdout = expectedStderr;
+				expectedStderr = tmpStdout;
 			}
+			if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-1")) {	// post commit 630e1a2eb06e6bfacac669ce11f38e228c907ea9 1507030: RestlibExceptions should show they originate server-side
+				expectedStderr = "HTTP error (400 - Bad Request): "+expectedStderr;	
+			}
+			Assert.assertEquals(result.getExitCode(), Integer.valueOf(1), "ExitCode from an attempt to repo-override '"+baseUrl+"' (note the case) and 'baseurl' of yumRepo '"+yumRepo.id+"'.");		
+			Assert.assertEquals(result.getStdout().trim(), expectedStdout, "Stdout from an attempt to repo-override the '"+baseUrl+"' (note the case) and 'baseurl' of yumRepo '"+yumRepo.id+"'.");
+			Assert.assertEquals(result.getStderr().trim(), expectedStderr, "Stderr from an attempt to repo-override the '"+baseUrl+"' (note the case) and 'baseurl' of yumRepo '"+yumRepo.id+"'.");
 		}
 		
 		// verify that no repo overrides have been added (including the valid parameter for the fun of it)
