@@ -1330,6 +1330,13 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		RemoteFileTasks.runCommandAndAssert(client,"rm -f "+tmpProductCertDir+"/*.pem",Integer.valueOf(0));
 		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir", tmpProductCertDir);
 		if (productIdJsonFile==null) {productIdJsonFile = client.runCommandAndWait("cat "+clienttasks.productIdJsonFile).getStdout().replaceAll("\\s*\n\\s*",""); Assert.assertTrue(productIdJsonFile!=null && !productIdJsonFile.isEmpty());} // remember the original so it can be restored later
+		// Step 2a: move the product-default certs too (effectively removing them from the test)
+		RemoteFileTasks.runCommandAndAssert(client,"mkdir -p "+tmpProductDefaultCertDir,Integer.valueOf(0));
+		RemoteFileTasks.runCommandAndAssert(client,"rm -f "+tmpProductDefaultCertDir+"/*.pem",Integer.valueOf(0));
+		for (ProductCert defaultProductCert : clienttasks.getProductCerts(clienttasks.productCertDefaultDir)) {
+			RemoteFileTasks.runCommandAndAssert(client,"mv "+defaultProductCert.file+" "+tmpProductDefaultCertDir,Integer.valueOf(0));
+		}
+		
 		
 		// Step 3: install an old RHEL product cert
 		ProductCert oldProductCert = null;	
@@ -1431,7 +1438,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		
 		
 		// Step 11: set the rhel release backward to perform downgrade testing
-		clienttasks.release(null, null, newerRelease, null, null, null, null, null);
+		clienttasks.release(null, null, oldRelease, null, null, null, null, null);
 		
 		// Step 12: downgrade the test package and assert the original product id remains installed.
 		clienttasks.yumClean("metadata");	// to avoid... Not using downloaded repomd.xml because it is older than what we have:
@@ -1449,7 +1456,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		//if (!originalRhelProductCert.productNamespace.version.toLowerCase().contains("beta")) {	// skip assertion when originalRhelProductCert is a beta cert since a beta productId will not be available for the latest release on the CDN 
 		//	Assert.assertEquals(finalRhelProductCert.productNamespace.version, originalRhelProductCert.productNamespace.version, "After downgrading package '"+testPackage+"' from the latest release, the installed product cert version remains the same as the original version '"+originalRhelProductCert.productNamespace.version+"'.");
 		//}
-		Assert.assertEquals(finalRhelProductCert.productNamespace.version, newestRelease, "After downgrading package '"+testPackage+"' from the latest release '"+newestRelease+"' to '"+newerRelease+"', the installed product cert version remains unchanged at release version '"+newestRelease+"'.");
+		Assert.assertEquals(finalRhelProductCert.productNamespace.version, newestRelease, "After downgrading package '"+testPackage+"' from the latest release '"+newestRelease+"' to '"+oldRelease+"', the installed product cert version remains unchanged at release version '"+newestRelease+"'.");
 	}
 	@DataProvider(name="getVerifyBaseRHELProductCertVersionUpdates_TestData")
 	public Object[][] getVerifyBaseRHELProductCertVersionUpdates_TestDataAs2dArray() {
@@ -1532,8 +1539,13 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 			log.info("Restoring the original productid json database file...");
 			RemoteFileTasks.runCommandAndAssert(client,"echo '"+productIdJsonFile+"' > "+clienttasks.productIdJsonFile, Integer.valueOf(0));
 			productIdJsonFile=null;
-//			clienttasks.yumClean("all");
 		}
+		
+		// restore the product-default certs too
+		for (ProductCert defaultProductCert : clienttasks.getProductCerts(tmpProductDefaultCertDir)) {
+			RemoteFileTasks.runCommandAndAssert(client,"mv "+defaultProductCert.file+" "+clienttasks.productCertDefaultDir,Integer.valueOf(0));
+		}
+		
 		clienttasks.yumClean("all");
 	}
 	@BeforeGroups(groups="setup", value = {"VerifyBaseRHELProductCertVersionUpdates_Test"})
@@ -1569,7 +1581,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	protected final String tmpProductCertDir = "/tmp/sm-tmpProductCertDir";
 	protected List<ProductCert> rhelProductCertsFromRhnDefinition = new ArrayList<ProductCert>();
 	protected String productIdJsonFile = null;	// original /var/lib/rhsm/productid.js
-
+	protected final String tmpProductDefaultCertDir = "/tmp/sm-tmpProductDefaultCertDir";
 
 
 
