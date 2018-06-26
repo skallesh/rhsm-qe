@@ -115,7 +115,7 @@ public class TemporaryPoolTests extends SubscriptionManagerCLITestScript {
 		SSHCommandResult result = clienttasks.subscribe_(null, null, unmappedGuestsOnlyPool.poolId, null, null, null, null, null, null, null, null, null, null);
 		String expectedStdout = String.format("Pool is restricted to unmapped virtual guests: '%s'", unmappedGuestsOnlyPool.poolId);
 		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.3.1-1")) {	// commit 0d5fefcfa8c1c2485921d2dee6633879b1e06931 Correct incorrect punctuation in user messages
-			expectedStdout = String.format("Pool is restricted to unmapped virtual guests: \"%s\".",unmappedGuestsOnlyPool.poolId);
+			expectedStdout = String.format("Pool is restricted to unmapped virtual guests: \"%s\"",unmappedGuestsOnlyPool.poolId);
 		}
 		String expectedStderr = "";
 		Assert.assertEquals(result.getStdout().trim(), expectedStdout, "Stdout from an attempt to attach a temporary pool to a virtual guest that has already been mapped.");
