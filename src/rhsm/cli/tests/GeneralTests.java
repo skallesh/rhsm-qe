@@ -308,8 +308,10 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		clienttasks.unregister(null, null, null, null);
 		clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForSubscriptionManager, "enabled", "1");
 		clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForProductId, "enabled", "1");
-
-		sshCommandResult = client.runCommandAndWait("yum repolist --disableplugin=rhnplugin"); // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
+		
+		String yumRepolistCommand = "yum repolist --disableplugin=rhnplugin";
+		if (Integer.valueOf(clienttasks.redhatReleaseX)>=8) yumRepolistCommand += " --debuglevel=3";
+		sshCommandResult = client.runCommandAndWait(yumRepolistCommand); // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
 		// Observed results
 		//	Loaded plugins: product-id, refresh-packagekit, security, subscription-manager
 		//
@@ -327,7 +329,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		Assert.assertTrue(doesStringContainMatches(stdout, stdoutRegex),"Yum repolist with "+clienttasks.yumPluginConfFileForProductId+" enabled=1 appears to have plugin product-id loaded.");
 			
 		clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForSubscriptionManager, "enabled", "0");
-		sshCommandResult = client.runCommandAndWait("yum repolist --disableplugin=rhnplugin"); // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
+		sshCommandResult = client.runCommandAndWait(yumRepolistCommand); // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
 		//	Loaded plugins: product-id, refresh-packagekit, security
 		stdout = sshCommandResult.getStdout();	// (first observed result)
 		stdout = stdout.replaceAll("-\\n\\s+:\\s", "-");	// join multiple lines of Loaded plugins (second observed result)
@@ -338,7 +340,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		Assert.assertTrue(doesStringContainMatches(stdout, stdoutRegex),"Yum repolist with "+clienttasks.yumPluginConfFileForProductId+" enabled=1 contains expected regex '"+stdoutRegex+"'.");
 		
 		clienttasks.updateConfFileParameter(clienttasks.yumPluginConfFileForProductId, "enabled", "0");
-		sshCommandResult = client.runCommandAndWait("yum repolist --disableplugin=rhnplugin"); // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
+		sshCommandResult = client.runCommandAndWait(yumRepolistCommand); // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
 		//	Loaded plugins: product-id, refresh-packagekit, security
 		stdout = sshCommandResult.getStdout();	// (first observed result)
 		stdout = stdout.replaceAll("-\\n\\s+:\\s", "-");	// join multiple lines of Loaded plugins (second observed result)
@@ -348,7 +350,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		stdoutRegex = "Loaded plugins:.* product-id";
 		Assert.assertTrue(!doesStringContainMatches(stdout, stdoutRegex),"Yum repolist with "+clienttasks.yumPluginConfFileForProductId+" enabled=0 does NOT contain expected regex '"+stdoutRegex+"'.");
 		
-		sshCommandResult = client.runCommandAndWait("yum repolist --disableplugin=rhnplugin --enableplugin=subscription-manager --enableplugin=product-id"); // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
+		sshCommandResult = client.runCommandAndWait(yumRepolistCommand+" --enableplugin=subscription-manager --enableplugin=product-id"); // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
 		//	Loaded plugins: product-id, refresh-packagekit, security, subscription-manager
 		stdout = sshCommandResult.getStdout();	// (first observed result)
 		stdout = stdout.replaceAll("-\\n\\s+:\\s", "-");	// join multiple lines of Loaded plugins (second observed result)
@@ -966,7 +968,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		if (Integer.valueOf(clienttasks.redhatReleaseX)<7) {
 			Assert.fail("Did not expect package '"+pkg+"' to be installed on RHEL release '"+clienttasks.redhatReleaseX+"'.");
 		}
-		if (clienttasks.redhatReleaseX.equals("7")||clienttasks.redhatReleaseX.equals("8")) {
+		if (clienttasks.redhatReleaseX.equals("7")) {
 			expectedRequiresList.addAll(Arrays.asList(new String[]{
 					"manual: initial-setup-gui >= 0.3.9.24-1",
 					"manual: subscription-manager-gui = "+clienttasks.installedPackageVersionMap.get("subscription-manager-gui").replace("subscription-manager-gui-", "").replaceFirst("\\."+clienttasks.arch, ""),	//"manual: subscription-manager-gui = 1.15.6-1.el7",
@@ -979,6 +981,13 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 						"manual: rhsm-gtk = "+clienttasks.installedPackageVersionMap.get("rhsm-gtk").replace("rhsm-gtk-", "").replaceFirst("\\."+clienttasks.arch, ""),	//"manual: rhsm-gtk = 1.9.11-1.el6",
 				}));
 			}
+		}
+		
+		if (clienttasks.redhatReleaseX.equals("8")) {
+			expectedRequiresList.addAll(Arrays.asList(new String[]{
+				"manual: initial-setup-gui >= 0.3.9.24-1",
+				"manual: rhsm-gtk = "+clienttasks.installedPackageVersionMap.get("rhsm-gtk").replace("rhsm-gtk-", "").replaceFirst("\\."+clienttasks.arch, ""),	//"manual: rhsm-gtk = 1.9.11-1.el6",
+			}));
 		}
 		
 		for (String expectedRequires : expectedRequiresList) if (!actualRequiresList.contains(expectedRequires)) log.warning("The actual requires list is missing expected requires '"+expectedRequires+"'.");
@@ -1110,10 +1119,18 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		if (Integer.valueOf(clienttasks.redhatReleaseX)<7) {
 			Assert.fail("Did not expect package '"+pkg+"' to be installed on RHEL release '"+clienttasks.redhatReleaseX+"'.");
 		}
-		if (clienttasks.redhatReleaseX.equals("7") || clienttasks.redhatReleaseX.equals("8")) {
+		if (clienttasks.redhatReleaseX.equals("7")) {
 			expectedRequiresList.addAll(Arrays.asList(new String[]{
 					"manual: pygobject3-base",
 					"manual: python-iniparse >= 0.4",
+					"manual: subscription-manager = "+clienttasks.installedPackageVersionMap.get("subscription-manager").replace("subscription-manager-", "").replaceFirst("\\."+clienttasks.arch, ""),	// "manual: subscription-manager = 1.15.6-1.el7"	// Bug 1165771
+					//TODO subscription-manager >= 1.15.9-5  account for Bug 1185958: Make ostree plugin depend on ostree
+			}));
+		}
+		if (clienttasks.redhatReleaseX.equals("8")) {
+			expectedRequiresList.addAll(Arrays.asList(new String[]{
+					"manual: pygobject3-base",
+					"manual: python3-iniparse >= 0.4",
 					"manual: subscription-manager = "+clienttasks.installedPackageVersionMap.get("subscription-manager").replace("subscription-manager-", "").replaceFirst("\\."+clienttasks.arch, ""),	// "manual: subscription-manager = 1.15.6-1.el7"	// Bug 1165771
 					//TODO subscription-manager >= 1.15.9-5  account for Bug 1185958: Make ostree plugin depend on ostree
 			}));
@@ -1539,8 +1556,14 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 			ll.add(Arrays.asList(new Object[]{null,										 			clienttasks.command+" repo-override --remove",								new Integer(2),		clienttasks.command+": error: --remove option requires an argument",	"Usage: subscription-manager repo-override [OPTIONS]"}));
 			ll.add(Arrays.asList(new Object[]{null,													clienttasks.command+" repo-override --add",									new Integer(2),		clienttasks.command+": error: --add option requires an argument",	"Usage: subscription-manager repo-override [OPTIONS]"}));
 			if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-1")) {	// post commit 2e4c2b8ab686bd240b99acb8d9c149e4aa7010d8
+
+			if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-1") && clienttasks.isPackageVersion("subscription-manager","<","1.22.1-1")) {	// post commit 2e4c2b8ab686bd240b99acb8d9c149e4aa7010d8
 				ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1479353"}),		clienttasks.command+" list --after=2018-01-01",								new Integer(64),	"","Error: --after is only applicable with --available"}));
 				ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1479353"}),		clienttasks.command+" list --after=2018-01-01 --ondate=2018-01-01 --avail",	new Integer(64),	"","Error: --after cannot be used with --ondate"}));	
+			}
+			if (clienttasks.isPackageVersion("subscription-manager",">=","1.22.1-1")) {	// post commit 292f9783e7d504dca78854b05a5f698d35597037
+				ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1479353","1589296"}),		clienttasks.command+" list --afterdate=2018-01-01",								new Integer(64),	"","Error: --afterdate is only applicable with --available"}));
+				ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"1479353","1589296"}),		clienttasks.command+" list --afterdate=2018-01-01 --ondate=2018-01-01 --avail",	new Integer(64),	"","Error: --afterdate cannot be used with --ondate"}));	
 			}
 
 			ll.add(Arrays.asList(new Object[]{null,													clienttasks.command+" repo-override --repo",								new Integer(2),		clienttasks.command+": error: --repo option requires "+anArgument,	"Usage: subscription-manager repo-override [OPTIONS]"}));
@@ -1647,4 +1670,4 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		
 		return ll;
 	}
-}
+	}}

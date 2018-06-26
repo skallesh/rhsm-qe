@@ -681,39 +681,43 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 	public void testSpellingsOnManPageForSubscriptionManagerGui() throws IOException {
 		if (clienttasks==null) throw new SkipException("A client connection is needed for this test.");
 		String tool = "subscription-manager-gui";
-		SSHCommandResult manPageResult = client.runCommandAndWait("man "+tool);
-		Assert.assertEquals(manPageResult.getExitCode(),Integer.valueOf(0), "ExitCode from man page for '"+tool+"'.");
+		if (Integer.valueOf(clienttasks.redhatReleaseX)>=8) {
+		    throw new SkipException("No manual entry for rhsm-icon as subscription-manager-gui is retired from RHEL-8 onwards in favor of cockpit");
+		}else {
+		    SSHCommandResult manPageResult = client.runCommandAndWait("man "+tool);
+		    Assert.assertEquals(manPageResult.getExitCode(),Integer.valueOf(0), "ExitCode from man page for '"+tool+"'.");
 		
-		// modify the contents of manPageResult for acceptable word spellings
-		String modifiedManPage = manPageResult.getStdout();
-		modifiedManPage = modifiedManPage.replaceAll("(\\w+)(?:‐|-)\\n\\s+(\\w+)", "$1$2");	// unhyphenate all words at the ends of a line
-		modifiedManPage = modifiedManPage.replaceAll("System Manager's Manual", " bugzilla1192574comment2isNotFixed ");
-		modifiedManPage = modifiedManPage.replaceAll("https://access.redhat.com/knowledge/docs/en-US/Red_Hat_Subscription_Management/1.0/html/Subscription_Management_Guide/index.html", " bugzilla1192574comment3isNotFixed ");
-		modifiedManPage = modifyMisspellingsInManPage(modifiedManPage);
+		    // modify the contents of manPageResult for acceptable word spellings
+		    String modifiedManPage = manPageResult.getStdout();
+		    modifiedManPage = modifiedManPage.replaceAll("(\\w+)(?:‐|-)\\n\\s+(\\w+)", "$1$2");	// unhyphenate all words at the ends of a line
+		    modifiedManPage = modifiedManPage.replaceAll("System Manager's Manual", " bugzilla1192574comment2isNotFixed ");
+		    modifiedManPage = modifiedManPage.replaceAll("https://access.redhat.com/knowledge/docs/en-US/Red_Hat_Subscription_Management/1.0/html/Subscription_Management_Guide/index.html", " bugzilla1192574comment3isNotFixed ");
+		    modifiedManPage = modifyMisspellingsInManPage(modifiedManPage);
 		
-		// TEMPORARY WORKAROUND FOR BUG
-		for (String word : Arrays.asList(new String[]{"bugzilla1192574comment2isNotFixed","bugzilla1192574comment3isNotFixed"})) {
-			if (modifiedManPage.contains(word)) {
-				boolean invokeWorkaroundWhileBugIsOpen = true;
-				String bugId="1192574";	// Bug 1192574 - typos and poor grammar in subscription-manager-gui man page
-				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
-				if (invokeWorkaroundWhileBugIsOpen) {
+		    // TEMPORARY WORKAROUND FOR BUG
+		    for (String word : Arrays.asList(new String[]{"bugzilla1192574comment2isNotFixed","bugzilla1192574comment3isNotFixed"})) {
+				if (modifiedManPage.contains(word)) {
+				    boolean invokeWorkaroundWhileBugIsOpen = true;
+				    String bugId="1192574";	// Bug 1192574 - typos and poor grammar in subscription-manager-gui man page
+				    try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
+				    if (invokeWorkaroundWhileBugIsOpen) {
 					log.warning("Ignoring known misspelling of '"+word+"' while bug '"+bugId+"' is open.");
 					modifiedManPage = modifiedManPage.replace(word, "TYPO");
-				}
+				    }
 				
-				if (word.equals("bugzilla1192574comment3isNotFixed") && clienttasks.isPackageVersion("subscription-manager", "<", "1.15.1-1")) {	// commit 589bf7debe8702d147f3a69f61f34c44ab47ef63
-					log.fine("Invoking workaround for Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");
-					SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);
-					log.warning("Ignoring known misspelling of '"+word+"' which is fixed in newer release subscription-manager-1.15.1-1.");
-					modifiedManPage = modifiedManPage.replace(word, "TYPO");
+				    if (word.equals("bugzilla1192574comment3isNotFixed") && clienttasks.isPackageVersion("subscription-manager", "<", "1.15.1-1")) {	// commit 589bf7debe8702d147f3a69f61f34c44ab47ef63
+						log.fine("Invoking workaround for Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");
+						SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);
+						log.warning("Ignoring known misspelling of '"+word+"' which is fixed in newer release subscription-manager-1.15.1-1.");
+						modifiedManPage = modifiedManPage.replace(word, "TYPO");
+				    }
 				}
-			}
-		}
-		// END OF WORKAROUND
+		    }
+		    // END OF WORKAROUND
 		
-		// assert that there were no unexpected hunspell check failures in the modified man page
-		Assert.assertEquals(getSpellCheckFailuresForModifiedManPage(tool,manPageResult.getStdout(),modifiedManPage).size(),0,"There are zero unexpected hunspell check failures in the man page for '"+tool+"'.");
+		    // assert that there were no unexpected hunspell check failures in the modified man page
+		    Assert.assertEquals(getSpellCheckFailuresForModifiedManPage(tool,manPageResult.getStdout(),modifiedManPage).size(),0,"There are zero unexpected hunspell check failures in the man page for '"+tool+"'.");
+		}
 	}
 
 
@@ -980,7 +984,12 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 		if (clienttasks==null) throw new SkipException("A client connection is needed for this test.");
 		String tool = "rhsm-icon";
 		SSHCommandResult manPageResult = client.runCommandAndWait("man "+tool);
-		Assert.assertEquals(manPageResult.getExitCode(),Integer.valueOf(0), "ExitCode from man page for '"+tool+"'.");
+		if (Integer.valueOf(clienttasks.redhatReleaseX)>=8) {
+		    throw new SkipException("No manual entry for rhsm-icon as rhsm-icon is retired from RHEL-8 onwards");
+		}
+		else{
+		    Assert.assertEquals(manPageResult.getExitCode(),Integer.valueOf(0), "ExitCode from man page for '"+tool+"'.");
+		
 		
 		// modify the contents of manPageResult for acceptable word spellings
 		String modifiedManPage = manPageResult.getStdout();
@@ -989,7 +998,7 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 		
 		// assert that there were no unexpected hunspell check failures in the modified man page
 		Assert.assertEquals(getSpellCheckFailuresForModifiedManPage(tool,manPageResult.getStdout(),modifiedManPage).size(),0,"There are zero unexpected hunspell check failures in the man page for '"+tool+"'.");	
-	}
+	}}
 
 
 	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer

@@ -325,7 +325,7 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.MEDIUM, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier3")
     @Test(	description = "Verify SKU level contentOverride is given priority over default golden ticket one",
-    		groups = {"Tier3Tests","blockedByBug-1427069","testRepoOverridePreference"},
+    		groups = {"Tier3Tests","blockedByBug-1427069","testRepoOverridePreference","blockedByBug-1595245"},
     		enabled = true)
     public void testRepoOverridePreference() throws Exception {
 	List<Repo> availableRepos= new ArrayList<Repo>();
@@ -428,14 +428,14 @@ public class GoldenTicketTests extends SubscriptionManagerCLITestScript {
 
 
 
-    public static String getContent(String authenticator, String password, String serverurl, String repoids)
+    public static String getContent(String authenticator, String password, String serverurl, String repoId)
 	    throws JSONException, Exception {
 	String contentId = null;
 	JSONArray jsonPool = new JSONArray(
 		CandlepinTasks.getResourceUsingRESTfulAPI(authenticator, password, serverurl, "/content/"));
 	for (int j = 0; j < jsonPool.length(); j++) {
 	    JSONObject jsonContentAttribute = (JSONObject) jsonPool.get(j);
-	    if (jsonContentAttribute.getString("label").equals(repoids)) {
+	    if (jsonContentAttribute.getString("label").equals(repoId)) {
 		// the actual attribute value is null, return null
 		contentId = jsonContentAttribute.getString("id");
 		break;
