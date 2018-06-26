@@ -319,7 +319,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier1")
 	@Test(	description="verify that only the expected rhsm.mo tranlation files are installed for each of the supported locales",
-			groups={"Tier1Tests", "blockedByBug-824100"},
+			groups={"Tier1Tests", "blockedByBug-824100", "blockedByBug-1594891"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void testOnlyExpectedTranslationFilesAreInstalled() {
@@ -363,7 +363,8 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 			tags= "Tier1")
 	@Test(	description="verify that only the expected rhsm.mo tranlation files are installed for each of the supported locales",
 			groups={"Tier1Tests","blockedByBug-1057532",
-					"blockedByBug-1481232",	// [subscription-manager] Tier 0 Localization
+					"blockedByBug-1569464",	// RHEL7.6 subscription-manager-1.21 [subscription-manager] Tier 0 Localization
+					"blockedByBug-1481232",	// RHEL7.5 subscription-manager-1.20 [subscription-manager] Tier 0 Localization
 					"blockedByBug-1441739",	// Zanata translations for subscription-manager 1.19 are not 100%
 					"blockedByBug-1391681",	// Zanata translations for subscription-manager 1.18 are not 100%
 					"blockedByBug-1340135",	// Zanata translations for subscription-manager 1.17 are not 100%
