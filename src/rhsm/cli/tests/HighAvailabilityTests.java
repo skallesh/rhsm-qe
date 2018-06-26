@@ -339,7 +339,7 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void testYumInstallFirstHighAvailabilityPackageAndAssertInstalledProductCerts() {
-		clienttasks.yumInstallPackage(haPackage1);
+		clienttasks.yumInstallPackage(haPackage1,"--disablerepo=beaker*");
 		
 		// get the currently installed products
 		List <InstalledProduct> installedProducts = clienttasks.getCurrentlyInstalledProducts();
@@ -370,7 +370,7 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void testYumInstallSecondHighAvailabilityPackageAndAssertInstalledProductCerts() {
-		clienttasks.yumInstallPackage(haPackage2);
+		clienttasks.yumInstallPackage(haPackage2,"--disablerepo=beaker*");
 		
 		// get the currently installed products
 		List <InstalledProduct> installedProducts = clienttasks.getCurrentlyInstalledProducts();
@@ -743,6 +743,20 @@ public class HighAvailabilityTests extends SubscriptionManagerCLITestScript {
 			}
 			if (arch.equals("s390x")) {
 				haPackages = Arrays.asList(new String[]{"omping", "clufter-cli", "clufter-lib-ccs", "clufter-lib-general", "clufter-lib-pcs", "corosync", " corosynclib", "corosynclib-devel", "libqb", "libqb-devel", "pacemaker", "pacemaker-cli", "pacemaker-cluster-libs", " pacemaker-cts", "pacemaker-doc", "pacemaker-libs", "pacemaker-libs-devel", "pacemaker-nagios-plugins-metadata", "pacemaker-remote", "pcs", "python-clufter", "resource-agents"});
+			}
+		}
+		if (redhatReleaseX>=7 && redhatReleaseY>=6) {
+			if (arch.equals("x86_64")) {
+				// http://download.devel.redhat.com/rel-eng/RHEL-7.5-RC-1.3/compose/Server/x86_64/os/addons/HighAvailability/
+				haPackages = Arrays.asList(new String[]{"awscli", "booth", "booth-arbitrator", "booth-core", "booth-site", "booth-test", "clufter-bin", "clufter-cli", "clufter-common", "clufter-lib-ccs", "clufter-lib-general", "clufter-lib-pcs", "corosync", "corosync-qdevice", "corosync-qnetd", "corosynclib", "corosynclib-devel", "fence-agents-aws", "fence-agents-azure-arm", "omping", "pacemaker", "pacemaker-cli", "pacemaker-cluster-libs", "pacemaker-cts", "pacemaker-doc", "pacemaker-libs", "pacemaker-libs-devel", "pacemaker-nagios-plugins-metadata", "pacemaker-remote", "pcs", "pcs-snmp", "python-adal", "python-azure-sdk", "python-boto3", "python-clufter", "python-isodate", "python-jwt", "python-msrest", "python-msrestazure", "python-s3transfer", "resource-agents", "sbd"});
+			}
+			if (arch.equals("s390x")) {
+				// http://download.devel.redhat.com/rel-eng/RHEL-7.5-RC-1.3/compose/Server/s390x/os/addons/HighAvailability/
+				haPackages = Arrays.asList(new String[]{"booth", "booth-arbitrator", "booth-core", "booth-site", "booth-test", "clufter-bin", "clufter-cli", "clufter-common", "clufter-lib-ccs", "clufter-lib-general", "clufter-lib-pcs", "corosync", "corosync-qdevice", "corosync-qnetd", "corosynclib", "corosynclib-devel", "omping", "pacemaker", "pacemaker-cli", "pacemaker-cluster-libs", "pacemaker-cts", "pacemaker-doc", "pacemaker-libs", "pacemaker-libs-devel", "pacemaker-nagios-plugins-metadata", "pacemaker-remote", "pcs", "pcs-snmp", "python-clufter", "resource-agents", "sbd"});
+			}
+			if (arch.equals("ppc64le")) {
+				// http://download.devel.redhat.com/rel-eng/RHEL-7.5-RC-1.3/compose/Server/ppc64le/os/addons/HighAvailability/
+				haPackages = Arrays.asList(new String[]{"booth", "booth-arbitrator", "booth-core", "booth-site", "booth-test", "clufter-bin", "clufter-cli", "clufter-common", "clufter-lib-ccs", "clufter-lib-general", "clufter-lib-pcs", "corosync", "corosync-qdevice", "corosync-qnetd", "corosynclib", "corosynclib-devel", "omping", "pacemaker", "pacemaker-cli", "pacemaker-cluster-libs", "pacemaker-cts", "pacemaker-doc", "pacemaker-libs", "pacemaker-libs-devel", "pacemaker-nagios-plugins-metadata", "pacemaker-remote", "pcs", "pcs-snmp", "python-clufter", "resource-agents", "sbd"});
 			}
 		}
 		
