@@ -207,7 +207,7 @@ public class SubscriptionManagerTasks {
 		yumPluginConfFileForProductId			= "/etc/yum/pluginconf.d/product-id.conf";
 		yumPluginConfFileForRhn					= "/etc/yum/pluginconf.d/rhnplugin.conf";
 		yumPluginConfFileForSearchDisabledRepos	= "/etc/yum/pluginconf.d/search-disabled-repos.conf";
-		if (!sshCommandRunner.runCommandAndWait("rpm -q --requires yum | egrep ^dnf").getStdout().trim().isEmpty()); {	// check if yum requires dnf
+		if (!sshCommandRunner.runCommandAndWait("rpm -q --requires yum | egrep ^dnf").getStdout().trim().isEmpty()) {	// check if yum requires dnf
 			yumPluginConfFileForSubscriptionManager	= "/etc/dnf/plugins/subscription-manager.conf";
 			yumPluginConfFileForProductId			= "/etc/dnf/plugins/product-id.conf";
 			yumPluginConfFileForRhn					= "/etc/dnf/plugins/rhnplugin.conf";
