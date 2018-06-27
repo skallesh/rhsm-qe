@@ -145,13 +145,26 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		String fileNotFound = "File not found.";
 		
 		// releases with no EUS support...
-		if (release.equals("6.8") || release.equals("6.9") || release.equals("6.10")) {
-			log.warning("There is no EUS support scheduled for RHEL '"+release+"'.  See https://pp.engineering.redhat.com/pp/product/rhel/release/rhel-6-9/schedule/overview");
+		if (release.equals("6.8")) {
+			log.warning("There is no EUS support scheduled for RHEL '"+release+"'.  See https://pp.engineering.redhat.com/pp/product/rhel/release/rhel-6-8/schedule/tasks");
 			Assert.assertTrue(result.getStdout().contains(fileNotFound), "Expected attempt to fetch the EUS productid results in '"+fileNotFound+"'");
-			throw new SkipException("There is no EUS support for RHEL '"+release+"'.");
+			throw new SkipException("There is no EUS support for RHEL '"+release+"'.  See https://pp.engineering.redhat.com/pp/product/rhel/release/rhel-6-8/schedule/tasks");
+		}
+		if (release.equals("6.9")) {
+			log.warning("There is no EUS support scheduled for RHEL '"+release+"'.  See https://pp.engineering.redhat.com/pp/product/rhel/release/rhel-6-9/schedule/tasks");
+			Assert.assertTrue(result.getStdout().contains(fileNotFound), "Expected attempt to fetch the EUS productid results in '"+fileNotFound+"'");
+			throw new SkipException("There is no EUS support for RHEL '"+release+"'.  See https://pp.engineering.redhat.com/pp/product/rhel/release/rhel-6-9/schedule/tasks");
+		}
+		if (release.equals("7.0")) {
+			log.warning("There is no EUS support scheduled for RHEL '"+release+"'.  See https://pp.engineering.redhat.com/pp/product/rhel/release/rhel-7-0/schedule/tasks");
+			Assert.assertTrue(result.getStdout().contains(fileNotFound), "Expected attempt to fetch the EUS productid results in '"+fileNotFound+"'");
+			throw new SkipException("There is no EUS support for RHEL '"+release+"'.  See https://pp.engineering.redhat.com/pp/product/rhel/release/rhel-7-0/schedule/tasks");
 		}
 		
-		if (result.getStdout().contains(fileNotFound)) Assert.fail("Failed to find a productid file on the CDN at '"+rhelRepoUrlToProductId+"'.  It is possible that RHEL release '"+release+"' has no EUS support; check the Product Pages for RHEL https://pp.engineering.redhat.com/pp/product/rhel/ to see if EUS is on the Schedule.");
+		// fail the test when productid file is not found
+		if (result.getStdout().contains(fileNotFound)) {
+			Assert.fail("Failed to find a productid file on the CDN at '"+rhelRepoUrlToProductId+"'.  It is possible that RHEL release '"+release+"' has no EUS support; check the Product Pages for RHEL https://pp.engineering.redhat.com/pp/product/rhel/ to see if EUS is on the Schedule.  If not, then this automated test needs an update the releases with no EUS support.");
+		}
 		
 		// create a ProductCert corresponding to the productid file
 		ProductCert productIdCert = clienttasks.getProductCertFromProductCertFile(localProductIdFile);
