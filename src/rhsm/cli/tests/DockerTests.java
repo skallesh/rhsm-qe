@@ -565,7 +565,10 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 				//	rhel-7-workstation-extras-rpms/x86_64
 				//	rhel-7-for-system-z-a-extras-rpms/7Server/s390x
 				//	rhel-7-for-power-le-extras-rpms/ppc64le
-				//  TODO need repo for aarch64
+				// RHEL-ALT:
+				//  rhel-7-for-arm-64-extras-rpms__7Server__aarch64
+				//  rhel-7-for-power-9-extras-rpms__7Server__ppc64le
+				//  rhel-7-for-system-z-a-extras-rpms__7Server__s390x
 				String command = clienttasks.isPackageInstalled("docker") ? "update" : "install"; 
 				//avoid "No packages marked for update" by ignoring results of yumUpdatePackageFromRepo(...)
 				clienttasks.yumDoPackageFromRepo_(command,"docker", "rhel-"+clienttasks.redhatReleaseX+"-*-extras-rpms", "--disablerepo=beaker* --nogpgcheck");
