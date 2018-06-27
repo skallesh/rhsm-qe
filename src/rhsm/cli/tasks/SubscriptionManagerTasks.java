@@ -763,7 +763,7 @@ if (false) {
 	
 	
 	/**
-	 * Configure a rhel-latest-extras.repo to http://download.devel.redhat.com/rel-eng/latest-EXTRAS-7-RHEL-7/compose/Server/x86_64/os/ and yum update the updatePackages
+	 * Configure a rhel-latest-extras.repo and attempt a yum update of the updatePackages
 	 * @param installOptions
 	 * @param updatePackages - specific list of packages, or an empty list implies update all packages
 	 * @throws IOException
@@ -808,19 +808,21 @@ if (false) {
 	    if (baseurlTestResult.getStdout().contains("404 Not Found") || baseurlTestResult.getStdout().contains("The document has moved")) {
 			log.info("Cannot install updates from latest-EXTRAS since the baseurl '"+baseurlForExtras+"' is Not Found.");
 			// attempt to use the previous minor release
-//		    String baseurlForPreviousExtras = String.format("http://download-node-02.eng.bos.redhat.com/rel-eng/latest-EXTRAS-%.1f-RHEL-7/compose/"+"Server"+"/"+arch+"/os/",Float.valueOf(redhatReleaseXY)-0.1);	// "Server" is the ONLY compose for http://download-node-02.eng.bos.redhat.com/rel-eng/latest-EXTRAS-7.5-RHEL-7/compose/
 		    String baseurlForPreviousExtras = baseurlForExtras.replace(redhatReleaseXY, String.format("%.1f",Float.valueOf(redhatReleaseXY)-0.1));
 		    log.info("Attempting to find extras under the previous minor release...");
 			baseurlTestResult = sshCommandRunner.runCommandAndWait("curl --stderr /dev/null --insecure --request GET "+baseurlForPreviousExtras);
 			if (baseurlTestResult.getStdout().contains("404 Not Found") || baseurlTestResult.getStdout().contains("The document has moved")) {
-				Assert.fail("The Latest Extras baseurl '"+baseurlForExtras+"' was Not Found (and neither was '"+baseurlForPreviousExtras+"').  Instruct the automator to verify the assembly of this baseurl.");
+				log.warning("The Latest Extras baseurl '"+baseurlForExtras+"' was Not Found (and neither was '"+baseurlForPreviousExtras+"').  Instruct the automator to verify the assembly of this baseurl.");
+				return;
+				//Assert.fail("The Latest Extras baseurl '"+baseurlForExtras+"' was Not Found (and neither was '"+baseurlForPreviousExtras+"').  Instruct the automator to verify the assembly of this baseurl.");
 			}
 			baseurlForExtras = baseurlForPreviousExtras;
 	    }
 	    baseurlTestResult = sshCommandRunner.runCommandAndWait("curl --stderr /dev/null --insecure --request GET "+baseurlForDeps);
 	    if (baseurlTestResult.getStdout().contains("404 Not Found") || baseurlTestResult.getStdout().contains("The document has moved")) {
-			log.warning("Cannot install updates from latest-RHEL since the baseurl '"+baseurlForDeps+"' is Not Found.");
-	    	Assert.fail("The Latest baseurl '"+baseurlForDeps+"' was Not Found.  Instruct the automator to verify the assembly of this baseurl.");
+			log.warning("Cannot install updates from latest-RHEL since the baseurl '"+baseurlForDeps+"' is Not Found.  Instruct the automator to verify the assembly of this baseurl.");
+			return;
+	    	//Assert.fail("The Latest baseurl '"+baseurlForDeps+"' was Not Found.  Instruct the automator to verify the assembly of this baseurl.");
 	    }
 		
 		// write out the rows of the table...
