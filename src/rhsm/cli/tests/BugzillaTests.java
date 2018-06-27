@@ -1796,7 +1796,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		servertasks.updateConfFileParameter("log4j.logger.org.candlepin.policy.js.compliance", "DEBUG");
 		servertasks.updateConfFileParameter("log4j.logger.org.candlepin", "DEBUG");
 		servertasks.restartTomcat();
-		sleep(1*90*1000);// adding buffer time for tomcat to be up and running
+		sleep(1*50*1000);// adding buffer time for tomcat to be up and running
 	   	File tomcatLogFile = servertasks.getTomcatLogFile();
 		String LogMarker = System.currentTimeMillis()
 				+ " Testing VerifyAutosubscribeReuseBasicAuthCredntials ********************************";
@@ -5925,8 +5925,13 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		attributes.put("warning_period", "30");
 		attributes.put("type", "MKT");
 		attributes.put("type", "SVC");
-		CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword,
+		
+		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.1.1-1")) {
+		    CandlepinTasks.deleteSubscriptionPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, productId);
+		}else {
+		    CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword,
 				sm_serverUrl, sm_clientOrg, productId);
+		}
 		String resourcePath = "/products/" + productId;
 		if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.0.0"))
 			resourcePath = "/owners/" + sm_clientOrg + resourcePath;
