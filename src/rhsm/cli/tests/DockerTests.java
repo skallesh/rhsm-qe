@@ -630,7 +630,7 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier1")
 	@Test(	description="verify the specified docker image downloads and will run subscription-manager >= 1.12.4-1",
-			groups={"debugTest","Tier1Tests","blockedByBug-1186386"},
+			groups={"Tier1Tests","blockedByBug-1186386"},
 			dependsOnMethods={"testInstallDockerPackageOnHost"},
 			dataProvider="getDockerImageData",
 			enabled=true)
