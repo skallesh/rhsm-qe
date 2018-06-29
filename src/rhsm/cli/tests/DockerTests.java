@@ -575,7 +575,7 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 			}
 		}
 		
-		// an even better best way to update docker is from http://download.devel.redhat.com/rel-eng/latest-EXTRAS-7-RHEL-7/compose/Server/x86_64/os/
+		// however, an even better best way to update docker is to update to the latest development version targeted for this RHEL release
 		clienttasks.installLatestExtrasUpdates(sm_yumInstallOptions, Arrays.asList(new String[]{"docker"}));
 		
 		// releases/variants/arches that do not support docker (could technically be located earlier in this testcase to save time)

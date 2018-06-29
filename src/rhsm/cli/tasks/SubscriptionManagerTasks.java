@@ -786,16 +786,23 @@ if (false) {
 		
 		// locally create a yum.repos.d extras repos file (and include latest-RHEL-7 for dependencies)
 	    File file = new File("tmp/latest.repo"); // this will be in the automation.dir directory on hudson (workspace/automatjon/sm)
-	    // http://download.devel.redhat.com/rel-eng/latest-EXTRAS-7-RHEL-7/compose/Server/x86_64/os/
-	    String baseurlForExtras = "http://download.devel.redhat.com/rel-eng/latest-EXTRAS-7-RHEL-7/compose/"+variant+"/"+arch+"/os/";
-	    baseurlForExtras = "http://download.devel.redhat.com/rel-eng/latest-EXTRAS-7-RHEL-7/compose/"+variant+"/"+arch+"/os/";	// 302 Found // The document has moved <a href="http://download-node-02.eng.bos.redhat.com/rel-eng/latest-EXTRAS-7-RHEL-7/compose/Workstation/x86_64/os/">here</a>
-	    baseurlForExtras = "http://download-node-02.eng.bos.redhat.com/rel-eng/latest-EXTRAS-7-RHEL-7/compose/"+variant+"/"+arch+"/os/";
-	    baseurlForExtras = "http://download-node-02.eng.bos.redhat.com/rel-eng/latest-EXTRAS-7-RHEL-7/compose/"+"Server"+"/"+arch+"/os/";	// "Server" is the ONLY compose for http://download-node-02.eng.bos.redhat.com/rel-eng/latest-EXTRAS-7-RHEL-7/compose/
-	    baseurlForExtras = "http://download-node-02.eng.bos.redhat.com/rel-eng/latest-EXTRAS-"+redhatReleaseXY+"-RHEL-7/compose/"+"Server"+"/"+arch+"/os/";	// "Server" is the ONLY compose for http://download-node-02.eng.bos.redhat.com/rel-eng/latest-EXTRAS-7.5-RHEL-7/compose/
-	    String baseurlForDeps = "http://download-node-02.eng.bos.redhat.com/rel-eng/latest-RHEL-7/compose/"+variant+"/"+arch+"/os/";
-	    // modify the repo when this is a RHEL-ALT system
-	    if (isCurrentRhelProductCertRhelAlt()) {
-    		baseurlForDeps = baseurlForDeps.replace("RHEL-7", "RHEL-ALT-7");
+	    
+	    // predict where to get the latest extras from RCM
+	    String baseurlForExtras, baseurlForDeps;
+	    if (Float.valueOf(redhatReleaseXY)<7.6f) { 
+		    baseurlForExtras = "http://download.devel.redhat.com/rel-eng/latest-EXTRAS-7-RHEL-7/compose/"+variant+"/"+arch+"/os/";
+		    baseurlForExtras = "http://download.devel.redhat.com/rel-eng/latest-EXTRAS-7-RHEL-7/compose/"+variant+"/"+arch+"/os/";	// 302 Found // The document has moved <a href="http://download-node-02.eng.bos.redhat.com/rel-eng/latest-EXTRAS-7-RHEL-7/compose/Workstation/x86_64/os/">here</a>
+		    baseurlForExtras = "http://download-node-02.eng.bos.redhat.com/rel-eng/latest-EXTRAS-7-RHEL-7/compose/"+variant+"/"+arch+"/os/";
+		    baseurlForExtras = "http://download-node-02.eng.bos.redhat.com/rel-eng/latest-EXTRAS-7-RHEL-7/compose/"+"Server"+"/"+arch+"/os/";	// "Server" is the ONLY compose for http://download-node-02.eng.bos.redhat.com/rel-eng/latest-EXTRAS-7-RHEL-7/compose/
+		    baseurlForExtras = "http://download-node-02.eng.bos.redhat.com/rel-eng/latest-EXTRAS-"+redhatReleaseXY+"-RHEL-7/compose/"+"Server"+"/"+arch+"/os/";	// "Server" is the ONLY compose for http://download-node-02.eng.bos.redhat.com/rel-eng/latest-EXTRAS-7.5-RHEL-7/compose/
+		    baseurlForDeps = "http://download-node-02.eng.bos.redhat.com/rel-eng/latest-RHEL-7/compose/"+variant+"/"+arch+"/os/";
+		    // modify the repo when this is a RHEL-ALT system
+		    if (isCurrentRhelProductCertRhelAlt()) baseurlForDeps = baseurlForDeps.replace("RHEL-7", "RHEL-ALT-7");
+	    } else {
+		    baseurlForExtras = "http://download-node-02.eng.bos.redhat.com/nightly/EXTRAS-RHEL-"+redhatReleaseXY+"/latest-EXTRAS-"+redhatReleaseXY+"-RHEL-7/compose/"+variant+"/"+arch+"/os/";
+		    baseurlForDeps = "http://download-node-02.eng.bos.redhat.com/nightly/latest-RHEL-"+redhatReleaseXY+"/compose/"+variant+"/"+arch+"/os/";
+			// modify the baseurlForDeps when this is a RHEL-ALT system
+		    if (isCurrentRhelProductCertRhelAlt()) baseurlForDeps = baseurlForDeps.replace("RHEL-7", "RHEL-ALT-7");
 	    }
     
 	    // check the baseurl for problems
