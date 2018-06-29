@@ -794,13 +794,8 @@ if (false) {
 	    baseurlForExtras = "http://download-node-02.eng.bos.redhat.com/rel-eng/latest-EXTRAS-"+redhatReleaseXY+"-RHEL-7/compose/"+"Server"+"/"+arch+"/os/";	// "Server" is the ONLY compose for http://download-node-02.eng.bos.redhat.com/rel-eng/latest-EXTRAS-7.5-RHEL-7/compose/
 	    String baseurlForDeps = "http://download-node-02.eng.bos.redhat.com/rel-eng/latest-RHEL-7/compose/"+variant+"/"+arch+"/os/";
 	    // modify the repo when this is a RHEL-ALT system
-	    ProductCert rhelProductCert = getCurrentRhelProductCert();
-	    if (redhatReleaseX.equals("7")) {
-	    	if (rhelProductCert.productId.equals("419")||	// Red Hat Enterprise Linux for ARM 64
-	    		rhelProductCert.productId.equals("420")||	// Red Hat Enterprise Linux for Power 9
-	    		rhelProductCert.productId.equals("434")) {	// Red Hat Enterprise Linux for IBM System z (Structure A)
-	    		baseurlForDeps = baseurlForDeps.replace("RHEL-7", "RHEL-ALT-7");
-	    	}
+	    if (isCurrentRhelProductCertRhelAlt()) {
+    		baseurlForDeps = baseurlForDeps.replace("RHEL-7", "RHEL-ALT-7");
 	    }
     
 	    // check the baseurl for problems
@@ -10405,5 +10400,21 @@ if (false) {
 			}
 		}
 		return false;
+	}
+	
+	
+	/**
+	 * @return is this a RHEL-ALT system? (indicated by the installed RHEL product cert id)
+	 */
+	public boolean isCurrentRhelProductCertRhelAlt( ) {
+	    ProductCert rhelProductCert = getCurrentRhelProductCert();
+	    if (redhatReleaseX.equals("7")) {
+	    	if (rhelProductCert.productId.equals("419")||	// Red Hat Enterprise Linux for ARM 64
+	    		rhelProductCert.productId.equals("420")||	// Red Hat Enterprise Linux for Power 9
+	    		rhelProductCert.productId.equals("434")) {	// Red Hat Enterprise Linux for IBM System z (Structure A)
+	    		return true;
+	    	}
+	    }
+	    return false;
 	}
 }

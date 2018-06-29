@@ -1259,6 +1259,12 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		for (String release : clienttasks.getCurrentlyAvailableReleases(null, null, null, null)) {
 			List<String> bugIds = new ArrayList<String>();
 			
+			// skip known issue for RHEL-ALT s390x on 7.4 (no bugzilla was opened)
+			if (release.equals("7.4") && rhelProductCert.productId.equals("434")) {
+				log.warning("Although 7.4 appears in the release list --available on a RHEL-ALT s390x system, there is NO content on the CDN for 7.4.  This is because under https://cdn.redhat.com/content/dist/rhel-alt/server/7/7.4/ only armv8-a and power9 were released.  Arch system-z-a/s390x was added to RHEL-ALT for 7.5.  This cannot be fixed by RCM because the listing file must keep 7.4 for the benefit of armv8-a and power9.");
+				continue;
+			}
+			
 			if (release.equals("multiarch")||release.equals("x86_64")) bugIds.add("1589835");	// Bug 1589835 - Values "multiarch" and "x86_64" are listed in subscription-manager release --list
 			
 			// NOTE: As older releases go EOL, these bugs may be CLOSED WONTFIX
@@ -1287,6 +1293,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 				if (release.matches("7.2|7.3") && clienttasks.variant.equals("Client") && clienttasks.arch.equals("x86_64")) bugIds.add("1356729"); 	// Bug 1356729 - cdn.redhat.com has the wrong repodata/productId version at client/7/7.2 and client/7/7Client
 				if (release.matches("7.0|7.1|7.2") && clienttasks.variant.equals("Server") && clienttasks.arch.equals("ppc64le")) bugIds.add("1351754"); 	// Bug 1351754 - production CDN productid files 404: Not Found. for Power, little endian releasever 7.1, 7.2, and 7Server
 				if (release.matches("7.1|7.2") && clienttasks.variant.equals("Server") && clienttasks.arch.equals("aarch64")) bugIds.add("1351800"); 	// Bug 1351800 - production CDN productid files 404: Not Found. for ARM releasever 7.1, 7.2, and 7Server
+				if (release.equals("7.5") && clienttasks.variant.equals("Server") && clienttasks.arch.equals("aarch64")) bugIds.add("1596396"); 	// Bug 1596396 - wrong productId version at https://cdn.redhat.com/content/dist/rhel-alt/server/7/7.5/armv8-a/aarch64/os/repodata/productid
 			}
 			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 			
@@ -1352,6 +1359,28 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 				}
 			}
 		}
+		
+		// Skip some select RHEL-ALT tests because their minor versions did not yet exist until later in the release schedule
+		if (oldProductCert==null && originalRhelProductCert.productId.equals("419") && oldProductCertVersion.contains("Beta") &&  Float.valueOf(oldProductCertVersion.split(" ")[0])<7.6f) {
+			throw new SkipException("The first version of Beta eng product 419 [Red Hat Enterprise Linux for ARM 64] debuted with RHEL-ALT-7.6.  Upgrading from an older version is not applicable.");
+		}
+		if (oldProductCert==null && originalRhelProductCert.productId.equals("420") && oldProductCertVersion.contains("Beta") &&  Float.valueOf(oldProductCertVersion.split(" ")[0])<7.6f) {
+			throw new SkipException("The first version of Beta eng product 420 [Red Hat Enterprise Linux for Power 9] debuted with RHEL-ALT-7.6.  Upgrading from an older version is not applicable.");
+		}
+		if (oldProductCert==null && originalRhelProductCert.productId.equals("434") && oldProductCertVersion.contains("Beta") &&  Float.valueOf(oldProductCertVersion.split(" ")[0])<7.6f) {
+			throw new SkipException("The first version of Beta eng product 434 [Red Hat Enterprise Linux for IBM System z (Structure A)] debuted with RHEL-ALT-7.6.  Upgrading from an older version is not applicable.");
+		}
+		
+		if (oldProductCert==null && originalRhelProductCert.productId.equals("419") && !oldProductCertVersion.contains("Beta") &&  Float.valueOf(oldProductCertVersion)<7.4f) {
+			throw new SkipException("The first version of eng product 419 [Red Hat Enterprise Linux for ARM 64] debuted with RHEL-ALT-7.4.  Upgrading from an older version is not applicable.");
+		}
+		if (oldProductCert==null && originalRhelProductCert.productId.equals("420") && !oldProductCertVersion.contains("Beta") &&  Float.valueOf(oldProductCertVersion)<7.4f) {
+			throw new SkipException("The first version of eng product 420 [Red Hat Enterprise Linux for Power 9] debuted with RHEL-ALT-7.4.  Upgrading from an older version is not applicable.");
+		}
+		if (oldProductCert==null && originalRhelProductCert.productId.equals("434") && !oldProductCertVersion.contains("Beta") &&  Float.valueOf(oldProductCertVersion)<7.5f) {
+			throw new SkipException("The first version of eng product 434 [Red Hat Enterprise Linux for IBM System z (Structure A)] debuted with RHEL-ALT-7.5.  Upgrading from an older version is not applicable.");
+		}
+		
 		Assert.assertNotNull(oldProductCert,"Initiating test with this old RHEL product cert: "+oldProductCert);
 		RemoteFileTasks.runCommandAndAssert(client,"cp "+oldProductCert.file+" "+tmpProductCertDir+"/"+oldProductCert.productId+".pem",Integer.valueOf(0));
 		Assert.assertNotNull(clienttasks.getInstalledProductCorrespondingToProductCert(oldProductCert),"The old product cert is installed and recognized by subscription-manager.");
@@ -1514,8 +1543,14 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 			ll.add(Arrays.asList(new Object[]{blockedByBugs,	"Red_Hat_Enterprise_Linux-Release_Notes-7-fr-FR",	"7.1 Beta",	"7.1",	"7.2"}));
 			ll.add(Arrays.asList(new Object[]{blockedByBugs,	"Red_Hat_Enterprise_Linux-Release_Notes-7-fr-FR",	"7.2 Beta",	"7.2",	"7.3"}));
 			ll.add(Arrays.asList(new Object[]{blockedByBugs,	"Red_Hat_Enterprise_Linux-Release_Notes-7-fr-FR",	"7.2",		"7.2",	"7.3"}));
-			ll.add(Arrays.asList(new Object[]{null,				"Red_Hat_Enterprise_Linux-Release_Notes-7-fr-FR",	"7.4 Beta",	"7.4",	"7.5"}));
-			ll.add(Arrays.asList(new Object[]{null,				"Red_Hat_Enterprise_Linux-Release_Notes-7-fr-FR",	"7.4",		"7.4",	"7.5"}));
+			
+			bugids.clear();
+			if (clienttasks.variant.equals("Server") && clienttasks.arch.equals("aarch64")) bugids.add("1596396");	// Bug 1596396 - wrong productId version at https://cdn.redhat.com/content/dist/rhel-alt/server/7/7.5/armv8-a/aarch64/os/repodata/productid
+			blockedByBugs = new BlockedByBzBug(bugids.toArray(new String[]{}));
+			if (!clienttasks.getCurrentRhelProductCert().productId.equals("434"))	// RHEL-ALT s390x did not exist on 7.4; exclude this row on RHEL-ALT s390x
+			ll.add(Arrays.asList(new Object[]{blockedByBugs,	"Red_Hat_Enterprise_Linux-Release_Notes-7-fr-FR",	"7.4 Beta",	"7.4",	"7.5"}));
+			if (!clienttasks.getCurrentRhelProductCert().productId.equals("434"))	// RHEL-ALT s390x did not exist on 7.4; exclude this row on RHEL-ALT s390x
+			ll.add(Arrays.asList(new Object[]{blockedByBugs,	"Red_Hat_Enterprise_Linux-Release_Notes-7-fr-FR",	"7.4",		"7.4",	"7.5"}));
 		}
 		else {
 			ll.add(Arrays.asList(new Object[]{null,	"FIXME: Unhandled Release",	"1.0 Beta",	"1.0",	"1.1"}));
@@ -1556,13 +1591,18 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		List<String> rhnDefinitionsProductCertsDirs = new ArrayList<String>();
 		for (String productIdsDir : result.getStdout().split("\\n")) {
 			if (!productIdsDir.equals(clienttasks.rhnDefinitionsDir+"/product_ids")) {
-				// put logic here to exclude specific directories
+				// put logic here to include specific directories
 				
-				// include only /rhel-X product cert dirs; for example: /rhel-6.5-beta /rhel-6.5 /rhel-6.6-beta /rhel-6.6-eus /rhel-6.6-htb /rhel-6.6
+				// include /rhel-X product cert dirs; for example: /rhel-6.5-beta /rhel-6.5 /rhel-6.6-beta /rhel-6.6-eus /rhel-6.6-htb /rhel-6.6
 				// http://git.app.eng.bos.redhat.com/git/rcm/rcm-metadata.git/tree/product_ids
-				if (!productIdsDir.contains("/rhel-"+clienttasks.redhatReleaseX+".")) continue;
+				if (productIdsDir.contains("/rhel-"+clienttasks.redhatReleaseX+".")) {
+					rhnDefinitionsProductCertsDirs.add(productIdsDir);
+				}
 				
-				rhnDefinitionsProductCertsDirs.add(productIdsDir);
+				// also include /rhel-alt-X cert dirs; for example: /rhel-alt-7.6 /rhel-alt-7.6-beta
+				if (productIdsDir.contains("/rhel-alt-"+clienttasks.redhatReleaseX+".")) {
+					rhnDefinitionsProductCertsDirs.add(productIdsDir);
+				}
 			}
 		}
 		Assert.assertTrue(!rhnDefinitionsProductCertsDirs.isEmpty(),"The "+clienttasks.rhnDefinitionsDir+"/product_ids is not empty.");
