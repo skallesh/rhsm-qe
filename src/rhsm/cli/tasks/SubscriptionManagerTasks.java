@@ -196,12 +196,7 @@ public class SubscriptionManagerTasks {
 		
 		// FIPS mode
 		isFipsEnabled = sshCommandRunner.runCommandAndWait("sysctl crypto.fips_enabled").getStdout().trim().equals("crypto.fips_enabled = 1")? true:false;
-		
-		// version of python interpreter
-		// [root@jsefler-rhel6 ~]# rpm -q --requires subscription-manager | grep 'python(abi)' | cut -d= -f2
-		//  2.6
-		pythonVersion = Float.valueOf(sshCommandRunner.runCommandAndWait("rpm -q --requires "+this.command+" | grep 'python(abi)' | cut -d= -f2").getStdout().trim());
-		
+				
 		// location for yum plugins (Note: on RHEL8, yum is redirected to dnf which has a new location for plugins)
 		yumPluginConfFileForSubscriptionManager	= "/etc/yum/pluginconf.d/subscription-manager.conf"; // "/etc/yum/pluginconf.d/rhsmplugin.conf"; renamed by dev on 11/24/2010
 		yumPluginConfFileForProductId			= "/etc/yum/pluginconf.d/product-id.conf";
