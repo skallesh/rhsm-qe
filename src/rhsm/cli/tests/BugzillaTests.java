@@ -92,10 +92,11 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	
 	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 		projectID = {Project.RedHatEnterpriseLinux7},
+			testCaseID = {""},
 		level= DefTypes.Level.COMPONENT,
 		testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 		posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
-		tags= "Tier1")
+		tags= "Tier3")
 	@Test(	description = "Verify that there is no traceback on the console when you try to run rhsm-debug system --no-archive --destination=<with a non-existent file>",
 		groups = {"Tier3Tests","testRHSMDebug_NoArchive_UsingDestination_WithNonExistentDestinationFile","blockedByBug-1596699"},enabled = true)
 	public void testRHSMDebug_NoArchive_UsingDestination_WithNonExistentDestinationFile() {
