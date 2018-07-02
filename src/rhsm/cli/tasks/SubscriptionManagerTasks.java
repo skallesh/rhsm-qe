@@ -196,18 +196,13 @@ public class SubscriptionManagerTasks {
 		
 		// FIPS mode
 		isFipsEnabled = sshCommandRunner.runCommandAndWait("sysctl crypto.fips_enabled").getStdout().trim().equals("crypto.fips_enabled = 1")? true:false;
-		
-		// version of python interpreter
-		// [root@jsefler-rhel6 ~]# rpm -q --requires subscription-manager | grep 'python(abi)' | cut -d= -f2
-		//  2.6
-		pythonVersion = Float.valueOf(sshCommandRunner.runCommandAndWait("rpm -q --requires "+this.command+" | grep 'python(abi)' | cut -d= -f2").getStdout().trim());
-		
+				
 		// location for yum plugins (Note: on RHEL8, yum is redirected to dnf which has a new location for plugins)
 		yumPluginConfFileForSubscriptionManager	= "/etc/yum/pluginconf.d/subscription-manager.conf"; // "/etc/yum/pluginconf.d/rhsmplugin.conf"; renamed by dev on 11/24/2010
 		yumPluginConfFileForProductId			= "/etc/yum/pluginconf.d/product-id.conf";
 		yumPluginConfFileForRhn					= "/etc/yum/pluginconf.d/rhnplugin.conf";
 		yumPluginConfFileForSearchDisabledRepos	= "/etc/yum/pluginconf.d/search-disabled-repos.conf";
-		if (!sshCommandRunner.runCommandAndWait("rpm -q --requires yum | egrep ^dnf").getStdout().trim().isEmpty()); {	// check if yum requires dnf
+		if (!sshCommandRunner.runCommandAndWait("rpm -q --requires yum | egrep ^dnf").getStdout().trim().isEmpty()) {	// check if yum requires dnf
 			yumPluginConfFileForSubscriptionManager	= "/etc/dnf/plugins/subscription-manager.conf";
 			yumPluginConfFileForProductId			= "/etc/dnf/plugins/product-id.conf";
 			yumPluginConfFileForRhn					= "/etc/dnf/plugins/rhnplugin.conf";
@@ -763,7 +758,7 @@ if (false) {
 	
 	
 	/**
-	 * Configure a rhel-latest-extras.repo to http://download.devel.redhat.com/rel-eng/latest-EXTRAS-7-RHEL-7/compose/Server/x86_64/os/ and yum update the updatePackages
+	 * Configure a rhel-latest-extras.repo and attempt a yum update of the updatePackages
 	 * @param installOptions
 	 * @param updatePackages - specific list of packages, or an empty list implies update all packages
 	 * @throws IOException
@@ -786,21 +781,23 @@ if (false) {
 		
 		// locally create a yum.repos.d extras repos file (and include latest-RHEL-7 for dependencies)
 	    File file = new File("tmp/latest.repo"); // this will be in the automation.dir directory on hudson (workspace/automatjon/sm)
-	    // http://download.devel.redhat.com/rel-eng/latest-EXTRAS-7-RHEL-7/compose/Server/x86_64/os/
-	    String baseurlForExtras = "http://download.devel.redhat.com/rel-eng/latest-EXTRAS-7-RHEL-7/compose/"+variant+"/"+arch+"/os/";
-	    baseurlForExtras = "http://download.devel.redhat.com/rel-eng/latest-EXTRAS-7-RHEL-7/compose/"+variant+"/"+arch+"/os/";	// 302 Found // The document has moved <a href="http://download-node-02.eng.bos.redhat.com/rel-eng/latest-EXTRAS-7-RHEL-7/compose/Workstation/x86_64/os/">here</a>
-	    baseurlForExtras = "http://download-node-02.eng.bos.redhat.com/rel-eng/latest-EXTRAS-7-RHEL-7/compose/"+variant+"/"+arch+"/os/";
-	    baseurlForExtras = "http://download-node-02.eng.bos.redhat.com/rel-eng/latest-EXTRAS-7-RHEL-7/compose/"+"Server"+"/"+arch+"/os/";	// "Server" is the ONLY compose for http://download-node-02.eng.bos.redhat.com/rel-eng/latest-EXTRAS-7-RHEL-7/compose/
-	    baseurlForExtras = "http://download-node-02.eng.bos.redhat.com/rel-eng/latest-EXTRAS-"+redhatReleaseXY+"-RHEL-7/compose/"+"Server"+"/"+arch+"/os/";	// "Server" is the ONLY compose for http://download-node-02.eng.bos.redhat.com/rel-eng/latest-EXTRAS-7.5-RHEL-7/compose/
-	    String baseurlForDeps = "http://download-node-02.eng.bos.redhat.com/rel-eng/latest-RHEL-7/compose/"+variant+"/"+arch+"/os/";
-	    // modify the repo when this is a RHEL-ALT system
-	    ProductCert rhelProductCert = getCurrentRhelProductCert();
-	    if (redhatReleaseX.equals("7")) {
-	    	if (rhelProductCert.productId.equals("419")||	// Red Hat Enterprise Linux for ARM 64
-	    		rhelProductCert.productId.equals("420")||	// Red Hat Enterprise Linux for Power 9
-	    		rhelProductCert.productId.equals("434")) {	// Red Hat Enterprise Linux for IBM System z (Structure A)
-	    		baseurlForDeps = baseurlForDeps.replace("RHEL-7", "RHEL-ALT-7");
-	    	}
+	    
+	    // predict where to get the latest extras from RCM
+	    String baseurlForExtras, baseurlForDeps;
+	    if (Float.valueOf(redhatReleaseXY)<7.6f) { 
+		    baseurlForExtras = "http://download.devel.redhat.com/rel-eng/latest-EXTRAS-7-RHEL-7/compose/"+variant+"/"+arch+"/os/";
+		    baseurlForExtras = "http://download.devel.redhat.com/rel-eng/latest-EXTRAS-7-RHEL-7/compose/"+variant+"/"+arch+"/os/";	// 302 Found // The document has moved <a href="http://download-node-02.eng.bos.redhat.com/rel-eng/latest-EXTRAS-7-RHEL-7/compose/Workstation/x86_64/os/">here</a>
+		    baseurlForExtras = "http://download-node-02.eng.bos.redhat.com/rel-eng/latest-EXTRAS-7-RHEL-7/compose/"+variant+"/"+arch+"/os/";
+		    baseurlForExtras = "http://download-node-02.eng.bos.redhat.com/rel-eng/latest-EXTRAS-7-RHEL-7/compose/"+"Server"+"/"+arch+"/os/";	// "Server" is the ONLY compose for http://download-node-02.eng.bos.redhat.com/rel-eng/latest-EXTRAS-7-RHEL-7/compose/
+		    baseurlForExtras = "http://download-node-02.eng.bos.redhat.com/rel-eng/latest-EXTRAS-"+redhatReleaseXY+"-RHEL-7/compose/"+"Server"+"/"+arch+"/os/";	// "Server" is the ONLY compose for http://download-node-02.eng.bos.redhat.com/rel-eng/latest-EXTRAS-7.5-RHEL-7/compose/
+		    baseurlForDeps = "http://download-node-02.eng.bos.redhat.com/rel-eng/latest-RHEL-7/compose/"+variant+"/"+arch+"/os/";
+		    // modify the repo when this is a RHEL-ALT system
+		    if (isCurrentRhelProductCertRhelAlt()) baseurlForDeps = baseurlForDeps.replace("RHEL-7", "RHEL-ALT-7");
+	    } else {
+		    baseurlForExtras = "http://download-node-02.eng.bos.redhat.com/nightly/EXTRAS-RHEL-"+redhatReleaseXY+"/latest-EXTRAS-"+redhatReleaseXY+"-RHEL-7/compose/"+variant+"/"+arch+"/os/";
+		    baseurlForDeps = "http://download-node-02.eng.bos.redhat.com/nightly/latest-RHEL-"+redhatReleaseXY+"/compose/"+variant+"/"+arch+"/os/";
+			// modify the baseurlForDeps when this is a RHEL-ALT system
+		    if (isCurrentRhelProductCertRhelAlt()) baseurlForDeps = baseurlForDeps.replace("RHEL-7", "RHEL-ALT-7");
 	    }
     
 	    // check the baseurl for problems
@@ -808,19 +805,21 @@ if (false) {
 	    if (baseurlTestResult.getStdout().contains("404 Not Found") || baseurlTestResult.getStdout().contains("The document has moved")) {
 			log.info("Cannot install updates from latest-EXTRAS since the baseurl '"+baseurlForExtras+"' is Not Found.");
 			// attempt to use the previous minor release
-//		    String baseurlForPreviousExtras = String.format("http://download-node-02.eng.bos.redhat.com/rel-eng/latest-EXTRAS-%.1f-RHEL-7/compose/"+"Server"+"/"+arch+"/os/",Float.valueOf(redhatReleaseXY)-0.1);	// "Server" is the ONLY compose for http://download-node-02.eng.bos.redhat.com/rel-eng/latest-EXTRAS-7.5-RHEL-7/compose/
 		    String baseurlForPreviousExtras = baseurlForExtras.replace(redhatReleaseXY, String.format("%.1f",Float.valueOf(redhatReleaseXY)-0.1));
 		    log.info("Attempting to find extras under the previous minor release...");
 			baseurlTestResult = sshCommandRunner.runCommandAndWait("curl --stderr /dev/null --insecure --request GET "+baseurlForPreviousExtras);
 			if (baseurlTestResult.getStdout().contains("404 Not Found") || baseurlTestResult.getStdout().contains("The document has moved")) {
-				Assert.fail("The Latest Extras baseurl '"+baseurlForExtras+"' was Not Found (and neither was '"+baseurlForPreviousExtras+"').  Instruct the automator to verify the assembly of this baseurl.");
+				log.warning("The Latest Extras baseurl '"+baseurlForExtras+"' was Not Found (and neither was '"+baseurlForPreviousExtras+"').  Instruct the automator to verify the assembly of this baseurl.");
+				return;
+				//Assert.fail("The Latest Extras baseurl '"+baseurlForExtras+"' was Not Found (and neither was '"+baseurlForPreviousExtras+"').  Instruct the automator to verify the assembly of this baseurl.");
 			}
 			baseurlForExtras = baseurlForPreviousExtras;
 	    }
 	    baseurlTestResult = sshCommandRunner.runCommandAndWait("curl --stderr /dev/null --insecure --request GET "+baseurlForDeps);
 	    if (baseurlTestResult.getStdout().contains("404 Not Found") || baseurlTestResult.getStdout().contains("The document has moved")) {
-			log.warning("Cannot install updates from latest-RHEL since the baseurl '"+baseurlForDeps+"' is Not Found.");
-	    	Assert.fail("The Latest baseurl '"+baseurlForDeps+"' was Not Found.  Instruct the automator to verify the assembly of this baseurl.");
+			log.warning("Cannot install updates from latest-RHEL since the baseurl '"+baseurlForDeps+"' is Not Found.  Instruct the automator to verify the assembly of this baseurl.");
+			return;
+	    	//Assert.fail("The Latest baseurl '"+baseurlForDeps+"' was Not Found.  Instruct the automator to verify the assembly of this baseurl.");
 	    }
 		
 		// write out the rows of the table...
@@ -10403,5 +10402,21 @@ if (false) {
 			}
 		}
 		return false;
+	}
+	
+	
+	/**
+	 * @return is this a RHEL-ALT system? (indicated by the installed RHEL product cert id)
+	 */
+	public boolean isCurrentRhelProductCertRhelAlt( ) {
+	    ProductCert rhelProductCert = getCurrentRhelProductCert();
+	    if (redhatReleaseX.equals("7")) {
+	    	if (rhelProductCert.productId.equals("419")||	// Red Hat Enterprise Linux for ARM 64
+	    		rhelProductCert.productId.equals("420")||	// Red Hat Enterprise Linux for Power 9
+	    		rhelProductCert.productId.equals("434")) {	// Red Hat Enterprise Linux for IBM System z (Structure A)
+	    		return true;
+	    	}
+	    }
+	    return false;
 	}
 }

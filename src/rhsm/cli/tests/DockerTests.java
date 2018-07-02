@@ -519,11 +519,16 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 	public void testInstallDockerPackageOnHost() throws IOException, JSONException {
 		// assert that the host system is rhel7+
 		if (Integer.valueOf(clienttasks.redhatReleaseX)<7) throw new SkipException("Installation of docker.rpm is only applicable on RHEL7+");
-		if (false) {	// docker is now available on multiple architectures, stop skipping
+		/* docker is now available on multiple architectures, stop skipping on non-x86_64
 		if (!clienttasks.arch.equals("x86_64")) throw new SkipException("Installation of docker.rpm is only applicable on arch x86_64");
 		}
+		*/
+		/* the Orion project was canceled, don't even try to install on Workstation anymore
 		if (clienttasks.variant.equals("Workstation")) log.warning("Installation of docker on Workstation is blocked by dependedncy on oci-register-machine >= 1:0-1.8.  TODO: need a blocked by bug number.  The Orion project will expand the installablility of docker to include Workstation.");	// TODO need a blocked by bug number.
 		if (!clienttasks.variant.equals("Server") && !clienttasks.variant.equals("Workstation")) throw new SkipException("Installation of docker.rpm is only applicable on variant Server and Workstation.  This variant is '"+clienttasks.variant+"'.");
+		*/
+		if (!clienttasks.variant.equals("Server")) throw new SkipException("Installation of docker.rpm is only applicable on variant Server.  This variant is '"+clienttasks.variant+"'.");
+		
 		
 		// make sure any existing docker processes are stopped
 		client.runCommandAndWait("systemctl stop docker.service");
@@ -535,10 +540,9 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 		clienttasks.yumDoPackageFromRepo_("remove", "container-selinux", null, null);	// avoid: Cannot install package docker-selinux-1.6.2-14.el7.x86_64. It is obsoleted by installed package 2:container-selinux-2.9-4.el7.noarch
 		
 		// install the requested docker packages
-		// good way of installing docker
-		if (false) {
-			clienttasks.installSubscriptionManagerRPMs(sm_dockerRpmInstallUrls, null, sm_yumInstallOptions, "", "");
-		}
+		/* old way of installing docker
+		clienttasks.installSubscriptionManagerRPMs(sm_dockerRpmInstallUrls, null, sm_yumInstallOptions, "", "");
+		*/
 		
 		// better way of installing docker (useful on static clients)
 		SSHCommandResult localCommandResult = runLocalCommand("rpm -q python-BeautifulSoup");	// Prerequisite on slave: sudo yum install python-BeautifulSoup
@@ -561,17 +565,24 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 				//	rhel-7-workstation-extras-rpms/x86_64
 				//	rhel-7-for-system-z-a-extras-rpms/7Server/s390x
 				//	rhel-7-for-power-le-extras-rpms/ppc64le
+				// RHEL-ALT:
+				//  rhel-7-for-arm-64-extras-rpms__7Server__aarch64
+				//  rhel-7-for-power-9-extras-rpms__7Server__ppc64le
+				//  rhel-7-for-system-z-a-extras-rpms__7Server__s390x
 				String command = clienttasks.isPackageInstalled("docker") ? "update" : "install"; 
 				//avoid "No packages marked for update" by ignoring results of yumUpdatePackageFromRepo(...)
 				clienttasks.yumDoPackageFromRepo_(command,"docker", "rhel-"+clienttasks.redhatReleaseX+"-*-extras-rpms", "--disablerepo=beaker* --nogpgcheck");
 			}
 		}
 		
-		// an even better best way to update docker is from http://download.devel.redhat.com/rel-eng/latest-EXTRAS-7-RHEL-7/compose/Server/x86_64/os/
+		// however, an even better best way to update docker is to update to the latest development version targeted for this RHEL release
 		clienttasks.installLatestExtrasUpdates(sm_yumInstallOptions, Arrays.asList(new String[]{"docker"}));
 		
+		// releases/variants/arches that do not support docker (could technically be located earlier in this testcase to save time)
+		if (clienttasks.redhatReleaseX.equals("7") && clienttasks.arch.equals("ppc64") && !clienttasks.isPackageInstalled("docker")) throw new SkipException("docker is not available on a '"+clienttasks.redhatReleaseXY+"' '"+clienttasks.arch+"' '"+clienttasks.variant+"' host.");
+		
 		// assert the docker version is >= 1.0.0-2
-		Assert.assertTrue(clienttasks.isPackageVersion("docker", ">=", "1.0.0-2"), "Expecting docker version to be >= 1.0.0-2 (first RHSM compatible version of docker).");
+		Assert.assertTrue(clienttasks.isPackageVersion("docker", ">=", "1.0.0-2"), "Expecting docker to be installed with version to be >= 1.0.0-2 (first RHSM compatible version of docker).  If this fails, review WARNINGs above for explanations.");
 		
 		// restart the docker service
 		//RemoteFileTasks.runCommandAndAssert(client,"service docker restart",Integer.valueOf(0),"^Starting docker: +\\[  OK  \\]$",null);

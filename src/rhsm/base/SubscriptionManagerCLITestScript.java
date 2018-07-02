@@ -584,6 +584,11 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		smt.installSubscriptionManagerRPMs(sm_rpmInstallUrls,sm_rpmUpdateUrls,sm_yumInstallOptions, jenkinsUsername,jenkinsPassword);
 		smt.initializeMsgStringsAfterInstallingSubscriptionManagerRPMs();
 		
+		// version of python interpreter
+		// [root@jsefler-rhel6 ~]# rpm -q --requires subscription-manager | grep 'python(abi)' | cut -d= -f2
+		//  2.6
+		smt.pythonVersion = Float.valueOf(smt.sshCommandRunner.runCommandAndWait("rpm -q --requires "+smt.command+" | grep 'python(abi)' | cut -d= -f2").getStdout().trim());
+		
 		// rewrite rhsmcertd.certFrequency -> rhsmcertd.certCheckInterval   see bug 882459
 		String certFrequency = smt.getConfFileParameter(smt.rhsmConfFile, "rhsmcertd", "certFrequency");
 		if (certFrequency!=null) {
