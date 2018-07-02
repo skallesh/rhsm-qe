@@ -584,7 +584,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		smt.installSubscriptionManagerRPMs(sm_rpmInstallUrls,sm_rpmUpdateUrls,sm_yumInstallOptions, jenkinsUsername,jenkinsPassword);
 		smt.initializeMsgStringsAfterInstallingSubscriptionManagerRPMs();
 		
-		// version of python interpreter
+		// version of python interpreter (depends on install of subscription-manager to be tested)
 		// [root@jsefler-rhel6 ~]# rpm -q --requires subscription-manager | grep 'python(abi)' | cut -d= -f2
 		//  2.6
 		smt.pythonVersion = Float.valueOf(smt.sshCommandRunner.runCommandAndWait("rpm -q --requires "+smt.command+" | grep 'python(abi)' | cut -d= -f2").getStdout().trim());

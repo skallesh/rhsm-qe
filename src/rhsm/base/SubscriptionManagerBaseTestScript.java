@@ -214,6 +214,7 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 			rpmInstallUrls.add(rpmInstallUrl);
 			if (rpmInstallUrl.contains("dnf-plugin-subscription-manager")) {
 				boolean invokeWorkaroundWhileBugIsOpen = true;
+				invokeWorkaroundWhileBugIsOpen = false; // due to https://bugzilla.redhat.com/show_bug.cgi?id=1581410#c1
 				String bugId="1581410";	// Bug 1581410 - package subscription-manager should require dnf-plugin-subscription-manager on RHEL8
 				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 				if (invokeWorkaroundWhileBugIsOpen) {
