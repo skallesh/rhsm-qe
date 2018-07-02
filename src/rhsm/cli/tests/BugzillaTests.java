@@ -89,7 +89,28 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	SSHCommandRunner sshCommandRunner = null;
 	String productId = "BugzillaTest-product";
 
-
+	
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+		projectID = {Project.RedHatEnterpriseLinux7},
+			testCaseID = {""},
+		level= DefTypes.Level.COMPONENT,
+		testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+		posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+		tags= "Tier3")
+	@Test(	description = "Verify that there is no traceback on the console when you try to run rhsm-debug system --no-archive --destination=<with a non-existent file>",
+		groups = {"Tier3Tests","testRHSMDebug_NoArchive_UsingDestination_WithNonExistentDestinationFile","blockedByBug-1596699"},enabled = true)
+	public void testRHSMDebug_NoArchive_UsingDestination_WithNonExistentDestinationFile() {
+	    	String destinationPath = "/home/testFileForRHSMDEBUG";
+	    	clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null,
+				null, (String) null, null, null, null, true, null, null, null, null, null);
+	    	SSHCommandResult result = client
+				.runCommandAndWait(clienttasks.rhsmDebugSystemCommand(destinationPath, true, null, null, null, null, null, null, null));
+	    	String expectedStderr= "Destination file specified is invalid";
+	    	Assert.assertContainsMatch(result.getStderr(),expectedStderr,destinationPath +" is not present on the file system for rhsmdebug command to write the data" );
+	    	Assert.assertFalse(result.getStderr().contains(" Traceback (most recent call last):"),"no Traceback when you try to run rhsm-debug system --no-archive --destination=<with a non-existent file> ");
+	   
+	}
+	
 	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
 			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
 			testCaseID = {"RHEL6-47933", "RHEL7-63527"},
@@ -315,8 +336,10 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			if (release.startsWith("7")) {
 				if (release.matches("7.1")) // && clienttasks.variant.equals("Server"))
 					bugIds.add("1369920");
+				if (release.matches("7.4")) // && clienttasks.variant.equals("Server"))
+					bugIds.add("1589329");
+				
 			}
-			
 			BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[] {}));
 			ll.add(Arrays.asList(new Object[] { blockedByBzBug, release, rhelRepoUrl, eusEntitlementCerts.file }));
 		}
@@ -409,16 +432,16 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			groups = {"Tier3Tests","VerifyrhsmDebugWithNoArchive", "blockedByBug-1175284" },
 			enabled = true)
 	public void testRhsmDebugWithNoArchive() throws Exception {
-		String path = "/home/tmp-dir";
-		client.runCommandAndWait("rm -rf " + path + " && mkdir -p " + path); // pre
+		String destinationPath = "/dev/testfile";
+		client.runCommandAndWait("rm -rf " + destinationPath + " && mkdir -p " + destinationPath); // pre
 		// cleanup
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null,
 				null, (String) null, null, null, null, true, null, null, null, null, null);
 		SSHCommandResult result = client
-				.runCommandAndWait(clienttasks.rhsmDebugSystemCommand(path, true, null, null, null, null, null, null, null));
-		String expectedStderr= "To use the no-archive option, the destination directory '"+path+"' must exist on the same file system as the data assembly directory '/var/spool/rhsm/debug'.";
-		Assert.assertContainsMatch(result.getStderr(),expectedStderr,path +" is not on the same file system as the data assembly directory '/var/spool/rhsm/debug' , so rhsm-debug --no-archive --destination "+path+ "will not write anything." );
-		client.runCommandAndWait("rm -rf " + path);
+				.runCommandAndWait(clienttasks.rhsmDebugSystemCommand(destinationPath, true, null, null, null, null, null, null, null));
+		String expectedStderr= "To use the no-archive option, the destination directory '"+destinationPath+"' must exist on the same file system as the data assembly directory '/var/spool/rhsm/debug'.";
+		Assert.assertContainsMatch(result.getStderr(),expectedStderr,destinationPath +" is not on the same file system as the data assembly directory '/var/spool/rhsm/debug' , so rhsm-debug --no-archive --destination "+destinationPath+ "will not write anything." );
+		client.runCommandAndWait("rm -rf " + destinationPath);
 
 	}
 
@@ -842,7 +865,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		DateFormat yyyy_MM_dd_DateFormat = new SimpleDateFormat("M/d/yy h:mm aaa");
 		String EndingDate = yyyy_MM_dd_DateFormat.format(endCalendar.getTime());
 		Calendar c2 = new GregorianCalendar();
-		sleep(1 * 59 * 1000 - (c2.getTimeInMillis() - c1.getTimeInMillis()));
+		sleep(1 * 60 * 1000 - (c2.getTimeInMillis() - c1.getTimeInMillis()));
 		new JSONObject(
 				CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername,
 						sm_clientPassword, sm_serverUrl, "/activation_keys/" + jsonActivationKey.getString("id")
@@ -2122,7 +2145,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		// sleep(endingMinutesFromNow*60*1000);
 		// trying to reduce the wait time for the expiration by subtracting off
 		// some expensive test time
-		sleep(1 * 60 * 1000 - (c2.getTimeInMillis() - c1.getTimeInMillis()));
+		sleep(1 * 61 * 1000 - (c2.getTimeInMillis() - c1.getTimeInMillis()));
 		// attempt to attach an entitlement from the same pool which is now
 		// expired
 		String result = clienttasks
