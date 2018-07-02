@@ -1829,8 +1829,23 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			enabled = true)
 	public void testAutosubscribeReuseBasicAuthCredentials() throws JSONException, Exception {
 		if (!(sm_serverType.equals(CandlepinType.standalone))) throw new SkipException("This test was designed for execution against an opremise candlepin server.");
-		servertasks.updateConfFileParameter("log4j.logger.org.candlepin.policy.js.compliance", "DEBUG");
-		servertasks.updateConfFileParameter("log4j.logger.org.candlepin", "DEBUG");
+		
+		// configure "log4j.logger.org.candlepin.policy.js.compliance" to DEBUG
+		servertasks.uncommentConfFileParameter("log4j.logger.org.candlepin.policy.js.compliance");
+		if (servertasks.getConfFileParameter("log4j.logger.org.candlepin.policy.js.compliance")==null) {
+			servertasks.addConfFileParameter ("\n# uncomment to enable debug logging in candlepin.log:\n"+"log4j.logger.org.candlepin.policy.js.compliance", "DEBUG");
+		} else {
+			servertasks.updateConfFileParameter("log4j.logger.org.candlepin.policy.js.compliance", "DEBUG");
+		}
+		
+		// configure "log4j.logger.org.candlepin" to DEBUG
+		servertasks.uncommentConfFileParameter("log4j.logger.org.candlepin");
+		if (servertasks.getConfFileParameter("log4j.logger.org.candlepin")==null) {
+			servertasks.addConfFileParameter ("\n# uncomment to enable debug logging in candlepin.log:\n"+"log4j.logger.org.candlepin", "DEBUG");
+		} else {
+			servertasks.updateConfFileParameter("log4j.logger.org.candlepin", "DEBUG");
+		}
+		
 		servertasks.restartTomcat();
 		sleep(1*50*1000);// adding buffer time for tomcat to be up and running
 	   	File tomcatLogFile = servertasks.getTomcatLogFile();
@@ -1842,12 +1857,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		String logMessage = " Authentication check for /consumers/" + clienttasks.getCurrentConsumerId() + "/entitlements";
 		Assert.assertTrue(RemoteFileTasks
 				.getTailFromMarkedFile(server, tomcatLogFile.getPath(), LogMarker, logMessage).trim().equals(""));
-		 servertasks.updateConfFileParameter("log4j.logger.org.candlepin.policy.js.compliance", "INFO");
-	    	 servertasks.updateConfFileParameter("log4j.logger.org.candlepin", "INFO");
 	}
 	
-	@AfterGroups(groups = { "setup" }, value = { "VerifyAutosubscribeReuseBasicAuthCredntials" })
-	@AfterClass(groups = "setup") // called after class for insurance
+	@AfterGroups(groups = { "setup" }, value = { "VerifyAutosubscribeReuseBasicAuthCredntials" }, alwaysRun=true)
 	public void restoreCandlepinConfFileParameters() {
 		if (sm_serverType.equals(CandlepinType.standalone)) {
 			servertasks.updateConfFileParameter("log4j.logger.org.candlepin.policy.js.compliance", "INFO");
@@ -5701,7 +5713,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	}
 
 	@AfterGroups(groups = { "setup" }, value = { "VerifyRHSMCertdLogging" })
-	@AfterClass(groups = "setup") // called after class for insurance
+//debugTesting	@AfterClass(groups = "setup") // called after class for insurance
 	public void restoreConfiguredFrequencies() {
 		if (clienttasks == null)
 			return;
