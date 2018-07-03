@@ -247,9 +247,9 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.9-1")) {String swap=expectedStderr; expectedStderr=expectedStdout; expectedStdout=swap;}	// post commit a695ef2d1da882c5f851fde90a24f957b70a63ad
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-1")) {	// post commit 630e1a2eb06e6bfacac669ce11f38e228c907ea9 1507030: RestlibExceptions should show they originate server-side	
 		    expectedStderr = "HTTP error (400 - Bad Request): "+expectedStderr;
-		    if(SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.5.5-1")) { //post commit 2a970671e8844e62ef5a6906b1d379ec7d7368ac  Added the ContentOverrideDTO and ContentOverrideTranslator 
+		}
+		if(SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.5.5-1")) { //post commit 2a970671e8844e62ef5a6906b1d379ec7d7368ac  Added the ContentOverrideDTO and ContentOverrideTranslator 
 			    expectedStderr="HTTP error (400 - Bad Request): The following content properties cannot be overridden: name";
-		    }
 		}
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(1), "ExitCode from an attempt to add repo-overrides for name for repoids: "+repoids);
 		Assert.assertEquals(result.getStdout().trim(), expectedStdout, "Stdout from an attempt add a repo-overrides for name for repoids: "+repoids);
@@ -264,9 +264,9 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.9-1")) {String swap=expectedStderr; expectedStderr=expectedStdout; expectedStdout=swap;}	// post commit a695ef2d1da882c5f851fde90a24f957b70a63ad
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-1")) {       // post commit 630e1a2eb06e6bfacac669ce11f38e228c907ea9 1507030: RestlibExceptions should show they originate server-side	
 			expectedStderr = "HTTP error (400 - Bad Request): ".replaceAll("\\(","\\\\(").replaceAll("\\)","\\\\)")+expectedStderr;
-			if(SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.5.5-1")) { //post commit 2a970671e8844e62ef5a6906b1d379ec7d7368ac  Added the ContentOverrideDTO and ContentOverrideTranslator 
-			    expectedStderr="HTTP error (400 - Bad Request): The following content properties cannot be overridden: name";
-			}
+		}
+		if(SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.5.5-1")) { //post commit 2a970671e8844e62ef5a6906b1d379ec7d7368ac  Added the ContentOverrideDTO and ContentOverrideTranslator 
+		    expectedStderr="HTTP error (400 - Bad Request): The following content properties cannot be overridden: name";
 		}
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(1), "ExitCode from an attempt to add repo-overrides for name and label for repoids: "+repoids);
 		Assert.assertEquals(result.getStdout().trim(), expectedStdout, "Stdout from an attempt add a repo-overrides for name and label for repoids: "+repoids);
@@ -285,9 +285,9 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.9-1")) {String swap=expectedStderr; expectedStderr=expectedStdout; expectedStdout=swap;}	// post commit a695ef2d1da882c5f851fde90a24f957b70a63ad
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-1")) {	// post commit 630e1a2eb06e6bfacac669ce11f38e228c907ea9 1507030: RestlibExceptions should show they originate server-side			
 			expectedStderr = "HTTP error (400 - Bad Request): ".replaceAll("\\(","\\\\(").replaceAll("\\)","\\\\)")+expectedStderr;
-			if(SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.5.5-1")) { //post commit 2a970671e8844e62ef5a6906b1d379ec7d7368ac  Added the ContentOverrideDTO and ContentOverrideTranslator 
-			    expectedStderr="HTTP error (400 - Bad Request): The following content properties cannot be overridden: name";
-			}
+		}
+		if(SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.5.5-1")) { //post commit 2a970671e8844e62ef5a6906b1d379ec7d7368ac  Added the ContentOverrideDTO and ContentOverrideTranslator 
+		    expectedStderr="HTTP error (400 - Bad Request): The following content properties cannot be overridden: name";
 		}
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(1), "ExitCode from an attempt to add repo-overrides for baseurl, name, and label for repoids: "+repoids);
 		Assert.assertEquals(result.getStdout().trim(), expectedStdout, "Stdout from an attempt add a repo-overrides for baseurl, name, and label for repoids: "+repoids);
@@ -330,10 +330,10 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.9-1")) {String swap=expectedStderr; expectedStderr=expectedStdout; expectedStdout=swap;}	// post commit a695ef2d1da882c5f851fde90a24f957b70a63ad
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-1")) {// post commit 630e1a2eb06e6bfacac669ce11f38e228c907ea9 1507030: RestlibExceptions should show they originate server-side
 		    expectedStderr = "HTTP error (400 - Bad Request): "+expectedStderr;
-		    if(SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.5.5-1")) { //post commit 2a970671e8844e62ef5a6906b1d379ec7d7368ac  Added the ContentOverrideDTO and ContentOverrideTranslator 
+		}
+		if(SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.5.5-1")) { //post commit 2a970671e8844e62ef5a6906b1d379ec7d7368ac  Added the ContentOverrideDTO and ContentOverrideTranslator 
 			    expectedStderr="HTTP error (400 - Bad Request): The following override values are invalid: "+valueToOverride;
-		    }
-		}	
+		}
 		
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(1), "ExitCode from an attempt to add a repo-override with a value exceeding 255 chars.");
 		Assert.assertEquals(result.getStdout().trim(), expectedStdout, "Stdout from an attempt to add a repo-override with a value exceeding 255 chars.");
@@ -355,9 +355,9 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.9-1")) {String swap=expectedStderr; expectedStderr=expectedStdout; expectedStdout=swap;}	// post commit a695ef2d1da882c5f851fde90a24f957b70a63ad
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-1")) { // post commit 630e1a2eb06e6bfacac669ce11f38e228c907ea9 1507030: RestlibExceptions should show they originate server-side
 		    expectedStderr = "HTTP error (400 - Bad Request): "+expectedStderr;
-		    if(SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.5.5-1")) { //post commit 2a970671e8844e62ef5a6906b1d379ec7d7368ac  Added the ContentOverrideDTO and ContentOverrideTranslator 
+		}
+		if(SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.5.5-1")) { //post commit 2a970671e8844e62ef5a6906b1d379ec7d7368ac  Added the ContentOverrideDTO and ContentOverrideTranslator 
 			    expectedStderr="HTTP error (400 - Bad Request): The following override values are invalid: "+valueToOverride;
-		    }
 		}
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(1), "ExitCode from an attempt to add a repo-override with a name exceeding 255 chars.");
 		Assert.assertEquals(result.getStdout().trim(), expectedStdout, "Stdout from an attempt to add a repo-override with a name exceeding 255 chars.");
@@ -375,9 +375,9 @@ public class RepoOverrideTests extends SubscriptionManagerCLITestScript{
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.13.9-1")) {String swap=expectedStderr; expectedStderr=expectedStdout; expectedStdout=swap;}	// post commit a695ef2d1da882c5f851fde90a24f957b70a63ad
 		if (clienttasks.isPackageVersion("subscription-manager",">=","1.21.2-1")) { 	// post commit 630e1a2eb06e6bfacac669ce11f38e228c907ea9 1507030: RestlibExceptions should show they originate server-side
 		    expectedStderr = "HTTP error (400 - Bad Request): "+expectedStderr;
-		    if(SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.5.5-1")) { //post commit 2a970671e8844e62ef5a6906b1d379ec7d7368ac  Added the ContentOverrideDTO and ContentOverrideTranslator 
-			    expectedStderr="HTTP error (400 - Bad Request): The following override values are invalid: "+valueToOverride;
-		    }
+		}
+		if(SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.5.5-1")) { //post commit 2a970671e8844e62ef5a6906b1d379ec7d7368ac  Added the ContentOverrideDTO and ContentOverrideTranslator 
+		    expectedStderr="HTTP error (400 - Bad Request): The following override values are invalid: "+valueToOverride;
 		}
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(1), "ExitCode from an attempt to add a repo-override with a label exceeding 255 chars.");
 		Assert.assertEquals(result.getStdout().trim(), expectedStdout, "Stdout from an attempt to add a repo-override with a label exceeding 255 chars.");
