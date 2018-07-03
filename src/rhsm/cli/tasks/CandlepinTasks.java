@@ -722,9 +722,10 @@ schema generation failed
 		if (RemoteFileTasks.testExists(sshCommandRunner, "/var/log/tomcat/")) {// tomcat
 			
 			// was catalina.out prior to tomcat-7.0.56
-			SSHCommandResult r = sshCommandRunner.runCommandAndWait("ls -t -1 /var/log/tomcat/* | head -n 1");
-			if (RemoteFileTasks.testExists(sshCommandRunner, r.getStdout().trim())) {
-				tomcatLogFile = new File(r.getStdout().trim());
+			SSHCommandResult r = sshCommandRunner.runCommandAndWait("sudo ls -t -1 /var/log/tomcat/ | head -n 1");
+			String tomcatLogFilename = "/var/log/tomcat/"+(r.getStdout().trim());
+			if (RemoteFileTasks.testExists(sshCommandRunner, tomcatLogFilename)) {
+				tomcatLogFile = new File(tomcatLogFilename);
 			}
 		} else
 		if (RemoteFileTasks.testExists(sshCommandRunner, "/var/log/tomcat6/")) {// tomcat6

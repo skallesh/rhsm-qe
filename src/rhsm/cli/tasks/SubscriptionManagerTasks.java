@@ -1212,6 +1212,27 @@ if (false) {
 			}
 			*/
 			
+			// TEMPORARY WORKAROUND FOR BUG
+			if (this.redhatReleaseX.equals("8")) {
+				String bugId="1581410";	// Bug 1581410 - package subscription-manager should require dnf-plugin-subscription-manager on RHEL8
+				boolean invokeWorkaroundWhileBugIsOpen = true;
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				if (invokeWorkaroundWhileBugIsOpen) {
+					// install /tmp/dnf-plugin-subscription-manager.rpm and /tmp/subscription-manager.rpm together
+					if (rpmPath.equals("/tmp/dnf-plugin-subscription-manager.rpm")) {
+						RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"wget -nv -O "+rpmPath+" --no-check-certificate "+(jenkinsUsername.isEmpty()?"":"--http-user="+jenkinsUsername)+" "+(jenkinsPassword.isEmpty()?"":"--http-password="+jenkinsPassword)+" \""+rpmUrl.trim()+"\"",Integer.valueOf(0),null,"-> \""+rpmPath+"\"");
+						continue;	// without installing yet
+					}
+					if (rpmPath.equals("/tmp/subscription-manager.rpm")) {
+						RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"wget -nv -O "+rpmPath+" --no-check-certificate "+(jenkinsUsername.isEmpty()?"":"--http-user="+jenkinsUsername)+" "+(jenkinsPassword.isEmpty()?"":"--http-password="+jenkinsPassword)+" \""+rpmUrl.trim()+"\"",Integer.valueOf(0),null,"-> \""+rpmPath+"\"");
+						Assert.assertEquals(sshCommandRunner.runCommandAndWait("yum -y localinstall "+rpmPath+" /tmp/dnf-plugin-subscription-manager.rpm "+installOptions).getExitCode(), Integer.valueOf(0), "ExitCode from yum installed local rpm: "+rpmPath);
+						pkgsInstalled.add(pkg);pkgsInstalled.add("dnf-plugin-subscription-manager");
+						continue;	// after installing /tmp/dnf-plugin-subscription-manager.rpm and /tmp/subscription-manager.rpm together
+					}
+				}
+			}
+			// END OF WORKAROUND
+			
 			// install rpmUrl
 			log.info("Installing RPM from "+rpmUrl+"...");
 			RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"wget -nv -O "+rpmPath+" --no-check-certificate "+(jenkinsUsername.isEmpty()?"":"--http-user="+jenkinsUsername)+" "+(jenkinsPassword.isEmpty()?"":"--http-password="+jenkinsPassword)+" \""+rpmUrl.trim()+"\"",Integer.valueOf(0),null,"-> \""+rpmPath+"\"");
