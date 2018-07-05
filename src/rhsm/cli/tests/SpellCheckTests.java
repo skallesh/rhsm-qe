@@ -53,6 +53,10 @@ import com.github.redhatqe.polarize.metadata.DefTypes.Project;
  *   ^C
  *   [root@jsefler-7 ~]# 
  *   
+ *   
+ *   To find a non-ascii character in a file...
+ *   [root@rhel8 ~]# grep --color='auto' -P -n '[^\x00-\x7F]' filename.txt
+ *   
  **/
 @Test(groups={"SpellCheckTests"})
 public class SpellCheckTests extends SubscriptionManagerCLITestScript {
