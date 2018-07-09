@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -1153,7 +1154,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 		forceVirtWhatToReturnHost();
 		
 		// create host consumer A
-		String consumerIdOfHostA = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null, null));
+		consumerIdOfHostA = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null, null));
 		
 		for (int c=0;c<2;c++) { // run this test twice
 			
@@ -1179,13 +1180,27 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 			// assert expected guestIds
 			for (String guestId : expectedGuestIdsOnHostA) Assert.assertContains(actualGuestIds, guestId);
 			Assert.assertEquals(actualGuestIds.size(), expectedGuestIdsOnHostA.size(),"All of the expected guestIds PUT on host consumer '"+consumerIdOfHostA+"' using the Candlepin API were verified.");
-
-		
 			
 			// Now let's create a second host consumer B and add its own guestIds to it and assert the same test
 			clienttasks.clean();	// this will keep consumer A registered
-			String consumerIdOfHostB = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, null, null, null, null, null, null));
-
+			clienttasks.deleteFactsFileWithOverridingValues();	// effectively a no-op until candlepin-2.5.5-1 detour
+			consumerIdOfHostB = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, null, null, null, null, null, null));
+			
+			// DETOUR!
+			// need to assert virt-who/candlepin fix for Bug 1314902 - 2 virt-who reporting on the same hypervisor using local libvirt and remote libvirt methods creates duplicate systems
+			if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.5.5-1")) {	// candlepin commit 17eba611a6482cbc5bd1587dd798e8ababe6f529 1314902: ENT-555 use dmi.system.uuid to reconcile hypervisors
+				// To prevent duplicate hypervisor consumers, we should now assert that consumer B actually
+				// recovered the same consumerId as consumer A since the "dmi.system.uuid" fact is unchanged.
+				Assert.assertEquals(consumerIdOfHostB, consumerIdOfHostA, "When a system registers with a 'dmi.system.uuid' fact that is already known to candlepin as a hypervisor host of guestIds, then the original consumerId is re-granted to the registering system (avoids duplicate consumers for unique dmi.system.uuid).");
+				
+				// Now let's clean and attempt to register a second host consumer B with a unique "dmi.system.uuid" to re-assert the original testcase
+				clienttasks.clean();
+				clienttasks.createFactsFileWithOverridingValues(new HashMap<String, String>(){{put("dmi.system.uuid",clienttasks.getFactValue("dmi.system.uuid")+"-2");}}); // append a random "-2" to the end of the original uuid to make it unique
+				consumerIdOfHostB = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, null, null, null, null, null, null));
+				Assert.assertFalse(consumerIdOfHostB.equals(consumerIdOfHostA), "consumerIdOfHostB '"+consumerIdOfHostB+"' does not equal consumerIdOfHostA '"+consumerIdOfHostA+"' after subscription-manager clean and register with new dmi.system.uuid fact.");
+			}
+			// END OF DETOUR
+			
 			// call Candlepin API to PUT some guestIds onto the host consumer B
 			List<String> expectedGuestIdsOnHostB = Arrays.asList(new String[]{"test-guestId"+k++,"test-guestId"+k++,"test-guestId"+k++,"test-guestId"+k++}); 
 			jsonData.put("guestIds", expectedGuestIdsOnHostB);
@@ -1231,7 +1246,6 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 			// assert expected guestIds
 			for (String guestId : expectedGuestIdsOnHostB) Assert.assertContains(actualGuestIds, guestId);
 			Assert.assertEquals(actualGuestIds.size(), expectedGuestIdsOnHostB.size(),"All of the expected guestIds PUT on consumer '"+consumerIdOfHostB+"' using the Candlepin API were verified.");
-
 			
 			
 			// Now let's re-verify that the guestIds of host consumer A have not changed
@@ -1251,8 +1265,9 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 			// assert expected guestIds
 			for (String guestId : expectedGuestIdsOnHostA) Assert.assertContains(actualGuestIds, guestId);
 			Assert.assertEquals(actualGuestIds.size(), expectedGuestIdsOnHostA.size(),"All of the expected guestIds PUT on consumer '"+consumerIdOfHostA+"' using the Candlepin API were verified.");
-
 		}
+		
+		// clean-up... is handled by unregisterConsumersIdOfHostAandBAfterGroups()
 	}
 	
 	
@@ -1343,7 +1358,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 		forceVirtWhatToReturnHost();
 		
 		// create host consumer A
-		String consumerIdOfHostA = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null, null));
+		consumerIdOfHostA = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null, null));
 		
 		for (int c=0;c<2;c++) { // run this test twice
 			
@@ -1371,13 +1386,27 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 			// assert expected guestIds
 			for (String guestId : expectedGuestIdsOnHostA) Assert.assertContains(actualGuestIds, guestId);
 			Assert.assertEquals(actualGuestIds.size(), expectedGuestIdsOnHostA.size(),"All of the expected guestIds PUT on host consumer '"+consumerIdOfHostA+"' using the Candlepin API were verified.");
-
-		
 			
 			// Now let's create a second host consumer B and add its own guestIds to it and assert the same test
 			clienttasks.clean();	// this will keep consumer A registered
-			String consumerIdOfHostB = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, null, null, null, null, null, null));
-
+			clienttasks.deleteFactsFileWithOverridingValues();	// effectively a no-op until candlepin-2.5.5-1 detour
+			consumerIdOfHostB = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, null, null, null, null, null, null));
+			
+			// DETOUR!
+			// need to assert virt-who/candlepin fix for Bug 1314902 - 2 virt-who reporting on the same hypervisor using local libvirt and remote libvirt methods creates duplicate systems
+			if (SubscriptionManagerTasks.isVersion(servertasks.statusVersion, ">=", "2.5.5-1")) {	// candlepin commit 17eba611a6482cbc5bd1587dd798e8ababe6f529 1314902: ENT-555 use dmi.system.uuid to reconcile hypervisors
+				// To prevent duplicate hypervisor consumers, we should now assert that consumer B actually
+				// recovered the same consumerId as consumer A since the "dmi.system.uuid" fact is unchanged.
+				Assert.assertEquals(consumerIdOfHostB, consumerIdOfHostA, "When a system registers with a 'dmi.system.uuid' fact that is already known to candlepin as a hypervisor host of guestIds, then the original consumerId is re-granted to the registering system (avoids duplicate consumers for unique dmi.system.uuid).");
+				
+				// Now let's clean and attempt to register a second host consumer B with a unique "dmi.system.uuid" to re-assert the original testcase
+				clienttasks.clean();
+				clienttasks.createFactsFileWithOverridingValues(new HashMap<String, String>(){{put("dmi.system.uuid",clienttasks.getFactValue("dmi.system.uuid")+"-2");}}); // append a random "-2" to the end of the original uuid to make it unique
+				consumerIdOfHostB = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, null, null, null, null, null, null));
+				Assert.assertFalse(consumerIdOfHostB.equals(consumerIdOfHostA), "consumerIdOfHostB '"+consumerIdOfHostB+"' does not equal consumerIdOfHostA '"+consumerIdOfHostA+"' after subscription-manager clean and register with new dmi.system.uuid fact.");
+			}
+			// END OF DETOUR
+			
 			// call Candlepin API to PUT some guestIds onto the host consumer B
 			// NOTE: decrementing k will effectively move the last guestId from HostA to HostB
 			k--;
@@ -1402,7 +1431,6 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 			// assert expected guestIds
 			for (String guestId : expectedGuestIdsOnHostB) Assert.assertContains(actualGuestIds, guestId);
 			Assert.assertEquals(actualGuestIds.size(), expectedGuestIdsOnHostB.size(),"All of the expected guestIds PUT on consumer '"+consumerIdOfHostB+"' using the Candlepin API were verified.");
-
 			
 			
 			// Now let's re-verify that the guestIds of host consumer A have not changed
@@ -1427,9 +1455,29 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 			for (String guestId : expectedGuestIdsOnHostA) Assert.assertContains(actualGuestIds, guestId);
 			if (actualGuestIds.size() == expectedGuestIdsOnHostA.size()+c+1) throw new SkipException("Currently Candlepin does NOT purge duplicate guest ids PUT by virt-who onto different host consumers.  The most recently PUT guest id is the winner. Entitlements should be revoked for the older guest id.  Development has decided to keep the stale guest id for potential reporting purposes, hence this test is being skipped until needed in the future."); else
 			Assert.assertEquals(actualGuestIds.size(), expectedGuestIdsOnHostA.size(),"All of the expected guestIds PUT on consumer '"+consumerIdOfHostA+"' using the Candlepin API were verified.");
-
 		}
+		
+		// clean-up... is handled by unregisterConsumersIdOfHostAandBAfterGroups()
 	}
+	@AfterGroups(groups="setup", value={"VerifyGuestIdsCanBePutOntoHostConsumer_Test","VerifyGuestIdIsRemovedFromHostConsumerAWhenHostConsumerBPutsSameGuestId_Test"}, alwaysRun=true)
+	public void unregisterConsumersIdOfHostAandBAfterGroups() {
+		
+		// unregister the current consumer  (will normally be consumerIdOfHostB)
+		clienttasks.unregister_(null, null, null, null);
+		clienttasks.deleteFactsFileWithOverridingValues();
+		
+		// unregister consumerIdOfHostA
+		clienttasks.register_(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, consumerIdOfHostA, null, null, null, (String)null, null, null, null, null, null, null, null, null, null);
+		clienttasks.unregister_(null, null, null, null);
+		consumerIdOfHostA=null;
+		
+		// unregister consumerIdOfHostB  (will normally be GoneException: HTTP error (410 - Gone): Unit 06f727b9-ca57-47a0-8e74-71f8f4c1f481 has been deleted)
+		clienttasks.register_(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, consumerIdOfHostB, null, null, null, (String)null, null, null, null, null, null, null, null, null, null);
+		clienttasks.unregister_(null, null, null, null);
+		consumerIdOfHostB=null;
+	}
+	protected String consumerIdOfHostA=null;
+	protected String consumerIdOfHostB=null;
 	
 	
 	

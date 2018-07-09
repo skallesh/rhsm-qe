@@ -690,6 +690,12 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 		}else {
 		    SSHCommandResult manPageResult = client.runCommandAndWait("man "+tool);
 		    Assert.assertEquals(manPageResult.getExitCode(),Integer.valueOf(0), "ExitCode from man page for '"+tool+"'.");
+		if (Integer.valueOf(clienttasks.redhatReleaseX)>=8) {	// RHEL8+
+			log.warning("The '"+tool+"' tool was provided by subscription-manager-gui and is no longer delivered on RHEL8+.");
+			Assert.assertEquals(manPageResult.getStderr().trim(),"No manual entry for "+tool, "Stderr from man page for '"+tool+"'.");
+			throw new SkipException("Because '"+tool+"' tool is no longer provided on RHEL8+, there is no man page for it.");
+		}
+		Assert.assertEquals(manPageResult.getExitCode(),Integer.valueOf(0), "ExitCode from man page for '"+tool+"'.");
 		
 		    // modify the contents of manPageResult for acceptable word spellings
 		    String modifiedManPage = manPageResult.getStdout();
@@ -988,12 +994,19 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 		if (clienttasks==null) throw new SkipException("A client connection is needed for this test.");
 		String tool = "rhsm-icon";
 		SSHCommandResult manPageResult = client.runCommandAndWait("man "+tool);
+
 		if (Integer.valueOf(clienttasks.redhatReleaseX)>=8) {
 		    throw new SkipException("No manual entry for rhsm-icon as rhsm-icon is retired from RHEL-8 onwards");
 		}
 		else{
 		    Assert.assertEquals(manPageResult.getExitCode(),Integer.valueOf(0), "ExitCode from man page for '"+tool+"'.");
 		
+		if (Integer.valueOf(clienttasks.redhatReleaseX)>=8) {	// RHEL8+
+			log.warning("The '"+tool+"' tool was provided by subscription-manager-gui and is no longer delivered on RHEL8+.");
+			Assert.assertEquals(manPageResult.getStderr().trim(),"No manual entry for "+tool, "Stderr from man page for '"+tool+"'.");
+			throw new SkipException("Because '"+tool+"' tool is no longer provided on RHEL8+, there is no man page for it.");
+		}
+		Assert.assertEquals(manPageResult.getExitCode(),Integer.valueOf(0), "ExitCode from man page for '"+tool+"'.");
 		
 		// modify the contents of manPageResult for acceptable word spellings
 		String modifiedManPage = manPageResult.getStdout();
@@ -1185,6 +1198,7 @@ public class SpellCheckTests extends SubscriptionManagerCLITestScript {
 		modifiedManPage = modifiedManPage.replaceAll("--activationkey", "--activation_key");
 		modifiedManPage = modifiedManPage.replaceAll("--serverurl", "--server_url");
 		modifiedManPage = modifiedManPage.replaceAll("--ondate", "--on_date");
+		modifiedManPage = modifiedManPage.replaceAll("--afterdate", "--after_date");
 		modifiedManPage = modifiedManPage.replaceAll("--baseurl", "--base_url");
 		modifiedManPage = modifiedManPage.replaceAll("--listslots", "--list_slots");
 		modifiedManPage = modifiedManPage.replaceAll("--listhooks", "--list_hooks");
