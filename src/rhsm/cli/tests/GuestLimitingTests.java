@@ -81,7 +81,7 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript {
 		if (clienttasks.getFactValue("virt.is_guest").equals("True")) {
 			Map<String, String> factsMap = new HashMap<String, String>();
 			factsMap.put("virt.is_guest", "False");
-			factsMap.put(" virt.uuid", "");
+			factsMap.put("virt.uuid", "");
 			clienttasks.createFactsFileWithOverridingValues(factsMap);
 			clienttasks.facts(null, true, null, null, null, null);
 		}
@@ -146,7 +146,7 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript {
 		if (clienttasks.getFactValue("virt.is_guest").equals("True")) {
 			Map<String, String> factsMap = new HashMap<String, String>();
 			factsMap.put("virt.is_guest", "False");
-			factsMap.put(" virt.uuid", "");
+			factsMap.put("virt.uuid", "");
 			clienttasks.createFactsFileWithOverridingValues(factsMap);
 			clienttasks.facts(null, true, null, null, null, null);
 		}
@@ -270,7 +270,7 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript {
 		if (clienttasks.getFactValue("virt.is_guest").equals("True")) {
 			Map<String, String> factsMap = new HashMap<String, String>();
 			factsMap.put("virt.is_guest", "False");
-			factsMap.put(" virt.uuid", "");
+			factsMap.put("virt.uuid", "");
 			clienttasks.createFactsFileWithOverridingValues(factsMap);
 			clienttasks.facts(null, true, null, null, null, null);
 		}
@@ -459,5 +459,11 @@ public class GuestLimitingTests extends SubscriptionManagerCLITestScript {
 				client.runCommandAndWait("mv " + lsFile + " " + lsFile.replaceFirst("\\.bak$", ""));
 			}
 		}
+	}
+	
+	@AfterClass(groups = "setup", alwaysRun=true)
+	public void deleteFactsFileWithOverridingValuesAfterClass() {
+		// cleanup the facts file created by testcase calls to createFactsFileWithOverridingValues(...)
+		clienttasks.deleteFactsFileWithOverridingValues();
 	}
 }
