@@ -440,7 +440,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		SSHCommandResult result = client
 				.runCommandAndWait(clienttasks.rhsmDebugSystemCommand(destinationPath, true, null, null, null, null, null, null, null));
 		String expectedStderr= "To use the no-archive option, the destination directory '"+destinationPath+"' must exist on the same file system as the data assembly directory '/var/spool/rhsm/debug'.";
-		Assert.assertContainsMatch(result.getStderr(),expectedStderr,destinationPath +" is not on the same file system as the data assembly directory '/var/spool/rhsm/debug' , so rhsm-debug --no-archive --destination "+destinationPath+ "will not write anything." );
+		Assert.assertContainsMatch(result.getStdout().trim(),expectedStderr,"since destination directory is not on same file system rhsmDebugSystemCommand will not write anything and fails gracefully" );
 		client.runCommandAndWait("rm -rf " + destinationPath);
 
 	}
