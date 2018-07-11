@@ -105,6 +105,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	    	SSHCommandResult result = client
 				.runCommandAndWait(clienttasks.rhsmDebugSystemCommand(null, true, null, null, null, null, null, null, null));
 	    	String expectedStdout= "Wrote: /tmp/rhsm-debug-system";
+		// TEMPORARY WORKAROUND
 	    	if (clienttasks.redhatReleaseX.equals("8")) {
 			boolean invokeWorkaroundWhileBugIsOpen = true;
 			String bugId="1592453"; // Bug 1592453 - support rhsm-debug system with --no-archive option on rhel8
@@ -114,7 +115,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			}
 							
 		}
-	    	Assert.assertContainsMatch(result.getStdout(),expectedStdout,"rhsm-debug system successfully wrote" );
+		// END OF WORKAROUND , delete this workaround and add this bug to blockedbybug list after the bug is fixed
+
+	    	Assert.assertContainsMatch(result.getStdout(),expectedStdout,"rhsm-debug system wrote the data successfully" );
 		Assert.assertEquals(result.getExitCode(), new Integer(0));
 	}
 	
