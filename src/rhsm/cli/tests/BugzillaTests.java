@@ -98,7 +98,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
 		posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 		tags= "Tier3")
-	@Test(	description = "Verify that there is no traceback on the console when you try to run rhsm-debug system --no-archive --destination=<with a non-existent file>",
+	@Test(	description = "Verify that there is no traceback on the console when you try to run rhsm-debug system --no-archive without specifying destination",
 		groups = {"Tier3Tests","testRHSMDebug_NoArchive_Without_Specifying_Destination"},enabled = true)
 	public void testRHSMDebug_NoArchive_Without_Specifying_Destination() {
 	    	clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null,
