@@ -98,6 +98,34 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 		tags= "Tier3")
 	@Test(	description = "Verify that there is no traceback on the console when you try to run rhsm-debug system --no-archive --destination=<with a non-existent file>",
+		groups = {"Tier3Tests","testRHSMDebug_NoArchive_Without_Specifying_Destination"},enabled = true)
+	public void testRHSMDebug_NoArchive_Without_Specifying_Destination() {
+	    	clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null,
+				null, (String) null, null, null, null, true, null, null, null, null, null);
+	    	SSHCommandResult result = client
+				.runCommandAndWait(clienttasks.rhsmDebugSystemCommand(null, true, null, null, null, null, null, null, null));
+	    	String expectedStdout= "Wrote: /tmp/rhsm-debug-system";
+	    	if (clienttasks.redhatReleaseX.equals("8")) {
+			boolean invokeWorkaroundWhileBugIsOpen = true;
+			String bugId="1592453"; // Bug 1592453 - support rhsm-debug system with --no-archive option on rhel8
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");SubscriptionManagerCLITestScript.addInvokedWorkaround(bugId);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (BugzillaAPIException be) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */} 
+			if (invokeWorkaroundWhileBugIsOpen) {
+				throw new SkipException("Skipping this test while bug '"+bugId+"' is open");
+			}
+							
+		}
+	    	Assert.assertContainsMatch(result.getStdout(),expectedStdout,"rhsm-debug system successfully wrote" );
+		Assert.assertEquals(result.getExitCode(), new Integer(0));
+	}
+	
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+		projectID = {Project.RedHatEnterpriseLinux7},
+			testCaseID = {""},
+		level= DefTypes.Level.COMPONENT,
+		testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+		posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+		tags= "Tier3")
+	@Test(	description = "Verify that there is no traceback on the console when you try to run rhsm-debug system --no-archive --destination=<with a non-existent file>",
 		groups = {"Tier3Tests","testRHSMDebug_NoArchive_UsingDestination_WithNonExistentDestinationFile","blockedByBug-1596699"},enabled = true)
 	public void testRHSMDebug_NoArchive_UsingDestination_WithNonExistentDestinationFile() {
 	    	String destinationPath = "/home/testFileForRHSMDEBUG";
