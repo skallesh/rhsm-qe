@@ -2946,7 +2946,6 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		for (List<Object> l : getRegisterAttemptsUsingProxyServerDataAsListOfLists()) {
 			// only include dataProvided rows where username, password, and org are valid
 			if (!(l.get(1).equals(sm_clientUsername) && l.get(2).equals(sm_clientPassword) && l.get(3)==sm_clientOrg)) continue;
-//			if (l.get(8)==nErrMsg) l.set(0,new BlockedByBzBug("838264"));
 			if (l.get(8)/*stdout*/==nErrMsg || l.get(9)/*stderr*/==nErrMsg) l.set(0,new BlockedByBzBug(new String[]{"838264","1345962"}));
 
 			ll.add(l);
@@ -3186,9 +3185,11 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	public Object[][] getStatusAttemptsUsingProxyServerDataAs2dArray() {
 		//return TestNGUtils.convertListOfListsTo2dArray(getValidRegisterAttemptsUsingProxyServerDataAsListOfLists());
 		List<List<Object>> ll = new ArrayList<List<Object>>();
-		for (List<Object> l : getValidRegisterAttemptsUsingProxyServerDataAsListOfLists()) {			
-
-			BlockedByBzBug blockedByBzBug = null;	// nullify the blockedByBug parameter since this function was originally not blocked by any bug			
+		for (List<Object> l : getValidRegisterAttemptsUsingProxyServerDataAsListOfLists()) {
+			BlockedByBzBug blockedByBzBug = (BlockedByBzBug) l.get(0);	// get the existing BlockedByBzBug
+/* no need to nullify anymore because the original bugs are CLOSED and newer bugs passed in from getValidRegisterAttemptsUsingProxyServerDataAsListOfLists() are getting clobbered
+			blockedByBzBug = null;	// nullify the blockedByBug parameter since this function was originally not blocked by any bug			
+*/
 			List<String> bugIds = blockedByBzBug==null?new ArrayList<String>():new ArrayList<String>(Arrays.asList(blockedByBzBug.getBugIds()));
 			// add BlockedByBzBug to rows that are expecting a proxy error
 			if (l.get(8)/*stdout*/==pErrMsg || l.get(9)/*stderr*/==pErrMsg || l.get(8)/*stdout*/==rErrMsg || l.get(9)/*stderr*/==rErrMsg) {
@@ -3213,12 +3214,11 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		//return TestNGUtils.convertListOfListsTo2dArray(getValidRegisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists());
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		for (List<Object> l : getValidRegisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists()) {
-
-			// Object blockedByBug, String username, String password, Sring org, String proxy, String proxyuser, String proxypassword, String proxy_hostnameConfig, String proxy_portConfig, String proxy_userConfig, String proxy_passwordConfig, Integer exitCode, String stdout, String stderr, SSHCommandRunner proxyRunner, String proxyLog, String proxyLogGrepPattern
-			
-			BlockedByBzBug blockedByBzBug = null;	// nullify the blockedByBug parameter since this function was originally not blocked by any bug			
+			BlockedByBzBug blockedByBzBug = (BlockedByBzBug) l.get(0);	// get the existing BlockedByBzBug
+			blockedByBzBug = null;	// nullify the blockedByBug parameter since this function was originally not blocked by any bug			
 			List<String> bugIds = blockedByBzBug==null?new ArrayList<String>():new ArrayList<String>(Arrays.asList(blockedByBzBug.getBugIds()));
 			bugIds.add("1345962");	// Bug 1345962 - unbound method endheaders() must be called with HTTPSConnection instance as first argument (got RhsmProxyHTTPSConnection instance instead)
+			// Object blockedByBug, String username, String password, Sring org, String proxy, String proxyuser, String proxypassword, String proxy_hostnameConfig, String proxy_portConfig, String proxy_userConfig, String proxy_passwordConfig, Integer exitCode, String stdout, String stderr, SSHCommandRunner proxyRunner, String proxyLog, String proxyLogGrepPattern
 			if (l.get(13)==pErr407Msg)  bugIds.add("1419197");	// Bug 1419197 - subscription-manager status with bad proxy configurations should be using cache
 			if (l.get(13)==pErrConMsg)  bugIds.add("1495286");	// Bug 1495286 - subscription-manager status module is no longer using cache when rhsm.conf is configured with a bad proxy
 			blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
@@ -3251,8 +3251,10 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		//return TestNGUtils.convertListOfListsTo2dArray(getValidRegisterAttemptsUsingProxyServerDataAsListOfLists());
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		for (List<Object> l : getValidRegisterAttemptsUsingProxyServerDataAsListOfLists()) {			
-
-			BlockedByBzBug blockedByBzBug = null;	// nullify the blockedByBug parameter since this function was originally not blocked by any bug
+			BlockedByBzBug blockedByBzBug = (BlockedByBzBug) l.get(0);	// get the existing BlockedByBzBug
+/* no need to nullify anymore because the original bugs are CLOSED and newer bugs passed in from getValidRegisterAttemptsUsingProxyServerDataAsListOfLists() are getting clobbered
+			blockedByBzBug = null;	// nullify the blockedByBug parameter since this function was originally not blocked by any bug
+*/
 			List<String> bugIds = blockedByBzBug==null?new ArrayList<String>():new ArrayList<String>(Arrays.asList(blockedByBzBug.getBugIds()));
 			// add BlockedByBzBug to rows that are expecting a proxy error
 			if (l.get(8)/*stdout*/==pErrMsg || l.get(9)/*stderr*/==pErrMsg || l.get(8)/*stdout*/==rErrMsg || l.get(9)/*stderr*/==rErrMsg) {
@@ -3287,8 +3289,8 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		// Note: The version module should always succeed, yet report subscription management server: Unknown when connection fails to the server
 		for (List<Object> l : getValidRegisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists()) {
-
-			BlockedByBzBug blockedByBzBug = null;	// nullify the blockedByBug parameter since this function was originally not blocked by any bug
+			BlockedByBzBug blockedByBzBug = (BlockedByBzBug) l.get(0);	// get the existing BlockedByBzBug
+			blockedByBzBug = null;	// nullify the blockedByBug parameter since this function was originally not blocked by any bug
 			List<String> bugIds = blockedByBzBug==null?new ArrayList<String>():new ArrayList<String>(Arrays.asList(blockedByBzBug.getBugIds()));
 			bugIds.add("1345962");	// Bug 1345962 - unbound method endheaders() must be called with HTTPSConnection instance as first argument (got RhsmProxyHTTPSConnection instance instead)
 			if (l.get(13)==pErr407Msg)  bugIds.add("1419197");	// Bug 1419197 - subscription-manager status with bad proxy configurations should be using cache
@@ -3323,15 +3325,11 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		//return TestNGUtils.convertListOfListsTo2dArray(getValidRegisterAttemptsUsingProxyServerDataAsListOfLists());
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		for (List<Object> l : getValidRegisterAttemptsUsingProxyServerDataAsListOfLists()) {
-			
-			BlockedByBzBug blockedByBzBug = null;	// nullify the blockedByBug parameter since this function was originally not blocked by any bug
+			BlockedByBzBug blockedByBzBug = (BlockedByBzBug) l.get(0);	// get the existing BlockedByBzBug
+/* no need to nullify anymore because the original bugs are CLOSED and newer bugs passed in from getValidRegisterAttemptsUsingProxyServerDataAsListOfLists() are getting clobbered
+			blockedByBzBug = null;	// nullify the blockedByBug parameter since this function was originally not blocked by any bug
+*/
 			List<String> bugIds = blockedByBzBug==null?new ArrayList<String>():new ArrayList<String>(Arrays.asList(blockedByBzBug.getBugIds()));
-//			// add BlockedByBzBug to rows that are expecting a network error
-//			if (l.get(8)==nErrMsg || l.get(8)==pErr407Msg) {
-//				bugIds.add("848195");	// Bug 848195 	Error while checking server version: Proxy connection failed: 407 
-//				bugIds.add("848190");	// Bug 848190 	Error while checking server version: (111, 'Connection refused') 
-//				bugIds.add("848184");	// Bug 848184 	Error while checking server version: (-2, 'Name or service not known') 
-//			}
 			bugIds.add("1345962");	// Bug 1345962 - unbound method endheaders() must be called with HTTPSConnection instance as first argument (got RhsmProxyHTTPSConnection instance instead)
 			blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
 			
@@ -3346,8 +3344,8 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		//return TestNGUtils.convertListOfListsTo2dArray(getValidRegisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists());
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		for (List<Object> l : getValidRegisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists()) {
-			
-			BlockedByBzBug blockedByBzBug = null;	// nullify the blockedByBug parameter since this function was originally not blocked by any bug
+			BlockedByBzBug blockedByBzBug = (BlockedByBzBug) l.get(0);	// get the existing BlockedByBzBug
+			blockedByBzBug = null;	// nullify the blockedByBug parameter since this function was originally not blocked by any bug
 			List<String> bugIds = blockedByBzBug==null?new ArrayList<String>():new ArrayList<String>(Arrays.asList(blockedByBzBug.getBugIds()));
 //			// add BlockedByBzBug to rows that are expecting a network error
 //			if (l.get(12)==nErrMsg || l.get(12)==pErr407Msg) {
@@ -3369,9 +3367,12 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		//return TestNGUtils.convertListOfListsTo2dArray(getValidRegisterAttemptsUsingProxyServerDataAsListOfLists());
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		for (List<Object> l : getValidRegisterAttemptsUsingProxyServerDataAsListOfLists()) {
-			
-			BlockedByBzBug blockedByBzBug = null;	// nullify the blockedByBug parameter since this function was originally not blocked by any bug
+			BlockedByBzBug blockedByBzBug = (BlockedByBzBug) l.get(0);	// get the existing BlockedByBzBug
+/* no need to nullify anymore because the original bugs are CLOSED and newer bugs passed in from getValidRegisterAttemptsUsingProxyServerDataAsListOfLists() are getting clobbered
+			blockedByBzBug = null;	// nullify the blockedByBug parameter since this function was originally not blocked by any bug
+*/
 			List<String> bugIds = blockedByBzBug==null?new ArrayList<String>():new ArrayList<String>(Arrays.asList(blockedByBzBug.getBugIds()));
+			
 			// add BlockedByBzBug to rows that are expecting a network error
 			if (l.get(8)==nErrMsg || l.get(8)==pErr407Msg) {
 				bugIds.add("848195");	// Bug 848195 	Error while checking server version: Proxy connection failed: 407 
@@ -3392,8 +3393,8 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		//return TestNGUtils.convertListOfListsTo2dArray(getValidRegisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists());
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		for (List<Object> l : getValidRegisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists()) {
-			
-			BlockedByBzBug blockedByBzBug = null;	// nullify the blockedByBug parameter since this function was originally not blocked by any bug
+			BlockedByBzBug blockedByBzBug = (BlockedByBzBug) l.get(0);	// get the existing BlockedByBzBug
+			blockedByBzBug = null;	// nullify the blockedByBug parameter since this function was originally not blocked by any bug
 			List<String> bugIds = blockedByBzBug==null?new ArrayList<String>():new ArrayList<String>(Arrays.asList(blockedByBzBug.getBugIds()));
 			// add BlockedByBzBug to rows that are expecting a network error
 			if (l.get(12)==nErrMsg || l.get(12)==pErr407Msg) {
@@ -3645,14 +3646,12 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		//return TestNGUtils.convertListOfListsTo2dArray(getValidRegisterAttemptsUsingProxyServerDataAsListOfLists());
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		for (List<Object> l : getValidRegisterAttemptsUsingProxyServerDataAsListOfLists()) {
-			
-			// get the existing BlockedByBzBug
-			BlockedByBzBug blockedByBzBug = (BlockedByBzBug) l.get(0);
-			List<String> bugIds = blockedByBzBug==null?new ArrayList<String>():new ArrayList<String>(Arrays.asList(blockedByBzBug.getBugIds()));
-			// add more BlockedByBzBug to rows that are....
-			blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
+			BlockedByBzBug blockedByBzBug = (BlockedByBzBug) l.get(0);	// get the existing BlockedByBzBug
+/* no need to nullify anymore because the original bugs are CLOSED and newer bugs passed in from getValidRegisterAttemptsUsingProxyServerDataAsListOfLists() are getting clobbered
 			blockedByBzBug = null;	// nullify the blockedByBug parameter since this function was originally not blocked by any bug
-			bugIds.clear();
+*/
+			List<String> bugIds = blockedByBzBug==null?new ArrayList<String>():new ArrayList<String>(Arrays.asList(blockedByBzBug.getBugIds()));
+			// add more BlockedByBzBug to rows....			
 			bugIds.add("1034396");	// Bug 1034396 - repo-override command should not require entitlements
 			bugIds.add("1345962");	// Bug 1345962 - unbound method endheaders() must be called with HTTPSConnection instance as first argument (got RhsmProxyHTTPSConnection instance instead)
 			blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
@@ -3681,14 +3680,10 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		//return TestNGUtils.convertListOfListsTo2dArray(getValidRegisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists());
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		for (List<Object> l : getValidRegisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists()) {
-			
-			// get the existing BlockedByBzBug
-			BlockedByBzBug blockedByBzBug = (BlockedByBzBug) l.get(0);
+			BlockedByBzBug blockedByBzBug = (BlockedByBzBug) l.get(0);	// get the existing BlockedByBzBug
+			blockedByBzBug = null;	// nullify the blockedByBug parameter since this function was originally not blocked by any bug
 			List<String> bugIds = blockedByBzBug==null?new ArrayList<String>():new ArrayList<String>(Arrays.asList(blockedByBzBug.getBugIds()));
 			// add more BlockedByBzBug to rows that are....
-			blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
-			blockedByBzBug = null;	// nullify the blockedByBug parameter since this function was originally not blocked by any bug
-			bugIds.clear();
 			bugIds.add("1034396");	// Bug 1034396 - repo-override command should not require entitlements
 			bugIds.add("1345962");	// Bug 1345962 - unbound method endheaders() must be called with HTTPSConnection instance as first argument (got RhsmProxyHTTPSConnection instance instead)
 			blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
