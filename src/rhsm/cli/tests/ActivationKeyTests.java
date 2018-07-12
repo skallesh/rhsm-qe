@@ -13,6 +13,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.testng.SkipException;
 import org.testng.annotations.AfterClass;
+import org.testng.annotations.AfterGroups;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeGroups;
 import org.testng.annotations.DataProvider;
@@ -1828,6 +1829,98 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"", ""}, importReady=false,
+			level= DefTypes.Level.COMPONENT,
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
+	@Test(	description="create a very simple activation key for an org and use it to register a physical system",
+			groups={"Tier1Tests","blockedByBug-1599456","testRegisterPhysicalSystemUsingSimpleActivationKey"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)	
+	public void testRegisterPhysicalSystemUsingSimpleActivationKey() throws JSONException, Exception {
+		// get an ownerKey (value will be identical to sm_clientOrg against onpremise candlepin)
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null, null);
+		String ownerKey = clienttasks.getCurrentlyRegisteredOwnerKey();
+		clienttasks.unregister(null, null, null, null);
+		
+		// create a simple activation key
+		String activationKeyName = String.format("ActivationKey%s", System.currentTimeMillis());
+		Map<String,String> mapActivationKeyRequest = new HashMap<String,String>();
+		mapActivationKeyRequest.put("name", activationKeyName);
+		JSONObject jsonActivationKeyRequest = new JSONObject(mapActivationKeyRequest);
+		JSONObject jsonActivationKey = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/owners/" + ownerKey + "/activation_keys",jsonActivationKeyRequest.toString()));
+		
+		// create a custom fact to mask this as a physical system
+		Map<String,String> factsMap = new HashMap<String,String>();
+		factsMap.clear();
+		factsMap.put("virt.uuid","");
+		factsMap.put("virt.host_type","");
+		factsMap.put("virt.is_guest","False");
+		clienttasks.createFactsFileWithOverridingValues(factsMap);
+		
+		// register with the activation key
+		SSHCommandResult registerResult = clienttasks.register(null, null, ownerKey, null, null, null, null, null, null, null, jsonActivationKey.getString("name"), null, null, null, null, null, null, null, null, null);
+		
+		// Bug 1599456 - registration via an activation key fails from a physical system: User "Anonymous" does not have access to create consumers in org "admin"
+		//	[root@ibm-x3650m4-01-vm-07 ~]# subscription-manager register --org=admin --activationkey=ActivationKey1531256586496
+		//	User "Anonymous" does not have access to create consumers in org "admin"
+		//	[root@ibm-x3650m4-01-vm-07 ~]# echo $?
+		//	70
+		
+		// delete the activation key to avoid bloating the database
+		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/activation_keys/" + jsonActivationKey.getString("id"));
+	}
+	@AfterGroups(value={"testRegisterPhysicalSystemUsingSimpleActivationKey"},groups={"setup"})
+	public void deleteFactsFileWithOverridingValuesAftertestRegisterPhysicalSystemUsingSimpleActivationKey() {
+		if (clienttasks!=null) clienttasks.deleteFactsFileWithOverridingValues();
+	}
+	
+	
+	@TestDefinition(//update=true,	// uncomment to make TestDefinition changes update Polarion testcases through the polarize testcase importer
+			projectID = {Project.RHEL6, Project.RedHatEnterpriseLinux7},
+			testCaseID = {"", ""}, importReady=false,
+			level= DefTypes.Level.COMPONENT,
+			testtype= @TestType(testtype= DefTypes.TestTypes.FUNCTIONAL, subtype1= DefTypes.Subtypes.RELIABILITY, subtype2= DefTypes.Subtypes.EMPTY),
+			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
+			tags= "Tier1")
+	@Test(	description="create a very simple activation key for an org and use it to register a virtual system",
+			groups={"Tier1Tests","testRegisterVirtualSystemUsingSimpleActivationKey"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)	
+	public void testRegisterVirtualSystemUsingSimpleActivationKey() throws JSONException, Exception {
+		// get an ownerKey (value will be identical to sm_clientOrg against onpremise candlepin)
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, true, null, null, null, null, null);
+		String ownerKey = clienttasks.getCurrentlyRegisteredOwnerKey();
+		clienttasks.unregister(null, null, null, null);
+		
+		// create a simple activation key
+		String activationKeyName = String.format("ActivationKey%s", System.currentTimeMillis());
+		Map<String,String> mapActivationKeyRequest = new HashMap<String,String>();
+		mapActivationKeyRequest.put("name", activationKeyName);
+		JSONObject jsonActivationKeyRequest = new JSONObject(mapActivationKeyRequest);
+		JSONObject jsonActivationKey = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/owners/" + ownerKey + "/activation_keys",jsonActivationKeyRequest.toString()));
+		
+		// create a custom fact to mask this as a physical system
+		Map<String,String> factsMap = new HashMap<String,String>();
+		factsMap.clear();
+		factsMap.put("virt.uuid",String.valueOf(System.currentTimeMillis()));
+		factsMap.put("virt.host_type","kvm");
+		factsMap.put("virt.is_guest","True");
+		clienttasks.createFactsFileWithOverridingValues(factsMap);
+		
+		// register with the activation key
+		SSHCommandResult registerResult = clienttasks.register(null, null, ownerKey, null, null, null, null, null, null, null, jsonActivationKey.getString("name"), null, null, null, null, null, null, null, null, null);
+		
+		// delete the activation key to avoid bloating the database
+		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/activation_keys/" + jsonActivationKey.getString("id"));
+	}
+	@AfterGroups(value={"testRegisterVirtualSystemUsingSimpleActivationKey"},groups={"setup"})
+	public void deleteFactsFileWithOverridingValuesAftertestRegisterVirtualSystemUsingSimpleActivationKey() {
+		if (clienttasks!=null) clienttasks.deleteFactsFileWithOverridingValues();
+	}
 	
 	
 	
