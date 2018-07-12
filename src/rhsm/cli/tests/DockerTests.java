@@ -546,7 +546,8 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 		
 		// better way of installing docker (useful on static clients)
 		SSHCommandResult localCommandResult = runLocalCommand("rpm -q python-BeautifulSoup");	// Prerequisite on slave: sudo yum install python-BeautifulSoup
-		if (!localCommandResult.getExitCode().equals(Integer.valueOf(0))) Assert.fail("python-BeautifulSoup must be installed on the executing slave in order to run .scripts/get-brew-rpm to install docker from brew.   localCommandResult: "+localCommandResult);
+		SSHCommandResult localCommandResult2 = runLocalCommand("rpm -q python2-beautifulsoup");	// Prerequisite on slave: sudo yum install python2-beautifulsoup
+		if (!localCommandResult.getExitCode().equals(Integer.valueOf(0)) && !localCommandResult2.getExitCode().equals(Integer.valueOf(0))) Assert.fail("'python-BeautifulSoup' or 'python2-beautifulsoup' must be installed on the executing slave in order to run .scripts/get-brew-rpm to install docker from brew.   localCommandResult: "+localCommandResult);
 		List<String> dockerRpmInstallUrls = new ArrayList<String>(); String dockerRpmInstallUrl;
 		//dockerRpmInstallUrls.add(runLocalCommand("./scripts/get-brew-rpm docker --rpmname=docker                       --release=el7 --regress --arch="+clienttasks.arch).getStdout());
 		//dockerRpmInstallUrls.add(runLocalCommand("./scripts/get-brew-rpm docker --rpmname=docker         --version=1.0 --release=el7 --regress --arch="+clienttasks.arch).getStdout());	// --version=1.0 is blocked by Bug 1121239 - docker pull from custom registry errors on Invalid Namespace Name	// Error: Invalid namespace name (registry.access.redhat.com), only [a-z0-9_] are allowed, size between 4 and 30
