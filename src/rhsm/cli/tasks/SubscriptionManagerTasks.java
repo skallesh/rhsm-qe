@@ -1071,6 +1071,7 @@ if (false) {
 		if /* >= RHEL8.0 */ (redhatReleaseX.equals("8") && Integer.valueOf(redhatReleaseXY.split("\\.")[1])>=0) {pkgs.add(0,"chrony");pkgs.remove("ntp");}	// replacement for ntp
 		if /* >= RHEL8.0 */ (redhatReleaseX.equals("8") && Integer.valueOf(redhatReleaseXY.split("\\.")[1])>=0) {pkgs.remove("python-dateutil");}	// old dep for python-rhsm is no longer needed on RHEL8
 		if /* >= RHEL8.0 */ (redhatReleaseX.equals("8") && Integer.valueOf(redhatReleaseXY.split("\\.")[1])>=0) {pkgs.remove("policycoreutils-python");}	// TODO is this still required by docker-selinux package
+		if /* >= RHEL8.0 */ (redhatReleaseX.equals("8") && Integer.valueOf(redhatReleaseXY.split("\\.")[1])>=0) {pkgs.add("docker");}	// docker is now provided by appstream under rhel8
 		
 		// TEMPORARY WORKAROUND FOR BUG
 		String bugId = "790116"; boolean invokeWorkaroundWhileBugIsOpen = true;
@@ -1192,7 +1193,7 @@ if (false) {
 			}
 			//sshCommandRunner.runCommandAndWait("yum -y remove "+pkg+" "+installOptions);	// inadvertently causes removal of cockpit-system which requires subscription-manager and then there is no way to get it back when subscription-manager-cockpit is installed; therefore let's use rpm --erase --no-deps
 			sshCommandRunner.runCommandAndWait("rpm --erase --nodeps "+pkg);
-			RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"rpm -q "+pkg,Integer.valueOf(1),"package "+pkg+" is not installed",null);
+			RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"rpm -q "+pkg,Integer.valueOf(1),"package "+pkg.replaceAll("\\+", "\\\\+").replaceAll("\\.", "\\\\.")+" is not installed",null);
 			installedPackageVersionMap.remove(pkg);
 		}
 		
@@ -1235,7 +1236,7 @@ if (false) {
 			
 			// install rpmUrl
 			log.info("Installing RPM from "+rpmUrl+"...");
-			RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"wget -nv -O "+rpmPath+" --no-check-certificate "+(jenkinsUsername.isEmpty()?"":"--http-user="+jenkinsUsername)+" "+(jenkinsPassword.isEmpty()?"":"--http-password="+jenkinsPassword)+" \""+rpmUrl.trim()+"\"",Integer.valueOf(0),null,"-> \""+rpmPath+"\"");
+			RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"wget -nv -O "+rpmPath+" --no-check-certificate "+(jenkinsUsername.isEmpty()?"":"--http-user="+jenkinsUsername)+" "+(jenkinsPassword.isEmpty()?"":"--http-password="+jenkinsPassword)+" \""+rpmUrl.trim()+"\"",Integer.valueOf(0),null,"-> \""+rpmPath.replaceAll("\\+", "\\\\+").replaceAll("\\.", "\\\\.")+"\"");
 			Assert.assertEquals(sshCommandRunner.runCommandAndWait("yum -y localinstall "+rpmPath+" "+installOptions).getExitCode(), Integer.valueOf(0), "ExitCode from yum installed local rpm: "+rpmPath);
 			
 			// assert the local rpm is now installed
@@ -1266,7 +1267,7 @@ if (false) {
 			
 			// upgrade rpmUrl
 			log.info("Upgrading RPM from "+rpmUrl+"...");
-			RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"wget -nv -O "+rpmPath+" --no-check-certificate \""+rpmUrl.trim()+"\"",Integer.valueOf(0),null,"-> \""+rpmPath+"\"");
+			RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"wget -nv -O "+rpmPath+" --no-check-certificate \""+rpmUrl.trim()+"\"",Integer.valueOf(0),null,"-> \""+rpmPath.replaceAll("\\+", "\\\\+").replaceAll("\\.", "\\\\.")+"\"");
 			rpmPaths += rpmPath; rpmPaths += " ";
 		}
 		if (!rpmUpdateUrls.isEmpty()) {
