@@ -52,7 +52,7 @@
   (.runCommandAndWait @c/clientcmd "chmod 755 ~/bin/get-config-value.py")
   (.runCommandAndWait @c/clientcmd "chmod 755 ~/bin/set-config-value.py")
   ;;-----------------------
-  (.runCommandAndWait @c/clientcmd "yum -y install cockpit-system")
+  ;;(.runCommandAndWait @c/clientcmd "yum -y install cockpit-system")
   (reset! driver  (doto (new FirefoxDriver (doto (DesiredCapabilities/firefox)
                                              (.setCapability "acceptSslCerts" true)
                                              (.setCapability "marionette" false)))
