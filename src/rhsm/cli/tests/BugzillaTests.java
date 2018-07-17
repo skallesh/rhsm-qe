@@ -1013,25 +1013,34 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
 				null, (String) null, null, null, null, true, null, null, null, null, null);
 		clienttasks.autoheal(null, null, true, null, null, null, null);
-		int sockets = 9;
-		int core = 2;
-		int ram = 10;
+		int sockets = 3;
+
 
 		Map<String, String> factsMap = new HashMap<String, String>();
 		factsMap.put("cpu.cpu_socket(s)", String.valueOf(sockets));
-		factsMap.put("cpu.core(s)_per_socket", String.valueOf(core));
-		factsMap.put("memory.memtotal", String.valueOf(GBToKBConverter(ram)));
 		factsMap.put("virt.is_guest", String.valueOf(Boolean.FALSE));
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
 		clienttasks.facts(null, true, null, null, null, null);
-		Boolean nosubscriptionsFound = true;
 		Calendar now = new GregorianCalendar();
 		DateFormat yyyy_MM_dd_DateFormat = new SimpleDateFormat("yyyy-MM-dd");
 		now.add(Calendar.YEAR, 1);
 		now.add(Calendar.DATE, 1);
 		String onDateToTest = yyyy_MM_dd_DateFormat.format(now.getTime());
 		List<String> providedProductId = new ArrayList<String>();
-		List<SubscriptionPool> AvailableStackableSubscription = SubscriptionPool
+		SubscriptionPool AvailableStackableSubscription = SubscriptionPool
+			.findFirstInstanceWithCaseInsensitiveMatchingFieldFromList("subscriptionName", "Awesome OS for x86_64", clienttasks.getAvailableSubscriptionsMatchingInstalledProducts());
+		int quantity = AvailableStackableSubscription.suggested -1;
+		clienttasks.subscribe(null, null, AvailableStackableSubscription.poolId, null, null, Integer.toString(quantity), null, null,
+			null, null, null, null, null);
+		InstalledProduct BeforeAttaching = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productName",
+				"Awesome OS for x86_64 Bits", clienttasks.getCurrentlyInstalledProducts());
+		Assert.assertEquals(BeforeAttaching.status, "Partially Subscribed",
+				"Verified that installed product is partially subscribed");
+		SubscriptionPool futureStackableSubscription = SubscriptionPool.findFirstInstanceWithCaseInsensitiveMatchingFieldFromList(
+			"subscriptionName", "Awesome OS for x86_64", clienttasks.getAvailableFutureSubscriptionsOndate(onDateToTest));
+		clienttasks.subscribe(null, null, futureStackableSubscription.poolId, null, null, "1", null, null, null,
+			null, null, null, null);
+	/*	List<SubscriptionPool> AvailableStackableSubscription = SubscriptionPool
 				.findAllInstancesWithMatchingFieldFromList("subscriptionType", "Stackable",
 						clienttasks.getAvailableSubscriptionsMatchingInstalledProducts());
 		List<SubscriptionPool> futureStackableSubscription = SubscriptionPool.findAllInstancesWithMatchingFieldFromList(
@@ -1062,9 +1071,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 
 			}
 
-		}
-		if (nosubscriptionsFound)
-			throw new SkipException("no subscriptions found");
+		}*/
 		InstalledProduct AfterAttaching = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productName",
 				providedProductId.get(providedProductId.size() - 1), clienttasks.getCurrentlyInstalledProducts());
 		Assert.assertEquals(AfterAttaching.status, "Partially Subscribed",
@@ -4395,53 +4402,32 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			groups = {"Tier3Tests","VerifyDistinctStackingEntires", "blockedByBug-733327" },
 			enabled = true)
 	public void testDistinctStackingEntires() throws Exception {
-		String poolId = null;
-		String productIds=null;
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null,
 				null, (String) null, null, null, null, true, null, null, null, null, null);
 		clienttasks.autoheal(null, null, true, null, null, null, null);
-		int sockets = 5;
-		int core = 2;
-		int ram = 10;
+		int sockets = 3;
 
 		Map<String, String> factsMap = new HashMap<String, String>();
 		factsMap.put("cpu.cpu_socket(s)", String.valueOf(sockets));
-		factsMap.put("cpu.core(s)_per_socket", String.valueOf(core));
-		factsMap.put("memory.memtotal", String.valueOf(GBToKBConverter(ram)));
 		factsMap.put("virt.is_guest", String.valueOf(Boolean.FALSE));
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
 		clienttasks.facts(null, true, null, null, null, null);
 		int quantity = 0;
 
-		String providedProductId = null;
-		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
-			if (pool.subscriptionType.equals("Stackable")) {
-				quantity = pool.suggested - 1;
-				if (!(pool.suggested == 1)) {
-					clienttasks.subscribe(null, null, pool.poolId, null, null, Integer.toString(quantity), null, null,
-							null, null, null, null, null);
-					 productIds = pool.productId;
-					providedProductId = pool.provides.get(randomGenerator.nextInt(pool.provides.size()));
-					if (!(providedProductId.isEmpty())) {
-					    break;
-					}
-				}
-			}
-		}
+		SubscriptionPool AvailableStackableSubscription = SubscriptionPool
+			.findFirstInstanceWithCaseInsensitiveMatchingFieldFromList("subscriptionName", "Awesome OS for x86_64", clienttasks.getAvailableSubscriptionsMatchingInstalledProducts());
+		quantity = AvailableStackableSubscription.suggested -1;
+		clienttasks.subscribe(null, null, AvailableStackableSubscription.poolId, null, null, Integer.toString(quantity), null, null,
+			null, null, null, null, null);
 		InstalledProduct BeforeAttaching = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productName",
-				providedProductId, clienttasks.getCurrentlyInstalledProducts());
+				"Awesome OS for x86_64 Bits", clienttasks.getCurrentlyInstalledProducts());
 		Assert.assertEquals(BeforeAttaching.status, "Partially Subscribed",
 				"Verified that installed product is partially subscribed");
-		List<SubscriptionPool> AvailableStackableSubscription = SubscriptionPool
-			.findAllInstancesWithMatchingFieldFromList("productId", productIds,
-					clienttasks.getAvailableSubscriptionsMatchingInstalledProducts());
-		for(SubscriptionPool pools :AvailableStackableSubscription){
-			quantity = pools.suggested;
-			clienttasks.subscribe(null, null, pools.poolId, null, null, Integer.toString(quantity), null, null,
-					null, null, null, null, null);		}
+		clienttasks.subscribe(null, null, AvailableStackableSubscription.poolId, null, null, "1", null, null,
+					null, null, null, null, null);	
 		
 		InstalledProduct AfterAttaching = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productName",
-				providedProductId, clienttasks.getCurrentlyInstalledProducts());
+				"Awesome OS for x86_64 Bits", clienttasks.getCurrentlyInstalledProducts());
 		Assert.assertEquals(AfterAttaching.status, "Subscribed", "Verified that installed product"
 				+ AfterAttaching.productName
 				+ "is fully subscribed after attaching one more quantity of multi-entitleable stackable subscription");
