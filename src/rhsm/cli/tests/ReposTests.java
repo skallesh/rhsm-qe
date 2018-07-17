@@ -1412,7 +1412,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 			posneg= PosNeg.POSITIVE, importance= DefTypes.Importance.HIGH, automation= DefTypes.Automation.AUTOMATED,
 			tags= "Tier3")
 	@Test(	description="Verify that RepoActionInvoker.is_managed('some_repo') returns False when 'some_repo' does not exist and True when it is entitled",
-			groups={"Tier3Tests","blockedByBug-1223038"},
+			groups={"Tier3Tests","blockedByBug-1223038","testfix"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void testFixForBug1223038() throws JSONException, Exception {
@@ -1643,12 +1643,12 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		
 		Map<String,String> repoOverrideNameValueMap = new HashMap<String,String>();
 		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
-		client.runCommandAndWait("yum-config-manager --disable beaker*");	// just in case the system came from Beaker
 		
 		// register and attach the pool (created in setupBeforeRepomdGpgUrlTest) that provides the CentOS product
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null,(String) null, null, null, null, true, null, null, null, null, null);
 		clienttasks.subscribe(null, null, testRepomdGpgUrlPoolId, null, null, null, null, null, null, null, null, null, null);
-		
+		client.runCommandAndWait("yum-config-manager --disable beaker*");	// just in case the system came from Beaker
+
 		
 		log.info("Case 1: Invalid repomd_gpg_url in rhsm.conf with repo_gpgcheck and gpgcheck turned on");
 		String baseurl="http://download.devel.redhat.com";
@@ -1661,8 +1661,12 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		repoOverrideNameValueMap.put("gpgcheck", "1");
 		repoOverrideNameValueMap.put("repo_gpgcheck", "1");	// alternative to setting repo_gpgcheck in /etc/yum.conf to 1;
 		clienttasks.repo_override(null, null, contentLabel, null, repoOverrideNameValueMap, null, null, null, null);
-		client.runCommandAndWait("find /var/lib/yum -name "+contentLabel+" -exec rm -rf {} \\;");	// delete any keys that might have already been imported from a former test execution
-		clienttasks.yumClean("all");	// needed to remove the keys from the yum cache in case this test was run once before
+		if (Integer.valueOf(clienttasks.redhatReleaseX)>=8) {
+		    client.runCommandAndWait("find /var/lib/dnf -name "+contentLabel+" -exec rm -rf {} \\;");	// delete any keys that might have already been imported from the case above
+		}else {
+		    client.runCommandAndWait("find /var/lib/yum -name "+contentLabel+" -exec rm -rf {} \\;");	// delete any keys that might have already been imported from the case above
+
+		}		clienttasks.yumClean("all");	// needed to remove the keys from the yum cache in case this test was run once before
 		Assert.assertNotNull(Repo.findFirstInstanceWithMatchingFieldFromList("repoId", contentLabel, clienttasks.getCurrentlySubscribedRepos()), "Found expected repoId '"+contentLabel+"' among the currently subscribed repos.");
 		//	[root@jsefler-rhel7 ~]# yum -q repolist
 		//	This system is not registered with RHN Classic or Red Hat Satellite.
@@ -1675,6 +1679,9 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		//	repo id                                   repo name                                     status
 		//	centos-71-rpms                            CentOS 7.1 Content                            0
 		String expectedStderr = String.format("%s: [Errno -1] Gpg Keys not imported, cannot verify repomd.xml for repo %s", baseurl+contentUrl+"repodata/repomd.xml", contentLabel);
+		if (Integer.valueOf(clienttasks.redhatReleaseX)>=8) {
+		    expectedStderr = String.format("Status code: 404 for http://download-node-02.eng.bos.redhat.com/foo");
+		}
 		Assert.assertTrue(client.runCommandAndWait("yum repolist -y").getStderr().contains(expectedStderr), "Stderr from yum repolist transaction contains expected '"+expectedStderr+"' because repomd.xml cannot be verified with key '"+repomd_gpg_url+"'.");
 		Assert.assertTrue(client.runCommandAndWait("yum install zsh -y").getStderr().contains(expectedStderr), "Stderr from yum install transaction contains expected '"+expectedStderr+"' because repomd.xml cannot be verified with key '"+repomd_gpg_url+"'.");
 		
@@ -1684,7 +1691,12 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		repoOverrideNameValueMap.put("repo_gpgcheck", "0");	// alternative to setting repo_gpgcheck in /etc/yum.conf to 0;
 		repoOverrideNameValueMap.put("gpgcheck", "0");
 		clienttasks.repo_override(null, null, contentLabel, null, repoOverrideNameValueMap, null, null, null, null);
-		client.runCommandAndWait("find /var/lib/yum -name "+contentLabel+" -exec rm -rf {} \\;");	// delete any keys that might have already been imported from the case above
+		if (Integer.valueOf(clienttasks.redhatReleaseX)>=8) {
+		    client.runCommandAndWait("find /var/lib/dnf -name "+contentLabel+" -exec rm -rf {} \\;");	// delete any keys that might have already been imported from the case above
+		}else {
+		    client.runCommandAndWait("find /var/lib/yum -name "+contentLabel+" -exec rm -rf {} \\;");	// delete any keys that might have already been imported from the case above
+
+		}
 		clienttasks.yumClean("all");
 		Assert.assertTrue(!client.runCommandAndWait("yum repolist -y").getStderr().contains(expectedStderr), "Stderr from yum repolist transaction does NOT contain '"+expectedStderr+"' because repomd.xml verification is turned off.");
 		Assert.assertTrue(!client.runCommandAndWait("yum install zsh -y").getStderr().contains(expectedStderr), "Stderr from yum install transaction does NOT contain '"+expectedStderr+"' because repomd.xml verification is turned off.");
@@ -1702,7 +1714,12 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		repoOverrideNameValueMap.put("repo_gpgcheck", "1");
 		repoOverrideNameValueMap.put("gpgcheck", "1");
 		clienttasks.repo_override(null, null, contentLabel, null, repoOverrideNameValueMap, null, null, null, null);
-		client.runCommandAndWait("find /var/lib/yum -name "+contentLabel+" -exec rm -rf {} \\;");	// delete any keys that might have already been imported from the case above
+		if (Integer.valueOf(clienttasks.redhatReleaseX)>=8) {
+		    client.runCommandAndWait("find /var/lib/dnf -name "+contentLabel+" -exec rm -rf {} \\;");	// delete any keys that might have already been imported from the case above
+		}else {
+		    client.runCommandAndWait("find /var/lib/yum -name "+contentLabel+" -exec rm -rf {} \\;");	// delete any keys that might have already been imported from the case above
+
+		}
 		clienttasks.yumClean("all");
 		SSHCommandResult yumRepolistResult = client.runCommandAndWait("yum repolist -y");
 		//	201806051824:42.835 - FINE: ssh root@jsefler-rhel7.usersys.redhat.com yum repolist
@@ -1720,10 +1737,16 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		//	 From       : http://download.devel.redhat.com/released/CentOS/RPM-GPG-KEY-CentOS-7
 		Assert.assertFalse(yumRepolistResult.getStderr().contains(expectedStderr), "Stderr from yum repolist transaction does NOT contain '"+expectedStderr+"' because repomd.xml verification is turned on with a valid repomd_gpg_url configured in rhsm.conf.");
 // TODO Commenting out this assert due to a bug in yum stderr when multiple gpgUrls are set on the content set (multiple because I purposefully added wrong version 6 key in the setupBeforeRepomdGpgUrlTest())
-//		String expectedStderrRegex = "Importing GPG key 0xF4A80EB5:.*\\n.*\\n.*\\n From *: "+repomd_gpg_url;
+		String expectedStderrRegex = "Importing GPG key 0xF4A80EB5:.*\\n.*\\n.*\\n From *: "+repomd_gpg_url;
 //		Assert.assertTrue(doesStringContainMatches(yumRepolistResult.getStderr(), expectedStderrRegex), "Stderr from yum repolist transaction indicates that a gpgkey from '"+repomd_gpg_url+"' was successfully imported. (asserting presence of regex '"+expectedStderrRegex+"')");
 		String expectedStdout = "Retrieving key from "+repomd_gpg_url;
-		Assert.assertTrue(yumRepolistResult.getStdout().contains(expectedStdout), "Stdout from yum repolist transaction indicates that a gpgkey from '"+repomd_gpg_url+"' was successfully retrieved. (asserting presence of '"+expectedStdout+"')");
+		//TODO no stdout on rhel8 this is a temperorary workaround till I figure out why 
+		if (Integer.valueOf(clienttasks.redhatReleaseX)>=8) {
+			Assert.assertTrue(yumRepolistResult.getStderr().contains(expectedStderrRegex), "Stdout from yum repolist transaction indicates that a gpgkey from '"+repomd_gpg_url+"' was successfully retrieved. (asserting presence of '"+expectedStdout+"')");
+		}else {
+			Assert.assertTrue(yumRepolistResult.getStdout().contains(expectedStdout), "Stdout from yum repolist transaction indicates that a gpgkey from '"+repomd_gpg_url+"' was successfully retrieved. (asserting presence of '"+expectedStdout+"')");
+
+		}
 		clienttasks.yumInstallPackageFromRepo("zsh", contentLabel, null);
 	}
 	@AfterGroups(groups = { "setup" }, value = {"testRepomdGpgUrl" })
