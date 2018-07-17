@@ -170,6 +170,7 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 		String entitlementCertDir = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsm", "entitlementCertDir");
 		client.runCommandAndWait("ls -l "+entitlementCertDir);
 		client.runCommandAndWait("ls -l "+entitlementHostDir);
+		/*if (Integer.valueOf(clienttasks.redhatReleaseX)>=8)*/ clienttasks.yumClean("dbcache");
 		List<String> yumRepolistOnContainer = clienttasks.getYumRepolist("all");
 		Assert.assertTrue(yumRepolistOnContainer.size()<yumRepolistOnHost.size(),"When in container mode (with *no* entitlements in '"+entitlementHostDir+"'), the number of yum repolists available should have dimmished (by the number of redhat.repo repos on the host)");
 		List<YumRepo> subscribedYumReposOnContainer = clienttasks.getCurrentlySubscribedYumRepos();
@@ -179,11 +180,12 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 		client.runCommandAndWait("cp "+entitlementCertDir+"/* "+entitlementHostDir);
 		client.runCommandAndWait("ls -l "+entitlementHostDir);
 		
-		// clean the consumer  TODO: FIXME - cleaning the host consumer will orphan all of his entitlements.  This should be properly deleted in an AfterGroup
+		// clean the consumer - cleaning the host consumer will orphan all of his entitlements.  This should be properly deleted in AfterGroup teardownVerifySubscriptionManagementEntitlementsInContainerMode_Test
 		log.info("Deleting the consumer cert (containers don't depend on a consumer)...");
 		clienttasks.removeAllCerts(true, true, false);
 		
 		// verify that the host entitlements are now accessible when in container mode
+		/*if (Integer.valueOf(clienttasks.redhatReleaseX)>=8)*/ clienttasks.yumClean("dbcache");
 		yumRepolistOnContainer = clienttasks.getYumRepolist("all");
 		Assert.assertTrue(yumRepolistOnContainer.containsAll(yumRepolistOnHost)&&yumRepolistOnHost.containsAll(yumRepolistOnContainer),"When in container mode, the entitlements in '"+entitlementHostDir+"' are reflected in yum repolist all. (yum repolist all in the container matches yum repolist all from the host)");
 		subscribedYumReposOnContainer = clienttasks.getCurrentlySubscribedYumRepos();
@@ -463,7 +465,8 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 			//	2
 			String path = etcDockerCertsDir+registryHostname;
 			SSHCommandResult result = client.runCommandAndWait("ls "+path+"/*.crt");
-			if (registryHostname.equals("registry.access.redhat.com") && clienttasks.isPackageInstalled("docker") && clienttasks.isPackageVersion("docker", ">=", "1.12.6-42")) {	// docker.spec commit 19a2d8d032bdeae68d0dc9dfe6cda40f0a50e89a from git clone git://pkgs.devel.redhat.com/rpms/docker git checkout extras-rhel-7.4	// /etc/docker/certs.d/registry.access.redhat.com/redhat-ca.crt symlink added, #1428142 https://bugzilla.redhat.com/show_bug.cgi?id=1428142#c11
+//DEFICIENT	if (registryHostname.equals("registry.access.redhat.com") && clienttasks.isPackageInstalled("docker") && clienttasks.isPackageVersion("docker", ">=", "1.12.6-42")) {	// docker.spec commit 19a2d8d032bdeae68d0dc9dfe6cda40f0a50e89a from git clone git://pkgs.devel.redhat.com/rpms/docker git checkout extras-rhel-7.4	// /etc/docker/certs.d/registry.access.redhat.com/redhat-ca.crt symlink added, #1428142 https://bugzilla.redhat.com/show_bug.cgi?id=1428142#c11
+			if (registryHostname.equals("registry.access.redhat.com") && RemoteFileTasks.testExists(client, path+"/"+"redhat-ca.crt")) {	// 1.13.1-*.el8 builds of docker do not include the patch from #1428142, but 1.13.1-*.el7 builds do include it, therefore we can't use isPackageVersion("docker")
 				//	[root@jsefler-rhel7server ~]# ls /etc/docker/certs.d/registry.access.redhat.com/*.crt
 				//	/etc/docker/certs.d/registry.access.redhat.com/redhat-ca.crt
 				//	[root@jsefler-rhel7server ~]# rpm -q --whatprovides /etc/docker/certs.d/registry.access.redhat.com/redhat-ca.crt
@@ -517,6 +520,7 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 	@SuppressWarnings("unused")
 	//@ImplementsNitrateTest(caseId=)
 	public void testInstallDockerPackageOnHost() throws IOException, JSONException {
+    	
 		// assert that the host system is rhel7+
 		if (Integer.valueOf(clienttasks.redhatReleaseX)<7) throw new SkipException("Installation of docker.rpm is only applicable on RHEL7+");
 		/* docker is now available on multiple architectures, stop skipping on non-x86_64
@@ -527,7 +531,7 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 		if (clienttasks.variant.equals("Workstation")) log.warning("Installation of docker on Workstation is blocked by dependedncy on oci-register-machine >= 1:0-1.8.  TODO: need a blocked by bug number.  The Orion project will expand the installablility of docker to include Workstation.");	// TODO need a blocked by bug number.
 		if (!clienttasks.variant.equals("Server") && !clienttasks.variant.equals("Workstation")) throw new SkipException("Installation of docker.rpm is only applicable on variant Server and Workstation.  This variant is '"+clienttasks.variant+"'.");
 		*/
-		if (!clienttasks.variant.equals("Server")) throw new SkipException("Installation of docker.rpm is only applicable on variant Server.  This variant is '"+clienttasks.variant+"'.");
+		if (Integer.valueOf(clienttasks.redhatReleaseX)<8 && !clienttasks.variant.equals("Server")) throw new SkipException("Installation of docker.rpm is only applicable on variant Server.  This variant is '"+clienttasks.variant+"'.");
 		
 		
 		// make sure any existing docker processes are stopped
@@ -536,8 +540,10 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 		client.runCommandAndWait("rm -rf /var/lib/docker/*");
 		
 		// make sure ALL docker* packages are removed so we can start from a clean slate (because a reinstall of subscription-manager during setupClient will remove only docker due to dependency) 
+		if (Integer.valueOf(clienttasks.redhatReleaseX)<8) {
 		clienttasks.yumDoPackageFromRepo_("remove", "docker*", null, null);
 		clienttasks.yumDoPackageFromRepo_("remove", "container-selinux", null, null);	// avoid: Cannot install package docker-selinux-1.6.2-14.el7.x86_64. It is obsoleted by installed package 2:container-selinux-2.9-4.el7.noarch
+		}
 		
 		// install the requested docker packages
 		/* old way of installing docker
@@ -546,14 +552,27 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 		
 		// better way of installing docker (useful on static clients)
 		SSHCommandResult localCommandResult = runLocalCommand("rpm -q python-BeautifulSoup");	// Prerequisite on slave: sudo yum install python-BeautifulSoup
-		if (!localCommandResult.getExitCode().equals(Integer.valueOf(0))) Assert.fail("python-BeautifulSoup must be installed on the executing slave in order to run .scripts/get-brew-rpm to install docker from brew.   localCommandResult: "+localCommandResult);
+		SSHCommandResult localCommandResult2 = runLocalCommand("rpm -q python2-beautifulsoup");	// Prerequisite on slave: sudo yum install python2-beautifulsoup
+		if (!localCommandResult.getExitCode().equals(Integer.valueOf(0)) && !localCommandResult2.getExitCode().equals(Integer.valueOf(0))) Assert.fail("'python-BeautifulSoup' or 'python2-beautifulsoup' must be installed on the executing slave in order to run .scripts/get-brew-rpm to install docker from brew.   localCommandResult: "+localCommandResult);
 		List<String> dockerRpmInstallUrls = new ArrayList<String>(); String dockerRpmInstallUrl;
-		//dockerRpmInstallUrls.add(runLocalCommand("./scripts/get-brew-rpm docker --rpmname=docker                       --release=el7 --regress --arch="+clienttasks.arch).getStdout());
-		//dockerRpmInstallUrls.add(runLocalCommand("./scripts/get-brew-rpm docker --rpmname=docker         --version=1.0 --release=el7 --regress --arch="+clienttasks.arch).getStdout());	// --version=1.0 is blocked by Bug 1121239 - docker pull from custom registry errors on Invalid Namespace Name	// Error: Invalid namespace name (registry.access.redhat.com), only [a-z0-9_] are allowed, size between 4 and 30
-		dockerRpmInstallUrl = runLocalCommand("./scripts/get-brew-rpm docker --rpmname=docker           --version=1.1 --release=el7 --regress --arch="+clienttasks.arch).getStdout().trim();  if (!dockerRpmInstallUrl.isEmpty()) dockerRpmInstallUrls.add(dockerRpmInstallUrl);
-		dockerRpmInstallUrl = runLocalCommand("./scripts/get-brew-rpm docker --rpmname=docker-selinux   --version=1.6 --release=el7 --regress --arch="+clienttasks.arch).getStdout().trim();  if (!dockerRpmInstallUrl.isEmpty()) dockerRpmInstallUrls.add(dockerRpmInstallUrl);	// --version=1.6 is the first build with docker-selinux	// avoid: Error response from daemon: Cannot start container fd39344bea2cf56e48467488745ac3b007eb904f185a240853103f112a87bdd3: permission denied
-		//dockerRpmInstallUrl = runLocalCommand("./scripts/get-brew-rpm docker --rpmname=docker-forward-journald  --release=el7 --regress --arch="+clienttasks.arch).getStdout();  if (!dockerRpmInstallUrl.isEmpty()) dockerRpmInstallUrls.add(dockerRpmInstallUrl);
-		//dockerRpmInstallUrl = runLocalCommand("./scripts/get-brew-rpm docker --rpmname=docker-common            --release=el7 --regress --arch="+clienttasks.arch).getStdout();  if (!dockerRpmInstallUrl.isEmpty()) dockerRpmInstallUrls.add(dockerRpmInstallUrl);
+		if (Integer.valueOf(clienttasks.redhatReleaseX)>=8) {
+/* abandoning this idea because trying to resolve the dependencies is changing too fast; instead we'll depend on installSubscriptionManagerRPMs(String installOptions) called by setupClient(...)
+			dockerRpmInstallUrl = runLocalCommand("./scripts/get-brew-rpm oci-umount              --rpmname=oci-umount              --version=2    --release=el8\\+. --regress --arch="+clienttasks.arch).getStdout().trim();	if (!dockerRpmInstallUrl.isEmpty()) dockerRpmInstallUrls.add(dockerRpmInstallUrl);	// --version=1.13 is the first build for el8
+			dockerRpmInstallUrl = runLocalCommand("./scripts/get-brew-rpm atomic                  --rpmname=atomic-registries       --version=1.22 --release=el8\\+. --regress --arch="+clienttasks.arch).getStdout().trim();	if (!dockerRpmInstallUrl.isEmpty()) dockerRpmInstallUrls.add(dockerRpmInstallUrl);	// --version=1.22 is the first build for el8
+			dockerRpmInstallUrl = runLocalCommand("./scripts/get-brew-rpm container-storage-setup --rpmname=container-storage-setup --version=0    --release=el8\\+. --regress --arch=noarch").getStdout().trim();				if (!dockerRpmInstallUrl.isEmpty()) dockerRpmInstallUrls.add(dockerRpmInstallUrl);	// --version=0 is the first build for el8
+			dockerRpmInstallUrl = runLocalCommand("./scripts/get-brew-rpm container-selinux       --rpmname=container-selinux       --version=2    --release=el8\\+. --regress --arch=noarch").getStdout().trim();				if (!dockerRpmInstallUrl.isEmpty()) dockerRpmInstallUrls.add(dockerRpmInstallUrl);	// --version=2 is the first build for el8
+			dockerRpmInstallUrl = runLocalCommand("./scripts/get-brew-rpm docker                  --rpmname=docker-common           --version=1.13 --release=el8\\+. --regress --arch="+clienttasks.arch).getStdout().trim();	if (!dockerRpmInstallUrl.isEmpty()) dockerRpmInstallUrls.add(dockerRpmInstallUrl);	// --version=1.13 is the first build for el8
+			dockerRpmInstallUrl = runLocalCommand("./scripts/get-brew-rpm docker                  --rpmname=docker-rhel-push-plugin --version=1.13 --release=el8\\+. --regress --arch="+clienttasks.arch).getStdout().trim();	if (!dockerRpmInstallUrl.isEmpty()) dockerRpmInstallUrls.add(dockerRpmInstallUrl);	// --version=1.13 is the first build for el8
+			dockerRpmInstallUrl = runLocalCommand("./scripts/get-brew-rpm docker                  --rpmname=docker                  --version=1.13 --release=el8\\+. --regress --arch="+clienttasks.arch).getStdout().trim();	if (!dockerRpmInstallUrl.isEmpty()) dockerRpmInstallUrls.add(dockerRpmInstallUrl);	// --version=1.13 is the first build for el8
+*/
+		} else {
+			//dockerRpmInstallUrls.add(runLocalCommand("./scripts/get-brew-rpm docker --rpmname=docker                       --release=el7 --regress --arch="+clienttasks.arch).getStdout());
+			//dockerRpmInstallUrls.add(runLocalCommand("./scripts/get-brew-rpm docker --rpmname=docker         --version=1.0 --release=el7 --regress --arch="+clienttasks.arch).getStdout());	// --version=1.0 is blocked by Bug 1121239 - docker pull from custom registry errors on Invalid Namespace Name	// Error: Invalid namespace name (registry.access.redhat.com), only [a-z0-9_] are allowed, size between 4 and 30
+			dockerRpmInstallUrl = runLocalCommand("./scripts/get-brew-rpm docker --rpmname=docker           --version=1.1 --release=el7 --regress --arch="+clienttasks.arch).getStdout().trim();  if (!dockerRpmInstallUrl.isEmpty()) dockerRpmInstallUrls.add(dockerRpmInstallUrl);
+			dockerRpmInstallUrl = runLocalCommand("./scripts/get-brew-rpm docker --rpmname=docker-selinux   --version=1.6 --release=el7 --regress --arch="+clienttasks.arch).getStdout().trim();  if (!dockerRpmInstallUrl.isEmpty()) dockerRpmInstallUrls.add(dockerRpmInstallUrl);	// --version=1.6 is the first build with docker-selinux	// avoid: Error response from daemon: Cannot start container fd39344bea2cf56e48467488745ac3b007eb904f185a240853103f112a87bdd3: permission denied
+			//dockerRpmInstallUrl = runLocalCommand("./scripts/get-brew-rpm docker --rpmname=docker-forward-journald  --release=el7 --regress --arch="+clienttasks.arch).getStdout();  if (!dockerRpmInstallUrl.isEmpty()) dockerRpmInstallUrls.add(dockerRpmInstallUrl);
+			//dockerRpmInstallUrl = runLocalCommand("./scripts/get-brew-rpm docker --rpmname=docker-common            --release=el7 --regress --arch="+clienttasks.arch).getStdout();  if (!dockerRpmInstallUrl.isEmpty()) dockerRpmInstallUrls.add(dockerRpmInstallUrl);
+		}
 		if (!dockerRpmInstallUrls.isEmpty()) clienttasks.installSubscriptionManagerRPMs(dockerRpmInstallUrls, null, sm_yumInstallOptions, "", "");
 		
 		// best way of updating docker (from a RHEL subscription) when possible - will give us the latest released version of docker
@@ -565,18 +584,23 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 				//	rhel-7-workstation-extras-rpms/x86_64
 				//	rhel-7-for-system-z-a-extras-rpms/7Server/s390x
 				//	rhel-7-for-power-le-extras-rpms/ppc64le
+				//  rhel-8-for-x86_64-appstream-rpms  (appstream is enabled by default)
 				// RHEL-ALT:
 				//  rhel-7-for-arm-64-extras-rpms__7Server__aarch64
 				//  rhel-7-for-power-9-extras-rpms__7Server__ppc64le
 				//  rhel-7-for-system-z-a-extras-rpms__7Server__s390x
 				String command = clienttasks.isPackageInstalled("docker") ? "update" : "install"; 
 				//avoid "No packages marked for update" by ignoring results of yumUpdatePackageFromRepo(...)
-				clienttasks.yumDoPackageFromRepo_(command,"docker", "rhel-"+clienttasks.redhatReleaseX+"-*-extras-rpms", "--disablerepo=beaker* --nogpgcheck");
+				String fromRepo = "rhel-"+clienttasks.redhatReleaseX+"-*-extras-rpms";
+				if (Integer.valueOf(clienttasks.redhatReleaseX) >=8) fromRepo = "rhel-"+clienttasks.redhatReleaseX+"-for-"+clienttasks.arch+"-appstream-rpms";
+				clienttasks.yumDoPackageFromRepo_(command,"docker", fromRepo, "--disablerepo=beaker* --nogpgcheck");
 			}
 		}
 		
 		// however, an even better best way to update docker is to update to the latest development version targeted for this RHEL release
+		if (Integer.valueOf(clienttasks.redhatReleaseX)<8) { // but EXTRAS content is no longer available on rhel8+, so only update from extras on rhel7
 		clienttasks.installLatestExtrasUpdates(sm_yumInstallOptions, Arrays.asList(new String[]{"docker"}));
+		}
 		
 		// releases/variants/arches that do not support docker (could technically be located earlier in this testcase to save time)
 		if (clienttasks.redhatReleaseX.equals("7") && clienttasks.arch.equals("ppc64") && !clienttasks.isPackageInstalled("docker")) throw new SkipException("docker is not available on a '"+clienttasks.redhatReleaseXY+"' '"+clienttasks.arch+"' '"+clienttasks.variant+"' host.");
@@ -585,7 +609,6 @@ public class DockerTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(clienttasks.isPackageVersion("docker", ">=", "1.0.0-2"), "Expecting docker to be installed with version to be >= 1.0.0-2 (first RHSM compatible version of docker).  If this fails, review WARNINGs above for explanations.");
 		
 		// restart the docker service
-		//RemoteFileTasks.runCommandAndAssert(client,"service docker restart",Integer.valueOf(0),"^Starting docker: +\\[  OK  \\]$",null);
 		RemoteFileTasks.runCommandAndAssert(client, "systemctl restart docker.service && systemctl is-active docker.service", Integer.valueOf(0), "^active$", null);
 	}
 	private SSHCommandResult runLocalCommand(String command) {
