@@ -1040,38 +1040,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			"subscriptionName", "Awesome OS for x86_64", clienttasks.getAvailableFutureSubscriptionsOndate(onDateToTest));
 		clienttasks.subscribe(null, null, futureStackableSubscription.poolId, null, null, "1", null, null, null,
 			null, null, null, null);
-	/*	List<SubscriptionPool> AvailableStackableSubscription = SubscriptionPool
-				.findAllInstancesWithMatchingFieldFromList("subscriptionType", "Stackable",
-						clienttasks.getAvailableSubscriptionsMatchingInstalledProducts());
-		List<SubscriptionPool> futureStackableSubscription = SubscriptionPool.findAllInstancesWithMatchingFieldFromList(
-				"subscriptionType", "Stackable", clienttasks.getAvailableFutureSubscriptionsOndate(onDateToTest));
-		List<SubscriptionPool> futureSubscription = FindSubscriptionsWithSuggestedQuantityGreaterThanTwo(
-				futureStackableSubscription);
-		List<SubscriptionPool> AvailableSubscriptions = FindSubscriptionsWithSuggestedQuantityGreaterThanTwo(
-				AvailableStackableSubscription);
-		for (SubscriptionPool AvailableSubscriptionPools : AvailableSubscriptions) {
-			int quantity = AvailableSubscriptionPools.suggested;
-			for (SubscriptionPool FutureSubscriptionPools : futureSubscription) {
-				if ((AvailableSubscriptionPools.subscriptionName).equals(FutureSubscriptionPools.subscriptionName)) {
-					providedProductId = AvailableSubscriptionPools.provides;
-					clienttasks.subscribe(null, null, AvailableSubscriptionPools.poolId, null, null,
-							Integer.toString(quantity - 1), null, null, null, null, null, null, null);
-					nosubscriptionsFound = false;
-					InstalledProduct AfterAttachingFutureSubscription = InstalledProduct
-							.findFirstInstanceWithMatchingFieldFromList("productName",
-									providedProductId.get(providedProductId.size() - 1),
-									clienttasks.getCurrentlyInstalledProducts());
-					Assert.assertEquals(AfterAttachingFutureSubscription.status, "Partially Subscribed",
-							"Verified that installed product is partially subscribed before attaching a future subscription");
-					clienttasks.subscribe(null, null, FutureSubscriptionPools.poolId, null, null, "1", null, null, null,
-							null, null, null, null);
-
-					break;
-				}
-
-			}
-
-		}*/
 		InstalledProduct AfterAttaching = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productName",
 				providedProductId.get(providedProductId.size() - 1), clienttasks.getCurrentlyInstalledProducts());
 		Assert.assertEquals(AfterAttaching.status, "Partially Subscribed",
