@@ -1050,7 +1050,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			null, null, null, null);
 		}
 		InstalledProduct AfterAttaching = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productName",
-				providedProductId.get(providedProductId.size() - 1), clienttasks.getCurrentlyInstalledProducts());
+			"Awesome OS for x86_64 Bits", clienttasks.getCurrentlyInstalledProducts());
 		Assert.assertEquals(AfterAttaching.status, "Partially Subscribed",
 				"Verified that installed product is partially subscribed even after attaching a future subscription");
 		
